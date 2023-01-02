@@ -14,7 +14,6 @@ import org.hibernate.annotations.Check;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -84,7 +83,7 @@ public class AnnotatedColumn {
 	private String defaultValue;
 	private String generatedAs;
 
-	private String comment;
+//	private String comment;
 	private String checkConstraint;
 
 	private AnnotatedColumns parent;
@@ -202,13 +201,13 @@ public class AnnotatedColumn {
 		this.checkConstraint = checkConstraint;
 	}
 
-	public String getComment() {
-		return comment;
-	}
+//	public String getComment() {
+//		return comment;
+//	}
 
-	public void setComment(String comment) {
-		this.comment = comment;
-	}
+//	public void setComment(String comment) {
+//		this.comment = comment;
+//	}
 
 	public String getGeneratedAs() {
 		return generatedAs;
@@ -245,9 +244,9 @@ public class AnnotatedColumn {
 			if ( checkConstraint !=null ) {
 				mappingColumn.setCheckConstraint( checkConstraint );
 			}
-			if ( isNotEmpty( comment ) ) {
-				mappingColumn.setComment( comment );
-			}
+//			if ( isNotEmpty( comment ) ) {
+//				mappingColumn.setComment( comment );
+//			}
 			if ( generatedAs != null ) {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
@@ -471,7 +470,7 @@ public class AnnotatedColumn {
 
 	public static AnnotatedColumns buildFormulaFromAnnotation(
 			org.hibernate.annotations.Formula formulaAnn,
-			Comment commentAnn,
+//			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -480,7 +479,7 @@ public class AnnotatedColumn {
 		return buildColumnOrFormulaFromAnnotation(
 				null,
 				formulaAnn,
-				commentAnn,
+//				commentAnn,
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -490,7 +489,7 @@ public class AnnotatedColumn {
 	}
 
 	public static AnnotatedColumns buildColumnFromNoAnnotation(
-			Comment commentAnn,
+//			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -498,7 +497,7 @@ public class AnnotatedColumn {
 			MetadataBuildingContext context) {
 		return buildColumnsFromAnnotations(
 				null,
-				commentAnn,
+//				commentAnn,
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -509,7 +508,7 @@ public class AnnotatedColumn {
 
 	public static AnnotatedColumns buildColumnFromAnnotation(
 			jakarta.persistence.Column column,
-			Comment commentAnn,
+//			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -518,7 +517,7 @@ public class AnnotatedColumn {
 		return buildColumnOrFormulaFromAnnotation(
 				column,
 				null,
-				commentAnn,
+//				commentAnn,
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -529,7 +528,7 @@ public class AnnotatedColumn {
 
 	public static AnnotatedColumns buildColumnsFromAnnotations(
 			jakarta.persistence.Column[] columns,
-			Comment commentAnn,
+//			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -538,7 +537,7 @@ public class AnnotatedColumn {
 		return buildColumnsOrFormulaFromAnnotation(
 				columns,
 				null,
-				commentAnn,
+//				commentAnn,
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -550,7 +549,7 @@ public class AnnotatedColumn {
 
 	public static AnnotatedColumns buildColumnsFromAnnotations(
 			jakarta.persistence.Column[] columns,
-			Comment commentAnn,
+//			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -560,7 +559,7 @@ public class AnnotatedColumn {
 		return buildColumnsOrFormulaFromAnnotation(
 				columns,
 				null,
-				commentAnn,
+//				commentAnn,
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -573,7 +572,7 @@ public class AnnotatedColumn {
 	public static AnnotatedColumns buildColumnOrFormulaFromAnnotation(
 			jakarta.persistence.Column column,
 			org.hibernate.annotations.Formula formulaAnn,
-			Comment commentAnn,
+//			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -582,7 +581,7 @@ public class AnnotatedColumn {
 		return buildColumnsOrFormulaFromAnnotation(
 				new jakarta.persistence.Column[] { column },
 				formulaAnn,
-				commentAnn,
+//				commentAnn,
 				nullability,
 				propertyHolder,
 				inferredData,
@@ -595,7 +594,7 @@ public class AnnotatedColumn {
 	public static AnnotatedColumns buildColumnsOrFormulaFromAnnotation(
 			jakarta.persistence.Column[] columns,
 			org.hibernate.annotations.Formula formulaAnn,
-			Comment comment,
+//			Comment comment,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -626,14 +625,14 @@ public class AnnotatedColumn {
 						suffixForDefaultColumnName,
 						secondaryTables,
 						propertyHolder,
-						comment,
+//						comment,
 						nullability,
 						context
 				);
 			}
 			else {
 				return buildExplicitColumns(
-						comment,
+//						comment,
 						propertyHolder,
 						inferredData,
 						suffixForDefaultColumnName,
@@ -670,7 +669,7 @@ public class AnnotatedColumn {
 	}
 
 	private static AnnotatedColumns buildExplicitColumns(
-			Comment comment,
+//			Comment comment,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			String suffixForDefaultColumnName,
@@ -692,7 +691,7 @@ public class AnnotatedColumn {
 //						final Identifier physicalName = physicalNamingStrategy.toPhysicalTableName( logicalName );
 //						tableName = physicalName.render( database.getDialect() );
 			buildColumn(
-					comment,
+//					comment,
 					propertyHolder,
 					inferredData,
 					suffixForDefaultColumnName,
@@ -718,7 +717,7 @@ public class AnnotatedColumn {
 	}
 
 	private static AnnotatedColumn buildColumn(
-			Comment comment,
+//			Comment comment,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			String suffixForDefaultColumnName,
@@ -739,9 +738,9 @@ public class AnnotatedColumn {
 //		annotatedColumn.setPropertyHolder( propertyHolder );
 //		annotatedColumn.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		annotatedColumn.setNullable( column.nullable() ); //TODO force to not null if available? This is a (bad) user choice.
-		if ( comment != null ) {
-			annotatedColumn.setComment( comment.value() );
-		}
+//		if ( comment != null ) {
+//			annotatedColumn.setComment( comment.value() );
+//		}
 		annotatedColumn.setUnique( column.unique() );
 		annotatedColumn.setInsertable( column.insertable() );
 		annotatedColumn.setUpdatable( column.updatable() );
@@ -859,7 +858,7 @@ public class AnnotatedColumn {
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
-			Comment comment,
+//			Comment comment,
 			Nullability nullability,
 			MetadataBuildingContext context) {
 		final AnnotatedColumns columns = new AnnotatedColumns();
@@ -869,9 +868,9 @@ public class AnnotatedColumn {
 		columns.setJoins( secondaryTables );
 		columns.setPropertyHolder( propertyHolder );
 		final AnnotatedColumn column = new AnnotatedColumn();
-		if ( comment != null ) {
-			column.setComment( comment.value() );
-		}
+//		if ( comment != null ) {
+//			column.setComment( comment.value() );
+//		}
 		//not following the spec but more clean
 		if ( nullability != Nullability.FORCED_NULL
 				&& inferredData.getClassOrElement().isPrimitive()

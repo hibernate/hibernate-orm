@@ -14,6 +14,9 @@ import org.hibernate.service.UnknownUnwrapTypeException;
 /**
  * Basic support for {@link MultiTenantConnectionProvider} implementations using
  * individual {@link ConnectionProvider} instances per tenant behind the scenes.
+ * <p>
+ * This class is meant to be subclassed to implement application-specific
+ * requirements.
  *
  * @author Steve Ebersole
  */

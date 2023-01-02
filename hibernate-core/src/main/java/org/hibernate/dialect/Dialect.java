@@ -215,6 +215,7 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.REAL;
+import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
@@ -4621,5 +4622,44 @@ public abstract class Dialect implements ConversionContext {
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry) {
 		return new HibernateSchemaManagementTool();
+	}
+
+	/**
+	 * The name of a {@code rowid}-like pseudo-column which
+	 * acts as a high-performance row locator, or null if
+	 * this dialect has no such pseudo-column.
+	 * <p>
+	 * If the {@code rowid}-like value is an explicitly-declared
+	 * named column instead of an implicit pseudo-column, and if
+	 * the given name is nonempty, return the given name.
+	 *
+	 * @param rowId the name specified by
+	 *        {@link org.hibernate.annotations.RowId#value()},
+	 *        which is ignored if {@link #getRowIdColumnString}
+	 *        is not overridden
+	 */
+	public String rowId(String rowId) {
+		return null;
+	}
+
+	/**
+	 * The JDBC type code of the {@code rowid}-like pseudo-column
+	 * which acts as a high-performance row locator.
+	 *
+	 * @return {@link Types#ROWID} by default
+	 */
+	public int rowIdSqlType() {
+		return ROWID;
+	}
+
+	/**
+	 * If this dialect requires that the {@code rowid} column be
+	 * declared explicitly, return the DDL column definition.
+	 *
+	 * @return the DDL column definition, or {@code null} if
+	 *         the {@code rowid} is an implicit pseudo-column
+	 */
+	public String getRowIdColumnString(String rowId) {
+		return null;
 	}
 }

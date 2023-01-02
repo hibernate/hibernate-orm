@@ -73,7 +73,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 
-	@Deprecated(since="6.2") @Remove
+	@Deprecated(since="6.2", forRemoval = true)
 	public Table() {
 		this( "orm" );
 	}

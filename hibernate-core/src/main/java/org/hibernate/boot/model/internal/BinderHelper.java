@@ -749,7 +749,7 @@ public class BinderHelper {
 		final AnnotatedColumns discriminatorColumns = buildColumnOrFormulaFromAnnotation(
 				discriminatorColumn,
 				discriminatorFormula,
-				null,
+//				null,
 				nullability,
 				propertyHolder,
 				inferredData,

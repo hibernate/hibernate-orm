@@ -10,7 +10,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 
 /**
  * An extension point for integrators that wish to hook into the process of how a SessionFactory
- * is built. Intended as a "discoverable service" ({@link java.util.ServiceLoader}).  There can
+ * is built. Intended as a "discoverable service" ({@link java.util.ServiceLoader}). There can
  * be at most one implementation discovered that returns a non-null {@link SessionFactoryBuilder}.
  *
  * @author Steve Ebersole
@@ -20,13 +20,13 @@ public interface SessionFactoryBuilderFactory {
 	 * The contract method. Return the {@link SessionFactoryBuilder}. May return {@code null}
 	 *
 	 * @param metadata The metadata from which we will be building a {@code SessionFactory}.
-	 * @param defaultBuilder The default SessionFactoryBuilder instance.
+	 * @param defaultBuilder The default {@code SessionFactoryBuilder} instance.
 	 *                       If the {@code SessionFactoryBuilder} being built here needs to use
 	 *                       this passed {@code SessionFactoryBuilder} instance, it is the
 	 *                       responsibility of the built {@code SessionFactoryBuilder} impl
 	 *                       to delegate configuration calls to the passed default impl.
 	 *
-	 * @return The SessionFactoryBuilder, or {@code null}
+	 * @return The {@code SessionFactoryBuilder}, or {@code null}
 	 */
 	SessionFactoryBuilder getSessionFactoryBuilder(MetadataImplementor metadata, SessionFactoryBuilderImplementor defaultBuilder);
 }

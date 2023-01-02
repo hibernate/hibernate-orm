@@ -144,6 +144,20 @@
  * These two approaches cannot be used together. A {@code UserType} always takes precedence
  * over the compositional approach.
  * <p>
+ * All the typing annotations just mentioned may be used as meta-annotations. That is,
+ * it's possible to define a new typing annotation like this:
+ * <pre>
+ * &#64;JavaType(ThingJavaType.class)
+ * &#64;JdbcTypeCode(JSON)
+ * &#64;Target({METHOD, FIELD})
+ * &#64;Retention(RUNTIME)
+ * public &#64;interface JsonThing {}
+ * </pre>
+ * The annotation may then be applied to fields and properties of entities and embeddable
+ * objects:
+ * <pre>
+ * &#64;JsonThing Thing myThing;
+ * </pre>
  * The packages {@link org.hibernate.type.descriptor.java} and
  * {@link org.hibernate.type.descriptor.jdbc} contain the built-in implementations of
  * {@code JavaType} and {@code JdbcType}, respectively.
@@ -251,6 +265,31 @@
  * Note that a filter has no affect unless it is
  * {@linkplain org.hibernate.Session#enableFilter(java.lang.String) enabled} in a
  * particular session.
+ *
+ * <h3 id="optimistic-locking">Optimistic locking</h3>
+ *
+ * JPA defines the {@link jakarta.persistence.Version} annotation for optimistic
+ * locking based on an integral version number or {@link java.sql.Timestamp}.
+ * Hibernate allows this annotation to be used with other datetime types including
+ * {@link java.time.Instant}.
+ * <p>
+ * A field may be explicitly excluded from optimistic lock checking using
+ * {@link org.hibernate.annotations.OptimisticLock @OptimisticLock(excluded=true)}.
+ * <p>
+ * This standard JPA approach is the recommended approach when working with a
+ * newly-designed database schema. But when working with a legacy database with
+ * tables having no version or update timestamp column, an alternative approach is
+ * supported:
+ * <ul>
+ * <li>{@link org.hibernate.annotations.OptimisticLockType#ALL @OptimisticLocking(ALL)}
+ *     specifies that optimistic lock checking should be done by comparing the values
+ *     of all columns, and
+ * <li>{@link org.hibernate.annotations.OptimisticLockType#DIRTY @OptimisticLocking(DIRTY)}
+ *     specifies that optimistic lock checking should be done by checking the values
+ *     of only the columns which are being set to new values.
+ * </ul>
+ * <p>
+ * For more detail, see {@link org.hibernate.annotations.OptimisticLocking}.
  *
  * <h3 id="dialect-specific-sql">Dialect-specific native SQL</h3>
  * <p>

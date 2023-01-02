@@ -71,6 +71,12 @@ public class StandardTableExporter implements Exporter<Table> {
 				}
 				appendColumn( createTable, column, table, metadata, dialect, context );
 			}
+			if ( table.getRowId() != null ) {
+				String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
+				if ( rowIdColumn != null ) {
+					createTable.append(", ").append( rowIdColumn );
+				}
+			}
 			if ( table.hasPrimaryKey() ) {
 				createTable.append( ", " ).append( table.getPrimaryKey().sqlConstraintString( dialect ) );
 			}

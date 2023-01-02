@@ -8,6 +8,9 @@ package org.hibernate.resource.transaction.spi;
 
 import org.hibernate.jpa.spi.JpaCompliance;
 
+import static org.hibernate.resource.transaction.spi.TransactionStatus.ACTIVE;
+import static org.hibernate.resource.transaction.spi.TransactionStatus.MARKED_ROLLBACK;
+
 /**
  * Models the coordination of all transaction related flows.
  *
@@ -52,14 +55,14 @@ public interface TransactionCoordinator {
 	boolean isJoined();
 
 	/**
-	 * Used by owner of the JdbcSession as a means to indicate that implicit joining should be done if needed.
+	 * Used by owner of the "JDBC session" as a means to indicate that implicit joining should be done if needed.
 	 */
 	void pulse();
 
 	/**
 	 * Is this transaction still active?
 	 * <p>
-	 * Answers on a best effort basis.  For example, in the case of JDBC based transactions we cannot know that a
+	 * Answers on a best-effort basis.  For example, in the case of JDBC based transactions we cannot know that a
 	 * transaction is active when it is initiated directly through the JDBC {@link java.sql.Connection}, only when
 	 * it is initiated from here.
 	 *
@@ -101,7 +104,8 @@ public interface TransactionCoordinator {
 	}
 
 	default boolean isTransactionActive(boolean isMarkedRollbackConsideredActive) {
-		return isJoined() && getTransactionDriverControl().isActive( isMarkedRollbackConsideredActive );
+		return isJoined()
+			&& getTransactionDriverControl().isActive( isMarkedRollbackConsideredActive );
 	}
 
 	default void invalidate(){}
@@ -134,8 +138,8 @@ public interface TransactionCoordinator {
 
 		default boolean isActive(boolean isMarkedRollbackConsideredActive) {
 			final TransactionStatus status = getStatus();
-			return TransactionStatus.ACTIVE == status
-					|| ( isMarkedRollbackConsideredActive && TransactionStatus.MARKED_ROLLBACK == status );
+			return status == ACTIVE
+				|| isMarkedRollbackConsideredActive && status == MARKED_ROLLBACK;
 		}
 
 		// todo : org.hibernate.Transaction will need access to register local Synchronizations.

@@ -22,6 +22,12 @@ package org.hibernate.boot.model;
  * The most common way to integrate a {@code FunctionContributor} is by making
  * it discoverable via the Java {@link java.util.ServiceLoader} facility.
  *
+ * @apiNote Unfortunately there's currently no programmatic way to register
+ *          an instance with {@code Configuration} or {@code MetadataBuilder}.
+ *          Nor can it be registered via a corresponding setting defined in
+ *          {@link org.hibernate.jpa.boot.spi.JpaSettings}. These are things
+ *          which <em>are</em> possible for its best friend {@link TypeContributor}.
+ *
  * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
  *
  * @author Karel Maesen

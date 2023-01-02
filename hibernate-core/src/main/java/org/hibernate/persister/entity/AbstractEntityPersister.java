@@ -544,7 +544,8 @@ public abstract class AbstractEntityPersister
 		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
 		identifierAliases = new String[identifierColumnSpan];
 
-		rowIdName = persistentClass.getRootTable().getRowId();
+		final String rowId = persistentClass.getRootTable().getRowId();
+		rowIdName = rowId == null ? null : dialect.rowId( rowId );
 
 		if ( persistentClass.getLoaderName() != null ) {
 			// We must resolve the named query on-demand through the boot model because it isn't initialized yet

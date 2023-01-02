@@ -19,9 +19,9 @@ public interface ConnectionValidator {
 	ConnectionValidator ALWAYS_VALID = connection -> true;
 
 	/**
-	 * Checks if the connection is still valid
+	 * Checks if the given connection is still valid.
 	 *
-	 * @return <code>true</code> if the connection is valid, <code>false</code> otherwise
+	 * @return {@code true} if the connection is valid, {@code false} otherwise
 	 * @throws SQLException when an error happens due to the connection usage leading to a connection close
 	 */
 	boolean isValid(Connection connection) throws SQLException;

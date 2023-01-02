@@ -341,7 +341,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 
 		if ( getDialect().getNationalizationSupport() == NationalizationSupport.EXPLICIT ) {
-			isNationalized = modelXProperty.isAnnotationPresent( Nationalized.class )
+			isNationalized = HCANNHelper.findAnnotation( modelXProperty, Nationalized.class ) != null
 					|| buildingContext.getBuildingOptions().useNationalizedCharacterData();
 		}
 

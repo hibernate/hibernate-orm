@@ -7,11 +7,13 @@
 package org.hibernate;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
@@ -113,6 +115,25 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  *     instance from the {@link SessionFactory}.
  * </ul>
  * <p>
+ * An easy way to be sure that session and transaction management is being done correctly
+ * is to {@linkplain SessionFactory#inTransaction(Consumer) let the factory do it}:
+ * <pre>
+ * sessionFactory.inTransaction(session -> {
+ *     //do the work
+ *     ...
+ * });
+ * </pre>
+ * <p>
+ * A session may be used to {@linkplain #doWork(Work) execute JDBC work} using its JDBC
+ * connection and transaction:
+ * <pre>
+ * session.doWork(connection -> {
+ *     try ( PreparedStatement ps = connection.prepareStatement( " ... " ) ) {
+ *         ps.execute();
+ *     }
+ * });
+ * </pre>
+ * <p>
  * A {@code Session} instance is serializable if its entities are serializable.
  * <p>
  * Every {@code Session} is a JPA {@link EntityManager}. Furthermore, when Hibernate is
@@ -136,9 +157,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Force this session to flush. Must be called at the end of a unit of work,
 	 * before the transaction is committed. Depending on the current
-	 * {@link #setHibernateFlushMode(FlushMode)} flush mode}, the session might automatically
-	 * flush when {@link Transaction#commit()} is called, and it is not necessary
-	 * to call this method directly.
+	 * {@linkplain #setHibernateFlushMode(FlushMode) flush mode}, the session might
+	 * automatically flush when {@link Transaction#commit()} is called, and it is not
+	 * necessary to call this method directly.
 	 * <p>
 	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory.

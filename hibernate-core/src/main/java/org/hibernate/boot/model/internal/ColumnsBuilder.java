@@ -8,7 +8,6 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
@@ -83,11 +82,11 @@ class ColumnsBuilder {
 		joinColumns = buildExplicitJoinColumns( property, inferredData );
 
 
-		Comment comment = property.getAnnotation(Comment.class);
+//		Comment comment = property.getAnnotation(Comment.class);
 		if ( property.isAnnotationPresent( Column.class ) ) {
 			columns = buildColumnFromAnnotation(
 					property.getAnnotation( Column.class ),
-					comment,
+//					comment,
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -98,7 +97,7 @@ class ColumnsBuilder {
 		else if ( property.isAnnotationPresent( Formula.class ) ) {
 			columns = buildFormulaFromAnnotation(
 					getOverridableAnnotation( property, Formula.class, buildingContext ),
-					comment,
+//					comment,
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -109,7 +108,7 @@ class ColumnsBuilder {
 		else if ( property.isAnnotationPresent( Columns.class ) ) {
 			columns = buildColumnsFromAnnotations(
 					property.getAnnotation( Columns.class ).columns(),
-					comment,
+//					comment,
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -130,7 +129,7 @@ class ColumnsBuilder {
 			OneToMany oneToMany = property.getAnnotation( OneToMany.class );
 			joinColumns = AnnotatedJoinColumns.buildJoinColumns(
 					null,
-					comment,
+//					comment,
 					oneToMany == null ? null : nullIfEmpty( oneToMany.mappedBy() ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -146,7 +145,7 @@ class ColumnsBuilder {
 		if ( columns == null && !property.isAnnotationPresent( ManyToMany.class ) ) {
 			//useful for collection of embedded elements
 			columns = buildColumnFromNoAnnotation(
-					comment,
+//					comment,
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -166,7 +165,7 @@ class ColumnsBuilder {
 
 	private AnnotatedJoinColumns buildDefaultJoinColumnsForToOne(XProperty property, PropertyData inferredData) {
 		final JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
-		final Comment comment = property.getAnnotation(Comment.class);
+//		final Comment comment = property.getAnnotation(Comment.class);
 		if ( joinTableAnn != null ) {
 			if ( isEmpty( joinTableAnn.name() ) ) {
 				//TODO: I don't see why this restriction makes sense (use the same defaulting rule as for many-valued)
@@ -177,7 +176,7 @@ class ColumnsBuilder {
 			}
 			return AnnotatedJoinColumns.buildJoinColumns(
 					joinTableAnn.inverseJoinColumns(),
-					comment,
+//					comment,
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -189,7 +188,7 @@ class ColumnsBuilder {
 			OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
 			return AnnotatedJoinColumns.buildJoinColumns(
 					null,
-					comment,
+//					comment,
 					oneToOneAnn == null ? null : nullIfEmpty( oneToOneAnn.mappedBy() ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -205,7 +204,7 @@ class ColumnsBuilder {
 		if ( joinColumnAnnotations != null ) {
 			return AnnotatedJoinColumns.buildJoinColumns(
 					joinColumnAnnotations,
-					property.getAnnotation( Comment.class ),
+//					property.getAnnotation( Comment.class ),
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,

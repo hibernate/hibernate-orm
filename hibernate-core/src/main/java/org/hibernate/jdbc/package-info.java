@@ -12,6 +12,16 @@
  * Execution of a unit of work may be requested by calling
  * {@link org.hibernate.SharedSessionContract#doWork(org.hibernate.jdbc.Work)} or
  * {@link org.hibernate.SharedSessionContract#doReturningWork(org.hibernate.jdbc.ReturningWork)}.
+ * <p>
+ * For example:
+ * <pre>
+ * session.doWork(connection -> {
+ *     try ( PreparedStatement ps = connection.prepareStatement( " ... " ) ) {
+ *         ps.execute();
+ *     }
+ * });
+ * </pre>
+ *
  *
  * @see org.hibernate.jdbc.Work
  * @see org.hibernate.jdbc.ReturningWork

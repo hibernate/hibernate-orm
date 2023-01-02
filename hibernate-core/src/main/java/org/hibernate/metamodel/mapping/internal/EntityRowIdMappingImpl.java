@@ -6,9 +6,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.sql.Types;
 import java.util.function.BiConsumer;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -41,9 +41,9 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 		this.rowIdName = rowIdName;
 		this.tableExpression = tableExpression;
 		this.declaringType = declaringType;
-		this.rowIdType = declaringType.getEntityPersister().getFactory().getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( Object.class, Types.ROWID );
+		final SessionFactoryImplementor factory = declaringType.getEntityPersister().getFactory();
+		this.rowIdType = factory.getTypeConfiguration().getBasicTypeRegistry()
+				.resolve( Object.class, factory.getJdbcServices().getDialect().rowIdSqlType() );
 	}
 
 	@Override

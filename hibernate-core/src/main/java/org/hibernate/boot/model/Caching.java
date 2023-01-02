@@ -15,7 +15,10 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ *
+ * @deprecated will move to {@link org.hibernate.boot.model.source.spi}, where its only uses are
  */
+@Deprecated(since = "6") // because it is moving packages
 public class Caching {
 	// NOTE : TruthValue for now because I need to look at how JPA's SharedCacheMode concept is handled
 	private TruthValue requested;

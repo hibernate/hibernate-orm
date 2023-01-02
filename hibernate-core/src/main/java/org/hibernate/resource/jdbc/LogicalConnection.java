@@ -22,29 +22,32 @@ public interface LogicalConnection {
 	 * <p>
 	 * That is, has {@link #close} not yet been called?
 	 *
-	 * @return {@code true} if still open ({@link #close} has not been called yet); {@code false} if not open
-	 * ({@link #close} has been called).
+	 * @return {@code true} if still open, since {@link #close} has not yet been called;
+	 *         {@code false} if not open, since {@link #close} was called.
 	 */
 	boolean isOpen();
 
 	/**
-	 * Closes the JdbcSession, making it inactive and forcing release of any held resources.
+	 * Closes the logical connection, making it inactive and forcing release of any held resources.
 	 *
-	 * @return Legacy :(  Returns the JDBC {@code Connection} if the user passed in a {@code Connection} originally.
+	 * @return the JDBC {@code Connection} if the user passed in a {@code Connection} originally
+	 *
+	 * @apiNote The return type accommodates legacy functionality for user-supplied connections.
 	 */
 	Connection close();
 
 	/**
-	 * Is this JdbcSession currently physically connected?
+	 * Is this logical connection currently physically connected?
 	 * <p>
-	 * That is, does it currently hold a physical JDBC {@code Connection}?
+	 * That is, does it currently hold a physical JDBC {@link Connection}?
 	 *
-	 * @return {@code true} if the JdbcSession currently hold a JDBC {@code Connection}; {@code false} if it does not.
+	 * @return {@code true} if currently holding a JDBC {@code Connection};
+	 *         {@code false} if not.
 	 */
 	boolean isPhysicallyConnected();
 
 	/**
-	 * Provides access to the registry of JDBC resources associated with this {@code LogicalConnection}.
+	 * Provides access to the registry of JDBC resources associated with this logical connection.
 	 *
 	 * @return The JDBC resource registry.
 	 *

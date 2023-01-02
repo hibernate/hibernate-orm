@@ -45,7 +45,6 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Check;
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.DynamicInsert;
@@ -77,10 +76,12 @@ import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
+import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
@@ -131,6 +132,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
+import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotations;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
@@ -233,6 +235,20 @@ public class EntityBinder {
 		// comment, checkConstraint, and indexes are processed here
 		entityBinder.processComplementaryTableDefinitions();
 		bindCallbacks( clazzToProcess, persistentClass, context );
+		entityBinder.callTypeBinders( persistentClass );
+	}
+
+	private void callTypeBinders(PersistentClass persistentClass) {
+		for ( Annotation containingAnnotation : findContainingAnnotations( annotatedClass, TypeBinderType.class ) ) {
+			final TypeBinderType binderType = containingAnnotation.annotationType().getAnnotation( TypeBinderType.class );
+			try {
+				final TypeBinder binder = binderType.binder().newInstance();
+				binder.bind( containingAnnotation, context, persistentClass );
+			}
+			catch ( Exception e ) {
+				throw new AnnotationException( "error processing @TypeBinderType annotation '" + containingAnnotation + "'", e );
+			}
+		}
 	}
 
 	private void handleIdentifier(
@@ -1470,37 +1486,30 @@ public class EntityBinder {
 			return false;
 		}
 		switch ( effectiveCache.include().toLowerCase( Locale.ROOT ) ) {
-			case "all": {
+			case "all":
 				return true;
-			}
-			case "non-lazy": {
+			case "non-lazy":
 				return false;
-			}
-			default: {
+			default:
 				throw new AnnotationException( "Class '" + annotatedClass.getName()
 						+ "' has a '@Cache' with undefined option 'include=\"" + effectiveCache.include() + "\"'" );
-			}
 		}
 	}
 
 	private static boolean isCacheable(SharedCacheMode sharedCacheMode, Cacheable explicitCacheableAnn) {
-		switch (sharedCacheMode) {
-			case ALL: {
+		switch ( sharedCacheMode ) {
+			case ALL:
 				// all entities should be cached
 				return true;
-			}
-			case ENABLE_SELECTIVE: {
+			case ENABLE_SELECTIVE:
 				// only entities with @Cacheable(true) should be cached
 				return explicitCacheableAnn != null && explicitCacheableAnn.value();
-			}
-			case DISABLE_SELECTIVE: {
+			case DISABLE_SELECTIVE:
 				// only entities with @Cacheable(false) should not be cached
 				return explicitCacheableAnn == null || explicitCacheableAnn.value();
-			}
-			default: {
+			default:
 				// treat both NONE and UNSPECIFIED the same
 				return false;
-			}
 		}
 	}
 
@@ -1668,10 +1677,10 @@ public class EntityBinder {
 		if ( rowId != null ) {
 			table.setRowId( rowId.value() );
 		}
-		final Comment comment = annotatedClass.getAnnotation( Comment.class );
-		if ( comment != null ) {
-			table.setComment( comment.value() );
-		}
+//		final Comment comment = annotatedClass.getAnnotation( Comment.class );
+//		if ( comment != null ) {
+//			table.setComment( comment.value() );
+//		}
 
 		context.getMetadataCollector().addEntityTableXref(
 				persistentClass.getEntityName(),

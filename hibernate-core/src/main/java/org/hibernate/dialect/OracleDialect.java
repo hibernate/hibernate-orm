@@ -1406,4 +1406,9 @@ public class OracleDialect extends Dialect {
 	public String getCreateUserDefinedTypeKindString() {
 		return "object";
 	}
+
+	@Override
+	public String rowId(String rowId) {
+		return "rowid";
+	}
 }

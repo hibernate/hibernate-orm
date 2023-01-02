@@ -16,6 +16,8 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.jboss.logging.Logger;
 
 /**
+ * Basic implementation of {@link TypeDefinitionRegistry}.
+ *
  * @author Chris Cranford
  */
 public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistry {

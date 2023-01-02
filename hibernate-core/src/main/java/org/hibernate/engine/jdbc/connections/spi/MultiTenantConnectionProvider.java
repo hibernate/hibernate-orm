@@ -13,15 +13,24 @@ import org.hibernate.service.Service;
 import org.hibernate.service.spi.Wrapped;
 
 /**
- * A specialized Connection provider contract used when the application is using multi-tenancy support requiring
- * tenant aware connections.
+ * A specialized {@link Connection} provider contract used when the application is using
+ * multi-tenancy support requiring tenant-aware connections.
+ * <p>
+ * A {@code MultiTenantConnectionProvider} may be selected using the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER}.
+ * <p>
+ * An application usually implements its own custom {@code MultiTenantConnectionProvider}
+ * by subclassing {@link AbstractMultiTenantConnectionProvider}.
  *
  * @author Steve Ebersole
+ *
+ * @see AbstractMultiTenantConnectionProvider
+ * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER
  */
 public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	/**
-	 * Allows access to the database metadata of the underlying database(s) in situations where we do not have a
-	 * tenant id (like startup processing, for example).
+	 * Allows access to the database metadata of the underlying database(s) in situations
+	 * where we do not have a tenant id (like startup processing, for example).
 	 *
 	 * @return The database metadata.
 	 *
@@ -39,7 +48,7 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	void releaseAnyConnection(Connection connection) throws SQLException;
 
 	/**
-	 * Obtains a connection for Hibernate use according to the underlying strategy of this provider.
+	 * Obtains a connection for use according to the underlying strategy of this provider.
 	 *
 	 * @param tenantIdentifier The identifier of the tenant for which to get a connection
 	 *
@@ -66,12 +75,12 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 * re-acquisition of those connections if needed?
 	 * <p>
 	 * This is used in conjunction with {@link org.hibernate.ConnectionReleaseMode#AFTER_STATEMENT}
-	 * to aggressively release JDBC connections.  However, the configured ConnectionProvider
+	 * to aggressively release JDBC connections. However, the configured {@link ConnectionProvider}
 	 * must support re-acquisition of the same underlying connection for that semantic to work.
 	 * <p>
 	 * Typically, this is only true in managed environments where a container tracks connections
 	 * by transaction or thread.
-	 *
+	 * <p>
 	 * Note that JTA semantic depends on the fact that the underlying connection provider does
 	 * support aggressive release.
 	 *

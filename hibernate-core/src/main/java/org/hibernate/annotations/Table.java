@@ -52,11 +52,10 @@ public @interface Table {
 
 	/**
 	 * Specifies comment to add to the generated DDL for the table.
-	 * <p>
-	 * <em>Useful for secondary tables, otherwise use {@link Comment}.</em>
 	 *
-	 * @see Comment
+	 * @deprecated use {@link Comment}
 	 */
+	@Deprecated(since = "6.2")
 	String comment() default "";
 
 	/**
@@ -64,8 +63,8 @@ public @interface Table {
 	 *
 	 * @deprecated use {@link jakarta.persistence.SecondaryTable#foreignKey()}
 	 */
-	@Deprecated(since = "6.0")
-	ForeignKey foreignKey() default @ForeignKey( name="" );
+	@Deprecated(since = "6.0", forRemoval = true)
+	ForeignKey foreignKey() default @ForeignKey(name = "");
 
 	/**
 	 * @deprecated This setting has no effect in Hibernate 6

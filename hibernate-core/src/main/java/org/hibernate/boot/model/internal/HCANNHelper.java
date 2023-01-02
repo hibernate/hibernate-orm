@@ -9,6 +9,8 @@ package org.hibernate.boot.model.internal;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Member;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -22,6 +24,7 @@ import org.hibernate.annotations.common.reflection.java.JavaXMember;
  */
 @Internal
 public final class HCANNHelper {
+
 	public static boolean hasAnnotation(
 			AnnotatedElement element,
 			Class<? extends Annotation> annotationToCheck) {
@@ -29,12 +32,7 @@ public final class HCANNHelper {
 			return false;
 		}
 
-		//noinspection RedundantIfStatement
-		if ( element.isAnnotationPresent( annotationToCheck ) ) {
-			return true;
-		}
-
-		return false;
+		return element.isAnnotationPresent( annotationToCheck );
 	}
 
 	public static boolean hasAnnotation(
@@ -46,7 +44,7 @@ public final class HCANNHelper {
 		}
 
 		return element.isAnnotationPresent( annotationToCheck )
-				|| element.isAnnotationPresent( annotationToCheck2 );
+			|| element.isAnnotationPresent( annotationToCheck2 );
 	}
 
 	public static boolean hasAnnotation(
@@ -56,12 +54,7 @@ public final class HCANNHelper {
 			return false;
 		}
 
-		//noinspection RedundantIfStatement
-		if ( element.isAnnotationPresent( annotationToCheck ) ) {
-			return true;
-		}
-
-		return false;
+		return element.isAnnotationPresent( annotationToCheck );
 	}
 
 	public static boolean hasAnnotation(
@@ -72,16 +65,13 @@ public final class HCANNHelper {
 			return false;
 		}
 
-		//noinspection RedundantIfStatement
-		if ( element.isAnnotationPresent( annotationToCheck )
-				|| element.isAnnotationPresent( annotationToCheck2 ) ) {
-			return true;
-		}
-
-		return false;
+		return element.isAnnotationPresent( annotationToCheck )
+			|| element.isAnnotationPresent( annotationToCheck2);
 	}
 
-	public static boolean hasAnnotation(XAnnotatedElement element, Class<? extends Annotation>... annotationsToCheck) {
+	public static boolean hasAnnotation(
+			XAnnotatedElement element,
+			Class<? extends Annotation>... annotationsToCheck) {
 		assert annotationsToCheck != null && annotationsToCheck.length > 0;
 
 		if ( element == null ) {
@@ -101,47 +91,51 @@ public final class HCANNHelper {
 	 * @deprecated Prefer using {@link #annotatedElementSignature(JavaXMember)}
 	 */
 	@Deprecated
-	public static String annotatedElementSignature(XProperty xProperty) {
-		return getUnderlyingMember( xProperty ).toString();
+	public static String annotatedElementSignature(XProperty property) {
+		return getUnderlyingMember( property ).toString();
 	}
 
-	public static String annotatedElementSignature(final JavaXMember jxProperty) {
-		return getUnderlyingMember( jxProperty ).toString();
+	public static String annotatedElementSignature(final JavaXMember member) {
+		return getUnderlyingMember( member ).toString();
 	}
 
 	/**
 	 * @deprecated Prefer using {@link #getUnderlyingMember(JavaXMember)}
 	 */
 	@Deprecated
-	public static Member getUnderlyingMember(XProperty xProperty) {
-		if (xProperty instanceof JavaXMember) {
-			JavaXMember jx = (JavaXMember)xProperty;
-			return jx.getMember();
+	public static Member getUnderlyingMember(XProperty property) {
+		if ( property instanceof JavaXMember ) {
+			JavaXMember member = (JavaXMember) property;
+			return member.getMember();
 		}
 		else {
 			throw new org.hibernate.HibernateException( "Can only extract Member from a XProperty which is a JavaXMember" );
 		}
 	}
 
-	public static Member getUnderlyingMember(final JavaXMember jxProperty) {
-		return jxProperty.getMember();
+	public static Member getUnderlyingMember(final JavaXMember member) {
+		return member.getMember();
 	}
 
 	/**
-	 * Locate an annotation on an annotated member, allowing for composed annotations (meta-annotations).
+	 * Return an annotation of the given type which annotates the given
+	 * annotated program element, or which meta-annotates an annotation
+	 * of the given annotated program element.
 	 *
 	 * @implNote Searches only one level deep
 	 */
-	public static <T extends Annotation> T findAnnotation(XAnnotatedElement xAnnotatedElement, Class<T> annotationType) {
+	public static <T extends Annotation> T findAnnotation(
+			XAnnotatedElement annotatedElement,
+			Class<T> annotationType) {
 		// first, see if we can find it directly...
-		final T direct = xAnnotatedElement.getAnnotation( annotationType );
+		final T direct = annotatedElement.getAnnotation( annotationType );
 		if ( direct != null ) {
 			return direct;
 		}
 
 		// or as composed...
-		for ( int i = 0; i < xAnnotatedElement.getAnnotations().length; i++ ) {
-			final Annotation annotation = xAnnotatedElement.getAnnotations()[ i ];
+		final Annotation[] annotations = annotatedElement.getAnnotations();
+		for ( Annotation annotation : annotations ) {
 			if ( annotationType.equals( annotation.getClass() ) ) {
 				// we would have found this on the direct search, so no need
 				// to check its meta-annotations
@@ -149,9 +143,9 @@ public final class HCANNHelper {
 			}
 
 			// we only check one level deep
-			final T metaAnn = annotation.annotationType().getAnnotation( annotationType );
-			if ( metaAnn != null ) {
-				return metaAnn;
+			final T metaAnnotation = annotation.annotationType().getAnnotation( annotationType );
+			if ( metaAnnotation != null ) {
+				return metaAnnotation;
 			}
 		}
 
@@ -159,26 +153,25 @@ public final class HCANNHelper {
 	}
 
 	/**
-	 * Locate the annotation, relative to `xAnnotatedElement`, which contains
-	 * the passed type of annotation.
+	 * Return an annotation of the given annotated program element which
+	 * is annotated by the given type of meta-annotation.
 	 *
 	 * @implNote Searches only one level deep
 	 */
-	public static <A extends Annotation, T extends Annotation> A findContainingAnnotation(
-			XAnnotatedElement xAnnotatedElement,
-			Class<T> annotationType) {
+	public static List<Annotation> findContainingAnnotations(
+			XAnnotatedElement annotatedElement,
+			Class<? extends Annotation> annotationType) {
 
-		for ( int i = 0; i < xAnnotatedElement.getAnnotations().length; i++ ) {
-			final Annotation annotation = xAnnotatedElement.getAnnotations()[ i ];
-			// annotation = @Sequence
+		final List<Annotation> result = new ArrayList<>();
 
-			final T metaAnn = annotation.annotationType().getAnnotation( annotationType );
+		final Annotation[] annotations = annotatedElement.getAnnotations();
+		for ( Annotation annotation : annotations ) {
+			final Annotation metaAnn = annotation.annotationType().getAnnotation( annotationType );
 			if ( metaAnn != null ) {
-				//noinspection unchecked
-				return (A) annotation;
+				result.add( annotation );
 			}
 		}
 
-		return null;
+		return result;
 	}
 }

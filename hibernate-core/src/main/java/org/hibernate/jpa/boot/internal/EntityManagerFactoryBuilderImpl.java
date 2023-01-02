@@ -89,7 +89,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
-import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.CFG_XML_FILE;
 import static org.hibernate.cfg.AvailableSettings.CLASSLOADERS;
 import static org.hibernate.cfg.AvailableSettings.CLASS_CACHE_PREFIX;
@@ -1474,7 +1473,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			( ( SessionFactoryBuilderImplementor ) sfBuilder ).disableJtaTransactionAccess();
 		}
 
-		final boolean allowRefreshDetachedEntity = readBooleanConfigurationValue( ALLOW_REFRESH_DETACHED_ENTITY );
+		final boolean allowRefreshDetachedEntity = readBooleanConfigurationValue( AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY );
 		if ( !allowRefreshDetachedEntity ) {
 			( (SessionFactoryBuilderImplementor) sfBuilder ).disableRefreshDetachedEntity();
 		}

@@ -6,12 +6,8 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
@@ -46,22 +42,11 @@ public class RuntimeMetamodelsImpl implements RuntimeMetamodelsImplementor {
 		return mappingMetamodel.getEmbeddableValuedModelPart( role );
 	}
 
-	/**
-	 * Chicken-and-egg because things try to use the SessionFactory (specifically the MappingMetamodel)
-	 * before it is ready.  So we do this fugly code...
-	 */
-	public void finishInitialization(
-			MetadataImplementor bootMetamodel,
-			BootstrapContext bootstrapContext,
-			SessionFactoryImpl sessionFactory) {
-		final MappingMetamodelImpl mappingMetamodel = bootstrapContext.getTypeConfiguration().scope( sessionFactory );
+	public void setMappingMetamodel(MappingMetamodelImplementor mappingMetamodel) {
 		this.mappingMetamodel = mappingMetamodel;
-		mappingMetamodel.finishInitialization(
-				bootMetamodel,
-				bootstrapContext,
-				sessionFactory
-		);
+	}
 
-		this.jpaMetamodel = mappingMetamodel.getJpaMetamodel();
+	public void setJpaMetamodel(JpaMetamodelImplementor jpaMetamodel) {
+		this.jpaMetamodel = jpaMetamodel;
 	}
 }

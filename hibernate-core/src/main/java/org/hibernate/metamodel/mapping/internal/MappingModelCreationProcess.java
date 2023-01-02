@@ -32,18 +32,15 @@ public class MappingModelCreationProcess {
 	 */
 	public static void process(
 			Map<String,EntityPersister> entityPersisterMap,
-			SqmFunctionRegistry functionRegistry,
 			RuntimeModelCreationContext creationContext) {
 		final MappingModelCreationProcess process = new MappingModelCreationProcess(
 				entityPersisterMap,
-				functionRegistry,
 				creationContext
 		);
 		process.execute();
 	}
 
 	private final Map<String,EntityPersister> entityPersisterMap;
-	private final SqmFunctionRegistry functionRegistry;
 
 	private final RuntimeModelCreationContext creationContext;
 
@@ -53,10 +50,8 @@ public class MappingModelCreationProcess {
 
 	private MappingModelCreationProcess(
 			Map<String, EntityPersister> entityPersisterMap,
-			SqmFunctionRegistry functionRegistry,
 			RuntimeModelCreationContext creationContext) {
 		this.entityPersisterMap = entityPersisterMap;
-		this.functionRegistry = functionRegistry;
 		this.creationContext = creationContext;
 	}
 
@@ -69,7 +64,7 @@ public class MappingModelCreationProcess {
 	}
 
 	public SqmFunctionRegistry getSqmFunctionRegistry() {
-		return functionRegistry;
+		return creationContext.getFunctionRegistry();
 	}
 
 	/**

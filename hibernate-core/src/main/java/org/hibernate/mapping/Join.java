@@ -51,12 +51,17 @@ public class Join implements AttributeContainer, Serializable {
 	public void addProperty(Property property) {
 		properties.add( property );
 		declaredProperties.add( property );
-		property.setPersistentClass( getPersistentClass() );
+		property.setPersistentClass( persistentClass );
 	}
 
-	public void addMappedsuperclassProperty( Property property ) {
+	@Override
+	public boolean contains(Property property) {
+		return properties.contains( property );
+	}
+
+	public void addMappedSuperclassProperty(Property property ) {
 		properties.add( property );
-		property.setPersistentClass( getPersistentClass() );
+		property.setPersistentClass( persistentClass );
 	}
 
 	public List<Property> getDeclaredProperties() {

@@ -35,15 +35,13 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 		buildingOptions.setBootstrapContext( bootstrapContext = new BootstrapContextImpl( serviceRegistry, buildingOptions ) );
 		mappingDefaults = new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry );
 		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingOptions );
-
 		objectNameNormalizer = new ObjectNameNormalizer() {
 			@Override
 			protected MetadataBuildingContext getBuildingContext() {
 				return MetadataBuildingContextTestingImpl.this;
 			}
 		};
-
-		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
+		typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
 		bootstrapContext.getTypeConfiguration().scope( this );
 	}
 

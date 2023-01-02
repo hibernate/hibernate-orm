@@ -322,12 +322,27 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
-		final MutabilityPlan mutabilityPlan;
-		if ( bootProperty.isUpdateable() ) {
-			mutabilityPlan = new MutabilityPlan() {
+		final MutabilityPlan mutabilityPlan = getMutabilityPlan( bootProperty, attrType, creationProcess );
+		return new SimpleAttributeMetadata(
+				propertyAccess,
+				mutabilityPlan,
+				bootProperty.getValue().isNullable(),
+				bootProperty.isInsertable(),
+				bootProperty.isUpdateable(),
+				bootProperty.isOptimisticLocked(),
+				cascadeStyle
+		);
+	}
 
-				final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext()
-						.getSessionFactory();
+	private static MutabilityPlan getMutabilityPlan(
+			Property bootProperty,
+			Type attrType,
+			MappingModelCreationProcess creationProcess) {
+		if ( bootProperty.isUpdateable() ) {
+			return new MutabilityPlan() {
+
+				final SessionFactoryImplementor sessionFactory =
+						creationProcess.getCreationContext().getSessionFactory();
 
 				@Override
 				public boolean isMutable() {
@@ -355,16 +370,8 @@ public class MappingModelCreationHelper {
 			};
 		}
 		else {
-			mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+			return ImmutableMutabilityPlan.INSTANCE;
 		}
-		SimpleAttributeMetadata basicAttributeMetadataAccess = new SimpleAttributeMetadata( propertyAccess,
-																							mutabilityPlan,
-																							bootProperty.getValue().isNullable(),
-																							bootProperty.isInsertable(),
-																							bootProperty.isUpdateable(),
-																							bootProperty.isOptimisticLocked(),
-																							cascadeStyle );
-		return basicAttributeMetadataAccess;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -387,8 +394,7 @@ public class MappingModelCreationHelper {
 		final Collection bootValueMapping = (Collection) bootProperty.getValue();
 
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final Dialect dialect = sessionFactory.getSqlStringGenerationContext().getDialect();
+		final Dialect dialect = creationContext.getDialect();
 		final MappingMetamodel domainModel = creationContext.getDomainModel();
 
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
@@ -562,6 +568,7 @@ public class MappingModelCreationHelper {
 				cascadeStyle
 		);
 
+		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 		final FetchStyle style = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
 				collectionDescriptor.getCollectionType(),
@@ -996,7 +1003,7 @@ public class MappingModelCreationHelper {
 					keyTableExpression,
 					collectionBootValueMapping.getKey(),
 					getPropertyOrder( bootValueMapping, creationProcess ),
-					creationProcess.getCreationContext().getSessionFactory(),
+					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					insertable,
 					updateable,
@@ -1020,7 +1027,7 @@ public class MappingModelCreationHelper {
 					keyTableExpression,
 					bootValueMapping,
 					getPropertyOrder( bootValueMapping, creationProcess ),
-					creationProcess.getCreationContext().getSessionFactory(),
+					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					insertable,
 					updateable,
@@ -1078,7 +1085,7 @@ public class MappingModelCreationHelper {
 		else {
 			final EntityType entityType = (EntityType) bootValueMapping.getType();
 			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType(
-					creationProcess.getCreationContext().getSessionFactory()
+					creationProcess.getCreationContext().getMetadata()
 			);
 			if ( identifierOrUniqueKeyType instanceof ComponentType ) {
 				componentType = (ComponentType) identifierOrUniqueKeyType;
@@ -1142,7 +1149,12 @@ public class MappingModelCreationHelper {
 	}
 
 	public static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
-		return getTableIdentifierExpression( table, creationProcess.getCreationContext().getSessionFactory() );
+		if ( table.getSubselect() != null ) {
+			return "( " + table.getSubselect() + " )";
+		}
+
+		return creationProcess.getCreationContext().getSqlStringGenerationContext()
+				.format( table.getQualifiedTableName() );
 	}
 
 	public static String getTableIdentifierExpression(Table table, SessionFactoryImplementor sessionFactory) {
@@ -1150,7 +1162,8 @@ public class MappingModelCreationHelper {
 			return "( " + table.getSubselect() + " )";
 		}
 
-		return sessionFactory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
+		return sessionFactory.getSqlStringGenerationContext()
+				.format( table.getQualifiedTableName() );
 	}
 
 	private static CollectionPart interpretMapKey(
@@ -1224,10 +1237,6 @@ public class MappingModelCreationHelper {
 		if ( bootMapKeyDescriptor instanceof OneToMany || bootMapKeyDescriptor instanceof ToOne ) {
 			final EntityType indexEntityType = (EntityType) collectionDescriptor.getIndexType();
 			final EntityPersister associatedEntity = creationProcess.getEntityPersister( indexEntityType.getAssociatedEntityName() );
-
-			final EntityCollectionPart.Cardinality partCardinality = bootMapKeyDescriptor instanceof OneToMany
-					? EntityCollectionPart.Cardinality.ONE_TO_MANY
-					: EntityCollectionPart.Cardinality.MANY_TO_MANY;
 
 			final EntityCollectionPart indexDescriptor;
 			if ( bootMapKeyDescriptor instanceof OneToMany ) {
@@ -1324,8 +1333,7 @@ public class MappingModelCreationHelper {
 		if ( element instanceof Any ) {
 			final Any anyBootMapping = (Any) element;
 
-			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
+			final TypeConfiguration typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
 			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 			final JavaType<Object> baseJtd = jtdRegistry.getDescriptor(Object.class);
 
@@ -1521,7 +1529,7 @@ public class MappingModelCreationHelper {
 					cascadeStyle,
 					creationProcess
 			);
-			SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 
 			final AssociationType type = (AssociationType) bootProperty.getType();
 			final FetchStyle fetchStyle = FetchOptionsHelper
@@ -1571,21 +1579,14 @@ public class MappingModelCreationHelper {
 
 			creationProcess.registerForeignKeyPostInitCallbacks(
 					"To-one key - " + navigableRole,
-					() -> {
-						final Dialect dialect = creationProcess.getCreationContext()
-								.getSessionFactory()
-								.getJdbcServices()
-								.getDialect();
-
-						return MappingModelCreationHelper.interpretToOneKeyDescriptor(
-								attributeMapping,
-								bootProperty,
-								(ToOne) bootProperty.getValue(),
-								null,
-								dialect,
-								creationProcess
-						);
-					}
+					() -> MappingModelCreationHelper.interpretToOneKeyDescriptor(
+							attributeMapping,
+							bootProperty,
+							(ToOne) bootProperty.getValue(),
+							null,
+							creationProcess.getCreationContext().getDialect(),
+							creationProcess
+					)
 			);
 			return attributeMapping;
 		}

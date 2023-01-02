@@ -299,7 +299,7 @@
  * <li>{@link org.hibernate.annotations.Formula} allows a field or property to map to an
  *     arbitrary SQL expression instead of a column,
  * <li>{@link org.hibernate.annotations.Check} specifies a check constraint condition,
- * <li>{@link org.hibernate.annotations.ColumnDefault} specifies default value, and
+ * <li>{@link org.hibernate.annotations.ColumnDefault} specifies a default value, and
  *     {@link org.hibernate.annotations.GeneratedColumn} specifies a generated value,
  * <li>{@link org.hibernate.annotations.Filter} and {@link org.hibernate.annotations.Where}
  *     each specify a restriction written in SQL,

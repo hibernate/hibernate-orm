@@ -42,7 +42,6 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.cfg.internal.DomainDataRegionConfigImpl;
@@ -55,10 +54,10 @@ import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
@@ -83,14 +82,15 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
@@ -100,6 +100,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.relational.internal.SchemaManagerImpl;
@@ -107,12 +108,11 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tool.schema.spi.DelayedDropAction;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -125,6 +125,7 @@ import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
 
+import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.cfg.AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED;
@@ -132,7 +133,8 @@ import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
-import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 
 /**
  * Concrete implementation of the {@link SessionFactory} API.
@@ -181,8 +183,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient CurrentSessionContext currentSessionContext;
 
-	private volatile DelayedDropAction delayedDropAction;
-
 	// todo : move to MetamodelImpl
 	private final transient Map<String, Generator> identifierGenerators;
 	private final transient Map<String, FilterDefinition> filters;
@@ -201,8 +201,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.debug( "Building session factory" );
 
 		final TypeConfiguration typeConfiguration = bootMetamodel.getTypeConfiguration();
-		final MetadataBuildingContext bootModelBuildingContext = typeConfiguration.getMetadataBuildingContext();
-		final BootstrapContext bootstrapContext = bootModelBuildingContext.getBootstrapContext();
+		final BootstrapContext bootstrapContext = typeConfiguration.getMetadataBuildingContext().getBootstrapContext();
 
 		sessionFactoryOptions = options;
 
@@ -251,18 +250,89 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			queryEngine = QueryEngine.from( this, bootMetamodel );
 
+			bootstrapContext.getTypeConfiguration().scope( this );
+
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
 			runtimeMetamodels = runtimeMetamodelsImpl;
-			runtimeMetamodelsImpl.finishInitialization( bootMetamodel, bootstrapContext, this );
+			new RuntimeModelCreationContext() {
+				final MappingMetamodelImpl mappingMetamodelImpl =
+						new MappingMetamodelImpl( typeConfiguration, serviceRegistry, options.getJpaCompliance() );
+				{
+					// need to set this before calling finishInitialization()
+					runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
+					// because this calls back to the RuntimeMetamodelsImplementor
+					mappingMetamodelImpl.finishInitialization( this );
+					// need to set this after calling finishInitialization()
+					runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
 
-			queryEngine.prepare( this, bootMetamodel, bootstrapContext );
-			if ( options.isNamedQueryStartupCheckingEnabled() ) {
-				checkNamedQueries( queryEngine );
-			}
+				}
 
-			exportSchema( bootMetamodel );
+				@Override
+				public BootstrapContext getBootstrapContext() {
+					return bootstrapContext;
+				}
 
-			currentSessionContext = buildCurrentSessionContext();
+				@Override
+				public SessionFactoryImplementor getSessionFactory() {
+					// this is bad, we're not yet fully-initialized
+					return SessionFactoryImpl.this;
+				}
+
+				@Override
+				public MetadataImplementor getBootModel() {
+					return bootMetamodel;
+				}
+
+				@Override
+				public MappingMetamodelImplementor getDomainModel() {
+					return mappingMetamodelImpl;
+				}
+
+				@Override
+				public CacheImplementor getCache() {
+					return cacheAccess;
+				}
+
+				@Override
+				public Map<String, Object> getSettings() {
+					return settings;
+				}
+
+				@Override
+				public Dialect getDialect() {
+					return jdbcServices.getDialect();
+				}
+
+				@Override
+				public SqmFunctionRegistry getFunctionRegistry() {
+					return queryEngine.getSqmFunctionRegistry();
+				}
+
+				@Override
+				public TypeConfiguration getTypeConfiguration() {
+					return typeConfiguration;
+				}
+
+				@Override
+				public SessionFactoryOptions getSessionFactoryOptions() {
+					return options;
+				}
+
+				@Override
+				public JdbcServices getJdbcServices() {
+					return jdbcServices;
+				}
+
+				@Override
+				public SqlStringGenerationContext getSqlStringGenerationContext() {
+					return sqlStringGenerationContext;
+				}
+
+				@Override
+				public ServiceRegistry getServiceRegistry() {
+					return serviceRegistry;
+				}
+			};
 
 			// this needs to happen after persisters are all ready to go...
 			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodelsImpl );
@@ -273,9 +343,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			fastSessionServices = new FastSessionServices( this );
 			wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
 
-			observer.sessionFactoryCreated( this );
+			currentSessionContext = buildCurrentSessionContext();
 
-			addToRegistry();
+			observer.sessionFactoryCreated( this );
 
 			// As last operation, delete all caches from ReflectionManager
 			// (not modelled as a listener as we want this to be last)
@@ -295,15 +365,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		LOG.debug( "Instantiated SessionFactory" );
-	}
-
-	private void exportSchema(MetadataImplementor bootMetamodel) {
-		SchemaManagementToolCoordinator.process(
-				bootMetamodel,
-				serviceRegistry,
-				settings,
-				action -> delayedDropAction = action
-		);
 	}
 
 	private static Map<String, Generator> createGenerators(
@@ -328,7 +389,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return generators;
 	}
 
-	private SqlStringGenerationContext createSqlStringGenerationContext(
+	private static SqlStringGenerationContext createSqlStringGenerationContext(
 			MetadataImplementor bootMetamodel,
 			SessionFactoryOptions options,
 			JdbcServices jdbcServices) {
@@ -349,16 +410,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				// it is not great how we pass in an instance to
 				// an incompletely-initialized instance here:
 				.buildServiceRegistry( self, options );
-	}
-
-	private void addToRegistry() {
-		SessionFactoryRegistry.INSTANCE.addSessionFactory(
-				getUuid(),
-				name,
-				sessionFactoryOptions.isSessionFactoryNameAlsoJndiName(),
-				this,
-				serviceRegistry.getService( JndiService.class )
-		);
 	}
 
 	class IntegratorObserver implements SessionFactoryObserver {
@@ -409,16 +460,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
 		for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 			// resolve the persister owning the fetch
-			final String entityName = runtimeMetamodels.getImportedName( mappingFetch.getEntity() );
-			final EntityPersister owner = entityName == null
-					? null
-					: runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( entityName );
-			if ( owner == null ) {
-				throw new HibernateException(
-						"Unable to resolve entity reference [" + mappingFetch.getEntity()
-								+ "] in fetch profile [" + fetchProfile.getName() + "]"
-				);
-			}
+			final EntityPersister owner = getEntityPersister( runtimeMetamodels, fetchProfile, mappingFetch );
 
 			// validate the specified association fetch
 			final Type associationType = owner.getPropertyType( mappingFetch.getAssociation() );
@@ -436,21 +478,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return fetchProfile;
 	}
 
-	private void checkNamedQueries(QueryEngine queryEngine) {
-		final Map<String, HibernateException> errors =
-				queryEngine.getNamedObjectRepository().checkNamedQueries( queryEngine );
-		if ( !errors.isEmpty() ) {
-			final StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-			String sep = "";
-			for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
-				QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
-				failingQueries.append( sep ).append( entry.getKey() );
-				sep = ", ";
+	private static EntityPersister getEntityPersister(RuntimeMetamodelsImpl runtimeMetamodels, FetchProfile fetchProfile, org.hibernate.mapping.FetchProfile.Fetch mappingFetch) {
+		final String entityName = runtimeMetamodels.getImportedName( mappingFetch.getEntity() );
+		if ( entityName != null ) {
+			EntityPersister persister = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( entityName );
+			if ( persister != null ) {
+				return persister;
 			}
-			final HibernateException exception = new HibernateException( failingQueries.toString() );
-			errors.values().forEach( exception::addSuppressed );
-			throw exception;
 		}
+		throw new HibernateException( "Unable to resolve entity reference [" + mappingFetch.getEntity()
+				+ "] in fetch profile [" + fetchProfile.getName() + "]" );
 	}
 
 	private static Map<String, Object> getSettings(SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
@@ -489,7 +526,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return withOptions()
 				.autoClose( false )
 				.flushMode( FlushMode.MANUAL )
-				.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT );
+				.connectionHandlingMode( DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT );
 	}
 
 	private void primeSecondLevelCacheRegions(MetadataImplementor mappingMetadata) {
@@ -655,8 +692,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override @Deprecated
 	public DeserializationResolver<?> getDeserializationResolver() {
-		return () -> (SessionFactoryImplementor) SessionFactoryRegistry.INSTANCE
-				.findSessionFactory( uuid, name );
+		return () -> (SessionFactoryImplementor)
+				SessionFactoryRegistry.INSTANCE.findSessionFactory( uuid, name );
 	}
 
 	@Override @SuppressWarnings({"rawtypes","unchecked"})
@@ -669,14 +706,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public Session createEntityManager() {
 		validateNotClosed();
-		return buildEntityManager( SynchronizationType.SYNCHRONIZED, null );
+		return buildEntityManager( SYNCHRONIZED, null );
 	}
 
 	private <K,V> Session buildEntityManager(final SynchronizationType synchronizationType, final Map<K,V> map) {
 		assert status != Status.CLOSED;
 
 		SessionBuilderImplementor builder = withOptions();
-		builder.autoJoinTransactions( synchronizationType == SynchronizationType.SYNCHRONIZED );
+		builder.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
 
 		final Session session = builder.openSession();
 		if ( map != null ) {
@@ -694,7 +731,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override @SuppressWarnings("unchecked")
 	public Session createEntityManager(Map map) {
 		validateNotClosed();
-		return buildEntityManager( SynchronizationType.SYNCHRONIZED, map );
+		return buildEntityManager( SYNCHRONIZED, map );
 	}
 
 	@Override
@@ -747,7 +784,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public String bestGuessEntityName(Object object) {
-		final LazyInitializer initializer = HibernateProxy.extractLazyInitializer( object );
+		final LazyInitializer initializer = extractLazyInitializer( object );
 		if ( initializer != null ) {
 			// it is possible for this method to be called during flush processing,
 			// so make certain that we do not accidentally initialize an uninitialized proxy
@@ -859,17 +896,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( queryEngine != null ) {
 				queryEngine.close();
 			}
-
-			if ( delayedDropAction != null ) {
-				delayedDropAction.perform( serviceRegistry );
-			}
-
-			SessionFactoryRegistry.INSTANCE.removeSessionFactory(
-					getUuid(),
-					name,
-					sessionFactoryOptions.isSessionFactoryNameAlsoJndiName(),
-					serviceRegistry.getService( JndiService.class )
-			);
 		}
 		finally {
 			status = Status.CLOSED;
@@ -1124,7 +1150,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return null;
 		}
 
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( bindValue );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( bindValue );
 		final Class<?> clazz = lazyInitializer != null ? lazyInitializer.getPersistentClass() : bindValue.getClass();
 
 		// Resolve superclass bindable type if necessary, as we don't register types for e.g. Inet4Address

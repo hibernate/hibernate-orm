@@ -108,15 +108,15 @@ public class Subclass extends PersistentClass {
 	}
 
 	@Override
-	public void addProperty(Property p) {
-		super.addProperty(p);
-		getSuperclass().addSubclassProperty(p);
+	public void addProperty(Property property) {
+		super.addProperty( property );
+		getSuperclass().addSubclassProperty( property );
 	}
 
 	@Override
-	public void addMappedSuperclassProperty(Property p) {
-		super.addMappedSuperclassProperty( p );
-		getSuperclass().addSubclassProperty(p);
+	public void addMappedSuperclassProperty(Property property) {
+		super.addMappedSuperclassProperty( property );
+		getSuperclass().addSubclassProperty( property );
 	}
 
 	@Override

@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -33,6 +34,7 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static java.util.Collections.unmodifiableList;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.lastIndexOfLetter;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -58,7 +60,6 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private Integer sqlTypeCode;
 	private boolean quoted;
 	int uniqueInteger;
-	private String checkConstraint;
 	private String comment;
 	private String defaultValue;
 	private String generatedAs;
@@ -67,6 +68,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String customRead;
 	private Size columnSize;
 	private String specializedTypeDeclaration;
+	private java.util.List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	public Column() {
 	}
@@ -404,15 +406,15 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		int typeStartIndex = 0;
 		for ( Type subtype : subtypes ) {
 			final int columnSpan = subtype.getColumnSpan(mapping);
-			if (typeStartIndex + columnSpan > typeIndex) {
+			if ( typeStartIndex + columnSpan > typeIndex ) {
 				final int subtypeIndex = typeIndex - typeStartIndex;
-				if (subtype instanceof EntityType) {
+				if ( subtype instanceof EntityType ) {
 					return getTypeForEntityValue(mapping, subtype, subtypeIndex);
 				}
-				if (subtype instanceof ComponentType) {
+				if ( subtype instanceof ComponentType ) {
 					return getTypeForComponentValue(mapping, subtype, subtypeIndex);
 				}
-				if (subtypeIndex == 0) {
+				if ( subtypeIndex == 0 ) {
 					return subtype;
 				}
 				break;
@@ -437,7 +439,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			return getTypeForEntityValue( mapping, entityType.getIdentifierOrUniqueKeyType( mapping ), typeIndex );
 		}
 		else if ( type instanceof ComponentType ) {
-			for (Type subtype : ((ComponentType) type).getSubtypes() ) {
+			for ( Type subtype : ((ComponentType) type).getSubtypes() ) {
 				final Type result = getTypeForEntityValue( mapping, subtype, typeIndex - index );
 				if ( result != null ) {
 					return result;
@@ -490,20 +492,54 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return specializedTypeDeclaration != null;
 	}
 
-	public String getCheckConstraint() {
-		return checkConstraint;
+	public void addCheckConstraint(CheckConstraint checkConstraint) {
+		if ( !checkConstraints.contains( checkConstraint) ) {
+			checkConstraints.add( checkConstraint );
+		}
 	}
 
-	public void setCheckConstraint(String checkConstraint) {
-		this.checkConstraint = checkConstraint;
+	public java.util.List<CheckConstraint> getCheckConstraints() {
+		return unmodifiableList( checkConstraints );
+	}
+
+	@Deprecated(since = "6.2")
+	public String getCheckConstraint() {
+		if ( checkConstraints.isEmpty() ) {
+			return null;
+		}
+		else if ( checkConstraints.size() > 1 ) {
+			throw new IllegalStateException( "column has multiple check constraints" );
+		}
+		else {
+			return checkConstraints.get(0).getConstraint();
+		}
+	}
+
+	@Deprecated(since = "6.2")
+	public void setCheckConstraint(String constraint) {
+		if ( constraint != null ) {
+			if ( !checkConstraints.isEmpty() ) {
+				throw new IllegalStateException( "column already has a check constraint" );
+			}
+			checkConstraints.add( new CheckConstraint( constraint ) );
+		}
 	}
 
 	public boolean hasCheckConstraint() {
-		return checkConstraint != null;
+		return !checkConstraints.isEmpty();
 	}
 
+	@Deprecated(since = "6.2")
 	public String checkConstraint() {
-		return checkConstraint == null ? null : " check (" + checkConstraint + ")";
+		if ( checkConstraints.isEmpty() ) {
+			return null;
+		}
+		else if ( checkConstraints.size() > 1 ) {
+			throw new IllegalStateException( "column has multiple check constraints" );
+		}
+		else {
+			return checkConstraints.get(0).constraintString();
+		}
 	}
 
 	@Override
@@ -632,24 +668,27 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	@Override
 	public Column clone() {
 		Column copy = new Column();
-		copy.setLength( length );
-		copy.setScale( scale );
-		copy.setValue( value );
-		copy.setTypeIndex( typeIndex );
-		copy.setName( getQuotedName() );
-		copy.setNullable( nullable );
-		copy.setPrecision( precision );
-		copy.setUnique( unique );
-		copy.setSqlType( sqlTypeName );
-		copy.setSqlTypeCode( sqlTypeCode );
+		copy.length = length;
+		copy.precision = precision;
+		copy.scale = scale;
+		copy.value = value;
+		copy.typeIndex = typeIndex;
+		copy.name = name;
+		copy.quoted = quoted;
+		copy.nullable = nullable;
+		copy.unique = unique;
+		copy.sqlTypeName = sqlTypeName;
+		copy.sqlTypeCode = sqlTypeCode;
 		copy.uniqueInteger = uniqueInteger; //usually useless
-		copy.setCheckConstraint( checkConstraint );
-		copy.setComment( comment );
-		copy.setDefaultValue( defaultValue );
-		copy.setGeneratedAs( generatedAs );
-		copy.setAssignmentExpression( assignmentExpression );
-		copy.setCustomRead( customRead );
-		copy.setCustomWrite( customWrite );
+		copy.checkConstraints = checkConstraints;
+		copy.comment = comment;
+		copy.defaultValue = defaultValue;
+		copy.generatedAs = generatedAs;
+		copy.assignmentExpression = assignmentExpression;
+		copy.customRead = customRead;
+		copy.customWrite = customWrite;
+		copy.specializedTypeDeclaration = specializedTypeDeclaration;
+		copy.columnSize = columnSize;
 		return copy;
 	}
 

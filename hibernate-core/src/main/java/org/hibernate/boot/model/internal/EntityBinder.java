@@ -45,6 +45,7 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.DynamicInsert;
@@ -101,6 +102,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
@@ -210,6 +212,7 @@ public class EntityBinder {
 		entityBinder.bindEntity();
 		entityBinder.handleClassTable( inheritanceState, superEntity );
 		entityBinder.handleSecondaryTables();
+		entityBinder.handleCheckConstraints();
 		final PropertyHolder holder = buildPropertyHolder(
 				clazzToProcess,
 				persistentClass,
@@ -236,6 +239,33 @@ public class EntityBinder {
 		entityBinder.processComplementaryTableDefinitions();
 		bindCallbacks( clazzToProcess, persistentClass, context );
 		entityBinder.callTypeBinders( persistentClass );
+	}
+
+	private void handleCheckConstraints() {
+		if ( annotatedClass.isAnnotationPresent( Checks.class ) ) {
+			// if we have more than one of them they are not overrideable :-/
+			for ( Check check : annotatedClass.getAnnotation( Checks.class ).value() ) {
+				addCheckToEntity( check );
+			}
+		}
+		else {
+			final Check check = getOverridableAnnotation( annotatedClass, Check.class, context );
+			if ( check != null ) {
+				addCheckToEntity( check );
+			}
+		}
+	}
+
+	/**
+	 * For now, we store it on the entity.
+	 * Later we will come back and figure out which table it belongs to.
+	 */
+	private void addCheckToEntity(Check check) {
+		final String name = check.name();
+		final String constraint = check.constraints();
+		persistentClass.addCheckConstraint( name.isEmpty()
+				? new CheckConstraint( constraint )
+				: new CheckConstraint( name, constraint ) );
 	}
 
 	private void callTypeBinders(PersistentClass persistentClass) {
@@ -620,17 +650,7 @@ public class EntityBinder {
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( inheritanceState.hasTable() ) {
-			final Check check = getOverridableAnnotation( annotatedClass, Check.class, context );
-			bindTable(
-					schema,
-					catalog,
-					table,
-					uniqueConstraints,
-					check == null ? null : check.constraints(),
-					inheritanceState.hasDenormalizedTable()
-							? collector.getEntityTableXref( superEntity.getEntityName() )
-							: null
-			);
+			createTable( inheritanceState, superEntity, schema, table, catalog, uniqueConstraints, collector );
 		}
 		else {
 			if ( hasTableAnnotation ) {
@@ -643,6 +663,27 @@ public class EntityBinder {
 				bindTableForDiscriminatedSubclass( collector.getEntityTableXref( superEntity.getEntityName() ) );
 			}
 		}
+	}
+
+	private void createTable(
+			InheritanceState inheritanceState,
+			PersistentClass superEntity,
+			String schema,
+			String table,
+			String catalog,
+			List<UniqueConstraintHolder> uniqueConstraints,
+			InFlightMetadataCollector collector) {
+		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
+		bindTable(
+				schema,
+				catalog,
+				table,
+				uniqueConstraints,
+				rowId == null ? null : rowId.value(),
+				inheritanceState.hasDenormalizedTable()
+						? collector.getEntityTableXref( superEntity.getEntityName() )
+						: null
+		);
 	}
 
 	private void handleInheritance(
@@ -1649,7 +1690,7 @@ public class EntityBinder {
 			String catalog,
 			String tableName,
 			List<UniqueConstraintHolder> uniqueConstraints,
-			String constraints,
+			String rowId,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 
 		final EntityTableNamingStrategyHelper namingStrategyHelper = new EntityTableNamingStrategyHelper(
@@ -1667,16 +1708,13 @@ public class EntityBinder {
 				logicalName,
 				persistentClass.isAbstract(),
 				uniqueConstraints,
-				null,
-				constraints,
 				context,
 				subselect,
 				denormalizedSuperTableXref
 		);
-		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
-		if ( rowId != null ) {
-			table.setRowId( rowId.value() );
-		}
+
+		table.setRowId( rowId );
+
 //		final Comment comment = annotatedClass.getAnnotation( Comment.class );
 //		if ( comment != null ) {
 //			table.setComment( comment.value() );
@@ -1964,8 +2002,8 @@ public class EntityBinder {
 			Object joinColumns,
 			UniqueConstraint[] uniqueConstraints) {
 		final QualifiedTableName logicalName = new QualifiedTableName(
-				Identifier.toIdentifier(catalog),
-				Identifier.toIdentifier(schema),
+				Identifier.toIdentifier( catalog ),
+				Identifier.toIdentifier( schema ),
 				context.getMetadataCollector()
 						.getDatabase()
 						.getJdbcEnvironment()
@@ -1984,11 +2022,7 @@ public class EntityBinder {
 						logicalName.getTableName(),
 						false,
 						TableBinder.buildUniqueConstraintHolders( uniqueConstraints ),
-						null,
-						null,
-						context,
-						null,
-						null
+						context
 				)
 		);
 	}

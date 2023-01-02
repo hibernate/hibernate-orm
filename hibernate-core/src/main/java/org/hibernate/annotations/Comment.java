@@ -28,8 +28,24 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * But when {@link #on} is explicitly specified, the comment applies to the mapped table
  * or column with the specified name.
+ * <p>
+ * For example:
+ * <pre>
+ * &#64;Entity
+ * &#64;Table(name = "book")
+ * &#64;SecondaryTable(name = "edition")
+ * &#64;Comment("The primary table for Book")
+ * &#64;Comment(on = "edition",
+ *          value = "The secondary table for Book")
+ * class Book { ... }
+ * </pre>
+ *
+ * @apiNote In principle, it's possible for a column of a secondary table to have the
+ *          same name as a column of the primary table, or as a column of some other
+ *          secondary table. Therefore, {@link #on} may be ambiguous.
  *
  * @author Yanming Zhou
+ * @author Gavin King
  */
 @TypeBinderType(binder = CommentBinder.class)
 @AttributeBinderType(binder = CommentBinder.class)

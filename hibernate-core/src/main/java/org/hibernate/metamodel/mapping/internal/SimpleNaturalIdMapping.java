@@ -52,9 +52,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		);
 		this.attribute = attribute;
 
-		typeConfiguration = creationProcess.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration();
+		typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
 
 	}
 

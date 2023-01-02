@@ -75,6 +75,27 @@
     The full power of Hibernate can only be unlocked via judicious use of these extra annotations.
 </p>
 
+<h3>XML-based mappings</h3>
+
+Annotation-based mappings are the best choice for most users, but Hibernate offers XML-based
+mappings as an alternative.
+
+<ul>
+    <li>
+        The JPA-standard XML schema is
+        <a href="https://jakarta.ee/xml/ns/persistence/orm/orm_3_0.xsd">orm_3_0.xsd</a>.
+    </li>
+    <li>
+        Hibernate extends this schema with some additional mapping elements. The schema is
+        <a href="https://hibernate.org/xsd/orm/mapping/mapping-3.1.0.xsd">mapping-3.1.0.xsd</a>.
+    </li>
+    <li>
+        Prior to the existence of JPA, Hibernate had its own format for XML-based mappings,
+        which still works, though it has not been improved in a long time. The DTD is
+        <a href="https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">hibernate-mapping-3.0.dtd</a>
+    </li>
+</ul>
+
 <h3>Bootstrapping Hibernate</h3>
 
 <p>

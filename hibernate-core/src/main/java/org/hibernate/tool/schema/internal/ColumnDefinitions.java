@@ -11,12 +11,15 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import java.util.List;
 
 class ColumnDefinitions {
 
@@ -96,12 +99,42 @@ class ColumnDefinitions {
 		if ( column.isUnique() && !table.isPrimaryKey( column ) ) {
 			final String keyName = Constraint.generateName( "UK_", table, column);
 			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
-			uniqueKey.addColumn(column);
+			uniqueKey.addColumn( column );
 			definition.append( dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment( column, context ) );
 		}
 
-		if ( dialect.supportsColumnCheck() && column.hasCheckConstraint() ) {
-			definition.append( column.checkConstraint() );
+		if ( dialect.supportsColumnCheck() ) {
+			// some databases (Maria, SQL Server) don't like multiple 'check' clauses
+			final List<CheckConstraint> checkConstraints = column.getCheckConstraints();
+			long anonConstraints = checkConstraints.stream().filter(CheckConstraint::isAnonymous).count();
+			if ( anonConstraints == 1 ) {
+				for ( CheckConstraint constraint : checkConstraints ) {
+					definition.append( constraint.constraintString() );
+				}
+			}
+			else {
+				boolean first = true;
+				for ( CheckConstraint constraint : checkConstraints ) {
+					if ( constraint.isAnonymous() ) {
+						if ( first ) {
+							definition.append(" check (");
+							first = false;
+						}
+						else {
+							definition.append(" and ");
+						}
+						definition.append( constraint.getConstraintInParens() );
+					}
+				}
+				if ( !first ) {
+					definition.append(")");
+				}
+				for ( CheckConstraint constraint : checkConstraints ) {
+					if ( constraint.isNamed() ) {
+						definition.append( constraint.constraintString() );
+					}
+				}
+			}
 		}
 	}
 

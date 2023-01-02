@@ -471,7 +471,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 					true,
 					false,
 					false,
-					creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect(),
+					creationProcess.getCreationContext().getDialect(),
 					creationProcess.getSqmFunctionRegistry()
 			);
 
@@ -503,11 +503,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 					collectionTableName,
 					elementBootDescriptor,
 					getPropertyOrder( elementBootDescriptor, creationProcess ),
-					creationProcess.getCreationContext().getSessionFactory(),
+					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					elementBootDescriptor.getColumnInsertability(),
 					elementBootDescriptor.getColumnUpdateability(),
-					creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect(),
+					creationProcess.getCreationContext().getDialect(),
 					creationProcess.getSqmFunctionRegistry()
 			);
 

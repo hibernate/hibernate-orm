@@ -14,10 +14,10 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -373,13 +373,13 @@ public class QueryEngine {
 		}
 	}
 
-	public void prepare(
-			SessionFactoryImplementor sessionFactory,
-			MetadataImplementor bootMetamodel,
-			BootstrapContext bootstrapContext) {
-		namedObjectRepository.prepare( sessionFactory, bootMetamodel, bootstrapContext );
+	public void prepare(SessionFactoryImplementor sessionFactory, Metadata bootMetamodel) {
+		namedObjectRepository.prepare( sessionFactory, bootMetamodel );
 	}
 
+	public void validateNamedQueries() {
+		namedObjectRepository.validateNamedQueries( this );
+	}
 	public NamedObjectRepository getNamedObjectRepository() {
 		return namedObjectRepository;
 	}

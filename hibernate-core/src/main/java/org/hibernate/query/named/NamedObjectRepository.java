@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
@@ -72,6 +72,11 @@ public interface NamedObjectRepository {
 	Map<String, HibernateException> checkNamedQueries(QueryEngine queryPlanCache);
 
 	/**
+	 * Validate the named queries and throw an exception if any are broken
+	 */
+	void validateNamedQueries(QueryEngine queryEngine);
+
+	/**
 	 * Resolve the named query with the given name.
 	 */
 	NamedQueryMemento resolve(
@@ -82,7 +87,8 @@ public interface NamedObjectRepository {
 	/**
 	 * Prepare for runtime use
 	 */
-	void prepare(SessionFactoryImplementor sessionFactory, MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext);
+	// TODO: avoid passing in the whole SessionFactory here, it's not necessary
+	void prepare(SessionFactoryImplementor sessionFactory, Metadata bootMetamodel);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

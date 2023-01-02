@@ -9,22 +9,18 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A grouping of {@link Table}s.
+ * A list of {@link Check}s.
  *
- * @author Emmanuel Bernard
- *
- * @deprecated since {@link Table} is deprecated
+ * @author Gavin King
  */
-@Target(TYPE)
+@Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
-@Deprecated(since = "6.2", forRemoval = true)
-public @interface Tables {
-	/**
-	 * The table grouping.
-	 */
-	Table[] value();
+public @interface Checks {
+	Check[] value();
 }

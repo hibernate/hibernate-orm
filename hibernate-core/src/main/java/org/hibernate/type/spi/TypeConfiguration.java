@@ -49,7 +49,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
-import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.internal.QueryHelper;
@@ -156,25 +155,38 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	// Scoping
 
 	/**
-	 * Obtain the MetadataBuildingContext currently scoping the
-	 * TypeConfiguration.
+	 * Obtain the {@link MetadataBuildingContext} currently scoping this {@code TypeConfiguration}.
 	 *
-	 * @apiNote This will throw an exception if the SessionFactory is not yet
-	 * bound here.  See {@link Scope} for more details regarding the stages
-	 * a TypeConfiguration goes through
+	 * @apiNote Throws an exception if the {@code TypeConfiguration} is no longer scoped to the
+	 *          {@link MetadataBuildingContext}. See {@link Scope} for more details regarding the
+	 *          stages a {@code TypeConfiguration} passes through.
 	 *
-	 * @return The MetadataBuildingContext
+	 * @return The {@link MetadataBuildingContext}
 	 */
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return scope.getMetadataBuildingContext();
 	}
 
+	/**
+	 * Scope this {@code TypeConfiguration} to the given {@link MetadataBuildingContext}.
+	 *
+	 * @implNote The given factory is not yet fully-initialized!
+	 *
+	 * @param metadataBuildingContext a {@link MetadataBuildingContext}
+	 */
 	public void scope(MetadataBuildingContext metadataBuildingContext) {
 		log.debugf( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
 		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
-	public MappingMetamodelImpl scope(SessionFactoryImplementor sessionFactory) {
+	/**
+	 * Scope this {@code TypeConfiguration} to the given {@link SessionFactory}.
+	 *
+	 * @implNote The given factory is not yet fully-initialized!
+	 *
+	 * @param sessionFactory a {@link SessionFactory} that is in a very fragile state
+	 */
+	public void scope(SessionFactoryImplementor sessionFactory) {
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImplementor [%s]", this, sessionFactory );
 
 		if ( scope.getMetadataBuildingContext() == null ) {
@@ -183,33 +195,31 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		scope.setSessionFactory( sessionFactory );
 		sessionFactory.addObserver( this );
-
-		return new MappingMetamodelImpl( sessionFactory, this );
 	}
 
 	/**
-	 * Obtain the SessionFactory currently scoping the TypeConfiguration.
+	 * Obtain the {@link SessionFactory} currently scoping this {@code TypeConfiguration}.
 	 *
-	 * @apiNote This will throw an exception if the SessionFactory is not yet
-	 * bound here.  See {@link Scope} for more details regarding the stages
-	 * a TypeConfiguration goes through (this is "runtime stage")
+	 * @apiNote Throws an exception if the {@code TypeConfiguration} is not yet scoped to
+	 *          a factory. See {@link Scope} for more details regarding the stages a
+	 *          {@code TypeConfiguration} passes through (this is a "runtime stage").
 	 *
-	 * @return The SessionFactory
+	 * @return The {@link SessionFactory} to which this {@code TypeConfiguration} is scoped
 	 *
-	 * @throws IllegalStateException if the TypeConfiguration is currently not
-	 * associated with a SessionFactory (in "runtime stage").
+	 * @throws HibernateException if the {@code TypeConfiguration} is not currently scoped
+	 *                            to a {@link SessionFactory} (in a "runtime stage").
 	 */
 	public SessionFactoryImplementor getSessionFactory() {
 		return scope.getSessionFactory();
 	}
 
 	/**
-	 * Obtain the ServiceRegistry scoped to the TypeConfiguration.
+	 * Obtain the {@link ServiceRegistry} scoped to this {@code TypeConfiguration}.
 	 *
-	 * @apiNote Depending on what the {@link Scope} is currently scoped to will determine where the
-	 * {@link ServiceRegistry} is obtained from.
+	 * @apiNote The current {@link Scope} will determine from where the {@link ServiceRegistry}
+	 *          is obtained.
 	 *
-	 * @return The ServiceRegistry
+	 * @return The {@link ServiceRegistry} for the current scope
 	 */
 	public ServiceRegistry getServiceRegistry() {
 		return scope.getServiceRegistry();
@@ -323,30 +333,32 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	/**
-	 * Encapsulation of lifecycle concerns for a TypeConfiguration:<ol>
+	 * Encapsulation of lifecycle concerns of a {@link TypeConfiguration}:
+	 * <ol>
 	 *     <li>
-	 *         "Boot" is where the {@link TypeConfiguration} is first
-	 *         built as the boot-model ({@link org.hibernate.boot.model}) of
-	 *         the user's domain model is converted into the runtime-model
-	 *         ({@link org.hibernate.metamodel.model}). During this phase,
-	 *         {@link #getMetadataBuildingContext()} will be accessible but
-	 *         {@link #getSessionFactory} will throw an exception.
+	 *         "Boot" is where the {@link TypeConfiguration} is first built as
+	 *         {@linkplain org.hibernate.boot.model the boot model} of the domain
+	 *         model is converted into {@linkplain org.hibernate.metamodel.model
+	 *         the runtime model}. During this phase,
+	 *         {@link #getMetadataBuildingContext()} is accessible but
+	 *         {@link #getSessionFactory} throws an exception.
 	 *     </li>
 	 *     <li>
-	 *         "Runtime" is where the runtime-model is accessible.  During this
-	 *         phase {@link #getSessionFactory()} is accessible while
-	 *         {@link #getMetadataBuildingContext()} will now throw an exception
+	 *         "Runtime" is where the runtime model is accessible. During this
+	 *         phase, {@link #getSessionFactory()} is accessible but
+	 *         {@link #getMetadataBuildingContext()} throws an exception.
 	 *     </li>
 	 *     <li>
-	 *        "Sunset" is after the SessionFactory has been closed.  At this point, both
-	 *        {@link #getSessionFactory()} and {@link #getMetadataBuildingContext()}
-	 *        will now throw an exception
+	 *        "Sunset" happens after the {@link SessionFactory} has been closed.
+	 *        Both {@link #getSessionFactory()} and {@link #getMetadataBuildingContext()}
+	 *        throw exceptions.
 	 *     </li>
 	 * </ol>
 	 * <p>
-	 * {@link #getServiceRegistry()} is available for both "Boot" and "Runtime".
-	 *
-	 * Each stage or phase is consider a scope for the TypeConfiguration.
+	 * On the other hand, the {@linkplain #getServiceRegistry() service registry}
+	 * is available during both "Boot" and "Runtime" phases.
+	 * <p>
+	 * Each stage or phase is considered a scope for the {@link TypeConfiguration}.
 	 */
 	private static class Scope implements Serializable {
 		private final TypeConfiguration typeConfiguration;
@@ -456,9 +468,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		/**
-		 * Used by TypeFactory scoping.
+		 * Used by {@link TypeConfiguration} scoping.
 		 *
-		 * @param factory The SessionFactory that the TypeFactory is being bound to
+		 * @param factory The {@link SessionFactory} to which the {@link TypeConfiguration} is being bound
 		 */
 		void setSessionFactory(SessionFactoryImplementor factory) {
 			if ( this.sessionFactory != null ) {
@@ -466,15 +478,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			}
 			else {
 				this.sessionFactoryUuid = factory.getUuid();
-				String sfName = factory.getSessionFactoryOptions().getSessionFactoryName();
-				if ( sfName == null ) {
+				String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
+				if ( factoryName == null ) {
 					final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
 							.getService( CfgXmlAccessService.class );
 					if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-						sfName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
+						factoryName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
 					}
 				}
-				this.sessionFactoryName = sfName;
+				this.sessionFactoryName = factoryName;
 			}
 			this.sessionFactory = factory;
 		}

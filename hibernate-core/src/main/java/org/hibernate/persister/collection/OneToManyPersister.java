@@ -113,7 +113,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 		cascadeDeleteEnabled = collectionBinding.getKey().isCascadeDeleteEnabled()
-				&& creationContext.getSessionFactory().getJdbcServices().getDialect().supportsCascadeDelete();
+				&& creationContext.getDialect().supportsCascadeDelete();
 		keyIsNullable = collectionBinding.getKey().isNullable();
 		keyIsUpdateable = collectionBinding.getKey().isUpdateable();
 

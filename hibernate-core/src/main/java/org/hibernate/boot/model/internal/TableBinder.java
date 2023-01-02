@@ -23,7 +23,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -44,11 +43,13 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.Index;
 import jakarta.persistence.UniqueConstraint;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unquote;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Stateful binder responsible for producing instances of {@link Table}.
@@ -59,14 +60,13 @@ public class TableBinder {
 	//TODO move it to a getter/setter strategy
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, TableBinder.class.getName() );
 
-	MetadataBuildingContext buildingContext;
+	private MetadataBuildingContext buildingContext;
 
 	private String schema;
 	private String catalog;
 	private String name;
 	private boolean isAbstract;
 	private List<UniqueConstraintHolder> uniqueConstraints;
-	String constraints;
 	private String ownerEntityTable;
 	private String associatedEntityTable;
 	private String propertyName;
@@ -109,10 +109,6 @@ public class TableBinder {
 
 	public void setJpaIndex(Index[] jpaIndex){
 		this.jpaIndexHolders = buildJpaIndexHolder( jpaIndex );
-	}
-
-	public void setConstraints(String constraints) {
-		this.constraints = constraints;
 	}
 
 	public void setJPA2ElementCollection(boolean isJPA2ElementCollection) {
@@ -292,12 +288,12 @@ public class TableBinder {
 		return buildAndFillTable(
 				schema,
 				catalog,
-				nameSource,
-				namingStrategyHelper,
+				isNotEmpty( nameSource.getExplicitName() )
+						? namingStrategyHelper.handleExplicitName( nameSource.getExplicitName(), buildingContext )
+						: namingStrategyHelper.determineImplicitName( buildingContext ),
 				isAbstract,
 				uniqueConstraints,
 				jpaIndexHolders,
-				constraints,
 				buildingContext,
 				null,
 				null
@@ -437,34 +433,20 @@ public class TableBinder {
 	public static Table buildAndFillTable(
 			String schema,
 			String catalog,
-			ObjectNameSource nameSource,
-			NamingStrategyHelper namingStrategyHelper,
+			Identifier logicalName,
 			boolean isAbstract,
 			List<UniqueConstraintHolder> uniqueConstraints,
-			List<JPAIndexHolder> jpaIndexHolders,
-			String constraints,
-			MetadataBuildingContext buildingContext,
-			String subselect,
-			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
-		final Identifier logicalName;
-		if ( isNotEmpty( nameSource.getExplicitName() ) ) {
-			logicalName = namingStrategyHelper.handleExplicitName( nameSource.getExplicitName(), buildingContext );
-		}
-		else {
-			logicalName = namingStrategyHelper.determineImplicitName( buildingContext );
-		}
-
+			MetadataBuildingContext buildingContext) {
 		return buildAndFillTable(
 				schema,
 				catalog,
 				logicalName,
 				isAbstract,
 				uniqueConstraints,
-				jpaIndexHolders,
-				constraints,
+				null,
 				buildingContext,
-				subselect,
-				denormalizedSuperTableXref
+				null,
+				null
 		);
 	}
 
@@ -474,17 +456,40 @@ public class TableBinder {
 			Identifier logicalName,
 			boolean isAbstract,
 			List<UniqueConstraintHolder> uniqueConstraints,
+			MetadataBuildingContext buildingContext,
+			String subselect,
+			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
+		return buildAndFillTable(
+				schema,
+				catalog,
+				logicalName,
+				isAbstract,
+				uniqueConstraints,
+				null,
+				buildingContext,
+				subselect,
+				denormalizedSuperTableXref
+		);
+	}
+
+	private static Table buildAndFillTable(
+			String schema,
+			String catalog,
+			Identifier logicalName,
+			boolean isAbstract,
+			List<UniqueConstraintHolder> uniqueConstraints,
 			List<JPAIndexHolder> jpaIndexHolders,
-			String constraints,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 		schema = nullIfEmpty( schema );
 		catalog = nullIfEmpty( catalog );
 
+		InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+
 		final Table table;
 		if ( denormalizedSuperTableXref != null ) {
-			table = buildingContext.getMetadataCollector().addDenormalizedTable(
+			table = metadataCollector.addDenormalizedTable(
 					schema,
 					catalog,
 					logicalName.render(),
@@ -495,7 +500,7 @@ public class TableBinder {
 			);
 		}
 		else {
-			table = buildingContext.getMetadataCollector().addTable(
+			table = metadataCollector.addTable(
 					schema,
 					catalog,
 					logicalName.render(),
@@ -505,19 +510,15 @@ public class TableBinder {
 			);
 		}
 
-		if ( CollectionHelper.isNotEmpty( uniqueConstraints ) ) {
-			buildingContext.getMetadataCollector().addUniqueConstraintHolders( table, uniqueConstraints );
+		if ( isNotEmpty( uniqueConstraints ) ) {
+			metadataCollector.addUniqueConstraintHolders( table, uniqueConstraints );
 		}
 
-		if ( CollectionHelper.isNotEmpty( jpaIndexHolders ) ) {
-			buildingContext.getMetadataCollector().addJpaIndexHolders( table, jpaIndexHolders );
+		if ( isNotEmpty( jpaIndexHolders ) ) {
+			metadataCollector.addJpaIndexHolders( table, jpaIndexHolders );
 		}
 
-		if ( constraints != null ) {
-			table.addCheckConstraint( constraints );
-		}
-
-		buildingContext.getMetadataCollector().addTableNameBinding( logicalName, table );
+		metadataCollector.addTableNameBinding( logicalName, table );
 
 		return table;
 	}
@@ -813,7 +814,7 @@ public class TableBinder {
 	public static List<UniqueConstraintHolder> buildUniqueConstraintHolders(UniqueConstraint[] annotations) {
 		List<UniqueConstraintHolder> result;
 		if ( annotations == null || annotations.length == 0 ) {
-			result = java.util.Collections.emptyList();
+			result = emptyList();
 		}
 		else {
 			result = arrayList( annotations.length );

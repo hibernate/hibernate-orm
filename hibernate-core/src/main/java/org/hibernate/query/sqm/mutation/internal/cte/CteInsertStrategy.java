@@ -112,7 +112,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 		this.rootDescriptor = rootDescriptor;
 		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
 
-		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+		final Dialect dialect = runtimeModelCreationContext.getDialect();
 
 		if ( !dialect.supportsNonQueryWithCTE() ) {
 			throw new UnsupportedOperationException(

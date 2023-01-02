@@ -38,6 +38,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * List&lt;Document&gt; documents;
  * </pre>
  * <p>
+ * The {@link WhereJoinTable} annotation lets a restriction be applied to
+ * an {@linkplain jakarta.persistence.JoinTable association table}:
+ * <pre>
+ * &#64;ManyToMany
+ * &#64;JoinTable(name = "collaborations")
+ * &#64;Where(clause = "status &lt;&gt; 'DELETED'")
+ * &#64;WhereJoinTable(clause = "status = 'ACTIVE'")
+ * List&lt;Document&gt; documents;
+ * </pre>
+ * <p>
  * By default, {@code @Where} restrictions declared for an entity are not
  * applied when loading a collection of that entity type. This behavior is
  * controlled by:
@@ -46,6 +56,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>the configuration property
  *     {@value org.hibernate.cfg.AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS}.
  * </ol>
+ * <p>
  * Note that {@code @Where} restrictions are always applied and cannot be
  * disabled. Nor may they be parameterized. They're therefore <em>much</em>
  * less flexible than {@linkplain Filter filters}.

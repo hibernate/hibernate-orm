@@ -6,11 +6,13 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
@@ -28,6 +30,7 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -84,7 +87,7 @@ public class AnnotatedColumn {
 	private String generatedAs;
 
 //	private String comment;
-	private String checkConstraint;
+	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	private AnnotatedColumns parent;
 
@@ -123,10 +126,6 @@ public class AnnotatedColumn {
 
 	public boolean isFormula() {
 		return isNotEmpty( formulaString );
-	}
-
-	public String getFormulaString() {
-		return formulaString;
 	}
 
 	public String getExplicitTableName() {
@@ -189,16 +188,12 @@ public class AnnotatedColumn {
 		return defaultValue;
 	}
 
-	public String getCheckConstraint() {
-		return checkConstraint;
-	}
-
 	public void setDefaultValue(String defaultValue) {
 		this.defaultValue = defaultValue;
 	}
 
-	public void setCheckConstraint(String checkConstraint) {
-		this.checkConstraint = checkConstraint;
+	public void addCheckConstraint(String name, String constraint) {
+		checkConstraints.add( new CheckConstraint( name, constraint ) );
 	}
 
 //	public String getComment() {
@@ -241,8 +236,8 @@ public class AnnotatedColumn {
 			if ( defaultValue != null ) {
 				mappingColumn.setDefaultValue( defaultValue );
 			}
-			if ( checkConstraint !=null ) {
-				mappingColumn.setCheckConstraint( checkConstraint );
+			for ( CheckConstraint constraint : checkConstraints ) {
+				mappingColumn.addCheckConstraint( constraint );
 			}
 //			if ( isNotEmpty( comment ) ) {
 //				mappingColumn.setComment( comment );
@@ -281,7 +276,9 @@ public class AnnotatedColumn {
 			mappingColumn.setNullable( nullable );
 			mappingColumn.setSqlType( sqlType );
 			mappingColumn.setUnique( unique );
-			mappingColumn.setCheckConstraint( checkConstraint );
+			for ( CheckConstraint constraint : checkConstraints ) {
+				mappingColumn.addCheckConstraint( constraint );
+			}
 			mappingColumn.setDefaultValue( defaultValue );
 
 			if ( writeExpression != null ) {
@@ -779,8 +776,9 @@ public class AnnotatedColumn {
 			final ColumnDefault columnDefault =
 					getOverridableAnnotation( property, ColumnDefault.class, getBuildingContext() );
 			if ( columnDefault != null ) {
-				if ( length!=1 ) {
-					throw new MappingException("@ColumnDefault may only be applied to single-column mappings");
+				if ( length != 1 ) {
+					throw new AnnotationException( "'@ColumnDefault' may only be applied to single-column mappings but '"
+							+ property.getName() + "' maps to " + length + " columns" );
 				}
 				setDefaultValue( columnDefault.value() );
 			}
@@ -797,7 +795,8 @@ public class AnnotatedColumn {
 					getOverridableAnnotation( property, GeneratedColumn.class, getBuildingContext() );
 			if ( generatedColumn != null ) {
 				if (length!=1) {
-					throw new MappingException("@GeneratedColumn may only be applied to single-column mappings");
+					throw new AnnotationException("'@GeneratedColumn' may only be applied to single-column mappings but '"
+							+ property.getName() + "' maps to " + length + " columns" );
 				}
 				setGeneratedAs( generatedColumn.value() );
 			}
@@ -810,12 +809,21 @@ public class AnnotatedColumn {
 	private void applyCheckConstraint(PropertyData inferredData, int length) {
 		final XProperty property = inferredData.getProperty();
 		if ( property != null ) {
-			final Check check = getOverridableAnnotation( property, Check.class, getBuildingContext() );
-			if ( check != null ) {
-				if (length!=1) {
-					throw new MappingException("@Check may only be applied to single-column mappings (use a table-level @Check)");
+			if ( property.isAnnotationPresent( Checks.class ) ) {
+				// if there are multiple annotations, they're not overrideable
+				for ( Check check : property.getAnnotation( Checks.class ).value() ) {
+					addCheckConstraint( check.name().isEmpty() ? null : check.name(), check.constraints() );
 				}
-				setCheckConstraint( check.constraints() );
+			}
+			else {
+				final Check check = getOverridableAnnotation( property, Check.class, getBuildingContext() );
+				if ( check != null ) {
+					if ( length != 1 ) {
+						throw new AnnotationException("'@Check' may only be applied to single-column mappings but '"
+								+ property.getName() + "' maps to " + length + " columns (use a table-level '@Check')" );
+					}
+					addCheckConstraint( check.name().isEmpty() ? null : check.name(), check.constraints() );
+				}
 			}
 		}
 		else {

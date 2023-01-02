@@ -9,7 +9,6 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -24,22 +23,28 @@ import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Comparator.comparing;
+import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
+import static org.hibernate.sql.Template.collectColumnNames;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Entity entity class}.
@@ -97,6 +102,8 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private boolean hasSubselectLoadableCollections;
 	private Component identifierMapper;
 	private List<CallbackDefinition> callbackDefinitions;
+
+	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -295,10 +302,15 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	@Override
-	public void addProperty(Property p) {
-		properties.add( p );
-		declaredProperties.add( p );
-		p.setPersistentClass( this );
+	public void addProperty(Property property) {
+		properties.add( property );
+		declaredProperties.add( property );
+		property.setPersistentClass( this );
+	}
+
+	@Override
+	public boolean contains(Property property) {
+		return properties.contains( property );
 	}
 
 	public abstract Table getTable();
@@ -725,9 +737,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 			if ( !prop.isValid( mapping ) ) {
 				final Type type = prop.getType();
 				final int actualColumns = prop.getColumnSpan();
-				final int requiredColumns = type.getColumnSpan(mapping);
+				final int requiredColumns = type.getColumnSpan( mapping );
 				throw new MappingException(
-						"Property '" + StringHelper.qualify( getEntityName(), prop.getName() )
+						"Property '" + qualify( getEntityName(), prop.getName() )
 								+ "' maps to " + actualColumns + " columns but " + requiredColumns
 								+ " columns are required (type '" + type.getName()
 								+ "' spans " + requiredColumns + " columns)"
@@ -1218,8 +1230,76 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	// End of @MappedSuperclass support
 
-	public void prepareForMappingModel() {
-		properties.sort( Comparator.comparing( Property::getName ) );
+	public void prepareForMappingModel(RuntimeModelCreationContext context) {
+		if ( !joins.isEmpty() ) {
+			// we need to deal with references to secondary tables
+			// in SQL formulas and check constraints
+
+			final Dialect dialect = context.getDialect();
+			final TypeConfiguration types = context.getTypeConfiguration();
+			final SqmFunctionRegistry functions = context.getFunctionRegistry();
+
+			// assign check constraints to the right table
+			for ( CheckConstraint checkConstraint : checkConstraints ) {
+				container( collectColumnNames( checkConstraint.getConstraint(), dialect, types, functions ) )
+						.getTable().addCheck( checkConstraint );
+			}
+
+			// now, move @Formulas to the correct AttributeContainers
+			//TODO: skip this step for hbm.xml
+			for ( Property property : new ArrayList<>( properties ) ) {
+				for ( Selectable selectable : property.getSelectables() ) {
+					if ( selectable.isFormula() && properties.contains( property ) ) {
+						final Formula formula = (Formula) selectable;
+						final AttributeContainer container =
+								container( collectColumnNames( formula.getTemplate( dialect, types, functions ) ) );
+						if ( !container.contains( property ) ) {
+							properties.remove( property );
+							container.addProperty( property );
+							break; //TODO: embeddables
+						}
+					}
+				}
+			}
+		}
+		properties.sort( comparing( Property::getName ) );
 	}
 
+	private AttributeContainer container(List<String> constrainedColumnNames) {
+		long matches = matchesInTable( constrainedColumnNames, getTable() );
+		if ( matches == constrainedColumnNames.size() ) {
+			// perfect, all columns matched in the primary table
+			return this;
+		}
+		else {
+			// go searching for a secondary table which better matches
+			AttributeContainer result = this;
+			long max = matches;
+			for ( Join join : getJoins() ) {
+				long secondaryMatches = matchesInTable( constrainedColumnNames, join.getTable() );
+				if ( secondaryMatches > max ) {
+					result = join;
+					max = secondaryMatches;
+				}
+			}
+			return result;
+		}
+	}
+
+	private static long matchesInTable(List<String> names, Table table) {
+		return table.getColumns().stream()
+				.filter( col -> col.isQuoted()
+						? names.contains( col.getName() )
+						: names.stream().anyMatch( name -> name.equalsIgnoreCase( col.getName() ) )
+				)
+				.count();
+	}
+
+	public void addCheckConstraint(CheckConstraint checkConstraint) {
+		checkConstraints.add( checkConstraint );
+	}
+
+	public List<CheckConstraint> getCheckConstraints() {
+		return checkConstraints;
+	}
 }

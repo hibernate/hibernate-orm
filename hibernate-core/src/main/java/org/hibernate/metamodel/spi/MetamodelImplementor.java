@@ -29,10 +29,6 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 @Deprecated(since = "6.0")
 public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
-
-	@Override
-	SessionFactoryImplementor getSessionFactory();
-
 	/**
 	 * @deprecated Use {@link MappingMetamodelImplementor#getEntityNameResolvers} instead
 	 */

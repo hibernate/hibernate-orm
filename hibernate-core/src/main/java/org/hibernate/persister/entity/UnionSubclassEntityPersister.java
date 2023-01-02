@@ -28,7 +28,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.StaticFilterAliasGenerator;
@@ -115,8 +114,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		validateGenerator();
 
-		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
-		final Dialect dialect = factory.getJdbcServices().getDialect();
+		final Dialect dialect = creationContext.getDialect();
 
 		// TABLE
 
@@ -162,7 +160,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		discriminatorValue = persistentClass.getSubclassId();
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
-		discriminatorType = factory.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER );
+		discriminatorType = creationContext.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER );
 
 		// PROPERTIES
 

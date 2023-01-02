@@ -41,7 +41,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -71,6 +70,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -523,8 +524,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		for ( Map.Entry<String,Object> entry : cfgService.getSettings().entrySet() ) {
 			final String propertyName = entry.getKey();
-			if ( propertyName.startsWith( AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
-				final String eventTypeName = propertyName.substring( AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1 );
+			if ( propertyName.startsWith( EVENT_LISTENER_PREFIX ) ) {
+				final String eventTypeName = propertyName.substring( EVENT_LISTENER_PREFIX.length() + 1 );
 				final EventType<?> eventType = EventType.resolveEventTypeByName( eventTypeName );
 				final String listeners = (String) entry.getValue();
 				appendListeners( eventListenerRegistry, classLoaderService, listeners, eventType );

@@ -16,7 +16,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
@@ -54,11 +53,20 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
 		this.metadata = metadata;
 		this.optionsBuilder = optionsBuilder;
+
 		if ( metadata.getSqlFunctionMap() != null ) {
 			for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
 				applySqlFunction( sqlFunctionEntry.getKey(), sqlFunctionEntry.getValue() );
 			}
 		}
+
+		final BytecodeProvider bytecodeProvider =
+				metadata.getMetadataBuildingOptions().getServiceRegistry()
+						.getService( BytecodeProvider.class );
+		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
+		addSessionFactoryObservers( new SessionFactoryObserverForNamedQueryValidation( metadata ) );
+		addSessionFactoryObservers( new SessionFactoryObserverForSchemaExport( metadata ) );
+		addSessionFactoryObservers( new SessionFactoryObserverForRegistration() );
 	}
 
 	@Override
@@ -409,9 +417,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 	@Override
 	public SessionFactory build() {
-		final StandardServiceRegistry serviceRegistry = metadata.getMetadataBuildingOptions().getServiceRegistry();
-		BytecodeProvider bytecodeProvider = serviceRegistry.getService( BytecodeProvider.class );
-		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
 		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions() );
 	}
 

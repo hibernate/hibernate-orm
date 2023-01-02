@@ -10,7 +10,6 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -33,10 +32,6 @@ public interface PersisterCreationContext {
 	}
 
 	MetadataImplementor getMetadata();
-
-	default ManagedBeanRegistry getManagedBeanRegistry() {
-		return getSessionFactory().getServiceRegistry().getService( ManagedBeanRegistry.class );
-	}
 
 	default JavaTypeRegistry getJavaTypeRegistry() {
 		return getTypeConfiguration().getJavaTypeRegistry();

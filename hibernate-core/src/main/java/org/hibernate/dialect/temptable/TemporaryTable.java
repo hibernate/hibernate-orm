@@ -105,7 +105,7 @@ public class TemporaryTable implements Exportable, Contributable {
 		else {
 			tableNameIdentifier = new Identifier( temporaryTableName, nameParts.getObjectName().isQuoted() );
 		}
-		this.qualifiedTableName = creationContext.getSessionFactory().getSqlStringGenerationContext().format(
+		this.qualifiedTableName = creationContext.getSqlStringGenerationContext().format(
 				new QualifiedTableName(
 						adjustedNameParts.getCatalogName() != null
 								? adjustedNameParts.getCatalogName()

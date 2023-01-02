@@ -80,9 +80,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			PersistentClass bootDescriptor,
 			EntityPersister runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final JavaTypeRegistry jtdRegistry = creationContext.getTypeConfiguration()
-				.getJavaTypeRegistry();
+		final JavaTypeRegistry jtdRegistry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 
 		final Class<?> mappedJavaType = bootDescriptor.getMappedClass();
 		this.mappedJtd = jtdRegistry.resolveEntityTypeDescriptor( mappedJavaType );
@@ -156,13 +154,13 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		this.proxyFactory = proxyFactory;
 
 		// resolveReflectionOptimizer may lead to a makePropertyAccess call which requires strategySelector
-		this.strategySelector = sessionFactory.getServiceRegistry().getService( StrategySelector.class );
+		this.strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
 		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
 		for ( Property property : bootDescriptor.getPropertyClosure() ) {
 			propertyAccessMap.put( property.getName(), makePropertyAccess( property ) );
 		}
 		this.propertyAccessMap = propertyAccessMap;
-		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider, sessionFactory );
+		this.reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
 
 		this.instantiator = determineInstantiator( bootDescriptor, entityMetamodel );
 	}
@@ -268,9 +266,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				? null
 				: ReflectHelper.getMethod( proxyInterface, idSetterMethod );
 
-		ProxyFactory pf = bytecodeProvider.getProxyFactoryFactory().buildProxyFactory( creationContext.getSessionFactory() );
+		final ProxyFactory proxyFactory = bytecodeProvider.getProxyFactoryFactory()
+				.buildProxyFactory( creationContext.getSessionFactory() );
 		try {
-			pf.postInstantiate(
+			proxyFactory.postInstantiate(
 					bootDescriptor.getEntityName(),
 					mappedClass,
 					proxyInterfaces,
@@ -281,7 +280,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 							null
 			);
 
-			return pf;
+			return proxyFactory;
 		}
 		catch (HibernateException he) {
 			LOG.unableToCreateProxyFactory( bootDescriptor.getEntityName(), he );
@@ -289,10 +288,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 	}
 
-	private ReflectionOptimizer resolveReflectionOptimizer(
-			PersistentClass bootType,
-			BytecodeProvider bytecodeProvider,
-			SessionFactoryImplementor sessionFactory) {
+	private ReflectionOptimizer resolveReflectionOptimizer(BytecodeProvider bytecodeProvider) {
 		if ( ! Environment.useReflectionOptimizer() ) {
 			return null;
 		}

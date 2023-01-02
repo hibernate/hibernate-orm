@@ -275,6 +275,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -525,12 +526,11 @@ public abstract class AbstractEntityPersister
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
 
-		final JdbcServices jdbcServices = factory.getServiceRegistry().getService( JdbcServices.class );
-		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
+		final Dialect dialect = creationContext.getDialect();
 
 		int batch = persistentClass.getBatchSize();
 		if ( batch == -1 ) {
-			batch = factory.getSessionFactoryOptions().getDefaultBatchFetchSize();
+			batch = creationContext.getSessionFactoryOptions().getDefaultBatchFetchSize();
 		}
 		batchSize = batch;
 		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections();
@@ -568,16 +568,17 @@ public abstract class AbstractEntityPersister
 
 		multiIdEntityLoader = new MultiIdLoaderStandard<>( this, persistentClass, factory );
 
-		SqmFunctionRegistry functionRegistry = factory.getQueryEngine().getSqmFunctionRegistry();
+		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
+		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 
 		List<Column> columns = persistentClass.getIdentifier().getColumns();
-		for ( int i = 0; i < columns.size(); i++ ) {
+		for (int i = 0; i < columns.size(); i++ ) {
 			Column column = columns.get(i);
 			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
 			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
 			rootTableKeyColumnReaderTemplates[i] = column.getTemplate(
 					dialect,
-					factory.getTypeConfiguration(),
+					typeConfiguration,
 					functionRegistry
 			);
 			identifierAliases[i] = column.getAlias( dialect, persistentClass.getRootTable() );
@@ -608,7 +609,7 @@ public abstract class AbstractEntityPersister
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					"(" + persistentClass.getWhere() + ")",
 					dialect,
-					factory.getTypeConfiguration(),
+					typeConfiguration,
 					functionRegistry
 			);
 		}
@@ -654,7 +655,7 @@ public abstract class AbstractEntityPersister
 					formula.setFormula( substituteBrackets( formula.getFormula() ) );
 					formulaTemplates[k] = selectable.getTemplate(
 							dialect,
-							factory.getTypeConfiguration(),
+							typeConfiguration,
 							functionRegistry
 					);
 				}
@@ -738,7 +739,7 @@ public abstract class AbstractEntityPersister
 				if ( selectable.isFormula() ) {
 					final String template = selectable.getTemplate(
 							dialect,
-							factory.getTypeConfiguration(),
+							typeConfiguration,
 							functionRegistry
 					);
 					forms[i] = template;
@@ -759,7 +760,7 @@ public abstract class AbstractEntityPersister
 					readers[i] = column.getReadExpr( dialect );
 					readerTemplates[i] = column.getTemplate(
 							dialect,
-							factory.getTypeConfiguration(),
+							typeConfiguration,
 							functionRegistry
 					);
 				}
@@ -801,8 +802,8 @@ public abstract class AbstractEntityPersister
 				? new FilterHelper( persistentClass.getFilters(), factory )
 				: null;
 
-		useReferenceCacheEntries = shouldUseReferenceCacheEntries();
-		cacheEntryHelper = buildCacheEntryHelper();
+		useReferenceCacheEntries = shouldUseReferenceCacheEntries( creationContext.getSessionFactoryOptions() );
+		cacheEntryHelper = buildCacheEntryHelper( creationContext.getSessionFactoryOptions() );
 		invalidateCache = sessionFactoryOptions.isSecondLevelCacheEnabled()
 				&& canWriteToCache
 				&& shouldInvalidateCache( persistentClass, creationContext );
@@ -852,10 +853,10 @@ public abstract class AbstractEntityPersister
 				: knownAbstract;
 	}
 
-	private boolean shouldUseReferenceCacheEntries() {
+	private boolean shouldUseReferenceCacheEntries(SessionFactoryOptions options) {
 		// Check if we can use Reference Cached entities in 2lc
 		// todo : should really validate that the cache access type is read-only
-		if ( !factory.getSessionFactoryOptions().isDirectReferenceCacheEntriesEnabled() ) {
+		if ( !options.isDirectReferenceCacheEntriesEnabled() ) {
 			return false;
 		}
 		// for now, limit this to just entities that:
@@ -1097,7 +1098,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected CacheEntryHelper buildCacheEntryHelper() {
+	protected CacheEntryHelper buildCacheEntryHelper(SessionFactoryOptions options) {
 		if ( cacheAccessStrategy == null ) {
 			// the entity defined no caching...
 			return NoopCacheEntryHelper.INSTANCE;
@@ -1108,7 +1109,7 @@ public abstract class AbstractEntityPersister
 			return new ReferenceCacheEntryHelper( this );
 		}
 		else {
-			return factory.getSessionFactoryOptions().isStructuredCacheEntriesEnabled()
+			return options.isStructuredCacheEntriesEnabled()
 					? new StructuredCacheEntryHelper( this )
 					: new StandardCacheEntryHelper( this );
 		}
@@ -4828,10 +4829,8 @@ public abstract class AbstractEntityPersister
 			templateInstanceCreator = null;
 		}
 		else {
-			final LazyValue<?> templateCreator = new LazyValue<>(
-					() -> instantiator.instantiate( creationProcess.getCreationContext().getSessionFactory() )
-			);
-			templateInstanceCreator = templateCreator::getValue;
+			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+			templateInstanceCreator = new LazyValue<>( () -> instantiator.instantiate( sessionFactory ) )::getValue;
 		}
 
 		identifierMapping = creationProcess.processSubPart(
@@ -5015,12 +5014,11 @@ public abstract class AbstractEntityPersister
 	protected Map<Object, DiscriminatorValueDetails> buildDiscriminatorValueMappings(
 			MappingModelCreationProcess modelCreationProcess) {
 		final MappingMetamodelImplementor mappingModel =
-				modelCreationProcess.getCreationContext().getSessionFactory().getMappingMetamodel();
+				modelCreationProcess.getCreationContext().getDomainModel();
 		//noinspection unchecked
 		final JdbcLiteralFormatter<Object> jdbcLiteralFormatter =
 				(JdbcLiteralFormatter<Object>) getDiscriminatorType().getJdbcLiteralFormatter();
-		final Dialect dialect = modelCreationProcess.getCreationContext()
-				.getSessionFactory().getJdbcServices().getDialect();
+		final Dialect dialect = modelCreationProcess.getCreationContext().getDialect();
 
 		final Map<Object, DiscriminatorValueDetails> valueMappings = new ConcurrentHashMap<>();
 		getSubclassByDiscriminatorValue().forEach( (value, entityName) -> {
@@ -5233,7 +5231,7 @@ public abstract class AbstractEntityPersister
 		final BasicValue.Resolution<?> basicTypeResolution = bootModelVersionValue.resolve();
 
 		final Column column = (Column) bootModelVersionValue.getColumn();
-		final Dialect dialect = creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
+		final Dialect dialect = creationProcess.getCreationContext().getDialect();
 
 		return new EntityVersionMappingImpl(
 				bootModelRootEntityDescriptor.getRootClass(),
@@ -5257,10 +5255,9 @@ public abstract class AbstractEntityPersister
 			int stateArrayPosition,
 			int fetchableIndex,
 			MappingModelCreationProcess creationProcess) {
-		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
+		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
+		final JdbcServices jdbcServices = creationContext.getJdbcServices();
+		final Dialect dialect = creationContext.getDialect();
 
 		final String attrName = tupleAttrDefinition.getName();
 		final Type attrType = tupleAttrDefinition.getType();
@@ -5336,12 +5333,12 @@ public abstract class AbstractEntityPersister
 					assert !selectables.isEmpty();
 					final Selectable selectable = selectables.get(0);
 
-					assert attrColumnExpression.equals( selectable.getText(sessionFactory.getJdbcServices().getDialect()) );
+					assert attrColumnExpression.equals( selectable.getText( creationContext.getDialect() ) );
 
 					customReadExpr = selectable.getTemplate(
 							dialect,
-							sessionFactory.getTypeConfiguration(),
-							sessionFactory.getQueryEngine().getSqmFunctionRegistry()
+							creationContext.getTypeConfiguration(),
+							creationContext.getFunctionRegistry()
 					);
 					customWriteExpr = selectable.getCustomWriteExpression();
 					Column column = value.getColumns().get( 0 );
@@ -5392,10 +5389,9 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof AnyType ) {
-			final JavaType<Object> baseAssociationJtd = sessionFactory
-					.getTypeConfiguration()
-					.getJavaTypeRegistry()
-					.getDescriptor( Object.class );
+			final JavaType<Object> baseAssociationJtd =
+					creationContext.getTypeConfiguration().getJavaTypeRegistry()
+							.getDescriptor( Object.class );
 
 			final AnyType anyType = (AnyType) attrType;
 

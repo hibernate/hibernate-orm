@@ -22,7 +22,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.AggregateColumn;
@@ -168,20 +167,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		this.embeddableJtd = representationStrategy.getMappedJavaType();
 		this.valueMapping = embeddedPartBuilder.apply( this );
 
-		final ConfigurationService cs = creationContext.getSessionFactory().getServiceRegistry()
-				.getService(ConfigurationService.class);
-
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
 				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
-				cs.getSettings(),
+				creationContext.getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
 				false
 		);
 		final AggregateColumn aggregateColumn = bootDescriptor.getAggregateColumn();
 		if ( aggregateColumn != null ) {
-			final Dialect dialect = creationContext.getBootstrapContext()
-					.getServiceRegistry()
-					.getService( JdbcServices.class )
-					.getDialect();
+			final Dialect dialect = creationContext.getDialect();
 			final boolean insertable;
 			final boolean updatable;
 			if ( componentProperty == null ) {
@@ -330,9 +323,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 //		);
 // todo (6.0) - get this ^^ to work, or drop the comment
 
-		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final TypeConfiguration typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
+		final JdbcServices jdbcServices = creationProcess.getCreationContext().getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
@@ -442,42 +434,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final boolean updateable = updateability[columnPosition];
 				final boolean includeInOptimisticLocking = bootPropertyDescriptor.isOptimisticLocked();
 				final CascadeStyle cascadeStyle = compositeType.getCascadeStyle( attributeIndex );
-				final MutabilityPlan<?> mutabilityPlan;
-
-				if ( updateable ) {
-					mutabilityPlan = new MutabilityPlan<>() {
-						@Override
-						public boolean isMutable() {
-							return true;
-						}
-
-						@Override
-						public Object deepCopy(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							return anyType.deepCopy( value, creationProcess.getCreationContext().getSessionFactory() );
-						}
-
-						@Override
-						public Serializable disassemble(Object value, SharedSessionContract session) {
-							throw new UnsupportedOperationException();
-						}
-
-						@Override
-						public Object assemble(Serializable cached, SharedSessionContract session) {
-							throw new UnsupportedOperationException();
-						}
-					};
-				}
-				else {
-					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
-				}
 
 				SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
 						propertyAccess,
-						mutabilityPlan,
+						getMutabilityPlan( updateable ),
 						nullable,
 						insertable,
 						updateable,
@@ -502,7 +462,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 			else if ( subtype instanceof CompositeType ) {
 				final CompositeType subCompositeType = (CompositeType) subtype;
-				final int columnSpan = subCompositeType.getColumnSpan( sessionFactory );
+				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getMetadata() );
 				final String subTableExpression;
 				final String[] subRootTableKeyColumnNames;
 				if ( rootTableKeyColumnNames == null ) {
@@ -587,6 +547,35 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		);
 
 		return true;
+	}
+
+	private static MutabilityPlan<?> getMutabilityPlan(boolean updateable) {
+		if ( updateable ) {
+			return new MutabilityPlan<>() {
+				@Override
+				public boolean isMutable() {
+					return true;
+				}
+
+				@Override
+				public Object deepCopy(Object value) {
+					return value;
+				}
+
+				@Override
+				public Serializable disassemble(Object value, SharedSessionContract session) {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public Object assemble(Serializable cached, SharedSessionContract session) {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
+		else {
+			return ImmutableMutabilityPlan.INSTANCE;
+		}
 	}
 
 	private boolean initColumnMappings() {

@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -70,7 +69,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 		this.rootDescriptor = rootDescriptor;
 		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
 
-		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+		final Dialect dialect = runtimeModelCreationContext.getDialect();
 
 		if ( !dialect.supportsNonQueryWithCTE() ) {
 			throw new UnsupportedOperationException(

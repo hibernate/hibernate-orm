@@ -20,7 +20,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -143,10 +142,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
-		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
-		final Dialect dialect = factory.getJdbcServices().getDialect();
-		final SqmFunctionRegistry functionRegistry = factory.getQueryEngine().getSqmFunctionRegistry();
-		final TypeConfiguration typeConfiguration = factory.getTypeConfiguration();
+		final Dialect dialect = creationContext.getDialect();
+		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
+		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 
 		// CLASS + TABLE
 

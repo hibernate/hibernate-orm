@@ -63,9 +63,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			AnyType anyType,
 			Any bootValueMapping,
 			MappingModelCreationProcess creationProcess) {
-		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 
-		final Dialect dialect = sessionFactory.getSqlStringGenerationContext().getDialect();
+		final Dialect dialect = creationProcess.getCreationContext().getDialect();
 		final String tableName = MappingModelCreationHelper.getTableIdentifierExpression(
 				bootValueMapping.getTable(),
 				creationProcess
@@ -126,7 +125,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 						? FetchTiming.DELAYED
 						: FetchTiming.IMMEDIATE,
 				bootValueMapping.getMetaValues(),
-				sessionFactory
+				creationProcess.getCreationContext().getSessionFactory()
 		);
 	}
 

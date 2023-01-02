@@ -82,7 +82,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		this.idMapping = idMapping;
 		this.virtualIdEmbeddable = virtualIdEmbeddable;
 
-		this.javaType = creationProcess.getCreationContext().getSessionFactory().getTypeConfiguration()
+		this.javaType = creationProcess.getCreationContext().getTypeConfiguration()
 				.getJavaTypeRegistry()
 				.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
 

@@ -339,7 +339,7 @@ public interface Type extends Serializable {
 	 * @throws HibernateException An error from Hibernate
 	 */
 	Object deepCopy(Object value, SessionFactoryImplementor factory)
-	throws HibernateException;
+			throws HibernateException;
 
 	/**
 	 * Are objects of this type mutable with respect to the referencing object?

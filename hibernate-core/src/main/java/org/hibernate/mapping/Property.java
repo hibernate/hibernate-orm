@@ -498,12 +498,12 @@ public class Property implements Serializable, MetaAttributable {
 
 		@Override
 		public String getDefaultCatalog() {
-			return context.getSessionFactory().getSessionFactoryOptions().getDefaultCatalog();
+			return context.getSessionFactoryOptions().getDefaultCatalog();
 		}
 
 		@Override
 		public String getDefaultSchema() {
-			return context.getSessionFactory().getSessionFactoryOptions().getDefaultSchema();
+			return context.getSessionFactoryOptions().getDefaultSchema();
 		}
 
 		@Override

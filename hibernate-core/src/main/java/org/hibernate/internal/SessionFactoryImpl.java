@@ -108,6 +108,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
@@ -320,6 +321,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				@Override
 				public JdbcServices getJdbcServices() {
 					return jdbcServices;
+				}
+
+				@Override
+				public SqlStringGenerationContext getSqlStringGenerationContext() {
+					return sqlStringGenerationContext;
+				}
+
+				@Override
+				public ServiceRegistry getServiceRegistry() {
+					return serviceRegistry;
 				}
 			};
 

@@ -272,7 +272,7 @@ public abstract class AbstractCollectionPersister
 
 		this.factory = creationContext.getSessionFactory();
 		this.cacheAccessStrategy = cacheAccessStrategy;
-		if ( factory.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
+		if ( creationContext.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
 			cacheEntryStructure = collectionBootDescriptor.isMap()
 					? StructuredMapCacheEntry.INSTANCE
 					: StructuredCollectionCacheEntry.INSTANCE;
@@ -281,8 +281,8 @@ public abstract class AbstractCollectionPersister
 			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
 
-		dialect = factory.getJdbcServices().getDialect();
-		sqlExceptionHelper = factory.getJdbcServices().getSqlExceptionHelper();
+		dialect = creationContext.getDialect();
+		sqlExceptionHelper = creationContext.getJdbcServices().getSqlExceptionHelper();
 		collectionType = collectionBootDescriptor.getCollectionType();
 		navigableRole = new NavigableRole( collectionBootDescriptor.getRole() );
 		entityName = collectionBootDescriptor.getOwnerEntityName();
@@ -316,8 +316,8 @@ public abstract class AbstractCollectionPersister
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					sqlWhereString,
 					dialect,
-					factory.getTypeConfiguration(),
-					factory.getQueryEngine().getSqmFunctionRegistry()
+					creationContext.getTypeConfiguration(),
+					creationContext.getFunctionRegistry()
 			);
 		}
 		else {
@@ -330,7 +330,7 @@ public abstract class AbstractCollectionPersister
 
 		int batch = collectionBootDescriptor.getBatchSize();
 		if ( batch == -1 ) {
-			batch = factory.getSessionFactoryOptions().getDefaultBatchFetchSize();
+			batch = creationContext.getSessionFactoryOptions().getDefaultBatchFetchSize();
 		}
 		batchSize = batch;
 
@@ -389,8 +389,8 @@ public abstract class AbstractCollectionPersister
 				Formula form = (Formula) selectable;
 				elementFormulaTemplates[j] = form.getTemplate(
 						dialect,
-						factory.getTypeConfiguration(),
-						factory.getQueryEngine().getSqmFunctionRegistry()
+						creationContext.getTypeConfiguration(),
+						creationContext.getFunctionRegistry()
 				);
 				elementFormulas[j] = form.getFormula();
 			}
@@ -401,8 +401,8 @@ public abstract class AbstractCollectionPersister
 				elementColumnReaders[j] = col.getReadExpr( dialect );
 				elementColumnReaderTemplates[j] = col.getTemplate(
 						dialect,
-						factory.getTypeConfiguration(),
-						factory.getQueryEngine().getSqmFunctionRegistry()
+						creationContext.getTypeConfiguration(),
+						creationContext.getFunctionRegistry()
 				);
 				elementColumnIsGettable[j] = true;
 				if ( elementType.isComponentType() ) {
@@ -454,8 +454,8 @@ public abstract class AbstractCollectionPersister
 					Formula indexForm = (Formula) s;
 					indexFormulaTemplates[i] = indexForm.getTemplate(
 							dialect,
-							factory.getTypeConfiguration(),
-							factory.getQueryEngine().getSqmFunctionRegistry()
+							creationContext.getTypeConfiguration(),
+							creationContext.getFunctionRegistry()
 					);
 					indexFormulas[i] = indexForm.getFormula();
 					hasFormula = true;
@@ -548,10 +548,7 @@ public abstract class AbstractCollectionPersister
 			);
 		}
 		else if ( !elementType.isEntityType() ) {
-			elementPropertyMapping = new ElementPropertyMapping(
-					elementColumnNames,
-					elementType
-					);
+			elementPropertyMapping = new ElementPropertyMapping( elementColumnNames, elementType );
 		}
 		else {
 			// not all entity-persisters implement PropertyMapping!
@@ -590,9 +587,9 @@ public abstract class AbstractCollectionPersister
 			manyToManyWhereString = "( " + collectionBootDescriptor.getManyToManyWhere() + ")";
 			manyToManyWhereTemplate = Template.renderWhereStringTemplate(
 					manyToManyWhereString,
-					factory.getJdbcServices().getDialect(),
-					factory.getTypeConfiguration(),
-					factory.getQueryEngine().getSqmFunctionRegistry()
+					creationContext.getDialect(),
+					creationContext.getTypeConfiguration(),
+					creationContext.getFunctionRegistry()
 			);
 		}
 
@@ -624,14 +621,14 @@ public abstract class AbstractCollectionPersister
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
 		final Generator generator = collection.getIdentifier().createGenerator(
 				context.getBootstrapContext().getIdentifierGeneratorFactory(),
-				factory.getJdbcServices().getDialect(),
+				context.getDialect(),
 				null
 		);
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}
 		if ( generator instanceof IdentifierGenerator ) {
-			( (IdentifierGenerator) generator ).initialize( context.getSessionFactory().getSqlStringGenerationContext() );
+			( (IdentifierGenerator) generator ).initialize( context.getSqlStringGenerationContext() );
 		}
 		return (BeforeExecutionGenerator) generator;
 	}

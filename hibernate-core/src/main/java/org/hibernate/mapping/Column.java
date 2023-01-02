@@ -493,7 +493,9 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	public void addCheckConstraint(CheckConstraint checkConstraint) {
-		this.checkConstraints.add( checkConstraint );
+		if ( !checkConstraints.contains( checkConstraint) ) {
+			checkConstraints.add( checkConstraint );
+		}
 	}
 
 	public java.util.List<CheckConstraint> getCheckConstraints() {

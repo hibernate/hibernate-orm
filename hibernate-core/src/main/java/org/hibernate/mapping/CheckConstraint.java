@@ -6,6 +6,8 @@
  */
 package org.hibernate.mapping;
 
+import java.util.Objects;
+
 /**
  * Represents a table or column level {@code check} constraint.
  *
@@ -24,6 +26,14 @@ public class CheckConstraint {
 		this.constraint = constraint;
 	}
 
+	public boolean isNamed() {
+		return name != null;
+	}
+
+	public boolean isAnonymous() {
+		return name == null;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -36,6 +46,10 @@ public class CheckConstraint {
 		return constraint;
 	}
 
+	public String getConstraintInParens() {
+		return "(" + constraint + ")";
+	}
+
 	public void setConstraint(String constraint) {
 		this.constraint = constraint;
 	}
@@ -44,5 +58,22 @@ public class CheckConstraint {
 		return name == null
 				? " check (" + constraint + ")"
 				: " constraint " + name + " check (" + constraint + ")";
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( object instanceof CheckConstraint ) {
+			CheckConstraint other = (CheckConstraint) object;
+			return Objects.equals( name, other.name )
+				&& Objects.equals( constraint, other.constraint );
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return constraint.hashCode();
 	}
 }

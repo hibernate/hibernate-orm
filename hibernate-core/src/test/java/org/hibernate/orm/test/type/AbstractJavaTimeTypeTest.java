@@ -27,6 +27,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.TestForIssue;
@@ -197,7 +198,9 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 		TimeZone timeZoneBefore = TimeZone.getDefault();
 		TimeZone.setDefault( toTimeZone( env.defaultJvmTimeZone ) );
 		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		if( determineDialect() instanceof H2Dialect || determineDialect() instanceof HSQLDialect) {
+			SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+		}
 		/*
 		 * Run the code in a new thread, because some libraries (looking at you, h2 JDBC driver)
 		 * cache data dependent on the default timezone in thread local variables,
@@ -227,7 +230,9 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 		finally {
 			TimeZone.setDefault( timeZoneBefore );
 			// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-			SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+			if( determineDialect() instanceof H2Dialect || determineDialect() instanceof HSQLDialect) {
+				SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+			}
 		}
 	}
 

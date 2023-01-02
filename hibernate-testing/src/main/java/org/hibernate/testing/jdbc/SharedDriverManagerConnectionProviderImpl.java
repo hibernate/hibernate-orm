@@ -21,6 +21,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * A special connection provider that is shared across test runs for better performance.
  *
  * @author Christian Beikov
+ * @author Loïc Lefèvre
  */
 public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConnectionProviderImpl {
 
@@ -88,7 +89,7 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 
 		public Config(Map<String,Object> configurationValues) {
 			this.autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues, false );
-			this.minSize = ConfigurationHelper.getInt( MIN_SIZE, configurationValues, 2 );
+			this.minSize = ConfigurationHelper.getInt( MIN_SIZE, configurationValues, 0 );
 			this.maxSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
 			this.initialSize = ConfigurationHelper.getInt( INITIAL_SIZE, configurationValues, minSize );
 			this.driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );

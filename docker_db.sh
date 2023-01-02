@@ -450,24 +450,57 @@ oracle_setup() {
     echo "Oracle successfully started"
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
-cat <<EOF | \$ORACLE_HOME/bin/sqlplus sys/Oracle18@localhost/XE as sysdba
-alter database tempfile '\$ORACLE_BASE/oradata/XE/temp01.dbf' resize 400M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/system01.dbf' resize 1000M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/sysaux01.dbf' resize 600M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/undotbs01.dbf' resize 300M;
+cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
+-- Increasing redo logs
 alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/redo04.log' size 500M reuse;
 alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/redo05.log' size 500M reuse;
 alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/redo06.log' size 500M reuse;
-
 alter system switch logfile;
 alter system switch logfile;
 alter system switch logfile;
 alter system checkpoint;
-
 alter database drop logfile group 1;
 alter database drop logfile group 2;
 alter database drop logfile group 3;
+!rm \$ORACLE_BASE/oradata/XE/redo01.log
+!rm \$ORACLE_BASE/oradata/XE/redo02.log
+!rm \$ORACLE_BASE/oradata/XE/redo03.log
+
+-- Increasing SYSAUX data file
+alter database datafile '\$ORACLE_BASE/oradata/XE/sysaux01.dbf' resize 600M;
+
+-- Modifying database init parameters
 alter system set open_cursors=1000 sid='*' scope=both;
+alter system set session_cached_cursors=500 sid='*' scope=spfile;
+alter system set db_securefile=ALWAYS sid='*' scope=spfile;
+alter system set dispatchers='(PROTOCOL=TCP)(SERVICE=XEXDB)(DISPATCHERS=0)' sid='*' scope=spfile;
+alter system set recyclebin=OFF sid='*' SCOPE=SPFILE;
+
+-- Comment the 2 next lines to be able to use Diagnostics Pack features
+alter system set sga_target=0m sid='*' scope=both;
+alter system set statistics_level=BASIC sid='*' scope=spfile;
+
+-- Restart the database
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE OPEN;
+
+-- Switch to the XEPDB1 pluggable database
+alter session set container=xepdb1;
+
+-- Modify XEPDB1 datafiles and tablespaces
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/system01.dbf' resize 320M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/sysaux01.dbf' resize 360M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 400M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' autoextend on next 16M;
+alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' resize 400M;
+alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' autoextend on next 16M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/users01.dbf' resize 100M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/users01.dbf' autoextend on next 16M;
+alter tablespace USERS nologging;
+alter tablespace SYSTEM nologging;
+alter tablespace SYSAUX nologging;
+
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
 EOF\""

@@ -183,7 +183,7 @@ dependencyResolutionManagement {
             version( "derby", derbyVersion )
             version( "pgsql", "42.5.0" )
             version( "mysql", "8.0.27" )
-            version( "oracle", "21.3.0.0" )
+            version( "oracle", "21.8.0.0" )
 
             alias( "h2" ).to( "com.h2database", "h2" ).versionRef( "h2" )
             alias( "h2gis" ).to( "org.orbisgis", "h2gis" ).versionRef( "h2gis" )

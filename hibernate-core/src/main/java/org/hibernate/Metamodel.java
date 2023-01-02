@@ -18,13 +18,6 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 @Deprecated(since = "6.0")
 public interface Metamodel extends JpaMetamodel {
 	/**
-	 * Access to the SessionFactory that this Metamodel instance is bound to.
-	 *
-	 * @return The SessionFactory
-	 */
-	SessionFactory getSessionFactory();
-
-	/**
 	 * Given the name of an entity class, determine all the class and interface names by which it can be
 	 * referenced in an HQL query.
 	 *

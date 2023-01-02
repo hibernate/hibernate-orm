@@ -55,6 +55,7 @@ import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -83,8 +84,10 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
@@ -100,6 +103,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.relational.internal.SchemaManagerImpl;
@@ -251,9 +255,79 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			queryEngine = QueryEngine.from( this, bootMetamodel );
 
+			bootstrapContext.getTypeConfiguration().scope( this );
+
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
 			runtimeMetamodels = runtimeMetamodelsImpl;
-			runtimeMetamodelsImpl.finishInitialization( bootMetamodel, bootstrapContext, this );
+			new RuntimeModelCreationContext() {
+				final MappingMetamodelImpl mappingMetamodelImpl =
+						new MappingMetamodelImpl( typeConfiguration, serviceRegistry, options.getJpaCompliance() );
+				{
+					// need to set this before calling finishInitialization()
+					runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
+					// because this calls back to the RuntimeMetamodelsImplementor
+					mappingMetamodelImpl.finishInitialization( this );
+					// need to set this after calling finishInitialization()
+					runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
+
+				}
+
+				@Override
+				public BootstrapContext getBootstrapContext() {
+					return bootstrapContext;
+				}
+
+				@Override
+				public SessionFactoryImplementor getSessionFactory() {
+					// this is bad, we're not yet fully-initialized
+					return SessionFactoryImpl.this;
+				}
+
+				@Override
+				public MetadataImplementor getBootModel() {
+					return bootMetamodel;
+				}
+
+				@Override
+				public MappingMetamodelImplementor getDomainModel() {
+					return mappingMetamodelImpl;
+				}
+
+				@Override
+				public CacheImplementor getCache() {
+					return cacheAccess;
+				}
+
+				@Override
+				public Map<String, Object> getSettings() {
+					return settings;
+				}
+
+				@Override
+				public Dialect getDialect() {
+					return jdbcServices.getDialect();
+				}
+
+				@Override
+				public SqmFunctionRegistry getFunctionRegistry() {
+					return queryEngine.getSqmFunctionRegistry();
+				}
+
+				@Override
+				public TypeConfiguration getTypeConfiguration() {
+					return typeConfiguration;
+				}
+
+				@Override
+				public SessionFactoryOptions getSessionFactoryOptions() {
+					return options;
+				}
+
+				@Override
+				public JdbcServices getJdbcServices() {
+					return jdbcServices;
+				}
+			};
 
 			queryEngine.prepare( this, bootMetamodel, bootstrapContext );
 			if ( options.isNamedQueryStartupCheckingEnabled() ) {
@@ -328,7 +402,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return generators;
 	}
 
-	private SqlStringGenerationContext createSqlStringGenerationContext(
+	private static SqlStringGenerationContext createSqlStringGenerationContext(
 			MetadataImplementor bootMetamodel,
 			SessionFactoryOptions options,
 			JdbcServices jdbcServices) {

@@ -25,13 +25,11 @@ import org.hibernate.MappingException;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -43,8 +41,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
-import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -68,6 +64,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
@@ -103,8 +100,6 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 	//implement a deprecated API so have to override deprecated things
 
 	private static final String[] EMPTY_IMPLEMENTORS = ArrayHelper.EMPTY_STRING_ARRAY;
-
-	private final SessionFactoryImplementor sessionFactory;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JpaMetamodel
@@ -160,79 +155,50 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 //	private final Map<Class<?>, EmbeddableDomainType<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	private final ServiceRegistry serviceRegistry;
 	private final TypeConfiguration typeConfiguration;
 
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
 	private final Map<TupleType<?>, MappingModelExpressible<?>> tupleTypeCache = new ConcurrentHashMap<>();
 
-	public MappingMetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
-		this.sessionFactory = sessionFactory;
+	public MappingMetamodelImpl(
+			TypeConfiguration typeConfiguration,
+			ServiceRegistry serviceRegistry,
+			JpaCompliance jpaCompliance) {
+		this.serviceRegistry = serviceRegistry;
 		this.typeConfiguration = typeConfiguration;
-		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, sessionFactory.getSessionFactoryOptions().getJpaCompliance() );
+		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, jpaCompliance );
 	}
 
 	public JpaMetamodelImplementor getJpaMetamodel() {
 		return jpaMetamodel;
 	}
 
-	public void finishInitialization(
-			MetadataImplementor bootModel,
-			BootstrapContext bootstrapContext,
-			SessionFactoryImplementor sessionFactory) {
-		final RuntimeModelCreationContext runtimeModelCreationContext = new RuntimeModelCreationContext() {
-			@Override
-			public BootstrapContext getBootstrapContext() {
-				return bootstrapContext;
-			}
-
-			@Override
-			public SessionFactoryImplementor getSessionFactory() {
-				return sessionFactory;
-			}
-
-			@Override
-			public MetadataImplementor getBootModel() {
-				return bootModel;
-			}
-
-			@Override
-			public MappingMetamodel getDomainModel() {
-				return MappingMetamodelImpl.this;
-			}
-		};
-
-		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
-
-		final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting = determineJpaStaticMetaModelPopulationSetting( sessionFactory.getProperties() );
-		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( sessionFactory.getProperties() );
-
+	public void finishInitialization(RuntimeModelCreationContext context) {
+		final MetadataImplementor bootModel = context.getBootModel();
 		bootModel.visitRegisteredComponents( Component::prepareForMappingModel );
 		bootModel.getMappedSuperclassMappingsCopy().forEach( MappedSuperclass::prepareForMappingModel );
-		bootModel.getEntityBindings().forEach( PersistentClass::prepareForMappingModel );
+		bootModel.getEntityBindings().forEach( persistentClass -> persistentClass.prepareForMappingModel( context ) );
 
+		final PersisterFactory persisterFactory = serviceRegistry.getService( PersisterFactory.class );
+		final CacheImplementor cache = context.getCache();
 		processBootEntities(
 				bootModel.getEntityBindings(),
-				sessionFactory.getCache(),
+				cache,
 				persisterFactory,
-				runtimeModelCreationContext
+				context
 		);
-
 		processBootCollections(
 				bootModel.getCollectionBindings(),
-				sessionFactory.getCache(),
+				cache,
 				persisterFactory,
-				runtimeModelCreationContext
+				context
 		);
-
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// after *all* persisters and named queries are registered
 
-		MappingModelCreationProcess.process(
-				entityPersisterMap,
-				sessionFactory.getQueryEngine().getSqmFunctionRegistry(),
-				runtimeModelCreationContext
-		);
+		MappingModelCreationProcess.process( entityPersisterMap, context );
 
 		for ( EntityPersister persister : entityPersisterMap.values() ) {
 			persister.postInstantiate();
@@ -243,18 +209,16 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 
 		registerEmbeddableMappingType( bootModel );
 
-		( (JpaMetamodelImpl) this.jpaMetamodel ).processJpa(
+		final Map<String, Object> settings = context.getSettings();
+		( (JpaMetamodelImpl) jpaMetamodel ).processJpa(
 				bootModel,
 				this,
 				entityProxyInterfaceMap,
-				jpaStaticMetaModelPopulationSetting,
-				jpaMetaModelPopulationSetting,
+				determineJpaStaticMetaModelPopulationSetting( settings ),
+				determineJpaMetaModelPopulationSetting( settings ),
 				bootModel.getNamedEntityGraphs().values(),
-				runtimeModelCreationContext
+				context
 		);
-
-		bootModel.getEntityBindings().forEach( persistentClass -> persistentClass.mappingModelReady( this ) );
-
 	}
 
 	private void registerEmbeddableMappingType(MetadataImplementor bootModel) {
@@ -453,11 +417,6 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 	}
 
 	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
-
-	@Override
 	public EntityPersister getEntityDescriptor(Class<?> entityJavaType) {
 		EntityPersister entityPersister = entityPersisterMap.get( entityJavaType.getName() );
 		if ( entityPersister == null ) {
@@ -566,9 +525,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 		}
 
 		try {
-			final Class<?> clazz = getSessionFactory().getServiceRegistry()
-					.getService( ClassLoaderService.class )
-					.classForName( className );
+			final Class<?> clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( className );
 			implementors = doGetImplementors( clazz );
 			if ( implementors.length > 0 ) {
 				implementorsCache.putIfAbsent( className, implementors );

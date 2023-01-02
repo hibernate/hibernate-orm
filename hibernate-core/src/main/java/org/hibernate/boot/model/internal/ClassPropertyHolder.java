@@ -368,7 +368,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				);
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
-				join.addMappedsuperclassProperty( property );
+				join.addMappedSuperclassProperty( property );
 				addPropertyToMappedSuperclass( property, declaringClass );
 			}
 			else {

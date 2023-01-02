@@ -8,12 +8,17 @@ package org.hibernate.metamodel.spi;
 
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.Map;
 
 /**
  * @author Steve Ebersole
@@ -25,14 +30,10 @@ public interface RuntimeModelCreationContext extends PersisterCreationContext {
 
 	MetadataImplementor getBootModel();
 
-	MappingMetamodel getDomainModel();
+	MappingMetamodelImplementor getDomainModel();
 
 	default TypeConfiguration getTypeConfiguration() {
 		return getBootstrapContext().getTypeConfiguration();
-	}
-
-	default ManagedBeanRegistry getManagedBeanRegistry() {
-		return getSessionFactory().getServiceRegistry().getService( ManagedBeanRegistry.class );
 	}
 
 	default JavaTypeRegistry getJavaTypeRegistry() {
@@ -43,4 +44,16 @@ public interface RuntimeModelCreationContext extends PersisterCreationContext {
 	default MetadataImplementor getMetadata() {
 		return getBootModel();
 	}
+
+	SqmFunctionRegistry getFunctionRegistry();
+
+	Map<String, Object> getSettings();
+
+	Dialect getDialect();
+
+	CacheImplementor getCache();
+
+	SessionFactoryOptions getSessionFactoryOptions();
+
+	JdbcServices getJdbcServices();
 }

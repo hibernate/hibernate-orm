@@ -362,15 +362,14 @@ public final class Template {
 	}
 
 	public static List<String> collectColumnNames(
-			String checkConstraint,
+			String sql,
+			Dialect dialect,
 			TypeConfiguration typeConfiguration,
-			SessionFactoryImplementor sessionFactory) {
-		final String template = renderWhereStringTemplate(
-				checkConstraint,
-				sessionFactory.getJdbcServices().getDialect(),
-				typeConfiguration,
-				sessionFactory.getQueryEngine().getSqmFunctionRegistry()
-		);
+			SqmFunctionRegistry functionRegistry) {
+		return collectColumnNames( renderWhereStringTemplate( sql, dialect, typeConfiguration, functionRegistry ) );
+	}
+
+	public static List<String> collectColumnNames(String template) {
 		final List<String> names = new ArrayList<>();
 		int begin = 0;
 		int match;

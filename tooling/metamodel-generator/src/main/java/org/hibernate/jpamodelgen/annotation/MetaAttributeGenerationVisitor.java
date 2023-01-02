@@ -34,14 +34,14 @@ import org.hibernate.jpamodelgen.util.TypeUtils;
 public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<AnnotationMetaAttribute, Element> {
 
 	/**
-	 * FQCN of the Hibernate specific @Target annotation. We do not use the class directly to avoid depending on Hibernate
-	 * Core.
+	 * FQCN of the Hibernate-specific {@code @Target} annotation.
+	 * We do not use the class directly to avoid depending on Hibernate Core.
 	 */
 	private static final String ORG_HIBERNATE_ANNOTATIONS_TARGET = "org.hibernate.annotations.Target";
 
 	/**
-	 * FQCN of the Hibernate specific @Type annotation. We do not use the class directly to avoid depending on Hibernate
-	 * Core.
+	 * FQCN of the Hibernate-specific {@code @Type} annotation.
+	 * We do not use the class directly to avoid depending on Hibernate Core.
 	 */
 	private static final String ORG_HIBERNATE_ANNOTATIONS_TYPE = "org.hibernate.annotations.Type";
 

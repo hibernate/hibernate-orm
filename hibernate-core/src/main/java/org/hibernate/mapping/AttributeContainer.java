@@ -26,5 +26,7 @@ public interface AttributeContainer {
 	/**
 	 * Add a property to this {@link PersistentClass} or {@link Join}.
 	 */
-	void addProperty(Property attribute);
+	void addProperty(Property property);
+	boolean contains(Property property);
+	Table getTable();
 }

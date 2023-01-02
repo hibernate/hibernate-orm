@@ -487,12 +487,14 @@ public abstract class AbstractEntityPersister
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
 
+		//set it here, but don't call it, since it's still uninitialized!
 		factory = creationContext.getSessionFactory();
+
 		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( persistentClass.getEntityName() );
 
 		navigableRole = new NavigableRole( persistentClass.getEntityName() );
 
-		final SessionFactoryOptions sessionFactoryOptions = creationContext.getSessionFactory().getSessionFactoryOptions();
+		final SessionFactoryOptions sessionFactoryOptions = creationContext.getSessionFactoryOptions();
 
 		if ( sessionFactoryOptions.isSecondLevelCacheEnabled() ) {
 			this.cacheAccessStrategy = cacheAccessStrategy;
@@ -1069,8 +1071,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isCacheComplianceEnabled(RuntimeModelCreationContext creationContext) {
-		return creationContext.getSessionFactory()
-				.getSessionFactoryOptions()
+		return creationContext.getSessionFactoryOptions()
 				.getJpaCompliance()
 				.isJpaCacheComplianceEnabled();
 	}
@@ -4752,8 +4753,7 @@ public abstract class AbstractEntityPersister
 						else {
 							sqmMultiTableMutationStrategy.prepare(
 									creationProcess,
-									creationContext.getSessionFactory().getJdbcServices()
-											.getBootstrapJdbcConnectionAccess()
+									creationContext.getJdbcServices().getBootstrapJdbcConnectionAccess()
 							);
 							return true;
 						}
@@ -4784,8 +4784,7 @@ public abstract class AbstractEntityPersister
 						else {
 							sqmMultiTableInsertStrategy.prepare(
 									creationProcess,
-									creationContext.getSessionFactory().getJdbcServices()
-											.getBootstrapJdbcConnectionAccess()
+									creationContext.getJdbcServices().getBootstrapJdbcConnectionAccess()
 							);
 							return true;
 						}

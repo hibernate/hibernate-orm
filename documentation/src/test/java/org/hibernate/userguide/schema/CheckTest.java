@@ -13,6 +13,7 @@ import jakarta.persistence.PersistenceException;
 
 import jakarta.persistence.SecondaryTable;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -52,6 +53,11 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 			book.setPrice(49.99d);
 
 			entityManager.persist(book);
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Book book = entityManager.find(Book.class, 0L);
+			assertEquals( 1, book.edition );
+			assertEquals( 2, book.nextEdition );
 		});
 		try {
 			doInJPA(this::entityManagerFactory, entityManager -> {
@@ -141,6 +147,9 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Column(table = "BookEdition")
 		private int edition = 1;
+
+		@Formula("edition + 1")
+		private int nextEdition = 2;
 
 		@Column(table = "BookEdition")
 		private LocalDate editionDate;

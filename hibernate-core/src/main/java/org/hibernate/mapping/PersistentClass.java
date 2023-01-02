@@ -23,19 +23,19 @@ import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.internal.util.collections.SingletonIterator;
-import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
-import org.hibernate.sql.Template;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -44,6 +44,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
+import static org.hibernate.sql.Template.collectColumnNames;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Entity entity class}.
@@ -301,10 +302,15 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	@Override
-	public void addProperty(Property p) {
-		properties.add( p );
-		declaredProperties.add( p );
-		p.setPersistentClass( this );
+	public void addProperty(Property property) {
+		properties.add( property );
+		declaredProperties.add( property );
+		property.setPersistentClass( this );
+	}
+
+	@Override
+	public boolean contains(Property property) {
+		return properties.contains( property );
 	}
 
 	public abstract Table getTable();
@@ -1224,36 +1230,55 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	// End of @MappedSuperclass support
 
-	public void prepareForMappingModel() {
+	public void prepareForMappingModel(RuntimeModelCreationContext context) {
+		final Dialect dialect = context.getDialect();
+		final TypeConfiguration typeConfiguration = context.getTypeConfiguration();
+		final SqmFunctionRegistry functionRegistry = context.getFunctionRegistry();
+
+		// assign check constraints to the right table
+		for ( CheckConstraint checkConstraint : checkConstraints ) {
+			container( collectColumnNames( checkConstraint.getConstraint(), dialect, typeConfiguration, functionRegistry ) )
+					.getTable().addCheck( checkConstraint );
+		}
+
+		// now, move @Formulas to the correct AttributeContainers
+		//TODO: skip this step for hbm.xml
+		for ( Property property : new ArrayList<>( properties ) ) {
+			for ( Selectable selectable : property.getSelectables() ) {
+				if ( selectable.isFormula() && properties.contains( property ) ) {
+					final Formula formula = (Formula) selectable;
+					final AttributeContainer container =
+							container( collectColumnNames( formula.getTemplate( dialect, typeConfiguration, functionRegistry ) ) );
+					if ( !container.contains( property ) ) {
+						properties.remove( property );
+						container.addProperty( property );
+						break; //TODO: embeddables
+					}
+				}
+			}
+		}
+
 		properties.sort( comparing( Property::getName ) );
 	}
 
-	public void mappingModelReady(MappingMetamodel mappingMetamodel) {
-		for ( CheckConstraint checkConstraint : checkConstraints ) {
-			final TypeConfiguration typeConfiguration = mappingMetamodel.getTypeConfiguration();
-			final SessionFactoryImplementor sessionFactory = typeConfiguration.getSessionFactory();
-			final List<String> constrainedColumnNames =
-					Template.collectColumnNames( checkConstraint.getConstraint(), typeConfiguration, sessionFactory );
-			final Table primary = getTable();
-			long matches = matchesInTable( constrainedColumnNames, primary );
-			if ( matches == constrainedColumnNames.size() ) {
-				// perfect, all columns matched in the primary table
-				primary.addCheck( checkConstraint );
-			}
-			else {
-				// go searching for a secondary table which better matches
-				Table table = primary;
-				long max = matches;
-				for ( Join join : getJoins() ) {
-					final Table secondary = join.getTable();
-					long secondaryMatches = matchesInTable( constrainedColumnNames, secondary );
-					if ( secondaryMatches > max ) {
-						table = secondary;
-						max = secondaryMatches;
-					}
+	private AttributeContainer container(List<String> constrainedColumnNames) {
+		long matches = matchesInTable( constrainedColumnNames, getTable() );
+		if ( matches == constrainedColumnNames.size() ) {
+			// perfect, all columns matched in the primary table
+			return this;
+		}
+		else {
+			// go searching for a secondary table which better matches
+			AttributeContainer result = this;
+			long max = matches;
+			for ( Join join : getJoins() ) {
+				long secondaryMatches = matchesInTable( constrainedColumnNames, join.getTable() );
+				if ( secondaryMatches > max ) {
+					result = join;
+					max = secondaryMatches;
 				}
-				table.addCheck( checkConstraint );
 			}
+			return result;
 		}
 	}
 

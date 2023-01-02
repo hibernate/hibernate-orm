@@ -1231,33 +1231,37 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	// End of @MappedSuperclass support
 
 	public void prepareForMappingModel(RuntimeModelCreationContext context) {
-		final Dialect dialect = context.getDialect();
-		final TypeConfiguration typeConfiguration = context.getTypeConfiguration();
-		final SqmFunctionRegistry functionRegistry = context.getFunctionRegistry();
+		if ( !joins.isEmpty() ) {
+			// we need to deal with references to secondary tables
+			// in SQL formulas and check constraints
 
-		// assign check constraints to the right table
-		for ( CheckConstraint checkConstraint : checkConstraints ) {
-			container( collectColumnNames( checkConstraint.getConstraint(), dialect, typeConfiguration, functionRegistry ) )
-					.getTable().addCheck( checkConstraint );
-		}
+			final Dialect dialect = context.getDialect();
+			final TypeConfiguration types = context.getTypeConfiguration();
+			final SqmFunctionRegistry functions = context.getFunctionRegistry();
 
-		// now, move @Formulas to the correct AttributeContainers
-		//TODO: skip this step for hbm.xml
-		for ( Property property : new ArrayList<>( properties ) ) {
-			for ( Selectable selectable : property.getSelectables() ) {
-				if ( selectable.isFormula() && properties.contains( property ) ) {
-					final Formula formula = (Formula) selectable;
-					final AttributeContainer container =
-							container( collectColumnNames( formula.getTemplate( dialect, typeConfiguration, functionRegistry ) ) );
-					if ( !container.contains( property ) ) {
-						properties.remove( property );
-						container.addProperty( property );
-						break; //TODO: embeddables
+			// assign check constraints to the right table
+			for ( CheckConstraint checkConstraint : checkConstraints ) {
+				container( collectColumnNames( checkConstraint.getConstraint(), dialect, types, functions ) )
+						.getTable().addCheck( checkConstraint );
+			}
+
+			// now, move @Formulas to the correct AttributeContainers
+			//TODO: skip this step for hbm.xml
+			for ( Property property : new ArrayList<>( properties ) ) {
+				for ( Selectable selectable : property.getSelectables() ) {
+					if ( selectable.isFormula() && properties.contains( property ) ) {
+						final Formula formula = (Formula) selectable;
+						final AttributeContainer container =
+								container( collectColumnNames( formula.getTemplate( dialect, types, functions ) ) );
+						if ( !container.contains( property ) ) {
+							properties.remove( property );
+							container.addProperty( property );
+							break; //TODO: embeddables
+						}
 					}
 				}
 			}
 		}
-
 		properties.sort( comparing( Property::getName ) );
 	}
 

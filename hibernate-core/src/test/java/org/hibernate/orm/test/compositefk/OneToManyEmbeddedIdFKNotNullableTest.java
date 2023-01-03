@@ -7,18 +7,14 @@
 package org.hibernate.orm.test.compositefk;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
-import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +23,6 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
@@ -36,7 +31,6 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Table;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -63,7 +57,7 @@ public class OneToManyEmbeddedIdFKNotNullableTest {
 			ChildEntity c1 = new ChildEntity();
 			ChildEntity c2 = new ChildEntity();
 			ParentEntity parentEntity = new ParentEntity(
-					new ParentEntityId( 1, "1" ),
+					new ParentEntityId( 1, new NestedEmbeddable( "parent_1" ) ),
 					List.of( c1, c2 )
 			);
 			session.persist( parentEntity );
@@ -102,25 +96,14 @@ public class OneToManyEmbeddedIdFKNotNullableTest {
 	}
 
 	@Embeddable
-	public static class ParentEntityId implements Serializable {
-		private int id;
-
+	public static class NestedEmbeddable {
 		private String name;
 
-		public ParentEntityId() {
+		public NestedEmbeddable() {
 		}
 
-		public ParentEntityId(int id, String name) {
-			this.id = id;
+		public NestedEmbeddable(String name) {
 			this.name = name;
-		}
-
-		public int getId() {
-			return id;
-		}
-
-		public void setId(int id) {
-			this.id = id;
 		}
 
 		public String getName() {
@@ -132,10 +115,43 @@ public class OneToManyEmbeddedIdFKNotNullableTest {
 		}
 	}
 
+	@Embeddable
+	public static class ParentEntityId implements Serializable {
+		private int id;
+
+		private NestedEmbeddable nestedEmbeddable;
+
+		public ParentEntityId() {
+		}
+
+		public ParentEntityId(int id, NestedEmbeddable nestedEmbeddable) {
+			this.id = id;
+			this.nestedEmbeddable = nestedEmbeddable;
+		}
+
+		public int getId() {
+			return id;
+		}
+
+		public void setId(int id) {
+			this.id = id;
+		}
+
+		public NestedEmbeddable getNestedEmbeddable() {
+			return nestedEmbeddable;
+		}
+
+		public void setNestedEmbeddable(NestedEmbeddable nestedEmbeddable) {
+			this.nestedEmbeddable = nestedEmbeddable;
+		}
+	}
 
 	@Entity(name = "ParentEntity")
 	@Table(name = "parent_entity")
 	public static class ParentEntity {
+		@EmbeddedId
+		private ParentEntityId id;
+
 		@OneToMany(cascade = CascadeType.ALL)
 		@JoinColumns({
 				@JoinColumn(name = "parent_entity_id", referencedColumnName = "id", nullable = false),
@@ -145,9 +161,6 @@ public class OneToManyEmbeddedIdFKNotNullableTest {
 
 		public ParentEntity() {
 		}
-
-		@EmbeddedId
-		private ParentEntityId id;
 
 		public ParentEntity(ParentEntityId id, List<ChildEntity> childEntities) {
 			this.id = id;

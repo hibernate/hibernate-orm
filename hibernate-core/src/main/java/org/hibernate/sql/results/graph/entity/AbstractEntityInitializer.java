@@ -378,7 +378,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( !missing ) {
+		if ( !missing && !isInitialized ) {
 			// Special case map proxy to avoid stack overflows
 			// We know that a map proxy will always be of "the right type" so just use that object
 			final LoadingEntityEntry existingLoadingEntry =
@@ -388,6 +388,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 			if ( entityInstance == null ) {
 				resolveEntityInstance( rowProcessingState, existingLoadingEntry, entityKey.getIdentifier() );
+			}
+			else if ( existingLoadingEntry != null && existingLoadingEntry.getEntityInitializer() != this ) {
+				isInitialized = true;
 			}
 		}
 	}

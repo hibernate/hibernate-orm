@@ -94,6 +94,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				null,
 				null,
 				null,
+				0,
 				insertability,
 				updateability,
 				embeddedPartBuilder,
@@ -108,6 +109,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			String[] rootTableKeyColumnNames,
 			Property componentProperty,
 			DependantValue dependantValue,
+			int dependantColumnIndex,
 			boolean[] insertability,
 			boolean[] updateability,
 			Function<EmbeddableMappingType,EmbeddableValuedModelPart> embeddedPartBuilder,
@@ -134,6 +136,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								rootTableExpression,
 								rootTableKeyColumnNames,
 								dependantValue,
+								dependantColumnIndex,
 								insertability,
 								updateability,
 								creationProcess
@@ -299,6 +302,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			DependantValue dependantValue,
+			int dependantColumnIndex,
 			boolean[] insertability,
 			boolean[] updateability,
 			MappingModelCreationProcess creationProcess) {
@@ -350,7 +354,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			if ( subtype instanceof BasicType ) {
 				final BasicValue basicValue = (BasicValue) value;
 				final Selectable selectable = dependantValue != null ?
-						dependantValue.getColumns().get( columnPosition ) :
+						dependantValue.getColumns().get( dependantColumnIndex + columnPosition ) :
 						basicValue.getColumn();
 				final String containingTableExpression;
 				final String columnExpression;
@@ -487,6 +491,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
+						dependantValue,
+						dependantColumnIndex + columnPosition,
 						this,
 						subCompositeType,
 						subTableExpression,

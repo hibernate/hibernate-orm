@@ -5421,11 +5421,18 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof CompositeType ) {
+			DependantValue dependantValue = null;
+			if ( bootProperty.getValue() instanceof DependantValue ) {
+				dependantValue = ( (DependantValue) bootProperty.getValue() );
+			}
+
 			return MappingModelCreationHelper.buildEmbeddedAttributeMapping(
 					attrName,
 					stateArrayPosition,
 					fetchableIndex,
 					bootProperty,
+					dependantValue,
+					0,
 					this,
 					(CompositeType) attrType,
 					tableExpression,

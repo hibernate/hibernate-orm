@@ -92,6 +92,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				null,
 				null,
 				null,
+				0,
 				embeddedPartBuilder,
 				creationProcess
 		);
@@ -104,6 +105,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			String[] rootTableKeyColumnNames,
 			Property componentProperty,
 			DependantValue dependantValue,
+			int dependantColumnIndex,
 			Function<EmbeddableMappingType,EmbeddableValuedModelPart> embeddedPartBuilder,
 			MappingModelCreationProcess creationProcess) {
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
@@ -127,6 +129,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								rootTableExpression,
 								rootTableKeyColumnNames,
 								dependantValue,
+								dependantColumnIndex,
 								creationProcess
 						)
 		);
@@ -214,6 +217,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			DependantValue dependantValue,
+			int dependantColumnIndex,
 			MappingModelCreationProcess creationProcess) {
 // for some reason I cannot get this to work, though only a single test fails - `CompositeElementTest`
 //		return finishInitialization(
@@ -264,7 +268,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			if ( subtype instanceof BasicType ) {
 				final BasicValue basicValue = (BasicValue) value;
 				final Selectable selectable = dependantValue != null ?
-						dependantValue.getColumns().get( columnPosition ) :
+						dependantValue.getColumns().get( dependantColumnIndex + columnPosition ) :
 						basicValue.getColumn();
 				final String containingTableExpression;
 				final String columnExpression;
@@ -452,6 +456,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
 						bootPropertyDescriptor,
+						dependantValue,
+						dependantColumnIndex + columnPosition,
 						this,
 						subCompositeType,
 						subTableExpression,

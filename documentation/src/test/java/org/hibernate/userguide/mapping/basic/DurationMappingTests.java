@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -46,6 +47,7 @@ public class DurationMappingTests {
 				.getMappingMetamodel();
 		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithDuration.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("duration");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
@@ -63,6 +65,11 @@ public class DurationMappingTests {
 						@Override
 						public int getColumnScale() {
 							return duration.getScale() == null ? JdbcTypeIndicators.NO_COLUMN_SCALE : duration.getScale();
+						}
+
+						@Override
+						public Dialect getDialect() {
+							return dialect;
 						}
 					},
 					jdbcMapping.getJavaTypeDescriptor()

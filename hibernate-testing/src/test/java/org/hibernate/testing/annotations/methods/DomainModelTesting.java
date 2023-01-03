@@ -47,9 +47,7 @@ public class DomainModelTesting {
 	}
 
 	private void settingAssertions(DomainModelScope scope) {
-		final org.hibernate.service.ServiceRegistry serviceRegistry = ( (MetadataImplementor) scope.getDomainModel() )
-				.getTypeConfiguration()
-				.getServiceRegistry();
+		final org.hibernate.service.ServiceRegistry serviceRegistry = scope.getDomainModel().getDatabase().getServiceRegistry();
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 		assertThat( configurationService.getSettings().get( "simple" ) ).isEqualTo( "simple-value" );
 	}

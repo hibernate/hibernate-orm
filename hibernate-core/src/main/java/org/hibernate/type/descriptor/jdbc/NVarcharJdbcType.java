@@ -91,10 +91,7 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 	}
 
 	protected boolean shouldUseMaterializedLob(JdbcTypeIndicators indicators) {
-		final Dialect dialect = indicators.getTypeConfiguration()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getDialect();
+		final Dialect dialect = indicators.getDialect();
 		final long length = indicators.getColumnLength();
 		final long maxLength = indicators.isNationalized() ?
 				dialect.getMaxNVarcharCapacity() :

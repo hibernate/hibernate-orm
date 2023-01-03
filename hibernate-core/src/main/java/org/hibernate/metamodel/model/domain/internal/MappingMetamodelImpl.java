@@ -79,6 +79,7 @@ import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
 
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
 import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaStaticMetaModelPopulationSetting;
 
@@ -99,7 +100,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 	//NOTE: we suppress deprecation warnings because at the moment we
 	//implement a deprecated API so have to override deprecated things
 
-	private static final String[] EMPTY_IMPLEMENTORS = ArrayHelper.EMPTY_STRING_ARRAY;
+	private static final String[] EMPTY_IMPLEMENTORS = EMPTY_STRING_ARRAY;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JpaMetamodel
@@ -161,13 +162,10 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
 	private final Map<TupleType<?>, MappingModelExpressible<?>> tupleTypeCache = new ConcurrentHashMap<>();
 
-	public MappingMetamodelImpl(
-			TypeConfiguration typeConfiguration,
-			ServiceRegistry serviceRegistry,
-			JpaCompliance jpaCompliance) {
+	public MappingMetamodelImpl(TypeConfiguration typeConfiguration, ServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 		this.typeConfiguration = typeConfiguration;
-		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, jpaCompliance );
+		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, this, serviceRegistry );
 	}
 
 	public JpaMetamodelImplementor getJpaMetamodel() {
@@ -361,6 +359,11 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
 	}
 
 	@Override
@@ -743,7 +746,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 			}
 		}
 
-		return results.toArray( ArrayHelper.EMPTY_STRING_ARRAY );
+		return results.toArray( EMPTY_STRING_ARRAY );
 	}
 
 	@Override

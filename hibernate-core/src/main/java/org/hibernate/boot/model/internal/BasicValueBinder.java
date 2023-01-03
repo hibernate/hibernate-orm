@@ -1023,11 +1023,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				.toType( returnedClassOrElement );
 	}
 
-	private Dialect getDialect() {
-		return buildingContext.getBuildingOptions()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getDialect();
+	@Override
+	public Dialect getDialect() {
+		return buildingContext.getMetadataCollector().getDatabase().getDialect();
 	}
 
 	private void applyJpaConverter(XProperty property, ConverterDescriptor attributeConverterDescriptor) {

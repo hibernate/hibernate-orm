@@ -6,21 +6,21 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
+import org.hibernate.query.spi.QueryEngineOptions;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmCreationOptionsStandard implements SqmCreationOptions {
-	private final SessionFactoryImplementor sessionFactory;
+	private final QueryEngineOptions queryEngineOptions;
 
-	public SqmCreationOptionsStandard(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+	public SqmCreationOptionsStandard(QueryEngineOptions queryEngineOptions) {
+		this.queryEngineOptions = queryEngineOptions;
 	}
 
 	@Override
 	public boolean useStrictJpaCompliance() {
-		return sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled();
+		return queryEngineOptions.getJpaCompliance().isJpaQueryComplianceEnabled();
 	}
 }

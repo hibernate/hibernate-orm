@@ -23,8 +23,8 @@ import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -47,7 +47,7 @@ public class EntityTypeImpl<J>
 			JavaType<J> javaType,
 			IdentifiableDomainType<? super J> superType,
 			PersistentClass persistentClass,
-			JpaMetamodel jpaMetamodel) {
+			JpaMetamodelImplementor jpaMetamodel) {
 		super(
 				persistentClass.getEntityName(),
 				javaType,
@@ -61,11 +61,9 @@ public class EntityTypeImpl<J>
 
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 
-		final Queryable entityDescriptor = (Queryable) jpaMetamodel.getTypeConfiguration()
-				.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( getHibernateEntityName() );
+		final Queryable entityDescriptor = (Queryable)
+				jpaMetamodel.getMappingMetamodel()
+						.getEntityDescriptor( getHibernateEntityName() );
 		final DiscriminatorMetadata discriminatorMetadata = entityDescriptor.getTypeDiscriminatorMetadata();
 		final DomainType discriminatorType;
 		if ( discriminatorMetadata != null ) {
@@ -83,7 +81,7 @@ public class EntityTypeImpl<J>
 				entityDescriptor
 		);
 	}
-	public EntityTypeImpl(JavaType<J> javaTypeDescriptor, JpaMetamodel jpaMetamodel) {
+	public EntityTypeImpl(JavaType<J> javaTypeDescriptor, JpaMetamodelImplementor jpaMetamodel) {
 		super(
 				javaTypeDescriptor.getJavaTypeClass().getName(),
 				javaTypeDescriptor,

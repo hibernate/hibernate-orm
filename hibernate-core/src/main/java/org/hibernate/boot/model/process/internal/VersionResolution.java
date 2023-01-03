@@ -12,6 +12,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -36,14 +37,12 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static <E> VersionResolution<E> from(
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
-			Function<TypeConfiguration, BasicJavaType> explicitJtdAccess,
-			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			TimeZoneStorageType timeZoneStorageType,
-			TypeConfiguration typeConfiguration,
 			@SuppressWarnings("unused") MetadataBuildingContext context) {
 
 		// todo (6.0) : add support for Dialect-specific interpretation?
 
+		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 		final java.lang.reflect.Type implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
 		final JavaType registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
 		final BasicJavaType jtd = (BasicJavaType) registered;
@@ -89,6 +88,11 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					@Override
 					public int getPreferredSqlTypeCodeForArray() {
 						return context.getPreferredSqlTypeCodeForArray();
+					}
+
+					@Override
+					public Dialect getDialect() {
+						return context.getMetadataCollector().getDatabase().getDialect();
 					}
 				}
 		);

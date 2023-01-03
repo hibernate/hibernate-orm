@@ -58,8 +58,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.profile.Association;
-import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
@@ -79,6 +77,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -86,8 +85,6 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -132,6 +129,7 @@ import static org.hibernate.cfg.AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLE
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
+import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
@@ -197,11 +195,20 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient SchemaManager schemaManager;
 
-	public SessionFactoryImpl(final MetadataImplementor bootMetamodel, final SessionFactoryOptions options) {
-		LOG.debug( "Building session factory" );
+	/**
+	 * @deprecated This constructor will be removed
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
+	public SessionFactoryImpl(MetadataImplementor bootMetamodel, SessionFactoryOptions options) {
+		this( bootMetamodel, options, bootMetamodel.getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext() );
+	}
 
-		final TypeConfiguration typeConfiguration = bootMetamodel.getTypeConfiguration();
-		final BootstrapContext bootstrapContext = typeConfiguration.getMetadataBuildingContext().getBootstrapContext();
+	public SessionFactoryImpl(
+			final MetadataImplementor bootMetamodel,
+			final SessionFactoryOptions options,
+			final BootstrapContext bootstrapContext) {
+		LOG.debug( "Building session factory" );
+		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		sessionFactoryOptions = options;
 
@@ -248,15 +255,22 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			primeSecondLevelCacheRegions( bootMetamodel );
 
+			// we build this before creating the runtime metamodel
+			// because the persisters need the SqmFunctionRegistry
+			// to translate SQL formulas ... but, if we fix Dialect
+			// as I proposed, so that it can contribute functions
+			// to the SqmFunctionRegistry before the QueryEngine is
+			// created, then we can split creation of QueryEngine
+			// and SqmFunctionRegistry, instantiating just the
+			// registry here, and doing the engine later
 			queryEngine = QueryEngine.from( this, bootMetamodel );
 
-			bootstrapContext.getTypeConfiguration().scope( this );
-
+			// this is where creation of the runtime metamodel happens
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
 			runtimeMetamodels = runtimeMetamodelsImpl;
 			new RuntimeModelCreationContext() {
 				final MappingMetamodelImpl mappingMetamodelImpl =
-						new MappingMetamodelImpl( typeConfiguration, serviceRegistry, options.getJpaCompliance() );
+						new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 				{
 					// need to set this before calling finishInitialization()
 					runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
@@ -264,7 +278,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 					mappingMetamodelImpl.finishInitialization( this );
 					// need to set this after calling finishInitialization()
 					runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
-
 				}
 
 				@Override
@@ -334,8 +347,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				}
 			};
 
-			// this needs to happen after persisters are all ready to go...
-			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodelsImpl );
+			// this needs to happen after the mapping metamodel is
+			// completely built, since we need to use the persisters
+			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodels.getMappingMetamodel() );
 
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
@@ -344,6 +358,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
 
 			currentSessionContext = buildCurrentSessionContext();
+
+			// re-scope the TypeConfiguration to this SessionFactory,
+			// now that we are (almost) fully-initialized ... note,
+			// we could have done this earlier, but then it's hard to
+			// really know or control who's calling back to us while
+			// we're in an incompletely-initialized state
+			typeConfiguration.scope( this );
 
 			observer.sessionFactoryCreated( this );
 
@@ -443,52 +464,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
-	private static Map<String, FetchProfile> getFetchProfiles(
-			MetadataImplementor bootMetamodel,
-			RuntimeMetamodelsImpl runtimeMetamodels) {
-		final Map<String, FetchProfile> fetchProfiles = new HashMap<>();
-		for ( org.hibernate.mapping.FetchProfile mappingProfile : bootMetamodel.getFetchProfiles() ) {
-			final FetchProfile fetchProfile = createFetchProfile( runtimeMetamodels, mappingProfile );
-			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
-		}
-		return fetchProfiles;
-	}
-
-	private static FetchProfile createFetchProfile(
-			RuntimeMetamodelsImpl runtimeMetamodels,
-			org.hibernate.mapping.FetchProfile mappingProfile) {
-		final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
-		for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
-			// resolve the persister owning the fetch
-			final EntityPersister owner = getEntityPersister( runtimeMetamodels, fetchProfile, mappingFetch );
-
-			// validate the specified association fetch
-			final Type associationType = owner.getPropertyType( mappingFetch.getAssociation() );
-			if ( associationType == null || !associationType.isAssociationType() ) {
-				throw new HibernateException( "Fetch profile [" + fetchProfile.getName() + "] specified an invalid association" );
-			}
-
-			// resolve the style
-			final Fetch.Style fetchStyle = Fetch.Style.parse( mappingFetch.getStyle() );
-
-			// then construct the fetch instance...
-			fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
-			((Loadable) owner).registerAffectingFetchProfile( fetchProfile.getName() );
-		}
-		return fetchProfile;
-	}
-
-	private static EntityPersister getEntityPersister(RuntimeMetamodelsImpl runtimeMetamodels, FetchProfile fetchProfile, org.hibernate.mapping.FetchProfile.Fetch mappingFetch) {
-		final String entityName = runtimeMetamodels.getImportedName( mappingFetch.getEntity() );
-		if ( entityName != null ) {
-			EntityPersister persister = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( entityName );
-			if ( persister != null ) {
-				return persister;
-			}
-		}
-		throw new HibernateException( "Unable to resolve entity reference [" + mappingFetch.getEntity()
-				+ "] in fetch profile [" + fetchProfile.getName() + "]" );
-	}
 
 	private static Map<String, Object> getSettings(SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
 		final Map<String, Object> settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();

@@ -51,6 +51,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
@@ -84,7 +85,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	private final TypeConfiguration typeConfiguration;
-	private final JpaCompliance jpaCompliance;
+	private final MappingMetamodel mappingMetamodel;
+	private final ServiceRegistry serviceRegistry;
 
 	private final Map<String, EntityDomainType<?>> jpaEntityTypeMap = new TreeMap<>(); // Need ordering for deterministic implementers list in SqmPolymorphicRootDescriptor
 	private final Map<Class<?>, ManagedDomainType<?>> jpaManagedTypeMap = new HashMap<>();
@@ -102,9 +104,13 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private final Map<String,Object> knownInvalidnameToImportMap = new ConcurrentHashMap<>();
 
 
-	public JpaMetamodelImpl(TypeConfiguration typeConfiguration, JpaCompliance jpaCompliance) {
+	public JpaMetamodelImpl(
+			TypeConfiguration typeConfiguration,
+			MappingMetamodel mappingMetamodel,
+			ServiceRegistry serviceRegistry) {
 		this.typeConfiguration = typeConfiguration;
-		this.jpaCompliance = jpaCompliance;
+		this.mappingMetamodel = mappingMetamodel;
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
@@ -113,8 +119,13 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
+	}
+
+	@Override
 	public JpaCompliance getJpaCompliance() {
-		return jpaCompliance;
+		return typeConfiguration.getJpaCompliance();
 	}
 
 	@Override
@@ -455,9 +466,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					if ( superType != null
 							&& superType.getPersistenceType() == Type.PersistenceType.ENTITY
 							&& javaType.isAssignableFrom( superType.getJavaType() ) ) {
-						final EntityMappingType superMapping = typeConfiguration.getSessionFactory()
-								.getRuntimeMetamodels()
-								.getMappingMetamodel()
+						final EntityMappingType superMapping = getMappingMetamodel()
 								.getEntityDescriptor( ( (EntityDomainType<?>) superType ).getHibernateEntityName() );
 						if ( !superMapping.isExplicitPolymorphism() ) {
 							continue;
@@ -465,9 +474,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					}
 
 					// it should not be added if it is mapped with explicit polymorphism itself
-					final EntityMappingType entityPersister = typeConfiguration.getSessionFactory()
-							.getRuntimeMetamodels()
-							.getMappingMetamodel()
+					final EntityMappingType entityPersister = getMappingMetamodel()
 							.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 					if ( entityPersister.isExplicitPolymorphism() ) {
 						continue;
@@ -490,6 +497,11 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 
 		throw new IllegalArgumentException( "Could not resolve entity reference : " + javaType.getName() );
+	}
+
+	@Override
+	public MappingMetamodel getMappingMetamodel() {
+		return mappingMetamodel;
 	}
 
 	public void processJpa(

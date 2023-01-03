@@ -13,7 +13,6 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.internal.util.StringHelper;
@@ -158,7 +157,7 @@ public abstract class EntityAction
 		return roleComparison != 0
 				? roleComparison
 				//then by id
-				: persister.getIdentifierType().compare( id, action.getId() );
+				: persister.getIdentifierType().compare( id, action.getId(), session.getSessionFactory() );
 	}
 
 	/**

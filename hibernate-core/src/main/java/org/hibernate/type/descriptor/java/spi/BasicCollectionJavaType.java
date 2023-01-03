@@ -74,9 +74,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
 			return ( (ArrayJdbcType) jdbcType ).resolveType(
 					typeConfiguration,
-					typeConfiguration.getServiceRegistry()
-							.getService( JdbcServices.class )
-							.getDialect(),
+					indicators.getDialect(),
 					recommendedComponentJdbcType,
 					ColumnTypeInformation.EMPTY
 			);

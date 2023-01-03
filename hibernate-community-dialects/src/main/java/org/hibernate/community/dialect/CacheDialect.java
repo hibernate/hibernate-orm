@@ -374,12 +374,6 @@ public class CacheDialect extends Dialect {
 	// miscellaneous support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getLowercaseFunction() {
-		// The name of the SQL function that transforms a string to lowercase
-		return "lower";
-	}
-
-	@Override
 	public String getNullColumnString() {
 		// The keyword used to specify a nullable column.
 		return " null";

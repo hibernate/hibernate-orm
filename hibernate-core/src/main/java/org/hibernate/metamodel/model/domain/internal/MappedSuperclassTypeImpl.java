@@ -13,10 +13,10 @@ import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -30,7 +30,7 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 			JavaType<J> javaType,
 			MappedSuperclass mappedSuperclass,
 			IdentifiableDomainType<? super J> superType,
-			JpaMetamodel jpaMetamodel) {
+			JpaMetamodelImplementor jpaMetamodel) {
 		super(
 				javaType.getJavaType().getTypeName(),
 				javaType,

@@ -6,21 +6,22 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractDomainType<J> implements SimpleDomainType<J> {
-	private final JpaMetamodel domainMetamodel;
+	private final JpaMetamodelImplementor domainMetamodel;
 	private final JavaType<J> javaType;
 
-	public AbstractDomainType(JavaType<J> javaType, JpaMetamodel domainMetamodel) {
+	public AbstractDomainType(JavaType<J> javaType, JpaMetamodelImplementor domainMetamodel) {
 		this.javaType = javaType;
 		this.domainMetamodel = domainMetamodel;
 	}
 
-	protected JpaMetamodel jpaMetamodel() {
+	protected JpaMetamodelImplementor jpaMetamodel() {
 		return domainMetamodel;
 	}
 

@@ -7,12 +7,13 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.QueryException;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+import static java.util.Arrays.asList;
 
 /**
  * @author Steve Ebersole
@@ -29,9 +30,6 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NONE = new ArgumentsValidator() {
 		@Override
-		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {}
-
-		@Override
 		public String getSignature() {
 			return "([arg0[, ...]])";
 		}
@@ -42,8 +40,11 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NO_ARGS = new ArgumentsValidator() {
 		@Override
-		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-			if (!arguments.isEmpty()) {
+		public void validate(
+				List<? extends SqmTypedNode<?>> arguments,
+				String functionName,
+				MappingMetamodel metamodel) {
+			if ( !arguments.isEmpty() ) {
 				throw new QueryException(
 						String.format(
 								Locale.ROOT,
@@ -67,8 +68,11 @@ public final class StandardArgumentsValidators {
 		}
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-				if (arguments.size() < minNumOfArgs) {
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					MappingMetamodel metamodel) {
+				if ( arguments.size() < minNumOfArgs ) {
 					throw new QueryException(
 							String.format(
 									Locale.ROOT,
@@ -101,8 +105,11 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator exactly(int number) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-				if (arguments.size() != number) {
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					MappingMetamodel metamodel) {
+				if ( arguments.size() != number ) {
 					throw new QueryException(
 							String.format(
 									Locale.ROOT,
@@ -137,8 +144,11 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator max(int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-				if (arguments.size() > maxNumOfArgs) {
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					MappingMetamodel metamodel) {
+				if ( arguments.size() > maxNumOfArgs ) {
 					throw new QueryException(
 							String.format(
 									Locale.ROOT,
@@ -169,7 +179,10 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator between(int minNumOfArgs, int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					MappingMetamodel metamodel) {
 				if (arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs) {
 					throw new QueryException(
 							String.format(
@@ -203,9 +216,14 @@ public final class StandardArgumentsValidators {
 	}
 
 	public static ArgumentsValidator of(Class<?> javaType) {
-		return (arguments, functionName, queryEngine) -> arguments.forEach(
-				arg -> {
-					Class<?> argType = arg.getNodeJavaType().getJavaTypeClass();
+		return new ArgumentsValidator() {
+			@Override
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					MappingMetamodel metamodel) {
+				for ( SqmTypedNode<?> argument : arguments ) {
+					Class<?> argType = argument.getNodeJavaType().getJavaTypeClass();
 					if ( !javaType.isAssignableFrom( argType ) ) {
 						throw new QueryException(
 								String.format(
@@ -218,16 +236,27 @@ public final class StandardArgumentsValidators {
 						);
 					}
 				}
-		);
+			}
+		};
 	}
 
 	public static ArgumentsValidator composite(ArgumentsValidator... validators) {
-		return composite( Arrays.asList( validators ) );
+		return composite( asList( validators ) );
 	}
 
 	public static ArgumentsValidator composite(List<ArgumentsValidator> validators) {
-		return (arguments, functionName, queryEngine) -> validators.forEach(
-				individualValidator -> individualValidator.validate( arguments, functionName, queryEngine)
-		);
+		return new ArgumentsValidator() {
+			@Override
+			public void validate(
+					List<? extends SqmTypedNode<?>> arguments,
+					String functionName,
+					MappingMetamodel metamodel) {
+				validators.forEach( individualValidator -> individualValidator.validate(
+						arguments,
+						functionName,
+						metamodel
+				) );
+			}
+		};
 	}
 }

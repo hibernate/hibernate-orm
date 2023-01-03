@@ -40,7 +40,7 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 public class EntitySelectFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 	private static final String CONCRETE_NAME = EntitySelectFetchInitializer.class.getSimpleName();
 
-	private final FetchParentAccess parentAccess;
+	protected final FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
 	private final boolean isEnhancedForLazyLoading;
 

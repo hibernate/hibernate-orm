@@ -56,6 +56,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -428,26 +429,27 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( missing ) {
-			return;
+		if ( !missing && !isInitialized ) {
+			// Special case map proxy to avoid stack overflows
+			// We know that a map proxy will always be of "the right type" so just use that object
+			final LoadingEntityEntry existingLoadingEntry =
+					rowProcessingState.getSession().getPersistenceContextInternal().getLoadContexts()
+							.findLoadingEntityEntry( entityKey );
+			setIsOwningInitializer( entityKey.getIdentifier(), existingLoadingEntry );
+
+			if ( entityInstance == null ) {
+				resolveEntityInstance( rowProcessingState, existingLoadingEntry, entityKey.getIdentifier() );
+			}
+			else if ( existingLoadingEntry != null && existingLoadingEntry.getEntityInitializer() != this ) {
+				isInitialized = true;
+			}
 		}
+	}
 
-		final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState = rowProcessingState.getJdbcValuesSourceProcessingState();
-		final SharedSessionContractImplementor session = jdbcValuesSourceProcessingState.getSession();
-
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		// Special case map proxy to avoid stack overflows
-		// We know that a map proxy will always be of "the right type" so just use that object
-		final LoadingEntityEntry existingLoadingEntry = persistenceContext
-				.getLoadContexts()
-				.findLoadingEntityEntry( entityKey );
-		setIsOwningInitializer( entityKey.getIdentifier(), existingLoadingEntry );
-
-		if ( entityInstance != null ) {
-			return;
-		}
-
-		final Object entityIdentifier = entityKey.getIdentifier();
+	private void resolveEntityInstance(
+			RowProcessingState rowProcessingState,
+			LoadingEntityEntry existingLoadingEntry,
+			Object entityIdentifier) {
 
 		if ( EntityLoadingLogging.TRACE_ENABLED ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
@@ -458,24 +460,24 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 
+		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
 		final Object proxy = getProxy( persistenceContext );
 		final Object entityInstanceFromExecutionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
 				.getExecutionContext()
 				.getEntityInstance();
-		if ( proxy != null && ( proxy instanceof MapProxy
-				|| entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) ) ) {
+		if ( isProxyInstance( proxy ) ) {
 			if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
-				this.entityInstance = entityInstanceFromExecutionContext;
+				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
 			else {
-				this.entityInstance = proxy;
+				entityInstance = proxy;
 			}
 		}
 		else {
 			final Object existingEntity = persistenceContext.getEntity( entityKey );
 			if ( existingEntity != null ) {
-				this.entityInstance = existingEntity;
+				entityInstance = existingEntity;
 				if ( existingLoadingEntry == null && isExistingEntityInitialized( existingEntity ) ) {
 					notifyResolutionListeners( entityInstance );
 					this.isInitialized = true;
@@ -488,26 +490,32 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				// look to see if another initializer from a parent load context or an earlier
 				// initializer is already loading the entity
-				this.entityInstance = resolveInstance(
-						entityIdentifier,
-						existingLoadingEntry,
-						rowProcessingState,
-						session
-				);
+				entityInstance = resolveInstance( entityIdentifier, existingLoadingEntry, rowProcessingState );
 			}
 
-			if ( LockMode.NONE != lockMode ) {
-				final EntityEntry entry = session.getPersistenceContextInternal().getEntry( this.entityInstance );
-				if ( entry != null && entry.getLockMode().lessThan( lockMode ) ) {
-					//we only check the version when _upgrading_ lock modes
-					if ( versionAssembler != null && entry.getLockMode() != LockMode.NONE ) {
-						checkVersion( entry, rowProcessingState );
-					}
-					//we need to upgrade the lock mode to the mode requested
-					entry.setLockMode( lockMode );
+			upgradeLockMode( rowProcessingState );
+		}
+	}
+
+	private void upgradeLockMode(RowProcessingState rowProcessingState) {
+		if ( lockMode != LockMode.NONE ) {
+			final EntityEntry entry =
+					rowProcessingState.getSession().getPersistenceContextInternal()
+							.getEntry( entityInstance );
+			if ( entry != null && entry.getLockMode().lessThan( lockMode ) ) {
+				//we only check the version when _upgrading_ lock modes
+				if ( versionAssembler != null && entry.getLockMode() != LockMode.NONE ) {
+					checkVersion( entry, rowProcessingState );
 				}
+				//we need to upgrade the lock mode to the mode requested
+				entry.setLockMode( lockMode );
 			}
 		}
+	}
+
+	private boolean isProxyInstance(Object proxy) {
+		return proxy != null
+				&& ( proxy instanceof MapProxy || entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) );
 	}
 
 	private boolean isExistingEntityInitialized(Object existingEntity) {
@@ -591,9 +599,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private Object resolveInstance(
 			Object entityIdentifier,
 			LoadingEntityEntry existingLoadingEntry,
-			RowProcessingState rowProcessingState,
-			SharedSessionContractImplementor session) {
-		if ( !isOwningInitializer ) {
+			RowProcessingState rowProcessingState) {
+		if ( isOwningInitializer ) {
+			assert existingLoadingEntry == null || existingLoadingEntry.getEntityInstance() == null;
+			return resolveEntityInstance( entityIdentifier, rowProcessingState );
+		}
+		else {
 			// the entity is already being loaded elsewhere
 			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
@@ -603,65 +614,74 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						existingLoadingEntry.getEntityInitializer()
 				);
 			}
-			// EARLY EXIT!!!
 			return existingLoadingEntry.getEntityInstance();
 		}
+	}
 
-		assert existingLoadingEntry == null || existingLoadingEntry.getEntityInstance() == null;
-
-		Object instance = null;
-
-		// this isEntityReturn bit is just for entity loaders, not hql/criteria
-		if ( isEntityReturn() ) {
-			final Object requestedEntityId = rowProcessingState.getJdbcValuesSourceProcessingState()
-					.getProcessingOptions()
-					.getEffectiveOptionalId();
-			final Object optionalEntityInstance = rowProcessingState.getJdbcValuesSourceProcessingState()
-					.getProcessingOptions()
-					.getEffectiveOptionalObject();
-			if ( requestedEntityId != null && optionalEntityInstance != null && requestedEntityId.equals(
-					entityKey.getIdentifier() ) ) {
-				instance = optionalEntityInstance;
-			}
+	private Object resolveEntityInstance(Object entityIdentifier, RowProcessingState rowProcessingState) {
+		final Object resolved = resolveToOptionalInstance( rowProcessingState );
+		if ( resolved != null ) {
+			registerLoadingEntity( rowProcessingState, resolved );
+			return resolved;
 		}
+		else {
+			// We have to query the second level cache if reference cache entries are used
+			if ( entityDescriptor.canUseReferenceCacheEntries() ) {
+				final Object cached = resolveInstanceFromCache( rowProcessingState );
+				if ( cached != null ) {
+					// EARLY EXIT!!!
+					// because the second level cache has reference cache entries, the entity is initialized
+					isInitialized = true;
+					return cached;
+				}
+			}
+			final Object instance = instantiateEntity( entityIdentifier, rowProcessingState.getSession() );
+			registerLoadingEntity( rowProcessingState, instance );
+			return instance;
+		}
+	}
 
-		// We have to query the second level cache if reference cache entries are used
-		if ( instance == null && entityDescriptor.canUseReferenceCacheEntries() ) {
-			instance = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-					(EventSource) rowProcessingState.getSession(),
-					null,
-					lockMode,
-					entityDescriptor,
-					entityKey
+	private Object instantiateEntity(Object entityIdentifier, SharedSessionContractImplementor session) {
+		final Object instance = session.instantiate( concreteDescriptor.getEntityName(), entityKey.getIdentifier() );
+		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
+					"(%s) Created new entity instance [%s] : %s",
+					getSimpleConcreteImplName(),
+					toLoggableString( getNavigablePath(), entityIdentifier),
+					instance
 			);
-
-			if ( instance != null ) {
-				// EARLY EXIT!!!
-				// because the second level cache has reference cache entries, the entity is initialized
-				isInitialized = true;
-				return instance;
-			}
 		}
-
-		if ( instance == null ) {
-			instance = session.instantiate(
-					concreteDescriptor.getEntityName(),
-					entityKey.getIdentifier()
-			);
-
-			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
-				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
-						"(%s) Created new entity instance [%s] : %s",
-						getSimpleConcreteImplName(),
-						toLoggableString( getNavigablePath(), entityIdentifier ),
-						instance
-				);
-			}
-		}
-
-		registerLoadingEntity( rowProcessingState, instance );
-
 		return instance;
+	}
+
+	private Object resolveToOptionalInstance(RowProcessingState rowProcessingState) {
+		if ( isEntityReturn() ) {
+			// this isEntityReturn bit is just for entity loaders, not hql/criteria
+			final JdbcValuesSourceProcessingOptions processingOptions =
+					rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions();
+			return matchesOptionalInstance( processingOptions ) ? processingOptions.getEffectiveOptionalObject() : null;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private boolean matchesOptionalInstance(JdbcValuesSourceProcessingOptions processingOptions) {
+		final Object optionalEntityInstance = processingOptions.getEffectiveOptionalObject();
+		final Object requestedEntityId = processingOptions.getEffectiveOptionalId();
+		return requestedEntityId != null
+				&& optionalEntityInstance != null
+				&& requestedEntityId.equals( entityKey.getIdentifier() );
+	}
+
+	private Object resolveInstanceFromCache(RowProcessingState rowProcessingState) {
+		return CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+				(EventSource) rowProcessingState.getSession(),
+				null,
+				lockMode,
+				entityDescriptor,
+				entityKey
+		);
 	}
 
 	private void registerLoadingEntity(RowProcessingState rowProcessingState, Object instance) {
@@ -694,8 +714,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				instance = resolveInstance(
 						entityKey.getIdentifier(),
 						persistenceContext.getLoadContexts().findLoadingEntityEntry( entityKey ),
-						rowProcessingState,
-						session
+						rowProcessingState
 				);
 				initializeEntity( instance, rowProcessingState, session, persistenceContext );
 			}

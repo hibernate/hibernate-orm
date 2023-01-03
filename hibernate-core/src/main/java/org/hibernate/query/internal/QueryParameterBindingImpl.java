@@ -105,7 +105,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			return;
 		}
 
-		if ( ! getTypeConfiguration().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+		if ( ! sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			try {
 				if ( bindType != null ) {
 					value = coerce( value, bindType );
@@ -211,7 +211,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			bindType = queryParameter.getHibernateType();
 		}
 
-		if ( ! getTypeConfiguration().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+		if ( ! sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			if ( bindType != null ) {
 				try {
 					value = coerce( value, bindType );

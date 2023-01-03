@@ -15,7 +15,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.spi.TypeBootstrapContext;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * {@link BeanInstanceProducer} implementation for building beans related to custom types.
@@ -24,29 +23,27 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 @Internal //TODO: move this to org.hibernate.boot.internal, where its only usage is
 public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBootstrapContext {
-	private final TypeConfiguration typeConfiguration;
+	private final ConfigurationService configurationService;
 
-	public TypeBeanInstanceProducer(TypeConfiguration typeConfiguration) {
-		this.typeConfiguration = typeConfiguration;
+	public TypeBeanInstanceProducer(ConfigurationService configurationService) {
+		this.configurationService = configurationService;
 	}
 
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
 		try {
-			final B type;
 			final Constructor<B> bootstrapContextAwareTypeConstructor = ReflectHelper.getConstructor(
 					beanType,
 					TypeBootstrapContext.class
 			);
 			if ( bootstrapContextAwareTypeConstructor != null ) {
-				type = bootstrapContextAwareTypeConstructor.newInstance( this );
+				return bootstrapContextAwareTypeConstructor.newInstance( this );
 			}
 			else {
-				type = beanType.newInstance();
+				return beanType.newInstance();
 			}
-			return type;
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			throw new MappingException( "Could not instantiate Type: " + beanType.getName(), e );
 		}
 	}
@@ -58,6 +55,6 @@ public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBoots
 
 	@Override
 	public Map<String, Object> getConfigurationSettings() {
-		return typeConfiguration.getServiceRegistry().getService( ConfigurationService.class ).getSettings();
+		return configurationService.getSettings();
 	}
 }

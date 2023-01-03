@@ -155,6 +155,10 @@ public abstract class SimpleValue implements KeyValue {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
 
+	public TypeConfiguration getTypeConfiguration() {
+		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
+	}
+
 	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
 		this.onDeleteAction = onDeleteAction;
 	}
@@ -729,6 +733,11 @@ public abstract class SimpleValue implements KeyValue {
 					@Override
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 						return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
+					}
+
+					@Override
+					public Dialect getDialect() {
+						return buildingContext.getMetadataCollector().getDatabase().getDialect();
 					}
 				}
 		);

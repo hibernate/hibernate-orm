@@ -19,6 +19,7 @@ import jakarta.persistence.MapKeyEnumerated;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -507,6 +508,11 @@ public class EnumType<T extends Enum<T>>
 		@Override
 		public long getColumnLength() {
 			return columnLength == null ? NO_COLUMN_LENGTH : columnLength;
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
 		}
 	}
 }

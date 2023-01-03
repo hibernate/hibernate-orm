@@ -61,12 +61,7 @@ public class RegistryHelper {
 
 		if ( javaTypeClass.isAnnotationPresent( Mutability.class ) ) {
 			final Mutability annotation = javaTypeClass.getAnnotation( Mutability.class );
-			final Class<? extends MutabilityPlan<?>> planClass = annotation.value();
-			final ManagedBeanRegistry managedBeanRegistry = typeConfiguration
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class );
-			final ManagedBean<? extends MutabilityPlan<?>> planBean = managedBeanRegistry.getBean( planClass );
-			return (MutabilityPlan<J>) planBean.getBeanInstance();
+			return typeConfiguration.createMutabilityPlan( annotation.value() );
 		}
 
 		if ( javaTypeClass.isEnum() ) {

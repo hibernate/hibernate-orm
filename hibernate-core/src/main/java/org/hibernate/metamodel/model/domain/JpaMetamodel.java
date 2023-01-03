@@ -41,9 +41,7 @@ public interface JpaMetamodel extends Metamodel {
 	 */
 	TypeConfiguration getTypeConfiguration();
 
-	default ServiceRegistry getServiceRegistry() {
-		return getTypeConfiguration().getServiceRegistry();
-	}
+	ServiceRegistry getServiceRegistry();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

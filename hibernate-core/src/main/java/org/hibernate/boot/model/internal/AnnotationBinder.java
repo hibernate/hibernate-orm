@@ -31,6 +31,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.GenericsHelper;
@@ -684,6 +685,11 @@ public final class AnnotationBinder {
 						@Override
 						public int getPreferredSqlTypeCodeForArray() {
 							return context.getPreferredSqlTypeCodeForArray();
+						}
+
+						@Override
+						public Dialect getDialect() {
+							return context.getMetadataCollector().getDatabase().getDialect();
 						}
 					}
 			);

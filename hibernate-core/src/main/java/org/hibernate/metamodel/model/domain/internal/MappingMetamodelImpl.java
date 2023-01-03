@@ -165,7 +165,7 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 	public MappingMetamodelImpl(TypeConfiguration typeConfiguration, ServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 		this.typeConfiguration = typeConfiguration;
-		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, this );
+		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, this, serviceRegistry );
 	}
 
 	public JpaMetamodelImplementor getJpaMetamodel() {
@@ -359,6 +359,11 @@ public class MappingMetamodelImpl implements MappingMetamodelImplementor, Metamo
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
 	}
 
 	@Override

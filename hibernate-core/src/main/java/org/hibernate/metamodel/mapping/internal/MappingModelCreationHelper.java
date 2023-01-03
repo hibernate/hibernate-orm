@@ -136,6 +136,7 @@ public class MappingModelCreationHelper {
 				rootTableKeyColumnNames,
 				bootProperty,
 				null,
+				0,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
 				embeddable -> new EmbeddedIdentifierMappingImpl(
@@ -148,7 +149,6 @@ public class MappingModelCreationHelper {
 				),
 				creationProcess
 		);
-
 
 		return (EmbeddedIdentifierMappingImpl) embeddableMappingType.getEmbeddedValueMapping();
 	}
@@ -247,12 +247,42 @@ public class MappingModelCreationHelper {
 		);
 	}
 
+	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			CompositeType attrType,
+			String tableExpression,
+			String[] rootTableKeyColumnNames,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		return buildEmbeddedAttributeMapping(
+				attrName,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				null,
+				0,
+				declaringType,
+				attrType,
+				tableExpression,
+				rootTableKeyColumnNames,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess
+		);
+	}
 
 	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
 			int fetchableIndex,
 			Property bootProperty,
+			DependantValue dependantValue,
+			int dependantColumnIndex,
 			ManagedMappingType declaringType,
 			CompositeType attrType,
 			String tableExpression,
@@ -269,9 +299,7 @@ public class MappingModelCreationHelper {
 		);
 
 		Value componentValue = bootProperty.getValue();
-		DependantValue dependantValue = null;
-		if ( componentValue instanceof DependantValue ) {
-			dependantValue = ( (DependantValue) componentValue );
+		if ( componentValue instanceof DependantValue && dependantValue != null ) {
 			componentValue = dependantValue.getWrappedValue();
 		}
 
@@ -283,6 +311,7 @@ public class MappingModelCreationHelper {
 				rootTableKeyColumnNames,
 				bootProperty,
 				dependantValue,
+				dependantColumnIndex,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
 				attributeMappingType -> {

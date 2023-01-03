@@ -78,10 +78,15 @@ public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 	public void testSessionFactoryInterceptor() {
 
 		Serializable customerId = 1L;
-		//tag::events-interceptors-session-factory-scope-example[]
 		SessionFactory sessionFactory = new MetadataSources(new StandardServiceRegistryBuilder()
 				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
 				.build())
+		/*
+		//tag::events-interceptors-session-factory-scope-example[]
+		SessionFactory sessionFactory = new MetadataSources(new StandardServiceRegistryBuilder().build())
+		//end::events-interceptors-session-factory-scope-example[]
+		*/
+		//tag::events-interceptors-session-factory-scope-example[]
 			.addAnnotatedClass(Customer.class)
 			.getMetadataBuilder()
 			.build()

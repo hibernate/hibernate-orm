@@ -32,6 +32,7 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -44,6 +45,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -147,7 +149,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
-		return scope.getCurrentBaseSqlTypeIndicators();
+		return scope;
 	}
 
 	public Map<Integer, Set<String>> getJdbcToHibernateTypeContributionMap() {
@@ -165,7 +167,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 *          stages a {@code TypeConfiguration} passes through.
 	 *
 	 * @return The {@link MetadataBuildingContext}
+	 *
+	 * @deprecated This operation is not very typesafe, and we're migrating away from its use
 	 */
+	@Deprecated(since = "6.2")
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return scope.getMetadataBuildingContext();
 	}
@@ -211,7 +216,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 *
 	 * @throws HibernateException if the {@code TypeConfiguration} is not currently scoped
 	 *                            to a {@link SessionFactory} (in a "runtime stage").
+	 *
+	 * @deprecated This operation is not very typesafe, and we're migrating away from its use
 	 */
+	@Deprecated(since = "6.2")
 	public SessionFactoryImplementor getSessionFactory() {
 		return scope.getSessionFactory();
 	}
@@ -226,6 +234,21 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 */
 	public ServiceRegistry getServiceRegistry() {
 		return scope.getServiceRegistry();
+	}
+
+	/**
+	 * Obtain the {@link JpaCompliance} setting.
+	 */
+	public JpaCompliance getJpaCompliance() {
+		return scope.getJpaCompliance();
+	}
+
+	/**
+	 * Workaround for an issue faced in {@link org.hibernate.type.EntityType#getReturnedClass()}.
+	 */
+	@Internal
+	public Class<?> entityClassForEntityName(String entityName) {
+		return scope.entityClassForEntityName(entityName);
 	}
 
 	@Override
@@ -365,7 +388,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * <p>
 	 * Each stage or phase is considered a scope for the {@link TypeConfiguration}.
 	 */
-	private static class Scope implements Serializable {
+	private static class Scope implements JdbcTypeIndicators, Serializable {
 		private final TypeConfiguration typeConfiguration;
 
 		private transient MetadataBuildingContext metadataBuildingContext;
@@ -374,71 +397,65 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
 
-		private final transient JdbcTypeIndicators currentSqlTypeIndicators = new JdbcTypeIndicators() {
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
 
-			@Override
-			public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getBuildingOptions().getDefaultTimeZoneStorage()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getDefaultTimeZoneStorageStrategy();
-			}
+		@Override
+		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+			return sessionFactory == null
+					? metadataBuildingContext.getBuildingOptions().getDefaultTimeZoneStorage()
+					: sessionFactory.getSessionFactoryOptions().getDefaultTimeZoneStorageStrategy();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForBoolean() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForBoolean()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
-			}
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForBoolean()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForDuration() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForDuration()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
-			}
+		@Override
+		public int getPreferredSqlTypeCodeForDuration() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForDuration()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForUuid() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForUuid()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
-			}
+		@Override
+		public int getPreferredSqlTypeCodeForUuid() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForUuid()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForInstant() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForInstant()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForInstant();
-			}
+		@Override
+		public int getPreferredSqlTypeCodeForInstant() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForInstant()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForInstant();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForArray() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForArray()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForArray();
-			}
-		};
+		@Override
+		public int getPreferredSqlTypeCodeForArray() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForArray()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForArray();
+		}
 
-		public Scope(TypeConfiguration typeConfiguration) {
+		private Scope(TypeConfiguration typeConfiguration) {
 			this.typeConfiguration = typeConfiguration;
 		}
 
-		public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
-			return currentSqlTypeIndicators;
-		}
-
-		public MetadataBuildingContext getMetadataBuildingContext() {
+		private MetadataBuildingContext getMetadataBuildingContext() {
 			if ( metadataBuildingContext == null ) {
 				throw new HibernateException( "TypeConfiguration is not currently scoped to MetadataBuildingContext" );
 			}
 			return metadataBuildingContext;
 		}
 
-		public ServiceRegistry getServiceRegistry() {
+		private ServiceRegistry getServiceRegistry() {
 			if ( metadataBuildingContext != null ) {
 				return metadataBuildingContext.getBootstrapContext().getServiceRegistry();
 			}
@@ -448,11 +465,21 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return null;
 		}
 
-		public void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
+		private JpaCompliance getJpaCompliance() {
+			if ( metadataBuildingContext != null ) {
+				return metadataBuildingContext.getBootstrapContext().getJpaCompliance();
+			}
+			else if ( sessionFactory != null ) {
+				return sessionFactory.getSessionFactoryOptions().getJpaCompliance();
+			}
+			return null;
+		}
+
+		private void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
 			this.metadataBuildingContext = metadataBuildingContext;
 		}
 
-		public SessionFactoryImplementor getSessionFactory() {
+		private SessionFactoryImplementor getSessionFactory() {
 			if ( sessionFactory == null ) {
 				if ( sessionFactoryName == null && sessionFactoryUuid == null ) {
 					throw new HibernateException( "TypeConfiguration was not yet scoped to SessionFactory" );
@@ -477,26 +504,30 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		 *
 		 * @param factory The {@link SessionFactory} to which the {@link TypeConfiguration} is being bound
 		 */
-		void setSessionFactory(SessionFactoryImplementor factory) {
+		private void setSessionFactory(SessionFactoryImplementor factory) {
 			if ( this.sessionFactory != null ) {
 				log.scopingTypesToSessionFactoryAfterAlreadyScoped( this.sessionFactory, factory );
 			}
 			else {
 				this.sessionFactoryUuid = factory.getUuid();
-				String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
-				if ( factoryName == null ) {
-					final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
-							.getService( CfgXmlAccessService.class );
-					if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-						factoryName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
-					}
-				}
-				this.sessionFactoryName = factoryName;
+				this.sessionFactoryName = getFactoryName( factory );
 			}
 			this.sessionFactory = factory;
 		}
 
-		public void unsetSessionFactory(SessionFactory factory) {
+		private static String getFactoryName(SessionFactoryImplementor factory) {
+			final String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
+			if ( factoryName == null ) {
+				final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
+						.getService( CfgXmlAccessService.class );
+				if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
+					return cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
+				}
+			}
+			return factoryName;
+		}
+
+		private void unsetSessionFactory(SessionFactory factory) {
 			log.debugf( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
 			this.sessionFactory = null;
 		}
@@ -521,6 +552,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			}
 
 			return this;
+		}
+
+		private Class<?> entityClassForEntityName(String entityName) {
+			return sessionFactory == null
+					? metadataBuildingContext.getMetadataCollector().getEntityBinding( entityName ).getMappedClass()
+					: sessionFactory.getMappingMetamodel().findEntityDescriptor( entityName ).getMappedClass();
 		}
 	}
 

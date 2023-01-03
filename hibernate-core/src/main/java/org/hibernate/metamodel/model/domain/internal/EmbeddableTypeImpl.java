@@ -12,7 +12,7 @@ import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -31,7 +31,7 @@ public class EmbeddableTypeImpl<J>
 	public EmbeddableTypeImpl(
 			JavaType<J> javaType,
 			boolean isDynamic,
-			JpaMetamodel domainMetamodel) {
+			JpaMetamodelImplementor domainMetamodel) {
 		super( javaType.getJavaType().getTypeName(), javaType, null, domainMetamodel );
 		this.isDynamic = isDynamic;
 	}

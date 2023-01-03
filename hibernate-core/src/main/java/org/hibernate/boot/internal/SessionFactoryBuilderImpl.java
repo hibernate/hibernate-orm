@@ -39,6 +39,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplementor {
 	private final MetadataImplementor metadata;
 	private final SessionFactoryOptionsBuilder optionsBuilder;
+	private final BootstrapContext bootstrapContext;
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
 		this(
@@ -46,13 +47,15 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 				new SessionFactoryOptionsBuilder(
 						metadata.getMetadataBuildingOptions().getServiceRegistry(),
 						bootstrapContext
-				)
+				),
+				bootstrapContext
 		);
 	}
 
-	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
+	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder, BootstrapContext context) {
 		this.metadata = metadata;
 		this.optionsBuilder = optionsBuilder;
+		this.bootstrapContext = context;
 
 		if ( metadata.getSqlFunctionMap() != null ) {
 			for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
@@ -67,6 +70,14 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		addSessionFactoryObservers( new SessionFactoryObserverForNamedQueryValidation( metadata ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForSchemaExport( metadata ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForRegistration() );
+	}
+
+	/**
+	 * @deprecated This constructor will be removed
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
+	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
+		this( metadata, optionsBuilder, metadata.getTypeConfiguration().getMetadataBuildingContext().getBootstrapContext() );
 	}
 
 	@Override
@@ -417,7 +428,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 
 	@Override
 	public SessionFactory build() {
-		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions() );
+		return new SessionFactoryImpl( metadata, buildSessionFactoryOptions(), bootstrapContext );
 	}
 
 	@Override

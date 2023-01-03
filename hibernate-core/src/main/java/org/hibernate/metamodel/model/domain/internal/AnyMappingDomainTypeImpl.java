@@ -6,11 +6,11 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
@@ -24,7 +24,11 @@ public class AnyMappingDomainTypeImpl implements AnyMappingDomainType<Class> {
 	private final JavaType<Class> baseJtd;
 	private final BasicType<Class> anyDiscriminatorType;
 
-	public AnyMappingDomainTypeImpl(AnyType anyType, JavaType<Class> baseJtd, TypeConfiguration typeConfiguration) {
+	public AnyMappingDomainTypeImpl(
+			AnyType anyType,
+			JavaType<Class> baseJtd,
+			TypeConfiguration typeConfiguration,
+			MappingMetamodel mappingMetamodel) {
 		this.anyType = anyType;
 		this.baseJtd = baseJtd;
 		final MetaType discriminatorType = (MetaType) anyType.getDiscriminatorType();
@@ -33,7 +37,12 @@ public class AnyMappingDomainTypeImpl implements AnyMappingDomainType<Class> {
 				new ConvertedBasicTypeImpl<>(
 						null, // no name
 						discriminatorBasicType.getJdbcType(),
-						new AnyDiscriminatorConverter( discriminatorType, discriminatorBasicType, typeConfiguration )
+						new AnyDiscriminatorConverter(
+								discriminatorType,
+								discriminatorBasicType,
+								typeConfiguration,
+								mappingMetamodel
+						)
 				);
 	}
 

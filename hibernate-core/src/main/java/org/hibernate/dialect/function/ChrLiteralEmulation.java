@@ -10,11 +10,14 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.QueryException;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -37,16 +40,19 @@ public class ChrLiteralEmulation extends AbstractSqmSelfRenderingFunctionDescrip
 				"chr",
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.composite(
-								StandardArgumentsValidators.exactly( 1 ),
-								(arguments, functionName, queryEngine) -> {
-									if ( !( arguments.get( 0 ) instanceof SqmLiteral<?> ) ) {
-										throw new QueryException(
-												String.format(
-														Locale.ROOT,
-														"Emulation of function chr() supports only integer literals, but %s argument given",
-														arguments.get( 0 ).getClass().getName()
-												)
-										);
+								StandardArgumentsValidators.exactly(1),
+								new ArgumentsValidator() {
+									@Override
+									public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, MappingMetamodel metamodel) {
+										if ( !( arguments.get( 0 ) instanceof SqmLiteral<?> ) ) {
+											throw new QueryException(
+													String.format(
+															Locale.ROOT,
+															"Emulation of function chr() supports only integer literals, but %s argument given",
+															arguments.get( 0 ).getClass().getName()
+													)
+											);
+										}
 									}
 								}
 						),

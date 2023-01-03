@@ -242,7 +242,12 @@ public class AttributeFactory {
 				final JavaType<Y> baseJtd = context.getTypeConfiguration()
 						.getJavaTypeRegistry()
 						.resolveDescriptor( anyType.getReturnedClass() );
-				return (DomainType<Y>) new AnyMappingDomainTypeImpl( anyType, (JavaType<Class>) baseJtd, context.getTypeConfiguration() );
+				return (DomainType<Y>) new AnyMappingDomainTypeImpl(
+						anyType,
+						(JavaType<Class>) baseJtd,
+						context.getTypeConfiguration(),
+						context.getMetamodel()
+				);
 			}
 			case EMBEDDABLE: {
 				final Component component = (Component) typeContext.getHibernateValue();

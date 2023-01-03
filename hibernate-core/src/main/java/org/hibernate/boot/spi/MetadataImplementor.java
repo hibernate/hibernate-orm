@@ -34,7 +34,7 @@ public interface MetadataImplementor extends Metadata {
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
 	/**
-	 * Access to the {@link TypeConfiguration}
+	 * Access to the {@link TypeConfiguration} belonging to the {@link BootstrapContext}
 	 */
 	TypeConfiguration getTypeConfiguration();
 

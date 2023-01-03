@@ -11,7 +11,7 @@ import java.util.Collections;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
-import org.hibernate.orm.test.jpa.JpaComplianceStub;
+import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.spi.QueryEngine;
@@ -48,7 +48,8 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 
 	@BeforeClass
 	public static void init() {
-		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( new TypeConfiguration(), new JpaComplianceStub() );
+		TypeConfiguration typeConfiguration = new TypeConfiguration();
+		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl(typeConfiguration, new MappingMetamodelImpl( typeConfiguration, ssr ) );
 
 		ssr = new StandardServiceRegistryBuilder().build();
 		queryEngine = new QueryEngine(

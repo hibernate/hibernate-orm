@@ -8,6 +8,7 @@ package org.hibernate.query.spi;
 
 import java.util.Map;
 
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -66,4 +67,6 @@ public interface QueryEngineOptions {
 	 * target of the mutation is a multi-table entity.
 	 */
 	SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy();
+
+	JpaCompliance getJpaCompliance();
 }

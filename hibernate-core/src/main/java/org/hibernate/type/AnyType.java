@@ -32,10 +32,11 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Handles "any" mappings
@@ -121,32 +122,37 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	@Override
 	public int compare(Object x, Object y) {
+		throw new UnsupportedOperationException( "compare() not implemented for AnyType" );
+	}
+
+	@Override
+	public int compare(Object x, Object y, SessionFactoryImplementor factory) {
 		if ( x == null ) {
 			// if y is also null, return that they are the same (no option for "UNKNOWN")
-			// if y is not null, return that y is "greater" (-1 because the result is from the perspective of
-			// 		the first arg: x)
+			// if y is not null, return that y is "greater"
+			// (-1 because the result is from the perspective of the first arg: x)
 			return y == null ? 0 : -1;
 		}
 		else if ( y == null ) {
-			// x is not null, but y is.  return that x is "greater"
+			// x is not null, but y is, return that x is "greater"
 			return 1;
 		}
 
 		// At this point we know both are non-null.
-		final Object xId = extractIdentifier( x );
-		final Object yId = extractIdentifier( y );
+		final Object xId = extractIdentifier( x, factory );
+		final Object yId = extractIdentifier( y, factory );
 
 		return getIdentifierType().compare( xId, yId );
 	}
 
-	private Object extractIdentifier(Object entity) {
-		final EntityPersister concretePersister = guessEntityPersister( entity );
+	private Object extractIdentifier(Object entity, SessionFactoryImplementor factory) {
+		final EntityPersister concretePersister = guessEntityPersister( entity, factory );
 		return concretePersister == null
 				? null
 				: concretePersister.getIdentifier( entity, null );
 	}
 
-	private EntityPersister guessEntityPersister(Object object) {
+	private EntityPersister guessEntityPersister(Object object, SessionFactoryImplementor factory) {
 		if ( typeConfiguration == null ) {
 			return null;
 		}
@@ -155,7 +161,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 		// this code is largely copied from Session's bestGuessEntityName
 		Object entity = object;
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
 				entityName = lazyInitializer.getEntityName();
@@ -164,9 +170,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		if ( entityName == null ) {
-			final MappingMetamodelImplementor mappingMetamodel = typeConfiguration.getSessionFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel();
+			final MappingMetamodelImplementor mappingMetamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
 			for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
 				entityName = resolver.resolveEntityName( entity );
 				if ( entityName != null ) {
@@ -180,7 +184,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			entityName = object.getClass().getName();
 		}
 
-		return typeConfiguration.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
+		return factory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -201,7 +205,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		final ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) old;
 		final boolean[] idCheckable = new boolean[checkable.length-1];
 		System.arraycopy( checkable, 1, idCheckable, 0, idCheckable.length );
-		return ( checkable[0] && !holder.entityName.equals( session.bestGuessEntityName( current ) ) )
+		return checkable[0] && !holder.entityName.equals( session.bestGuessEntityName( current ) )
 				|| identifierType.isModified( holder.id, getIdentifier( current, session ), idCheckable, session );
 	}
 
@@ -270,11 +274,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			return "<uninitialized>";
 		}
 
-		String entityName = factory.bestGuessEntityName(value);
+		final String entityName = factory.bestGuessEntityName(value);
 		final EntityPersister descriptor = entityName == null
 				? null
 				: factory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
-		return MessageHelper.infoString( descriptor, value, factory );
+		return infoString( descriptor, value, factory );
 	}
 
 	@Override

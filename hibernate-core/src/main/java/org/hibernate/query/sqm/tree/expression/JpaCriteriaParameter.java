@@ -20,8 +20,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * {@link JpaParameterExpression} created via JPA {@link jakarta.persistence.criteria.CriteriaBuilder}.
- *
- * Each occurrence of a JpaParameterExpression results in a unique SqmParameter
+ * <p>
+ * Each occurrence of a {@code JpaParameterExpression} results in a unique {@link SqmParameter}.
  *
  * @see ParameterMetadata
  * @see NodeBuilder#parameter
@@ -54,9 +54,7 @@ public class JpaCriteriaParameter<T>
 		if ( type == null ) {
 			return null;
 		}
-		return type.resolveExpressible(
-				nodeBuilder.getQueryEngine().getTypeConfiguration().getSessionFactory()
-		);
+		return type.resolveExpressible( nodeBuilder.getSessionFactory() );
 	}
 
 	@Override

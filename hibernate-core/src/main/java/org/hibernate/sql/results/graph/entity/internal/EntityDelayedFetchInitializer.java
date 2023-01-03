@@ -120,7 +120,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 				}
 				else {
 					if ( selectByUniqueKey ) {
-						final String uniqueKeyPropertyName = referencedModelPart.getBidirectionalAttributeName();
+						final String uniqueKeyPropertyName = referencedModelPart.getReferencedPropertyName();
 						final Type uniqueKeyPropertyType = ( referencedModelPart.getReferencedPropertyName() == null ) ?
 								concreteDescriptor.getIdentifierType() :
 								session.getFactory()

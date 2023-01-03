@@ -33,7 +33,6 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -45,6 +44,7 @@ import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.PrimitiveBasicTypeImpl;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
@@ -73,7 +73,7 @@ import jakarta.persistence.metamodel.Type;
 public class MetadataContext {
 	private static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( MetadataContext.class );
 
-	private final JpaMetamodel jpaMetamodel;
+	private final JpaMetamodelImplementor jpaMetamodel;
 	private final RuntimeModelCreationContext runtimeModelCreationContext;
 
 	private final Set<MappedSuperclass> knownMappedSuperclasses;
@@ -103,7 +103,7 @@ public class MetadataContext {
 	private final MappingMetamodel metamodel;
 
 	public MetadataContext(
-			JpaMetamodel jpaMetamodel,
+			JpaMetamodelImplementor jpaMetamodel,
 			MappingMetamodel mappingMetamodel,
 			MetadataImplementor bootMetamodel,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
@@ -122,7 +122,7 @@ public class MetadataContext {
 		return runtimeModelCreationContext;
 	}
 
-	public JpaMetamodel getJpaMetamodel() {
+	public JpaMetamodelImplementor getJpaMetamodel() {
 		return jpaMetamodel;
 	}
 

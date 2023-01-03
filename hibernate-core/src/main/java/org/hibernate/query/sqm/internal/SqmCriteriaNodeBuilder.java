@@ -176,21 +176,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SqmCriteriaNodeBuilder.class );
 
-	/**
-	 * Simplified creation from a SessionFactory
-	 */
-	public static SqmCriteriaNodeBuilder create(SessionFactoryImplementor sf) {
-		return new SqmCriteriaNodeBuilder(
-				sf.getUuid(),
-				sf.getName(),
-				sf.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled(),
-				sf.getQueryEngine(),
-				() -> sf.getRuntimeMetamodels().getJpaMetamodel(),
-				sf.getServiceRegistry(),
-				sf.getSessionFactoryOptions().getCriteriaValueHandlingMode()
-		);
-	}
-
 	private final String uuid;
 	private final String name;
 	private final transient boolean jpaComplianceEnabled;
@@ -198,6 +183,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final transient Supplier<JpaMetamodelImplementor> domainModelAccess;
 	private final transient ServiceRegistry serviceRegistry;
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
+	private final transient SessionFactoryImplementor sessionFactory;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Character> characterType;
@@ -210,7 +196,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			QueryEngine queryEngine,
 			Supplier<JpaMetamodelImplementor> domainModelAccess,
 			ServiceRegistry serviceRegistry,
-			ValueHandlingMode criteriaValueHandlingMode) {
+			ValueHandlingMode criteriaValueHandlingMode,
+			SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
 		this.uuid = uuid;
 		this.name = name;
 		this.jpaComplianceEnabled = jpaComplianceEnabled;
@@ -222,7 +210,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		this.extensions = new HashMap<>();
 		for (CriteriaBuilderExtension extension : ServiceLoader.load( CriteriaBuilderExtension.class ) ) {
 			HibernateCriteriaBuilder builder = extension.extend( this );
-			extensions.put(extension.getRegistrationKey(), builder);
+			extensions.put( extension.getRegistrationKey(), builder );
 		}
 	}
 
@@ -234,6 +222,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public boolean isJpaQueryComplianceEnabled() {
 		return jpaComplianceEnabled;
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
 	}
 
 	@Override
@@ -466,7 +459,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			throw new SemanticException( "Path should refer to a to-one attribute : " + path );
 		}
 
-		return new SqmFkExpression<>( (SqmEntityValuedSimplePath) path, this );
+		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) path, this );
 	}
 
 	@Override
@@ -623,7 +616,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			expressibleType = (DomainType<R>) typeConfiguration.resolveTupleType( sqmExpressions );
 		}
 		else {
-			expressibleType = typeConfiguration.getSessionFactory().getJpaMetamodel().embeddable( tupleType );
+			expressibleType = domainModelAccess.get().embeddable( tupleType );
 		}
 		return tuple( expressibleType, sqmExpressions );
 	}
@@ -1194,12 +1187,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		final BindableType<? extends T> valueParamType = queryEngine.getTypeConfiguration()
-				.getSessionFactory()
-				.resolveParameterBindType( value );
+		final BindableType<? extends T> valueParamType = queryEngine.resolveParameterBindType( value );
 		final SqmExpressible<? extends T> sqmExpressible = valueParamType == null
 				? null
-				: valueParamType.resolveExpressible( getTypeConfiguration().getSessionFactory() );
+				: valueParamType.resolveExpressible( sessionFactory );
 
 		return new SqmLiteral<>( value, sqmExpressible, this );
 	}
@@ -1235,7 +1226,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final TypeConfiguration typeConfiguration = getTypeConfiguration();
 		final BasicType<T> basicTypeForJavaType = typeConfiguration.getBasicTypeForJavaType( resultClass );
 		final SqmExpressible<T> sqmExpressible = basicTypeForJavaType == null
-				? typeConfiguration.getSessionFactory().getJpaMetamodel().managedType( resultClass )
+				? domainModelAccess.get().managedType( resultClass )
 				: basicTypeForJavaType;
 		return new SqmLiteralNull<>(sqmExpressible, this );
 	}
@@ -1263,7 +1254,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass) {
-		return parameter( paramClass, (String) null );
+		return parameter( paramClass, null );
 	}
 
 	@Override
@@ -1727,7 +1718,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 					this
 			);
 		}
-		final SqmExpressible<T> expressible = bindableType.resolveExpressible( getTypeConfiguration().getSessionFactory() );
+		final SqmExpressible<T> expressible = bindableType.resolveExpressible( sessionFactory );
 		T coercedValue = expressible.getExpressibleJavaType().coerce( value, this::getTypeConfiguration );
 		if ( isInstance( bindableType, coercedValue ) ) {
 			return new ValueBindJpaCriteriaParameter<>(
@@ -1739,7 +1730,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		else {
 			// ignore typeInferenceSource and fallback the value type
 			return new ValueBindJpaCriteriaParameter<>(
-					queryEngine.getTypeConfiguration().getSessionFactory().resolveParameterBindType( value ),
+					queryEngine.resolveParameterBindType( value ),
 					value,
 					this
 			);
@@ -1753,7 +1744,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		if ( bindableType.getBindableJavaType().isInstance( value ) ) {
 			return true;
 		}
-		return bindableType.resolveExpressible( getTypeConfiguration().getSessionFactory() )
+		return bindableType.resolveExpressible( sessionFactory )
 				.getExpressibleJavaType()
 				.isInstance( value );
 	}
@@ -1792,7 +1783,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 		else {
 			return new ValueBindJpaCriteriaParameter<>(
-					queryEngine.getTypeConfiguration().getSessionFactory().resolveParameterBindType( value ),
+					queryEngine.resolveParameterBindType( value ),
 					value,
 					this
 			);

@@ -163,7 +163,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			normalizedValue = naturalIdToLoad;
 		}
 
-		if ( getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+		if ( getTypeConfiguration().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			return normalizedValue;
 		}
 		return getJavaType().coerce( normalizedValue, this );

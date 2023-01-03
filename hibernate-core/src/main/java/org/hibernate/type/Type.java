@@ -218,6 +218,9 @@ public interface Type extends Serializable {
 	 */
 	int compare(Object x, Object y);
 
+	default int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+		return compare( x, y );
+	}
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
 	 *
@@ -480,5 +483,4 @@ public interface Type extends Serializable {
 	 * @return array indicating column nullness for a value instance
 	 */
 	boolean[] toColumnNullness(Object value, Mapping mapping);
-
 }

@@ -31,6 +31,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -223,8 +224,12 @@ public class DefaultCatalogAndSchemaTest {
 				break;
 			case SESSION_FACTORY_SERVICE_REGISTRY:
 				serviceRegistry = createStandardServiceRegistry( configuredDefaultCatalog, configuredDefaultSchema );
-				sfb = new SessionFactoryBuilderImpl( metadata, new SessionFactoryOptionsBuilder( serviceRegistry,
-						((MetadataImpl) metadata).getBootstrapContext() ) );
+				BootstrapContext bootstrapContext = ((MetadataImpl) metadata).getBootstrapContext();
+				sfb = new SessionFactoryBuilderImpl(
+						metadata,
+						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext),
+						bootstrapContext
+				);
 				break;
 			default:
 				throw new IllegalStateException( "Unknown settings mode: " + settingsMode );

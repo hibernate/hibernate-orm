@@ -36,16 +36,16 @@ import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
  */
 public class SqmExpressionHelper {
 	public static <T> SqmExpressible<T> toSqmType(BindableType<T> parameterType, SqmCreationState creationState) {
-		return toSqmType( parameterType, creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration() );
+		return toSqmType( parameterType, creationState.getCreationContext().getNodeBuilder().getSessionFactory() );
 	}
 
 	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, NodeBuilder nodeBuilder) {
-		return toSqmType( anticipatedType, nodeBuilder.getTypeConfiguration() );
+		return toSqmType( anticipatedType, nodeBuilder.getSessionFactory() );
 	}
 
-	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, TypeConfiguration typeConfiguration) {
-		return toSqmType( anticipatedType, typeConfiguration.getSessionFactory() );
-	}
+//	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, TypeConfiguration typeConfiguration) {
+//		return toSqmType( anticipatedType, typeConfiguration.getSessionFactory() );
+//	}
 
 	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
 		if ( anticipatedType == null ) {

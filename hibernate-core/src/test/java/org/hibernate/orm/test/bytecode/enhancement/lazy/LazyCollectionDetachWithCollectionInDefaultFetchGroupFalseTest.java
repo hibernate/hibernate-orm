@@ -22,7 +22,6 @@ import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
 import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
-import org.hibernate.orm.test.bytecode.enhancement.dirty.DirtyTrackingCollectionInDefaultFetchGroupTest;
 import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.TestForIssue;
@@ -72,7 +71,7 @@ public class LazyCollectionDetachWithCollectionInDefaultFetchGroupFalseTest exte
 					// We want to test with this setting set to false explicitly,
 					// because another test already takes care of the default.
 					optionsBuilder.enableCollectionInDefaultFetchGroup( false );
-					return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
+					return new SessionFactoryBuilderImpl( metadata, optionsBuilder, bootstrapContext );
 				}
 		);
 	}

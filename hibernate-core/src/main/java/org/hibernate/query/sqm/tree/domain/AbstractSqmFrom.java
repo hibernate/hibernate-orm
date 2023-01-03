@@ -205,10 +205,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			final SqmAttributeJoin<?, ?> lhsAttributeJoin = (SqmAttributeJoin<?, ?>) lhs;
 			if ( lhsAttributeJoin.getReferencedPathSource() instanceof EntityDomainType<?> ) {
 				final String entityName = ( (EntityDomainType<?>) lhsAttributeJoin.getReferencedPathSource() ).getHibernateEntityName();
-				return (ModelPartContainer) creationState.getCreationContext().getQueryEngine()
-						.getTypeConfiguration()
-						.getSessionFactory()
-						.getRuntimeMetamodels()
+				return (ModelPartContainer) creationState.getCreationContext()
+						.getJpaMetamodel()
 						.getMappingMetamodel()
 						.getEntityDescriptor( entityName )
 						.findSubPart( attributeJoin.getAttribute().getName(), null );
@@ -230,10 +228,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 				assert lhs instanceof SqmCrossJoin<?>;
 				entityName = ( (SqmCrossJoin<?>) lhs ).getEntityName();
 			}
-			return (ModelPartContainer) creationState.getCreationContext().getQueryEngine()
-					.getTypeConfiguration()
-					.getSessionFactory()
-					.getRuntimeMetamodels()
+			return (ModelPartContainer) creationState.getCreationContext()
+					.getJpaMetamodel()
 					.getMappingMetamodel()
 					.getEntityDescriptor( entityName )
 					.findSubPart( attributeJoin.getAttribute().getName(), null );

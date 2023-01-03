@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.persister.entity.EntityPersister;
@@ -17,15 +18,19 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 public class AnyDiscriminatorConverter implements BasicValueConverter<Class, Object> {
 	private final MetaType modelPart;
-	private BasicType discriminatorBasicType;
-	private TypeConfiguration typeConfiguration;
+	private final BasicType discriminatorBasicType;
+	private final TypeConfiguration typeConfiguration;
+	private final MappingMetamodel mappingMetamodel;
 
 	public AnyDiscriminatorConverter(
-			MetaType modelPart, BasicType discriminatorBasicType,
-			TypeConfiguration typeConfiguration) {
+			MetaType modelPart,
+			BasicType discriminatorBasicType,
+			TypeConfiguration typeConfiguration,
+			MappingMetamodel mappingMetamodel) {
 		this.modelPart = modelPart;
 		this.discriminatorBasicType = discriminatorBasicType;
 		this.typeConfiguration = typeConfiguration;
+		this.mappingMetamodel = mappingMetamodel;
 	}
 
 	@Override
@@ -35,10 +40,7 @@ public class AnyDiscriminatorConverter implements BasicValueConverter<Class, Obj
 		}
 
 		final String entityName = modelPart.getDiscriminatorValuesToEntityNameMap().get( discriminatorValue );
-		final EntityPersister entityDescriptor = typeConfiguration.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( entityName );
 		assert entityDescriptor.getRepresentationStrategy().getMode() == RepresentationMode.POJO;
 		return entityDescriptor.getJavaType().getJavaTypeClass();
 	}

@@ -63,7 +63,7 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
 					);
 					// This test only makes sense if association properties *can* be uninitialized.
 					optionsBuilder.enableCollectionInDefaultFetchGroup( false );
-					return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
+					return new SessionFactoryBuilderImpl( metadata, optionsBuilder, bootstrapContext );
 				}
 		);
 	}

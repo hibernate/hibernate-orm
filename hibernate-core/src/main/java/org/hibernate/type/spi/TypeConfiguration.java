@@ -72,22 +72,25 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * Defines a set of available {@link Type} instances as isolated from other configurations.
- * The isolation is defined by each instance of a {@code TypeConfiguration}.
+ * Each instance defines a set of {@linkplain Type types} available in a given
+ * persistence unit, and isolates them from other configurations.
  * <p>
- * Note that each {@code Type} is inherently "scoped" to a {@code TypeConfiguration}. We only
- * ever access a {@code Type} via its {@code TypeConfiguration}, more specifically, via the
- * {@code TypeConfiguration} in effect for the current persistence unit.
+ * Note that each instance of {@code Type} is inherently "scoped" to a
+ * {@code TypeConfiguration}. We always obtain a reference to a {@code Type}
+ * via the {@code TypeConfiguration} associated with the current persistence
+ * unit.
  * <p>
- * Even though each {@code Type} instance is scoped to a {@code TypeConfiguration}, a {@code Type}
- * does not inherently have access to its {@code TypeConfiguration}, mainly because {@code Type}
- * is an extension contract and so Hibernate does not have full control over every {@code Type}
- * available in a {@code TypeConfiguration}.
+ * On the other hand, a {@code Type} does not inherently have access to its
+ * parent {@code TypeConfiguration} since extensions may contribute instances
+ * of {@code Type}, via {@link org.hibernate.boot.model.TypeContributions},
+ * for example, and the instantiation of such instances occurs outside the
+ * control of Hibernate.
  * <p>
- * However, a {@code Type} will often want access to the  {@code TypeConfiguration}, which can be
- * achieved by the {@code Type} simply implementing the {@link TypeConfigurationAware} interface.
+ * In particular, a custom {@link org.hibernate.boot.model.TypeContributor}
+ * may contribute types to a {@code TypeConfiguration}.
  * <p>
- * A {@code TypeConfiguration} may be configured by a {@link org.hibernate.boot.model.TypeContributor}.
+ * If a {@code Type} requires access to the parent {@code TypeConfiguration},
+ * it should implement {@link TypeConfigurationAware}.
  *
  * @author Steve Ebersole
  *
@@ -269,19 +272,21 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	/**
 	 * Understands the following target type names for the {@code cast()} function:
 	 * <ul>
-	 * <li>String
-	 * <li>Character
-	 * <li>Byte, Integer, Long
-	 * <li>Float, Double
-	 * <li>Time, Date, Timestamp
-	 * <li>LocalDate, LocalTime, LocalDateTime
-	 * <li>BigInteger
-	 * <li>BigDecimal
-	 * <li>Binary
-	 * <li>Boolean (fragile)
+	 * <li>{@code String}
+	 * <li>{@code Character}
+	 * <li>{@code Byte}, {@code Short}, {@code Integer}, {@code Long}
+	 * <li>{@code Float}, {@code Double}
+	 * <li>{@code Time}, {@code Date}, {@code Timestamp}
+	 * <li>{@code LocalDate}, {@code LocalTime}, {@code LocalDateTime}
+	 * <li>{@code BigInteger}
+	 * <li>{@code BigDecimal}
+	 * <li>{@code Binary}
+	 * <li>{@code Boolean}
+	 *     (fragile, not aware of encoding to character via
+	 *     {@link org.hibernate.type.CharBooleanConverter})
 	 * </ul>
 	 * <p>
-	 * (The type names are not case-sensitive.)
+	 * The type names are not case-sensitive.
 	 */
 	public BasicValuedMapping resolveCastTargetType(String name) {
 		switch ( name.toLowerCase() ) {

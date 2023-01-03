@@ -8,8 +8,6 @@ package org.hibernate.boot.model.relational;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -156,7 +154,7 @@ public class Database {
 	}
 
 	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
-		return auxiliaryDatabaseObjects == null ? emptyList() : auxiliaryDatabaseObjects.values();
+		return auxiliaryDatabaseObjects.values();
 	}
 
 	public Collection<InitCommand> getInitCommands() {

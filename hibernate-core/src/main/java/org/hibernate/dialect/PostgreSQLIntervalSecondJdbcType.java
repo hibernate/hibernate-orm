@@ -17,7 +17,6 @@ import java.sql.Types;
 import java.time.Duration;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -107,10 +106,7 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 		final int scale;
 		if ( indicators.getColumnScale() == JdbcTypeIndicators.NO_COLUMN_SCALE ) {
 			scale = domainJtd.getDefaultSqlScale(
-					indicators.getTypeConfiguration()
-							.getServiceRegistry()
-							.getService( JdbcServices.class )
-							.getDialect(),
+					indicators.getDialect(),
 					this
 			);
 		}

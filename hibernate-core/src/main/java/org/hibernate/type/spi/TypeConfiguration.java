@@ -41,6 +41,7 @@ import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
@@ -56,12 +57,15 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -231,7 +235,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 *          is obtained.
 	 *
 	 * @return The {@link ServiceRegistry} for the current scope
+	 *
+	 * @deprecated This simply isn't a very sensible place to hang the {@link ServiceRegistry}
 	 */
+	@Deprecated(since = "6.2")
 	public ServiceRegistry getServiceRegistry() {
 		return scope.getServiceRegistry();
 	}
@@ -345,14 +352,14 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				}
 
 				try {
-					final ClassLoaderService cls = getServiceRegistry().getService( ClassLoaderService.class );
-					final Class<?> javaTypeClass = cls.classForName( name );
-
+					final Class<?> javaTypeClass =
+							scope.getServiceRegistry().getService( ClassLoaderService.class )
+									.classForName( name );
 					final JavaType<?> jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
 					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
 					return basicTypeRegistry.resolve( jtd, jdbcType );
 				}
-				catch (Exception ignore) {
+				catch ( Exception ignore ) {
 				}
 
 				throw new HibernateException( "unrecognized cast target type: " + name );
@@ -442,6 +449,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return sessionFactory == null
 					? metadataBuildingContext.getPreferredSqlTypeCodeForArray()
 					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForArray();
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return sessionFactory == null
+					? metadataBuildingContext.getMetadataCollector().getDatabase().getDialect()
+					: sessionFactory.getJdbcServices().getDialect();
 		}
 
 		private Scope(TypeConfiguration typeConfiguration) {
@@ -789,4 +803,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return matchesJavaType( type, Duration.class );
 	}
 
+	@Internal @SuppressWarnings("unchecked")
+	public <J> MutabilityPlan<J> createMutabilityPlan(Class<? extends MutabilityPlan<?>> planClass) {
+		final ManagedBean<? extends MutabilityPlan<?>> planBean =
+				scope.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( planClass );
+		return (MutabilityPlan<J>) planBean.getBeanInstance();
+	}
 }

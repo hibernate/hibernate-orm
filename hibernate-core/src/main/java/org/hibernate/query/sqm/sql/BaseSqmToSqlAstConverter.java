@@ -34,6 +34,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.FetchTiming;
@@ -609,6 +610,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected SqmStatement<?> getStatement() {
 		return statement;
+	}
+
+	@Override
+	public Dialect getDialect() {
+		return creationContext.getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

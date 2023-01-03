@@ -107,7 +107,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
 		this.typeConfiguration = new TypeConfiguration();
-		this.beanInstanceProducer = new TypeBeanInstanceProducer( typeConfiguration );
+		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService );
 	}
 
 	@Override

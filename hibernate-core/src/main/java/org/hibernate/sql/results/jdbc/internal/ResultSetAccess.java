@@ -128,6 +128,11 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 							public EnumType getEnumeratedType() {
 								return resolvedJdbcType.isNumber() ? EnumType.ORDINAL : EnumType.STRING;
 							}
+
+							@Override
+							public Dialect getDialect() {
+								return getFactory().getJdbcServices().getDialect();
+							}
 						}
 				);
 			}

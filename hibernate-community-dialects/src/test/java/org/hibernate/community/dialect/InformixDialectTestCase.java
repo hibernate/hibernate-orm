@@ -49,7 +49,7 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 	@BeforeClass
 	public static void init() {
 		TypeConfiguration typeConfiguration = new TypeConfiguration();
-		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl(typeConfiguration, new MappingMetamodelImpl( typeConfiguration, ssr ) );
+		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, new MappingMetamodelImpl( typeConfiguration, ssr ), ssr );
 
 		ssr = new StandardServiceRegistryBuilder().build();
 		queryEngine = new QueryEngine(

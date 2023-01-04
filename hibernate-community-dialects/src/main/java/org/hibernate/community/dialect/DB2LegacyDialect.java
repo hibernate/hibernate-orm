@@ -312,6 +312,7 @@ public class DB2LegacyDialect extends Dialect {
 			functionFactory.stddevPopSamp();
 			functionFactory.varPopSamp();
 			functionFactory.varianceSamp();
+			functionFactory.dateTrunc();
 		}
 		else {
 			// Before version 11, the position function required the use of the code units
@@ -327,11 +328,11 @@ public class DB2LegacyDialect extends Dialect {
 			functionFactory.stddevSamp_sumCount();
 			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "var_pop", "variance" );
 			functionFactory.varSamp_sumCount();
+			functionFactory.dateTrunc_trunc();
 		}
 
 		functionFactory.addYearsMonthsDaysHoursMinutesSeconds();
 		functionFactory.yearsMonthsDaysHoursMinutesSecondsBetween();
-		functionFactory.dateTrunc();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 
 		// DB2 wants parameter operands to be casted to allow lengths bigger than 255

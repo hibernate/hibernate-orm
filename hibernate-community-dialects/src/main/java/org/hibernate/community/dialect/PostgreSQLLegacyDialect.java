@@ -44,6 +44,7 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -605,6 +606,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			functionContributions.getFunctionRegistry().register( "min", new PostgreSQLMinMaxFunction( "min" ) );
 			functionContributions.getFunctionRegistry().register( "max", new PostgreSQLMinMaxFunction( "max" ) );
 		}
+
+		functionContributions.getFunctionRegistry().register(
+				"round", new PostgreSQLTruncRoundFunction( "round", true )
+		);
+		functionContributions.getFunctionRegistry().register(
+				"trunc", new PostgreSQLTruncRoundFunction( "trunc", true )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}
 
 	/**

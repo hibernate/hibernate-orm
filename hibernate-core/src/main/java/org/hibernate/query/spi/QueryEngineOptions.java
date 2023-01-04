@@ -9,6 +9,7 @@ package org.hibernate.query.spi;
 import java.util.Map;
 
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -69,4 +70,6 @@ public interface QueryEngineOptions {
 	SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy();
 
 	JpaCompliance getJpaCompliance();
+
+	ValueHandlingMode getCriteriaValueHandlingMode();
 }

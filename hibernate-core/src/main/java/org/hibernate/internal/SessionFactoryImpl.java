@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -88,7 +87,6 @@ import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
@@ -153,7 +151,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-public class SessionFactoryImpl implements SessionFactoryImplementor {
+public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
 	private final String name;
@@ -1115,39 +1113,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	public FetchProfile getFetchProfile(String name) {
 		return fetchProfiles.get( name );
-	}
-
-	@Override
-	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
-		if ( bindValue == null ) {
-			// we can't guess
-			return null;
-		}
-
-		final LazyInitializer lazyInitializer = extractLazyInitializer( bindValue );
-		final Class<?> clazz = lazyInitializer != null ? lazyInitializer.getPersistentClass() : bindValue.getClass();
-
-		// Resolve superclass bindable type if necessary, as we don't register types for e.g. Inet4Address
-		Class<?> c = clazz;
-		do {
-			final BindableType<?> type = resolveParameterBindType( c );
-			if ( type != null ) {
-				//noinspection unchecked
-				return (BindableType<? extends T>) type;
-			}
-			c = c.getSuperclass();
-		}
-		while ( c != Object.class );
-		if ( !clazz.isEnum() && Serializable.class.isAssignableFrom( clazz ) ) {
-			//noinspection unchecked
-			return (BindableType<? extends T>) resolveParameterBindType( Serializable.class );
-		}
-		return null;
-	}
-
-	@Override
-	public <T> BindableType<T> resolveParameterBindType(Class<T> javaType) {
-		return getMappingMetamodel().resolveQueryParameterType( javaType );
 	}
 
 	/**

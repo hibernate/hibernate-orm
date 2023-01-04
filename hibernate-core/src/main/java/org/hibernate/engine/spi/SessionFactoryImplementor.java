@@ -25,6 +25,7 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
@@ -47,7 +48,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends Mapping, SessionFactory, SqmCreationContext, SqlAstCreationContext, QueryParameterBindingTypeResolver {
+		extends Mapping, SessionFactory, SqmCreationContext, SqlAstCreationContext,
+				QueryParameterBindingTypeResolver { //deprecated extension, use MappingMetamodel
 	/**
 	 * Get the UUID for this SessionFactory.
 	 * <p>
@@ -204,5 +206,17 @@ public interface SessionFactoryImplementor
 	 * The best guess entity name for an entity not in an association
 	 */
 	String bestGuessEntityName(Object object);
+
+	/**
+	 * @deprecated Use {@link #getMappingMetamodel()}.{@link MappingMetamodelImplementor#resolveParameterBindType(Object)}
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
+	<T> BindableType<? extends T> resolveParameterBindType(T bindValue);
+
+	/**
+	 * @deprecated Use {@link #getMappingMetamodel()}.{@link MappingMetamodelImplementor#resolveParameterBindType(Class)}
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
+	<T> BindableType<T> resolveParameterBindType(Class<T> clazz);
 
 }

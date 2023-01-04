@@ -23,7 +23,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.internal.export.common.DefaultValueVisitor;
 import org.hibernate.tool.internal.util.NameConverter;
-import org.hibernate.tuple.GenerationTiming;
 
 /**
  * Abstract implementation of POJOClass. To be extended by ComponentPOJO and EntityPOJO
@@ -818,7 +817,7 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 			return false;
 		}
 		if(field.getValue()!=null) {			
-			if (!field.isOptional() && (field.getValueGenerationStrategy() == null || field.getValueGenerationStrategy().getGenerationTiming().equals(GenerationTiming.NEVER))) {				
+			if (!field.isOptional() && (field.getValueGeneratorCreator() == null )) {				
 				return true;
 			} else if (field.getValue() instanceof Component) {
 				Component c = (Component) field.getValue();

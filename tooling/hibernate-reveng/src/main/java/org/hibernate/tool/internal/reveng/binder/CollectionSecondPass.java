@@ -12,7 +12,7 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Value;
 
-public class CollectionSecondPass extends org.hibernate.cfg.CollectionSecondPass {
+public class CollectionSecondPass extends org.hibernate.boot.model.internal.CollectionSecondPass {
 	
 	private static final long serialVersionUID = 
 			ObjectStreamClass.lookup(CollectionSecondPass.class).getSerialVersionUID();
@@ -20,7 +20,7 @@ public class CollectionSecondPass extends org.hibernate.cfg.CollectionSecondPass
 	private MetadataBuildingContext mdbc;
 
     public CollectionSecondPass(MetadataBuildingContext mdbc, Collection coll) {
-        super(mdbc, coll);
+        super(coll);
         this.mdbc = mdbc;
     }
 

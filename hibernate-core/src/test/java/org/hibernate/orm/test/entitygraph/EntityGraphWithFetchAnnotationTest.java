@@ -41,13 +41,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				EntityGraphWithFetchAnnotationTest.Tag.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EntityGraphWithFetchAnnotationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10485")
 	void testWithoutEntityGraph(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction(
@@ -73,7 +73,7 @@ public class EntityGraphWithFetchAnnotationTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10485")
 	void testWithEntityGraph(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction(

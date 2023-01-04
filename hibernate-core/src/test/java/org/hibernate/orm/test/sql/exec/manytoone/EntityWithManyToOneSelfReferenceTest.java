@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 		}
 )
 @ServiceRegistry
-@SessionFactory(generateStatistics = true, statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(generateStatistics = true, useCollectingStatementInspector = true)
 public class EntityWithManyToOneSelfReferenceTest {
 
 	@BeforeEach
@@ -96,7 +96,7 @@ public class EntityWithManyToOneSelfReferenceTest {
 
 	@Test
 	public void testGetEntity(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

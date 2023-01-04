@@ -25,13 +25,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @TestForIssue( jiraKey = "HHH-14201" )
 @DomainModel( annotatedClasses = { JoinOrderTest.EntityA.class, JoinOrderTest.EntityB.class, JoinOrderTest.EntityC.class } )
-@SessionFactory( statementInspectorClass = SQLStatementInspector.class )
+@SessionFactory( useCollectingStatementInspector = true )
 public class JoinOrderTest {
 
 	@Test
 	public void testJoinOrder(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final SQLStatementInspector sqlStatementInspector = (SQLStatementInspector) scope.getStatementInspector();
+			final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
 			sqlStatementInspector.clear();
 
 			final String hql = "select 1"

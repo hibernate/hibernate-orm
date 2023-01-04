@@ -29,7 +29,7 @@ import jakarta.persistence.ManyToOne;
 		HHH15065Test.Person.class,
 	}
 )
-@SessionFactory
+@SessionFactory(useCollectingStatementInspector = true)
 class HHH15065Test {
 
 	@Test
@@ -43,7 +43,7 @@ class HHH15065Test {
 				.getResultList();
 		} );
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		List<String> sqlQueries = statementInspector.getSqlQueries();
 		assertEquals( 1, sqlQueries.size() );
 		assertEquals( "select b1_0.id,a1_0.id,c1_0.id,c2_0.id,e1_0.id" +

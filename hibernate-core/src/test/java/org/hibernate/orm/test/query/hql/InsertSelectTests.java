@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		InsertSelectTests.EntityEntry.class,
 		InsertSelectTests.EntitySource.class
 })
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class InsertSelectTests {
 
 	@BeforeEach
@@ -55,7 +55,7 @@ public class InsertSelectTests {
 	@Test
 	@TestForIssue( jiraKey = "HHH-15527")
 	public void testInsertSelectGeneratedAssigned(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();

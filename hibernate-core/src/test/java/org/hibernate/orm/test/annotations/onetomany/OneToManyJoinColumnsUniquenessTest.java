@@ -28,13 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 				OneToManyJoinColumnsUniquenessTest.EntityB.class,
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @TestForIssue(jiraKey = "HHH-15091")
 public class OneToManyJoinColumnsUniquenessTest {
 
 	@Test
 	public void testInsertWithNullAssociationThrowPersistenceException(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		assertThrows(
 				PersistenceException.class, () ->

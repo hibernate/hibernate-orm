@@ -22,7 +22,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @DomainModel(
 		annotatedClasses = BatchNoUseJdbcMetadataTest.Person.class
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "5"),
@@ -35,7 +35,7 @@ public class BatchNoUseJdbcMetadataTest {
 
 	@Test
 	public void testBatching(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {

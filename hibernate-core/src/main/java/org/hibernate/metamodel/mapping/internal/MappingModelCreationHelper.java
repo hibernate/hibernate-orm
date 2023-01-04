@@ -31,6 +31,7 @@ import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
@@ -134,6 +135,8 @@ public class MappingModelCreationHelper {
 				rootTableName,
 				rootTableKeyColumnNames,
 				bootProperty,
+				null,
+				0,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
 				embeddable -> new EmbeddedIdentifierMappingImpl(
@@ -146,7 +149,6 @@ public class MappingModelCreationHelper {
 				),
 				creationProcess
 		);
-
 
 		return (EmbeddedIdentifierMappingImpl) embeddableMappingType.getEmbeddedValueMapping();
 	}
@@ -245,12 +247,42 @@ public class MappingModelCreationHelper {
 		);
 	}
 
+	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			CompositeType attrType,
+			String tableExpression,
+			String[] rootTableKeyColumnNames,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		return buildEmbeddedAttributeMapping(
+				attrName,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				null,
+				0,
+				declaringType,
+				attrType,
+				tableExpression,
+				rootTableKeyColumnNames,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess
+		);
+	}
 
 	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
 			int fetchableIndex,
 			Property bootProperty,
+			DependantValue dependantValue,
+			int dependantColumnIndex,
 			ManagedMappingType declaringType,
 			CompositeType attrType,
 			String tableExpression,
@@ -266,13 +298,20 @@ public class MappingModelCreationHelper {
 				creationProcess
 		);
 
-		final Component component = (Component) bootProperty.getValue();
+		Value componentValue = bootProperty.getValue();
+		if ( componentValue instanceof DependantValue && dependantValue != null ) {
+			componentValue = dependantValue.getWrappedValue();
+		}
+
+		final Component component = (Component) componentValue;
 		final EmbeddableMappingTypeImpl embeddableMappingType = EmbeddableMappingTypeImpl.from(
 				component,
 				attrType,
 				tableExpression,
 				rootTableKeyColumnNames,
 				bootProperty,
+				dependantValue,
+				dependantColumnIndex,
 				component.getColumnInsertability(),
 				component.getColumnUpdateability(),
 				attributeMappingType -> {

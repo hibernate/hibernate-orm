@@ -13,6 +13,9 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -55,12 +58,12 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			Query q;
 			q = em.createNamedQuery( "TableWithEnumArrays.Native.insert" );
 			q.setParameter( "id", 4L );
-			q.setParameter( "data", new Short[]{ (short) MyEnum.TRUE.ordinal(), null, (short) MyEnum.FALSE.ordinal() } );
+			q.setParameter( "data", nativeEnumArray( MyEnum.TRUE, null, MyEnum.FALSE ) );
 			q.executeUpdate();
 
 			q = em.createNativeQuery( "INSERT INTO table_with_enum_arrays(id, the_array) VALUES ( :id , :data )" );
 			q.setParameter( "id", 5L );
-			q.setParameter( "data", new Short[]{ (short) MyEnum.TRUE.ordinal(), null, (short) MyEnum.FALSE.ordinal() } );
+			q.setParameter( "data", nativeEnumArray( MyEnum.TRUE, MyEnum.FALSE ) );
 			q.executeUpdate();
 		} );
 	}
@@ -124,10 +127,33 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 					"SELECT * FROM table_with_enum_arrays t WHERE the_array " + op + " :data",
 					TableWithEnumArrays.class
 			);
-			tq.setParameter( "data", new Short[]{ (short) MyEnum.FALSE.ordinal(), (short) MyEnum.FALSE.ordinal(), null, (short) MyEnum.TRUE.ordinal() } );
+			tq.setParameter( "data", nativeEnumArray( MyEnum.FALSE, MyEnum.FALSE, null, MyEnum.TRUE ) );
 			TableWithEnumArrays tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );
 		} );
+	}
+
+	private Object nativeEnumArray(MyEnum... enums) {
+		final DdlTypeRegistry ddlTypeRegistry = sessionFactory().getTypeConfiguration().getDdlTypeRegistry();
+		final String tinyintType = ddlTypeRegistry.getDescriptor( SqlTypes.TINYINT ).getRawTypeName();
+		final String smallintType = ddlTypeRegistry.getDescriptor( SqlTypes.SMALLINT ).getRawTypeName();
+		// We have to bind a Short[] if the DDL type is smallint to align with the Hibernate mapping,
+		// but also if the dialect supports arrays natively, because then a Short[] can be coerced to a Byte[]
+		if ( tinyintType.equals( smallintType ) || getDialect().supportsStandardArrays() ) {
+			final Short[] array = new Short[enums.length];
+			for ( int i = 0; i < enums.length; i++ ) {
+				array[i] = enums[i] == null ? null : (short) enums[i].ordinal();
+			}
+			return array;
+		}
+		else {
+			// We have to always serialize the Byte[] since it can contain nulls, but VARBINARY can't
+			final Byte[] array = new Byte[enums.length];
+			for ( int i = 0; i < enums.length; i++ ) {
+				array[i] = enums[i] == null ? null : (byte) enums[i].ordinal();
+			}
+			return SerializationHelper.serialize( array );
+		}
 	}
 
 	@Entity( name = "TableWithEnumArrays" )

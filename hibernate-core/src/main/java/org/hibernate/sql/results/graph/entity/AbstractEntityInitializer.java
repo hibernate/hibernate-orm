@@ -42,6 +42,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
 import org.hibernate.spi.NavigablePath;
@@ -51,6 +52,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -409,7 +411,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final Object entityInstanceFromExecutionContext =
 				rowProcessingState.getJdbcValuesSourceProcessingState().getExecutionContext().getEntityInstance();
 		if ( isProxyInstance( proxy ) ) {
-			if ( isEntityResultInitializer() && entityInstanceFromExecutionContext != null ) {
+			if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -421,8 +423,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			final Object existingEntity = persistenceContext.getEntity( entityKey );
 			if ( existingEntity != null ) {
 				entityInstance = existingEntity;
+				if ( existingLoadingEntry == null && isExistingEntityInitialized( existingEntity ) ) {
+					notifyResolutionListeners( entityInstance );
+					this.isInitialized = true;
+				}
 			}
-			else if ( isEntityResultInitializer() && entityInstanceFromExecutionContext != null ) {
+			else if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -455,6 +461,26 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private boolean isProxyInstance(Object proxy) {
 		return proxy != null
 			&& ( proxy instanceof MapProxy || entityDescriptor.getJavaType().getJavaTypeClass().isInstance( proxy ) );
+	}
+
+	private boolean isExistingEntityInitialized(Object existingEntity) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
+				return false;
+			}
+			return true;
+		}
+		else if ( isPersistentAttributeInterceptable( existingEntity ) ) {
+			final PersistentAttributeInterceptor persistentAttributeInterceptor = asPersistentAttributeInterceptable(
+					entityInstance ).$$_hibernate_getInterceptor();
+			if ( persistentAttributeInterceptor == null || persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor )  {
+				return false;
+			}
+			return true;
+		}
+
+		return true;
 	}
 
 	/**
@@ -951,6 +977,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				listener.onPreLoad( preLoadEvent );
 			}
 		}
+	}
+
+	@Override
+	public boolean isInitialized() {
+		return isInitialized;
 	}
 
 	@Override

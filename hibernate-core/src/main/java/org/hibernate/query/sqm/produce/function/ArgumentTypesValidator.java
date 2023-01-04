@@ -6,30 +6,22 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -105,7 +97,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 					try {
 						checkType(
 								count, functionName, type,
-								getJdbcType( typeConfiguration, argument, indicators, javaType ),
+								getJdbcType( indicators, javaType ),
 								javaType.getJavaTypeClass()
 						);
 					}
@@ -141,64 +133,13 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		}
 	}
 
-	private int getJdbcType(
-			TypeConfiguration typeConfiguration,
-			SqmTypedNode<?> argument,
-			JdbcTypeIndicators indicators,
-			JavaType<?> javaType) {
-		// For enum types, we must try to resolve the JdbcMapping of a possible path
-		// to be sure we use the correct JdbcType for the validation
-		final JdbcType jdbcType;
+	private int getJdbcType(JdbcTypeIndicators indicators, JavaType<?> javaType) {
 		if ( javaType.getJavaTypeClass().isEnum() ) {
-			// we can't tell from the enum class whether it is mapped
-			// as STRING or ORDINAL, we have to look at the entity
-			// attribute it belongs to when it occurs as a path expression
-			final JdbcMapping mapping = getJdbcMappingForEnum( argument, typeConfiguration );
-			if ( mapping == null ) {
-				jdbcType = javaType.getRecommendedJdbcType( indicators );
-			}
-			else {
-				// indicates that we don't know if its STRING or ORDINAL
-				return ENUM_UNKNOWN_JDBC_TYPE;
-			}
+			// magic value indicates it can be coerced STRING or ORDINAL
+			return ENUM_UNKNOWN_JDBC_TYPE;
 		}
 		else {
-			jdbcType = javaType.getRecommendedJdbcType( indicators );
-		}
-		return jdbcType.getDefaultSqlTypeCode();
-	}
-
-	private JdbcMapping getJdbcMappingForEnum(SqmTypedNode<?> argument, TypeConfiguration typeConfiguration) {
-		if ( argument instanceof SqmPath<?> ) {
-			final SqmPath<?> path = (SqmPath<?>) argument;
-			final ModelPartContainer modelPartContainer = getModelPartContainer( path.getLhs(), typeConfiguration );
-			final ModelPart part = modelPartContainer.findSubPart( path.getReferencedPathSource().getPathName(), null );
-			return part.getJdbcMappings().get( 0 );
-		}
-		return null;
-	}
-
-	/**
-	 * @implNote Accesses the given {@link MappingMetamodel}, which is problematic.
-	 */
-	private ModelPartContainer getModelPartContainer(SqmPath<?> path, TypeConfiguration typeConfiguration) {
-		final SqmPath<?> lhs = path.getLhs();
-		if ( lhs == null ) {
-			assert path instanceof SqmFrom<?, ?>;
-			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) path.getNodeType().getSqmPathType();
-			final MappingMetamodelImplementor mappingMetamodel;
-			try {
-				mappingMetamodel = typeConfiguration.getSessionFactory().getMappingMetamodel();
-			}
-			catch (HibernateException he) {
-				// we don't have a SessionFactory, or a MappingMetamodel
-				return null;
-			}
-			return mappingMetamodel.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
-		}
-		else {
-			final ModelPartContainer modelPartContainer = getModelPartContainer( lhs, typeConfiguration );
-			return (ModelPartContainer) modelPartContainer.findSubPart( path.getReferencedPathSource().getPathName(), null );
+			return javaType.getRecommendedJdbcType( indicators ).getDefaultSqlTypeCode();
 		}
 	}
 

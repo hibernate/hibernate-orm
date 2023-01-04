@@ -10,8 +10,6 @@ import org.hibernate.Internal;
 
 import java.sql.Types;
 
-import org.hibernate.Internal;
-
 /**
  * Defines a list of constant type codes used to identify generic SQL types.
  * This is an extension of the standard JDBC-defined {@link Types}, defining

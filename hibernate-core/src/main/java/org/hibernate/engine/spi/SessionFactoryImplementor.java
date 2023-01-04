@@ -25,6 +25,7 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
@@ -47,7 +48,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends Mapping, SessionFactory, SqmCreationContext, SqlAstCreationContext, QueryParameterBindingTypeResolver {
+		extends Mapping, SessionFactory, SqmCreationContext, SqlAstCreationContext,
+				QueryParameterBindingTypeResolver { //deprecated extension, use MappingMetamodel
 	/**
 	 * Get the UUID for this SessionFactory.
 	 * <p>
@@ -129,14 +131,6 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * Get the identifier generator for the hierarchy
-	 * 
-	 * @deprecated use {@link #getGenerator(String)}
-	 */
-	@Deprecated(since = "6.2")
-	IdentifierGenerator getIdentifierGenerator(String rootEntityName);
-
-	/**
-	 * Get the identifier generator for the hierarchy
 	 */
 	Generator getGenerator(String rootEntityName);
 
@@ -157,6 +151,40 @@ public interface SessionFactoryImplementor
 
 	WrapperOptions getWrapperOptions();
 
+
+
+	/**
+	 * Get the JdbcServices.
+	 *
+	 * @return the JdbcServices
+	 */
+	JdbcServices getJdbcServices();
+
+	SqlStringGenerationContext getSqlStringGenerationContext();
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// map these to Metamodel
+
+	RootGraphImplementor<?> findEntityGraphByName(String name);
+
+	/**
+	 * The best guess entity name for an entity not in an association
+	 */
+	String bestGuessEntityName(Object object);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Deprecations
+
+	/**
+	 * Get the identifier generator for the hierarchy
+	 *
+	 * @deprecated use {@link #getGenerator(String)}
+	 */
+	@Deprecated(since = "6.2")
+	IdentifierGenerator getIdentifierGenerator(String rootEntityName);
+
 	/**
 	 * Contract for resolving this SessionFactory on deserialization
 	 *
@@ -173,36 +201,22 @@ public interface SessionFactoryImplementor
 	@Deprecated(since = "6.2", forRemoval = true)
 	DeserializationResolver<?> getDeserializationResolver();
 
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Deprecations
-
-	/**
-	 * Get the JdbcServices.
-	 *
-	 * @return the JdbcServices
-	 */
-	JdbcServices getJdbcServices();
-
-	SqlStringGenerationContext getSqlStringGenerationContext();
-
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// map these to Metamodel
-
 	/**
 	 * @deprecated no longer for internal use, use {@link #getMappingMetamodel()} or {@link #getJpaMetamodel()}
 	 */
 	@Override @Deprecated
 	MetamodelImplementor getMetamodel();
 
-	RootGraphImplementor<?> findEntityGraphByName(String name);
+	/**
+	 * @deprecated Use {@link #getMappingMetamodel()}.{@link MappingMetamodelImplementor#resolveParameterBindType(Object)}
+	 */
+	@Override @Deprecated(since = "6.2", forRemoval = true)
+	<T> BindableType<? extends T> resolveParameterBindType(T bindValue);
 
 	/**
-	 * The best guess entity name for an entity not in an association
+	 * @deprecated Use {@link #getMappingMetamodel()}.{@link MappingMetamodelImplementor#resolveParameterBindType(Class)}
 	 */
-	String bestGuessEntityName(Object object);
+	@Override @Deprecated(since = "6.2", forRemoval = true)
+	<T> BindableType<T> resolveParameterBindType(Class<T> clazz);
 
 }

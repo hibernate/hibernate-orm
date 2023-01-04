@@ -74,9 +74,7 @@ import jakarta.persistence.criteria.Subquery;
 public interface NodeBuilder extends HibernateCriteriaBuilder {
 	JpaMetamodel getDomainModel();
 
-	default TypeConfiguration getTypeConfiguration() {
-		return getDomainModel().getTypeConfiguration();
-	}
+	TypeConfiguration getTypeConfiguration();
 
 	boolean isJpaQueryComplianceEnabled();
 

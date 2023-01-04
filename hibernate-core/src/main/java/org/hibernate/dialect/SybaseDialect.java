@@ -10,6 +10,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
@@ -25,7 +26,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.internal.JTDSCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.CastType;
@@ -209,10 +209,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		functionFactory.stddev();
 		functionFactory.variance();
@@ -224,11 +224,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		functionFactory.round_round();
 
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register(
 				"count",
 				new CountFunction(
 						this,
-						queryEngine.getTypeConfiguration(),
+						functionContributions.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
 						"count_big",
 						"+",
@@ -250,8 +250,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		functionFactory.octetLength_pattern( "datalength(?1)" );
 		functionFactory.bitLength_pattern( "datalength(?1)*8" );
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd",
-				new IntegralTimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register( "timestampadd",
+				new IntegralTimestampaddFunction( this, functionContributions.getTypeConfiguration() ) );
 	}
 
 	@Override

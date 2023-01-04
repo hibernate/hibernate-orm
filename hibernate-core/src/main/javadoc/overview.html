@@ -86,7 +86,7 @@ mappings as an alternative.
         <a href="https://jakarta.ee/xml/ns/persistence/orm/orm_3_0.xsd">orm_3_0.xsd</a>.
     </li>
     <li>
-        Hibernate extends this schema with some additional mapping elements. The schema is
+        Hibernate extends this schema with some additional mapping elements. The extended schema is
         <a href="https://hibernate.org/xsd/orm/mapping/mapping-3.1.0.xsd">mapping-3.1.0.xsd</a>.
     </li>
     <li>
@@ -165,7 +165,7 @@ mappings as an alternative.
 </p>
 <ul>
     <li>
-        {@link org.hibernate.dialects} provides a framework for modelling dialects of SQL,
+        {@link org.hibernate.dialect} provides a framework for modelling dialects of SQL,
     </li>
     <li>
         {@link org.hibernate.cache.spi} defines an SPI for integrating with second-level cache
@@ -176,6 +176,12 @@ mappings as an alternative.
         JDBC connection pools.
     </li>
 </ul>
+<p>
+    Finally, Hibernate ORM Core is itself a framework for advanced extensions like Hibernate Search,
+    Hibernate Reactive, and Envers, which do much more than just implementing a single well-defined
+    extension point. The starting points for such extensions are found in the packages
+    {@link org.hibernate.integrator.spi} and  {@link org.hibernate.event.spi}.
+</p>
 
 <h3>Package categories</h3>
 

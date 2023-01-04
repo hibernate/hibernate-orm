@@ -47,10 +47,6 @@ public interface MappingMetamodel {
 			Function<NavigablePath,
 			TableGroup> tableGroupLocator);
 
-	MappingModelExpressible<?> lenientlyResolveMappingExpressible(
-			SqmExpressible<?> sqmExpressible,
-			Function<NavigablePath, TableGroup> tableGroupLocator);
-
 	/**
 	 * Given a Java type, determine the corresponding BindableType to
 	 * use implicitly
@@ -66,11 +62,6 @@ public interface MappingMetamodel {
 	 */
 	void forEachEntityDescriptor(Consumer<EntityPersister> action);
 	Stream<EntityPersister> streamEntityDescriptors();
-
-	/**
-	 * Given a JPA entity domain type, get the associated Hibernate entity descriptor
-	 */
-	EntityPersister resolveEntityDescriptor(EntityDomainType<?> entityDomainType);
 
 	/**
 	 * Get an entity mapping descriptor based on its Hibernate entity-name

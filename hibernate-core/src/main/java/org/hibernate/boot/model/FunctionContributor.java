@@ -35,17 +35,22 @@ package org.hibernate.boot.model;
 public interface FunctionContributor {
 
 	/**
-	 *  Contribute functions
+	 * Contribute functions
 	 *
 	 * @param functionContributions The target for the contributions
 	 */
 	void contributeFunctions(FunctionContributions functionContributions);
 
 	/**
-	 * Determines order in which the contributions will be applied (lowest ordinal first).
-	 *
-	 * The range 0-500 is reserved for Hibernate, range 500-1000 for libraries and 1000-Integer.MAX_VALUE for
-	 * user-defined FunctionContributors.
+	 * Determines order in which the contributions will be applied
+	 * (lowest ordinal first).
+	 * <p>
+	 * The range 0-500 is reserved for Hibernate, range 500-1000 for libraries and
+	 * 1000-Integer.MAX_VALUE for user-defined FunctionContributors.
+	 * <p>
+	 * Contributions from higher precedence contributors (higher numbers) effectively override 
+	 * contributions from lower precedence.  E.g. if a contributor with precedence 1000 contributes a 
+	 * function named {@code "max"}, that will override Hibernate's standard function of that name.
 	 *
 	 * @return the ordinal for this FunctionContributor
 	 */

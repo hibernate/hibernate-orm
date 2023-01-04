@@ -1429,7 +1429,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
 		if ( type == null && retType != null ) {
-			type = getSession().getFactory().resolveParameterBindType( retType );
+			type = getSession().getFactory().getMappingMetamodel().resolveParameterBindType( retType );
 		}
 		//noinspection unchecked
 		return (BindableType<Object>) type;

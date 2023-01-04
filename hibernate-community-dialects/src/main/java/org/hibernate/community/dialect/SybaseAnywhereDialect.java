@@ -10,6 +10,7 @@ package org.hibernate.community.dialect;
 import java.util.Map;
 
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.RowLockStrategy;
@@ -21,7 +22,6 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -90,9 +90,9 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-		final CommonFunctionFactory functionFactory = new CommonFunctionFactory( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
+		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.listagg_list( "varchar" );
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.windowFunctions();

@@ -174,7 +174,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 		if ( bindType == null ) {
 			if ( value != null ) {
-				this.bindType = sessionFactory.resolveParameterBindType( value );
+				this.bindType = sessionFactory.getMappingMetamodel().resolveParameterBindType( value );
 			}
 		}
 	}
@@ -267,7 +267,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 
 		if ( bindType == null && value != null ) {
-			this.bindType = sessionFactory.resolveParameterBindType( value );
+			this.bindType = sessionFactory.getMappingMetamodel().resolveParameterBindType( value );
 		}
 
 	}

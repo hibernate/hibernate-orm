@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -19,7 +20,6 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
@@ -123,10 +123,10 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.cot();
 		functionFactory.ln_log();
 		functionFactory.log_loglog();
@@ -151,17 +151,17 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		functionFactory.datepartDatename();
 		functionFactory.lastDay_eomonth();
 
-		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
-		queryEngine.getSqmFunctionRegistry().register( "str", new TransactSQLStrFunction( queryEngine.getTypeConfiguration() ) );
-		queryEngine.getSqmFunctionRegistry().register(
+		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
+		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		functionContributions.getFunctionRegistry().register( "str", new TransactSQLStrFunction( functionContributions.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register(
 				"concat",
 				new CastingConcatFunction(
 						this,
 						"+",
 						false,
 						SqlAstNodeRenderingMode.DEFAULT,
-						queryEngine.getTypeConfiguration()
+						functionContributions.getTypeConfiguration()
 				)
 		);
 	}

@@ -118,9 +118,9 @@ public abstract class AbstractJdbcParameter
 			return jdbcMapping;
 		}
 
-		final BindableType<?> parameterType = executionContext.getSession()
-				.getFactory()
-				.resolveParameterBindType( bindValue );
+		final BindableType<?> parameterType =
+				executionContext.getSession().getFactory().getMappingMetamodel()
+						.resolveParameterBindType( bindValue );
 		if ( parameterType instanceof JdbcMapping ) {
 			return (JdbcMapping) parameterType;
 		}

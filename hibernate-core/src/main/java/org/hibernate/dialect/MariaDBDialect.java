@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
@@ -18,7 +19,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -78,21 +78,21 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory( queryEngine );
+		CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory(functionContributions);
 		commonFunctionFactory.windowFunctions();
 		commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		queryEngine.getSqmFunctionRegistry().registerNamed(
+		functionContributions.getFunctionRegistry().registerNamed(
 				"json_valid",
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 						.getBasicTypeRegistry()
 						.resolve( StandardBasicTypes.BOOLEAN )
 		);
 		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
-				.setInvariantType( queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
+				.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
 				.register();

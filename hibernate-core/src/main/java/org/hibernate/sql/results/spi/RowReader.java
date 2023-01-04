@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.internal.InitializersList;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -50,7 +51,9 @@ public interface RowReader<R> {
 	 * The initializers associated with this reader.
 	 *
 	 * @see org.hibernate.sql.results.graph.DomainResult
+	 * @deprecated use {@link #getInitializersList()}
 	 */
+	@Deprecated
 	List<Initializer> getInitializers();
 
 	/**
@@ -69,5 +72,12 @@ public interface RowReader<R> {
 	 */
 	@Deprecated
 	RowReaderMemento toMemento(SessionFactoryImplementor factory);
+
+	/**
+	 * The initializers associated with this reader.
+	 *
+	 * @see org.hibernate.sql.results.graph.DomainResult
+	 */
+	InitializersList getInitializersList();
 
 }

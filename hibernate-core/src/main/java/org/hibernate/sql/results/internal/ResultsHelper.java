@@ -73,7 +73,7 @@ public class ResultsHelper {
 		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 
 		final Map<NavigablePath, Initializer> initializerMap = new LinkedHashMap<>();
-		final List<Initializer> initializers = new ArrayList<>();
+		final InitializersList.Builder initializersBuilder = new InitializersList.Builder();
 
 		final List<DomainResultAssembler<?>> assemblers = jdbcValuesMapping.resolveAssemblers(
 				new AssemblerCreationState() {
@@ -112,7 +112,7 @@ public class ResultsHelper {
 						);
 
 						initializerMap.put( navigablePath, initializer );
-						initializers.add( initializer );
+						initializersBuilder.addInitializer( initializer );
 
 						return initializer;
 					}
@@ -126,7 +126,9 @@ public class ResultsHelper {
 
 		logInitializers( initializerMap );
 
-		return new StandardRowReader<>( assemblers, initializers, rowTransformer, transformedResultJavaType );
+		final InitializersList initializersList = initializersBuilder.build( initializerMap );
+
+		return new StandardRowReader<>( assemblers, initializersList, rowTransformer, transformedResultJavaType );
 	}
 
 	private static void logInitializers(Map<NavigablePath, Initializer> initializerMap) {

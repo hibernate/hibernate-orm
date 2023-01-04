@@ -220,6 +220,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return queryEngine.getTypeConfiguration();
+	}
+
+	@Override
 	public boolean isJpaQueryComplianceEnabled() {
 		return jpaComplianceEnabled;
 	}

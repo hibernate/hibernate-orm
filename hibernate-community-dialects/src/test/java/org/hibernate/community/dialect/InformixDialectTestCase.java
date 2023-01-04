@@ -6,20 +6,19 @@
  */
 package org.hibernate.community.dialect;
 
-import java.util.Collections;
-
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
@@ -33,6 +32,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl.NATIVE_QUERY_INTERPRETER;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -43,15 +45,18 @@ import static org.junit.Assert.assertEquals;
 public class InformixDialectTestCase extends BaseUnitTestCase {
 
 	private static final InformixDialect dialect = new InformixDialect();
-	private static ServiceRegistry ssr;
+	private static StandardServiceRegistry ssr;
 	private static QueryEngine queryEngine;
+	private static MappingMetamodelImplementor mappingMetamodel;
+	private static TypeConfiguration typeConfiguration;
 
 	@BeforeClass
 	public static void init() {
-		TypeConfiguration typeConfiguration = new TypeConfiguration();
-		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, new MappingMetamodelImpl( typeConfiguration, ssr ), ssr );
-
 		ssr = new StandardServiceRegistryBuilder().build();
+		typeConfiguration = new TypeConfiguration();
+		typeConfiguration.scope( new MetadataBuildingContextTestingImpl( ssr ) );
+		mappingMetamodel = new MappingMetamodelImpl( typeConfiguration, ssr );
+		final JpaMetamodelImpl jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, mappingMetamodel, ssr );
 		queryEngine = new QueryEngine(
 				null,
 				null,
@@ -59,8 +64,8 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 				ValueHandlingMode.BIND,
 				dialect.getPreferredSqlTypeCodeForBoolean(),
 				false,
-				new NamedObjectRepositoryImpl( Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap() ),
-				NativeQueryInterpreterStandardImpl.NATIVE_QUERY_INTERPRETER,
+				new NamedObjectRepositoryImpl( emptyMap(), emptyMap(), emptyMap(), emptyMap() ),
+				NATIVE_QUERY_INTERPRETER,
 				dialect,
 				ssr
 		);
@@ -89,17 +94,14 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 	public void testCurrentTimestampFunction() {
 		SqmFunctionDescriptor functionDescriptor = queryEngine.getSqmFunctionRegistry()
 				.findFunctionDescriptor( "current_timestamp" );
-		SelfRenderingSqmFunction<Object> sqmExpression = functionDescriptor.generateSqmExpression(
-				null,
-				queryEngine,
-				new TypeConfiguration()
-		);
+		SelfRenderingSqmFunction<Object> sqmExpression =
+				functionDescriptor.generateSqmExpression( null, queryEngine, typeConfiguration );
 		BasicType<?> basicType = (BasicType<?>) sqmExpression.getNodeType();
 		assertEquals( JdbcTimestampJavaType.INSTANCE, basicType.getJavaTypeDescriptor() );
 		assertEquals( TimestampJdbcType.INSTANCE, basicType.getJdbcType() );
 
 		SqlAppender appender = new StringBuilderSqlAppender();
-		sqmExpression.getRenderingSupport().render( appender, Collections.emptyList(), null );
+		sqmExpression.getRenderingSupport().render( appender, emptyList(), null );
 		assertEquals( "current", appender.toString() );
 	}
 
@@ -108,17 +110,14 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 	public void testCurrentDateFunction() {
 		SqmFunctionDescriptor functionDescriptor = queryEngine.getSqmFunctionRegistry()
 				.findFunctionDescriptor( "current_date" );
-		SelfRenderingSqmFunction<Object> sqmExpression = functionDescriptor.generateSqmExpression(
-				null,
-				queryEngine,
-				new TypeConfiguration()
-		);
+		SelfRenderingSqmFunction<Object> sqmExpression =
+				functionDescriptor.generateSqmExpression( null, queryEngine, typeConfiguration );
 		BasicType<?> basicType = (BasicType<?>) sqmExpression.getNodeType();
 		assertEquals( JdbcDateJavaType.INSTANCE, basicType.getJavaTypeDescriptor() );
 		assertEquals( DateJdbcType.INSTANCE, basicType.getJdbcType() );
 
 		SqlAppender appender = new StringBuilderSqlAppender();
-		sqmExpression.getRenderingSupport().render( appender, Collections.emptyList(), null );
+		sqmExpression.getRenderingSupport().render( appender, emptyList(), null );
 		assertEquals( "today", appender.toString() );
 	}
 

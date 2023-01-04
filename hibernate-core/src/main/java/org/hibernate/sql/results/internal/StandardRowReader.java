@@ -44,23 +44,8 @@ public class StandardRowReader<T> implements RowReader<T> {
 		this.resultAssemblers = resultAssemblers;
 		this.initializers = initializers;
 		this.rowTransformer = rowTransformer;
-
 		this.assemblerCount = resultAssemblers.size();
 		this.domainResultJavaType = domainResultJavaType;
-
-		logDebugInfo();
-	}
-
-	protected void logDebugInfo() {
-		// we'd really need some form of description for the assemblers and initializers for this
-		// to be useful.
-		//
-		// todo (6.0) : consider whether this ^^ is worth it
-
-//		if ( ! ResultsLogger.DEBUG_ENABLED ) {
-//			return;
-//		}
-
 	}
 
 	@Override

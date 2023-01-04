@@ -18,6 +18,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -25,9 +26,7 @@ import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
@@ -36,7 +35,6 @@ import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
@@ -58,7 +56,7 @@ import static java.util.Comparator.comparingInt;
  * @author Steve Ebersole
  */
 @Incubating
-public class QueryEngine implements QueryParameterBindingTypeResolver {
+public class QueryEngine {
 
 	/**
 	 * The default soft reference count.
@@ -68,146 +66,91 @@ public class QueryEngine implements QueryParameterBindingTypeResolver {
 	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger( "org.hibernate.HQL_FUNCTIONS" );
 
 	public static QueryEngine from(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata) {
-		final QueryEngineOptions queryEngineOptions = sessionFactory.getSessionFactoryOptions();
+		final QueryEngineOptions options = sessionFactory.getSessionFactoryOptions();
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 		return new QueryEngine(
 				sessionFactory,
-				resolveHqlTranslator(
-						queryEngineOptions,
-						dialect,
-						sessionFactory,
-						new SqmCreationOptionsStandard( queryEngineOptions )
-				),
-				resolveSqmTranslatorFactory( queryEngineOptions, dialect ),
-				metadata,
-				dialect,
-				buildCustomFunctionRegistry( queryEngineOptions )
-		);
-	}
-
-	private static SqmFunctionRegistry buildCustomFunctionRegistry(QueryEngineOptions queryEngineOptions) {
-		if ( queryEngineOptions.getCustomSqmFunctionRegistry() == null ) {
-			final Map<String, SqmFunctionDescriptor> customSqlFunctionMap = queryEngineOptions.getCustomSqlFunctionMap();
-			if ( customSqlFunctionMap == null || customSqlFunctionMap.isEmpty() ) {
-				return null;
-			}
-			else {
-				SqmFunctionRegistry customSqmFunctionRegistry = new SqmFunctionRegistry();
-				customSqlFunctionMap.forEach( customSqmFunctionRegistry::register );
-				return customSqmFunctionRegistry;
-			}
-		}
-		else {
-			return queryEngineOptions.getCustomSqmFunctionRegistry();
-		}
-	}
-
-	private final NamedObjectRepository namedObjectRepository;
-	private final SqmCriteriaNodeBuilder criteriaBuilder;
-	private final HqlTranslator hqlTranslator;
-	private final SqmTranslatorFactory sqmTranslatorFactory;
-	private final NativeQueryInterpreter nativeQueryInterpreter;
-	private final QueryInterpretationCache interpretationCache;
-	private final SqmFunctionRegistry sqmFunctionRegistry;
-	private final TypeConfiguration typeConfiguration;
-	private final int preferredSqlTypeCodeForBoolean;
-	private final QueryParameterBindingTypeResolver queryParameterBindingTypeResolver;
-
-	private QueryEngine(
-			SessionFactoryImplementor sessionFactory,
-			HqlTranslator hqlTranslator,
-			SqmTranslatorFactory sqmTranslatorFactory,
-			MetadataImplementor metadata,
-			Dialect dialect,
-			SqmFunctionRegistry customFunctionRegistry) {
-		this(
-				sessionFactory.getUuid(),
-				sessionFactory.getName(),
-				sessionFactory.getSessionFactoryOptions().getJpaCompliance(),
-				() -> sessionFactory.getRuntimeMetamodels().getJpaMetamodel(),
-				sessionFactory.getSessionFactoryOptions().getCriteriaValueHandlingMode(),
-				sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean(),
-				metadata.buildNamedQueryRepository( sessionFactory ),
-				hqlTranslator,
-				sqmTranslatorFactory,
-				sessionFactory.getServiceRegistry().getService( NativeQueryInterpreter.class ),
-				buildInterpretationCache( sessionFactory::getStatistics, sessionFactory.getProperties() ),
 				metadata.getTypeConfiguration(),
-				dialect,
-				customFunctionRegistry,
-				sessionFactory.getServiceRegistry(),
-				sessionFactory
+				resolveHqlTranslator( options, dialect, sessionFactory, new SqmCreationOptionsStandard( options ) ),
+				resolveSqmTranslatorFactory( options, dialect ),
+				createFunctionRegistry( sessionFactory, metadata, options, dialect ),
+				metadata.buildNamedQueryRepository( sessionFactory ),
+				buildInterpretationCache( sessionFactory::getStatistics, sessionFactory.getProperties() )
 		);
 	}
 
-	private QueryEngine(
-			String uuid,
-			String name,
-			JpaCompliance jpaCompliance,
-			Supplier<JpaMetamodelImplementor> jpaMetamodelAccess,
-			ValueHandlingMode criteriaValueHandlingMode,
-			int preferredSqlTypeCodeForBoolean,
-			NamedObjectRepository namedObjectRepository,
-			HqlTranslator hqlTranslator,
-			SqmTranslatorFactory sqmTranslatorFactory,
-			NativeQueryInterpreter nativeQueryInterpreter,
-			QueryInterpretationCache interpretationCache,
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			SqmFunctionRegistry userDefinedRegistry,
-			ServiceRegistry serviceRegistry,
-			SessionFactoryImplementor sessionFactory) {
-		this.queryParameterBindingTypeResolver = sessionFactory;
-		this.namedObjectRepository = Objects.requireNonNull( namedObjectRepository );
-		this.sqmTranslatorFactory = sqmTranslatorFactory;
-		this.nativeQueryInterpreter = Objects.requireNonNull( nativeQueryInterpreter );
-		this.interpretationCache = interpretationCache;
-		this.hqlTranslator = hqlTranslator;
+	private static SqmFunctionRegistry createFunctionRegistry(
+			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor metadata,
+			QueryEngineOptions queryEngineOptions,
+			Dialect dialect) {
+		final SqmFunctionRegistry sqmFunctionRegistry = new SqmFunctionRegistry();
 
-		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
-				uuid,
-				name,
-				jpaCompliance.isJpaQueryComplianceEnabled(),
-				this,
-				jpaMetamodelAccess,
-				serviceRegistry,
-				criteriaValueHandlingMode,
-				sessionFactory
-		);
+		queryEngineOptions.getCustomSqlFunctionMap().forEach( sqmFunctionRegistry::register );
 
-		this.sqmFunctionRegistry = new SqmFunctionRegistry();
-		this.typeConfiguration = typeConfiguration;
-		this.preferredSqlTypeCodeForBoolean = preferredSqlTypeCodeForBoolean;
-		dialect.initializeFunctionRegistry( this );
-		if ( userDefinedRegistry != null ) {
-			userDefinedRegistry.overlay( sqmFunctionRegistry );
+		final SqmFunctionRegistry customSqmFunctionRegistry = queryEngineOptions.getCustomSqmFunctionRegistry();
+		if ( customSqmFunctionRegistry != null ) {
+			customSqmFunctionRegistry.overlay( sqmFunctionRegistry );
 		}
 
-		final FunctionContributions functionContributions = new FunctionContributions() {
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
-
-			@Override
-			public SqmFunctionRegistry getFunctionRegistry() {
-				return sqmFunctionRegistry;
-			}
-
-			@Override
-			public ServiceRegistry getServiceRegistry() {
-				return serviceRegistry;
-			}
-		};
-		for ( FunctionContributor contributor : sortedFunctionContributors( serviceRegistry ) ) {
+		//TODO: probably better to turn this back into an anonymous class
+		final FunctionContributions functionContributions = new FunctionContributionsImpl(
+				sessionFactory.getServiceRegistry(),
+				metadata.getTypeConfiguration(),
+				sqmFunctionRegistry
+		);
+		for ( FunctionContributor contributor : sortedFunctionContributors( sessionFactory.getServiceRegistry() ) ) {
 			contributor.contributeFunctions( functionContributions );
 		}
+
+		// can't move this here just yet!
+		//dialect.initializeFunctionRegistry( this );
 
 		if ( LOG_HQL_FUNCTIONS.isDebugEnabled() ) {
 			sqmFunctionRegistry.getFunctionsByName().forEach(
 					entry -> LOG_HQL_FUNCTIONS.debug( entry.getValue().getSignature( entry.getKey() ) )
 			);
 		}
+
+		return sqmFunctionRegistry;
+	}
+
+	private final NamedObjectRepository namedObjectRepository;
+	private final NativeQueryInterpreter nativeQueryInterpreter;
+	private final QueryInterpretationCache interpretationCache;
+	private final SqmCriteriaNodeBuilder criteriaBuilder;
+	private final HqlTranslator hqlTranslator;
+	private final SqmTranslatorFactory sqmTranslatorFactory;
+	private final SqmFunctionRegistry sqmFunctionRegistry;
+	private final TypeConfiguration typeConfiguration;
+
+	private QueryEngine(
+			SessionFactoryImplementor sessionFactory,
+			TypeConfiguration typeConfiguration,
+			HqlTranslator hqlTranslator,
+			SqmTranslatorFactory sqmTranslatorFactory,
+			SqmFunctionRegistry functionRegistry,
+			NamedObjectRepository namedObjectRepository,
+			QueryInterpretationCache interpretationCache) {
+		this.typeConfiguration = typeConfiguration;
+		this.sqmFunctionRegistry = functionRegistry;
+		this.sqmTranslatorFactory = sqmTranslatorFactory;
+		this.hqlTranslator = hqlTranslator;
+		this.namedObjectRepository = namedObjectRepository;
+		this.interpretationCache = interpretationCache;
+		this.nativeQueryInterpreter = sessionFactory.getServiceRegistry().getService( NativeQueryInterpreter.class );
+		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
+				sessionFactory.getUuid(),
+				sessionFactory.getName(),
+				this,
+				sessionFactoryOptions.getJpaCompliance().isJpaQueryComplianceEnabled(),
+				sessionFactoryOptions.getCriteriaValueHandlingMode(),
+				sessionFactory.getServiceRegistry(),
+				() -> sessionFactory
+		);
+		// TODO: move into createFunctionRegistry()
+		sessionFactory.getJdbcServices().getDialect().initializeFunctionRegistry( this );
 	}
 
 	/**
@@ -227,61 +170,48 @@ public class QueryEngine implements QueryParameterBindingTypeResolver {
 		this.namedObjectRepository = Objects.requireNonNull( namedObjectRepository );
 		this.sqmTranslatorFactory = null;
 		this.nativeQueryInterpreter = Objects.requireNonNull( nativeQueryInterpreter );
-
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 		this.typeConfiguration = jpaMetamodel.getTypeConfiguration();
-		this.preferredSqlTypeCodeForBoolean = preferredSqlTypeCodeForBoolean;
 		dialect.initializeFunctionRegistry( this );
-
-		SessionFactoryImplementor sessionFactory = jpaMetamodel.getTypeConfiguration().getSessionFactory();
-		this.queryParameterBindingTypeResolver = sessionFactory;
-		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
-				uuid,
-				name,
-				false,
-				this,
-				() -> jpaMetamodel,
-				serviceRegistry,
-				criteriaValueHandlingMode,
-				sessionFactory
-		);
-
-		final SqmCreationContext sqmCreationContext = new SqmCreationContext() {
-			@Override
-			public JpaMetamodelImplementor getJpaMetamodel() {
-				return jpaMetamodel;
-			}
-
-			@Override
-			public ServiceRegistry getServiceRegistry() {
-				return serviceRegistry;
-			}
-
-			@Override
-			public QueryEngine getQueryEngine() {
-				return QueryEngine.this;
-			}
-
-			@Override
-			public NodeBuilder getNodeBuilder() {
-				return criteriaBuilder;
-			}
-		};
-
-		//noinspection Convert2Lambda
-		this.hqlTranslator = new StandardHqlTranslator(
-				sqmCreationContext,
-				new SqmCreationOptions() {
-					@Override
-					public boolean useStrictJpaCompliance() {
-						return useStrictJpaCompliance;
-					}
-				}
-		);
 
 		this.interpretationCache = buildInterpretationCache(
 				() -> serviceRegistry.getService( StatisticsImplementor.class ),
 				serviceRegistry.getService( ConfigurationService.class ).getSettings()
+		);
+
+		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
+				uuid,
+				name,
+				this,
+				useStrictJpaCompliance,
+				criteriaValueHandlingMode,
+				serviceRegistry,
+				typeConfiguration::getSessionFactory
+		);
+
+		this.hqlTranslator = new StandardHqlTranslator(
+				new SqmCreationContext() {
+					@Override
+					public JpaMetamodelImplementor getJpaMetamodel() {
+						return jpaMetamodel;
+					}
+
+					@Override
+					public ServiceRegistry getServiceRegistry() {
+						return serviceRegistry;
+					}
+
+					@Override
+					public QueryEngine getQueryEngine() {
+						return QueryEngine.this;
+					}
+
+					@Override
+					public NodeBuilder getNodeBuilder() {
+						return criteriaBuilder;
+					}
+				},
+				() -> useStrictJpaCompliance
 		);
 	}
 
@@ -413,17 +343,33 @@ public class QueryEngine implements QueryParameterBindingTypeResolver {
 		}
 	}
 
-	public int getPreferredSqlTypeCodeForBoolean() {
-		return preferredSqlTypeCodeForBoolean;
-	}
+	private static class FunctionContributionsImpl implements FunctionContributions {
+		private final ServiceRegistry serviceRegistry;
+		private final TypeConfiguration typeConfiguration;
+		private final SqmFunctionRegistry functionRegistry;
 
-	@Override
-	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
-		return queryParameterBindingTypeResolver.resolveParameterBindType( bindValue );
-	}
+		public FunctionContributionsImpl(
+				ServiceRegistry serviceRegistry,
+				TypeConfiguration typeConfiguration,
+				SqmFunctionRegistry functionRegistry) {
+			this.serviceRegistry = serviceRegistry;
+			this.typeConfiguration = typeConfiguration;
+			this.functionRegistry = functionRegistry;
+		}
 
-	@Override
-	public <T> BindableType<T> resolveParameterBindType(Class<T> clazz) {
-		return queryParameterBindingTypeResolver.resolveParameterBindType( clazz );
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
+
+		@Override
+		public SqmFunctionRegistry getFunctionRegistry() {
+			return functionRegistry;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
 	}
 }

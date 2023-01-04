@@ -488,7 +488,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
-		final BindableType<T> parameterType = getSessionFactory().resolveParameterBindType( javaType );
+		final BindableType<T> parameterType = getSessionFactory().getMappingMetamodel().resolveParameterBindType( javaType );
 
 		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
 				position,
@@ -531,7 +531,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> javaType, ParameterMode mode) {
-		final BindableType<T> parameterType = getSessionFactory().resolveParameterBindType( javaType );
+		final BindableType<T> parameterType = getSessionFactory().getMappingMetamodel().resolveParameterBindType( javaType );
 
 		final ProcedureParameterImpl<T> parameter = new ProcedureParameterImpl<>(
 				name,

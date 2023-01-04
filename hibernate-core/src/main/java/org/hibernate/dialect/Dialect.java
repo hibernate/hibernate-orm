@@ -1029,7 +1029,9 @@ public abstract class Dialect implements ConversionContext {
 				"cast",
 				new CastFunction(
 						this,
-						queryEngine.getPreferredSqlTypeCodeForBoolean()
+						queryEngine.getTypeConfiguration()
+								.getCurrentBaseSqlTypeIndicators()
+								.getPreferredSqlTypeCodeForBoolean()
 				)
 		);
 

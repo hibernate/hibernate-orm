@@ -803,7 +803,9 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	}
 
 	public void addJoin(Join join) {
-		joins.add( join );
+		if ( !joins.contains(join) ) {
+			joins.add( join );
+		}
 		join.setPersistentClass( this );
 	}
 

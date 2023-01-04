@@ -8,6 +8,7 @@ package org.hibernate.annotations;
 
 import org.hibernate.binder.internal.CommentBinder;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -51,6 +52,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @AttributeBinderType(binder = CommentBinder.class)
 @Target({METHOD, FIELD, TYPE})
 @Retention(RUNTIME)
+@Repeatable(Comments.class)
 public @interface Comment {
 	/**
 	 * The text of the comment.

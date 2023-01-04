@@ -63,5 +63,11 @@ public interface RowReader<R> {
 	 */
 	void finishUp(JdbcValuesSourceProcessingState context);
 
+	/**
+	 * Not used - to be removed?
+	 * @deprecated to be removed
+	 */
+	@Deprecated
 	RowReaderMemento toMemento(SessionFactoryImplementor factory);
+
 }

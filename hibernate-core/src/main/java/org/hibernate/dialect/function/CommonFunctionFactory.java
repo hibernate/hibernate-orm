@@ -363,6 +363,20 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * SAP HANA
+	 */
+	public void trunc_roundMode() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"round(?1,0,round_down)",
+				"round(?1,?2,round_down)",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
 	 * Returns double between 0.0 and 1.0. First call may specify a seed value.
 	 */
 	public void rand() {

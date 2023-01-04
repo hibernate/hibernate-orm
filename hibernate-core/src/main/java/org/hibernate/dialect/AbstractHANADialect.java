@@ -397,6 +397,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.cosh();
 		functionFactory.sinh();
 		functionFactory.tanh();
+		functionFactory.trunc_roundMode();
 		functionFactory.log10_log();
 		functionFactory.log();
 		functionFactory.bitand();

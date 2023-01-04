@@ -163,7 +163,7 @@ public abstract class AbstractStrategy implements RevengStrategy {
 	}
 
 	public Properties getTableIdentifierProperties(TableIdentifier identifier) {
-		return null;
+		return new Properties();
 	}
 
 	public List<String> getPrimaryKeyColumnNames(TableIdentifier identifier) {

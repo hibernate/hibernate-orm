@@ -18,11 +18,13 @@ import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -34,7 +36,9 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-12935" )
 	public void testUniqueExportableIdentifier() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
+				.build();
 		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( ssr );
 		options.setBootstrapContext( new BootstrapContextImpl( ssr, options ) );
 		final Database database = new Database( options );

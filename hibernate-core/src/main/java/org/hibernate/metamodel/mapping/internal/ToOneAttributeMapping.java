@@ -982,7 +982,8 @@ public class ToOneAttributeMapping
 			}
 			return false;
 		}
-		return parentNavigablePath.getLocalName().equals( bidirectionalAttributeName );
+		return parentNavigablePath.getLocalName().equals( bidirectionalAttributeName ) ||
+				parentNavigablePath.getLocalName().equals( identifyingColumnsTableExpression );
 	}
 
 	public String getBidirectionalAttributeName(){

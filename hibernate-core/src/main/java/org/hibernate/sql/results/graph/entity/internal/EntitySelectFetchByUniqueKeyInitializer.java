@@ -47,6 +47,7 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			// make sure parentEntityInitializer.resolveInstance has been called before
 			parentEntityInitializer.resolveInstance( rowProcessingState );
 			if ( parentEntityInitializer.isInitialized() ) {
+				isInitialized = true;
 				return;
 			}
 		}

@@ -178,7 +178,13 @@ public class Cfg2HbmTool {
 	}
 	
 	public Properties getIdentifierGeneratorProperties(Property property) {
-		return ( (SimpleValue) property.getValue() ).getIdentifierGeneratorProperties();
+		SimpleValue simpleValue = (SimpleValue)property.getValue();
+		Properties result = new Properties();
+		Map<String, Object> idGenParams = simpleValue.getIdentifierGeneratorParameters();
+		if (idGenParams != null) {
+			result.putAll(idGenParams);
+		}
+		return result;
 	}
 	
 	/**

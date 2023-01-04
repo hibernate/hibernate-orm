@@ -833,7 +833,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {
-		if ( dialect.getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
+		try {
 			return dialect.getIdentityColumnSupport()
 					.getIdentitySelectString(
 							getTableName(0),
@@ -841,7 +841,7 @@ public abstract class AbstractEntityPersister
 							( (BasicType<?>) getIdentifierType() ).getJdbcType().getDdlTypeCode()
 					);
 		}
-		else {
+		catch (MappingException ex) {
 			return null;
 		}
 	}

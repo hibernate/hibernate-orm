@@ -38,7 +38,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @DomainModel(
 		annotatedClasses = { EagerManyToOneStreamTest.Child.class, EagerManyToOneStreamTest.Parent.class }
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "2"))
 @JiraKey("HHH-15449")
 public class EagerManyToOneStreamTest {
@@ -72,7 +72,7 @@ public class EagerManyToOneStreamTest {
 
 	@Test
 	public void testGetResultStreamCollectSingleResult(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -100,7 +100,7 @@ public class EagerManyToOneStreamTest {
 
 	@Test
 	public void testGetResultStreamCollect(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {

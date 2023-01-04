@@ -2,13 +2,9 @@ package org.hibernate.orm.test.jpa.association.toone;
 
 import java.util.List;
 
-import org.hibernate.cfg.AvailableSettings;
-
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,13 +34,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				CriteriaJoinFetchTest.Address.class,
 				CriteriaJoinFetchTest.Note.class
 		},
-		settingProviders = {
-				@SettingProvider(
-						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = DefaultSQLStatementInspectorSettingProvider.class
-				)
-		}
-
+		useCollectingStatementInspector = true
 )
 public class CriteriaJoinFetchTest {
 
@@ -52,7 +42,7 @@ public class CriteriaJoinFetchTest {
 
 	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
-		statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		statementInspector = scope.getCollectingStatementInspector();
 
 		scope.inTransaction(
 				entityManager -> {

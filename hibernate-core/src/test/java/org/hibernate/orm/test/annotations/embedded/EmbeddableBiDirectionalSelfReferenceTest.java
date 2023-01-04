@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 				EntityTest.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EmbeddableBiDirectionalSelfReferenceTest {
 
 	@BeforeEach
@@ -70,7 +70,7 @@ public class EmbeddableBiDirectionalSelfReferenceTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -111,7 +111,7 @@ public class EmbeddableBiDirectionalSelfReferenceTest {
 				}
 		);
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

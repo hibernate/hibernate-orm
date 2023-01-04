@@ -13,6 +13,8 @@ import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+
 /**
  * @author Steve Ebersole
  */
@@ -22,6 +24,7 @@ public interface EntityManagerFactoryScope {
 
 	StatementInspector getStatementInspector();
 	<T extends StatementInspector> T getStatementInspector(Class<T> type);
+	SQLStatementInspector getCollectingStatementInspector();
 
 	void inEntityManager(Consumer<EntityManager> action);
 	void inTransaction(Consumer<EntityManager> action);

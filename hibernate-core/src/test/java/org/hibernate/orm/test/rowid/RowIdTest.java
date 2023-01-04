@@ -30,7 +30,7 @@ import static org.junit.Assert.assertThat;
  * @author Nathan Xu
  */
 @DomainModel( annotatedClasses = RowIdTest.Product.class )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class RowIdTest {
 
 	@BeforeEach
@@ -50,7 +50,7 @@ public class RowIdTest {
 		scope.inTransaction( session -> {
 			String rowId = scope.getSessionFactory().getJdbcServices().getDialect().rowId("");
 
-			SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+			SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 			statementInspector.clear();
 
 			Product product = session.find( Product.class, "1L" );

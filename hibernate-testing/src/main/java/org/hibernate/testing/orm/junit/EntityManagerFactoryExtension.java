@@ -31,6 +31,7 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -164,7 +165,6 @@ public class EntityManagerFactoryExtension
 
 		final Map<String, Object> integrationSettings = new HashMap<>();
 
-
 		integrationSettings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		integrationSettings.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		integrationSettings.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
@@ -188,6 +188,15 @@ public class EntityManagerFactoryExtension
 			catch (Exception e) {
 				log.error( "Error obtaining setting provider for " + providerImpl.getName(), e );
 			}
+		}
+
+		// statement inspector
+		if ( emfAnn.useCollectingStatementInspector() ) {
+			String inspectorSetting = (String) integrationSettings.get( AvailableSettings.STATEMENT_INSPECTOR );
+			if ( !(inspectorSetting == null || inspectorSetting.isBlank()) ) {
+				log.warn( String.format( "Overriding the explicit \"%1s\" statement inspector setting", inspectorSetting ) );
+			}
+			integrationSettings.put( AvailableSettings.STATEMENT_INSPECTOR, new SQLStatementInspector() );
 		}
 
 		final EntityManagerFactoryScopeImpl scope = new EntityManagerFactoryScopeImpl( pui, integrationSettings );

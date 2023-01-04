@@ -29,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel(
 		annotatedClasses = { IdClassTest.SystemUser.class }
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class IdClassTest {
 
 	@BeforeEach
@@ -55,7 +55,7 @@ public class IdClassTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -78,7 +78,7 @@ public class IdClassTest {
 
 	@Test
 	public void testHql(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

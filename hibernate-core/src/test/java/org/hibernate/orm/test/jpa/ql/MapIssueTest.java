@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 		annotatedClasses = {
 				MapOwner.class, MapContent.class, Relationship.class
 		})
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class MapIssueTest {
 
 	@Test
@@ -39,7 +39,7 @@ public class MapIssueTest {
 
 	@Test
 	public void testOnlyCollectionTableJoined(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
@@ -53,7 +53,7 @@ public class MapIssueTest {
 
 	@Test
 	public void testMapKeyJoinIsOmitted(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
@@ -67,7 +67,7 @@ public class MapIssueTest {
 
 	@Test
 	public void testMapKeyJoinIsReused(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
@@ -81,7 +81,7 @@ public class MapIssueTest {
 
 	@Test
 	public void testMapKeyJoinIsReusedForFurtherJoin(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
@@ -95,7 +95,7 @@ public class MapIssueTest {
 
 	@Test
 	public void testMapKeyJoinIsReusedForFurtherJoinAndElementJoinIsProperlyOrdered(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
@@ -110,7 +110,7 @@ public class MapIssueTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-15357")
 	public void testSelectMapKeyFk(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {

@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -53,6 +54,11 @@ abstract class AbstractEntityManagerFactoryScope implements EntityManagerFactory
 	public <T extends StatementInspector> T getStatementInspector(Class<T> type) {
 		//noinspection unchecked
 		return (T) getStatementInspector();
+	}
+
+	@Override
+	public SQLStatementInspector getCollectingStatementInspector() {
+		return getStatementInspector( SQLStatementInspector.class );
 	}
 
 	@Override

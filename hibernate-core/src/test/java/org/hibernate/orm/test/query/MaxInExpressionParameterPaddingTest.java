@@ -14,7 +14,6 @@ import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -43,12 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				@SettingProvider(
 						settingName = AvailableSettings.DIALECT,
 						provider = MaxInExpressionParameterPaddingTest.DialectProvider.class
-				),
-				@SettingProvider(
-						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = DefaultSQLStatementInspectorSettingProvider.class
 				)
-		}
+		},
+		useCollectingStatementInspector = true
 )
 public class MaxInExpressionParameterPaddingTest {
 
@@ -76,7 +72,7 @@ public class MaxInExpressionParameterPaddingTest {
 
 	@Test
 	public void testInClauseParameterPadding(EntityManagerFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( entityManager ->
@@ -98,7 +94,7 @@ public class MaxInExpressionParameterPaddingTest {
 	@TestForIssue(jiraKey = "HHH-14109")
 	@Test
 	public void testInClauseParameterPaddingToLimit(EntityManagerFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction(
@@ -123,7 +119,7 @@ public class MaxInExpressionParameterPaddingTest {
 
 	@Test
 	public void testInClauseParameterSplittingAfterLimit(EntityManagerFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction(
@@ -149,7 +145,7 @@ public class MaxInExpressionParameterPaddingTest {
 
 	@Test
 	public void testInClauseParameterSplittingAfterLimit2(EntityManagerFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction(
@@ -175,7 +171,7 @@ public class MaxInExpressionParameterPaddingTest {
 
 	@Test
 	public void testInClauseParameterSplittingAfterLimit3(EntityManagerFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction(

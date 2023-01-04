@@ -17,7 +17,6 @@ import jakarta.persistence.Table;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -37,7 +36,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 				EagerManyToOneEmbeddedIdFKTest.SystemUser.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EagerManyToOneEmbeddedIdFKTest {
 
 	@BeforeEach
@@ -68,7 +67,7 @@ public class EagerManyToOneEmbeddedIdFKTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -84,7 +83,7 @@ public class EagerManyToOneEmbeddedIdFKTest {
 
 	@Test
 	public void testHql(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

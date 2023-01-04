@@ -20,7 +20,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -44,7 +43,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		}
 )
 @SessionFactory(
-		statementInspectorClass = SQLStatementInspector.class
+		useCollectingStatementInspector = true
 )
 public class QueryListParametersWithFetchSubSelectTest {
 
@@ -65,7 +64,7 @@ public class QueryListParametersWithFetchSubSelectTest {
 
 	@Test
 	public void simpleTest(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 
 		scope.inTransaction( s -> {
@@ -85,7 +84,7 @@ public class QueryListParametersWithFetchSubSelectTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-14439")
 	public void reusingQueryWithFewerNamedParameters(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 
 		sqlStatementInterceptor.clear();
 
@@ -120,7 +119,7 @@ public class QueryListParametersWithFetchSubSelectTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-14439")
 	public void reusingQueryWithFewerOrdinalParameters(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 
 		sqlStatementInterceptor.clear();
 

@@ -39,7 +39,6 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -52,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				CascadeMergeToProxyEntityCopyAllowedTest.Speaker.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(
@@ -67,7 +66,7 @@ public class CascadeMergeToProxyEntityCopyAllowedTest {
 	public void test(SessionFactoryScope scope) {
 		final Event root = (Event) persistEntity( scope, new Event( null, defaultProject ) );
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		Event rootFromDB = scope.fromTransaction(
 				session -> {

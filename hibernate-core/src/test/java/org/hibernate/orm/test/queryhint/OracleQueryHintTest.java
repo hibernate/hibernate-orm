@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(
 		annotatedClasses = { OracleQueryHintTest.Employee.class, OracleQueryHintTest.Department.class }
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = @Setting(name = AvailableSettings.USE_SQL_COMMENTS, value = "true")
 )
@@ -67,7 +67,7 @@ public class OracleQueryHintTest {
 
 	@Test
 	public void testQueryHint(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		// test Query w/ a simple Oracle optimizer hint
@@ -141,7 +141,7 @@ public class OracleQueryHintTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12362")
 	public void testQueryHintAndComment(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( s -> {
@@ -165,7 +165,7 @@ public class OracleQueryHintTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-13608")
 	public void testQueryHintCaseInsensitive(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( s -> {

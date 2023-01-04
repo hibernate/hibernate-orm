@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				ElementCollectionWithSubselectFetchModeTest.Client.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @TestForIssue(jiraKey = "HHH-15640")
 public class ElementCollectionWithSubselectFetchModeTest {
 
@@ -62,7 +62,7 @@ public class ElementCollectionWithSubselectFetchModeTest {
 
 	@Test
 	public void testSelect(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

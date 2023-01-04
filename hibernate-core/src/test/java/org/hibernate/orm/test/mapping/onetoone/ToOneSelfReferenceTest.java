@@ -26,7 +26,7 @@ import static org.hibernate.orm.test.mapping.onetoone.ToOneSelfReferenceTest.Ent
  * @author Andrea Boriero
  */
 @DomainModel( annotatedClasses = { EntityTest.class } )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class ToOneSelfReferenceTest {
 
 	@BeforeEach
@@ -48,7 +48,7 @@ public class ToOneSelfReferenceTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

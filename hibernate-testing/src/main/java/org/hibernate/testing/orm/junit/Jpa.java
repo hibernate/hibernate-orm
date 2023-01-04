@@ -17,8 +17,8 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.resource.jdbc.spi.StatementInspector;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.junit.jupiter.api.TestInstance;
@@ -122,4 +122,12 @@ public @interface Jpa {
 	String[] annotatedClassNames() default {};
 	String[] annotatedPackageNames() default {};
 	String[] xmlMappings() default {};
+
+	/**
+	 * Shorthand for adding {@code @Setting( name = AvailableSettings.STATEMENT_INSPECTOR, value = "org.hibernate.testing.jdbc.SQLStatementInspector"}
+	 * to the integration settings.
+	 * Note: if the statement inspector is also explicitly specified as a setting, it will be overridden by the shortcut
+	 * @see SQLStatementInspector
+	 */
+	boolean useCollectingStatementInspector() default false;
 }

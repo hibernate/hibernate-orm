@@ -38,12 +38,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 		SimpleLazySubSelectFetchTests.Owner.class,
 		SimpleLazySubSelectFetchTests.Thing.class
 })
-@SessionFactory( statementInspectorClass = SQLStatementInspector.class )
+@SessionFactory( useCollectingStatementInspector = true )
 public class SimpleLazySubSelectFetchTests {
 
 	@Test
 	public void smokeTest(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -93,7 +93,7 @@ public class SimpleLazySubSelectFetchTests {
 
 	@Test
 	public void baselineJoinFetchTest(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

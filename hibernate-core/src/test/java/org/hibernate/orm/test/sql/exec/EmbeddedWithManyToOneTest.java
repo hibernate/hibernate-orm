@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @SessionFactory(
 		generateStatistics = true,
-		statementInspectorClass = SQLStatementInspector.class)
+		useCollectingStatementInspector = true)
 public class EmbeddedWithManyToOneTest {
 
 	@BeforeEach
@@ -73,7 +73,7 @@ public class EmbeddedWithManyToOneTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -87,7 +87,7 @@ public class EmbeddedWithManyToOneTest {
 
 	@Test
 	public void testHqlSelect(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

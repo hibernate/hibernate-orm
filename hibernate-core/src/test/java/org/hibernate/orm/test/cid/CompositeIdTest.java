@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				"org/hibernate/orm/test/cid/Product.hbm.xml"
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class CompositeIdTest {
 
 	@AfterEach
@@ -90,7 +90,7 @@ public class CompositeIdTest {
 				}
 		);
 
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction(

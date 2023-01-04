@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @ServiceRegistry
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
-@SessionFactory( statementInspectorClass = SQLStatementInspector.class )
+@SessionFactory( useCollectingStatementInspector = true )
 public class GroupByTest {
 
 	@Test
@@ -46,7 +46,7 @@ public class GroupByTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9301" )
 	public void testGroupByAliasedBasicPart(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
 		sqlStatementInspector.clear();
 
 		scope.inSession( (session) -> {
@@ -67,7 +67,7 @@ public class GroupByTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9301" )
 	public void testGroupByAliasedCompositePart(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
 		sqlStatementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -92,7 +92,7 @@ public class GroupByTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9301" )
 	public void testGroupByMultipleAliases(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
 		sqlStatementInspector.clear();
 
 		scope.inTransaction( (session) -> {

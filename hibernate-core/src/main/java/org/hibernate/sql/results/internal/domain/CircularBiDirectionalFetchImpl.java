@@ -155,8 +155,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 					final EntityPersister entityPersister = (EntityPersister) fetchable.asAttributeMapping().getMappedType();
 					final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
 					final Object key = collectionKey.getKey();
-					final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
-							.getSession();
+					final SharedSessionContractImplementor session = rowProcessingState.getSession();
 					final PersistenceContext persistenceContext = session.getPersistenceContext();
 					if ( fetchable.getReferencedPropertyName() != null ) {
 						return loadByUniqueKey( entityPersister, key, session, persistenceContext );
@@ -182,11 +181,14 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 			final Object initializedInstance = initializer.getInitializedInstance();
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( initializedInstance );
 			if ( lazyInitializer != null ) {
-				if ( initializedInstance.getClass().isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+				final Class<?> concreteProxyClass = initializer.getConcreteDescriptor().getConcreteProxyClass();
+				if ( concreteProxyClass.isInstance( initializedInstance ) ) {
 					return initializedInstance;
 				}
-				initializer.initializeInstance( rowProcessingState );
-				return lazyInitializer.getImplementation();
+				else {
+					initializer.initializeInstance( rowProcessingState );
+					return lazyInitializer.getImplementation();
+				}
 			}
 			return initializedInstance;
 		}

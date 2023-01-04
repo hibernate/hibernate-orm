@@ -17,8 +17,6 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TiDBDialect;
 
-import org.hibernate.testing.orm.junit.DialectFeatureCheck;
-
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
  *
@@ -310,6 +308,13 @@ abstract public class DialectChecks {
 	public static class SupportsRecursiveCtes implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsRecursiveCTE();
+		}
+	}
+
+	public static class SupportsRowId implements DialectCheck {
+		@Override
+		public boolean isMatch(Dialect dialect) {
+			return dialect.rowId("") != null;
 		}
 	}
 }

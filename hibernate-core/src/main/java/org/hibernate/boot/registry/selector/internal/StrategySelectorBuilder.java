@@ -14,6 +14,9 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyLegacy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
@@ -38,11 +41,11 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.type.FormatMapper;
-import org.hibernate.type.jackson.JacksonJsonFormatMapper;
-import org.hibernate.type.jackson.JacksonXmlFormatMapper;
-import org.hibernate.type.jaxb.JaxbXmlFormatMapper;
-import org.hibernate.type.jakartajson.JsonBJsonFormatMapper;
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
+import org.hibernate.type.format.jackson.JacksonXmlFormatMapper;
+import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
+import org.hibernate.type.format.jakartajson.JsonBJsonFormatMapper;
 
 import org.jboss.logging.Logger;
 
@@ -114,6 +117,7 @@ public class StrategySelectorBuilder {
 		addTransactionCoordinatorBuilders( strategySelector );
 		addSqmMultiTableMutationStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
+		addColumnOrderingStrategies( strategySelector );
 		addCacheKeysFactories( strategySelector );
 		addJsonFormatMappers( strategySelector );
 		addXmlFormatMappers( strategySelector );
@@ -240,6 +244,19 @@ public class StrategySelectorBuilder {
 				ImplicitDatabaseObjectNamingStrategy.class,
 				LegacyNamingStrategy.STRATEGY_NAME,
 				LegacyNamingStrategy.class
+		);
+	}
+
+	private static void addColumnOrderingStrategies(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				ColumnOrderingStrategy.class,
+				"default",
+				ColumnOrderingStrategyStandard.class
+		);
+		strategySelector.registerStrategyImplementor(
+				ColumnOrderingStrategy.class,
+				"legacy",
+				ColumnOrderingStrategyLegacy.class
 		);
 	}
 

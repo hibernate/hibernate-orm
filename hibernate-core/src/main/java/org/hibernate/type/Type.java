@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *     <li>how to clone values, and
  *     <li>how to assemble/disassemble values for storage in the second-level cache.
  * </ul>
+ * <p>
  * An application-defined custom types could, in principle, implement this interface directly,
  * but it's safer to implement the more stable interface {@link org.hibernate.usertype.UserType}.
  * <p>
@@ -217,6 +218,9 @@ public interface Type extends Serializable {
 	 */
 	int compare(Object x, Object y);
 
+	default int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+		return compare( x, y );
+	}
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
 	 *
@@ -338,7 +342,7 @@ public interface Type extends Serializable {
 	 * @throws HibernateException An error from Hibernate
 	 */
 	Object deepCopy(Object value, SessionFactoryImplementor factory)
-	throws HibernateException;
+			throws HibernateException;
 
 	/**
 	 * Are objects of this type mutable with respect to the referencing object?
@@ -359,10 +363,12 @@ public interface Type extends Serializable {
 	 * <pre>
 	 * {@code Objects.equals(disassemble(x,s), disassemble(y,s))} == isEqual(x,y,sf)
 	 * </pre>
+	 * <p>
 	 * and that:
 	 * <pre>
 	 * {@code Objects.equals(x, assemble(disassemble(x,s),s,o))}
 	 * </pre>
+	 * <p>
 	 * That is, the implementation must be consistent with
 	 * {@link #isEqual(Object, Object, SessionFactoryImplementor)} and with
 	 * {@link #assemble(Serializable, SharedSessionContractImplementor, Object)}.
@@ -477,5 +483,4 @@ public interface Type extends Serializable {
 	 * @return array indicating column nullness for a value instance
 	 */
 	boolean[] toColumnNullness(Object value, Mapping mapping);
-
 }

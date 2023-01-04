@@ -24,10 +24,10 @@ import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
 
 /**
- * @author Andrea Boriero
- *
  * This implementation executes one {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])} call
  * for each {@link jakarta.persistence.Entity} in order to determine if a corresponding database table exists.
+ *
+ * @author Andrea Boriero
  */
 public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 
@@ -50,7 +50,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
 			Namespace namespace,
-			SqlStringGenerationContext sqlStringGenerationContext,
+			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		final NameSpaceTablesInformation tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
@@ -74,12 +74,12 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					checkExportIdentifier( table, exportIdentifiers );
 					final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
 					if ( tableInformation == null ) {
-						createTable( table, dialect, metadata, formatter, options, sqlStringGenerationContext, targets );
+						createTable( table, dialect, metadata, formatter, options, context, targets );
 					}
 					else if ( tableInformation.isPhysicalTable() ) {
 						tablesInformation.addTableInformation( tableInformation );
 						migrateTable( table, tableInformation, dialect, metadata, formatter, options,
-								sqlStringGenerationContext, targets );
+								context, targets );
 					}
 				}
 			}
@@ -91,9 +91,9 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
 					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
 						applyIndexes( table, tableInformation, dialect, metadata, formatter, options,
-								sqlStringGenerationContext, targets );
+								context, targets );
 						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options,
-								sqlStringGenerationContext, targets );
+								context, targets );
 					}
 				}
 			}

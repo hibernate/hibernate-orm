@@ -20,7 +20,6 @@ import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.spi.Limit;
@@ -92,20 +91,11 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			}
 
 			final LockOptions lockOptions = queryOptions.getLockOptions();
-			boolean followOnLocking = false;
-			if ( lockOptions != null && !lockOptions.isEmpty() && jdbcSelect.getLockStrategy() != JdbcLockStrategy.NONE ) {
-				switch ( jdbcSelect.getLockStrategy() ) {
-					case FOLLOW_ON:
-						followOnLocking = true;
-						break;
-					case AUTO:
-						if ( lockOptions.getFollowOnLocking() == null && dialect.useFollowOnLocking( sql, queryOptions )
-								|| Boolean.TRUE.equals( lockOptions.getFollowOnLocking() ) ) {
-							followOnLocking = true;
-						}
-						break;
-				}
-				if ( followOnLocking ) {
+			final JdbcLockStrategy jdbcLockStrategy = jdbcSelect.getLockStrategy();
+			if ( jdbcLockStrategy != JdbcLockStrategy.NONE
+					&& lockOptions != null && !lockOptions.isEmpty() ) {
+				usesFollowOnLocking = useFollowOnLocking( jdbcLockStrategy, sql, queryOptions, lockOptions, dialect );
+				if ( usesFollowOnLocking ) {
 					final LockMode lockMode = determineFollowOnLockMode( lockOptions );
 					if ( lockMode != LockMode.UPGRADE_SKIPLOCKED ) {
 						// Dialect prefers to perform locking in a separate step
@@ -131,12 +121,32 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 					sql = dialect.applyLocksToSql( sql, lockOptions, Collections.emptyMap() );
 				}
 			}
-			usesFollowOnLocking = followOnLocking;
+			else {
+				usesFollowOnLocking = false;
+			}
 			finalSql = dialect.addSqlHintOrComment(
 					sql,
 					queryOptions,
 					executionContext.getSession().getFactory().getSessionFactoryOptions().isCommentsEnabled()
 			);
+		}
+	}
+
+	private static boolean useFollowOnLocking(
+			JdbcLockStrategy jdbcLockStrategy,
+			String sql,
+			QueryOptions queryOptions,
+			LockOptions lockOptions,
+			Dialect dialect) {
+		switch ( jdbcLockStrategy ) {
+			case FOLLOW_ON:
+				return true;
+			case AUTO:
+				return lockOptions.getFollowOnLocking() == null
+					? dialect.useFollowOnLocking( sql, queryOptions )
+					: lockOptions.getFollowOnLocking();
+			default:
+				return false;
 		}
 	}
 

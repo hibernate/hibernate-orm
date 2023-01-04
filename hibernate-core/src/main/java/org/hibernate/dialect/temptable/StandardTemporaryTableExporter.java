@@ -43,9 +43,9 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 		buffer.append( temporaryTable.getQualifiedTableName() );
 		buffer.append( '(' );
 
-		for ( TemporaryTableColumn column : temporaryTable.getColumns() ) {
+		for ( TemporaryTableColumn column : temporaryTable.getColumnsForExport() ) {
 			buffer.append( column.getColumnName() ).append( ' ' );
-			final int sqlTypeCode = column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
+			final int sqlTypeCode = column.getJdbcMapping().getJdbcType().getDdlTypeCode();
 			final String databaseTypeName = column.getSqlTypeDefinition();
 
 			buffer.append( databaseTypeName );
@@ -68,7 +68,7 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 		}
 		if ( dialect.supportsTemporaryTablePrimaryKey() ) {
 			buffer.append( "primary key (" );
-			for ( TemporaryTableColumn column : temporaryTable.getColumns() ) {
+			for ( TemporaryTableColumn column : temporaryTable.getColumnsForExport() ) {
 				if ( column.isPrimaryKey() ) {
 					buffer.append( column.getColumnName() );
 					buffer.append( ", " );

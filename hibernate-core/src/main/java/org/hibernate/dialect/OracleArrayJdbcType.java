@@ -96,7 +96,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 		if ( typeName == null || typeName.isBlank() ) {
 			typeName = dialect.getArrayTypeName(
 					typeConfiguration.getDdlTypeRegistry().getTypeName(
-							elementType.getDefaultSqlTypeCode(),
+							elementType.getDdlTypeCode(),
 							dialect
 					)
 			);

@@ -6,7 +6,7 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.Generator;
 
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
@@ -19,11 +19,10 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Defines a named identifier generator, an instance of the interface
- * {@link org.hibernate.id.IdentifierGenerator}. This allows the use of
- * custom identifier generation strategies beyond those provided by the
- * four basic JPA-defined {@linkplain jakarta.persistence.GenerationType
- * generation types}.
+ * Defines a named identifier generator, usually an instance of the interface
+ * {@link org.hibernate.id.IdentifierGenerator}. This allows the use of custom
+ * identifier generation strategies beyond those provided by the four basic
+ * JPA-defined {@linkplain jakarta.persistence.GenerationType generation types}.
  * <p>
  * A named generator may be associated with an entity class by:
  * <ul>
@@ -37,21 +36,23 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     to specify the {@link #name()} of the generator defined using this
  *     annotation.
  * </ul>
+ * <p>
  * If neither {@link #type} not {@link #strategy} is specified, Hibernate asks
  * {@linkplain org.hibernate.dialect.Dialect#getNativeIdentifierGeneratorStrategy
  * the dialect} to decide an appropriate strategy. This is equivalent to using
  * {@link jakarta.persistence.GenerationType#AUTO AUTO} in JPA.
  * <p>
  * For example, if we define a generator using:
- * <pre>{@code
- * @GenericGenerator(name = "custom-generator",
+ * <pre>
+ * &#64;GenericGenerator(name = "custom-generator",
  *                   type = org.hibernate.eg.CustomStringGenerator.class)
  * }</pre>
+ * <p>
  * Then we may make use of it by annotating an identifier field as follows:
- * <pre>{@code
- * @Id @GeneratedValue(generator = "custom-generator")
+ * <pre>
+ * &#64;Id &#64;GeneratedValue(generator = "custom-generator")
  * private String id;
- * }</pre>
+ * </pre>
  * <p>
  * The disadvantage of this approach is the use of stringly-typed names. An
  * alternative, completely typesafe, way to declare a generator and associate
@@ -74,17 +75,17 @@ public @interface GenericGenerator {
 	 */
 	String name();
 	/**
-	 * The type of identifier generator, a class implementing {@link InMemoryGenerator}
+	 * The type of identifier generator, a class implementing {@link Generator}
 	 * or, more commonly, {@link org.hibernate.id.IdentifierGenerator}.
 	 *
 	 * @since 6.2
 	 */
-	Class<? extends InMemoryGenerator> type() default InMemoryGenerator.class;
+	Class<? extends Generator> type() default Generator.class;
 	/**
 	 * The type of identifier generator, the name of either:
 	 * <ul>
 	 * <li>a built-in Hibernate id generator, or
-	 * <li>a custom class implementing {@link InMemoryGenerator}, or, more commonly,
+	 * <li>a custom class implementing {@link Generator}, or, more commonly,
 	 *     {@link org.hibernate.id.IdentifierGenerator}.
 	 * </ul>
 	 *

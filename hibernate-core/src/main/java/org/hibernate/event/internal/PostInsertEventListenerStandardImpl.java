@@ -14,7 +14,7 @@ import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Kabir Khan
  * @author Steve Ebersole
  */
 public class PostInsertEventListenerStandardImpl implements PostInsertEventListener, CallbackRegistryConsumer {

@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -42,24 +41,27 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
 
 	@Override
 	public boolean canDoExtraction() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public JdbcType getJdbcType() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public J extract(
-			CallableStatement statement, int paramIndex, SharedSessionContractImplementor session) throws SQLException {
-		throw new NotYetImplementedFor6Exception( getClass() );
+			CallableStatement statement,
+			int paramIndex,
+			SharedSessionContractImplementor session) throws SQLException {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public J extract(
-			CallableStatement statement, String paramName, SharedSessionContractImplementor session)
-			throws SQLException {
-		throw new NotYetImplementedFor6Exception( getClass() );
+			CallableStatement statement,
+			String paramName,
+			SharedSessionContractImplementor session) throws SQLException {
+		throw new UnsupportedOperationException();
 	}
 }

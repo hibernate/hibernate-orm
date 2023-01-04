@@ -24,6 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     given the expected data access patterns affecting the entity
  *     or collection.
  * </ul>
+ * <p>
  * This annotation should always be used in preference to the less
  * useful JPA-defined annotation {@link jakarta.persistence.Cacheable},
  * since JPA provides no means to specify anything about the semantics
@@ -32,9 +33,30 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Note that entity subclasses of a root entity with a second-level
  * cache inherit the cache belonging to the root entity.
+ * <p>
+ * For example, the following entity is eligible for caching:
+ * <pre>
+ * &#64;Entity
+ * &#64;Cache(usage = NONSTRICT_READ_WRITE)
+ * public static class Person { ... }
+ * </pre>
+ * <p>
+ * Similarly, this collection is cached:
+ * <pre>
+ * &#64;OneToMany(mappedBy = "person")
+ * &#64;Cache(usage = NONSTRICT_READ_WRITE)
+ * private List&lt;Phone&gt; phones = new ArrayList&lt;&gt;();
+ * </pre>
+ * <p>
+ * Note that the second-level cache is disabled unless
+ * {@value org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY}
+ * is explicitly specified, and so, by default, this annotation has
+ * no effect.
  *
  * @see jakarta.persistence.Cacheable
  * @see org.hibernate.Cache
+ * @see org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY
+ * @see org.hibernate.cfg.AvailableSettings#USE_SECOND_LEVEL_CACHE
  *
  * @author Emmanuel Bernard
  */

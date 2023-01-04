@@ -104,7 +104,7 @@ public class SmokeTests {
 
 			assertThat(
 					jdbcTypeRegistry.getDescriptor( valueConverter.getJdbcTypeCode() ),
-					is( jdbcTypeRegistry.getDescriptor( Types.SMALLINT ) )
+					is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
 			);
 		}
 

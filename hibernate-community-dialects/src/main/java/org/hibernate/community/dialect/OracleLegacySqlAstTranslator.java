@@ -380,7 +380,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 			return;
 		}
-		switch ( lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getJdbcTypeCode() ) {
+		switch ( lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() ) {
 			case SqlTypes.SQLXML:
 				// In Oracle, XMLTYPE is not "comparable", so we have to use the xmldiff function for this purpose
 				switch ( operator ) {
@@ -402,8 +402,11 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				rhs.accept( this );
 				appendSql( "),'/*[local-name()=''xdiff'']/*')" );
 				break;
+			case SqlTypes.CLOB:
+			case SqlTypes.NCLOB:
 			case SqlTypes.BLOB:
-				// In Oracle, BLOB types are not "comparable", so we have to use the dbms_lob.compare function for this purpose
+				// In Oracle, BLOB, CLOB and NCLOB types are not "comparable",
+				// so we have to use the dbms_lob.compare function for this purpose
 				switch ( operator ) {
 					case EQUAL:
 						appendSql( "0=" );

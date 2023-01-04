@@ -17,7 +17,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -165,7 +164,7 @@ public abstract class Constraint implements Exportable, Serializable {
 	/**
 	 * @deprecated this method is no longer called
 	 */
-	@Deprecated(since="6.2") @Remove
+	@Deprecated(since="6.2", forRemoval = true)
 	public abstract String sqlConstraintString(
 			SqlStringGenerationContext context,
 			String constraintName,

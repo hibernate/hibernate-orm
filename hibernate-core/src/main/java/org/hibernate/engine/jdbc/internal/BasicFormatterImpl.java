@@ -153,6 +153,7 @@ public class BasicFormatterImpl implements Formatter {
 					case "cross":
 					case "group":
 					case "order":
+					case "returning":
 						beginNewClause();
 						break;
 

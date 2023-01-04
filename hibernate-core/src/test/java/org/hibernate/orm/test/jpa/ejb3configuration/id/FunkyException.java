@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.jpa.ejb3configuration.id;
 
 /**
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 public class FunkyException extends RuntimeException {
 }

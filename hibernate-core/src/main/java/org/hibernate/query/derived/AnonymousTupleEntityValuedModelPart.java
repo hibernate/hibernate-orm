@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
@@ -42,9 +43,9 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -173,8 +174,8 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
-		delegate.getEntityMappingType().visitAttributeMappings( action );
+	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
+		delegate.getEntityMappingType().forEachAttributeMapping( action );
 	}
 
 	@Override
@@ -640,13 +641,13 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public String getSubclassForDiscriminatorValue(Object value) {
-		return delegate.getEntityMappingType().getSubclassForDiscriminatorValue( value );
+	public EntityVersionMapping getVersionMapping() {
+		return delegate.getEntityMappingType().getVersionMapping();
 	}
 
 	@Override
-	public EntityVersionMapping getVersionMapping() {
-		return delegate.getEntityMappingType().getVersionMapping();
+	public OptimisticLockStyle optimisticLockStyle() {
+		return delegate.getEntityMappingType().optimisticLockStyle();
 	}
 
 	@Override

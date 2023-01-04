@@ -6,7 +6,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.Internal;
+
 import java.sql.Types;
+
+import org.hibernate.Internal;
 
 /**
  * Defines a list of constant type codes used to identify generic SQL types.
@@ -135,6 +139,9 @@ public class SqlTypes {
 	 * <p>
 	 * Interpreted by Hibernate as a {@link #VARCHAR}-like type large enough
 	 * to hold a string of maximum length {@link org.hibernate.Length#LONG}.
+	 * <p>
+	 * Apart from the larger default column length, this type code is treated
+	 * as a synonym for {@link #VARCHAR}.
 	 *
 	 * @see org.hibernate.Length#LONG
 	 *
@@ -147,6 +154,10 @@ public class SqlTypes {
 	 * A type code used internally by the Hibernate
 	 * {@link org.hibernate.dialect.Dialect} to identify a
 	 * {@link #VARCHAR}-like type large enough to hold any Java string.
+	 * <p>
+	 * In principle, the type must accommodate strings of length
+	 * {@value Integer#MAX_VALUE}, though this is not an absolutely hard
+	 * requirement, since such large strings do not occur in practice.
 	 *
 	 * @see org.hibernate.Length#LONG32
 	 */
@@ -197,6 +208,9 @@ public class SqlTypes {
 	 * <p>
 	 * Interpreted by Hibernate as a {@link #VARBINARY}-like type large enough
 	 * to hold a byte array of maximum length {@link org.hibernate.Length#LONG}.
+	 * <p>
+	 * Apart from the larger default column length, this type code is treated
+	 * as a synonym for {@link #VARBINARY}.
 	 *
 	 * @see org.hibernate.Length#LONG
 	 *
@@ -206,9 +220,13 @@ public class SqlTypes {
 	public final static int LONGVARBINARY = Types.LONGVARBINARY;
 
 	/**
-	 * A type code used internally by the Hibernate SQL
+	 * A type code used by the Hibernate SQL
 	 * {@linkplain org.hibernate.dialect.Dialect dialect} to identify a
 	 * {@link #VARBINARY}-like type large enough to hold any Java byte array.
+	 * <p>
+	 * In principle, the type must accommodate arrays of length
+	 * {@value Integer#MAX_VALUE}, though this is not an absolutely hard
+	 * requirement, since such large arrays do not occur in practice.
 	 *
 	 * @see org.hibernate.Length#LONG32
 	 */
@@ -328,6 +346,9 @@ public class SqlTypes {
 	 * <p>
 	 * Interpreted by Hibernate as an {@link #NVARCHAR}-like type large enough
 	 * to hold a string of maximum length {@link org.hibernate.Length#LONG}.
+	 * <p>
+	 * Apart from the larger default column length, this type code is treated
+	 * as a synonym for {@link #NVARCHAR}.
 	 *
 	 * @see org.hibernate.Length#LONG
 	 *
@@ -340,6 +361,10 @@ public class SqlTypes {
 	 * A type code used internally by the Hibernate
 	 * {@link org.hibernate.dialect.Dialect} to identify an
 	 * {@link #NVARCHAR}-like type large enough to hold any Java string.
+	 * <p>
+	 * In principle, the type must accommodate strings of length
+	 * {@value Integer#MAX_VALUE}, though this is not an absolutely hard
+	 * requirement, since such large strings do not occur in practice.
 	 *
 	 * @see org.hibernate.Length#LONG32
 	 */
@@ -422,6 +447,39 @@ public class SqlTypes {
 	 * @see org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType
 	 */
 	public static final int TIMESTAMP_UTC = 3003;
+
+	/**
+	 * The constant in the Java programming language, sometimes referred to
+	 * as a type code, that identifies the generic SQL type
+	 * {@code MATERIALIZED_BLOB}.
+	 *
+	 * This type is used when JDBC access should use {@link #VARBINARY} semantics,
+	 * but the {@link org.hibernate.type.descriptor.sql.DdlType} should be based on {@link #BLOB}.
+	 */
+	@Internal
+	public static final int MATERIALIZED_BLOB = 3004;
+
+	/**
+	 * The constant in the Java programming language, sometimes referred to
+	 * as a type code, that identifies the generic SQL type
+	 * {@code MATERIALIZED_CLOB}.
+	 *
+	 * This type is used when JDBC access should use {@link #VARCHAR} semantics,
+	 * but the {@link org.hibernate.type.descriptor.sql.DdlType} should be based on {@link #CLOB}.
+	 */
+	@Internal
+	public static final int MATERIALIZED_CLOB = 3005;
+
+	/**
+	 * The constant in the Java programming language, sometimes referred to
+	 * as a type code, that identifies the generic SQL type
+	 * {@code MATERIALIZED_NCLOB}.
+	 *
+	 * This type is used when JDBC access should use {@link #NVARCHAR} semantics,
+	 * but the {@link org.hibernate.type.descriptor.sql.DdlType} should be based on {@link #NCLOB}.
+	 */
+	@Internal
+	public static final int MATERIALIZED_NCLOB = 3006;
 
 	// Interval types
 
@@ -606,6 +664,17 @@ public class SqlTypes {
 		switch ( typeCode ) {
 			case INTEGER:
 			case BIGINT:
+			case SMALLINT:
+			case TINYINT:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Internal
+	public static boolean isSmallOrTinyInt(int typeCode) {
+		switch ( typeCode ) {
 			case SMALLINT:
 			case TINYINT:
 				return true;

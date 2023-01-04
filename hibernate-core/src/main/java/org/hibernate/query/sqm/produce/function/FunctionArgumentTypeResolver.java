@@ -19,7 +19,7 @@ public interface FunctionArgumentTypeResolver {
 	/**
 	 * Resolve the argument type for a function given its context-implied return type.
 	 * <p>
-	 * NOTE : the _context-implied_ type is the type implied by where the function's
+	 * The <em>context-implied</em> type is the type implied by where the function
 	 * occurs in the query.  E.g., for an equality predicate (`something = some_function`)
 	 * the implied type would be defined by the type of `something`.
 	 *

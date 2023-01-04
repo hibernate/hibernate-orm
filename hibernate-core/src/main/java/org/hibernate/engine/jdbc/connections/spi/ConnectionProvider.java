@@ -18,9 +18,18 @@ import org.hibernate.service.spi.Wrapped;
  * <p>
  * A {@code ConnectionProvider} may be selected using the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER}.
+ * <p>
+ * It's not usual for an applications to implement its on {@code ConnectionProvider}.
+ * Instead, the Hibernate project provides pre-built implementations for a variety of
+ * connection pools as add-on modules.
+ * <p>
+ * On the other hand, this is an extremely important extension point for integration
+ * with containers and frameworks.
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER
  */
 public interface ConnectionProvider extends Service, Wrapped {
 	/**
@@ -48,7 +57,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * re-acquisition of those connections if needed?
 	 * <p>
 	 * This is used in conjunction with {@link org.hibernate.ConnectionReleaseMode#AFTER_STATEMENT}
-	 * to aggressively release JDBC connections.  However, the configured ConnectionProvider
+	 * to aggressively release JDBC connections.  However, the configured {@link ConnectionProvider}
 	 * must support re-acquisition of the same underlying connection for that semantic to work.
 	 * <p>
 	 * Typically, this is only true in managed environments where a container tracks connections

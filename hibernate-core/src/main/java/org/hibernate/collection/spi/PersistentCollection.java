@@ -21,26 +21,29 @@ import org.hibernate.type.Type;
 
 /**
  * Persistent collections are treated as value objects by Hibernate.
- * ie. they have no independent existence beyond the object holding
- * a reference to them. Unlike instances of entity classes, they are
+ * They have no independent existence beyond the entity holding a
+ * reference to them. Unlike instances of entity classes, they are
  * automatically deleted when unreferenced and automatically become
  * persistent when held by a persistent object. Collections can be
  * passed between different objects (change "roles") and this might
  * cause their elements to move from one database table to another.
  * <p>
- * Hibernate "wraps" a java collection in an instance of
- * PersistentCollection. This mechanism is designed to support
- * tracking of changes to the collection's persistent state and
- * lazy instantiation of collection elements. The downside is that
+ * Hibernate "wraps" a Java collection in an instance of
+ * {@code PersistentCollection}. This mechanism is allows for
+ * tracking of changes to the persistent state of the collection and
+ * lazy fetching of the collection elements. The downside is that
  * only certain abstract collection types are supported and any
- * extra semantics are lost
+ * extra semantics associated with the particular implementation of
+ * the generic collection type are lost. For example, every
+ * {@link java.util.List} behaves like an {@code ArrayList}, and
+ * every {@link java.util.SortedMap} behaves like a {@code TreeMap}.
  * <p>
  * Applications should <em>never</em> use classes in this package
  * directly, unless extending the "framework" here.
  * <p>
- * Changes to <em>structure</em> of the collection are recorded by the
- * collection calling back to the session. Changes to mutable
- * elements (ie. composite elements) are discovered by cloning their
+ * Changes to <em>structure</em> of the collection are recorded by
+ * the collection calling back to the session. Changes to mutable
+ * elements (composite elements) are discovered by cloning their
  * state when the collection is initialized and comparing at flush
  * time.
  *

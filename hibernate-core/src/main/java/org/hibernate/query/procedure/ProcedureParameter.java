@@ -12,7 +12,7 @@ import org.hibernate.query.QueryParameter;
 import jakarta.persistence.ParameterMode;
 
 /**
- * NOTE: Consider this contract (and its sub-contracts) as incubating as we transition to 6.0 and SQM
+ * @apiNote Consider this contract (and its subcontracts) as incubating as we transition to 6.0 and SQM.
  *
  * @author Steve Ebersole
  */

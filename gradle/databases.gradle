@@ -126,7 +126,7 @@ ext {
                         'jdbc.driver': 'oracle.jdbc.OracleDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xe',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xepdb1',
                         'connection.init_sql' : ''
                 ],
                 oracle_ci : [
@@ -134,6 +134,15 @@ ext {
                         'jdbc.driver': 'oracle.jdbc.OracleDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xepdb1',
+                        'connection.init_sql' : ''
+                ],
+                oracle_legacy_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        // For 11 version that doesn't have any XEPDB1 database service
                         'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE',
                         'connection.init_sql' : ''
                 ],

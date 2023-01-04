@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -39,6 +40,11 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.type.SqlTypes;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * A SQL AST translator for DB2.
@@ -349,16 +355,15 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	protected boolean renderReturningClause(MutationStatement statement) {
 		final List<ColumnReference> returningColumns = statement.getReturningColumns();
-		final int size = returningColumns.size();
-		if ( size == 0 ) {
+		if ( isEmpty( returningColumns ) ) {
 			return false;
 		}
 		appendSql( "select " );
-		String separator = "";
-		for ( int i = 0; i < size; i++ ) {
-			appendSql( separator );
+		for ( int i = 0; i < returningColumns.size(); i++ ) {
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
 			appendSql( returningColumns.get( i ).getColumnExpression() );
-			separator = ",";
 		}
 		if ( statement instanceof DeleteStatement ) {
 			appendSql( " from old table (" );
@@ -370,13 +375,104 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
+	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
+		final List<ColumnReference> returningColumns = tableInsert.getReturningColumns();
+		if ( isNotEmpty( returningColumns ) ) {
+			appendSql( "select " );
+
+			for ( int i = 0; i < returningColumns.size(); i++ ) {
+				if ( i > 0 ) {
+					appendSql( ", " );
+				}
+				appendSql( returningColumns.get( i ).getColumnExpression() );
+			}
+
+			appendSql( " from new table ( " ); // 'from final table' does not seem to play well with triggers
+			super.visitStandardTableInsert( tableInsert );
+			appendSql( ")" );
+		}
+		else {
+			super.visitStandardTableInsert( tableInsert );
+		}
+	}
+
+	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		if ( getDB2Version().isSameOrAfter( 11, 1 ) ) {
 			renderComparisonStandard( lhs, operator, rhs );
 		}
 		else {
+			final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+			if ( lhsExpressionType != null
+					&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+				// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "decode(" );
+						appendSql( "xmlserialize(" );
+						lhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( ',' );
+						appendSql( "xmlserialize(" );
+						rhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( ",0,1)=1" );
+						return;
+					case NOT_DISTINCT_FROM:
+						appendSql( "decode(" );
+						appendSql( "xmlserialize(" );
+						lhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( ',' );
+						appendSql( "xmlserialize(" );
+						rhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( ",0,1)=0" );
+						return;
+					case EQUAL:
+					case NOT_EQUAL:
+						appendSql( "xmlserialize(" );
+						lhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						appendSql( operator.sqlText() );
+						appendSql( "xmlserialize(" );
+						rhs.accept( this );
+						appendSql( " as varchar(32672))" );
+						return;
+					default:
+						// Fall through
+						break;
+				}
+			}
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 		}
+	}
+
+	@Override
+	protected void renderComparisonStandard(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null
+				&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			switch ( operator ) {
+				case EQUAL:
+				case NOT_DISTINCT_FROM:
+				case NOT_EQUAL:
+				case DISTINCT_FROM:
+					appendSql( "xmlserialize(" );
+					lhs.accept( this );
+					appendSql( " as varchar(32672))" );
+					appendSql( operator.sqlText() );
+					appendSql( "xmlserialize(" );
+					rhs.accept( this );
+					appendSql( " as varchar(32672))" );
+					return;
+				default:
+					// Fall through
+					break;
+			}
+		}
+		super.renderComparisonStandard( lhs, operator, rhs );
 	}
 
 	@Override

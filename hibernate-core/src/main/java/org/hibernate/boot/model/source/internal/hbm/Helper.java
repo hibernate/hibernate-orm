@@ -35,6 +35,8 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+
 /**
  * @author Steve Ebersole
  * @author Gail Badner
@@ -76,32 +78,31 @@ public class Helper {
 
 	public static Caching createCaching(JaxbHbmCacheType cacheElement) {
 		if ( cacheElement == null ) {
-			// I'd really rather this be UNKNOWN, but the annotation version resolves this to TRUE/FALSE
-			return new Caching( TruthValue.FALSE );
+			return new Caching( TruthValue.UNKNOWN );
 		}
-
-		final boolean cacheLazyProps = cacheElement.getInclude() == null
-				|| !"non-lazy".equals( cacheElement.getInclude().value() );
-
-		return new Caching(
-				cacheElement.getRegion(),
-				cacheElement.getUsage(),
-				cacheLazyProps,
-				TruthValue.TRUE
-		);
+		else {
+			return new Caching(
+					cacheElement.getRegion(),
+					cacheElement.getUsage(),
+					cacheElement.getInclude() == null
+							|| !"non-lazy".equals( cacheElement.getInclude().value() ),
+					TruthValue.TRUE
+			);
+		}
 	}
 
 	public static Caching createNaturalIdCaching(JaxbHbmNaturalIdCacheType cacheElement) {
 		if ( cacheElement == null ) {
 			return new Caching( TruthValue.UNKNOWN );
 		}
-
-		return new Caching(
-				StringHelper.nullIfEmpty( cacheElement.getRegion() ),
-				null,
-				false,
-				TruthValue.TRUE
-		);
+		else {
+			return new Caching(
+					nullIfEmpty( cacheElement.getRegion() ),
+					null,
+					false,
+					TruthValue.TRUE
+			);
+		}
 	}
 
 	public static String getPropertyAccessorName(String access, boolean isEmbedded, String defaultAccess) {

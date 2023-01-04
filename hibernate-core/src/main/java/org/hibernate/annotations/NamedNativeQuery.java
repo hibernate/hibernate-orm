@@ -22,7 +22,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Declares a named query written in native SQL.
  * <p>
- * Extends {@link jakarta.persistence.NamedNativeQuery} with additional settings.
+ * Whereas {@link jakarta.persistence.NamedNativeQuery} allows settings to be
+ * specified using stringly-typed {@link jakarta.persistence.QueryHint}s, this
+ * annotation is typesafe.
+ * <p>
+ * Note that the members of this annotation correspond to hints enumerated by
+ * {@link org.hibernate.jpa.AvailableHints}.
  *
  * @author Emmanuel Bernard
  *
@@ -47,12 +52,14 @@ public @interface NamedNativeQuery {
 
 	/**
 	 * The resulting {@code Class}.
+	 * <p>
 	 * Should not be used in conjunction with {@link #resultSetMapping()}
 	 */
 	Class<?> resultClass() default void.class;
 
 	/**
 	 * The name of a {@link jakarta.persistence.SqlResultSetMapping}.
+	 * <p>
 	 * Should not be used in conjunction with {@link #resultClass()}.
 	 */
 	String resultSetMapping() default "";
@@ -61,6 +68,7 @@ public @interface NamedNativeQuery {
 	 * The flush mode for the query.
 	 *
 	 * @see org.hibernate.query.CommonQueryContract#setFlushMode(jakarta.persistence.FlushModeType)
+	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
 	 */
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
@@ -69,6 +77,7 @@ public @interface NamedNativeQuery {
 	 * Default is {@code false}, that is, not cacheable.
 	 *
 	 * @see org.hibernate.query.SelectionQuery#setCacheable(boolean)
+	 * @see org.hibernate.jpa.HibernateHints#HINT_CACHEABLE
 	 */
 	boolean cacheable() default false;
 
@@ -76,6 +85,7 @@ public @interface NamedNativeQuery {
 	 * If the query results are cacheable, the name of the query cache region.
 	 *
 	 * @see org.hibernate.query.SelectionQuery#setCacheRegion(String)
+	 * @see org.hibernate.jpa.HibernateHints#HINT_CACHE_REGION
 	 */
 	String cacheRegion() default "";
 
@@ -83,6 +93,7 @@ public @interface NamedNativeQuery {
 	 * The number of rows fetched by the JDBC driver per trip.
 	 *
 	 * @see org.hibernate.query.SelectionQuery#setFetchSize(int)
+	 * @see org.hibernate.jpa.HibernateHints#HINT_FETCH_SIZE
 	 */
 	int fetchSize() default -1;
 
@@ -91,6 +102,8 @@ public @interface NamedNativeQuery {
 	 * Default is no timeout.
 	 *
 	 * @see org.hibernate.query.CommonQueryContract#setTimeout(int)
+	 * @see org.hibernate.jpa.HibernateHints#HINT_TIMEOUT
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */
 	int timeout() default -1;
 
@@ -99,6 +112,7 @@ public @interface NamedNativeQuery {
 	 * Useful when engaging with DBA.
 	 *
 	 * @see org.hibernate.query.CommonQueryContract#setComment(String)
+	 * @see org.hibernate.jpa.HibernateHints#HINT_COMMENT
 	 */
 	String comment() default "";
 
@@ -106,6 +120,7 @@ public @interface NamedNativeQuery {
 	 * The cache storage mode for objects returned by this query.
 	 *
 	 * @see org.hibernate.query.Query#setCacheMode(CacheMode)
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_STORE_MODE
 	 */
 	CacheStoreMode cacheStoreMode() default CacheStoreMode.USE;
 
@@ -113,6 +128,7 @@ public @interface NamedNativeQuery {
 	 * The cache retrieval mode for objects returned by  this query.
 	 *
 	 * @see org.hibernate.query.Query#setCacheMode(CacheMode)
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
 	 */
 	CacheRetrieveMode cacheRetrieveMode() default CacheRetrieveMode.USE;
 
@@ -122,6 +138,8 @@ public @interface NamedNativeQuery {
 	 * @deprecated use {@link #cacheStoreMode()} and
 	 *            {@link #cacheRetrieveMode()} since
 	 *            {@link CacheModeType} is deprecated
+	 *
+	 * @see org.hibernate.jpa.HibernateHints#HINT_CACHE_MODE
 	 */
 	@Deprecated(since = "6.2") @Remove
 	//TODO: actually, we won't remove it, we'll change its
@@ -129,10 +147,11 @@ public @interface NamedNativeQuery {
 	CacheModeType cacheMode() default CacheModeType.NORMAL;
 
 	/**
-	 * Whether the query results should be marked read-only.
+	 * Whether the results should be loaded in read-only mode.
 	 * Default is {@code false}.
 	 *
 	 * @see org.hibernate.query.SelectionQuery#setReadOnly(boolean)
+	 * @see org.hibernate.jpa.HibernateHints#HINT_READ_ONLY
 	 */
 	boolean readOnly() default false;
 
@@ -140,6 +159,7 @@ public @interface NamedNativeQuery {
 	 * The query spaces involved in this query.
 	 *
 	 * @see org.hibernate.query.SynchronizeableQuery
+	 * @see org.hibernate.jpa.HibernateHints#HINT_NATIVE_SPACES
 	 */
 	String[] querySpaces() default {};
 
@@ -150,6 +170,8 @@ public @interface NamedNativeQuery {
 	 * @deprecated Calling database procedures and functions through
 	 *             {@link org.hibernate.query.NativeQuery} is no longer supported;
 	 *             use {@link jakarta.persistence.NamedStoredProcedureQuery} instead.
+	 *
+	 * @see org.hibernate.jpa.HibernateHints#HINT_CALLABLE_FUNCTION
 	 */
 	@Deprecated( since = "6.0" )
 	boolean callable() default false;

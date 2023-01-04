@@ -16,7 +16,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Form of {@link JdbcTypeCode} for describing the id of an id-bag mapping
+ * Form of {@link JdbcTypeCode} for describing the id of an id-bag mapping.
  *
  * @since 6.0
  */

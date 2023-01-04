@@ -7,8 +7,7 @@
 package org.hibernate;
 
 /**
- * This exception is thrown when an invalid LockMode is selected for an entity. This occurs if the
- * user tries to set an inappropriate LockMode for an entity.
+ * This exception is thrown when an invalid {@link LockMode} is selected for an entity.
  *
  * @author John O'Hara
  */

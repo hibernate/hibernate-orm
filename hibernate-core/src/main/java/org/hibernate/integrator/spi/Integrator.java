@@ -13,10 +13,18 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
- * Contract for stuff that integrates with Hibernate.
+ * Contract for extensions that integrate with Hibernate.
  * <p>
- * IMPL NOTE: called during session factory initialization (constructor), so not all parts of the passed session factory
- * will be available.
+ * The best way to make an implementation of {@code Integrator} available to Hibernate
+ * is by making it discoverable via the standard Java {@link java.util.ServiceLoader}
+ * facility.
+ *
+ * @implNote {@link #integrate(Metadata, BootstrapContext, SessionFactoryImplementor)}
+ *           is called during the process of {@linkplain SessionFactoryImplementor
+ *           session factory} initialization. In fact, it's called directly from the
+ *           constructor of {@link org.hibernate.internal.SessionFactoryImpl}. So the
+ *           passed session factory is not yet fully-initialized and is in a very
+ *           fragile state.
  *
  * @author Steve Ebersole
  * @since 4.0

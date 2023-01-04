@@ -11,6 +11,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -237,4 +238,6 @@ public interface JdbcTypeIndicators {
 				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision);
 		}
 	}
+
+	Dialect getDialect();
 }

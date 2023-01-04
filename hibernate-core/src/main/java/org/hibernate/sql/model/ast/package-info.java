@@ -6,7 +6,7 @@
  */
 
 /**
- * SQL AST extensions for model mutations
+ * SQL AST extensions for model mutations.
  *
  * @author Steve Ebersole
  */

@@ -24,7 +24,9 @@ public interface SchemaManagementTool extends Service {
 	SchemaDropper getSchemaDropper(Map<String,Object> options);
 	SchemaMigrator getSchemaMigrator(Map<String,Object> options);
 	SchemaValidator getSchemaValidator(Map<String,Object> options);
-	SchemaTruncator getSchemaTruncator(Map<String,Object> options);
+	default SchemaTruncator getSchemaTruncator(Map<String,Object> options) {
+		throw new UnsupportedOperationException("Schema truncator is not supported by this schema management tool.");
+	}
 
 	/**
 	 * This allows to set an alternative implementation for the Database
@@ -41,9 +43,11 @@ public interface SchemaManagementTool extends Service {
 	 * Resolves the {@linkplain GenerationTarget targets} to which to
 	 * send the DDL commands based on configuration
 	 */
-	GenerationTarget[] buildGenerationTargets(
+	default GenerationTarget[] buildGenerationTargets(
 			TargetDescriptor targetDescriptor,
 			JdbcContext jdbcContext,
 			Map<String, Object> options,
-			boolean needsAutoCommit);
+			boolean needsAutoCommit) {
+		throw new UnsupportedOperationException("Building generation targets is not supported by this schema management tool.");
+	}
 }

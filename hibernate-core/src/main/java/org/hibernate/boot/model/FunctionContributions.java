@@ -7,18 +7,33 @@
 package org.hibernate.boot.model;
 
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Defines the target contributing functions, whether via dialects or {@link FunctionContributor}
+ * Allows custom function descriptors to be contributed to the eventual
+ * {@link SqmFunctionRegistry}, either by a {@link org.hibernate.dialect.Dialect}
+ * or by a {@link FunctionContributor}.
+ *
+ * @see FunctionContributor
  *
  * @author Christian Beikov
  */
 public interface FunctionContributions {
-	TypeConfiguration getTypeConfiguration();
 
+	/**
+	 * The registry into which the contributions should be made.
+	 */
 	SqmFunctionRegistry getFunctionRegistry();
 
+	/**
+	 * Access to type information
+	 */
+	TypeConfiguration getTypeConfiguration();
+
+	/**
+	 * Access to {@linkplain Service services}
+	 */
 	ServiceRegistry getServiceRegistry();
 }

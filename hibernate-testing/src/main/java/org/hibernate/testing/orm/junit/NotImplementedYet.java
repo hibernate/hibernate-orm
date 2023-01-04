@@ -13,8 +13,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.hibernate.NotImplementedYetException;
-
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**

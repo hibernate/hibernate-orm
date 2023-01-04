@@ -45,8 +45,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.procedure.internal.DB2CallableStatementSupport;
-import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
@@ -98,7 +96,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
- * A {@linkplain Dialect SQL dialect} for DB2.
+ * A {@linkplain Dialect SQL dialect} for DB2 for LUW (Linux, Unix, and Windows) version 10.5 and above.
  *
  * @author Gavin King
  */
@@ -284,7 +282,7 @@ public class DB2Dialect extends Dialect {
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.trunc();
-		functionFactory.truncate();
+//		functionFactory.truncate();
 		functionFactory.insert();
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
 		functionFactory.stddev();
@@ -357,6 +355,14 @@ public class DB2Dialect extends Dialect {
 				"format",
 				new DB2FormatEmulation( queryEngine.getTypeConfiguration() )
 		);
+
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "atan2", "atan2(?2,?1)" )
+				.setInvariantType(
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+				)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( FunctionParameterType.NUMERIC, FunctionParameterType.NUMERIC )
+				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "posstr" )
 				.setInvariantType(
@@ -657,6 +663,17 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
+		return "alter column " + columnName + " set data type " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
@@ -831,6 +848,14 @@ public class DB2Dialect extends Dialect {
 		return new DB2IdentityColumnSupport();
 	}
 
+	/**
+	 * @return {@code true} because we can use {@code select ... from new table (insert .... )}
+	 */
+	@Override
+	public boolean supportsInsertReturning() {
+		return true;
+	}
+
 	@Override
 	public boolean supportsValuesList() {
 		return true;
@@ -923,8 +948,8 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
-		builder.setAutoQuoteInitialUnderscore(true);
-		return super.buildIdentifierHelper(builder, dbMetaData);
+		builder.setAutoQuoteInitialUnderscore( true );
+		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 
 	@Override
@@ -950,5 +975,21 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String getCreateUserDefinedTypeExtensionsString() {
 		return " instantiable mode db2sql";
+	}
+
+	/**
+	 * The more "standard" syntax is {@code rid_bit(alias)} but here we use {@code alias.rowid}.
+	 * <p>
+	 * There is also an alternative {@code rid()} of type {@code bigint}, but it cannot be used
+	 * with partitioning.
+	 */
+	@Override
+	public String rowId(String rowId) {
+		return "rowid";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return VARBINARY;
 	}
 }

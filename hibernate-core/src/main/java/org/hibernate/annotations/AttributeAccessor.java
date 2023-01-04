@@ -6,18 +6,18 @@
  */
 package org.hibernate.annotations;
 
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
-import org.hibernate.binder.internal.AttributeAccessorBinder;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import org.hibernate.binder.internal.AttributeAccessorBinder;
+import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Names a persistent property access strategy ({@link PropertyAccessStrategy}) to use.
+ * Specifies an attribute {@linkplain PropertyAccessStrategy access strategy} to use.
  * <p>
  * Can be specified at either:<ul>
  *     <li>

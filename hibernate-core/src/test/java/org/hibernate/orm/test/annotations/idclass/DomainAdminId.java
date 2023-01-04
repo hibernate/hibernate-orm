@@ -13,7 +13,7 @@ import java.io.Serializable;
 /**
  * A DomainAdminId.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
+ * @author Stale W. Pedersen
  */
 @SuppressWarnings("serial")
 public class DomainAdminId implements Serializable {

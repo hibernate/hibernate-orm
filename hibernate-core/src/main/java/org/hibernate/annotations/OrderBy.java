@@ -16,19 +16,32 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Order a collection using an expression written in native SQL.
  * <p>
- * The order is applied by the database when the collection is fetched, but is not maintained
- * by operations that mutate the collection in memory. If the collection is a {@link java.util.Set}
- * or {@link java.util.Map}, the order is maintained using a {@link java.util.LinkedHashSet} or
- * {@link java.util.LinkedHashMap}.
+ * The order is applied by the database when the collection is fetched,
+ * but is not maintained by operations that mutate the collection in
+ * memory.
+ * <p>
+ * If the collection is a {@link java.util.Set} or {@link java.util.Map},
+ * the order is maintained using a {@link java.util.LinkedHashSet} or
+ * {@link java.util.LinkedHashMap}. If the collection is a bag or
+ * {@link java.util.List}, the order is maintained by the underlying
+ * {@link java.util.ArrayList}.
+ * <p>
+ * There are several other ways to order or sort a collection:
  * <ul>
- * <li>Use {@link jakarta.persistence.OrderBy} to order using an expression written in HQL.
- * <li>Use {@link SortComparator} to sort the collection in memory using a {@link java.util.Comparator}.
- * <li>Use {@link SortNatural} to sort the collection in its {@link java.util.Comparator natural order}.
- * <li>Use {@link jakarta.persistence.OrderColumn} to maintain the order of a {@link java.util.List}
- *     with a dedicated index column.
+ * <li>Use the JPA-defined {@link jakarta.persistence.OrderBy} annotation
+ *     to order using an expression written in HQL/JPQL. Since HQL is more
+ *     portable between databases, this is the preferred alternative most
+ *     of the time.
+ * <li>Use {@link SortComparator} to sort the collection in memory using
+ *     a {@link java.util.Comparator}, or {@link SortNatural} to sort the
+ *     collection in memory according to its {@linkplain java.util.Comparator
+ *     natural order}.
+ * <li>Use {@link jakarta.persistence.OrderColumn} to maintain the order
+ *     of a {@link java.util.List} with a dedicated index column.
  * </ul>
  * <p>
- * It is illegal to use both {@code OrderBy} and {@link jakarta.persistence.OrderBy}.
+ * It's illegal to use {@code OrderBy} together with the JPA-defined
+ * {@link jakarta.persistence.OrderBy} for the same collection.
  *
  * @see jakarta.persistence.OrderBy
  * @see SortComparator

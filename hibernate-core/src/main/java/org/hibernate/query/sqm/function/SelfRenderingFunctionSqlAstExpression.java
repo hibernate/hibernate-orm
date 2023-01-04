@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.IndexedConsumer;
@@ -23,7 +22,6 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
@@ -113,13 +111,14 @@ public class SelfRenderingFunctionSqlAstExpression
 			jdbcJavaType = type.getExpressibleJavaType();
 			converter = null;
 		}
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		return new BasicResult(
-				creationState.getSqlAstCreationState().getSqlExpressionResolver()
+				sqlAstCreationState.getSqlExpressionResolver()
 						.resolveSqlSelection(
 								this,
 								jdbcJavaType,
 								null,
-								creationState.getSqlAstCreationState().getCreationContext()
+								sqlAstCreationState.getCreationContext()
 										.getMappingMetamodel().getTypeConfiguration()
 						)
 						.getValuesArrayPosition(),
@@ -153,10 +152,7 @@ public class SelfRenderingFunctionSqlAstExpression
 	}
 
 	@Override
-	public String getTemplate(
-			Dialect dialect,
-			TypeConfiguration typeConfiguration,
-			SqmFunctionRegistry functionRegistry) {
+	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry registry) {
 		return null;
 	}
 
@@ -182,37 +178,29 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		if ( type instanceof SqlExpressible) {
-			return ( (SqlExpressible) type ).getJdbcMapping();
-		}
-		else {
-			return ( (SqlExpressible) expressible).getJdbcMapping();
-		}
+		return type instanceof SqlExpressible
+				? ( (SqlExpressible) type ).getJdbcMapping()
+				: ( (SqlExpressible) expressible ).getJdbcMapping();
 	}
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-
 		final JdbcMapping jdbcMapping = getJdbcMapping();
-		final JavaType<?> jdbcJavaType;
-		if ( jdbcMapping != null ) {
-			jdbcJavaType = jdbcMapping.getJdbcJavaType();
-		}
-		else {
-			jdbcJavaType = type.getExpressibleJavaType();
-		}
-		sqlExpressionResolver.resolveSqlSelection(
-				this,
-				jdbcJavaType,
-				null,
-				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-		);
+		sqlAstCreationState.getSqlExpressionResolver()
+				.resolveSqlSelection(
+					this,
+					jdbcMapping != null
+							? jdbcMapping.getJdbcJavaType()
+							: type.getExpressibleJavaType(),
+					null,
+					sqlAstCreationState.getCreationContext()
+							.getMappingMetamodel().getTypeConfiguration()
+			);
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 }

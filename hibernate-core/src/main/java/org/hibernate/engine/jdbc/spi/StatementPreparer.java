@@ -12,10 +12,13 @@ import java.sql.Statement;
 import org.hibernate.ScrollMode;
 
 /**
- * Contracting for preparing SQL statements
+ * Interface to the object that prepares JDBC {@link Statement}s and {@link PreparedStatement}s
+ * on behalf of a {@link JdbcCoordinator}.
  *
  * @author Steve Ebersole
  * @author Brett Meyer
+ *
+ * @see JdbcCoordinator#getStatementPreparer()
  */
 public interface StatementPreparer {
 	/**
@@ -46,10 +49,12 @@ public interface StatementPreparer {
 
 	/**
 	 * Prepare an INSERT statement, specifying how auto-generated (by the database) keys should be handled.  Really this
-	 * is a boolean, but JDBC opted to define it instead using 2 int constants:<ul>
+	 * is a boolean, but JDBC opted to define it instead using 2 int constants:
+	 * <ul>
 	 *     <li>{@link PreparedStatement#RETURN_GENERATED_KEYS}</li>
 	 *     <li>{@link PreparedStatement#NO_GENERATED_KEYS}</li>
 	 * </ul>
+	 * <p>
 	 * Generated keys are accessed afterwards via {@link PreparedStatement#getGeneratedKeys}
 	 *
 	 * @param sql The INSERT SQL

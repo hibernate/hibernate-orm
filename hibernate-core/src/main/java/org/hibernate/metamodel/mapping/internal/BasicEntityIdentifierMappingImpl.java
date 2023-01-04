@@ -47,6 +47,10 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
+ * Mapping of a simple identifier
+ *
+ * @see jakarta.persistence.Id
+ *
  * @author Andrea Boriero
  */
 public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMapping, FetchOptions {
@@ -96,6 +100,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		this.attributeName = attributeName;
 		this.rootTable = rootTable;
 		this.pkColumnName = pkColumnName;
+		//noinspection unchecked
 		this.idType = (BasicType<Object>) idType;
 		this.entityPersister = entityPersister;
 
@@ -140,15 +145,6 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public IdentifierValue getUnsavedStrategy() {
 		return unsavedStrategy;
-	}
-
-	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
-		if ( lazyInitializer != null ) {
-			return lazyInitializer.getIdentifier();
-		}
-		return propertyAccess.getGetter().get( entity );
 	}
 
 	@Override
@@ -316,6 +312,16 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public boolean isUpdateable() {
 		return insertable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
 	}
 
 	@Override

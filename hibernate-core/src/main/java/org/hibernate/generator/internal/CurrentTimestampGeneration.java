@@ -7,7 +7,6 @@
 package org.hibernate.generator.internal;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.Session;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.SourceType;
@@ -15,8 +14,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.InDatabaseGenerator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.tuple.GenerationTiming;
@@ -47,7 +46,7 @@ import static org.hibernate.generator.EventTypeSets.fromArray;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public class CurrentTimestampGeneration implements InMemoryGenerator, InDatabaseGenerator {
+public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnExecutionGenerator {
 	private final EnumSet<EventType> eventTypes;
 	private final ValueGenerator<?> generator;
 
@@ -81,7 +80,7 @@ public class CurrentTimestampGeneration implements InMemoryGenerator, InDatabase
 	}
 
 	@Override
-	public boolean generatedByDatabase() {
+	public boolean generatedOnExecution() {
 		return generator == null;
 	}
 

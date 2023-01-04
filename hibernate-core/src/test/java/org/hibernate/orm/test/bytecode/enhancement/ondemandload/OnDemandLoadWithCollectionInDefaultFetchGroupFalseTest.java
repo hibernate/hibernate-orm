@@ -26,7 +26,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.SimpleUpdateTestWithLazyLoading;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -83,7 +82,7 @@ public class OnDemandLoadWithCollectionInDefaultFetchGroupFalseTest extends Base
                     // We want to test with this setting set to false explicitly,
                     // because another test already takes care of the default.
                     optionsBuilder.enableCollectionInDefaultFetchGroup( false );
-                    return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
+                    return new SessionFactoryBuilderImpl( metadata, optionsBuilder, bootstrapContext );
                 }
         );
     }

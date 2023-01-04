@@ -216,12 +216,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		try {
 			return ReflectHelper.classForName( entityName );
 		}
-		catch (ClassNotFoundException cnfe) {
-			return typeConfiguration.getSessionFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( entityName )
-					.getMappedClass();
+		catch ( ClassNotFoundException cnfe ) {
+			return typeConfiguration.entityClassForEntityName( entityName );
 		}
 	}
 
@@ -256,7 +252,35 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 	@Override
 	public int compare(Object x, Object y) {
-		return 0; //TODO: entities CAN be compared, by PK, fix this! -> only if/when we can extract the id values....
+		throw new UnsupportedOperationException( "compare() not implemented for EntityType" );
+	}
+
+	@Override
+	public int compare(Object x, Object y, SessionFactoryImplementor factory) {
+		if ( x == null ) {
+			// if y is also null, return that they are the same (no option for "UNKNOWN")
+			// if y is not null, return that y is "greater"
+			// (-1 because the result is from the perspective of the first arg: x)
+			return y == null ? 0 : -1;
+		}
+		else if ( y == null ) {
+			// x is not null, but y is, return that x is "greater"
+			return 1;
+		}
+
+		// At this point we know both are non-null.
+		final Object xId = extractIdentifier( x, factory );
+		final Object yId = extractIdentifier( y, factory );
+
+		return getIdentifierType( factory ).compare( xId, yId );
+	}
+
+	private Object extractIdentifier(Object entity, SessionFactoryImplementor factory) {
+		final EntityPersister concretePersister =
+				factory.getMappingMetamodel().getEntityDescriptor( associatedEntityName );
+		return concretePersister == null
+				? null
+				: concretePersister.getIdentifier( entity, null );
 	}
 
 	@Override

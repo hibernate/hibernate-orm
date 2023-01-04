@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -646,4 +647,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	BasicType<Integer> getIntegerType();
 
 	BasicType<Character> getCharacterType();
+
+	SessionFactoryImplementor getSessionFactory();
 }

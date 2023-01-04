@@ -12,17 +12,22 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 
 /**
- * Parts of the domain model that can be fetched
+ * Parts of the domain model that can be fetched.  In other words,
+ * a {@link ModelPart} which can produce {@link Fetch} references.
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface Fetchable extends ModelPart {
 	/**
-	 * The name of the fetchable
+	 * The name of the fetchable.  This is the part's "local name".
+	 *
+	 * @see #getNavigableRole()
+	 * @see NavigableRole#getLocalName()
 	 */
 	String getFetchableName();
 

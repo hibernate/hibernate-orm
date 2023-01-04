@@ -19,9 +19,11 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 
 /**
  * Do we have a dirty collection here?
- * 1. if it is a new application-instantiated collection, return true (does not occur anymore!)
- * 2. if it is a component, recurse
- * 3. if it is a wrappered collection, ask the collection entry
+ * <ol>
+ * <li>If it's a new application-instantiated collection, return true. (Does not occur anymore!)
+ * <li>If it's an embeddable, recurse.
+ * <li>If it is a wrappered collection, ask the collection entry.
+ * </ol>
  *
  * @author Gavin King
  */
@@ -60,18 +62,19 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 			}
 			else {
 				if ( interceptor != null && !interceptor.isAttributeLoaded( type.getName() ) ) {
-					return null;
+					return null; //NOTE: EARLY EXIT!
 				}
-				// if not wrapped yet, its dirty (this can't occur, because
-				// we now always call wrap() before getting to here)
-				// return ( ! (obj instanceof PersistentCollection) ) ?
-				//true : searchForDirtyCollections( (PersistentCollection) obj, type );
-				persistentCollection = (PersistentCollection<?>) collection;
+				else {
+					// if not wrapped yet, it's dirty
+					// (this can't occur, because we now always call wrap() before getting here)
+					// return ( ! (obj instanceof PersistentCollection) )
+					//     ? true : searchForDirtyCollections( (PersistentCollection) obj, type );
+					persistentCollection = (PersistentCollection<?>) collection;
+				}
 			}
 
 			if ( persistentCollection.isDirty() ) { //we need to check even if it was not initialized, because of delayed adds!
 				dirty = true;
-				return null; //NOTE: EARLY EXIT!
 			}
 		}
 

@@ -11,12 +11,17 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+
 
 /**
  * Describes the mapping of an entity's identifier.
  *
- * @see jakarta.persistence.Id
- * @see jakarta.persistence.EmbeddedId
+ * @see Id
+ * @see EmbeddedId
+ * @see Nature
  */
 public interface EntityIdentifierMapping extends ValuedModelPart {
 
@@ -40,20 +45,23 @@ public interface EntityIdentifierMapping extends ValuedModelPart {
 	/**
 	 * The strategy for distinguishing between detached and transient
 	 * state based on the identifier mapping
+	 *
+	 * @see EntityVersionMapping#getUnsavedStrategy()
 	 */
 	IdentifierValue getUnsavedStrategy();
 
 	/**
+	 * Instantiate an instance of the identifier.
 	 *
-	 *
-	 * @return the entity identifier value
-	 *
-	 * @deprecated Use {@link #getIdentifier(Object)}
+	 * @apiNote This is really only valid on {@linkplain CompositeIdentifierMapping composite identifiers}
 	 */
-	@Deprecated
-	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
+	Object instantiate();
 
+	/**
+	 * Extract the identifier from an instance of the entity
+	 */
 	Object getIdentifier(Object entity);
+
 	/**
 	 * Return the identifier of the persistent or transient object, or throw
 	 * an exception if the instance is "unsaved"
@@ -97,24 +105,39 @@ public interface EntityIdentifierMapping extends ValuedModelPart {
 		return id;
 	}
 
+	/**
+	 * Inject an identifier value into an instance of the entity
+	 */
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 
-	Object instantiate();
-
+	/**
+	 * The style of identifier used.
+	 */
 	enum Nature {
 		/**
-		 * Single column id
+		 * Simple, single-column identifier.
+		 *
+		 * @see Id
+		 * @see BasicEntityIdentifierMapping
 		 */
 		SIMPLE,
 
 		/**
-		 * @see jakarta.persistence.EmbeddedId
+		 * An "aggregated" composite identifier, which is another way to say that the
+		 * identifier is represented as an {@linkplain EmbeddedId embeddable}.
+		 *
+		 * @see EmbeddedId
+		 * @see AggregatedIdentifierMapping
 		 */
 		COMPOSITE,
 
 		/**
-		 * Composite identifier defined with multiple {@link jakarta.persistence.Id}
-		 * mappings.  Often used in conjunction with an {@link jakarta.persistence.IdClass}
+		 * Composite identifier defined with multiple {@link Id}
+		 * mappings.  Often used in conjunction with an {@link IdClass}
+		 *
+		 * @see Id
+		 * @see IdClass
+		 * @see NonAggregatedIdentifierMapping
 		 */
 		VIRTUAL
 	}

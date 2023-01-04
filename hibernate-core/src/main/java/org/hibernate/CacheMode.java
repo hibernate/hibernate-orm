@@ -63,6 +63,7 @@ public enum CacheMode {
 	 * <li>enabled for a cache where writes are much more expensive than
 	 *     reads, which is usually the case for a distributed cache.
 	 * </ul>
+	 * <p>
 	 * It's not usually necessary to specify this setting explicitly because,
 	 * by default, it's set to a sensible value by the second-level cache
 	 * implementation.

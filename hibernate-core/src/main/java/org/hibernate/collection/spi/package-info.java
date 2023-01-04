@@ -6,6 +6,15 @@
  */
 
 /**
- * SPI definitions for persistent collections
+ * This package defines the SPI of a framework for lazy-initializing
+ * and state-tracking collection wrappers.
+ * <p>
+ * The interface {@link org.hibernate.collection.spi.PersistentCollection}
+ * and all its implementations belong to an SPI. They are not part of the
+ * public API of Hibernate, and are not meant to be used directly by typical
+ * programs which use Hibernate for persistence.
+ *
+ * @see org.hibernate.collection.spi.PersistentCollection
+ * @see org.hibernate.collection.spi.CollectionSemantics
  */
 package org.hibernate.collection.spi;

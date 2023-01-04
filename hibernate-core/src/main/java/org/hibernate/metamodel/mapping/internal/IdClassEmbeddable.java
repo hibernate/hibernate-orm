@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.EntityKey;
@@ -36,8 +35,8 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -52,8 +51,6 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
-
-import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getAttributeMetadata;
 
 /**
  * EmbeddableMappingType implementation describing an {@link jakarta.persistence.IdClass}
@@ -85,7 +82,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		this.idMapping = idMapping;
 		this.virtualIdEmbeddable = virtualIdEmbeddable;
 
-		this.javaType = creationProcess.getCreationContext().getSessionFactory().getTypeConfiguration()
+		this.javaType = creationProcess.getCreationContext().getTypeConfiguration()
 				.getJavaTypeRegistry()
 				.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
 
@@ -322,7 +319,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
 		forEachAttribute( (index, attribute) -> action.accept( attribute ) );
 	}
 
@@ -440,7 +437,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -453,7 +450,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Override
 	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

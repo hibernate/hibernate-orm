@@ -13,7 +13,10 @@ import org.hibernate.query.TypedTupleTransformer;
 
 /**
  * Wraps the tuples in a constructor call.
+ *
+ * @deprecated since {@link ResultTransformer} is deprecated
  */
+@Deprecated
 public class AliasToBeanConstructorResultTransformer<T> implements ResultTransformer<T>, TypedTupleTransformer<T> {
 
 	private final Constructor<T> constructor;

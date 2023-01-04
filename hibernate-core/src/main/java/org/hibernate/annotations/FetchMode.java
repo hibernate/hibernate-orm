@@ -37,6 +37,7 @@ public enum FetchMode {
 	 * <li>ensuring that the associated entity or collection may be
 	 *     retrieved from the {@linkplain Cache second-level cache}.
 	 * </ul>
+	 * <p>
 	 * This fetching strategy is, in principle, compatible with both
 	 * {@linkplain jakarta.persistence.FetchType#EAGER eager} and
 	 * {@linkplain jakarta.persistence.FetchType#LAZY lazy} fetching.

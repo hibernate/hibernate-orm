@@ -36,8 +36,35 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
 /**
- * Models a selection query returning results.  It is a slimmed down version
- * of {@link Query}, but providing only methods relevant to selection queries.
+ * Within the context of an active {@linkplain org.hibernate.Session session},
+ * an instance of this type represents an executable selection query, that is,
+ * a {@code select}. It is a slimmed-down version of {@link Query}, providing
+ * only methods relevant to selection queries.
+ * <p>
+ * A {@code SelectionQuery} may be obtained from the {@link org.hibernate.Session}
+ * by calling:
+ * <ul>
+ * <li>{@link QueryProducer#createSelectionQuery(String, Class)}, passing the
+ *     HQL as a string,
+ * <li>{@link QueryProducer#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
+ *     query object}, or
+ * <li>{@link QueryProducer#createNamedSelectionQuery(String, Class)} passing
+ *     the name of a query defined using {@link jakarta.persistence.NamedQuery}
+ *     or {@link jakarta.persistence.NamedNativeQuery}.
+ * </ul>
+ * <p>
+ * A {@code SelectionQuery} controls how a query is executed, and allows arguments
+ * to be bound to its parameters.
+ * <ul>
+ * <li>Selection queries are usually executed using {@link #getResultList()} or
+ *     {@link #getSingleResult()}.
+ * <li>The methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
+ *     control limits and pagination.
+ * <li>The various overloads of {@link #setParameter(String, Object)} and
+ *     {@link #setParameter(int, Object)} allow arguments to be bound to named
+ *     and ordinal parameters defined by the query.
+ * </ul>
  *
  * @author Steve Ebersole
  */
@@ -169,12 +196,12 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setTimeout(int timeout);
 
 	/**
-	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
-	 * query via {@link java.sql.Statement#setFetchSize(int)}.  As defined b y JDBC, this value is a hint to the
+	 * Obtain the JDBC fetch size hint in effect for this query. This value is eventually passed along to the JDBC
+	 * query via {@link java.sql.Statement#setFetchSize(int)}. As defined by JDBC, this value is a hint to the
 	 * driver to indicate how many rows to fetch from the database when more rows are needed.
-	 * <p>
-	 * NOTE : JDBC expressly defines this value as a hint.  It may or may not have any effect on the actual
-	 * query execution and ResultSet processing depending on the driver.
+	 *
+	 * @implNote JDBC expressly defines this value as a hint. Depending on the driver, it may or may not have any
+	 *           effect on the actual query execution and {@link java.sql.ResultSet} processing .
 	 *
 	 * @return The timeout <b>in seconds</b>
 	 *
@@ -272,8 +299,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * the query inherits the {@link CacheMode} of the session from which
 	 * it originates.
 	 * <p>
-	 * NOTE: The {@link CacheMode} here describes reading-from/writing-to
-	 * the entity/collection caches as we process query results. For caching
+	 * The {@link CacheMode} here describes reading-from/writing-to the
+	 * entity/collection caches as we process query results. For caching
 	 * of the actual query results, see {@link #isCacheable()} and
 	 * {@link #getCacheRegion()}
 	 * <p>
@@ -287,11 +314,15 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * @see #getCacheMode()
+	 *
+	 * @since 6.2
 	 */
 	CacheStoreMode getCacheStoreMode();
 
 	/**
 	 * @see #getCacheMode()
+	 *
+	 * @since 6.2
 	 */
 	CacheRetrieveMode getCacheRetrieveMode();
 
@@ -308,11 +339,15 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * @see #setCacheMode(CacheMode)
+	 *
+	 * @since 6.2
 	 */
 	SelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
 	/**
 	 * @see #setCacheMode(CacheMode)
+	 *
+	 * @since 6.2
 	 */
 	SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
@@ -322,8 +357,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * This is different to second level caching of any returned entities and
 	 * collections, which is controlled by {@link #getCacheMode()}.
 	 * <p>
-	 * NOTE: the query being "eligible" for caching does not necessarily mean
-	 * its results will be cached. Second-level query caching still has to be
+	 * The query being "eligible" for caching does not necessarily mean its
+	 * results will be cached. Second-level query caching still has to be
 	 * enabled on the {@link SessionFactory} for this to happen. Usually that
 	 * is controlled by the configuration setting
 	 * {@value org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE}.

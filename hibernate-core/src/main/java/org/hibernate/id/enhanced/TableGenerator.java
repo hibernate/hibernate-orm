@@ -63,17 +63,16 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 /**
  * An enhanced version of table-based id generation.
  * <p>
- * Unlike the simplistic legacy one (which, btw, was only ever intended for subclassing
- * support) we "segment" the table into multiple values.  Thus a single table can
+ * Unlike the simplistic legacy one (which  was only ever intended for subclassing
+ * support) we "segment" the table into multiple values.  Thus, a single table can
  * actually serve as the persistent storage for multiple independent generators.  One
  * approach would be to segment the values by the name of the entity for which we are
  * performing generation, which would mean that we would have a row in the generator
  * table for each entity name.  Or any configuration really; the setup is very flexible.
  * <p>
- * <b>NOTE</b> that by default we use a single row for all generators (based
- * on {@link #DEF_SEGMENT_VALUE}).  The configuration parameter
- * {@link #CONFIG_PREFER_SEGMENT_PER_ENTITY} can be used to change that to
- * instead default to using a row for each entity name.
+ * Byy default we use a single row for all generators (based on {@link #DEF_SEGMENT_VALUE}).
+ * The configuration parameter {@link #CONFIG_PREFER_SEGMENT_PER_ENTITY} can be used to
+ * change that to instead default to using a row for each entity name.
  * <p>
  * <table>
  * <caption>Configuration parameters</caption>
@@ -100,12 +99,14 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  *   <tr>
  *     <td>{@link #SEGMENT_VALUE_PARAM}</td>
  *     <td>{@link #DEF_SEGMENT_VALUE}</td>
- *     <td>The value indicating which segment is used by this generator; refers to values in the {@link #SEGMENT_COLUMN_PARAM} column</td>
+ *     <td>The value indicating which segment is used by this generator;
+ *         refers to values in the {@link #SEGMENT_COLUMN_PARAM} column</td>
  *   </tr>
  *   <tr>
  *     <td>{@link #SEGMENT_LENGTH_PARAM}</td>
  *     <td>{@link #DEF_SEGMENT_LENGTH}</td>
- *     <td>The data length of the {@link #SEGMENT_COLUMN_PARAM} column; used for schema creation</td>
+ *     <td>The data length of the {@link #SEGMENT_COLUMN_PARAM} column;
+ *         used for schema creation</td>
  *   </tr>
  *   <tr>
  *     <td>{@link #INITIAL_PARAM}</td>
@@ -115,7 +116,8 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  *   <tr>
  *     <td>{@link #INCREMENT_PARAM}</td>
  *     <td>{@link #DEFAULT_INCREMENT_SIZE}</td>
- *     <td>The increment size for the underlying segment; see the discussion on {@link Optimizer} for more details.</td>
+ *     <td>The increment size for the underlying segment;
+ *         see the discussion on {@link Optimizer} for more details.</td>
  *   </tr>
  *   <tr>
  *     <td>{@link #OPT_PARAM}</td>
@@ -259,9 +261,9 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * The size of the {@link #getSegmentColumnName segment column} in the
 	 * underlying table.
-	 * <p>
-	 * <b>NOTE</b> : should really have been called 'segmentColumnLength' or
-	 * even better 'segmentColumnSize'
+	 *
+	 * @apiNote This should really have been called {@code segmentColumnLength}
+	 *          or even better {@code segmentColumnSize}.
 	 *
 	 * @return the column size.
 	 */

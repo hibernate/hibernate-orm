@@ -19,23 +19,23 @@ import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
-import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
-import org.hibernate.type.FormatMapper;
+import org.hibernate.type.format.FormatMapper;
 
 /**
- * Aggregator of special options used to build the SessionFactory.
+ * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
  *
  * @since 5.0
  */
@@ -314,8 +314,15 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	@Incubating
 	int getPreferredSqlTypeCodeForArray();
 
+	@Incubating
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
+	/**
+	 * The format mapper to use for serializing/deserializing JSON data.
+	 *
+	 * @since 6.0
+	 */
+	@Incubating
 	FormatMapper getJsonFormatMapper();
 
 	/**
@@ -323,5 +330,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @since 6.0.1
 	 */
+	@Incubating
 	FormatMapper getXmlFormatMapper();
 }

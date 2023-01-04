@@ -42,6 +42,7 @@ public class ForeignKeyMigrationTest extends BaseUnitTestCase {
 					.addAnnotatedClass( Box.class )
 					.addAnnotatedClass( Thing.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			// first create the schema...

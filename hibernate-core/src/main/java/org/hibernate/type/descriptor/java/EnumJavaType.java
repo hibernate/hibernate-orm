@@ -6,14 +6,21 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import java.sql.Types;
 import jakarta.persistence.EnumType;
 
-import org.hibernate.type.SqlTypes;
+import org.hibernate.AssertionFailure;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+
+import static jakarta.persistence.EnumType.ORDINAL;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.SMALLINT;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * Describes a Java {@code enum} type.
@@ -27,21 +34,28 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		JdbcTypeRegistry registry = context.getTypeConfiguration().getJdbcTypeRegistry();
-		if ( context.getEnumeratedType() != null && context.getEnumeratedType() == EnumType.STRING ) {
-			if ( context.getColumnLength() == 1 ) {
+		final JdbcTypeRegistry registry = context.getTypeConfiguration().getJdbcTypeRegistry();
+		final EnumType type = context.getEnumeratedType();
+		switch ( type == null ? ORDINAL : type ) {
+			case ORDINAL:
+				return registry.getDescriptor( hasManyValues() ? SMALLINT : TINYINT );
+			case STRING:
+				if ( context.getColumnLength() == 1 ) {
+					return context.isNationalized()
+							? registry.getDescriptor( NCHAR )
+							: registry.getDescriptor( CHAR );
+				}
 				return context.isNationalized()
-						? registry.getDescriptor( Types.NCHAR )
-						: registry.getDescriptor( Types.CHAR );
-			}
+						? registry.getDescriptor( NVARCHAR )
+						: registry.getDescriptor( VARCHAR );
+			default:
+				throw new AssertionFailure("unknown EnumType");
+		}
+	}
 
-			return context.isNationalized()
-					? registry.getDescriptor( Types.NVARCHAR )
-					: registry.getDescriptor( Types.VARCHAR );
-		}
-		else {
-			return registry.getDescriptor( SqlTypes.SMALLINT );
-		}
+	public boolean hasManyValues() {
+		// a bit arbitrary, but gives us some headroom
+		return getJavaTypeClass().getEnumConstants().length > 128; 
 	}
 
 	@Override

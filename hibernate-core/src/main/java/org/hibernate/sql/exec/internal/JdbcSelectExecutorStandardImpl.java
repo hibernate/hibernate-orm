@@ -64,6 +64,7 @@ import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -228,109 +229,24 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final Integer fetchSize = queryOptions.getFetchSize();
 		final Limit limit = queryOptions.getLimit();
 
-		return new ExecutionContext() {
-
-			@Override
-			public boolean isScrollResult() {
-				return true;
-			}
-
-			@Override
-			public QueryOptions getQueryOptions() {
-
-				return new QueryOptions() {
-					@Override
-					public Integer getTimeout() {
-						return timeout;
-					}
-
-					@Override
-					public FlushMode getFlushMode() {
-						return flushMode;
-					}
-
-					@Override
-					public Boolean isReadOnly() {
-						return readOnly;
-					}
-
-					@Override
-					public AppliedGraph getAppliedGraph() {
-						return appliedGraph;
-					}
-
-					@Override
-					public TupleTransformer<?> getTupleTransformer() {
-						return tupleTransformer;
-					}
-
-					@Override
-					public ResultListTransformer<?> getResultListTransformer() {
-						return resultListTransformer;
-					}
-
-					@Override
-					public Boolean isResultCachingEnabled() {
-						return resultCachingEnabled;
-					}
-
-					@Override
-					public CacheRetrieveMode getCacheRetrieveMode() {
-						return cacheRetrieveMode;
-					}
-
-					@Override
-					public CacheStoreMode getCacheStoreMode() {
-						return cacheStoreMode;
-					}
-
-					@Override
-					public String getResultCacheRegionName() {
-						return resultCacheRegionName;
-					}
-
-					@Override
-					public LockOptions getLockOptions() {
-						return lockOptions;
-					}
-
-					@Override
-					public String getComment() {
-						return comment;
-					}
-
-					@Override
-					public List<String> getDatabaseHints() {
-						return databaseHints;
-					}
-
-					@Override
-					public Integer getFetchSize() {
-						return fetchSize;
-					}
-
-					@Override
-					public Limit getLimit() {
-						return limit;
-					}
-				};
-			}
-
-			@Override
-			public QueryParameterBindings getQueryParameterBindings() {
-				return context.getQueryParameterBindings();
-			}
-
-			@Override
-			public Callback getCallback() {
-				return context.getCallback();
-			}
-
-			@Override
-			public SharedSessionContractImplementor getSession() {
-				return context.getSession();
-			}
-		};
+		return new JdbcSelectExecutionContext(
+				timeout,
+				flushMode,
+				readOnly,
+				appliedGraph,
+				tupleTransformer,
+				resultListTransformer,
+				resultCachingEnabled,
+				cacheRetrieveMode,
+				cacheStoreMode,
+				resultCacheRegionName,
+				lockOptions,
+				comment,
+				databaseHints,
+				fetchSize,
+				limit,
+				context
+		);
 	}
 
 	private <T, R> T doExecuteQuery(
@@ -650,14 +566,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		public <J> BasicType<J> resolveType(
 				int position,
 				JavaType<J> explicitJavaType,
-				SessionFactoryImplementor sessionFactory) {
+				TypeConfiguration typeConfiguration) {
 			if ( columnNames == null ) {
 				initializeArrays();
 			}
 			final BasicType<J> basicType = resultSetAccess.resolveType(
 					position,
 					explicitJavaType,
-					sessionFactory
+					typeConfiguration
 			);
 			types[position - 1] = basicType;
 			return basicType;
@@ -707,7 +623,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		public <J> BasicType<J> resolveType(
 				int position,
 				JavaType<J> explicitJavaType,
-				SessionFactoryImplementor sessionFactory) {
+				TypeConfiguration typeConfiguration) {
 			final BasicType<?> type = types[position - 1];
 			if ( type == null ) {
 				throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
@@ -717,11 +633,163 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				return (BasicType<J>) type;
 			}
 			else {
-				return sessionFactory.getTypeConfiguration().getBasicTypeRegistry().resolve(
+				return typeConfiguration.getBasicTypeRegistry().resolve(
 						explicitJavaType,
 						type.getJdbcType()
 				);
 			}
+		}
+
+	}
+
+	private static class JdbcSelectExecutionContext extends BaseExecutionContext implements QueryOptions {
+
+		private final Integer timeout;
+		private final FlushMode flushMode;
+		private final Boolean readOnly;
+		private final AppliedGraph appliedGraph;
+		private final TupleTransformer<?> tupleTransformer;
+		private final ResultListTransformer<?> resultListTransformer;
+		private final Boolean resultCachingEnabled;
+		private final CacheRetrieveMode cacheRetrieveMode;
+		private final CacheStoreMode cacheStoreMode;
+		private final String resultCacheRegionName;
+		private final LockOptions lockOptions;
+		private final String comment;
+		private final List<String> databaseHints;
+		private final Integer fetchSize;
+		private final Limit limit;
+		private final ExecutionContext context;
+
+		public JdbcSelectExecutionContext(
+				Integer timeout,
+				FlushMode flushMode,
+				Boolean readOnly,
+				AppliedGraph appliedGraph,
+				TupleTransformer<?> tupleTransformer,
+				ResultListTransformer<?> resultListTransformer,
+				Boolean resultCachingEnabled,
+				CacheRetrieveMode cacheRetrieveMode,
+				CacheStoreMode cacheStoreMode,
+				String resultCacheRegionName,
+				LockOptions lockOptions,
+				String comment,
+				List<String> databaseHints,
+				Integer fetchSize,
+				Limit limit,
+				ExecutionContext context) {
+			super( context.getSession() );
+			this.timeout = timeout;
+			this.flushMode = flushMode;
+			this.readOnly = readOnly;
+			this.appliedGraph = appliedGraph;
+			this.tupleTransformer = tupleTransformer;
+			this.resultListTransformer = resultListTransformer;
+			this.resultCachingEnabled = resultCachingEnabled;
+			this.cacheRetrieveMode = cacheRetrieveMode;
+			this.cacheStoreMode = cacheStoreMode;
+			this.resultCacheRegionName = resultCacheRegionName;
+			this.lockOptions = lockOptions;
+			this.comment = comment;
+			this.databaseHints = databaseHints;
+			this.fetchSize = fetchSize;
+			this.limit = limit;
+			this.context = context;
+		}
+
+		@Override
+		public boolean isScrollResult() {
+			return true;
+		}
+
+		@Override
+		public QueryOptions getQueryOptions() {
+			return this;
+		}
+
+		@Override
+		public Integer getTimeout() {
+			return timeout;
+		}
+
+		@Override
+		public FlushMode getFlushMode() {
+			return flushMode;
+		}
+
+		@Override
+		public Boolean isReadOnly() {
+			return readOnly;
+		}
+
+		@Override
+		public AppliedGraph getAppliedGraph() {
+			return appliedGraph;
+		}
+
+		@Override
+		public TupleTransformer<?> getTupleTransformer() {
+			return tupleTransformer;
+		}
+
+		@Override
+		public ResultListTransformer<?> getResultListTransformer() {
+			return resultListTransformer;
+		}
+
+		@Override
+		public Boolean isResultCachingEnabled() {
+			return resultCachingEnabled;
+		}
+
+		@Override
+		public CacheRetrieveMode getCacheRetrieveMode() {
+			return cacheRetrieveMode;
+		}
+
+		@Override
+		public CacheStoreMode getCacheStoreMode() {
+			return cacheStoreMode;
+		}
+
+		@Override
+		public String getResultCacheRegionName() {
+			return resultCacheRegionName;
+		}
+
+		@Override
+		public LockOptions getLockOptions() {
+			return lockOptions;
+		}
+
+		@Override
+		public String getComment() {
+			return comment;
+		}
+
+		@Override
+		public List<String> getDatabaseHints() {
+			return databaseHints;
+		}
+
+		@Override
+		public Integer getFetchSize() {
+			return fetchSize;
+		}
+
+		@Override
+		public Limit getLimit() {
+			return limit;
+		}
+
+		@Override
+		public QueryParameterBindings getQueryParameterBindings() {
+			return context.getQueryParameterBindings();
+		}
+
+		@Override
+		public Callback getCallback() {
+			return context.getCallback();
 		}
 
 	}

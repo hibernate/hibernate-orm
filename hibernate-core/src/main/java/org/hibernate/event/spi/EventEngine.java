@@ -36,14 +36,12 @@ public class EventEngine {
 
 	private final CallbackRegistry callbackRegistry;
 
-	public EventEngine(
-			MetadataImplementor mappings,
-			SessionFactoryImplementor sessionFactory) {
+	public EventEngine(MetadataImplementor mappings, SessionFactoryImplementor sessionFactory) {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// resolve (JPA) callback handlers
 
-		this.callbackRegistry = CallbacksFactory.buildCallbackRegistry( sessionFactory.getSessionFactoryOptions(),
+		callbackRegistry = CallbacksFactory.buildCallbackRegistry( sessionFactory.getSessionFactoryOptions(),
 				sessionFactory.getServiceRegistry(), mappings.getEntityBindings() );
 
 

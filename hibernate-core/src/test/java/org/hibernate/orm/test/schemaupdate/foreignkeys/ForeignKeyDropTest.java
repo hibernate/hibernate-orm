@@ -65,6 +65,7 @@ public class ForeignKeyDropTest extends BaseUnitTestCase {
 				.addAnnotatedClass( ParentEntity.class )
 				.addAnnotatedClass( ChildEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 		schemaExport = new SchemaExport().setHaltOnError( false ).setOutputFile( output.getAbsolutePath() );
 	}

@@ -14,6 +14,7 @@ import java.util.function.BiFunction;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.ast.MutationGroup;
 
 /**
  * Specialized MutationOperationGroup for case of no operations
@@ -23,6 +24,9 @@ import org.hibernate.sql.model.MutationType;
 public class MutationOperationGroupNone extends AbstractMutationOperationGroup {
 	public MutationOperationGroupNone(MutationType mutationType, MutationTarget<?> mutationTarget) {
 		super( mutationType, mutationTarget );
+	}
+	public MutationOperationGroupNone(MutationGroup mutationGroup) {
+		this( mutationGroup.getMutationType(), mutationGroup.getMutationTarget() );
 	}
 
 	@Override

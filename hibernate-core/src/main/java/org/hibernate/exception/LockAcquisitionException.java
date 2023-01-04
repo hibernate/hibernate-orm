@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * Implementation of JDBCException indicating a problem acquiring lock
+ * A {@link JDBCException} indicating a problem acquiring a lock
  * on the database.
  *
  * @author Steve Ebersole

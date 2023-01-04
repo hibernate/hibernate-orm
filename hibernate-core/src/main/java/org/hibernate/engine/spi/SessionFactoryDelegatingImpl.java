@@ -30,7 +30,6 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.spi.EventEngine;
@@ -165,7 +164,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getDefinedFilterNames();
 	}
 
-	@Override
+	@Override @Deprecated
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
 		return delegate.getFilterDefinition( filterName );
 	}
@@ -270,8 +269,8 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getFastSessionServices();
 	}
 
-	@Override
-	public DeserializationResolver getDeserializationResolver() {
+	@Override @Deprecated
+	public DeserializationResolver<?> getDeserializationResolver() {
 		return delegate.getDeserializationResolver();
 	}
 

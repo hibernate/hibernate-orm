@@ -29,6 +29,7 @@ import org.hibernate.type.Type;
  *         specify that there is a dedicated instance of the interceptor for each
  *         session.
  * </ul>
+ * <p>
  * Whichever approach is used, the interceptor must be serializable for the
  * {@code Session} to be serializable. This means that {@code SessionFactory}-scoped
  * interceptors should implement {@code readResolve()}.
@@ -347,6 +348,7 @@ public interface Interceptor {
 	 * <li>{@code null} - Hibernate uses the {@code unsaved-value} mapping and other heuristics to 
 	 * determine if the object is unsaved
 	 * </ul>
+	 *
 	 * @param entity a transient or detached entity
 	 * @return Boolean or {@code null} to choose default behaviour
 	 */

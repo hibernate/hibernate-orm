@@ -32,10 +32,10 @@ public interface SessionFactoryObserver extends Serializable {
 	/**
 	 * Callback to indicate that the given factory is about to close.  The passed factory
 	 * reference should be usable since it is only about to close.
-	 * <p>
-	 * NOTE : defined as default to allow for existing SessionFactoryObserver impls to work
-	 * in 5.2.  Starting in 6.0 the default will be removed and SessionFactoryObserver impls
-	 * will be required to implement this new method.
+	 *
+	 * @apiNote defined as default to allow for existing {@code SessionFactoryObserver}
+	 *          implementations to work in 5.2. Starting in 6.0 the default will be
+	 *          removed and implementations will be required to implement this new method.
 	 *
 	 * @param factory The factory about to be closed.
 	 *

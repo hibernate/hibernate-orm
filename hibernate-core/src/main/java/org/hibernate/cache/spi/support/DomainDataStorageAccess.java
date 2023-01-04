@@ -9,7 +9,7 @@ package org.hibernate.cache.spi.support;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Specialization of StorageAccess for domain data regions
+ * Specialization of {@link StorageAccess} for domain data regions.
  *
  * @author Steve Ebersole
  */

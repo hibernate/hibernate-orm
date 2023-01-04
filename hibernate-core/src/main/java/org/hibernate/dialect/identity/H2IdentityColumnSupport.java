@@ -48,6 +48,7 @@ public class H2IdentityColumnSupport extends IdentityColumnSupportImpl {
 		void renderInsertValues();
 	}
 
+	@Deprecated //TODO: get rid of this layer-breaking method!
 	public void render(
 			TableInsert tableInsert,
 			Consumer<String> sqlAppender,

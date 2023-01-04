@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.NonAggregatedCompositeSqmPathSource;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
@@ -32,8 +33,8 @@ import org.jboss.logging.Logger;
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
  * identifiable types as entities or mapped-superclasses.  Basically things to which an
  * identifier can be attached.
- * <p>
- * NOTE : Currently we only really have support for direct entities in the Hibernate metamodel
+ *
+ * @apiNote Currently we only really have support for direct entities in the Hibernate metamodel
  * as the information for them is consumed into the closest actual entity subclass(es) in the
  * internal Hibernate mapping-metamodel.
  *
@@ -64,7 +65,7 @@ public abstract class AbstractIdentifiableType<J>
 			boolean hasIdClass,
 			boolean hasIdentifierProperty,
 			boolean versioned,
-			JpaMetamodel jpaMetamodel) {
+			JpaMetamodelImplementor jpaMetamodel) {
 		super( typeName, javaType, superType, jpaMetamodel );
 		this.hasIdClass = hasIdClass;
 		this.hasIdentifierProperty = hasIdentifierProperty;

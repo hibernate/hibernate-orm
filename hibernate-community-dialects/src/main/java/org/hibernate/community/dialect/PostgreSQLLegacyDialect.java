@@ -15,7 +15,6 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -85,7 +84,6 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
@@ -276,6 +274,12 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public int getMaxVarcharLength() {
 		return 10_485_760;
+	}
+
+	@Override
+	public int getMaxVarcharCapacity() {
+		// 1GB according to PostgreSQL docs
+		return 1_073_741_824;
 	}
 
 	@Override
@@ -534,11 +538,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
-		functionFactory.round_floor(); //Postgres round(x,n) does not accept double
+		functionFactory.round_roundFloor(); //Postgres round(x,n) does not accept double
+		functionFactory.trunc_truncFloor();
 		functionFactory.cot();
 		functionFactory.radians();
 		functionFactory.degrees();
-		functionFactory.trunc();
 		functionFactory.log();
 		functionFactory.mod_operator();
 		if ( getVersion().isSameOrAfter( 12 ) ) {
@@ -1015,6 +1019,13 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
+		return false;
+	}
+
+	@Override
+	public boolean supportsMaterializedLobAccess() {
+		// Prefer using text and bytea over oid (LOB), because oid is very restricted.
+		// If someone really wants a type bigger than 1GB, they should ask for it by using @Lob explicitly
 		return false;
 	}
 

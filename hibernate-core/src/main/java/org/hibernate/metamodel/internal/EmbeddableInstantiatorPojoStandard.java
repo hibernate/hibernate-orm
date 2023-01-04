@@ -26,7 +26,6 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoInstantiatorImpl.class );
 
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
-	private final boolean constructorInjection = false;
 	private final Constructor<?> constructor;
 
 	public EmbeddableInstantiatorPojoStandard(JavaType<?> javaType, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
@@ -38,7 +37,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
 		try {
-			return ReflectHelper.getDefaultConstructor( mappedPojoClass);
+			return ReflectHelper.getDefaultConstructor( mappedPojoClass );
 		}
 		catch ( PropertyNotFoundException e ) {
 			LOG.noDefaultConstructor( mappedPojoClass.getName() );
@@ -51,7 +50,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
 		if ( isAbstract() ) {
 			throw new InstantiationException(
-					"Cannot instantiate abstract class or interface: ", getMappedPojoClass()
+					"Cannot instantiate abstract class or interface", getMappedPojoClass()
 			);
 		}
 
@@ -60,11 +59,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 		}
 
 		try {
-			if ( constructorInjection ) {
-				return constructor.newInstance( valuesAccess.getValues() );
-			}
-
-			Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+			final Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
 			final Object instance = constructor.newInstance();
 			if ( values != null ) {
 				// At this point, createEmptyCompositesEnabled is always true.
@@ -81,7 +76,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 			return instance;
 		}
 		catch ( Exception e ) {
-			throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+			throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 		}
 	}
 }

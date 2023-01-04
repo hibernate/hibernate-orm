@@ -181,8 +181,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				);
 				final NamedTableReference existsTableReference = new NamedTableReference(
 						tableExpression,
-						"dml_",
-						false
+						"dml_"
 				);
 				final List<ColumnReference> existsKeyColumns = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
 				final String[] keyColumns = entityPersister.getKeyColumns( i );

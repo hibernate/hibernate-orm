@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.io.Serializable;
 import java.util.function.BiConsumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -61,6 +60,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 
 	private final boolean insertable;
 	private final boolean updateable;
+	private final boolean partitioned;
 	private final MetaType metaType;
 
 	public AnyDiscriminatorPart(
@@ -74,6 +74,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			Integer scale,
 			boolean insertable,
 			boolean updateable,
+			boolean partitioned,
 			MetaType metaType) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
@@ -85,6 +86,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 		this.scale = scale;
 		this.insertable = insertable;
 		this.updateable = updateable;
+		this.partitioned = partitioned;
 		this.metaType = metaType;
 	}
 
@@ -124,6 +126,11 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public boolean isUpdateable() {
 		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return partitioned;
 	}
 
 	@Override
@@ -182,13 +189,13 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void applySqlSelections(
 			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -197,7 +204,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -212,7 +219,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

@@ -10,16 +10,15 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import jakarta.persistence.GenerationType;
 
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.ForeignGenerator;
@@ -44,9 +43,10 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.generator.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.GenerationType;
 
 import static org.hibernate.cfg.AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER;
 import static org.hibernate.id.factory.IdGenFactoryLogging.ID_GEN_FAC_LOGGER;
@@ -108,11 +108,7 @@ public class StandardIdentifierGeneratorFactory
 		generatorTypeStrategyMap.put( GenerationType.SEQUENCE, SequenceGenerationTypeStrategy.INSTANCE );
 		generatorTypeStrategyMap.put( GenerationType.TABLE, TableGenerationTypeStrategy.INSTANCE );
 		generatorTypeStrategyMap.put( GenerationType.IDENTITY, IdentityGenerationTypeStrategy.INSTANCE );
-		try {
-			generatorTypeStrategyMap.put( GenerationType.valueOf( "UUID" ), UUIDGenerationTypeStrategy.INSTANCE );
-		}
-		catch (IllegalArgumentException ignore) {
-		}
+		generatorTypeStrategyMap.put( GenerationType.UUID, UUIDGenerationTypeStrategy.INSTANCE );
 	}
 
 	private void logOverrides() {
@@ -197,7 +193,7 @@ public class StandardIdentifierGeneratorFactory
 					serviceRegistry
 			);
 		}
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException( "No GenerationTypeStrategy specified" );
 	}
 
 	@Override @Deprecated

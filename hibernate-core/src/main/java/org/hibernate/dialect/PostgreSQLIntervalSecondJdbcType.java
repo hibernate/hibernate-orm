@@ -29,7 +29,6 @@ import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Christian Beikov
@@ -104,8 +103,19 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 
 	@Override
 	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
-		// The default scale is 9
-		if ( indicators.getColumnScale() == JdbcTypeIndicators.NO_COLUMN_SCALE || indicators.getColumnScale() > 6 ) {
+		final int scale;
+		if ( indicators.getColumnScale() == JdbcTypeIndicators.NO_COLUMN_SCALE ) {
+			scale = domainJtd.getDefaultSqlScale(
+					indicators.getDialect(),
+					this
+			);
+		}
+		else {
+			scale = indicators.getColumnScale();
+		}
+		if ( scale > 6 ) {
+			// Since the maximum allowed scale on PostgreSQL is 6 (microsecond precision),
+			// we have to switch to the numeric type if the value is greater
 			return indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.NUMERIC ) );
 		}
 		return this;

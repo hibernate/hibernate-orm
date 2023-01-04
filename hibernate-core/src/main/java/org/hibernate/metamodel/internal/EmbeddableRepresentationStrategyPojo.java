@@ -62,18 +62,9 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 
 		assert bootDescriptor.getComponentClass() != null;
 
-		this.strategySelector = creationContext.getSessionFactory()
-				.getServiceRegistry()
-				.getService( StrategySelector.class );
+		this.strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
 
 		this.reflectionOptimizer = buildReflectionOptimizer( bootDescriptor, creationContext );
-		final ConfigurationService configurationService = creationContext.getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-				.getService(ConfigurationService.class);
-		boolean createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
-				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
-				configurationService.getSettings(),
-				false
-		);
 
 		this.instantiator = customInstantiator != null
 				? customInstantiator
@@ -108,13 +99,12 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 		}
 
 		if ( bootDescriptor.isEmbedded() && ReflectHelper.isAbstractClass( bootDescriptor.getComponentClass() ) ) {
-			final ProxyFactoryFactory proxyFactoryFactory = creationContext.getSessionFactory()
-					.getServiceRegistry()
-					.getService( ProxyFactoryFactory.class );
 			return new EmbeddableInstantiatorProxied(
 					bootDescriptor.getComponentClass(),
 					runtimeDescriptorAccess,
-					proxyFactoryFactory.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
+					creationContext.getServiceRegistry()
+							.getService( ProxyFactoryFactory.class )
+							.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
 			);
 		}
 
@@ -186,7 +176,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 			return null;
 		}
 
-		if ( hasCustomAccessors() || bootDescriptor.getCustomInstantiator() != null ) {
+		if ( hasCustomAccessors() || bootDescriptor.getCustomInstantiator() != null || bootDescriptor.getInstantiator() != null ) {
 			return null;
 		}
 

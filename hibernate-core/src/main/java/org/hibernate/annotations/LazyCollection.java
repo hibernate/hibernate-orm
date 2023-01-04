@@ -32,7 +32,8 @@ import java.util.Map;
  * <li>Use static methods of {@link org.hibernate.Hibernate},
  *     for example {@link org.hibernate.Hibernate#size(Collection)},
  *     {@link org.hibernate.Hibernate#contains(Collection, Object)},
- *     or {@link org.hibernate.Hibernate#get(Map, Object)} instead
+ *     {@link org.hibernate.Hibernate#get(Map, Object)}, or
+ *     {@link org.hibernate.Hibernate#remove(Map, Object)} instead
  *     of {@code LazyCollection(EXTRA)}.
  * </ul>
  */

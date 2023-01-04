@@ -17,15 +17,16 @@ import java.io.Serializable;
  * well available via {@link Statistics#getDomainDataRegionStatistics} using
  * the configured region name
  *
- * todo (6.0) : consider a means to get the cache Region statistics for:
- * 		1) an entity by name
- * 		2) a collection by role
- * 		3) a natural-id by entity name
- *
  * @author Eric Dalquist
  * @author Steve Ebersole
  */
 public interface NaturalIdStatistics extends CacheableDataStatistics, Serializable {
+
+	// todo (6.0) : consider a means to get the cache region statistics for:
+	//              1) an entity by name
+	//              2) a collection by role
+	//              3) a natural-id by entity name
+
 	/**
 	 * Number of times (since last Statistics clearing) the "natural id
 	 * resolution" query has been executed

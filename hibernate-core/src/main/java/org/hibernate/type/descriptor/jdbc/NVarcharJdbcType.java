@@ -12,6 +12,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -77,11 +80,23 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 		if ( indicators.isLob() ) {
 			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
 		}
+		else if ( shouldUseMaterializedLob( indicators ) ) {
+			jdbcTypeCode = indicators.isNationalized() ? SqlTypes.MATERIALIZED_NCLOB : SqlTypes.MATERIALIZED_CLOB;
+		}
 		else {
 			jdbcTypeCode = indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
 		}
 
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+	}
+
+	protected boolean shouldUseMaterializedLob(JdbcTypeIndicators indicators) {
+		final Dialect dialect = indicators.getDialect();
+		final long length = indicators.getColumnLength();
+		final long maxLength = indicators.isNationalized() ?
+				dialect.getMaxNVarcharCapacity() :
+				dialect.getMaxVarcharCapacity();
+		return length > maxLength && dialect.useMaterializedLobWhenCapacityExceeded();
 	}
 
 	@Override

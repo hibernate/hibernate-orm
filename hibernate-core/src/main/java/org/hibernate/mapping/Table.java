@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,8 +35,10 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A mapping model object representing a relational database {@linkplain jakarta.persistence.Table table}.
@@ -64,7 +65,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private final Map<String, Index> indexes = new LinkedHashMap<>();
 	private final Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
-	private final List<String> checkConstraints = new ArrayList<>();
+	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 	private String rowId;
 	private String subselect;
 	private boolean isAbstract;
@@ -73,7 +74,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 
-	@Deprecated(since="6.2") @Remove
+	@Deprecated(since="6.2", forRemoval = true)
 	public Table() {
 		this( "orm" );
 	}
@@ -185,10 +186,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public void setQuoted(boolean quoted) {
-		if ( quoted == name.isQuoted() ) {
-			return;
+		if ( quoted != name.isQuoted() ) {
+			name = new Identifier( name.getText(), quoted );
 		}
-		this.name = new Identifier( name.getText(), quoted );
 	}
 
 	public void setSchema(String schema) {
@@ -554,7 +554,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			foreignKey.setTable( this );
 			foreignKey.setReferencedEntityName( referencedEntityName );
 			foreignKey.setKeyDefinition( keyDefinition );
-			for (Column keyColumn : keyColumns) {
+			for ( Column keyColumn : keyColumns ) {
 				foreignKey.addColumn( keyColumn );
 			}
 			if ( referencedColumns != null ) {
@@ -594,8 +594,13 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return idValue;
 	}
 
+	@Deprecated(since = "6.2")
 	public void addCheckConstraint(String constraint) {
-		checkConstraints.add( constraint );
+		addCheck( new CheckConstraint( constraint ) );
+	}
+
+	public void addCheck(CheckConstraint check) {
+		checkConstraints.add( check );
 	}
 
 	public boolean containsColumn(Column column) {
@@ -611,17 +616,17 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public String toString() {
-		final StringBuilder buf = new StringBuilder()
+		final StringBuilder string = new StringBuilder()
 				.append( getClass().getSimpleName() )
 				.append( '(' );
 		if ( getCatalog() != null ) {
-			buf.append( getCatalog() ).append( "." );
+			string.append( getCatalog() ).append( "." );
 		}
 		if ( getSchema() != null ) {
-			buf.append( getSchema() ).append( "." );
+			string.append( getSchema() ).append( "." );
 		}
-		buf.append( getName() ).append( ')' );
-		return buf.toString();
+		string.append( getName() ).append( ')' );
+		return string.toString();
 	}
 
 	public String getSubselect() {
@@ -673,7 +678,12 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return getCheckConstraints().iterator();
 	}
 
+	@Deprecated(since = "6.2")
 	public List<String> getCheckConstraints() {
+		return checkConstraints.stream().map( CheckConstraint::getConstraint ).collect( toList() );
+	}
+
+	public List<CheckConstraint> getChecks() {
 		return unmodifiableList( checkConstraints );
 	}
 
@@ -684,6 +694,15 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	private String render(Identifier identifier) {
 		return identifier == null ? null : identifier.render();
+	}
+
+	@Internal
+	public void reorderColumns(List<Column> columns) {
+		assert this.columns.size() == columns.size() && this.columns.values().containsAll( columns );
+		this.columns.clear();
+		for ( Column column : columns ) {
+			this.columns.put( column.getCanonicalName(), column );
+		}
 	}
 
 	public static class ForeignKeyKey implements Serializable {
@@ -697,7 +716,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			this.referencedClassName = referencedClassName;
 			this.columns = columns.toArray( EMPTY_COLUMN_ARRAY );
 			this.referencedColumns = referencedColumns != null
-					? referencedColumns.toArray(EMPTY_COLUMN_ARRAY)
+					? referencedColumns.toArray( EMPTY_COLUMN_ARRAY )
 					: EMPTY_COLUMN_ARRAY;
 		}
 
@@ -738,7 +757,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public List<InitCommand> getInitCommands(SqlStringGenerationContext context) {
 		if ( initCommandProducers == null ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
 		else {
 			final List<InitCommand> initCommands = new ArrayList<>();

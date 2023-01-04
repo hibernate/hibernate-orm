@@ -140,7 +140,7 @@ public class CustomType<J>
 
 	@Override
 	public int[] getSqlTypeCodes(Mapping pi) {
-		return new int[] { jdbcType.getDefaultSqlTypeCode() };
+		return new int[] { jdbcType.getDdlTypeCode() };
 	}
 
 	@Override

@@ -1,0 +1,79 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.mapping;
+
+import java.util.Objects;
+
+/**
+ * Represents a table or column level {@code check} constraint.
+ *
+ * @author Gavin King
+ */
+public class CheckConstraint {
+	private String name;
+	private String constraint;
+
+	public CheckConstraint(String name, String constraint) {
+		this.name = name;
+		this.constraint = constraint;
+	}
+
+	public CheckConstraint(String constraint) {
+		this.constraint = constraint;
+	}
+
+	public boolean isNamed() {
+		return name != null;
+	}
+
+	public boolean isAnonymous() {
+		return name == null;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getConstraint() {
+		return constraint;
+	}
+
+	public String getConstraintInParens() {
+		return "(" + constraint + ")";
+	}
+
+	public void setConstraint(String constraint) {
+		this.constraint = constraint;
+	}
+
+	public String constraintString() {
+		return name == null
+				? " check (" + constraint + ")"
+				: " constraint " + name + " check (" + constraint + ")";
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( object instanceof CheckConstraint ) {
+			CheckConstraint other = (CheckConstraint) object;
+			return Objects.equals( name, other.name )
+				&& Objects.equals( constraint, other.constraint );
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return constraint.hashCode();
+	}
+}

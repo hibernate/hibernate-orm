@@ -26,7 +26,6 @@ import jakarta.persistence.metamodel.Type;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.legacy.I;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -105,7 +104,6 @@ public class MetadataTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testBuildingMetamodelWithParameterizedCollection() {
         Metadata metadata = new MetadataSources()
                 .addAnnotatedClass(WithGenericCollection.class)
@@ -440,8 +438,5 @@ public class MetadataTest {
             //success
         }
     }
-
-    //todo test plural
-
 
 }

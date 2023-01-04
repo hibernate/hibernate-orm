@@ -6,9 +6,10 @@
  */
 package org.hibernate.resource.transaction.spi;
 
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
-import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.jpa.spi.JpaCompliance;
+
+import static org.hibernate.resource.transaction.spi.TransactionStatus.ACTIVE;
+import static org.hibernate.resource.transaction.spi.TransactionStatus.MARKED_ROLLBACK;
 
 /**
  * Models the coordination of all transaction related flows.
@@ -54,14 +55,14 @@ public interface TransactionCoordinator {
 	boolean isJoined();
 
 	/**
-	 * Used by owner of the JdbcSession as a means to indicate that implicit joining should be done if needed.
+	 * Used by owner of the "JDBC session" as a means to indicate that implicit joining should be done if needed.
 	 */
 	void pulse();
 
 	/**
 	 * Is this transaction still active?
 	 * <p>
-	 * Answers on a best effort basis.  For example, in the case of JDBC based transactions we cannot know that a
+	 * Answers on a best-effort basis.  For example, in the case of JDBC based transactions we cannot know that a
 	 * transaction is active when it is initiated directly through the JDBC {@link java.sql.Connection}, only when
 	 * it is initiated from here.
 	 *
@@ -81,14 +82,14 @@ public interface TransactionCoordinator {
 	/**
 	 * Adds an observer to the coordinator.
 	 * <p>
-	 * observers are not to be cleared on transaction completion.
+	 * Observers are not to be cleared on transaction completion.
 	 *
 	 * @param observer The observer to add.
 	 */
 	void addObserver(TransactionObserver observer);
 
 	/**
-	 * Removed an observer from the coordinator.
+	 * Remove an observer from the coordinator.
 	 *
 	 * @param observer The observer to remove.
 	 */
@@ -103,14 +104,15 @@ public interface TransactionCoordinator {
 	}
 
 	default boolean isTransactionActive(boolean isMarkedRollbackConsideredActive) {
-		return isJoined() && getTransactionDriverControl().isActive( isMarkedRollbackConsideredActive );
+		return isJoined()
+			&& getTransactionDriverControl().isActive( isMarkedRollbackConsideredActive );
 	}
 
 	default void invalidate(){}
 
 	/**
-	 * Provides the means for "local transactions" (as transaction drivers) to control the
-	 * underlying "physical transaction" currently associated with the TransactionCoordinator.
+	 * Provides the means for resource-local transactions (as transaction drivers) to control the
+	 * underlying "physical transaction" currently associated with the {@code TransactionCoordinator}.
 	 *
 	 * @author Steve Ebersole
 	 */
@@ -136,8 +138,8 @@ public interface TransactionCoordinator {
 
 		default boolean isActive(boolean isMarkedRollbackConsideredActive) {
 			final TransactionStatus status = getStatus();
-			return TransactionStatus.ACTIVE == status
-					|| ( isMarkedRollbackConsideredActive && TransactionStatus.MARKED_ROLLBACK == status );
+			return status == ACTIVE
+				|| isMarkedRollbackConsideredActive && status == MARKED_ROLLBACK;
 		}
 
 		// todo : org.hibernate.Transaction will need access to register local Synchronizations.
@@ -145,7 +147,5 @@ public interface TransactionCoordinator {
 		//		org.hibernate.Transaction that might be best done by:
 		//			1) exposing registerSynchronization here (if the Transaction is just passed this)
 		//			2) using the exposed TransactionCoordinator#getLocalSynchronizations (if the Transaction is passed the TransactionCoordinator)
-		//
-		//		if
 	}
 }

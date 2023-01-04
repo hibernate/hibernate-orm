@@ -7,14 +7,12 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.criteria.JpaJoinedFrom;
-import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
@@ -164,9 +162,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 
 	@Override
 	public SqmCorrelatedEntityJoin<T> createCorrelation() {
-		// todo: implement
-		throw new NotYetImplementedFor6Exception(getClass());
-//		return new SqmCorrelatedEntityJoin<>( this );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

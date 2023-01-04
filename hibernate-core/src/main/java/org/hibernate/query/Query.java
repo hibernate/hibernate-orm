@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -32,6 +30,8 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -39,33 +39,56 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.TypedQuery;
 
 /**
- * Represents a {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria query}
- * or a query written in HQL. The subtype {@link NativeQuery} represents a query
- * written in native SQL.
+ * Within the context of an active {@linkplain org.hibernate.Session session},
+ * an instance of this type represents an executable query, either:
+ * <ul>
+ * <li>a query written in HQL,
+ * <li>a named query written in HQL or native SQL, or
+ * <li>a {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria query}.
+ * </ul>
  * <p>
- * This type simply mixes {@link TypedQuery} defined by JPA with {@link SelectionQuery}
- * and {@link MutationQuery}. Unfortunately, JPA does not distinguish between
- * {@link SelectionQuery selection queries} and {@link MutationQuery mutation queries},
- * so we lose that distinction here. However, every {@code Query} may logically
- * be classified as one or the other.
+ * The subtype {@link NativeQuery} represents a query written in native SQL.
+ * <p>
+ * This type simply mixes the {@link TypedQuery} interface defined by JPA with
+ * {@link SelectionQuery} and {@link MutationQuery}. Unfortunately, JPA does
+ * not distinguish between {@linkplain SelectionQuery selection queries} and
+ * {@linkplain MutationQuery mutation queries}, so we lose that distinction here.
+ * However, every {@code Query} may logically be classified as one or the other.
+ * <p>
+ * A {@code Query} may be obtained from the {@link org.hibernate.Session} by
+ * calling:
+ * <ul>
+ * <li>{@link QueryProducer#createQuery(String, Class)}, passing the HQL as a
+ *     string,
+ * <li>{@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
+ *     object}, or
+ * <li>{@link QueryProducer#createNamedQuery(String, Class)} passing the name
+ *     of a query defined using {@link jakarta.persistence.NamedQuery} or
+ *     {@link jakarta.persistence.NamedNativeQuery}.
+ * </ul>
  * <p>
  * A {@code Query} controls how a query is executed, and allows arguments to be
  * bound to its parameters.
  * <ul>
  * <li>Selection queries are usually executed using {@link #getResultList()} or
- *     {@link #getSingleResult()}, and mutation queries must be executed using
- *     {@link #executeUpdate()}.
+ *     {@link #getSingleResult()}.
  * <li>The methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
  *     control limits and pagination.
  * <li>The various overloads of {@link #setParameter(String, Object)} and
  *     {@link #setParameter(int, Object)} allow arguments to be bound to named
  *     and ordinal parameters defined by the query.
  * </ul>
+ * <p>
+ * Note that this interface offers no real advantages over {@link SelectionQuery}
+ * except for compatibility with the JPA-defined {@link TypedQuery} interface.
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @param <R> The result type, for typed queries, or {@link Object} for untyped queries
+ *
+ * @see QueryProducer
  */
 @Incubating
 public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R> {
@@ -104,7 +127,9 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * {@linkplain Dialect#defaultScrollMode() dialect default scroll mode}.
 	 *
 	 * @apiNote The exact behavior of this method depends somewhat
-	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
+	 *          on the level of JDBC driver support for scrollable
+	 *          {@link java.sql.ResultSet}s, and so is not very
+	 *          portable between database.
 	 */
 	@Override
 	ScrollableResults<R> scroll();
@@ -115,8 +140,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * of the returned {@link ScrollableResults} depend on the specified
 	 * {@link ScrollMode}.
 	 *
-	 * @apiNote The exact behavior of this method depends somewhat on the
-	 * level of JDBC driver support for scrollable {@link java.sql.ResultSet}s.
+	 * @apiNote The exact behavior of this method depends somewhat
+	 *          on the level of JDBC driver support for scrollable
+	 *          {@link java.sql.ResultSet}s, and so is not very
+	 *          portable between database.
 	 */
 	@Override
 	ScrollableResults<R> scroll(ScrollMode scrollMode);
@@ -131,8 +158,8 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * stream so that resources are freed as soon as possible.
 	 *
 	 * @implNote Delegates to {@link #stream()}, which in turn delegates
-	 * to this method.  Implementors should implement at least one of
-	 * these methods.
+	 *           to this method. Implementors should implement at least
+	 *           one of these methods.
 	 *
 	 * @return The results as a {@link Stream}
 	 */
@@ -215,8 +242,8 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * @see jakarta.persistence.Query#executeUpdate()
 	 *
 	 * @apiNote This method is needed because this interface extends
-	 * {@link jakarta.persistence.Query}, which defines this method.
-	 * See {@link MutationQuery} and {@link SelectionQuery}.
+	 *          {@link jakarta.persistence.Query}, which defines this method.
+	 *          See {@link MutationQuery} and {@link SelectionQuery}.
 	 *
 	 * @see QueryProducer#createMutationQuery
 	 */
@@ -241,28 +268,26 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Apply the given graph using the given semantic
 	 *
-	 * @param graph The graph the apply.
+	 * @param graph The graph to apply.
 	 * @param semantic The semantic to use when applying the graph
-	 *
-	 * @return this - for method chaining
 	 */
 	Query<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic);
 
 	/**
-	 * Apply the given graph using {@linkplain GraphSemantic#FETCH fetch semantics}
+	 * Apply the given graph using {@linkplain GraphSemantic#FETCH fetch semantics}.
 	 *
 	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)}
-	 * using {@link GraphSemantic#FETCH} as the semantic
+	 *          using {@link GraphSemantic#FETCH} as the semantic.
 	 */
 	default Query<R> applyFetchGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		return applyGraph( graph, GraphSemantic.FETCH );
 	}
 
 	/**
-	 * Apply the given graph using {@linkplain GraphSemantic#LOAD load semantics}
+	 * Apply the given graph using {@linkplain GraphSemantic#LOAD load semantics}.
 	 *
 	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)}
-	 * using {@link GraphSemantic#LOAD} as the semantic
+	 *          using {@link GraphSemantic#LOAD} as the semantic.
 	 */
 	@SuppressWarnings("UnusedDeclaration")
 	default Query<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
@@ -366,12 +391,12 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	Query<R> setLockMode(String alias, LockMode lockMode);
 
 	/**
-	 * Set a {@link TupleTransformer}
+	 * Set a {@link TupleTransformer}.
 	 */
 	<T> Query<T> setTupleTransformer(TupleTransformer<T> transformer);
 
 	/**
-	 * Set a {@link ResultListTransformer}
+	 * Set a {@link ResultListTransformer}.
 	 */
 	Query<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
@@ -394,8 +419,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 */
 	ParameterMetadata getParameterMetadata();
 
-
-
 	/**
 	 * Bind the given argument to a named query parameter.
 	 * <p>
@@ -414,7 +437,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameter(String, Object)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(String, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(String parameter, P argument, Class<P> type);
@@ -422,8 +444,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Bind the given argument to a named query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> Query<R> setParameter(String parameter, P argument, BindableType<P> type);
 
@@ -465,7 +485,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameter(int, Object)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(int, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(int parameter, P argument, Class<P> type);
@@ -473,8 +492,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> Query<R> setParameter(int parameter, P argument, BindableType<P> type);
 
@@ -524,7 +541,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(QueryParameter<P> parameter, P argument, Class<P> type);
@@ -570,7 +586,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -582,11 +598,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -597,7 +612,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * {@link BindableType}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -610,8 +625,8 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
-	 * @apiNote This is used for binding a list of values to an expression s
-	 * uch as {@code entity.field in (:values)}.
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -623,11 +638,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -639,7 +653,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * {@link BindableType}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -652,7 +666,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * the first collection element.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -664,11 +678,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -679,7 +692,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * {@link BindableType}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -692,7 +705,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * first collection element.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -704,11 +717,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * to use. If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -719,7 +731,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * {@link BindableType}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
-	 * such as {@code entity.field in (:values)}.
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -746,11 +758,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * appropriate {@link BindableType}, {@link #setParameterList(String, Collection)}
 	 * is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such
-	 * as {@code entity.field in (:values)}.
+	 *          as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -764,7 +775,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * collection element.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such
-	 * as {@code entity.field in (:values)}.
+	 *          as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -772,7 +783,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
-	 * given {@link QueryParameter}
+	 * given {@link QueryParameter}.
 	 * <p>
 	 * The type of the parameter is inferred between the context in which it
 	 * occurs, the type associated with the QueryParameter and the type of
@@ -787,16 +798,15 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
-	 * given {@link QueryParameter} using the given Class reference to attempt
-	 * to determine the {@link BindableType} to use.  If unable to
+	 * given {@link QueryParameter} using the given {@code Class} reference
+	 * to attempt to determine the {@link BindableType} to use. If unable to
 	 * determine an appropriate {@link BindableType},
-	 * {@link #setParameterList(String, Collection)} is used
+	 * {@link #setParameterList(String, Collection)} is used.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, Object[], BindableType)
 	 *
-	 * @apiNote This is used for binding a list of values to an expression such
-	 * as {@code entity.field in (:values)}.
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -809,8 +819,8 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
-	 * @apiNote This is used for binding a list of values to an expression such
-	 * as {@code entity.field in (:values)}.
+	 * @apiNote This is used for binding a list of values to an expression
+	 *          such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -828,9 +838,9 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	Query<R> setProperties(Object bean);
 
 	/**
-	 * Bind the values of the given Map for each named parameters of the query,
-	 * matching key names with parameter names and mapping value types to
-	 * Hibernate types using heuristics.
+	 * Bind the values of the given {@code Map} for each named parameters of
+	 * the query, matching key names with parameter names and mapping value
+	 * types to Hibernate types using heuristics.
 	 *
 	 * @param bean a {@link Map} of names to arguments
 	 *

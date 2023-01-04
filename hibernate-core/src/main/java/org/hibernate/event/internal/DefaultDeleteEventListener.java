@@ -210,7 +210,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			EntityEntry entityEntry) {
 		LOG.trace( "Deleting a persistent instance" );
 		final EventSource source = event.getSession();
-		if ( entityEntry.getStatus() == Status.DELETED || entityEntry.getStatus() == Status.GONE
+		if ( entityEntry.getStatus().isDeletedOrGone()
 				|| source.getPersistenceContextInternal()
 						.containsDeletedUnloadedEntityKey( entityEntry.getEntityKey() ) ) {
 			LOG.trace( "Object was already deleted" );

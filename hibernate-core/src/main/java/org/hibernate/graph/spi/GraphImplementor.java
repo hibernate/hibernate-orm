@@ -20,7 +20,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 /**
  * Integration version of the Graph contract
  *
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  * @author Steve Ebersole
  * @author Andrea Boriero
  */

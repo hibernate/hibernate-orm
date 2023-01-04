@@ -29,6 +29,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -80,6 +81,7 @@ public abstract class SimpleValue implements KeyValue {
 	private final List<Selectable> columns = new ArrayList<>();
 	private final List<Boolean> insertability = new ArrayList<>();
 	private final List<Boolean> updatability = new ArrayList<>();
+	private boolean partitionKey;
 
 	private String typeName;
 	private Properties typeParameters;
@@ -120,6 +122,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.columns.addAll( original.columns );
 		this.insertability.addAll( original.insertability );
 		this.updatability.addAll( original.updatability );
+		this.partitionKey = original.partitionKey;
 		this.typeName = original.typeName;
 		this.typeParameters = original.typeParameters == null ? null : new Properties( original.typeParameters );
 		this.isVersion = original.isVersion;
@@ -150,6 +153,10 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
+	}
+
+	public TypeConfiguration getTypeConfiguration() {
+		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
 	}
 
 	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
@@ -340,12 +347,19 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public void createForeignKey() throws MappingException {}
 
+	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) throws MappingException {}
+
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
 		if ( isConstrained() ) {
-			final ForeignKey fk = table.createForeignKey( getForeignKeyName(), getConstraintColumns(), entityName, getForeignKeyDefinition() );
-			fk.setOnDeleteAction( onDeleteAction );
-			return fk;
+			final ForeignKey foreignKey = table.createForeignKey(
+					getForeignKeyName(),
+					getConstraintColumns(),
+					entityName,
+					getForeignKeyDefinition()
+			);
+			foreignKey.setOnDeleteAction( onDeleteAction );
+			return foreignKey;
 		}
 
 		return null;
@@ -431,6 +445,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Deprecated
+	@Override
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
 		return IdentityGenerator.class.isAssignableFrom(
 				identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy )
@@ -719,9 +734,14 @@ public abstract class SimpleValue implements KeyValue {
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 						return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
 					}
+
+					@Override
+					public Dialect getDialect() {
+						return buildingContext.getMetadataCollector().getDatabase().getDialect();
+					}
 				}
 		);
-		int jdbcTypeCode = recommendedJdbcType.getDefaultSqlTypeCode();
+		int jdbcTypeCode = recommendedJdbcType.getDdlTypeCode();
 		if ( isLob() ) {
 			if ( LobTypeMappings.isMappedToKnownLobCode( jdbcTypeCode ) ) {
 				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );
@@ -863,6 +883,14 @@ public abstract class SimpleValue implements KeyValue {
 			return updatability.get( index );
 		}
 		return false;
+	}
+
+	public boolean isPartitionKey() {
+		return partitionKey;
+	}
+
+	public void setPartitionKey(boolean partitionColumn) {
+		this.partitionKey = partitionColumn;
 	}
 
 	private static boolean[] extractBooleansFromList(List<Boolean> list) {

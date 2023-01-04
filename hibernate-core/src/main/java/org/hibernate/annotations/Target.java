@@ -6,9 +6,11 @@
  */
 package org.hibernate.annotations;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Explicitly specifies the target entity type in an association,
@@ -22,8 +24,8 @@ import java.lang.annotation.RetentionPolicy;
  *             {@link jakarta.persistence.OneToMany#targetEntity()}
  */
 @Deprecated(since = "6.2")
-@java.lang.annotation.Target({ElementType.FIELD, ElementType.METHOD})
-@Retention( RetentionPolicy.RUNTIME )
+@java.lang.annotation.Target({FIELD, METHOD})
+@Retention(RUNTIME)
 public @interface Target {
 	/**
 	 * The target entity type.

@@ -7,10 +7,12 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.time.Duration;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -18,7 +20,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -43,6 +47,7 @@ public class DurationMappingTests {
 				.getMappingMetamodel();
 		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithDuration.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("duration");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
@@ -50,15 +55,30 @@ public class DurationMappingTests {
 		final JdbcType intervalType = jdbcTypeRegistry.getDescriptor(SqlTypes.INTERVAL_SECOND);
 		final JdbcType realType;
 		if (intervalType instanceof AdjustableJdbcType) {
-			realType = ((AdjustableJdbcType) intervalType).resolveIndicatedType(
-					() -> mappingMetamodel.getTypeConfiguration(),
+			realType = ( (AdjustableJdbcType) intervalType ).resolveIndicatedType(
+					new JdbcTypeIndicators() {
+						@Override
+						public TypeConfiguration getTypeConfiguration() {
+							return mappingMetamodel.getTypeConfiguration();
+						}
+
+						@Override
+						public int getColumnScale() {
+							return duration.getScale() == null ? JdbcTypeIndicators.NO_COLUMN_SCALE : duration.getScale();
+						}
+
+						@Override
+						public Dialect getDialect() {
+							return dialect;
+						}
+					},
 					jdbcMapping.getJavaTypeDescriptor()
 			);
 		}
 		else {
 			realType = intervalType;
 		}
-		assertThat( jdbcMapping.getJdbcType(), is( realType));
+		assertThat( jdbcMapping.getJdbcType(), is( realType ) );
 
 		scope.inTransaction(
 				(session) -> {
@@ -68,6 +88,14 @@ public class DurationMappingTests {
 
 		scope.inTransaction(
 				(session) -> session.find(EntityWithDuration.class, 1)
+		);
+
+		scope.inTransaction(
+				(session) -> {
+					session.createQuery( "from EntityWithDuration e where e.duration = :param", EntityWithDuration.class )
+							.setParameter( "param", Duration.ofHours( 3 ) )
+							.getResultList();
+				}
 		);
 	}
 

@@ -11,24 +11,56 @@ import java.lang.annotation.Target;
 
 import org.hibernate.usertype.UserType;
 
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies a custom {@link UserType} for the annotated attribute mapping.
+ * This annotation may be applied:
+ * <ul>
+ * <li>directly to a property or field of an entity to specify the custom
+ *     type of the property or field,
+ * <li>indirectly, as a meta-annotation of an annotation type that is then
+ *     applied to various properties and fields, or
+ * <li>by default, via a {@linkplain TypeRegistration registration}.
+ * </ul>
  * <p>
- * This is usually mutually exclusive with the compositional approach of
- * {@link JavaType}, {@link JdbcType}, etc.
+ * For example, as an alternative to:
+ * <pre>
+ * &#64;Type(MonetaryAmountUserType.class)
+ * BigDecimal amount;
+ * </pre>
+ * <p>
+ * we may define an annotation type:
+ * <pre>
+ * &#64;Retention(RUNTIME)
+ * &#64;Target({METHOD,FIELD})
+ * &#64;Type(MonetaryAmountUserType.class)
+ * public @interface MonetaryAmount {}
+ * </pre>
+ * <p>
+ * and then write:
+ * <pre>
+ * &#64;MonetaryAmount
+ * BigDecimal amount;
+ * </pre>
+ * <p>
+ * which is much cleaner.
+ * <p>
+ * The use of a {@code UserType} is usually mutually exclusive with the
+ * compositional approach of {@link JavaType} and {@link JdbcType}.
  *
  * @see UserType
  * @see TypeRegistration
+ * @see CompositeType
  */
-@Target({METHOD, FIELD})
+@Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface Type {
 	/**
-	 * The implementation class which implements {@link UserType}.
+	 * The class which implements {@link UserType}.
 	 */
 	Class<? extends UserType<?>> value();
 

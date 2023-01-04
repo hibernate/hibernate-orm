@@ -16,7 +16,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * The standard PostDeleteEventListener implementation
  *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Kabir Khan
  * @author Steve Ebersole
  */
 public class PostDeleteEventListenerStandardImpl implements PostDeleteEventListener, CallbackRegistryConsumer {

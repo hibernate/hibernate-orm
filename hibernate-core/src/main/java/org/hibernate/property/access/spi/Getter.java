@@ -15,7 +15,7 @@ import java.util.Map;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * The contract for getting value for a persistent property from its container/owner
+ * The contract for getting the value of a persistent attribute from its container/owner.
  *
  * @author Gavin King
  * @author Steve Ebersole

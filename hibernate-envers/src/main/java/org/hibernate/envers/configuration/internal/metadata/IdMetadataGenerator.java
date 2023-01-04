@@ -26,12 +26,12 @@ import org.hibernate.envers.internal.entities.mapper.id.MultipleIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.NestedEmbeddedIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
@@ -67,7 +67,7 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 			Property virtualProperty,
 			boolean audited) {
 
-		if ( PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( mappedProperty.getName() ) ) {
+		if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( mappedProperty.getName() ) ) {
 			return false;
 		}
 

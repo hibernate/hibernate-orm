@@ -8,8 +8,6 @@ package org.hibernate.boot.model.relational;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +22,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static java.util.Collections.emptyList;
 
 /**
  * @author Steve Ebersole
@@ -46,11 +46,11 @@ public class Database {
 	}
 
 	public Database(MetadataBuildingOptions buildingOptions, JdbcEnvironment jdbcEnvironment) {
-		this.serviceRegistry = buildingOptions.getServiceRegistry();
-		this.typeConfiguration = buildingOptions.getTypeConfiguration();
 		this.jdbcEnvironment = jdbcEnvironment;
-		this.physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
-		this.dialect = determineDialect( buildingOptions );
+		serviceRegistry = buildingOptions.getServiceRegistry();
+		typeConfiguration = buildingOptions.getTypeConfiguration();
+		physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
+		dialect = determineDialect( buildingOptions );
 
 		setImplicitNamespaceName(
 				toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
@@ -59,7 +59,7 @@ public class Database {
 	}
 
 	private void setImplicitNamespaceName(Identifier catalogName, Identifier schemaName) {
-		this.physicalImplicitNamespaceName = new Namespace.Name(
+		physicalImplicitNamespaceName = new Namespace.Name(
 				physicalNamingStrategy.toPhysicalCatalogName( catalogName, jdbcEnvironment ),
 				physicalNamingStrategy.toPhysicalSchemaName( schemaName, jdbcEnvironment )
 		);
@@ -76,8 +76,7 @@ public class Database {
 	}
 
 	private Namespace makeNamespace(Namespace.Name name) {
-		Namespace namespace;
-		namespace = new Namespace( this.getPhysicalNamingStrategy(), this.getJdbcEnvironment(), name );
+		final Namespace namespace = new Namespace( getPhysicalNamingStrategy(), getJdbcEnvironment(), name );
 		namespaceMap.put( name, namespace );
 		return namespace;
 	}
@@ -91,22 +90,21 @@ public class Database {
 	}
 
 	/**
-	 * Wrap the raw name of a database object in it's Identifier form accounting for quoting from
-	 * any of:<ul>
+	 * Wrap the raw name of a database object in its Identifier form accounting
+	 * for quoting from any of:
+	 * <ul>
 	 *     <li>explicit quoting in the name itself</li>
 	 *     <li>global request to quote all identifiers</li>
 	 * </ul>
-	 * <p>
-	 * NOTE : quoting from database keywords happens only when building physical identifiers
+	 *
+	 * @implNote Quoting from database keywords happens only when building physical identifiers.
 	 *
 	 * @param text The raw object name
 	 *
 	 * @return The wrapped Identifier form
 	 */
 	public Identifier toIdentifier(String text) {
-		return text == null
-				? null
-				: jdbcEnvironment.getIdentifierHelper().toIdentifier( text );
+		return text == null ? null : jdbcEnvironment.getIdentifierHelper().toIdentifier( text );
 	}
 
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
@@ -119,7 +117,7 @@ public class Database {
 
 	/**
 	 * @return The default namespace, with a {@code null} catalog and schema
-	 * which will have to be interpreted with defaults at runtime.
+	 *         which will have to be interpreted with defaults at runtime.
 	 * @see SqlStringGenerationContext
 	 */
 	public Namespace getDefaultNamespace() {
@@ -127,8 +125,9 @@ public class Database {
 	}
 
 	/**
-	 * @return The implicit name of the default namespace, with a {@code null} catalog and schema
-	 * which will have to be interpreted with defaults at runtime.
+	 * @return The implicit name of the default namespace, with a {@code null}
+	 *         catalog and schema which will have to be interpreted with defaults
+	 *         at runtime.
 	 * @see SqlStringGenerationContext
 	 */
 	public Namespace.Name getPhysicalImplicitNamespaceName() {
@@ -137,11 +136,8 @@ public class Database {
 
 	public Namespace locateNamespace(Identifier catalogName, Identifier schemaName) {
 		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
-		Namespace namespace = namespaceMap.get( name );
-		if ( namespace == null ) {
-			namespace = makeNamespace( name );
-		}
-		return namespace;
+		final Namespace namespace = namespaceMap.get( name );
+		return namespace == null ? makeNamespace( name ) : namespace;
 	}
 
 	public Namespace adjustDefaultNamespace(Identifier catalogName, Identifier schemaName) {
@@ -158,15 +154,11 @@ public class Database {
 	}
 
 	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
-		return auxiliaryDatabaseObjects == null
-				? Collections.emptyList()
-				: auxiliaryDatabaseObjects.values();
+		return auxiliaryDatabaseObjects.values();
 	}
 
 	public Collection<InitCommand> getInitCommands() {
-		return initCommands == null
-				? Collections.emptyList()
-				: initCommands;
+		return initCommands == null ? emptyList() : initCommands;
 	}
 
 	public void addInitCommand(InitCommand initCommand) {

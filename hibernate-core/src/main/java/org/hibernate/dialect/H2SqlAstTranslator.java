@@ -11,7 +11,6 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -38,6 +37,8 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+
 /**
  * A SQL AST translator for H2.
  *
@@ -53,7 +54,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 
 	@Override
 	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
-		if ( CollectionHelper.isNotEmpty( tableInsert.getReturningColumns() ) ) {
+		if ( isNotEmpty( tableInsert.getReturningColumns() ) ) {
 			visitReturningInsertStatement( tableInsert );
 		}
 		else {
@@ -64,6 +65,10 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 	public void visitReturningInsertStatement(TableInsertStandard tableInsert) {
 		assert tableInsert.getReturningColumns() != null
 				&& !tableInsert.getReturningColumns().isEmpty();
+
+		//TODO: This is a terrible way to solve this problem, please fix it!
+		//      Not every "returning insert" statement has something to do
+		//      with identity columns! (Nor is it an elegant implementation.)
 
 		final H2IdentityColumnSupport  identitySupport = (H2IdentityColumnSupport) getSessionFactory()
 				.getJdbcServices()
@@ -238,7 +243,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		// i.e. `join ( (select ...) alias join ... )`, so we have to introduce a dummy table reference
 		if ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) {
 			final boolean realTableGroup = tableGroup.isRealTableGroup()
-					&& ( CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() )
+					&& ( isNotEmpty( tableGroup.getTableReferenceJoins() )
 					|| hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
 			if ( realTableGroup ) {
 				appendSql( "dual cross join " );

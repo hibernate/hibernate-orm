@@ -12,7 +12,11 @@ import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link NavigablePath} or {@link org.hibernate.metamodel.model.domain.NavigableRole}
+ * instead, depending on need.
  */
+@Deprecated(since = "6", forRemoval = true)
 public class PropertyPath implements DotIdentifierSequence {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 

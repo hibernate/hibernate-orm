@@ -24,6 +24,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * will be called when the annotation is discovered by Hibernate.
  *
  * @author Gavin King
+ *
+ * @see TypeBinderType
  */
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)

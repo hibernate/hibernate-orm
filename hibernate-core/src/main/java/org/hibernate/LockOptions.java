@@ -34,6 +34,7 @@ import static java.util.Collections.unmodifiableSet;
  * <li>the {@link #getLockScope() lock scope}, that is, whether the
  *     lock extends to rows of owned collections.
  * </ul>
+ * <p>
  * Timeout and lock scope are ignored if the specified {@code LockMode}
  * represents a flavor of {@linkplain LockMode#OPTIMISTIC optimistic}
  * locking.

@@ -15,7 +15,7 @@ import java.io.Serializable;
  * or an annotated method on a separate "listener" class.  This contract presents
  * a unified abstraction for both cases
  *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Kabir Khan
  * @author Steve Ebersole
  */
 public interface Callback extends Serializable {

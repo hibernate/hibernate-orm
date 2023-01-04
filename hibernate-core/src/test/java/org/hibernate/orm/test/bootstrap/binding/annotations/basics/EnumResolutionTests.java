@@ -60,7 +60,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "rawEnum" ),
-				Types.SMALLINT,
+				Types.TINYINT,
 				Integer.class,
 				OrdinalEnumValueConverter.class,
 				true
@@ -75,7 +75,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "unspecifiedMappingEnum" ),
-				Types.SMALLINT,
+				Types.TINYINT,
 				Integer.class,
 				OrdinalEnumValueConverter.class,
 				true
@@ -90,7 +90,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "ordinalEnum" ),
-				Types.SMALLINT,
+				Types.TINYINT,
 				Integer.class,
 				OrdinalEnumValueConverter.class,
 				true
@@ -143,7 +143,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "explicitEnum" ),
-				Types.TINYINT,
+				Types.SMALLINT,
 				Integer.class,
 				OrdinalEnumValueConverter.class,
 				true
@@ -222,7 +222,7 @@ public class EnumResolutionTests {
 		private Values namedEnum;
 
 		@Enumerated( ORDINAL )
-		@JdbcTypeCode( Types.TINYINT )
+		@JdbcTypeCode( Types.SMALLINT )
 		private Values explicitEnum;
 	}
 

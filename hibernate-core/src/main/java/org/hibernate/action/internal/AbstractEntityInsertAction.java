@@ -67,9 +67,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 
 	/**
 	 * Returns the entity state.
+	 * <P>
+	 * Note that the call to {@link #nullifyTransientReferencesIfNotAlready}
+	 * can modify the entity state.
 	 *
-	 * NOTE: calling {@link #nullifyTransientReferencesIfNotAlready} can modify the
-	 *       entity state.
 	 * @return the entity state.
 	 *
 	 * @see #nullifyTransientReferencesIfNotAlready

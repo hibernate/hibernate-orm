@@ -994,7 +994,8 @@ Of course, we also have a number of functions for working with numeric values.
 | `exp()` | Exponential function | `exp(x)` | &check;
 | `power()` | Exponentiation | `power(x,y)` | &check;
 | `ln()` | Natural logarithm | `ln(x)` | &check;
-| `round()` | Numeric rounding | `round(number, places)` | &check;
+| `round()` | Numeric rounding | `round(number)`, `round(number, places)` | &check;
+| `trunc()` or `truncate()` | Numeric truncation | `truncate(number)`, `truncate(number, places)` | &cross;
 | `floor()` | Floor function | `floor(x)` | &check;
 | `ceiling()` | Ceiling function | `ceiling(x)` | &check;
 

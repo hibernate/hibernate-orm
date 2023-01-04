@@ -8,7 +8,6 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.StreamSupport;
@@ -62,6 +61,8 @@ import static org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy.DRO
 import static org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy.SKIP;
 
 /**
+ * Base implementation of {@link SchemaMigrator}.
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractSchemaMigrator implements SchemaMigrator {

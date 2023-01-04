@@ -9,6 +9,7 @@ package org.hibernate.orm.test.query.criteria;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
@@ -154,9 +155,9 @@ public class CriteriaWindowFunctionTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SQLServerDialect.class)
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "No support for nth_value function")
+	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for nth_value function")
 	public void testNthValue(SessionFactoryScope scope) {
-		// note : SQLServer does not support nth_value function
 		scope.inTransaction(
 				session -> {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -210,6 +211,7 @@ public class CriteriaWindowFunctionTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for percent_rank and cume_dist functions")
 	public void testReusableWindow(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

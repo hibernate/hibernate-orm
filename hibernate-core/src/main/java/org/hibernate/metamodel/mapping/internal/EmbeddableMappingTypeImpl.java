@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -23,7 +22,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.AggregateColumn;
@@ -31,6 +29,7 @@ import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -49,8 +48,8 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
@@ -77,8 +76,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Describes a "normal" embeddable.
  *
- * NOTE: At the moment, this class is used to describe some non-normal cases: mainly
- * composite fks
+ * @apiNote At the moment, this class is also used to describe some non-"normal" things:
+ *          mainly composite foreign keys.
  */
 public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping implements SelectableMappings {
 	public static EmbeddableMappingTypeImpl from(
@@ -94,6 +93,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				null,
 				null,
 				null,
+				null,
+				0,
 				insertability,
 				updateability,
 				embeddedPartBuilder,
@@ -107,6 +108,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			Property componentProperty,
+			DependantValue dependantValue,
+			int dependantColumnIndex,
 			boolean[] insertability,
 			boolean[] updateability,
 			Function<EmbeddableMappingType,EmbeddableValuedModelPart> embeddedPartBuilder,
@@ -132,6 +135,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								compositeType,
 								rootTableExpression,
 								rootTableKeyColumnNames,
+								dependantValue,
+								dependantColumnIndex,
 								insertability,
 								updateability,
 								creationProcess
@@ -169,20 +174,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		this.embeddableJtd = representationStrategy.getMappedJavaType();
 		this.valueMapping = embeddedPartBuilder.apply( this );
 
-		final ConfigurationService cs = creationContext.getSessionFactory().getServiceRegistry()
-				.getService(ConfigurationService.class);
-
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
 				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
-				cs.getSettings(),
+				creationContext.getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
 				false
 		);
 		final AggregateColumn aggregateColumn = bootDescriptor.getAggregateColumn();
 		if ( aggregateColumn != null ) {
-			final Dialect dialect = creationContext.getBootstrapContext()
-					.getServiceRegistry()
-					.getService( JdbcServices.class )
-					.getDialect();
+			final Dialect dialect = creationContext.getDialect();
 			final boolean insertable;
 			final boolean updatable;
 			if ( componentProperty == null ) {
@@ -203,6 +202,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					creationContext.getTypeConfiguration(),
 					insertable,
 					updatable,
+					false,
 					dialect,
 					null
 			);
@@ -240,7 +240,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						aggregateColumn.getSqlTypeCode() == SqlTypes.STRUCT
 								? aggregateColumn.getSqlType()
 								: null,
-						this
+						this,
+						creationContext
 				)
 		);
 		// Register the resolved type under its struct name and java class name
@@ -300,6 +301,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			CompositeType compositeType,
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
+			DependantValue dependantValue,
+			int dependantColumnIndex,
 			boolean[] insertability,
 			boolean[] updateability,
 			MappingModelCreationProcess creationProcess) {
@@ -329,9 +332,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 //		);
 // todo (6.0) - get this ^^ to work, or drop the comment
 
-		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final TypeConfiguration typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
+		final JdbcServices jdbcServices = creationProcess.getCreationContext().getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
@@ -351,7 +353,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final Value value = bootPropertyDescriptor.getValue();
 			if ( subtype instanceof BasicType ) {
 				final BasicValue basicValue = (BasicValue) value;
-				final Selectable selectable = basicValue.getColumn();
+				final Selectable selectable = dependantValue != null ?
+						dependantValue.getColumns().get( dependantColumnIndex + columnPosition ) :
+						basicValue.getColumn();
 				final String containingTableExpression;
 				final String columnExpression;
 				if ( rootTableKeyColumnNames == null ) {
@@ -441,42 +445,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final boolean updateable = updateability[columnPosition];
 				final boolean includeInOptimisticLocking = bootPropertyDescriptor.isOptimisticLocked();
 				final CascadeStyle cascadeStyle = compositeType.getCascadeStyle( attributeIndex );
-				final MutabilityPlan<?> mutabilityPlan;
-
-				if ( updateable ) {
-					mutabilityPlan = new MutabilityPlan<>() {
-						@Override
-						public boolean isMutable() {
-							return true;
-						}
-
-						@Override
-						public Object deepCopy(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							return anyType.deepCopy( value, creationProcess.getCreationContext().getSessionFactory() );
-						}
-
-						@Override
-						public Serializable disassemble(Object value, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
-						}
-
-						@Override
-						public Object assemble(Serializable cached, SharedSessionContract session) {
-							throw new NotYetImplementedFor6Exception( getClass() );
-						}
-					};
-				}
-				else {
-					mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
-				}
 
 				SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
 						propertyAccess,
-						mutabilityPlan,
+						getMutabilityPlan( updateable ),
 						nullable,
 						insertable,
 						updateable,
@@ -501,7 +473,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 			else if ( subtype instanceof CompositeType ) {
 				final CompositeType subCompositeType = (CompositeType) subtype;
-				final int columnSpan = subCompositeType.getColumnSpan( sessionFactory );
+				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getMetadata() );
 				final String subTableExpression;
 				final String[] subRootTableKeyColumnNames;
 				if ( rootTableKeyColumnNames == null ) {
@@ -519,6 +491,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
+						dependantValue,
+						dependantColumnIndex + columnPosition,
 						this,
 						subCompositeType,
 						subTableExpression,
@@ -588,6 +562,35 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return true;
 	}
 
+	private static MutabilityPlan<?> getMutabilityPlan(boolean updateable) {
+		if ( updateable ) {
+			return new MutabilityPlan<>() {
+				@Override
+				public boolean isMutable() {
+					return true;
+				}
+
+				@Override
+				public Object deepCopy(Object value) {
+					return value;
+				}
+
+				@Override
+				public Serializable disassemble(Object value, SharedSessionContract session) {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public Object assemble(Serializable cached, SharedSessionContract session) {
+					throw new UnsupportedOperationException();
+				}
+			};
+		}
+		else {
+			return ImmutableMutabilityPlan.INSTANCE;
+		}
+	}
+
 	private boolean initColumnMappings() {
 		this.selectableMappings = SelectableMappingsImpl.from( this );
 		return true;
@@ -655,7 +658,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public void visitFetchables(Consumer<? super Fetchable> consumer, EntityMappingType treatTargetType) {
-		visitAttributeMappings( consumer );
+		forEachAttributeMapping( consumer );
 	}
 
 	@Override
@@ -880,7 +883,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public void visitAttributeMappings(final Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(final Consumer<? super AttributeMapping> action) {
 		attributeMappings.forEach( action );
 	}
 
@@ -898,7 +901,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
-		visitAttributeMappings( consumer );
+		forEachAttributeMapping( consumer );
 	}
 
 	@Override

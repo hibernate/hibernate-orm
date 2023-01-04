@@ -15,7 +15,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -24,17 +23,13 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -201,38 +196,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 			jdbcServices.getJdbcSelectExecutor().list(
 					jdbcSelect,
 					jdbcParameterBindings,
-					new ExecutionContext() {
-						@Override
-						public SharedSessionContractImplementor getSession() {
-							return session;
-						}
-
-						@Override
-						public QueryOptions getQueryOptions() {
-							return QueryOptions.NONE;
-						}
-
-						@Override
-						public String getQueryIdentifier(String sql) {
-							return sql;
-						}
-
-						@Override
-						public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-							subSelectFetchableKeysHandler.addKey( entityKey, entry );
-						}
-
-						@Override
-						public QueryParameterBindings getQueryParameterBindings() {
-							return QueryParameterBindings.NO_PARAM_BINDINGS;
-						}
-
-						@Override
-						public Callback getCallback() {
-							return null;
-						}
-
-					},
+					new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
 					RowTransformerStandardImpl.instance(),
 					ListResultsConsumer.UniqueSemantic.FILTER
 			);

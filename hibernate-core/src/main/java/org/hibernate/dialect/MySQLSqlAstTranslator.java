@@ -6,10 +6,14 @@
  */
 package org.hibernate.dialect;
 
+import java.util.Locale;
+
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
@@ -31,6 +35,41 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	public static String getSqlType(CastTarget castTarget, Dialect dialect) {
+		final String sqlType = castTarget.getSqlType();
+
+		if ( sqlType != null ) {
+			int parenthesesIndex = sqlType.indexOf( '(' );
+			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex );
+			switch ( baseName.toLowerCase( Locale.ROOT ) ) {
+				case "bit":
+					return "unsigned";
+				case "tinyint":
+				case "smallint":
+				case "integer":
+				case "bigint":
+					return "signed";
+				case "float":
+				case "real":
+				case "double precision":
+					final int precision = castTarget.getPrecision() == null ?
+							dialect.getDefaultDecimalPrecision() :
+							castTarget.getPrecision();
+					final int scale = castTarget.getScale() == null ? Size.DEFAULT_SCALE : castTarget.getScale();
+					return "decimal(" + precision + "," + scale + ")";
+				case "char":
+				case "varchar":
+				case "nchar":
+				case "nvarchar":
+					return "char";
+				case "binary":
+				case "varbinary":
+					return "binary";
+			}
+		}
+		return sqlType;
 	}
 
 	@Override
@@ -143,8 +182,8 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
 		// Custom implementation because MySQL uses backslash as the default escape character
-		if ( getDialect().getVersion().isSameOrAfter( 8 ) ) {
-			// From version 8 we can override this by specifying an empty escape character
+		if ( getDialect().getVersion().isSameOrAfter( 8, 0, 24 ) ) {
+			// From version 8.0.24 we can override this by specifying an empty escape character
 			// See https://dev.mysql.com/doc/refman/8.0/en/string-comparison-functions.html#operator_like
 			super.visitLikePredicate( likePredicate );
 			if ( !getDialect().isNoBackslashEscapesEnabled() && likePredicate.getEscapeCharacter() == null ) {
@@ -238,5 +277,16 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	public MySQLDialect getDialect() {
 		return (MySQLDialect) super.getDialect();
+	}
+
+	@Override
+	public void visitCastTarget(CastTarget castTarget) {
+		String sqlType = getSqlType( castTarget, getDialect() );
+		if ( sqlType != null ) {
+			appendSql( sqlType );
+		}
+		else {
+			super.visitCastTarget( castTarget );
+		}
 	}
 }

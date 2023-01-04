@@ -22,6 +22,13 @@ public class UnionTableReference extends NamedTableReference {
 	public UnionTableReference(
 			String unionTableExpression,
 			String[] subclassTableSpaceExpressions,
+			String identificationVariable) {
+		this( unionTableExpression, subclassTableSpaceExpressions, identificationVariable, false );
+	}
+
+	public UnionTableReference(
+			String unionTableExpression,
+			String[] subclassTableSpaceExpressions,
 			String identificationVariable,
 			boolean isOptional) {
 		super( unionTableExpression, identificationVariable, isOptional );

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.cfg.persister;
 import jakarta.persistence.Entity;
 
 /**
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 @Entity
 public class Palmtree extends Tree {

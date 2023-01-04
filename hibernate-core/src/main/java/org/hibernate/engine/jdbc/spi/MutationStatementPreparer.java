@@ -9,9 +9,12 @@ package org.hibernate.engine.jdbc.spi;
 import java.sql.PreparedStatement;
 
 /**
- * Contracting for creating {@link PreparedStatement} instances related to mutations
+ * Interface to the object that prepares JDBC {@link PreparedStatement}s related to mutations
+ * on behalf of a {@link JdbcCoordinator}.
  *
  * @author Steve Ebersole
+ *
+ * @see JdbcCoordinator#getMutationStatementPreparer()
  */
 public interface MutationStatementPreparer {
 	/**
@@ -26,10 +29,12 @@ public interface MutationStatementPreparer {
 
 	/**
 	 * Prepare an INSERT statement, specifying how auto-generated (by the database) keys should be handled.  Really this
-	 * is a boolean, but JDBC opted to define it instead using 2 int constants:<ul>
+	 * is a boolean, but JDBC opted to define it instead using 2 int constants:
+	 * <ul>
 	 *     <li>{@link PreparedStatement#RETURN_GENERATED_KEYS}</li>
 	 *     <li>{@link PreparedStatement#NO_GENERATED_KEYS}</li>
 	 * </ul>
+	 * <p>
 	 * Generated keys are accessed afterwards via {@link PreparedStatement#getGeneratedKeys}
 	 *
 	 * @param sql The INSERT SQL

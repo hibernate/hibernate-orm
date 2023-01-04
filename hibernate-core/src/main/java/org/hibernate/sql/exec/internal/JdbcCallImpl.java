@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
@@ -110,7 +109,7 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 
 	@Override
 	public Set<String> getAffectedTableNames() {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

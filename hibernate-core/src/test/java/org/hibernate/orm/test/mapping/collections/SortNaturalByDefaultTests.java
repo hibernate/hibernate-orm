@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * Tests Hibernate specific feature that {@link org.hibernate.annotations.SortNatural @SortNatural} will take effect implicitly
- * when no <i>sort</i> or <i>order</i> related annotations exist, including:
+ * Tests Hibernate-specific feature that {@link org.hibernate.annotations.SortNatural @SortNatural}
+ * will take effect implicitly when no <i>sort</i> or <i>order</i> related annotations exist, including:
  * <ul>
  *     <li>{@link org.hibernate.annotations.SortNatural @SortNatural}</li>
  *     <li>{@link org.hibernate.annotations.SortComparator @SortComparator}</li>

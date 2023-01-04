@@ -19,15 +19,15 @@ import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
-import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -35,17 +35,17 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.type.FormatMapper;
+import org.hibernate.type.format.FormatMapper;
 
 /**
- * Convenience base class for custom implementors of SessionFactoryOptions, using delegation
+ * Convenience base class for custom implementations of {@link SessionFactoryOptions}
+ * using delegation.
  *
- * @implNote non-abstract to ensure that all SessionFactoryOptions methods have at least
- * a default implementation
+ * @implNote Declared non-abstract to ensure that all {@link SessionFactoryOptions} methods
+ *           have at least a default implementation.
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOptions {
 	private final SessionFactoryOptions delegate;
 

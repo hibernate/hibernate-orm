@@ -48,6 +48,7 @@ public class InheritedAttributeOverridingTest extends BaseUnitTestCase {
 				.addAnnotatedClass( B.class )
 				.buildMetadata();
 
+		( (MetadataImplementor) metadata ).orderColumns( false );
 		( (MetadataImplementor) metadata ).validate();
 	}
 
@@ -59,6 +60,7 @@ public class InheritedAttributeOverridingTest extends BaseUnitTestCase {
 				.addAnnotatedClass( D.class )
 				.buildMetadata();
 
+		( (MetadataImplementor) metadata ).orderColumns( false );
 		( (MetadataImplementor) metadata ).validate();
 	}
 

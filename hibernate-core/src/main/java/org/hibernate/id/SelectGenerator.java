@@ -8,31 +8,75 @@ package org.hibernate.id;
 
 import java.util.Properties;
 
-import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
+import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
+
 /**
  * A generator that {@code select}s the just-{@code insert}ed row to determine the
- * {@code IDENTITY} column value assigned by the database. The correct row is located
- * using a unique key of the entity, either:
+ * column value assigned by the database. The correct row is located using a unique
+ * key of the entity, either:
  * <ul>
  * <li>the mapped {@linkplain org.hibernate.annotations.NaturalId} of the entity, or
  * <li>a property specified using the parameter named {@code "key"}.
  * </ul>
+ * <p>
  * The second approach is provided for backward compatibility with older versions of
  * Hibernate.
  * <p>
+ * This generator is intended for use with primary keys assigned by a database trigger
+ * or something similar, for example:
+ * <pre>
+ * &#64;Entity &#64;Table(name="TableWithPKAssignedByTrigger")
+ * &#64;GenericGenerator(name = "triggered", type = SelectGenerator.class)
+ * public class TriggeredEntity {
+ *     &#64;Id @GeneratedValue(generator = "triggered")
+ *     private Long id;
+ *
+ *     &#64;NaturalId
+ *     private String name;
+ *
+ *     ...
+ * }
+ * </pre>
+ * <p>
+ * However, after a very long working life, this generator is now handing over its
+ * work to {@link org.hibernate.generator.internal.GeneratedGeneration}, and the
+ * above code may be written as:
+ * <pre>
+ * &#64;Entity &#64;Table(name="TableWithPKAssignedByTrigger")
+ * public class TriggeredEntity {
+ *     &#64;Id &#64;Generated
+ *     private Long id;
+ *
+ *     &#64;NaturalId
+ *     private String name;
+ *
+ *     ...
+ * }
+ * </pre>
+ * <p>
+ * For tables with identity/autoincrement columns, use {@link IdentityGenerator}.
+ * <p>
+ * The actual work involved in retrieving the primary key value is the job of
+ * {@link org.hibernate.id.insert.UniqueKeySelectingDelegate}.
+ * <p>
  * Arguably, this class breaks the natural separation of responsibility between the
- * {@linkplain InDatabaseGenerator generator} and the coordinating
- * code, since it's role is to specify how the generated value is <em>retrieved</em>.
+ * {@linkplain OnExecutionGenerator generator} and the coordinating code, since its
+ * role is to specify how the generated value is <em>retrieved</em>.
  *
  * @see org.hibernate.annotations.NaturalId
+ * @see org.hibernate.id.insert.UniqueKeySelectingDelegate
  *
  * @author Gavin King
  */
-public class SelectGenerator extends IdentityGenerator {
+public class SelectGenerator
+		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
 	private String uniqueKeyPropertyName;
 
 	@Override
@@ -41,29 +85,19 @@ public class SelectGenerator extends IdentityGenerator {
 	}
 
 	@Override
-	public String getUniqueKeyPropertyName(EntityPersister persister) {
-		if ( uniqueKeyPropertyName != null ) {
-			return uniqueKeyPropertyName;
-		}
-		int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
-		if ( naturalIdPropertyIndices == null ) {
-			throw new IdentifierGenerationException(
-					"no natural-id property defined; need to specify [key] in " +
-							"generator parameters"
-			);
-		}
-		if ( naturalIdPropertyIndices.length > 1 ) {
-			throw new IdentifierGenerationException(
-					"select generator does not currently support composite " +
-							"natural-id properties; need to specify [key] in generator parameters"
-			);
-		}
-		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
-			throw new IdentifierGenerationException(
-					"natural-id also defined as insert-generated; need to specify [key] " +
-							"in generator parameters"
-			);
-		}
-		return persister.getPropertyNames()[naturalIdPropertyIndices[0]];
+	public String[] getUniqueKeyPropertyNames(EntityPersister persister) {
+		return uniqueKeyPropertyName != null
+				? new String[] { uniqueKeyPropertyName }
+				: getNaturalIdPropertyNames( persister );
+	}
+
+	@Override
+	public boolean referenceColumnsInSql(Dialect dialect) {
+		return false;
+	}
+
+	@Override
+	public String[] getReferencedColumnValues(Dialect dialect) {
+		return null;
 	}
 }

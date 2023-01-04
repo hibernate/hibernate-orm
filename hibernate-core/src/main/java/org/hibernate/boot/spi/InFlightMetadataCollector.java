@@ -19,12 +19,16 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.internal.AnnotatedClassType;
+import org.hibernate.boot.model.internal.JPAIndexHolder;
+import org.hibernate.boot.model.internal.UniqueConstraintHolder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -33,12 +37,6 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
-import org.hibernate.cfg.AnnotatedClassType;
-import org.hibernate.cfg.JPAIndexHolder;
-import org.hibernate.cfg.PropertyData;
-import org.hibernate.cfg.SecondPass;
-import org.hibernate.cfg.UniqueConstraintHolder;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
@@ -55,9 +53,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
+import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
-import org.hibernate.usertype.UserType;
 
 /**
  * An in-flight representation of {@link org.hibernate.boot.Metadata} while it is being built.
@@ -190,7 +188,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @param typeDefinition The named type definition to add.
 	 *
-	 * @throws DuplicateMappingException If a TypeDefinition already exists with that name.
+	 * @throws DuplicateMappingException If a {@link TypeDefinition} already exists with that name.
 	 *
 	 * @deprecated Use {@link #getTypeDefinitionRegistry()} instead
 	 *
@@ -199,6 +197,10 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	@Deprecated
 	void addTypeDefinition(TypeDefinition typeDefinition);
 
+	/**
+	 * Access to the {@link TypeDefinitionRegistry}, which may be used to add
+	 * type definitions to this metadata repository.
+	 */
 	TypeDefinitionRegistry getTypeDefinitionRegistry();
 
 	/**
@@ -206,7 +208,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 *
 	 * @param definition The filter definition to add.
 	 *
-	 * @throws DuplicateMappingException If a FilterDefinition already exists with that name.
+	 * @throws DuplicateMappingException If a {@link FilterDefinition} already exists with that name.
 	 */
 	void addFilterDefinition(FilterDefinition definition);
 
@@ -217,6 +219,9 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	 */
 	void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
+	/**
+	 * Add a {@link FetchProfile}.
+	 */
 	void addFetchProfile(FetchProfile profile);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

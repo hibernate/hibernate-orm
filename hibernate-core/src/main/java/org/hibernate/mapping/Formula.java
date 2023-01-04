@@ -13,10 +13,12 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.sql.Template;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.internal.util.StringHelper.safeInterning;
+import static org.hibernate.sql.Template.TEMPLATE;
+import static org.hibernate.sql.Template.renderWhereStringTemplate;
 
 /**
  * A mapping model object representing a SQL {@linkplain org.hibernate.annotations.Formula formula}
@@ -41,12 +43,9 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
-	public String getTemplate(
-			Dialect dialect,
-			TypeConfiguration typeConfiguration,
-			SqmFunctionRegistry functionRegistry) {
-		String template = Template.renderWhereStringTemplate( formula, dialect, typeConfiguration, functionRegistry );
-		return safeInterning( StringHelper.replace( template, "{alias}", Template.TEMPLATE ) );
+	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry registry) {
+		final String template = renderWhereStringTemplate( formula, dialect, typeConfiguration, registry );
+		return safeInterning( replace( template, "{alias}", TEMPLATE ) );
 	}
 
 	@Override
@@ -94,6 +93,6 @@ public class Formula implements Selectable, Serializable {
 
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName() + "( " + formula + " )";
+		return getClass().getSimpleName() + "( " + formula + " )";
 	}
 }

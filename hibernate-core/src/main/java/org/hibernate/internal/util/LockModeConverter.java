@@ -22,11 +22,10 @@ public final class LockModeConverter {
 	}
 
 	/**
-	 * Convert from the Hibernate specific LockMode to the JPA defined LockModeType.
+	 * Convert from the Hibernate-specific {@link LockMode} to the JPA defined {@link LockModeType}.
 	 *
-	 * @param lockMode The Hibernate LockMode.
-	 *
-	 * @return The JPA LockModeType
+	 * @param lockMode The Hibernate {@link LockMode}.
+	 * @return The JPA {@link LockModeType}
 	 */
 	public static LockModeType convertToLockModeType(LockMode lockMode) {
 		if ( lockMode == LockMode.NONE ) {
@@ -54,11 +53,10 @@ public final class LockModeConverter {
 
 
 	/**
-	 * Convert from JPA defined LockModeType to Hibernate specific LockMode.
+	 * Convert from JPA defined {@link LockModeType} to Hibernate-specific {@link LockMode}.
 	 *
-	 * @param lockMode The JPA LockModeType
-	 *
-	 * @return The Hibernate LockMode.
+	 * @param lockMode The JPA {@link LockModeType}
+	 * @return The Hibernate {@link LockMode}.
 	 */
 	public static LockMode convertToLockMode(LockModeType lockMode) {
 		switch ( lockMode ) {

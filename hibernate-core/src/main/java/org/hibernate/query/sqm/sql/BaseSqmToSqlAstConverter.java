@@ -32,17 +32,17 @@ import java.util.function.Supplier;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
@@ -610,6 +610,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected SqmStatement<?> getStatement() {
 		return statement;
+	}
+
+	@Override
+	public Dialect getDialect() {
+		return creationContext.getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1337,7 +1342,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			targetColumnReferenceConsumer.accept( versionPath, targetColumnReferences );
 			versionExpression = new VersionTypeSeedParameterSpecification( entityDescriptor.getVersionMapping() );
 		}
-		if ( discriminatorMapping != null && discriminatorMapping.isPhysical() ) {
+		if ( discriminatorMapping != null && discriminatorMapping.hasPhysicalColumn() ) {
 			final BasicValuedPathInterpretation<?> discriminatorPath = new BasicValuedPathInterpretation<>(
 					new ColumnReference(
 							rootTableGroup.resolveTableReference( discriminatorMapping.getContainingTableExpression() ),
@@ -1355,7 +1360,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		}
 		// This uses identity generation, so we don't need to list the column
-		if ( identifierGenerator != null && identifierGenerator.generatedByDatabase()
+		if ( identifierGenerator != null && identifierGenerator.generatedOnExecution()
 				|| identifierGenerator instanceof CompositeNestedGeneratedValueGenerator ) {
 			identifierGenerator = null;
 		}
@@ -1440,10 +1445,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( discriminatorExpression != null ) {
 				expressions.add( discriminatorExpression );
 			}
-			if ( identifierGenerator != null && !identifierGenerator.generatedByDatabase() ) {
+			if ( identifierGenerator != null && !identifierGenerator.generatedOnExecution() ) {
 				if ( identifierGeneratorParameter == null ) {
 					identifierGeneratorParameter =
-							new IdGeneratorParameter( identifierMapping, (InMemoryGenerator) identifierGenerator );
+							new IdGeneratorParameter( identifierMapping, (BeforeExecutionGenerator) identifierGenerator );
 				}
 				expressions.add( identifierGeneratorParameter );
 			}
@@ -1517,9 +1522,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private static class IdGeneratorParameter extends AbstractJdbcParameter {
 
-		private final InMemoryGenerator generator;
+		private final BeforeExecutionGenerator generator;
 
-		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, InMemoryGenerator generator) {
+		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, BeforeExecutionGenerator generator) {
 			super( identifierMapping.getJdbcMapping() );
 			this.generator = generator;
 		}
@@ -2837,7 +2842,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				navigablePath,
 				sqlAliasBase,
 				tableGroupProducer,
-				new NamedTableReference( cteName, identifierVariable, false ),
+				new NamedTableReference( cteName, identifierVariable ),
 				tableGroupProducer.getCompatibleTableExpressions()
 		);
 	}
@@ -5073,10 +5078,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final EntityIdentifierMapping identifierMapping = entityValuedModelPart.getEntityMappingType()
 						.getIdentifierMapping();
 				associationKeyPart = identifierMapping;
-				associationKey = identifierMapping.getIdentifier(
-						literal.getLiteralValue(),
-						null
-				);
+				associationKey = identifierMapping.getIdentifier( literal.getLiteralValue() );
 			}
 			if ( associationKeyPart instanceof BasicValuedMapping ) {
 				return new QueryLiteral<>(
@@ -5443,7 +5445,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( inferredValueMapping != null ) {
 				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
-			throw new NotYetImplementedFor6Exception( "Support for embedded-valued parameters not yet implemented" );
+			throw new UnsupportedOperationException( "Support for embedded-valued parameters not yet implemented" );
 		}
 
 		if ( paramSqmType instanceof AnyDiscriminatorSqmPathSource ) {
@@ -5528,7 +5530,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			SqlTypedMapping sqlTypedMapping = null;
 			if ( bindable instanceof BasicType<?> ) {
-				final int sqlTypeCode = ( (BasicType<?>) bindable ).getJdbcType().getDefaultSqlTypeCode();
+				final int sqlTypeCode = ( (BasicType<?>) bindable ).getJdbcType().getDdlTypeCode();
 				if ( sqlTypeCode == SqlTypes.NUMERIC || sqlTypeCode == SqlTypes.DECIMAL ) {
 					// For numeric and decimal parameter types we must determine the precision/scale of the value.
 					// When we need to cast the parameter later, it is necessary to know the size to avoid truncation.
@@ -7119,7 +7121,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitFullyQualifiedClass(Class<?> namedClass) {
-		throw new NotYetImplementedFor6Exception();
+		throw new UnsupportedOperationException();
 
 		// what exactly is the expected end result here?
 
@@ -7129,7 +7131,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //		// see if it is an entity-type
 //		final EntityTypeDescriptor entityDescriptor = metamodel.findEntityDescriptor( namedClass );
 //		if ( entityDescriptor != null ) {
-//			throw new NotYetImplementedFor6Exception( "Add support for entity type literals as SqlExpression" );
+//			throw new UnsupportedOperationException( "Add support for entity type literals as SqlExpression" );
 //		}
 //
 //

@@ -86,6 +86,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( TestEntity.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );

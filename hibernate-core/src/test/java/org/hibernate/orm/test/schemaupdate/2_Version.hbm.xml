@@ -16,7 +16,8 @@
 			<generator class="sequence"/>
 		</id>
 		<property name="description"/>	
-		<property name="name"/>			
+		<property name="name"/>
+		<property name="versionNumber"/>
 	</class>
 	
 </hibernate-mapping>

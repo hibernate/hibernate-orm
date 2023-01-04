@@ -8,7 +8,7 @@ package org.hibernate.orm.test.generatedkeys.select;
 
 
 /**
- * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>
+ * @author Steve Ebersole
  */
 public class MyEntity {
 	private Long id;

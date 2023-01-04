@@ -9,10 +9,10 @@ package org.hibernate.sql.results.internal;
 import java.util.List;
 
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
@@ -27,7 +27,7 @@ import org.hibernate.sql.results.spi.RowReader;
 /**
  * Standard RowProcessingState implementation
  */
-public class RowProcessingStateStandardImpl implements RowProcessingState {
+public class RowProcessingStateStandardImpl extends BaseExecutionContext implements RowProcessingState {
 	private static final Initializer[] NO_INITIALIZERS = new Initializer[0];
 
 	private final JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState;
@@ -44,6 +44,7 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 			ExecutionContext executionContext,
 			RowReader<?> rowReader,
 			JdbcValues jdbcValues) {
+		super( resultSetProcessingState.getSession() );
 		this.resultSetProcessingState = resultSetProcessingState;
 		this.executionContext = executionContext;
 		this.rowReader = rowReader;
@@ -152,11 +153,6 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	@Override
 	public void finishRowProcessing() {
-	}
-
-	@Override
-	public SharedSessionContractImplementor getSession() {
-		return getJdbcValuesSourceProcessingState().getExecutionContext().getSession();
 	}
 
 	@Override

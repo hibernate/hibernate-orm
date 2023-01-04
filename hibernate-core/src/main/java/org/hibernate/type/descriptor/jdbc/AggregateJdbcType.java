@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.jdbc;
 import java.sql.SQLException;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -17,7 +18,10 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public interface AggregateJdbcType extends JdbcType {
 
-	AggregateJdbcType resolveAggregateJdbcType(EmbeddableMappingType mappingType, String sqlType);
+	AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext);
 
 	EmbeddableMappingType getEmbeddableMappingType();
 

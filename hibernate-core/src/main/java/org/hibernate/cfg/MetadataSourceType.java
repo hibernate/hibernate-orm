@@ -2,9 +2,10 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.cfg;
+
 import org.hibernate.HibernateException;
 
 /**
@@ -12,7 +13,10 @@ import org.hibernate.HibernateException;
  * 
  * @author Hardy Ferentschik
  * @author Steve Ebersole
+ *
+ * @deprecated {@code hbm.xml} mappings are no longer supported, making this attribute irrelevant
  */
+@Deprecated(since = "6", forRemoval = true)
 public enum MetadataSourceType {
 	/**
 	 * Indicates metadata coming from {@code hbm.xml} files

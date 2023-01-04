@@ -21,7 +21,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -30,7 +29,6 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -44,10 +42,10 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -87,7 +85,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	}
 
 	@Override
-	public Loadable getLoadable() {
+	public EntityMappingType getLoadable() {
 		return entityDescriptor();
 	}
 
@@ -177,17 +175,13 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 		final SelectStatement sqlSelect = new SelectStatement( rootQuerySpec, Collections.singletonList( domainResult ) );
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>( naturalIdMapping.getJdbcTypeCount() );
-		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
 
 		applyNaturalIdRestriction(
 				bindValue,
 				rootTableGroup,
 				rootQuerySpec::applyPredicate,
-				(jdbcParameter, jdbcParameterBinding) -> {
-					jdbcParameters.add( jdbcParameter );
-					jdbcParamBindings.addBinding( jdbcParameter, jdbcParameterBinding );
-				},
+				jdbcParamBindings::addBinding,
 				sqlAstCreationState,
 				session
 		);
@@ -203,35 +197,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final List<L> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
-				new ExecutionContext() {
-					private final Callback callback = new CallbackImpl();
-
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return queryOptions;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return callback;
-					}
-
-				},
+				new NaturalIdLoaderWithOptionsExecutionContext( session, queryOptions ),
 				row -> (L) row[0],
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -278,7 +244,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			TableGroup rootTableGroup,
 			SelectableMapping selectableMapping,
 			SqlExpressionResolver sqlExpressionResolver,
-			SessionFactoryImplementor sessionFactory) {
+			@SuppressWarnings("unused") SessionFactoryImplementor sessionFactory) {
 		final TableReference tableReference = rootTableGroup.getTableReference( rootTableGroup.getNavigablePath(), selectableMapping.getContainingTableExpression() );
 		if ( tableReference == null ) {
 			throw new IllegalStateException(
@@ -362,33 +328,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final List<Object> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
-					}
-
-				},
+				new NoCallbackExecutionContext( session ),
 				(row) -> {
 					// because we select the natural-id we want to "reduce" the result
 					assert row.length == 1;
@@ -434,5 +374,27 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			fetches.add( fetch );
 		}
 		return fetches.build();
+	}
+
+	private static class NaturalIdLoaderWithOptionsExecutionContext extends BaseExecutionContext {
+		private final Callback callback;
+		private final QueryOptions queryOptions;
+
+		public NaturalIdLoaderWithOptionsExecutionContext(SharedSessionContractImplementor session, QueryOptions queryOptions) {
+			super( session );
+			this.queryOptions = queryOptions;
+			callback = new CallbackImpl();
+		}
+
+		@Override
+		public QueryOptions getQueryOptions() {
+			return queryOptions;
+		}
+
+		@Override
+		public Callback getCallback() {
+			return callback;
+		}
+
 	}
 }

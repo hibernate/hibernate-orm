@@ -17,7 +17,6 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
-import org.hibernate.generator.internal.SourceGeneration;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -27,6 +26,8 @@ import org.hibernate.boot.model.Caching;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.internal.FkSecondPass;
+import org.hibernate.boot.model.internal.SimpleToOneFkSecondPass;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
@@ -94,15 +95,16 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
+import org.hibernate.boot.spi.SecondPass;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.FkSecondPass;
-import org.hibernate.cfg.SecondPass;
-import org.hibernate.cfg.SimpleToOneFkSecondPass;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.generator.internal.GeneratedGeneration;
+import org.hibernate.generator.internal.SourceGeneration;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -110,7 +112,6 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.AttributeContainer;
@@ -147,7 +148,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.generator.internal.GeneratedGeneration;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
@@ -203,22 +204,18 @@ public class ModelBinder {
 				.addEntityBinding( rootEntityDescriptor );
 
 		switch ( hierarchySource.getHierarchyInheritanceType() ) {
-			case NO_INHERITANCE: {
+			case NO_INHERITANCE:
 				// nothing to do
 				break;
-			}
-			case DISCRIMINATED: {
+			case DISCRIMINATED:
 				bindDiscriminatorSubclassEntities( hierarchySource.getRoot(), rootEntityDescriptor );
 				break;
-			}
-			case JOINED: {
+			case JOINED:
 				bindJoinedSubclassEntities( hierarchySource.getRoot(), rootEntityDescriptor );
 				break;
-			}
-			case UNION: {
+			case UNION:
 				bindUnionSubclassEntities( hierarchySource.getRoot(), rootEntityDescriptor );
 				break;
-			}
 		}
 	}
 
@@ -293,49 +290,40 @@ public class ModelBinder {
 	}
 
 	private void applyCaching(MappingDocument mappingDocument, Caching caching, RootClass rootEntityDescriptor) {
-		if ( caching == null || caching.getRequested() == TruthValue.UNKNOWN ) {
-			// see if JPA's SharedCacheMode indicates we should implicitly apply caching
-			//
-			// here we only really look for ALL.  Ideally we could look at NONE too as a means
-			// to selectively disable all caching, but historically hbm.xml mappings were processed
-			// outside this concept and whether to cache or not was defined wholly by what
-			// is defined in the mapping document.  So for backwards compatibility we
-			// do not consider ENABLE_SELECTIVE nor DISABLE_SELECTIVE here.
-			//
-			// Granted, ALL was not historically considered either, but I have a practical
-			// reason for wanting to support this... our legacy tests built using
-			// Configuration applied a similar logic but that capability is no longer
-			// accessible from Configuration
-			switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
-				case ALL:
-					caching = new Caching(
-							null,
-							mappingDocument.getBuildingOptions().getImplicitCacheAccessType(),
-							false,
-							TruthValue.UNKNOWN
-					);
-					break;
-				case NONE: // Ideally we'd disable all caching...
-				case ENABLE_SELECTIVE: // this is default behavior for hbm.xml
-				case DISABLE_SELECTIVE: // really makes no sense for hbm.xml
-				default: // null or UNSPECIFIED, nothing to do.  IMO for hbm.xml this is equivalent to ENABLE_SELECTIVE
-					// do nothing
-			}
+		if ( isCacheEnabled( mappingDocument, caching ) ) {
+			rootEntityDescriptor.setCacheConcurrencyStrategy( getConcurrencyStrategy( mappingDocument, caching ).getExternalName() );
+			rootEntityDescriptor.setCacheRegionName( caching == null ? null : caching.getRegion() );
+			rootEntityDescriptor.setLazyPropertiesCacheable( caching == null || caching.isCacheLazyProperties() );
+			rootEntityDescriptor.setCached( true );
 		}
+	}
 
-		if ( caching == null || caching.getRequested() == TruthValue.FALSE ) {
-			return;
-		}
+	private static AccessType getConcurrencyStrategy(MappingDocument mappingDocument, Caching caching) {
+		return caching == null || caching.getAccessType() == null
+				? mappingDocument.getBuildingOptions().getImplicitCacheAccessType()
+				: caching.getAccessType();
+	}
 
-		if ( caching.getAccessType() != null ) {
-			rootEntityDescriptor.setCacheConcurrencyStrategy( caching.getAccessType().getExternalName() );
+	private static boolean isCacheEnabled(MappingDocument mappingDocument, Caching caching) {
+		switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
+			case UNSPECIFIED:
+			case ENABLE_SELECTIVE:
+				// this is default behavior for hbm.xml
+				return caching != null && caching.getRequested().toBoolean(false);
+			case NONE:
+				// this option is actually really useful
+				return false;
+			case ALL:
+				// goes completely against the whole ideology we have for
+				// caching, and so it hurts me to support it here
+				return true;
+			case DISABLE_SELECTIVE:
+				// makes no sense for hbm.xml, and also goes against our
+				// ideology, and so it hurts me to support it here
+				return caching == null || caching.getRequested().toBoolean(true);
+			default:
+				throw new AssertionFailure( "unknown SharedCacheMode" );
 		}
-		else {
-			rootEntityDescriptor.setCacheConcurrencyStrategy( mappingDocument.getBuildingOptions().getImplicitCacheAccessType().getExternalName() );
-		}
-		rootEntityDescriptor.setCacheRegionName( caching.getRegion() );
-		rootEntityDescriptor.setLazyPropertiesCacheable( caching.isCacheLazyProperties() );
-		rootEntityDescriptor.setCached( caching.getRequested() != TruthValue.UNKNOWN );
 	}
 
 	private void bindEntityIdentifier(
@@ -850,7 +838,7 @@ public class ModelBinder {
 		return identifierSource.getEmbeddableSource().getTypeDescriptor().getName();
 	}
 
-	private static final String ID_MAPPER_PATH_PART = '<' + PropertyPath.IDENTIFIER_MAPPER_PROPERTY + '>';
+	private static final String ID_MAPPER_PATH_PART = '<' + NavigablePath.IDENTIFIER_MAPPER_PROPERTY + '>';
 
 	private void bindNonAggregatedCompositeEntityIdentifier(
 			MappingDocument mappingDocument,
@@ -899,7 +887,7 @@ public class ModelBinder {
 			rootEntityDescriptor.setIdentifierMapper( mapper );
 			rootEntityDescriptor.setDeclaredIdentifierMapper( mapper );
 			Property property = new Property();
-			property.setName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY );
+			property.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 			property.setUpdateable( false );
 			property.setInsertable( false );
 			property.setValue( mapper );
@@ -1090,6 +1078,7 @@ public class ModelBinder {
 						(PluralAttributeSource) attributeSource,
 						entityDescriptor
 				);
+				attribute.setOptional( true );
 				entityDescriptor.addProperty( attribute );
 			}
 			else {
@@ -1116,9 +1105,7 @@ public class ModelBinder {
 							entityDescriptor.getClassName()
 					);
 
-					if ( secondaryTableJoin != null ) {
-						attribute.setOptional( secondaryTableJoin.isOptional() );
-					}
+					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
 
 					attributeContainer.addProperty( attribute );
 
@@ -1151,9 +1138,7 @@ public class ModelBinder {
 							entityDescriptor.getClassName()
 					);
 
-					if ( secondaryTableJoin != null ) {
-						attribute.setOptional( secondaryTableJoin.isOptional() );
-					}
+					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
 
 					attributeContainer.addProperty( attribute );
 
@@ -1186,9 +1171,7 @@ public class ModelBinder {
 							entityDescriptor.getClassName()
 					);
 
-					if ( secondaryTableJoin != null ) {
-						attribute.setOptional( secondaryTableJoin.isOptional() );
-					}
+					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
 
 					attributeContainer.addProperty( attribute );
 
@@ -1208,6 +1191,9 @@ public class ModelBinder {
 							new OneToOne( mappingDocument, table, entityDescriptor ),
 							entityDescriptor.getClassName()
 					);
+
+					attribute.setOptional( attribute.getValue().isNullable() );
+
 					entityDescriptor.addProperty( attribute );
 
 					handleNaturalIdBinding(
@@ -1243,9 +1229,7 @@ public class ModelBinder {
 							entityDescriptor.getEntityName()
 					);
 
-					if ( secondaryTableJoin != null ) {
-						attribute.setOptional( secondaryTableJoin.isOptional() );
-					}
+					attribute.setOptional( isOptional( secondaryTableJoin, attribute ) );
 
 					attributeContainer.addProperty( attribute );
 
@@ -1258,6 +1242,11 @@ public class ModelBinder {
 				}
 			}
 		}
+	}
+
+	private static boolean isOptional(Join secondaryTableJoin, Property attribute) {
+		return secondaryTableJoin != null && secondaryTableJoin.isOptional()
+			|| attribute.getValue().isNullable();
 	}
 
 	private void handleNaturalIdBinding(
@@ -1552,50 +1541,10 @@ public class ModelBinder {
 	}
 
 	private void applyCaching(MappingDocument mappingDocument, Caching caching, Collection collection) {
-		if ( caching == null || caching.getRequested() == TruthValue.UNKNOWN ) {
-			// see if JPA's SharedCacheMode indicates we should implicitly apply caching
-			switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
-				case ALL: {
-					caching = new Caching(
-							null,
-							mappingDocument.getBuildingOptions().getImplicitCacheAccessType(),
-							false,
-							TruthValue.UNKNOWN
-					);
-					break;
-				}
-				case NONE: {
-					// Ideally we'd disable all caching...
-					break;
-				}
-				case ENABLE_SELECTIVE: {
-					// this is default behavior for hbm.xml
-					break;
-				}
-				case DISABLE_SELECTIVE: {
-					// really makes no sense for hbm.xml
-					break;
-				}
-				default: {
-					// null or UNSPECIFIED, nothing to do.  IMO for hbm.xml this is equivalent
-					// to ENABLE_SELECTIVE
-					break;
-				}
-			}
+		if ( isCacheEnabled( mappingDocument, caching ) ) {
+			collection.setCacheConcurrencyStrategy( getConcurrencyStrategy( mappingDocument, caching ).getExternalName() );
+			collection.setCacheRegionName( caching == null ? null : caching.getRegion() );
 		}
-
-		if ( caching == null || caching.getRequested() == TruthValue.FALSE ) {
-			return;
-		}
-
-		if ( caching.getAccessType() != null ) {
-			collection.setCacheConcurrencyStrategy( caching.getAccessType().getExternalName() );
-		}
-		else {
-			collection.setCacheConcurrencyStrategy( mappingDocument.getBuildingOptions().getImplicitCacheAccessType().getExternalName() );
-		}
-		collection.setCacheRegionName( caching.getRegion() );
-//		collection.setCachingExplicitlyRequested( caching.getRequested() != TruthValue.UNKNOWN );
 	}
 
 	private Identifier determineTable(
@@ -1911,7 +1860,7 @@ public class ModelBinder {
 					.getBasicTypeRegistry()
 					.getRegisteredType( value.getTypeName() );
 			if ( basicType instanceof AbstractSingleColumnStandardBasicType ) {
-				if ( isLob( basicType.getJdbcType().getJdbcTypeCode(), null ) ) {
+				if ( isLob( basicType.getJdbcType().getDdlTypeCode(), null ) ) {
 					value.makeLob();
 				}
 			}
@@ -2523,48 +2472,55 @@ public class ModelBinder {
 			// NOTE : Property#is refers to whether a property is lazy via bytecode enhancement (not proxies)
 			property.setLazy( singularAttributeSource.isBytecodeLazy() );
 
-			final GenerationTiming timing = singularAttributeSource.getGenerationTiming();
-			if ( timing != null ) {
-				if ( (timing == GenerationTiming.INSERT || timing == GenerationTiming.UPDATE)
-						&& property.getValue() instanceof SimpleValue
-						&& ((SimpleValue) property.getValue()).isVersion() ) {
-					// this is enforced by DTD, but just make sure
-					throw new MappingException(
-							"'generated' attribute cannot be 'insert' or 'update' for version/timestamp property",
-							mappingDocument.getOrigin()
-					);
-				}
-				if ( timing != GenerationTiming.NEVER ) {
-					property.setValueGeneratorCreator( context -> new GeneratedGeneration( timing.getEquivalent() ) );
-
-					// generated properties can *never* be insertable...
-					if ( property.isInsertable() && timing.includesInsert() ) {
-						log.debugf(
-								"Property [%s] specified %s generation, setting insertable to false : %s",
-								propertySource.getName(),
-								timing.name(),
-								mappingDocument.getOrigin()
-						);
-						property.setInsertable( false );
-					}
-
-					// properties generated on update can never be updatable...
-					if ( property.isUpdateable() && timing.includesUpdate() ) {
-						log.debugf(
-								"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
-								propertySource.getName(),
-								mappingDocument.getOrigin()
-						);
-						property.setUpdateable( false );
-					}
-				}
-			}
+			handleGenerationTiming( mappingDocument, propertySource, property, singularAttributeSource.getGenerationTiming() );
 		}
 
 		property.setMetaAttributes( propertySource.getToolingHintContext().getMetaAttributeMap() );
 
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Mapped property: " + propertySource.getName() + " -> [" + columns( property.getValue() ) + "]" );
+		}
+	}
+
+	private static void handleGenerationTiming(
+			MappingDocument mappingDocument,
+			AttributeSource propertySource,
+			Property property,
+			GenerationTiming timing) {
+		if ( timing != null ) {
+			if ( (timing == GenerationTiming.INSERT || timing == GenerationTiming.UPDATE)
+					&& property.getValue() instanceof SimpleValue
+					&& ((SimpleValue) property.getValue()).isVersion() ) {
+				// this is enforced by DTD, but just make sure
+				throw new MappingException(
+						"'generated' attribute cannot be 'insert' or 'update' for version/timestamp property",
+						mappingDocument.getOrigin()
+				);
+			}
+			if ( timing != GenerationTiming.NEVER ) {
+				property.setValueGeneratorCreator(context -> new GeneratedGeneration( timing.getEquivalent() ) );
+
+				// generated properties can *never* be insertable...
+				if ( property.isInsertable() && timing.includesInsert() ) {
+					log.debugf(
+							"Property [%s] specified %s generation, setting insertable to false : %s",
+							propertySource.getName(),
+							timing.name(),
+							mappingDocument.getOrigin()
+					);
+					property.setInsertable( false );
+				}
+
+				// properties generated on update can never be updatable...
+				if ( property.isUpdateable() && timing.includesUpdate() ) {
+					log.debugf(
+							"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
+							propertySource.getName(),
+							mappingDocument.getOrigin()
+					);
+					property.setUpdateable( false );
+				}
+			}
 		}
 	}
 
@@ -2777,6 +2733,8 @@ public class ModelBinder {
 
 				);
 			}
+
+			attribute.setOptional( attribute.getValue().isNullable() );
 
 			component.addProperty( attribute );
 		}
@@ -3279,19 +3237,20 @@ public class ModelBinder {
 				// for non-inverse one-to-many, with a not-null fk, add a backref!
 				final String entityName = ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName();
 				final PersistentClass referenced = getReferencedEntityBinding( entityName );
-				final Backref prop = new Backref();
-				prop.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "Backref" );
-				prop.setUpdateable( false );
-				prop.setSelectable( false );
-				prop.setCollectionRole( collectionBinding.getRole() );
-				prop.setEntityName( collectionBinding.getOwner().getEntityName() );
-				prop.setValue( collectionBinding.getKey() );
-				referenced.addProperty( prop );
+				final Backref backref = new Backref();
+				backref.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "Backref" );
+				backref.setOptional( true );
+				backref.setUpdateable( false );
+				backref.setSelectable( false );
+				backref.setCollectionRole( collectionBinding.getRole() );
+				backref.setEntityName( collectionBinding.getOwner().getEntityName() );
+				backref.setValue( collectionBinding.getKey() );
+				referenced.addProperty( backref );
 
 				if ( log.isDebugEnabled() ) {
 					log.debugf(
 							"Added virtual backref property [%s] : %s",
-							prop.getName(),
+							backref.getName(),
 							pluralAttributeSource.getAttributeRole().getFullPath()
 					);
 				}
@@ -3741,14 +3700,15 @@ public class ModelBinder {
 					&& !indexIsFormula ) {
 				final String entityName = ( (OneToMany) getCollectionBinding().getElement() ).getReferencedEntityName();
 				final PersistentClass referenced = getMappingDocument().getMetadataCollector().getEntityBinding( entityName );
-				final IndexBackref ib = new IndexBackref();
-				ib.setName( '_' + getCollectionBinding().getOwnerEntityName() + "." + getPluralAttributeSource().getName() + "IndexBackref" );
-				ib.setUpdateable( false );
-				ib.setSelectable( false );
-				ib.setCollectionRole( getCollectionBinding().getRole() );
-				ib.setEntityName( getCollectionBinding().getOwner().getEntityName() );
-				ib.setValue( getCollectionBinding().getIndex() );
-				referenced.addProperty( ib );
+				final IndexBackref backref = new IndexBackref();
+				backref.setName( '_' + getCollectionBinding().getOwnerEntityName() + "." + getPluralAttributeSource().getName() + "IndexBackref" );
+				backref.setOptional( true );
+				backref.setUpdateable( false );
+				backref.setSelectable( false );
+				backref.setCollectionRole( getCollectionBinding().getRole() );
+				backref.setEntityName( getCollectionBinding().getOwner().getEntityName() );
+				backref.setValue( getCollectionBinding().getIndex() );
+				referenced.addProperty( backref );
 			}
 		}
 	}
@@ -3819,14 +3779,15 @@ public class ModelBinder {
 				&& !collectionBinding.isInverse() ) {
 			final String entityName = ( (OneToMany) collectionBinding.getElement() ).getReferencedEntityName();
 			final PersistentClass referenced = mappingDocument.getMetadataCollector().getEntityBinding( entityName );
-			final IndexBackref ib = new IndexBackref();
-			ib.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "IndexBackref" );
-			ib.setUpdateable( false );
-			ib.setSelectable( false );
-			ib.setCollectionRole( collectionBinding.getRole() );
-			ib.setEntityName( collectionBinding.getOwner().getEntityName() );
-			ib.setValue( collectionBinding.getIndex() );
-			referenced.addProperty( ib );
+			final IndexBackref backref = new IndexBackref();
+			backref.setName( '_' + collectionBinding.getOwnerEntityName() + "." + pluralAttributeSource.getName() + "IndexBackref" );
+			backref.setOptional( true );
+			backref.setUpdateable( false );
+			backref.setSelectable( false );
+			backref.setCollectionRole( collectionBinding.getRole() );
+			backref.setEntityName( collectionBinding.getOwner().getEntityName() );
+			backref.setValue( collectionBinding.getIndex() );
+			referenced.addProperty( backref );
 		}
 	}
 

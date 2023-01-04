@@ -36,6 +36,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -62,6 +63,7 @@ public class BasicAttributeMapping
 	private final boolean nullable;
 	private final boolean insertable;
 	private final boolean updateable;
+	private final boolean partitioned;
 
 	private final JavaType domainTypeDescriptor;
 
@@ -86,6 +88,7 @@ public class BasicAttributeMapping
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
+			boolean partitioned,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
@@ -116,6 +119,7 @@ public class BasicAttributeMapping
 		this.nullable = nullable;
 		this.insertable = insertable;
 		this.updateable = updateable;
+		this.partitioned = partitioned;
 		this.jdbcMapping = jdbcMapping;
 		this.domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
 
@@ -174,6 +178,7 @@ public class BasicAttributeMapping
 				selectableMapping.isNullable(),
 				insertable,
 				updateable,
+				selectableMapping.isPartitioned(),
 				original.getJdbcMapping(),
 				declaringType,
 				propertyAccess
@@ -228,6 +233,11 @@ public class BasicAttributeMapping
 	@Override
 	public boolean isUpdateable() {
 		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return partitioned;
 	}
 
 	@Override
@@ -346,6 +356,7 @@ public class BasicAttributeMapping
 		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
 		if ( fetchTiming == FetchTiming.DELAYED
+				&& !( fetchParent instanceof EmbeddableResultGraphNode )
 				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
 			valuesArrayPosition = -1;
 		}

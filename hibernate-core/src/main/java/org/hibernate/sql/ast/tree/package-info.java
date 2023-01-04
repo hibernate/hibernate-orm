@@ -7,8 +7,7 @@
 
 /**
  * Package defining the SQL AST.
- *
- * {@link org.hibernate.sql.ast.spi} defines support for creating and
- * consuming these trees.
+ * <p>
+ * The package {@link org.hibernate.sql.ast.spi} defines support for creating and consuming the AST.
  */
 package org.hibernate.sql.ast.tree;

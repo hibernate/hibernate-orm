@@ -17,7 +17,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 
 /**
- * Leverages Antlr to build a parse tree from an HQL query
+ * Leverages ANTLR to build a parse tree from an HQL query.
  *
  * @author Steve Ebersole
  */

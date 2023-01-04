@@ -57,6 +57,7 @@ public class SequenceGeneratorsTest extends BaseUnitTestCase {
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( TestEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

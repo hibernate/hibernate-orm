@@ -91,6 +91,7 @@ public class SchemaCreationToOutputScriptTest {
 				.addAnnotatedClass( MyEntity.class )
 				.addAnnotatedClass( MySecondEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

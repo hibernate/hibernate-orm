@@ -29,11 +29,13 @@ import org.hibernate.service.spi.Stoppable;
  * <li>{@linkplain #buildTimestampsRegion timestamps} used to
  *     determine when a cached query result set is stale.
  * </ul>
+ * <p>
  * Implementors should define a constructor in one of two forms:
  * <ul>
  * <li>{@code MyRegionFactoryImpl(java.util.Properties)}</li>
  * <li>{@code MyRegionFactoryImpl()}</li>
  * </ul>
+ * <p>
  * Use the first when we need to read config properties prior to
  * {@link #start} being called.
  * <p>

@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * no need to run this on DB matrix
  *
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  */
 @RequiresDialect(H2Dialect.class)
 public class LockTimeoutPropertyTest extends BaseEntityManagerFunctionalTestCase {

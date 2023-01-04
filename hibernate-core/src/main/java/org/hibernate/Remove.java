@@ -19,12 +19,13 @@ import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Indicates that the annotated element is planned for removal as part
- * of a deprecation lifecycle.
+ * Indicates that the annotated element is planned for removal as part of a
+ * deprecation process.
  *
- * @apiNote Intended for use at development-time for developers to better understand
- * the lifecycle of the annotated element.  Also, useful for "deprecating" a package
- * as the Java compiler does not like `@Deprecated` on packages.
+ * @apiNote Intended for use at development time for developers to better
+ * understand the lifecycle of the annotated element. Also, useful for
+ * deprecating a whole package, since the Java compiler does not accept
+ * the {@link Deprecated @Deprecated} annotation on packages.
  *
  * @see Deprecated#forRemoval()
  *

@@ -7,6 +7,7 @@
 package org.hibernate.engine.jdbc.batch.spi;
 
 import java.sql.PreparedStatement;
+import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -14,13 +15,17 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 
 /**
- * Conceptually models a batch.
+ * Represents a batch of statements to be executed together.
  * <p>
- * Unlike in JDBC, here we add the ability to batch together multiple statements at a time.  In the underlying
- * JDBC this correlates to multiple {@link PreparedStatement} objects (one for each DML string) maintained within the
- * batch.
+ * Unlike in JDBC, here we add the ability to batch together multiple statements at a time.
+ * In the underlying JDBC this correlates to multiple {@link PreparedStatement} objects,
+ * one for each DML string, all maintained within the batch.
+ * <p>
+ * A batch is usually associated with a {@link org.hibernate.engine.jdbc.spi.JdbcCoordinator}.
  *
  * @author Steve Ebersole
+ * 
+ * @see org.hibernate.engine.jdbc.spi.JdbcCoordinator#getBatch(BatchKey, Integer, Supplier)
  */
 @Incubating
 public interface Batch {
@@ -41,9 +46,8 @@ public interface Batch {
 	PreparedStatementGroup getStatementGroup();
 
 	/**
-	 * Apply the value bindings to the batch JDBC statements
-	 * and
-	 * Indicates completion of the current part of the batch.
+	 * Apply the value bindings to the batch JDBC statements and indicates completion
+	 * of the current part of the batch.
 	 */
 	void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker);
 
@@ -53,8 +57,8 @@ public interface Batch {
 	void execute();
 
 	/**
-	 * Used to indicate that the batch instance is no longer needed and that, therefore, it can release its
-	 * resources.
+	 * Used to indicate that the batch instance is no longer needed and that, therefore,
+	 * it can release its resources.
 	 */
 	void release();
 }

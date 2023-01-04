@@ -30,9 +30,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 public interface JdbcValuesSourceProcessingState {
 	ExecutionContext getExecutionContext();
 
-	default SharedSessionContractImplementor getSession() {
-		return getExecutionContext().getSession();
-	}
+	SharedSessionContractImplementor getSession();
 
 	default QueryOptions getQueryOptions() {
 		return getExecutionContext().getQueryOptions();
@@ -58,14 +56,8 @@ public interface JdbcValuesSourceProcessingState {
 			LoadingEntityEntry loadingEntry);
 
 	void registerInitializer(
-			EntityKey entityKey,
-			Initializer initializer);
-
-	void registerInitializer(
 			EntityUniqueKey entityKey,
 			Initializer initializer);
-
-	Initializer findInitializer(EntityKey entityKey);
 
 	Initializer findInitializer(EntityUniqueKey entityKey);
 

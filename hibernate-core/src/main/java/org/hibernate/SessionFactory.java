@@ -17,6 +17,7 @@ import javax.naming.Referenceable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.stat.Statistics;
 
@@ -31,10 +32,21 @@ import jakarta.persistence.EntityManagerFactory;
  * affects the runtime behavior of Hibernate, and instances of services that
  * Hibernate needs to perform its duties.
  * <p>
- * Crucially, this is where a program comes to obtain {@link Session sessions}.
+ * Crucially, this is where a program comes to obtain {@linkplain Session sessions}.
  * Typically, a program has a single {@link SessionFactory} instance, and must
  * obtain a new {@link Session} instance from the factory each time it services
- * a client request.
+ * a client request. It is then also responsible for {@linkplain Session#close()
+ * destroying} the session at the end of the client request.
+ * <p>
+ * The {@link #inSession} and {@link #inTransaction} methods provide a convenient
+ * way to obtain a session, with or without starting a transaction, and have it
+ * cleaned up automatically, relieving the program of the need to explicitly
+ * call {@link Session#close()} and {@link Transaction#commit()}.
+ * <p>
+ * Alternatively, {@link #getCurrentSession()} provides support for the notion
+ * of contextually-scoped sessions, where an implementation of the SPI interface
+ * {@link org.hibernate.context.spi.CurrentSessionContext} is responsible for
+ * creating, scoping, and destroying sessions.
  * <p>
  * Depending on how Hibernate is configured, the {@code SessionFactory} itself
  * might be responsible for the lifecycle of pooled JDBC connections and
@@ -51,7 +63,7 @@ import jakarta.persistence.EntityManagerFactory;
  * There are some interesting exceptions to this principle:
  * <ul>
  * <li>Each {@code SessionFactory} has its own isolated second-level cache,
- *     shared between the sessions it creates, and it {@link #getCache()
+ *     shared between the sessions it creates, and it {@linkplain #getCache()
  *     exposes the cache} to clients as a stateful object with entries that
  *     may be queried and managed directly.
  * <li>Similarly, the factory {@linkplain #getStatistics() exposes} a
@@ -67,6 +79,7 @@ import jakarta.persistence.EntityManagerFactory;
  *     motivation to call either method later, when the factory already has
  *     active sessions.
  * </ul>
+ * <p>
  * The {@code SessionFactory} exposes part of the information in the runtime
  * metamodel via an {@linkplain #getMetamodel() instance} of the JPA-defined
  * {@link jakarta.persistence.metamodel.Metamodel}. This object is sometimes
@@ -83,10 +96,19 @@ import jakarta.persistence.EntityManagerFactory;
  *     cleaning up} data left behind by tests.
  * </ul>
  * <p>
+ * Finally, the factory {@linkplain #getCriteriaBuilder() provides} a
+ * {@link HibernateCriteriaBuilder}, an extension to the JPA-defined interface
+ * {@link jakarta.persistence.criteria.CriteriaBuilder}, which may be used to
+ * construct {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
+ * queries}.
+ * <p>
  * Every {@code SessionFactory} is a JPA {@link EntityManagerFactory}.
  * Furthermore, when Hibernate is acting as the JPA persistence provider, the
  * method {@link EntityManagerFactory#unwrap(Class)} may be used to obtain the
  * underlying {@code SessionFactory}.
+ * <p>
+ * The very simplest way to obtain a new {@code SessionFactory} is using a
+ * {@link org.hibernate.cfg.Configuration}.
  *
  * @see Session
  * @see org.hibernate.cfg.Configuration
@@ -125,9 +147,9 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 
 	/**
 	 * Obtains the <em>current session</em>, an instance of {@link Session}
-	 * implicitly associated with some context. For example, the session
-	 * might be associated with the current thread, or with the current
-	 * JTA transaction.
+	 * implicitly associated with some context or scope. For example, the
+	 * session might be associated with the current thread, or with the
+	 * current JTA transaction.
 	 * <p>
 	 * The context used for scoping the current session (that is, the
 	 * definition of what precisely "current" means here) is determined
@@ -137,12 +159,16 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * {@value org.hibernate.cfg.AvailableSettings#CURRENT_SESSION_CONTEXT_CLASS}.
 	 * <p>
 	 * If no {@link org.hibernate.context.spi.CurrentSessionContext} is
-	 * explicitly configured, but JTA is configured, then
-	 * {@link org.hibernate.context.internal.JTASessionContext} is used.
+	 * explicitly configured, but JTA support is enabled, then
+	 * {@link org.hibernate.context.internal.JTASessionContext} is used,
+	 * and the current session is scoped to the active JTA transaction.
 	 *
 	 * @return The current session.
 	 *
 	 * @throws HibernateException Indicates an issue locating a suitable current session.
+	 *
+	 * @see org.hibernate.context.spi.CurrentSessionContext
+	 * @see org.hibernate.cfg.AvailableSettings#CURRENT_SESSION_CONTEXT_CLASS
 	 */
 	Session getCurrentSession() throws HibernateException;
 
@@ -281,6 +307,17 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 6.2
 	 */
 	SchemaManager getSchemaManager();
+
+	/**
+	 * Obtain a {@link HibernateCriteriaBuilder} which may be used to
+	 * {@linkplain HibernateCriteriaBuilder#createQuery(Class) construct}
+	 * {@linkplain org.hibernate.query.criteria.JpaCriteriaQuery criteria
+	 * queries}.
+	 *
+	 * @see SharedSessionContract#getCriteriaBuilder()
+	 */
+	@Override
+	HibernateCriteriaBuilder getCriteriaBuilder();
 
 	/**
 	 * Destroy this {@code SessionFactory} and release all its resources,

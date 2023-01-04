@@ -124,6 +124,7 @@ public class SchemaUpdateSQLServerTest extends BaseUnitTestCase {
 		metadataSources.addAnnotatedClass( InheritanceSecondChildEntity.class );
 
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

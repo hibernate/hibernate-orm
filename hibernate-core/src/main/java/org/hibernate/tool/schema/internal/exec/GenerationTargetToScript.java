@@ -10,7 +10,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
 /**
- * GenerationTarget implementation for handling generation to scripts
+ * A {@link GenerationTarget} that writes DDL to scripts.
  *
  * @author Steve Ebersole
  */

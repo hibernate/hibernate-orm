@@ -191,7 +191,7 @@ public class SmokeTests {
 					assertThat( enumConverter.getRelationalJavaType().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
 					assertThat(
 							basicType.getJdbcType(),
-							is( jdbcTypeRegistry.getDescriptor( Types.SMALLINT ) )
+							is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
 					);
 
 

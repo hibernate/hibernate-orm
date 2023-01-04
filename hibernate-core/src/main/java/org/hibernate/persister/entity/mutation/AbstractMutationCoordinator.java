@@ -10,7 +10,10 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -24,7 +27,9 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.internal.MutationOperationGroupNone;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.internal.MutationOperationGroupStandard;
-import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * Base support for coordinating mutations against an entity
@@ -55,49 +60,41 @@ public abstract class AbstractMutationCoordinator {
 		return factory().getJdbcServices().getDialect();
 	}
 
-
 	protected MutationOperationGroup createOperationGroup(ValuesAnalysis valuesAnalysis, MutationGroup mutationGroup) {
-		if ( mutationGroup.getNumberOfTableMutations() == 0 ) {
-			return new MutationOperationGroupNone( mutationGroup.getMutationType(), mutationGroup.getMutationTarget() );
+		final int numberOfTableMutations = mutationGroup.getNumberOfTableMutations();
+		switch ( numberOfTableMutations ) {
+			case 0:
+				return new MutationOperationGroupNone( mutationGroup );
+			case 1: {
+				final MutationOperation operation = mutationGroup.getSingleTableMutation()
+						.createMutationOperation( valuesAnalysis, factory() );
+				return operation == null
+						? new MutationOperationGroupNone( mutationGroup )
+						: new MutationOperationGroupSingle( mutationGroup, operation );
+			}
+			default: {
+				final List<MutationOperation> operations = arrayList( numberOfTableMutations );
+				mutationGroup.forEachTableMutation( (integer, tableMutation) -> {
+					final MutationOperation operation = tableMutation.createMutationOperation( valuesAnalysis, factory );
+					if ( operation != null ) {
+						operations.add( operation );
+					}
+					else {
+						ModelMutationLogging.MODEL_MUTATION_LOGGER.debugf(
+								"Skipping table update - %s",
+								tableMutation.getTableName()
+						);
+					}
+				} );
+				return new MutationOperationGroupStandard( mutationGroup.getMutationType(), entityPersister, operations );
+			}
 		}
-
-		if ( mutationGroup.getNumberOfTableMutations() == 1 ) {
-			final MutationOperation operation = mutationGroup.getSingleTableMutation().createMutationOperation( valuesAnalysis, factory() );
-			if ( operation == null ) {
-				return new MutationOperationGroupNone( mutationGroup.getMutationType(), mutationGroup.getMutationTarget() );
-			}
-			return new MutationOperationGroupSingle(
-					mutationGroup.getMutationType(),
-					mutationGroup.getMutationTarget(),
-					operation
-			);
-		}
-
-		final List<MutationOperation> operations = CollectionHelper.arrayList( mutationGroup.getNumberOfTableMutations() );
-		mutationGroup.forEachTableMutation( (integer, tableMutation) -> {
-			final MutationOperation operation = tableMutation.createMutationOperation( valuesAnalysis, factory );
-			if ( operation != null ) {
-				operations.add( operation );
-			}
-			else {
-				ModelMutationLogging.MODEL_MUTATION_LOGGER.debugf(
-						"Skipping table update - %s",
-						tableMutation.getTableName()
-				);
-			}
-		} );
-
-		return new MutationOperationGroupStandard(
-				mutationGroup.getMutationType(),
-				entityPersister,
-				operations
-		);
 	}
 
 	void handleValueGeneration(
 			AttributeMapping attributeMapping,
 			MutationGroupBuilder mutationGroupBuilder,
-			InDatabaseGenerator generator) {
+			OnExecutionGenerator generator) {
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		final boolean writePropertyValue = generator.writePropertyValue();
 		final String[] columnValues = writePropertyValue ? null : generator.getReferencedColumnValues( dialect );
@@ -110,5 +107,33 @@ public abstract class AbstractMutationCoordinator {
 					mapping.getJdbcMapping()
 			);
 		} );
+	}
+
+	protected void bindPartitionColumnValueBindings(
+			Object[] loadedState,
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings) {
+		if ( entityPersister().hasPartitionedSelectionMapping() ) {
+			entityPersister().forEachAttributeMapping(
+					(index, attributeMapping) -> {
+						if ( attributeMapping.hasPartitionedSelectionMapping() ) {
+							attributeMapping.decompose(
+									loadedState[index],
+									(value, jdbcValueMapping) -> {
+										if ( jdbcValueMapping.isPartitioned() ) {
+											jdbcValueBindings.bindValue(
+													value,
+													jdbcValueMapping,
+													ParameterUsage.RESTRICT,
+													session
+											);
+										}
+									},
+									session
+							);
+						}
+					}
+			);
+		}
 	}
 }

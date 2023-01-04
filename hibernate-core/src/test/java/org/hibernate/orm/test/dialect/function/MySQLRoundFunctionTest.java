@@ -19,7 +19,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import static org.junit.Assert.assertEquals;
 
 /**
-  @author <a href="mailto:stliu@redhat.com">Strong Liu</a>
+  @author Strong Liu
  */
 @RequiresDialect( MySQLDialect.class )
 public class MySQLRoundFunctionTest extends BaseCoreFunctionalTestCase {

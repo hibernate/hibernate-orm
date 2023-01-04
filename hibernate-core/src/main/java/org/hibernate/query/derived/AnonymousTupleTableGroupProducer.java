@@ -346,6 +346,11 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		return offset - originalOffset;
 	}
 
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
+	}
+
 	//--------------------------------
 	// Support for using the anonymous tuple as table reference directly somewhere is not yet implemented
 	//--------------------------------

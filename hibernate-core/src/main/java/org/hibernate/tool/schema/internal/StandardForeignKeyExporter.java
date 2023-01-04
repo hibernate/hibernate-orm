@@ -63,12 +63,12 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 		final StringBuilder buffer = new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
 				.append(
-						foreignKey.getKeyDefinition() != null ?
-								dialect.getAddForeignKeyConstraintString(
+						foreignKey.getKeyDefinition() != null
+								? dialect.getAddForeignKeyConstraintString(
 										foreignKey.getName(),
 										foreignKey.getKeyDefinition()
-								) :
-								dialect.getAddForeignKeyConstraintString(
+								)
+								: dialect.getAddForeignKeyConstraintString(
 										foreignKey.getName(),
 										columnNames,
 										targetTableName,

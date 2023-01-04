@@ -24,12 +24,13 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 
 /**
- * A persistent wrapper for an array. Lazy initialization
- * is NOT supported. Use of Hibernate arrays is not really
- * recommended.
+ * A dummy collection wrapper for an array. Lazy initialization is
+ * <em>not</em> supported. The use of arrays to represent persistent
+ * collections in Hibernate is discouraged.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */

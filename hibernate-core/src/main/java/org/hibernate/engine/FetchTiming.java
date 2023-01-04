@@ -7,7 +7,7 @@
 package org.hibernate.engine;
 
 /**
- * Enumeration of values describing <b>WHEN</b> fetching should occur.
+ * Enumeration of values describing <em>when</em> fetching should occur.
  * 
  * @author Steve Ebersole
  * @see FetchStyle

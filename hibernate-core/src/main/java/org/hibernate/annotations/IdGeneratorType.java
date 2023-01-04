@@ -22,31 +22,34 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * way to work with customized identifier generation in Hibernate.
  * <p>
  * For example, if we have a custom identifier generator:
- * <pre>{@code
- * public class CustomSequenceGenerator implements InMemoryGenerator {
+ * <pre>
+ * public class CustomSequenceGenerator implements BeforeExecutionGenerator {
  *     public CustomSequenceGenerator(CustomSequence config, Member annotatedMember,
  *                                    CustomIdGeneratorCreationContext context) {
  *         ...
  *     }
  *     ...
  * }
- * }</pre>
+ * </pre>
+ * <p>
  * Then we may also define an annotation which associates this generator with
  * an entity and supplies configuration parameters:
- * <pre>{@code
- * @IdGeneratorType(CustomSequenceGenerator.class)
- * @Retention(RUNTIME) @Target({METHOD,FIELD})
+ * <pre>
+ * &#64;IdGeneratorType(CustomSequenceGenerator.class)
+ * &#64;Retention(RUNTIME) @Target({METHOD,FIELD})
  * public @interface CustomSequence {
  *     String name();
  *     int startWith() default 1;
  *     int incrementBy() default 50;
  * }
- * }</pre>
+ * </pre>
+ * <p>
  * and we may use it as follows:
- * <pre>{@code
- * @Id @CustomSequence(name = "mysequence", startWith = 0)
+ * <pre>
+ * &#64;Id &#64;CustomSequence(name = "mysequence", startWith = 0)
  * private Integer id;
- * }</pre>
+ * </pre>
+ * <p>
  * We did not use the JPA-defined {@link jakarta.persistence.GeneratedValue}
  * here, since that API is designed around the use of stringly-typed names.
  * The {@code @CustomSequence} annotation itself implies that {@code id} is
@@ -59,6 +62,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>the id generator class has a constructor with the same signature as
  *     {@link AnnotationBasedGenerator#initialize}.
  * </ul>
+ * <p>
  * For a more complete example, see the annotation {@link UuidGenerator} and
  * the corresponding generator class {@link org.hibernate.id.uuid.UuidGenerator}.
  * <p>

@@ -24,7 +24,6 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterArray;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -184,7 +183,7 @@ public class ArrayJdbcType implements JdbcType {
 						.resolveSize( elementJdbcType, containerJavaType.getElementJavaType(), null, null, null );
 				String typeName = session.getTypeConfiguration()
 						.getDdlTypeRegistry()
-						.getDescriptor( elementJdbcType.getDefaultSqlTypeCode() )
+						.getDescriptor( elementJdbcType.getDdlTypeCode() )
 						.getTypeName( size );
 				int cutIndex = typeName.indexOf( '(' );
 				if ( cutIndex > 0 ) {

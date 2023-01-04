@@ -14,7 +14,28 @@ import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 
 /**
- * Mapping for an entity's natural-id, if one is defined
+ * Mapping for an entity's natural-id, if one is defined.
+ * <p/>
+ * Natural identifiers are an alternative form of uniquely
+ * identifying a specific row.  In this sense, they are similar
+ * to a primary key.  In fact most natural identifiers will also
+ * be classified as "candidate keys" (as in a column or group of
+ * columns that are considered candidates for primary-key).
+ * <p/>
+ * However, a natural id has fewer restrictions than a primary 
+ * key.  While these lessened restrictions make them inappropriate
+ * for use as a primary key, they are still generally usable as 
+ * unique locators with caveats.  General reasons a natural id
+ * might be inappropriate for use as a primary key are<ul>
+ *     <li>it contains nullable values</li>
+ *     <li>it contains modifiable values</li>
+ * </ul>
+ * <p>
+ * See other sources for a more complete discussion of data modeling.
+ * 
+ * @see org.hibernate.Session#byNaturalId 
+ * @see org.hibernate.Session#bySimpleNaturalId
+ * @see org.hibernate.Session#byMultipleNaturalId 
  *
  * @author Steve Ebersole
  */

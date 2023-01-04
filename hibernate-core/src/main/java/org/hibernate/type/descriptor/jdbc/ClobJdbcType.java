@@ -305,4 +305,55 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		}
 	};
 
+	public static final ClobJdbcType MATERIALIZED = new ClobJdbcType() {
+		@Override
+		public String toString() {
+			return "ClobTypeDescriptor(MATERIALIZED)";
+		}
+
+		@Override
+		public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+			return String.class;
+		}
+
+		@Override
+		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<>( javaType, this ) {
+				@Override
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					st.setString( index, javaType.unwrap( value, String.class, options ) );
+				}
+
+				@Override
+				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+						throws SQLException {
+					st.setString( name, javaType.unwrap( value, String.class, options ) );
+				}
+			};
+		}
+
+		@Override
+		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+			return new BasicExtractor<>( javaType, this ) {
+				@Override
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					return javaType.wrap( rs.getString( paramIndex ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getString( index ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+						throws SQLException {
+					return javaType.wrap( statement.getString( name ), options );
+				}
+			};
+		}
+	};
+
 }

@@ -598,4 +598,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return targetSide.getModelPart().disassemble( value, session );
 	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return keySide.getModelPart().hasPartitionedSelectionMapping();
+	}
 }

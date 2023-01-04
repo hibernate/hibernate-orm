@@ -14,11 +14,21 @@
 
 package org.hibernate.boot.model;
 
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.service.ServiceRegistry;
-
 /**
- * Contract for contributing functions
+ * On object that contributes custom types and type descriptors, eventually
+ * to a {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}, via an
+ * instance of {@link FunctionContributions}.
+ * <p>
+ * The most common way to integrate a {@code FunctionContributor} is by making
+ * it discoverable via the Java {@link java.util.ServiceLoader} facility.
+ *
+ * @apiNote Unfortunately there's currently no programmatic way to register
+ *          an instance with {@code Configuration} or {@code MetadataBuilder}.
+ *          Nor can it be registered via a corresponding setting defined in
+ *          {@link org.hibernate.jpa.boot.spi.JpaSettings}. These are things
+ *          which <em>are</em> possible for its best friend {@link TypeContributor}.
+ *
+ * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
  *
  * @author Karel Maesen
  */

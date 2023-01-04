@@ -33,9 +33,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * current session it is scoping.  This portion is static to allow easy
  * reference from that external thing.
  * </ul>
+ * <p>
  * The underlying storage of the current sessions here is a static
  * {@link ThreadLocal}-based map where the sessions are keyed by the
- * the owning session factory.
+ * owning session factory.
  *
  * @author Steve Ebersole
  */

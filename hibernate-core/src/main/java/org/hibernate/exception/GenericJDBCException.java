@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * Generic, non-specific JDBCException.
+ * Generic, non-specific flavor of {@link JDBCException}.
  *
  * @author Steve Ebersole
  */

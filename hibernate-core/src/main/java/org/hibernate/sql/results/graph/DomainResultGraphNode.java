@@ -13,8 +13,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Marker for all object types that can be part of a result mapping
- *
- * Both {@link DomainResult} and {@link Fetch} are ResultSetMappingNode subtypes.
+ * <p>
+ * Both {@link DomainResult} and {@link Fetch} are subtypes.
  *
  * @author Steve Ebersole
  */

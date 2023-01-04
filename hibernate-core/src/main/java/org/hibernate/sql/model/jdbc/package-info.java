@@ -6,8 +6,7 @@
  */
 
 /**
- * Extensions to {@link org.hibernate.sql.exec.spi.JdbcOperation} for
- * model mutations
+ * Extensions to {@link org.hibernate.sql.exec.spi.JdbcOperation} for model mutations.
  *
  * @author Steve Ebersole
  */

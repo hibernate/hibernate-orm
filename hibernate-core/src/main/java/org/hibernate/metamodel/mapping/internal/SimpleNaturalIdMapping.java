@@ -20,6 +20,7 @@ import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -51,10 +52,12 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		);
 		this.attribute = attribute;
 
-		typeConfiguration = creationProcess.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration();
+		typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
 
+	}
+
+	public SingularAttributeMapping getAttribute() {
+		return attribute;
 	}
 
 	@Override
@@ -109,7 +112,8 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			return;
 		}
 
-		if ( naturalIdValue.getClass().isArray() ) {
+		final Class<?> naturalIdValueClass = naturalIdValue.getClass();
+		if ( naturalIdValueClass.isArray() && !naturalIdValueClass.getComponentType().isPrimitive() ) {
 			// be flexible
 			final Object[] values = (Object[]) naturalIdValue;
 			if ( values.length == 1 ) {
@@ -123,7 +127,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 							Locale.ROOT,
 							"Incoming natural-id value [%s (`%s`)] is not of expected type [`%s`] and could not be coerced",
 							naturalIdValue,
-							naturalIdValue.getClass().getName(),
+							naturalIdValueClass.getName(),
 							getJavaType().getJavaType().getTypeName()
 					)
 			);
@@ -159,14 +163,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			normalizedValue = naturalIdToLoad;
 		}
 
-		if ( getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+		if ( getTypeConfiguration().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			return normalizedValue;
 		}
 		return getJavaType().coerce( normalizedValue, this );
-	}
-
-	public SingularAttributeMapping getAttribute() {
-		return attribute;
 	}
 
 	@Override
@@ -268,5 +268,15 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public AttributeMapping asAttributeMapping() {
+		return getAttribute();
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return attribute.hasPartitionedSelectionMapping();
 	}
 }

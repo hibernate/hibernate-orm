@@ -37,7 +37,7 @@ public class ExportableColumn extends Column {
 				type,
 				database.getTypeConfiguration()
 						.getDdlTypeRegistry()
-						.getTypeName( type.getJdbcType().getDefaultSqlTypeCode(), database.getDialect() )
+						.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() )
 		);
 	}
 

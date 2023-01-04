@@ -46,6 +46,7 @@ public class IdBagSequenceTest extends BaseUnitTestCase {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addResource( "org/hibernate/orm/test/schemaupdate/idbag/Mappings.hbm.xml" )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()

@@ -14,8 +14,7 @@ import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Commonality in regards to the mapping type system for all managed domain
- * types - entity types, mapped-superclass types, composite types, etc
+ * Mapping-model corollary to {@link jakarta.persistence.metamodel.ManagedType}
  *
  * @author Steve Ebersole
  */
@@ -40,6 +39,11 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 */
 	AttributeMapping getAttributeMapping(int position);
 
+	/**
+	 * Find an attribute by name.
+	 *
+	 * @return The named attribute, or {@code null} if no match was found
+	 */
 	default AttributeMapping findAttributeMapping(String name) {
 		return null;
 	}
@@ -52,7 +56,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	/**
 	 * Visit attributes defined on this class and any supers
 	 */
-	void visitAttributeMappings(Consumer<? super AttributeMapping> action);
+	void forEachAttributeMapping(Consumer<? super AttributeMapping> action);
 
 	/**
 	 * Visit attributes defined on this class and any supers
@@ -61,14 +65,26 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 		getAttributeMappings().indexedForEach( consumer );
 	}
 
+	/**
+	 * Extract the individual attribute values from the entity instance
+	 */
 	Object[] getValues(Object instance);
 
+	/**
+	 * Extract a specific attribute value from the entity instance, by position
+	 */
 	default Object getValue(Object instance, int position) {
 		return getAttributeMapping( position ).getValue( instance );
 	}
 
+	/**
+	 * Inject the attribute values into the entity instance
+	 */
 	void setValues(Object instance, Object[] resolvedValues);
 
+	/**
+	 * Inject a specific attribute value into the entity instance, by position
+	 */
 	default void setValue(Object instance, int position, Object value) {
 		getAttributeMapping( position ).setValue( instance, value );
 	}
@@ -81,6 +97,16 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 				if ( ( (EmbeddableMappingType) mappedType ).anyRequiresAggregateColumnWriter() ) {
 					return true;
 				}
+			}
+		}
+		return false;
+	}
+
+	@Override
+	default boolean hasPartitionedSelectionMapping() {
+		for ( AttributeMapping attributeMapping : getAttributeMappings() ) {
+			if ( attributeMapping.hasPartitionedSelectionMapping() ) {
+				return true;
 			}
 		}
 		return false;

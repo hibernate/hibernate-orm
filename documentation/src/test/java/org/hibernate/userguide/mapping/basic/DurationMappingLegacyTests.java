@@ -56,7 +56,7 @@ public class DurationMappingLegacyTests {
 		final JdbcType realType;
 		if (intervalType instanceof AdjustableJdbcType) {
 			realType = ((AdjustableJdbcType) intervalType).resolveIndicatedType(
-					() -> mappingMetamodel.getTypeConfiguration(),
+					mappingMetamodel.getTypeConfiguration().getCurrentBaseSqlTypeIndicators(),
 					jdbcMapping.getJavaTypeDescriptor()
 			);
 		}

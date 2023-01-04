@@ -23,6 +23,7 @@ import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.TypeBeanInstanceProducer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -31,7 +32,6 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.annotations.reflection.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -107,7 +107,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
 		this.typeConfiguration = new TypeConfiguration();
-		this.beanInstanceProducer = new TypeBeanInstanceProducer( typeConfiguration );
+		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService );
 	}
 
 	@Override
@@ -126,7 +126,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public BeanInstanceProducer getBeanInstanceProducer() {
+	public BeanInstanceProducer getCustomTypeProducer() {
 		return beanInstanceProducer;
 	}
 

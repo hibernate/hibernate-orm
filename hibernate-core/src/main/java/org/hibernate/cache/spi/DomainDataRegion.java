@@ -18,12 +18,14 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
  * <li>the destructured state of entity instances and collections, and
  * <li>mappings from natural id to primary key.
  * </ul>
+ * <p>
  * This type of data has:
  * <ul>
  * <li>key and value wrapping that should to be applied, and
  * <li>defined policies for managing concurrent data access, possibly
  *     including some form of locking.
  * </ul>
+ * <p>
  * These behaviors are defined by an instance of {@link EntityDataAccess},
  * {@link CollectionDataAccess}, or {@link NaturalIdDataAccess}).
  *

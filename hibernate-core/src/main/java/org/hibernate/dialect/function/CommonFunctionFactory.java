@@ -263,11 +263,82 @@ public class CommonFunctionFactory {
 
 	public void trunc() {
 		functionRegistry.namedDescriptorBuilder( "trunc" )
+				.setReturnTypeResolver( useArgType( 1 ) )
 				.setArgumentCountBetween( 1, 2 )
 				.setParameterTypes(NUMERIC, INTEGER)
-				.setInvariantType(doubleType)
 				.setArgumentListSignature( "(NUMERIC number[, INTEGER places])" )
 				.register();
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * MySQL
+	 */
+	public void trunc_truncate() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"truncate(?1,0)",
+				"truncate(?1,?2)",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * SQL Server
+	 */
+	public void trunc_round() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"round(?1,0,1)",
+				"round(?1,?2,1)",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * Sybase
+	 */
+	public void trunc_floorPower() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"sign(?1)*floor(abs(?1))",
+				"sign(?1)*floor(abs(?1)*power(10,?2))/power(10,?2)",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * PostgreSQL (only works if the second arg is constant, as it almost always is)
+	 */
+	public void trunc_truncFloor() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"trunc(?1)",
+				"sign(?1)*floor(abs(?1)*1e?2)/1e?2",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * Derby (only works if the second arg is constant, as it almost always is)
+	 */
+	public void trunc_floor() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"trunc",
+				"sign(?1)*floor(abs(?1))",
+				"sign(?1)*floor(abs(?1)*1e?2)/1e?2",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	public void truncate() {
@@ -416,7 +487,6 @@ public class CommonFunctionFactory {
 	}
 
 	public void regrLinearRegressionAggregates() {
-
 		Arrays.asList(
 						"regr_avgx", "regr_avgy", "regr_count", "regr_intercept", "regr_r2",
 						"regr_slope", "regr_sxx", "regr_sxy", "regr_syy"
@@ -2087,13 +2157,6 @@ public class CommonFunctionFactory {
 	}
 
 	public void math() {
-		functionRegistry.namedDescriptorBuilder( "round" )
-				// To avoid truncating to a specific data type, we default to using the argument type
-				.setReturnTypeResolver( useArgType( 1 ) )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, INTEGER)
-				.register();
-
 		functionRegistry.namedDescriptorBuilder( "floor" )
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
@@ -2170,12 +2233,54 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public void round_floor() {
-		functionRegistry.patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
-				.setReturnTypeResolver( useArgType(1) )
-				.setExactArgumentCount( 2 )
+	public void round() {
+		functionRegistry.namedDescriptorBuilder( "round" )
+				// To avoid truncating to a specific data type, we default to using the argument type
+				.setReturnTypeResolver( useArgType( 1 ) )
+				.setArgumentCountBetween( 1, 2 )
 				.setParameterTypes(NUMERIC, INTEGER)
+				.setArgumentListSignature( "(NUMERIC number[, INTEGER places])" )
 				.register();
+	}
+
+	/**
+	 * SQL Server
+	 */
+	public void round_round() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"round",
+				"round(?1,0)",
+				"round(?1,?2)",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
+	 * Derby (only works if the second arg is constant, as it almost always is)
+	 */
+	public void round_floor() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"round",
+				"floor(?1+0.5)",
+				"floor(?1*1e?2+0.5)/1e?2",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+	}
+
+	/**
+	 * PostgreSQL (only works if the second arg is constant, as it almost always is)
+	 */
+	public void round_roundFloor() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"round",
+				"round(?1)",
+				"floor(?1*1e?2+0.5)/1e?2",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
 	}
 
 	public void square() {
@@ -2441,6 +2546,15 @@ public class CommonFunctionFactory {
 
 	public void dateTrunc() {
 		functionRegistry.patternDescriptorBuilder( "date_trunc", "date_trunc('?1',?2)" )
+				.setInvariantType(timestampType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
+				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
+				.register();
+	}
+
+	public void dateTrunc_trunc() {
+		functionRegistry.patternDescriptorBuilder( "date_trunc", "trunc(?2,'?1')" )
 				.setInvariantType(timestampType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)

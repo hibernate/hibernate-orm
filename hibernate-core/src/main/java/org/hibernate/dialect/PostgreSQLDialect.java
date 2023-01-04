@@ -126,7 +126,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 8 and above.
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 10 and above.
  *
  * @author Gavin King
  */
@@ -259,6 +259,12 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public int getMaxVarcharLength() {
 		return 10_485_760;
+	}
+
+	@Override
+	public int getMaxVarcharCapacity() {
+		// 1GB according to PostgreSQL docs
+		return 1_073_741_824;
 	}
 
 	@Override
@@ -517,11 +523,11 @@ public class PostgreSQLDialect extends Dialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
 
-		functionFactory.round_floor(); //Postgres round(x,n) does not accept double
+		functionFactory.round_roundFloor(); //Postgres round(x,n) does not accept double
+		functionFactory.trunc_truncFloor();
 		functionFactory.cot();
 		functionFactory.radians();
 		functionFactory.degrees();
-		functionFactory.trunc();
 		functionFactory.log();
 		functionFactory.mod_operator();
 		if ( getVersion().isSameOrAfter( 12 ) ) {
@@ -667,6 +673,17 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
+		return true;
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
+		return "alter column " + columnName + " set data type " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
 		return true;
 	}
 
@@ -991,6 +1008,13 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsMaterializedLobAccess() {
+		// Prefer using text and bytea over oid (LOB), because oid is very restricted.
+		// If someone really wants a type bigger than 1GB, they should ask for it by using @Lob explicitly
+		return false;
+	}
+
+	@Override
 	public boolean supportsTemporalLiteralOffset() {
 		return true;
 	}
@@ -1208,6 +1232,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsInsertReturning() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsOffsetInSubquery() {
 		return true;
 	}
@@ -1320,7 +1349,17 @@ public class PostgreSQLDialect extends Dialect {
 	// disabled foreign key constraints still prevent 'truncate table'
 	// (these would help if we used 'delete' instead of 'truncate')
 
-//	@Override
+	@Override
+	public String rowId(String rowId) {
+		return "ctid";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return OTHER;
+	}
+
+	//	@Override
 //	public String getDisableConstraintsStatement() {
 //		return "set constraints all deferred";
 //	}

@@ -16,7 +16,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
 /**
- * Functional contract to create a CollectionInitializer
+ * Functional contract to create a {@link CollectionInitializer}.
  *
  * @author Steve Ebersole
  *
@@ -26,15 +26,20 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 @FunctionalInterface
 public interface CollectionInitializerProducer {
 	/**
-	 * Create an initializer for `attribute` relative to `navigablePath`.
+	 * Create an initializer for the given attribute relative to the given
+	 * navigable path.
 	 *
-	 * `parentAccess` may be null to indicate that the initializer is for
-	 * a {@link org.hibernate.sql.results.graph.DomainResult} rather than
-	 * a {@link org.hibernate.sql.results.graph.Fetch}
-	 *
-	 * `collectionKeyAssembler` and `collectionValueKeyAssembler` allow
-	 * creating {@link org.hibernate.sql.results.graph.DomainResult} for
-	 * either side of the collection foreign-key
+	 * @param navigablePath the navigable path
+	 * @param attribute the attribute
+	 * @param parentAccess  may be null to indicate that the initializer is
+	 *        for a {@link org.hibernate.sql.results.graph.DomainResult}
+	 *        rather than a {@link org.hibernate.sql.results.graph.Fetch}
+	 * @param collectionKeyAssembler allows creation of a
+	 *        {@link org.hibernate.sql.results.graph.DomainResult} for
+	 *        either side of the collection foreign key
+	 * @param collectionValueKeyAssembler allows creation of a
+	 *        {@link org.hibernate.sql.results.graph.DomainResult} for
+	 *        either side of the collection foreign key
 	 */
 	CollectionInitializer produceInitializer(
 			NavigablePath navigablePath,

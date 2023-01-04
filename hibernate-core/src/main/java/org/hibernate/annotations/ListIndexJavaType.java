@@ -18,7 +18,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Form of {@link JavaType} for describing the column mapping for the index of a List or array
+ * Form of {@link JavaType} for describing the column mapping
+ * for the index of a {@code List} or array.
  *
  * @since 6.0
  */

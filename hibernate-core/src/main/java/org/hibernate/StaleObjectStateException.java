@@ -9,8 +9,8 @@ package org.hibernate;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * A specialized StaleStateException that carries information about the particular entity
- * instance that was the source of the failure.
+ * A specialized {@link StaleStateException} that carries information about
+ * the particular entity instance that was the source of the failure.
  *
  * @author Gavin King
  */
@@ -19,7 +19,7 @@ public class StaleObjectStateException extends StaleStateException {
 	private final Object identifier;
 
 	/**
-	 * Constructs a StaleObjectStateException using the supplied information.
+	 * Constructs a {@code StaleObjectStateException} using the supplied information.
 	 *  @param entityName The name of the entity
 	 * @param identifier The identifier of the entity
 	 */

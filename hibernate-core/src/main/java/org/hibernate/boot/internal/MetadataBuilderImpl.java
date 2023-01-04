@@ -39,6 +39,8 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -177,6 +179,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
 		this.options.physicalNamingStrategy = namingStrategy;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+		this.options.columnOrderingStrategy = columnOrderingStrategy;
 		return this;
 	}
 
@@ -548,6 +556,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
+		private ColumnOrderingStrategy columnOrderingStrategy;
 
 		private SharedCacheMode sharedCacheMode;
 		private final AccessType defaultCacheAccessType;
@@ -692,6 +701,21 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					PhysicalNamingStrategyStandardImpl.INSTANCE
 			);
 
+			this.columnOrderingStrategy = strategySelector.resolveDefaultableStrategy(
+					ColumnOrderingStrategy.class,
+					configService.getSettings().get( AvailableSettings.COLUMN_ORDERING_STRATEGY ),
+					new Callable<>() {
+						@Override
+						public ColumnOrderingStrategy call() {
+							return strategySelector.resolveDefaultableStrategy(
+									ColumnOrderingStrategy.class,
+									"default",
+									ColumnOrderingStrategyStandard.INSTANCE
+							);
+						}
+					}
+			);
+
 			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
 
 			this.useNationalizedCharacterData = configService.getSetting(
@@ -756,7 +780,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 						.getDialect()
 						.getTimeZoneSupport();
 			}
-			catch (ServiceException se) {
+			catch ( ServiceException se ) {
 				return TimeZoneSupport.NONE;
 			}
 		}
@@ -821,6 +845,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public PhysicalNamingStrategy getPhysicalNamingStrategy() {
 			return physicalNamingStrategy;
+		}
+
+		@Override
+		public ColumnOrderingStrategy getColumnOrderingStrategy() {
+			return columnOrderingStrategy;
 		}
 
 		@Override

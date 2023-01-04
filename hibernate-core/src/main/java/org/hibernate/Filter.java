@@ -18,6 +18,10 @@ import org.hibernate.engine.spi.FilterDefinition;
  * A filter may be defined using {@link org.hibernate.annotations.FilterDef}
  * and {@link org.hibernate.annotations.Filter}, and must be explicitly
  * enabled at runtime by calling {@link Session#enableFilter(String)}.
+ * <p>
+ * Every parameter of the filter must be set immediately after
+ * {@code enableFilter()} is called, and before any other operation of the
+ * session is invoked.
  *
  * @see org.hibernate.annotations.FilterDef
  * @see Session#enableFilter(String)
@@ -44,7 +48,7 @@ public interface Filter {
 	 *             should be avoided since {@link FilterDefinition} is an
 	 *             SPI type, and so this operation is a layer-breaker.
 	 */
-	@Deprecated
+	@Deprecated(since = "6.2")
 	FilterDefinition getFilterDefinition();
 
 	/**

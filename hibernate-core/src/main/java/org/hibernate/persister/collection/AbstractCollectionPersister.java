@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,7 +25,6 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.TransientObjectException;
@@ -52,6 +50,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
@@ -75,6 +75,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
@@ -127,8 +128,6 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -226,7 +225,7 @@ public abstract class AbstractCollectionPersister
 	protected final SqlExceptionHelper sqlExceptionHelper;
 	private final SessionFactoryImplementor factory;
 	private final EntityPersister ownerPersister;
-	private final InMemoryGenerator identifierGenerator;
+	private final BeforeExecutionGenerator identifierGenerator;
 	private final PropertyMapping elementPropertyMapping;
 	private final EntityPersister elementPersister;
 	private final CollectionDataAccess cacheAccessStrategy;
@@ -273,7 +272,7 @@ public abstract class AbstractCollectionPersister
 
 		this.factory = creationContext.getSessionFactory();
 		this.cacheAccessStrategy = cacheAccessStrategy;
-		if ( factory.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
+		if ( creationContext.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
 			cacheEntryStructure = collectionBootDescriptor.isMap()
 					? StructuredMapCacheEntry.INSTANCE
 					: StructuredCollectionCacheEntry.INSTANCE;
@@ -282,8 +281,8 @@ public abstract class AbstractCollectionPersister
 			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
 
-		dialect = factory.getJdbcServices().getDialect();
-		sqlExceptionHelper = factory.getJdbcServices().getSqlExceptionHelper();
+		dialect = creationContext.getDialect();
+		sqlExceptionHelper = creationContext.getJdbcServices().getSqlExceptionHelper();
 		collectionType = collectionBootDescriptor.getCollectionType();
 		navigableRole = new NavigableRole( collectionBootDescriptor.getRole() );
 		entityName = collectionBootDescriptor.getOwnerEntityName();
@@ -317,8 +316,8 @@ public abstract class AbstractCollectionPersister
 			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
 					sqlWhereString,
 					dialect,
-					factory.getTypeConfiguration(),
-					factory.getQueryEngine().getSqmFunctionRegistry()
+					creationContext.getTypeConfiguration(),
+					creationContext.getFunctionRegistry()
 			);
 		}
 		else {
@@ -331,7 +330,7 @@ public abstract class AbstractCollectionPersister
 
 		int batch = collectionBootDescriptor.getBatchSize();
 		if ( batch == -1 ) {
-			batch = factory.getSessionFactoryOptions().getDefaultBatchFetchSize();
+			batch = creationContext.getSessionFactoryOptions().getDefaultBatchFetchSize();
 		}
 		batchSize = batch;
 
@@ -390,8 +389,8 @@ public abstract class AbstractCollectionPersister
 				Formula form = (Formula) selectable;
 				elementFormulaTemplates[j] = form.getTemplate(
 						dialect,
-						factory.getTypeConfiguration(),
-						factory.getQueryEngine().getSqmFunctionRegistry()
+						creationContext.getTypeConfiguration(),
+						creationContext.getFunctionRegistry()
 				);
 				elementFormulas[j] = form.getFormula();
 			}
@@ -402,8 +401,8 @@ public abstract class AbstractCollectionPersister
 				elementColumnReaders[j] = col.getReadExpr( dialect );
 				elementColumnReaderTemplates[j] = col.getTemplate(
 						dialect,
-						factory.getTypeConfiguration(),
-						factory.getQueryEngine().getSqmFunctionRegistry()
+						creationContext.getTypeConfiguration(),
+						creationContext.getFunctionRegistry()
 				);
 				elementColumnIsGettable[j] = true;
 				if ( elementType.isComponentType() ) {
@@ -455,8 +454,8 @@ public abstract class AbstractCollectionPersister
 					Formula indexForm = (Formula) s;
 					indexFormulaTemplates[i] = indexForm.getTemplate(
 							dialect,
-							factory.getTypeConfiguration(),
-							factory.getQueryEngine().getSqmFunctionRegistry()
+							creationContext.getTypeConfiguration(),
+							creationContext.getFunctionRegistry()
 					);
 					indexFormulas[i] = indexForm.getFormula();
 					hasFormula = true;
@@ -549,10 +548,7 @@ public abstract class AbstractCollectionPersister
 			);
 		}
 		else if ( !elementType.isEntityType() ) {
-			elementPropertyMapping = new ElementPropertyMapping(
-					elementColumnNames,
-					elementType
-					);
+			elementPropertyMapping = new ElementPropertyMapping( elementColumnNames, elementType );
 		}
 		else {
 			// not all entity-persisters implement PropertyMapping!
@@ -591,9 +587,9 @@ public abstract class AbstractCollectionPersister
 			manyToManyWhereString = "( " + collectionBootDescriptor.getManyToManyWhere() + ")";
 			manyToManyWhereTemplate = Template.renderWhereStringTemplate(
 					manyToManyWhereString,
-					factory.getJdbcServices().getDialect(),
-					factory.getTypeConfiguration(),
-					factory.getQueryEngine().getSqmFunctionRegistry()
+					creationContext.getDialect(),
+					creationContext.getTypeConfiguration(),
+					creationContext.getFunctionRegistry()
 			);
 		}
 
@@ -622,19 +618,19 @@ public abstract class AbstractCollectionPersister
 		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, qualifiedTableName );
 	}
 
-	private InMemoryGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
+	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
 		final Generator generator = collection.getIdentifier().createGenerator(
 				context.getBootstrapContext().getIdentifierGeneratorFactory(),
-				factory.getJdbcServices().getDialect(),
+				context.getDialect(),
 				null
 		);
-		if ( generator.generatedByDatabase() ) {
-			throw new MappingException("must be an InMemoryGenerator"); //TODO fix message
+		if ( generator.generatedOnExecution() ) {
+			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}
 		if ( generator instanceof IdentifierGenerator ) {
-			( (IdentifierGenerator) generator ).initialize( context.getSessionFactory().getSqlStringGenerationContext() );
+			( (IdentifierGenerator) generator ).initialize( context.getSqlStringGenerationContext() );
 		}
-		return (InMemoryGenerator) generator;
+		return (BeforeExecutionGenerator) generator;
 	}
 
 	@Override
@@ -819,11 +815,8 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String getSQLOrderByString(String alias) {
-//		return hasOrdering()
-//				? orderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
-//				: "";
 		if ( hasOrdering() ) {
-			throw new NotYetImplementedFor6Exception( getClass() );
+			throw new UnsupportedOperationException();
 		}
 
 		return "";
@@ -831,11 +824,8 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String getManyToManyOrderByString(String alias) {
-//		return hasManyToManyOrdering()
-//				? manyToManyOrderByTranslation.injectAliases( new StandardOrderByAliasResolver( alias ) )
-//				: "";
 		if ( hasManyToManyOrdering() ) {
-			throw new NotYetImplementedFor6Exception( getClass() );
+			throw new UnsupportedOperationException();
 		}
 
 		return "";
@@ -1162,7 +1152,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public InMemoryGenerator getGenerator() {
+	public BeforeExecutionGenerator getGenerator() {
 		return identifierGenerator;
 	}
 
@@ -1565,11 +1555,13 @@ public abstract class AbstractCollectionPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// "mapping model"
 
-	// todo (6.0) : atm there is no way to get a `PluralAttributeMapping` reference except through
-	//  	its declaring `ManagedTypeMapping` attributes.  this is a backhand way of getting access
-	//  	to it for use from the persister
-
-
+	/**
+	 * Allows injection of the corresponding {@linkplain PluralAttributeMapping plural-attribute mapping}.
+	 *
+	 * @implNote Helps solve the chicken-egg problem of which to create first.  Ultimately we could
+	 * make this work in a similar fashion to how this works in the relationship between
+	 * {@link org.hibernate.metamodel.mapping.EmbeddableMappingType} and {@link EmbeddableValuedModelPart}.
+	 */
 	@Override
 	public void injectAttributeMapping(PluralAttributeMapping attributeMapping) {
 		this.attributeMapping = attributeMapping;

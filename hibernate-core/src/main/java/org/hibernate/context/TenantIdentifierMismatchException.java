@@ -10,8 +10,8 @@ import org.hibernate.HibernateException;
 
 /**
  * Indicates that tenant identifiers did not match in cases where
- * {@link org.hibernate.context.spi.CurrentTenantIdentifierResolver#validateExistingCurrentSessions()} returns
- * {@code true} and there is a mismatch found.
+ * {@link org.hibernate.context.spi.CurrentTenantIdentifierResolver#validateExistingCurrentSessions()}
+ * returns {@code true} and there is a mismatch found.
  *
  * @author Steve Ebersole
  */

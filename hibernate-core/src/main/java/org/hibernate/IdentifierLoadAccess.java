@@ -52,7 +52,7 @@ public interface IdentifierLoadAccess<T> {
 	/**
 	 * Return the persistent instance with the given identifier, assuming that the instance exists. This method
 	 * might return a proxied instance that is initialized on-demand, when a non-identifier method is accessed.
-	 *
+	 * <p>
 	 * You should not use this method to determine if an instance exists; to check for existence, use {@link #load}
 	 * instead.  Use this only to retrieve an instance that you assume exists, where non-existence would be an
 	 * actual error.

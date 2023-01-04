@@ -17,9 +17,13 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Annotation used to identify a package, class, interface or method
- * as "internal", meaning that applications should expect no guarantees
- * with regard to the binary stability from release to release.
+ * Marks the annotated Java element as forming part of the <em>internal</em>
+ * implementation of Hibernate, meaning that clients should expect absolutely
+ * no guarantees with regard to the binary stability from release to release.
+ * The user of such an API is embracing the potential for their program to
+ * break with any point release of Hibernate.
+ *
+ * @implNote Defined with {@code RUNTIME} retention so tooling can see it
  *
  * @author Steve Ebersole
  */

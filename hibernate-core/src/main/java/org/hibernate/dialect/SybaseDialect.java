@@ -220,6 +220,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		functionFactory.varPopSamp_varp();
 		functionFactory.stddevPopSamp();
 		functionFactory.varPopSamp();
+		functionFactory.trunc_floorPower();
+		functionFactory.round_round();
 
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
 		queryEngine.getSqmFunctionRegistry().register(
@@ -364,5 +366,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		return jtdsDriver ? JTDSCallableStatementSupport.INSTANCE : super.getCallableStatementSupport();
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "modify " + columnName + " " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
 	}
 }

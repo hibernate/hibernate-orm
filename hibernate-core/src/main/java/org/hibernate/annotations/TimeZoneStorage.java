@@ -25,19 +25,19 @@ import static java.lang.annotation.ElementType.METHOD;
  * <p>
  * For example:
  * <pre>
- * {@code
- * @Entity public class Person {
+ * &#64;Entity
+ * public class Person {
  *
- *     @TimeZoneStorage(COLUMN)
- *     @TimeZoneColumn(column = @Column(...))
+ *     &#64;Column(name = "birth_timestamp")
+ *     &#64;TimeZoneColumn(name = "birth_zone")
+ *     &#64;TimeZoneStorage(COLUMN)
  *     public OffsetDateTime birthDate;
  *
- *     @TimeZoneStorage(NATIVE)
+ *     &#64;TimeZoneStorage(NATIVE)
  *     public OffsetDateTime registrationDate;
  *
  *     ...
- *   }
- *}
+ * }
  * </pre>
  *
  * @author Christian Beikov

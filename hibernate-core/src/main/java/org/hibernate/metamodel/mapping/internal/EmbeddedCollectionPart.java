@@ -355,4 +355,9 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		return FetchTiming.IMMEDIATE;
 	}
 
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return getEmbeddableTypeDescriptor().hasPartitionedSelectionMapping();
+	}
+
 }

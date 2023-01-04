@@ -10,7 +10,7 @@ package org.hibernate.engine.config.spi;
 import static org.hibernate.engine.config.spi.ConfigurationService.Converter;
 
 /**
- * Standard set of setting converters
+ * Standard set of setting converters.
  *
  * @author Steve Ebersole
  */

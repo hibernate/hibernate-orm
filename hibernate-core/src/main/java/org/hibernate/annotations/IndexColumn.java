@@ -18,8 +18,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Matthew Inger
  *
- * @deprecated Prefer the standard JPA {@link jakarta.persistence.OrderColumn} annotation and the Hibernate specific
- * {@link ListIndexBase} (for replacing {@link #base()}).
+ * @deprecated Prefer the standard JPA {@link jakarta.persistence.OrderColumn} annotation,
+ *             using {@link ListIndexBase} instead of {@link #base()}.
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

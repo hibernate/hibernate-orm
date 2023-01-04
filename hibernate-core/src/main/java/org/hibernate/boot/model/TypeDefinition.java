@@ -44,12 +44,13 @@ import org.hibernate.usertype.UserType;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
- * Models the information pertaining to a custom type definition supplied by the user.  Used
- * to delay instantiation of the actual {@link Type} instance.
- *
+ * Models the information pertaining to a custom type definition supplied by the user.
+ * Used to delay instantiation of the actual {@link Type} instance.
+ * <p>
  * Generally speaking this information would come from annotations
- * ({@link org.hibernate.annotations.Type}) or XML mappings.  An alternative form of
- * supplying custom types is programmatically via one of:<ul>
+ * ({@link org.hibernate.annotations.Type}) or XML mappings. An alternative way to
+ * supply custom types is programmatically, via one of:
+ * <ul>
  *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType)}</li>
  *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(UserType, String[])}</li>
  *     <li>{@link org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)}</li>
@@ -138,7 +139,7 @@ public class TypeDefinition implements Serializable {
 			MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final BeanInstanceProducer instanceProducer = bootstrapContext.getBeanInstanceProducer();
+		final BeanInstanceProducer instanceProducer = bootstrapContext.getCustomTypeProducer();
 		final boolean isKnownType = Type.class.isAssignableFrom( typeImplementorClass )
 				|| UserType.class.isAssignableFrom( typeImplementorClass );
 

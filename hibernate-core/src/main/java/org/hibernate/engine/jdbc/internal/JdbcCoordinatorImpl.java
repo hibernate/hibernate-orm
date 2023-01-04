@@ -19,9 +19,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -31,7 +29,6 @@ import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
@@ -44,10 +41,10 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 
+import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
+
 /**
- * Standard Hibernate implementation of {@link JdbcCoordinator}
- * <p>
- * IMPL NOTE : Custom serialization handling!
+ * Standard implementation of {@link JdbcCoordinator}.
  *
  * @author Steve Ebersole
  * @author Brett Meyer
@@ -74,7 +71,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private boolean releasesEnabled = true;
 
 	/**
-	 * Constructs a JdbcCoordinatorImpl
+	 * Constructs a {@code JdbcCoordinatorImpl}
 	 *
 	 * @param userSuppliedConnection The user supplied connection (may be null)
 	 */
@@ -109,9 +106,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.logicalConnection = logicalConnection;
 		this.isUserSuppliedConnection = isUserSuppliedConnection;
 		this.owner = owner;
-		this.jdbcServices = owner.getJdbcSessionContext()
-				.getServiceRegistry()
-				.getService( JdbcServices.class );
+		this.jdbcServices = owner.getJdbcSessionContext().getJdbcServices();
 	}
 
 	@Override
@@ -119,14 +114,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		return logicalConnection;
 	}
 
-	protected SessionFactoryImplementor sessionFactory() {
-		return this.owner.getJdbcSessionContext().getSessionFactory();
-	}
-
 	/**
-	 * Access to the SqlExceptionHelper
+	 * Access to the {@link SqlExceptionHelper}
 	 *
-	 * @return The SqlExceptionHelper
+	 * @return The {@code SqlExceptionHelper}
 	 */
 	public SqlExceptionHelper sqlExceptionHelper() {
 		return jdbcServices.getSqlExceptionHelper();
@@ -183,8 +174,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			}
 		}
 
-		final BatchBuilder batchBuilder = sessionFactory().getFastSessionServices().batchBuilder;
-		currentBatch = batchBuilder.buildBatch( key, batchSize, statementGroupSupplier, this );
+		currentBatch = owner.getJdbcSessionContext().getBatchBuilder()
+				.buildBatch( key, batchSize, statementGroupSupplier, this );
 
 		return currentBatch;
 	}
@@ -264,7 +255,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void afterStatementExecution() {
 		final ConnectionReleaseMode connectionReleaseMode = getLogicalConnection().getConnectionHandlingMode().getReleaseMode();
 		LOG.tracev( "Starting after statement execution processing [{0}]", connectionReleaseMode );
-		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
+		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
 				LOG.debug( "Skipping aggressive release due to manual disabling" );
 				return;
@@ -280,38 +271,18 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterTransaction() {
 		transactionTimeOutInstant = -1;
-		ConnectionReleaseMode connectionReleaseMode = getLogicalConnection().getConnectionHandlingMode().getReleaseMode();
-		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ||
-				connectionReleaseMode == ConnectionReleaseMode.AFTER_TRANSACTION ||
-				connectionReleaseMode == ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION ) {
-			this.logicalConnection.afterTransaction();
+		switch ( getLogicalConnection().getConnectionHandlingMode().getReleaseMode() ) {
+			case AFTER_STATEMENT:
+			case AFTER_TRANSACTION:
+			case BEFORE_TRANSACTION_COMPLETION:
+				logicalConnection.afterTransaction();
 		}
-	}
-
-	private void releaseResources() {
-		getLogicalConnection().getResourceRegistry().releaseResources();
 	}
 
 	private boolean hasRegisteredResources() {
 		return getLogicalConnection().getResourceRegistry().hasRegisteredResources();
 	}
 
-	private ConnectionReleaseMode determineConnectionReleaseMode(
-			JdbcConnectionAccess jdbcConnectionAccess,
-			boolean isUserSuppliedConnection,
-			ConnectionReleaseMode connectionReleaseMode) {
-		if ( isUserSuppliedConnection ) {
-			return ConnectionReleaseMode.ON_CLOSE;
-		}
-		else if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
-				! jdbcConnectionAccess.supportsAggressiveRelease() ) {
-			LOG.debug( "Connection provider reports to not support aggressive release; overriding" );
-			return ConnectionReleaseMode.AFTER_TRANSACTION;
-		}
-		else {
-			return connectionReleaseMode;
-		}
-	}
 	@Override
 	public <T> T coordinateWork(WorkExecutorVisitable<T> work) {
 		final Connection connection = getLogicalConnection().getPhysicalConnection();
@@ -327,7 +298,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public boolean isReadyForSerialization() {
-		return this.isUserSuppliedConnection
+		return isUserSuppliedConnection
 				? ! getLogicalConnection().isPhysicallyConnected()
 				: ! hasRegisteredResources();
 	}
@@ -351,17 +322,18 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				lastQuery.cancel();
 			}
 		}
-		catch (SQLException sqle) {
-			SqlExceptionHelper sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
-			//Should always be non-null, but to make sure as the implementation is lazy:
-			if ( sqlExceptionHelper == null ) {
-				sqlExceptionHelper = new SqlExceptionHelper( false );
-			}
-			throw sqlExceptionHelper.convert( sqle, "Cannot cancel query" );
+		catch ( SQLException sqle ) {
+			throw safeSqlExceptionHelper().convert( sqle, "Cannot cancel query" );
 		}
 		finally {
 			lastQuery = null;
 		}
+	}
+
+	private SqlExceptionHelper safeSqlExceptionHelper() {
+		final SqlExceptionHelper sqlExceptionHelper = sqlExceptionHelper();
+		//Should always be non-null, but to make sure as the implementation is lazy:
+		return sqlExceptionHelper == null ? new SqlExceptionHelper( false ) : sqlExceptionHelper;
 	}
 
 	@Override
@@ -441,7 +413,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public boolean isActive() {
-		return !sessionFactory().isClosed();
+		return owner.getJdbcSessionContext().isActive();
 	}
 
 	@Override
@@ -451,8 +423,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void beforeTransactionCompletion() {
-		this.owner.beforeTransactionCompletion();
-		this.logicalConnection.beforeTransactionCompletion();
+		owner.beforeTransactionCompletion();
+		logicalConnection.beforeTransactionCompletion();
 	}
 
 	@Override
@@ -463,7 +435,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public JdbcSessionOwner getJdbcSessionOwner() {
-		return this.owner;
+		return owner;
 	}
 
 	@Override
@@ -493,7 +465,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * @param ois The stream into which to write our state
 	 * @param owner The Jdbc Session owner which owns the JdbcCoordinatorImpl to be deserialized.
 	 *
-	 * @return The deserialized JdbcCoordinatorImpl
+	 * @return The deserialized {@code JdbcCoordinatorImpl}
 	 *
 	 * @throws IOException Trouble accessing the stream
 	 * @throws ClassNotFoundException Trouble reading the stream
@@ -502,7 +474,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			ObjectInputStream ois,
 			JdbcSessionOwner owner) throws IOException, ClassNotFoundException {
 		final boolean isUserSuppliedConnection = ois.readBoolean();
-		LogicalConnectionImplementor logicalConnection;
+		final LogicalConnectionImplementor logicalConnection;
 		if ( isUserSuppliedConnection ) {
 			logicalConnection = LogicalConnectionProvidedImpl.deserialize( ois );
 		}

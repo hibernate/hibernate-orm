@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * Extension of CollectionSemantics for Maps
+ * Extension of {@link CollectionSemantics} for Maps
  *
  * @author Steve Ebersole
  */

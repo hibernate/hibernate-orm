@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
@@ -24,7 +22,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -90,7 +87,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			TableGroup entityTableGroup) {
 		final MappingType mappingType = identifierMapping.getPartMappingType();
 		if ( mappingType instanceof ManagedMappingType ) {
-			( (ManagedMappingType) mappingType ).visitAttributeMappings(
+			( (ManagedMappingType) mappingType ).forEachAttributeMapping(
 					attributeMapping -> {
 						if ( attributeMapping instanceof ToOneAttributeMapping ) {
 							( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor()

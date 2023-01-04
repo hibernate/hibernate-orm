@@ -164,7 +164,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -358,6 +358,11 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return null;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
 	}
 
 	@Override

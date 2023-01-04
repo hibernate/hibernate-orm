@@ -14,7 +14,6 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -237,7 +236,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		visitAttributeMappings(
+		forEachAttributeMapping(
 				attributeMapping -> attributeMapping.applySqlSelections( navigablePath, tableGroup, creationState )
 		);
 	}
@@ -248,7 +247,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		visitAttributeMappings(
+		forEachAttributeMapping(
 				attributeMapping ->
 						attributeMapping.applySqlSelections(
 								navigablePath,

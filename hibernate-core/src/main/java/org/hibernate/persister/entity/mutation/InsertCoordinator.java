@@ -19,14 +19,10 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.EventType;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -37,9 +33,11 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InDatabaseGenerator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
+
+import static org.hibernate.generator.EventType.INSERT;
 
 /**
  * Coordinates the insertion of an entity.
@@ -114,9 +112,9 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			for ( int i = 0; i < generators.length; i++ ) {
 				final Generator generator = generators[i];
 				if ( generator != null
-						&& !generator.generatedByDatabase()
+						&& !generator.generatedOnExecution()
 						&& generator.generatesOnInsert() ) {
-					values[i] = ( (InMemoryGenerator) generator ).generate( session, entity, values[i], EventType.INSERT );
+					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
 					entityPersister().setPropertyValue( entity, i, values[i] );
 				}
 			}
@@ -148,15 +146,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 		final TableInclusionChecker tableInclusionChecker = getTableInclusionChecker( insertValuesAnalysis );
 
-		final MutationExecutorService mutationExecutorService = session.getSessionFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
-
-		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
-				() -> insertBatchKey,
-				staticInsertGroup,
-				session
-		);
+		final MutationExecutor mutationExecutor = executor( session, staticInsertGroup );
 
 		decomposeForInsert(
 				mutationExecutor,
@@ -200,85 +190,79 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			SharedSessionContractImplementor session) {
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
-		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
 		mutationGroup.forEachOperation( (position, operation) -> {
 			final EntityTableMapping tableDetails = (EntityTableMapping) operation.getTableDetails();
-
-			if ( !tableInclusionChecker.include( tableDetails ) ) {
-				return;
-			}
-
-			final int[] attributeIndexes = tableDetails.getAttributeIndexes();
-			for ( int i = 0; i < attributeIndexes.length; i++ ) {
-				final int attributeIndex = attributeIndexes[ i ];
-
-				if ( !propertyInclusions[attributeIndex] ) {
-					continue;
+			if ( tableInclusionChecker.include( tableDetails ) ) {
+				final int[] attributeIndexes = tableDetails.getAttributeIndexes();
+				for ( int i = 0; i < attributeIndexes.length; i++ ) {
+					final int attributeIndex = attributeIndexes[ i ];
+					if ( propertyInclusions[attributeIndex] ) {
+						final AttributeMapping mapping = entityPersister().getAttributeMappings().get( attributeIndex );
+						decomposeAttribute( values[attributeIndex], session, jdbcValueBindings, mapping );
+					}
 				}
-
-				final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
-				}
-
-				attributeMapping.decompose(
-						values[ attributeIndex ],
-						(jdbcValue, selectableMapping) -> {
-							if ( !selectableMapping.isInsertable() ) {
-								return;
-							}
-
-							final String tableName = entityPersister().physicalTableNameForMutation( selectableMapping );
-							jdbcValueBindings.bindValue(
-									jdbcValue,
-									tableName,
-									selectableMapping.getSelectionExpression(),
-									ParameterUsage.SET,
-									session
-							);
-						},
-						session
-				);
 			}
 		} );
 
 		mutationGroup.forEachOperation( (position, jdbcOperation) -> {
-			final EntityTableMapping tableDetails = (EntityTableMapping) jdbcOperation.getTableDetails();
-
-			final String tableName = tableDetails.getTableName();
-
 			if ( id == null )  {
 				assert entityPersister().getIdentityInsertDelegate() != null;
-				return;
 			}
+			else {
+				final EntityTableMapping tableDetails = (EntityTableMapping) jdbcOperation.getTableDetails();
+				breakDownJdbcValue( id, session, jdbcValueBindings, tableDetails );
+			}
+		} );
+	}
 
-			tableDetails.getKeyMapping().breakDownKeyJdbcValues(
-					id,
-					(jdbcValue, columnMapping) -> jdbcValueBindings.bindValue(
-							jdbcValue,
-							tableName,
-							columnMapping.getColumnName(),
-							ParameterUsage.SET,
-							session
-					),
+	private static void breakDownJdbcValue(
+			Object id,
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings,
+			EntityTableMapping tableDetails) {
+		final String tableName = tableDetails.getTableName();
+		tableDetails.getKeyMapping().breakDownKeyJdbcValues(
+				id,
+				(jdbcValue, columnMapping) -> jdbcValueBindings.bindValue(
+						jdbcValue,
+						tableName,
+						columnMapping.getColumnName(),
+						ParameterUsage.SET,
+						session
+				),
+				session
+		);
+	}
+
+	private void decomposeAttribute(
+			Object value,
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings,
+			AttributeMapping mapping) {
+		if ( !(mapping instanceof PluralAttributeMapping) ) {
+			mapping.decompose(
+					value,
+					(jdbcValue, selectableMapping) -> {
+						if ( selectableMapping.isInsertable() ) {
+							jdbcValueBindings.bindValue(
+									jdbcValue,
+									entityPersister().physicalTableNameForMutation( selectableMapping ),
+									selectableMapping.getSelectionExpression(),
+									ParameterUsage.SET,
+									session
+							);
+						}
+					},
 					session
 			);
-		} );
+		}
 	}
 
 	protected Object doDynamicInserts(Object id, Object[] values, Object object, SharedSessionContractImplementor session) {
 		final boolean[] insertability = getPropertiesToInsert( values );
 		final MutationOperationGroup insertGroup = generateDynamicInsertSqlGroup( insertability );
 
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
-		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
-				() -> insertBatchKey,
-				insertGroup,
-				session
-		);
+		final MutationExecutor mutationExecutor = executor( session, insertGroup );
 
 		final InsertValuesAnalysis insertValuesAnalysis = new InsertValuesAnalysis( entityPersister(), values );
 
@@ -308,6 +292,13 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
+	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup insertGroup) {
+		return session.getFactory()
+				.getServiceRegistry()
+				.getService( MutationExecutorService.class )
+				.createExecutor( () -> insertBatchKey, insertGroup, session );
+	}
+
 	protected static TableInclusionChecker getTableInclusionChecker(InsertValuesAnalysis insertValuesAnalysis) {
 		return tableMapping -> !tableMapping.isOptional() || insertValuesAnalysis.hasNonNullBindings( tableMapping );
 	}
@@ -328,61 +319,33 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 	protected MutationOperationGroup generateDynamicInsertSqlGroup(boolean[] insertable) {
 		assert entityPersister().getEntityMetamodel().isDynamicInsert();
-
 		final MutationGroupBuilder insertGroupBuilder = new MutationGroupBuilder( MutationType.INSERT, entityPersister() );
-
-		entityPersister().forEachMutableTable( (tableMapping) -> {
-			final TableInsertBuilder tableInsertBuilder;
-			final InsertGeneratedIdentifierDelegate identityDelegate = entityPersister().getIdentityInsertDelegate();
-			if ( tableMapping.isIdentifierTable() && identityDelegate != null ) {
-				final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
-				tableInsertBuilder = identityDelegate.createTableInsertBuilder(
-						identifierMapping,
-						tableMapping.getInsertExpectation(),
-						factory()
-				);
-			}
-			else {
-				tableInsertBuilder = new TableInsertBuilderStandard(
-						entityPersister(),
-						tableMapping,
-						factory()
-				);
-			}
-			insertGroupBuilder.addTableDetailsBuilder( tableInsertBuilder );
-		} );
-
+		entityPersister().forEachMutableTable(
+				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping ) )
+		);
 		applyTableInsertDetails( insertGroupBuilder, insertable );
-
 		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
 	}
 
 	public MutationOperationGroup generateStaticOperationGroup() {
 		final MutationGroupBuilder insertGroupBuilder = new MutationGroupBuilder( MutationType.INSERT, entityPersister() );
-
-		entityPersister().forEachMutableTable( (tableMapping) -> {
-			final TableInsertBuilder tableInsertBuilder;
-			final InsertGeneratedIdentifierDelegate identityDelegate = entityPersister().getIdentityInsertDelegate();
-			if ( tableMapping.isIdentifierTable() && identityDelegate != null ) {
-				tableInsertBuilder = identityDelegate.createTableInsertBuilder(
-						(BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping(),
-						tableMapping.getInsertExpectation(),
-						factory()
-				);
-			}
-			else {
-				tableInsertBuilder = new TableInsertBuilderStandard(
-						entityPersister(),
-						tableMapping,
-						factory()
-				);
-			}
-			insertGroupBuilder.addTableDetailsBuilder( tableInsertBuilder );
-		} );
-
+		entityPersister().forEachMutableTable(
+				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping ) )
+		);
 		applyTableInsertDetails( insertGroupBuilder, entityPersister().getPropertyInsertability() );
-
 		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
+	}
+
+	private TableInsertBuilder createTableInsertBuilder(EntityTableMapping tableMapping) {
+		final InsertGeneratedIdentifierDelegate identityDelegate = entityPersister().getIdentityInsertDelegate();
+		if ( tableMapping.isIdentifierTable() && identityDelegate != null ) {
+			final BasicEntityIdentifierMapping mapping =
+					(BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
+			return identityDelegate.createTableInsertBuilder( mapping, tableMapping.getInsertExpectation(), factory() );
+		}
+		else {
+			return new TableInsertBuilderStandard( entityPersister(), tableMapping, factory() );
+		}
 	}
 
 	private void applyTableInsertDetails(
@@ -400,16 +363,15 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			for ( int i = 0; i < attributeIndexes.length; i++ ) {
 				final int attributeIndex = attributeIndexes[ i ];
 				final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
-
-				if ( !attributeInclusions[ attributeIndex ] ) {
-					final Generator generator = attributeMapping.getGenerator();
-					if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect()) ) {
-						handleValueGeneration( attributeMapping, insertGroupBuilder, (InDatabaseGenerator) generator );
-					}
-					continue;
+				if ( attributeInclusions[attributeIndex] ) {
+					attributeMapping.forEachInsertable( insertGroupBuilder );
 				}
-
-				attributeMapping.forEachInsertable( insertGroupBuilder );
+				else {
+					final Generator generator = attributeMapping.getGenerator();
+					if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect() ) ) {
+						handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
+					}
+				}
 			}
 		} );
 
@@ -434,7 +396,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
 		return generator != null
 			&& generator.generatesOnInsert()
-			&& generator.generatedByDatabase()
-			&& ( (InDatabaseGenerator) generator ).referenceColumnsInSql(dialect);
+			&& generator.generatedOnExecution()
+			&& ( (OnExecutionGenerator) generator ).referenceColumnsInSql(dialect);
 	}
 }

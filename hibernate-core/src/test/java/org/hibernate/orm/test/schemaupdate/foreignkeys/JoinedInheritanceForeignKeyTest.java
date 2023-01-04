@@ -122,6 +122,7 @@ public class JoinedInheritanceForeignKeyTest extends BaseUnitTestCase {
 			metadataSources.addAnnotatedClass( c );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 		new SchemaExport()
 				.setHaltOnError( true )

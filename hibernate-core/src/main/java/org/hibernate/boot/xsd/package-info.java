@@ -6,7 +6,6 @@
  */
 
 /**
- * Support for XSD handling, specifically for ORM mappings (Hibernate's `hbm.xml` and
- * JPA's `orm.xml`) and config files (Hibernate's `cfg.xml` and JPA's `persistence.xml`)
+ * Support for XSD handling.
  */
 package org.hibernate.boot.xsd;

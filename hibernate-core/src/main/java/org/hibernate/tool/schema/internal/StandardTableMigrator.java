@@ -24,7 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
-import static org.hibernate.tool.schema.internal.StandardTableExporter.appendColumn;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.getColumnDefinition;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingLength;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingType;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.getFullColumnDeclaration;
 
 /**
  * A {@link TableMigrator} that only knows how to add new columns.
@@ -47,8 +50,8 @@ public class StandardTableMigrator implements TableMigrator {
 			Table table,
 			Metadata metadata,
 			TableInformation tableInfo,
-			SqlStringGenerationContext sqlStringGenerationContext) {
-		return sqlAlterStrings( table, dialect, metadata, tableInfo, sqlStringGenerationContext )
+			SqlStringGenerationContext context) {
+		return sqlAlterStrings( table, dialect, metadata, tableInfo, context )
 				.toArray( EMPTY_STRING_ARRAY );
 	}
 
@@ -57,31 +60,40 @@ public class StandardTableMigrator implements TableMigrator {
 			Table table,
 			Dialect dialect,
 			Metadata metadata,
-			TableInformation tableInfo,
-			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
+			TableInformation tableInformation,
+			SqlStringGenerationContext context) throws HibernateException {
 
-		final String tableName = sqlStringGenerationContext.format( new QualifiedTableName(
+		final String tableName = context.format( new QualifiedTableName(
 				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
 				Identifier.toIdentifier( table.getSchema(), table.isSchemaQuoted() ),
 				table.getNameIdentifier() )
 		);
 
-		final StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
-				.append( ' ' )
-				.append( dialect.getAddColumnString() );
+		final String alterTable = dialect.getAlterTableString( tableName ) + ' ';
 
 		final List<String> results = new ArrayList<>();
 
 		for ( Column column : table.getColumns() ) {
-			final ColumnInformation columnInfo = tableInfo.getColumn(
+			final ColumnInformation columnInformation = tableInformation.getColumn(
 					Identifier.toIdentifier( column.getName(), column.isQuoted() )
 			);
-			if ( columnInfo == null ) {
+			if ( columnInformation == null ) {
 				// the column doesn't exist at all.
-				final StringBuilder alterTable = new StringBuilder( root.toString() ).append( ' ' );
-				appendColumn( alterTable, column, table, metadata, dialect, sqlStringGenerationContext );
-				alterTable.append( dialect.getAddColumnSuffixString() );
-				results.add( alterTable.toString() );
+				final String addColumn = dialect.getAddColumnString() + ' '
+						+ getFullColumnDeclaration( column, table, metadata, dialect, context )
+						+ dialect.getAddColumnSuffixString();
+				results.add( alterTable + addColumn );
+			}
+			else if ( dialect.supportsAlterColumnType() ) {
+				if ( !hasMatchingType( column, columnInformation, metadata, dialect )
+						|| !hasMatchingLength( column, columnInformation, metadata, dialect ) ) {
+					final String alterColumn = dialect.getAlterColumnTypeString(
+							column.getQuotedName( dialect ),
+							column.getSqlType(metadata),
+							getColumnDefinition( column, table, metadata, dialect )
+					);
+					results.add( alterTable + alterColumn );
+				}
 			}
 		}
 

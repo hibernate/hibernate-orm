@@ -16,9 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -28,6 +31,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
@@ -37,6 +41,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -46,13 +51,13 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
-import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
@@ -62,31 +67,43 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
 
 /**
- * A convenience API making it easier to bootstrap an instance of Hibernate
- * using {@link MetadataBuilder} and {@link StandardServiceRegistryBuilder}
- * under the covers.
+ * A convenience API making it easier to bootstrap an instance of Hibernate.
  * <p>
  * An instance of {@code Configuration} may be obtained simply by
- * {@linkplain #Configuration() instantiation}.
- * <p>
- * A {@code Configuration} may be used to aggregate:
+ * {@linkplain #Configuration() instantiation}, and may be used to aggregate:
  * <ul>
  * <li>{@linkplain #setProperty(String, String) configuration properties}
  *     from various sources, and
  * <li>entity O/R mappings, defined in either {@linkplain #addAnnotatedClass
  *    annotated classes}, or {@linkplain #addFile XML mapping documents}.
  * </ul>
+ * <p>
  * Note that XML mappings may be expressed using the JPA {@code orm.xml}
  * format, or in Hibernate's legacy {@code .hbm.xml} format.
  * <p>
+ * Configuration properties are enumerated by {@link AvailableSettings}.
+ * <pre>
+ *  SessionFactory factory = new Configuration()
+ *     // scan classes for mapping annotations
+ *     .addAnnotatedClass(Item.class)
+ *     .addAnnotatedClass(Bid.class)
+ *     .addAnnotatedClass(User.class)
+ *     // read package-level annotations of the named package
+ *     .addPackage("org.hibernate.auction")
+ *     // set a configuration property
+ *     .setProperty(AvailableSettings.DATASOURCE,
+ *                  "java:comp/env/jdbc/test")
+ *     .getSessionFactory();
+ * </pre>
+ * <p>
  * In addition, there are convenience methods for adding
- * {@link #addAttributeConverter attribute converters},
- * {@link #registerTypeContributor type contributors},
- * {@link #addEntityNameResolver entity name resolvers},
- * {@link #addSqlFunction SQL function descriptors}, and
- * {@link #addAuxiliaryDatabaseObject auxiliary database objects}, for
- * setting {@link #setImplicitNamingStrategy naming strategies} and a
- * {@link #setCurrentTenantIdentifierResolver tenant id resolver},
+ * {@linkplain #addAttributeConverter attribute converters},
+ * {@linkplain #registerTypeContributor type contributors},
+ * {@linkplain #addEntityNameResolver entity name resolvers},
+ * {@linkplain #addSqlFunction SQL function descriptors}, and
+ * {@linkplain #addAuxiliaryDatabaseObject auxiliary database objects}, for
+ * setting {@linkplain #setImplicitNamingStrategy naming strategies} and a
+ * {@linkplain #setCurrentTenantIdentifierResolver tenant id resolver},
  * and more.
  * <p>
  * Finally, an instance of {@link SessionFactoryBuilder} is obtained by
@@ -95,14 +112,15 @@ import jakarta.persistence.SharedCacheMode;
  * Ultimately, this class simply delegates to {@link MetadataBuilder} and
  * {@link StandardServiceRegistryBuilder} to actually do the hard work of
  * {@linkplain #buildSessionFactory() building} the {@code SessionFactory}.
- * <p>
- * Configuration properties are enumerated by {@link AvailableSettings}.
+ * Programs may directly use the APIs defined under {@link org.hibernate.boot},
+ * as an alternative to using an instance of this class.
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see SessionFactory
  * @see AvailableSettings
+ * @see org.hibernate.boot
  */
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
@@ -135,7 +153,10 @@ public class Configuration {
 	private EntityNotFoundDelegate entityNotFoundDelegate;
 	private Interceptor interceptor;
 	private SessionFactoryObserver sessionFactoryObserver;
+	private StatementInspector statementInspector;
 	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
+	private ColumnOrderingStrategy columnOrderingStrategy;
 	private Properties properties;
 	private SharedCacheMode sharedCacheMode;
 
@@ -270,12 +291,34 @@ public class Configuration {
 		return this;
 	}
 
-	public void setImplicitNamingStrategy(ImplicitNamingStrategy implicitNamingStrategy) {
-		this.implicitNamingStrategy = implicitNamingStrategy;
+	/**
+	 * The {@link ImplicitNamingStrategy}, if any, to use in this configuration.
+	 */
+	public ImplicitNamingStrategy getImplicitNamingStrategy() {
+		return implicitNamingStrategy;
 	}
 
-	public void setPhysicalNamingStrategy(PhysicalNamingStrategy physicalNamingStrategy) {
+	/**
+	 * Set an {@link ImplicitNamingStrategy} to use in this configuration.
+	 */
+	public Configuration setImplicitNamingStrategy(ImplicitNamingStrategy implicitNamingStrategy) {
+		this.implicitNamingStrategy = implicitNamingStrategy;
+		return this;
+	}
+
+	/**
+	 * The {@link PhysicalNamingStrategy}, if any, to use in this configuration.
+	 */
+	public PhysicalNamingStrategy getPhysicalNamingStrategy() {
+		return physicalNamingStrategy;
+	}
+
+	/**
+	 * Set a {@link PhysicalNamingStrategy} to use in this configuration.
+	 */
+	public Configuration setPhysicalNamingStrategy(PhysicalNamingStrategy physicalNamingStrategy) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
+		return this;
 	}
 
 	/**
@@ -314,6 +357,7 @@ public class Configuration {
 	/**
 	 * Intended for internal testing use only!!!
 	 */
+	@Internal
 	public StandardServiceRegistryBuilder getStandardServiceRegistryBuilder() {
 		return standardServiceRegistryBuilder;
 	}
@@ -354,6 +398,9 @@ public class Configuration {
 
 	// MetadataSources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Add a {@link TypeContributor} to this configuration.
+	 */
 	public Configuration registerTypeContributor(TypeContributor typeContributor) {
 		typeContributorRegistrations.add( typeContributor );
 		return this;
@@ -654,24 +701,86 @@ public class Configuration {
 	 *
 	 * @param entityNotFoundDelegate The delegate to use
 	 */
-	public void setEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
+	public Configuration setEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
 		this.entityNotFoundDelegate = entityNotFoundDelegate;
+		return this;
 	}
 
+	/**
+	 * The {@link SessionFactoryObserver}, if any, that was added to this configuration.
+	 */
 	public SessionFactoryObserver getSessionFactoryObserver() {
 		return sessionFactoryObserver;
 	}
 
-	public void setSessionFactoryObserver(SessionFactoryObserver sessionFactoryObserver) {
+	/**
+	 * Specify a {@link SessionFactoryObserver} to be added to this configuration.
+	 */
+	public Configuration setSessionFactoryObserver(SessionFactoryObserver sessionFactoryObserver) {
 		this.sessionFactoryObserver = sessionFactoryObserver;
+		return this;
 	}
 
+	/**
+	 * The {@link StatementInspector}, if any, that was added to this configuration.
+	 */
+	public StatementInspector getStatementInspector() {
+		return statementInspector;
+	}
+
+	/**
+	 * Specify a {@link StatementInspector} to be added to this configuration.
+	 */
+	public Configuration setStatementInspector(StatementInspector statementInspector) {
+		this.statementInspector = statementInspector;
+		return this;
+	}
+
+	/**
+	 * The {@link CurrentTenantIdentifierResolver}, if any, that was added to this configuration.
+	 */
 	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
 
-	public void setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver currentTenantIdentifierResolver) {
+	/**
+	 * Specify a {@link CurrentTenantIdentifierResolver} to be added to this configuration.
+	 */
+	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver currentTenantIdentifierResolver) {
 		this.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
+		return this;
+	}
+
+	/**
+	 * The {@link CustomEntityDirtinessStrategy}, if any, that was added to this configuration.
+	 */
+	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
+		return customEntityDirtinessStrategy;
+	}
+
+	/**
+	 * Specify a {@link CustomEntityDirtinessStrategy} to be added to this configuration.
+	 */
+	public Configuration setCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy customEntityDirtinessStrategy) {
+		this.customEntityDirtinessStrategy = customEntityDirtinessStrategy;
+		return this;
+	}
+
+	/**
+	 * The {@link CustomEntityDirtinessStrategy}, if any, that was added to this configuration.
+	 */
+	@Incubating
+	public ColumnOrderingStrategy getColumnOrderingStrategy() {
+		return columnOrderingStrategy;
+	}
+
+	/**
+	 * Specify a {@link CustomEntityDirtinessStrategy} to be added to this configuration.
+	 */
+	@Incubating
+	public Configuration setColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+		this.columnOrderingStrategy = columnOrderingStrategy;
+		return this;
 	}
 
 	/**
@@ -697,6 +806,10 @@ public class Configuration {
 
 		if ( physicalNamingStrategy != null ) {
 			metadataBuilder.applyPhysicalNamingStrategy( physicalNamingStrategy );
+		}
+
+		if ( columnOrderingStrategy != null ) {
+			metadataBuilder.applyColumnOrderingStrategy( columnOrderingStrategy );
 		}
 
 		if ( sharedCacheMode != null ) {
@@ -746,16 +859,24 @@ public class Configuration {
 			sessionFactoryBuilder.addEntityNameResolver( entityNameResolvers.toArray(new EntityNameResolver[0]) );
 		}
 
-		if ( getSessionFactoryObserver() != null ) {
-			sessionFactoryBuilder.addSessionFactoryObservers( getSessionFactoryObserver() );
+		if ( sessionFactoryObserver != null ) {
+			sessionFactoryBuilder.addSessionFactoryObservers( sessionFactoryObserver );
 		}
 
-		if ( getEntityNotFoundDelegate() != null ) {
-			sessionFactoryBuilder.applyEntityNotFoundDelegate( getEntityNotFoundDelegate() );
+		if ( statementInspector != null ) {
+			sessionFactoryBuilder.applyStatementInspector( statementInspector );
 		}
 
-		if ( getCurrentTenantIdentifierResolver() != null ) {
-			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( getCurrentTenantIdentifierResolver() );
+		if ( entityNotFoundDelegate != null ) {
+			sessionFactoryBuilder.applyEntityNotFoundDelegate( entityNotFoundDelegate );
+		}
+
+		if ( currentTenantIdentifierResolver != null ) {
+			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( currentTenantIdentifierResolver );
+		}
+
+		if ( customEntityDirtinessStrategy != null ) {
+			sessionFactoryBuilder.applyCustomEntityDirtinessStrategy( customEntityDirtinessStrategy );
 		}
 
 		return sessionFactoryBuilder.build();
@@ -789,30 +910,39 @@ public class Configuration {
 		return customFunctionDescriptors;
 	}
 
-	public void addSqlFunction(String functionName, SqmFunctionDescriptor function) {
+	/**
+	 * Adds a {@linkplain SqmFunctionDescriptor SQL function descriptor} to this configuration.
+	 */
+	public Configuration addSqlFunction(String functionName, SqmFunctionDescriptor function) {
 		if ( customFunctionDescriptors == null ) {
 			customFunctionDescriptors = new HashMap<>();
 		}
 		customFunctionDescriptors.put( functionName, function );
+		return null;
 	}
 
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
+	/**
+	 * Adds an {@link AuxiliaryDatabaseObject} to this configuration.
+	 */
+	public Configuration addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
 		if ( auxiliaryDatabaseObjectList == null ) {
 			auxiliaryDatabaseObjectList = new ArrayList<>();
 		}
 		auxiliaryDatabaseObjectList.add( object );
+		return null;
 	}
 
 	/**
 	 * Adds an {@link AttributeConverter} to this configuration.
 	 *
 	 * @param attributeConverterClass The {@code AttributeConverter} class.
-	 * @param autoApply Should the AttributeConverter be auto applied to
+	 * @param autoApply Should the {@code AttributeConverter} be auto applied to
 	 *                  property types as specified by its "entity attribute"
 	 *                  parameterized type?
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
+	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
 		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext ) );
+		return null;
 	}
 
 	/**
@@ -820,8 +950,9 @@ public class Configuration {
 	 *
 	 * @param attributeConverterClass The {@code AttributeConverter} class.
 	 */
-	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
+	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
 		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, classmateContext ) );
+		return null;
 	}
 
 	/**
@@ -831,8 +962,9 @@ public class Configuration {
 	 *
 	 * @param attributeConverter The {@code AttributeConverter} instance.
 	 */
-	public void addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
+	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
 		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, classmateContext ) );
+		return null;
 	}
 
 	/**
@@ -845,37 +977,43 @@ public class Configuration {
 	 *                  to property types as specified by its "entity attribute"
 	 *                  parameterized type?
 	 */
-	public void addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
+	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
 		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, autoApply, classmateContext ) );
+		return null;
 	}
 
-	public void addAttributeConverter(ConverterDescriptor converterDescriptor) {
+	public Configuration addAttributeConverter(ConverterDescriptor converterDescriptor) {
 		if ( attributeConverterDescriptorsByClass == null ) {
 			attributeConverterDescriptorsByClass = new HashMap<>();
 		}
 		attributeConverterDescriptorsByClass.put( converterDescriptor.getAttributeConverterClass(), converterDescriptor );
+		return null;
 	}
 
 	/**
 	 * Add an {@link EntityNameResolver} to this configuration.
+	 *
+	 * @since 6.2
 	 */
-	public void addEntityNameResolver(EntityNameResolver entityNameResolver) {
+	public Configuration addEntityNameResolver(EntityNameResolver entityNameResolver) {
 		if ( entityNameResolvers == null ) {
 			entityNameResolvers = new ArrayList<>();
 		}
 		entityNameResolvers.add( entityNameResolver );
+		return null;
 	}
 
 	/**
 	 * Sets the {@link SharedCacheMode} to use.
 	 * <p>
 	 * Note that currently only {@link jakarta.persistence.SharedCacheMode#ALL}
-	 * has any effect in terms of {@code hbm.xml} binding.
+	 * has any effect on {@code hbm.xml} binding.
 	 *
 	 * @param sharedCacheMode The SharedCacheMode to use
 	 */
-	public void setSharedCacheMode(SharedCacheMode sharedCacheMode) {
+	public Configuration setSharedCacheMode(SharedCacheMode sharedCacheMode) {
 		this.sharedCacheMode = sharedCacheMode;
+		return null;
 	}
 
 

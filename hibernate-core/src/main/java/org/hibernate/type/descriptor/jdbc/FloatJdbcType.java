@@ -12,11 +12,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterNumericData;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -52,8 +50,11 @@ public class FloatJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		if ( length != null && length <= typeConfiguration.getServiceRegistry().getService( JdbcServices.class ).getDialect().getFloatPrecision() ) {
-			return typeConfiguration.getJavaTypeRegistry().getDescriptor( Float.class );
+		if ( length != null ) {
+			int floatPrecision = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect().getFloatPrecision();
+			if ( length <= floatPrecision ) {
+				return typeConfiguration.getJavaTypeRegistry().getDescriptor( Float.class );
+			}
 		}
 		return typeConfiguration.getJavaTypeRegistry().getDescriptor( Double.class );
 	}

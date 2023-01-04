@@ -26,6 +26,7 @@ import org.hibernate.pretty.MessageHelper;
  * <li>A <em>managed entity</em> (the {@code managedEntity} method parameter) is
  *     the managed entity that is the result of merging an entity.
  * </ul>
+ * <p>
  * A merge entity can be transient, detached, or managed. If it is managed, then
  * it is identical to its resulting managed entity.
  * <p>
@@ -53,6 +54,7 @@ import org.hibernate.pretty.MessageHelper;
  * <li>The map returned by {@link #invertMap()} will only contain the "newest"
  *     (most recently added) managed-to-merge cross-reference to its merge entity.
  * </ul>
+ * <p>
  * The following method is intended to be used by an implementation of
  * {@link org.hibernate.event.spi.MergeEventListener} to add a merge entity and its
  * corresponding managed entity to a {@code MergeContext} and indicate if the merge

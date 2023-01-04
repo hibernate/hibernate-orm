@@ -16,10 +16,12 @@ import java.sql.Struct;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -54,17 +56,30 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 	};
 
 	private final String oracleTypeName;
+	private final int[] orderMapping;
+	private final int[] inverseOrderMapping;
 	private final EmbeddableMappingType embeddableMappingType;
 	private final ValueExtractor<Object[]> objectArrayExtractor;
 
 	private OracleStructJdbcType() {
 		// The default instance is for reading only and will return an Object[]
-		this( null, null );
+		this( null, null, null );
 	}
 
-	public OracleStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName) {
-		this.oracleTypeName = typeName == null ? null : typeName.toUpperCase( Locale.ROOT );
+	public OracleStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
 		this.embeddableMappingType = embeddableMappingType;
+		this.oracleTypeName = typeName == null ? null : typeName.toUpperCase( Locale.ROOT );
+		this.orderMapping = orderMapping;
+		if ( orderMapping == null ) {
+			this.inverseOrderMapping = null;
+		}
+		else {
+			final int[] inverseOrderMapping = new int[orderMapping.length];
+			for ( int i = 0; i < orderMapping.length; i++ ) {
+				inverseOrderMapping[orderMapping[i]] = i;
+			}
+			this.inverseOrderMapping = inverseOrderMapping;
+		}
 		// We cache the extractor for Object[] here
 		// since that is used in AggregateEmbeddableFetchImpl and AggregateEmbeddableResultImpl
 		this.objectArrayExtractor = createBasicExtractor( new UnknownBasicJavaType<>( Object[].class ) );
@@ -76,8 +91,19 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 	}
 
 	@Override
-	public AggregateJdbcType resolveAggregateJdbcType(EmbeddableMappingType mappingType, String sqlType) {
-		return new OracleStructJdbcType( mappingType, sqlType );
+	public AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext) {
+		return new OracleStructJdbcType(
+				mappingType,
+				sqlType,
+				creationContext.getBootModel()
+						.getDatabase()
+						.getDefaultNamespace()
+						.locateUserDefinedType( Identifier.toIdentifier( sqlType ) )
+						.getOrderMapping()
+		);
 	}
 
 	@Override
@@ -113,6 +139,7 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 	public Object createJdbcValue(Object domainValue, WrapperOptions options) throws SQLException {
 		final Object[] jdbcValues = StructHelper.getJdbcValues(
 				embeddableMappingType,
+				orderMapping,
 				embeddableMappingType.getValues( domainValue ),
 				options
 		);
@@ -126,7 +153,7 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 	@Override
 	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
 		final Object[] attributes = ( (Struct) rawJdbcValue ).getAttributes();
-		wrapRawJdbcValues( embeddableMappingType, attributes, 0, options );
+		wrapRawJdbcValues( embeddableMappingType, orderMapping, inverseOrderMapping, attributes, 0, options );
 		return attributes;
 	}
 
@@ -182,13 +209,14 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 				final Object[] values = struct.getAttributes();
 				final boolean jdbcRepresentation = getJavaType().getJavaTypeClass() == Object[].class;
 				if ( jdbcRepresentation ) {
-					wrapRawJdbcValues( embeddableMappingType, values, 0, options );
+					wrapRawJdbcValues( embeddableMappingType, orderMapping, inverseOrderMapping, values, 0, options );
 					//noinspection unchecked
 					return (X) values;
 				}
 				assert embeddableMappingType != null && embeddableMappingType.getJavaType() == getJavaType();
 				final Object[] attributeValues = getAttributeValues(
 						embeddableMappingType,
+						orderMapping,
 						values,
 						options
 				);
@@ -201,13 +229,14 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 		};
 	}
 
-	public static Object[] getAttributeValues(
+	private static Object[] getAttributeValues(
 			EmbeddableMappingType embeddableMappingType,
+			int[] orderMapping,
 			Object[] rawJdbcValues,
 			WrapperOptions options) throws SQLException {
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
 		final Object[] attributeValues;
-		if ( numberOfAttributeMappings != rawJdbcValues.length ) {
+		if ( numberOfAttributeMappings != rawJdbcValues.length || orderMapping != null ) {
 			attributeValues = new Object[numberOfAttributeMappings];
 		}
 		else {
@@ -215,8 +244,22 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 		}
 		int jdbcIndex = 0;
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
-			jdbcIndex += injectAttributeValue( attributeMapping, attributeValues, i, rawJdbcValues, jdbcIndex, options );
+			final int attributeIndex;
+			if ( orderMapping == null ) {
+				attributeIndex = i;
+			}
+			else {
+				attributeIndex = orderMapping[i];
+			}
+			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( attributeIndex );
+			jdbcIndex += injectAttributeValue(
+					attributeMapping,
+					attributeValues,
+					attributeIndex,
+					rawJdbcValues,
+					jdbcIndex,
+					options
+			);
 		}
 		return attributeValues;
 	}
@@ -235,12 +278,25 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 			final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
 			if ( embeddableMappingType.getAggregateMapping() != null ) {
 				jdbcValueCount = 1;
-				if ( rawJdbcValue instanceof Struct ) {
-					final Object[] subValues = getAttributeValues(
-							embeddableMappingType,
-							( (Struct) rawJdbcValue ).getAttributes(),
-							options
-					);
+				if ( rawJdbcValue == null ) {
+					attributeValues[attributeIndex] = null;
+				}
+				else {
+					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) embeddableMappingType.getAggregateMapping()
+							.getJdbcMapping()
+							.getJdbcType();
+					final Object[] subValues;
+					if ( aggregateJdbcType instanceof OracleStructJdbcType ) {
+						subValues = getAttributeValues(
+								embeddableMappingType,
+								( (OracleStructJdbcType) aggregateJdbcType ).orderMapping,
+								( (Struct) rawJdbcValue ).getAttributes(),
+								options
+						);
+					}
+					else {
+						subValues = aggregateJdbcType.extractJdbcValues( rawJdbcValue, options );
+					}
 					attributeValues[attributeIndex] = embeddableMappingType.getRepresentationStrategy()
 							.getInstantiator()
 							.instantiate(
@@ -250,15 +306,12 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 											.getFactory()
 							);
 				}
-				else {
-					attributeValues[attributeIndex] = rawJdbcValue;
-				}
 			}
 			else {
 				jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 				final Object[] jdbcValues = new Object[jdbcValueCount];
 				System.arraycopy( rawJdbcValues, jdbcIndex, jdbcValues, 0, jdbcValues.length );
-				final Object[] subValues = getAttributeValues( embeddableMappingType, jdbcValues, options );
+				final Object[] subValues = getAttributeValues( embeddableMappingType, null, jdbcValues, options );
 				attributeValues[attributeIndex] = embeddableMappingType.getRepresentationStrategy()
 						.getInstantiator()
 						.instantiate(
@@ -297,12 +350,27 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 
 	private static int wrapRawJdbcValues(
 			EmbeddableMappingType embeddableMappingType,
+			int[] orderMapping,
+			int[] inverseOrderMapping,
 			Object[] jdbcValues,
 			int jdbcIndex,
 			WrapperOptions options) throws SQLException {
+		final Object[] targetJdbcValues;
+		if ( orderMapping == null ) {
+			targetJdbcValues = jdbcValues;
+		}
+		else {
+			targetJdbcValues = jdbcValues.clone();
+		}
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
+			final AttributeMapping attributeMapping;
+			if ( orderMapping == null ) {
+				attributeMapping = embeddableMappingType.getAttributeMapping( i );
+			}
+			else {
+				attributeMapping = embeddableMappingType.getAttributeMapping( orderMapping[i] );
+			}
 			final MappingType mappedType = attributeMapping.getMappedType();
 
 			if ( mappedType instanceof EmbeddableMappingType ) {
@@ -311,32 +379,36 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) embeddableType.getAggregateMapping()
 							.getJdbcMapping()
 							.getJdbcType();
-					jdbcValues[jdbcIndex] = aggregateJdbcType.extractJdbcValues( jdbcValues[jdbcIndex], options );
+					final Object rawJdbcValue = targetJdbcValues[jdbcIndex];
+					targetJdbcValues[jdbcIndex] = aggregateJdbcType.extractJdbcValues( rawJdbcValue, options );
 					jdbcIndex++;
 				}
 				else {
-					jdbcIndex = wrapRawJdbcValues( embeddableType, jdbcValues, jdbcIndex, options );
+					jdbcIndex = wrapRawJdbcValues( embeddableType, null, null, targetJdbcValues, jdbcIndex, options );
 				}
 			}
 			else {
 				assert attributeMapping.getJdbcTypeCount() == 1;
-				final Object rawJdbcValue = jdbcValues[jdbcIndex];
+				final Object rawJdbcValue = targetJdbcValues[jdbcIndex];
 				if ( rawJdbcValue != null ) {
 					final JdbcMapping jdbcMapping = attributeMapping.getJdbcMappings().get( 0 );
 					switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 						case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 						case SqlTypes.TIMESTAMP_UTC:
 							// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
-							jdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType()
+							targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType()
 									.wrap( transformRawJdbcValue( rawJdbcValue, options ), options );
 							break;
 						default:
-							jdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
+							targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
 							break;
 					}
 				}
 				jdbcIndex++;
 			}
+		}
+		if ( orderMapping != null ) {
+			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, targetJdbcValues, jdbcValues );
 		}
 		return jdbcIndex;
 	}

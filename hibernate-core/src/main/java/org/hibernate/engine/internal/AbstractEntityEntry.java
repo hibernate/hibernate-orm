@@ -41,9 +41,9 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
  * A base implementation of EntityEntry
  *
  * @author Gavin King
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  * @author Gunnar Morling
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
+ * @author Sanne Grinovero
  */
 public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
@@ -73,6 +73,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	 *
 	 * 0000 0000 | 0000 0000 | 0654 3333 | 2222 1111
 	 * </pre>
+	 * <p>
 	 * Use {@link #setCompressedValue(EnumState, Enum)},
 	 * {@link #getCompressedValue(EnumState)} etc
 	 * to access the enums and booleans stored in this value.

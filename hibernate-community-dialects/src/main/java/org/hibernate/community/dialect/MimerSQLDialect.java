@@ -54,7 +54,7 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 /**
  * A dialect for Mimer SQL 11.
  *
- * @author <a href="mailto:fredrik.alund@mimer.se">Fredrik lund</a>
+ * @author Fredrik lund
  * @author Gavin King
  */
 public class MimerSQLDialect extends Dialect {

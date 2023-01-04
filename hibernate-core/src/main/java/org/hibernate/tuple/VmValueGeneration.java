@@ -11,16 +11,15 @@ import java.util.EnumSet;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.Session;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 
 import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 /**
- * An {@link InMemoryGenerator} which delegates to a {@link ValueGenerator}.
+ * A {@link BeforeExecutionGenerator} which delegates to a {@link ValueGenerator}.
  * Underlies the {@link GeneratorType} annotation.
  *
  * @author Gunnar Morling
@@ -29,7 +28,7 @@ import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
  */
 @Internal
 @Deprecated(since = "6.2")
-public class VmValueGeneration implements InMemoryGenerator {
+public class VmValueGeneration implements BeforeExecutionGenerator {
 
 	private final EnumSet<EventType> eventTypes;
 	private final ValueGenerator<?> generator;

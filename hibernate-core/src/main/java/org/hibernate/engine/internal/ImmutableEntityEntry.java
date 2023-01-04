@@ -23,9 +23,9 @@ import org.hibernate.persister.entity.EntityPersister;
  * immutable in terms of its internal state; the term immutable here refers to the entity it describes.
  *
  * @author Gavin King
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  * @author Gunnar Morling
- * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
+ * @author Sanne Grinovero
  *
  * @see org.hibernate.annotations.Immutable
  */

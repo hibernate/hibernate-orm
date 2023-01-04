@@ -20,11 +20,6 @@ public class Oracle12cIdentityColumnSupport extends IdentityColumnSupportImpl {
 	}
 
 	@Override
-	public boolean supportsInsertSelectIdentity() {
-		return true;
-	}
-
-	@Override
 	public String getIdentityColumnString(int type) {
 		return "generated as identity";
 	}
@@ -32,7 +27,7 @@ public class Oracle12cIdentityColumnSupport extends IdentityColumnSupportImpl {
 	@Override
 	public GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
 			PostInsertIdentityPersister persister, Dialect dialect) {
-		return new Oracle12cGetGeneratedKeysDelegate( persister, dialect );
+		return new GetGeneratedKeysDelegate( persister, dialect, false );
 	}
 
 	@Override

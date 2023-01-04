@@ -15,6 +15,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -144,7 +145,9 @@ public class EmbeddedAttributeMapping
 				inverseModelPart.getFetchableName(),
 				-1,
 				inverseModelPart.getFetchableKey(),
-				null,
+				inverseModelPart instanceof AttributeMapping
+						? inverseModelPart.asAttributeMapping().getAttributeMetadata()
+						: null,
 				inverseModelPart.getMappedFetchOptions(),
 				keyDeclaringType,
 				inverseModelPart instanceof PropertyBasedMapping
@@ -212,6 +215,11 @@ public class EmbeddedAttributeMapping
 	@Override
 	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		getEmbeddableTypeDescriptor().decompose( domainValue, valueConsumer, session );
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return getEmbeddableTypeDescriptor().hasPartitionedSelectionMapping();
 	}
 
 	@Override
@@ -292,10 +300,7 @@ public class EmbeddedAttributeMapping
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState) {
-		if ( embeddableMappingType.shouldSelectAggregateMapping()
-				// We always want to set the whole aggregate mapping in the SET clause if a single expression is given
-				// This usually happens when we try to set the aggregate to e.g. null or a parameter
-				|| clause == Clause.SET && embeddableMappingType.getAggregateMapping() != null ) {
+		if ( embeddableMappingType.getAggregateMapping() != null ) {
 			final SelectableMapping selection = embeddableMappingType.getAggregateMapping();
 			final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
 			final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );

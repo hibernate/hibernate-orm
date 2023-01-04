@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.ContributableDatabaseObject;
@@ -40,6 +41,7 @@ public class UserDefinedType implements Serializable, ContributableDatabaseObjec
 	private Identifier name;
 
 	private final Map<String, Column> columns = new LinkedHashMap<>();
+	private int[] orderMapping;
 	private String comment;
 
 	public UserDefinedType(
@@ -254,5 +256,26 @@ public class UserDefinedType implements Serializable, ContributableDatabaseObjec
 			qualifiedName.append( schema.render() ).append( '.' );
 		}
 		return qualifiedName.append( name.render() ).toString();
+	}
+
+	@Internal
+	public void reorderColumns(List<Column> columns) {
+		if ( orderMapping != null ) {
+			return;
+		}
+		orderMapping = new int[columns.size()];
+		int i = 0;
+		for ( Column column : this.columns.values() ) {
+			orderMapping[columns.indexOf( column )] = i++;
+		}
+		this.columns.clear();
+		for ( Column column : columns ) {
+			this.columns.put( column.getCanonicalName(), column );
+		}
+	}
+
+	@Internal
+	public int[] getOrderMapping() {
+		return orderMapping;
 	}
 }

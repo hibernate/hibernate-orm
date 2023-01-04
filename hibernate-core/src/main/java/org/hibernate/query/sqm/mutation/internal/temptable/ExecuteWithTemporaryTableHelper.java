@@ -20,7 +20,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
+import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -67,8 +67,7 @@ public final class ExecuteWithTemporaryTableHelper {
 
 		final NamedTableReference idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
-				InsertSelectStatement.DEFAULT_ALIAS,
-				false
+				InsertSelectStatement.DEFAULT_ALIAS
 		);
 		final InsertSelectStatement idTableInsert = new InsertSelectStatement( idTableReference );
 

@@ -7,11 +7,13 @@
 package org.hibernate;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
@@ -39,6 +41,7 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * <li><em>detached:</em> previously persistent, but not currently associated with the
  *     {@code Session}.
  * </ul>
+ * <p>
  * At any given time, an instance may be associated with at most one open session.
  * <p>
  * Any instance returned by {@link #get(Class, Object)} or by a query is persistent.
@@ -63,11 +66,11 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * detached instance to the persistent state are now deprecated, and clients should now
  * migrate to the use of {@code merge()}.
  * <p>
- * From {@link FlushMode time to time}, the session performs a {@linkplain #flush() flushing}
- * operation, and synchronizes state held in memory with persistent state held in the
- * database by executing SQL {@code insert}, {@code update}, and {@code delete} statements.
- * Note that SQL statements are often not executed synchronously by the methods of the
- * {@code Session} interface. If synchronous execution of SQL is desired, the
+ * From {@linkplain FlushMode time to time}, a {@linkplain #flush() flush operation} is
+ * triggered, and the session synchronizes state held in memory with persistent state
+ * held in the database by executing SQL {@code insert}, {@code update}, and {@code delete}
+ * statements. Note that SQL statements are often not executed synchronously by the methods
+ * of the {@code Session} interface. If synchronous execution of SQL is desired, the
  * {@link StatelessSession} allows this.
  * <p>
  * A persistence context holds hard references to all its entities and prevents them
@@ -76,9 +79,6 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * {@link #clear()} and {@link #detach(Object)} may be used to control memory usage.
  * However, for processes which read many entities, a {@link StatelessSession} should
  * be used.
- * <p>
- * A {@code Session} is never threadsafe. Each thread or transaction must obtain its own
- * instance from a {@link SessionFactory}.
  * <p>
  * A session might be associated with a container-managed JTA transaction, or it might be
  * in control of its own <em>resource-local</em> database transaction. In the case of a
@@ -103,9 +103,36 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * }
  * </pre>
  * <p>
- * If the {@code Session} throws an exception, the current transaction must be rolled back
- * and the session must be discarded. The internal state of the {@code Session} might not
- * be consistent with the database after the exception occurs.
+ * It's crucially important to appreciate the following restrictions and why they exist:
+ * <ul>
+ * <li>If the {@code Session} throws an exception, the current transaction must be rolled
+ *     back and the session must be discarded. The internal state of the {@code Session}
+ *     cannot be expected to be consistent with the database after the exception occurs.
+ * <li>At the end of a logical transaction, the session must be explicitly {@linkplain
+ *     #close() destroyed}, so that all JDBC resources may be released.
+ * <li>A {@code Session} is never thread-safe. It contains various different sorts of
+ *     fragile mutable state. Each thread or transaction must obtain its own dedicated
+ *     instance from the {@link SessionFactory}.
+ * </ul>
+ * <p>
+ * An easy way to be sure that session and transaction management is being done correctly
+ * is to {@linkplain SessionFactory#inTransaction(Consumer) let the factory do it}:
+ * <pre>
+ * sessionFactory.inTransaction(session -> {
+ *     //do the work
+ *     ...
+ * });
+ * </pre>
+ * <p>
+ * A session may be used to {@linkplain #doWork(Work) execute JDBC work} using its JDBC
+ * connection and transaction:
+ * <pre>
+ * session.doWork(connection -> {
+ *     try ( PreparedStatement ps = connection.prepareStatement( " ... " ) ) {
+ *         ps.execute();
+ *     }
+ * });
+ * </pre>
  * <p>
  * A {@code Session} instance is serializable if its entities are serializable.
  * <p>
@@ -130,9 +157,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Force this session to flush. Must be called at the end of a unit of work,
 	 * before the transaction is committed. Depending on the current
-	 * {@link #setHibernateFlushMode(FlushMode)} flush mode}, the session might automatically
-	 * flush when {@link Transaction#commit()} is called, and it is not necessary
-	 * to call this method directly.
+	 * {@linkplain #setHibernateFlushMode(FlushMode) flush mode}, the session might
+	 * automatically flush when {@link Transaction#commit()} is called, and it is not
+	 * necessary to call this method directly.
 	 * <p>
 	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory.
@@ -706,6 +733,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>perform a version check with {@link LockMode#READ}, or
 	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_WRITE}).
 	 * </ul>
+	 * <p>
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
@@ -735,6 +763,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>perform a version check with {@link LockMode#READ}, or
 	 * <li>upgrade to a pessimistic lock with {@link LockMode#PESSIMISTIC_WRITE}).
 	 * </ul>
+	 * <p>
 	 * This operation cascades to associated instances if the association is
 	 * mapped with {@link org.hibernate.annotations.CascadeType#LOCK}.
 	 *
@@ -756,6 +785,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <li>the {@linkplain LockRequest#setLockScope(PessimisticLockScope) scope}
 	 *     that is, whether the lock extends to rows of owned collections.
 	 * </ul>
+	 * <p>
 	 * Timeout and scope are ignored if the specified {@code LockMode} represents
 	 * a flavor of {@linkplain LockMode#OPTIMISTIC optimistic} locking.
 	 * <p>
@@ -782,6 +812,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *     SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
+	 * <p>
 	 * This operation cascades to associated instances if the association is mapped
 	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
 	 * <p>
@@ -803,6 +834,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *     SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
+	 * <p>
 	 * This operation cascades to associated instances if the association is mapped
 	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
 	 *
@@ -1149,6 +1181,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Enable the named {@linkplain Filter filter} for this current session.
+	 * <p>
+	 * The returned {@link Filter} object must be used to bind arguments
+	 * to parameters of the filter, and every parameter must be set before
+	 * any other operation of this session is called.
 	 *
 	 * @param filterName the name of the filter to be enabled.
 	 *
@@ -1264,9 +1300,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void disableFetchProfile(String name) throws UnknownProfileException;
 
 	/**
-	 * Retrieve this session's helper/delegate for creating LOB instances.
+	 * Obtain a {@linkplain LobHelper factory} for instances of {@link java.sql.Blob}
+	 * and {@link java.sql.Clob}.
 	 *
-	 * @return this session's {@link LobHelper LOB helper}
+	 * @return an instance of {@link LobHelper}
 	 */
 	LobHelper getLobHelper();
 
@@ -1348,9 +1385,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 		boolean getScope();
 
 		/**
-		 * Check if locking extends to owned collections and associated entities.
-		 *
-		 * @return true if locking will be extended to owned collections and associated entities
+		 * Obtain the {@link PessimisticLockScope}, which determines if locking
+		 * extends to owned collections and associated entities.
 		 */
 		default PessimisticLockScope getLockScope() {
 			return getScope() ? PessimisticLockScope.EXTENDED : PessimisticLockScope.NORMAL;
@@ -1371,6 +1407,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 		@Deprecated(since = "6.2")
 		LockRequest setScope(boolean scope);
 
+		/**
+		 * Set the {@link PessimisticLockScope}, which determines if locking
+		 * extends to owned collections and associated entities.
+		 */
 		default LockRequest setLockScope(PessimisticLockScope scope) {
 			return setScope( scope == PessimisticLockScope.EXTENDED );
 		}
@@ -1432,7 +1472,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	/**
-	 * Create a {@link Query} for the given JPA {@link CriteriaDelete}
+	 * Create a {@link Query} for the given JPA {@link CriteriaDelete}.
 	 *
 	 * @deprecated use {@link #createMutationQuery(CriteriaDelete)}
 	 */
@@ -1440,7 +1480,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	Query createQuery(CriteriaDelete deleteQuery);
 
 	/**
-	 * Create a {@link Query} for the given JPA {@link CriteriaUpdate}
+	 * Create a {@link Query} for the given JPA {@link CriteriaUpdate}.
 	 *
 	 * @deprecated use {@link #createMutationQuery(CriteriaUpdate)}
 	 */

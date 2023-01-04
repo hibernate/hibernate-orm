@@ -18,14 +18,13 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.entity.CacheEntityLoaderHelper;
-import org.hibernate.loader.entity.CacheEntityLoaderHelper.PersistenceContextEntry;
+import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
+import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.PersistenceContextEntry;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -65,9 +64,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final Class<?> idClass = persister.getIdentifierType().getReturnedClass();
 			if ( handleIdType( persister, event, loadType, idClass) ) {
 				throw new TypeMismatchException(
-						"Provided id of the wrong type for class " + persister.getEntityName()
-								+ ". Expected: " + idClass
-								+ ", got " + event.getEntityId().getClass()
+						"Supplied id had wrong type: entity '" + persister.getEntityName()
+								+ "' has id type '" + idClass
+								+ "' but supplied id was of type '" + event.getEntityId().getClass() + "'"
 				);
 			}
 		}
@@ -443,8 +442,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private static boolean wasDeleted(PersistenceContext persistenceContext, Object existing) {
-		final Status status = persistenceContext.getEntry( existing ).getStatus();
-		return status == Status.DELETED || status == Status.GONE;
+		return persistenceContext.getEntry( existing ).getStatus().isDeletedOrGone();
 	}
 
 	private static Object createProxy(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {

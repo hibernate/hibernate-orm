@@ -28,6 +28,7 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
+import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
@@ -53,7 +54,6 @@ import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
@@ -64,6 +64,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
+import org.hibernate.jpa.boot.spi.JpaSettings;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
@@ -88,7 +89,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
-import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.CFG_XML_FILE;
 import static org.hibernate.cfg.AvailableSettings.CLASSLOADERS;
 import static org.hibernate.cfg.AvailableSettings.CLASS_CACHE_PREFIX;
@@ -140,22 +140,22 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	/**
 	 * Names a {@link IntegratorProvider}
 	 */
-	public static final String INTEGRATOR_PROVIDER = "hibernate.integrator_provider";
+	public static final String INTEGRATOR_PROVIDER = JpaSettings.INTEGRATOR_PROVIDER;
 	
 	/**
 	 * Names a {@link StrategyRegistrationProviderList}
 	 */
-	public static final String STRATEGY_REGISTRATION_PROVIDERS = "hibernate.strategy_registration_provider";
+	public static final String STRATEGY_REGISTRATION_PROVIDERS = JpaSettings.STRATEGY_REGISTRATION_PROVIDERS;
 	
 	/**
 	 * Names a {@link TypeContributorList}
 	 */
-	public static final String TYPE_CONTRIBUTORS = "hibernate.type_contributors";
+	public static final String TYPE_CONTRIBUTORS = JpaSettings.TYPE_CONTRIBUTORS;
 
 	/**
-	 * Names a {@link MetadataBuilderImplementor}
+	 * Names a {@link MetadataBuilderContributor}
 	 */
-	public static final String METADATA_BUILDER_CONTRIBUTOR = "hibernate.metadata_builder_contributor";
+	public static final String METADATA_BUILDER_CONTRIBUTOR = JpaSettings.METADATA_BUILDER_CONTRIBUTOR;
 
 	/**
 	 * Names a Jandex {@link Index} instance to use.
@@ -1473,7 +1473,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			( ( SessionFactoryBuilderImplementor ) sfBuilder ).disableJtaTransactionAccess();
 		}
 
-		final boolean allowRefreshDetachedEntity = readBooleanConfigurationValue( ALLOW_REFRESH_DETACHED_ENTITY );
+		final boolean allowRefreshDetachedEntity = readBooleanConfigurationValue( AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY );
 		if ( !allowRefreshDetachedEntity ) {
 			( (SessionFactoryBuilderImplementor) sfBuilder ).disableRefreshDetachedEntity();
 		}

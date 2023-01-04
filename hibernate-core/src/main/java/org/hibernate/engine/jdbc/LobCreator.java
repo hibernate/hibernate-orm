@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.engine.jdbc;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.sql.Blob;
@@ -13,9 +14,12 @@ import java.sql.NClob;
 
 /**
  * Contract for creating various LOB references.
- * 
+ *
  * @author Steve Ebersole
  * @author Gail Badner
+ *
+ * @see org.hibernate.type.descriptor.WrapperOptions#getLobCreator()
+ * @see org.hibernate.LobHelper
  */
 public interface LobCreator {
 	/**

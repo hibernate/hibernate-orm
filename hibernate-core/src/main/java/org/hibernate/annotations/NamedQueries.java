@@ -13,8 +13,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A grouping of Hibernate-specific {@link NamedQuery} definitions.  Effectively extends the named query
- * definitions made available through {@link jakarta.persistence.NamedQueries}.
+ * A grouping of {@link NamedQuery} definitions. Extends the named query definitions
+ * made available through {@link jakarta.persistence.NamedQueries}.
  *
  * @author Emmanuel Bernard
  * @author Carlos Gonzalez-Cadenas

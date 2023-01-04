@@ -38,13 +38,12 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 			RuntimeModelCreationContext creationContext) {
 		this.entityMappingType = entityMappingType;
 		if ( bootDescriptor.getComponentClassName() != null && ReflectHelper.isAbstractClass( bootDescriptor.getComponentClass() ) ) {
-			final ProxyFactoryFactory proxyFactoryFactory = creationContext.getSessionFactory()
-					.getServiceRegistry()
-					.getService( ProxyFactoryFactory.class );
 			this.instantiator = new EmbeddableInstantiatorProxied(
 					bootDescriptor.getComponentClass(),
 					() -> virtualIdEmbeddable,
-					proxyFactoryFactory.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
+					creationContext.getServiceRegistry()
+							.getService( ProxyFactoryFactory.class )
+							.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
 
 			);
 		}

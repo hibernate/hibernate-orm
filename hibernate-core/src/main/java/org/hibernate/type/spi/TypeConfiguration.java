@@ -32,6 +32,7 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -40,27 +41,31 @@ import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
-import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -73,22 +78,32 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * Defines a set of available Type instances as isolated from other configurations.  The
- * isolation is defined by each instance of a TypeConfiguration.
+ * Each instance defines a set of {@linkplain Type types} available in a given
+ * persistence unit, and isolates them from other configurations.
  * <p>
- * Note that each Type is inherently "scoped" to a TypeConfiguration.  We only ever access
- * a Type through a TypeConfiguration - specifically the TypeConfiguration in effect for
- * the current persistence unit.
+ * Note that each instance of {@code Type} is inherently "scoped" to a
+ * {@code TypeConfiguration}. We always obtain a reference to a {@code Type}
+ * via the {@code TypeConfiguration} associated with the current persistence
+ * unit.
  * <p>
- * Even though each Type instance is scoped to a TypeConfiguration, Types do not inherently
- * have access to that TypeConfiguration (mainly because Type is an extension contract - meaning
- * that Hibernate does not manage the full set of Types available in ever TypeConfiguration).
- * However Types will often want access to the TypeConfiguration, which can be achieved by the
- * Type simply implementing the {@link TypeConfigurationAware} interface.
+ * On the other hand, a {@code Type} does not inherently have access to its
+ * parent {@code TypeConfiguration} since extensions may contribute instances
+ * of {@code Type}, via {@link org.hibernate.boot.model.TypeContributions},
+ * for example, and the instantiation of such instances occurs outside the
+ * control of Hibernate.
+ * <p>
+ * In particular, a custom {@link org.hibernate.boot.model.TypeContributor}
+ * may contribute types to a {@code TypeConfiguration}.
+ * <p>
+ * If a {@code Type} requires access to the parent {@code TypeConfiguration},
+ * it should implement {@link TypeConfigurationAware}.
  *
  * @author Steve Ebersole
  *
  * @since 5.3
+ *
+ * @see org.hibernate.boot.model.TypeContributor
+ * @see org.hibernate.boot.model.TypeContributions
  */
 @Incubating
 public class TypeConfiguration implements SessionFactoryObserver, Serializable {
@@ -138,7 +153,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
-		return scope.getCurrentBaseSqlTypeIndicators();
+		return scope;
 	}
 
 	public Map<Integer, Set<String>> getJdbcToHibernateTypeContributionMap() {
@@ -149,25 +164,41 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	// Scoping
 
 	/**
-	 * Obtain the MetadataBuildingContext currently scoping the
-	 * TypeConfiguration.
+	 * Obtain the {@link MetadataBuildingContext} currently scoping this {@code TypeConfiguration}.
 	 *
-	 * @apiNote This will throw an exception if the SessionFactory is not yet
-	 * bound here.  See {@link Scope} for more details regarding the stages
-	 * a TypeConfiguration goes through
+	 * @apiNote Throws an exception if the {@code TypeConfiguration} is no longer scoped to the
+	 *          {@link MetadataBuildingContext}. See {@link Scope} for more details regarding the
+	 *          stages a {@code TypeConfiguration} passes through.
 	 *
-	 * @return The MetadataBuildingContext
+	 * @return The {@link MetadataBuildingContext}
+	 *
+	 * @deprecated This operation is not very typesafe, and we're migrating away from its use
 	 */
+	@Deprecated(since = "6.2")
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return scope.getMetadataBuildingContext();
 	}
 
+	/**
+	 * Scope this {@code TypeConfiguration} to the given {@link MetadataBuildingContext}.
+	 *
+	 * @implNote The given factory is not yet fully-initialized!
+	 *
+	 * @param metadataBuildingContext a {@link MetadataBuildingContext}
+	 */
 	public void scope(MetadataBuildingContext metadataBuildingContext) {
 		log.debugf( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
 		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
-	public MappingMetamodelImpl scope(SessionFactoryImplementor sessionFactory) {
+	/**
+	 * Scope this {@code TypeConfiguration} to the given {@link SessionFactory}.
+	 *
+	 * @implNote The given factory is not yet fully-initialized!
+	 *
+	 * @param sessionFactory a {@link SessionFactory} that is in a very fragile state
+	 */
+	public void scope(SessionFactoryImplementor sessionFactory) {
 		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImplementor [%s]", this, sessionFactory );
 
 		if ( scope.getMetadataBuildingContext() == null ) {
@@ -176,36 +207,55 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		scope.setSessionFactory( sessionFactory );
 		sessionFactory.addObserver( this );
-
-		return new MappingMetamodelImpl( sessionFactory, this );
 	}
 
 	/**
-	 * Obtain the SessionFactory currently scoping the TypeConfiguration.
+	 * Obtain the {@link SessionFactory} currently scoping this {@code TypeConfiguration}.
 	 *
-	 * @apiNote This will throw an exception if the SessionFactory is not yet
-	 * bound here.  See {@link Scope} for more details regarding the stages
-	 * a TypeConfiguration goes through (this is "runtime stage")
+	 * @apiNote Throws an exception if the {@code TypeConfiguration} is not yet scoped to
+	 *          a factory. See {@link Scope} for more details regarding the stages a
+	 *          {@code TypeConfiguration} passes through (this is a "runtime stage").
 	 *
-	 * @return The SessionFactory
+	 * @return The {@link SessionFactory} to which this {@code TypeConfiguration} is scoped
 	 *
-	 * @throws IllegalStateException if the TypeConfiguration is currently not
-	 * associated with a SessionFactory (in "runtime stage").
+	 * @throws HibernateException if the {@code TypeConfiguration} is not currently scoped
+	 *                            to a {@link SessionFactory} (in a "runtime stage").
+	 *
+	 * @deprecated This operation is not very typesafe, and we're migrating away from its use
 	 */
+	@Deprecated(since = "6.2")
 	public SessionFactoryImplementor getSessionFactory() {
 		return scope.getSessionFactory();
 	}
 
 	/**
-	 * Obtain the ServiceRegistry scoped to the TypeConfiguration.
+	 * Obtain the {@link ServiceRegistry} scoped to this {@code TypeConfiguration}.
 	 *
-	 * @apiNote Depending on what the {@link Scope} is currently scoped to will determine where the
-	 * {@link ServiceRegistry} is obtained from.
+	 * @apiNote The current {@link Scope} will determine from where the {@link ServiceRegistry}
+	 *          is obtained.
 	 *
-	 * @return The ServiceRegistry
+	 * @return The {@link ServiceRegistry} for the current scope
+	 *
+	 * @deprecated This simply isn't a very sensible place to hang the {@link ServiceRegistry}
 	 */
+	@Deprecated(since = "6.2")
 	public ServiceRegistry getServiceRegistry() {
 		return scope.getServiceRegistry();
+	}
+
+	/**
+	 * Obtain the {@link JpaCompliance} setting.
+	 */
+	public JpaCompliance getJpaCompliance() {
+		return scope.getJpaCompliance();
+	}
+
+	/**
+	 * Workaround for an issue faced in {@link org.hibernate.type.EntityType#getReturnedClass()}.
+	 */
+	@Internal
+	public Class<?> entityClassForEntityName(String entityName) {
+		return scope.entityClassForEntityName(entityName);
 	}
 
 	@Override
@@ -252,24 +302,28 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	/**
 	 * Understands the following target type names for the {@code cast()} function:
 	 * <ul>
-	 * <li>String
-	 * <li>Character
-	 * <li>Byte, Integer, Long
-	 * <li>Float, Double
-	 * <li>Time, Date, Timestamp
-	 * <li>LocalDate, LocalTime, LocalDateTime
-	 * <li>BigInteger
-	 * <li>BigDecimal
-	 * <li>Binary
-	 * <li>Boolean (fragile)
+	 * <li>{@code String}
+	 * <li>{@code Character}
+	 * <li>{@code Byte}, {@code Short}, {@code Integer}, {@code Long}
+	 * <li>{@code Float}, {@code Double}
+	 * <li>{@code Time}, {@code Date}, {@code Timestamp}
+	 * <li>{@code LocalDate}, {@code LocalTime}, {@code LocalDateTime}
+	 * <li>{@code BigInteger}
+	 * <li>{@code BigDecimal}
+	 * <li>{@code Binary}
+	 * <li>{@code Boolean}
+	 *     (fragile, not aware of encoding to character via
+	 *     {@link org.hibernate.type.CharBooleanConverter})
 	 * </ul>
-	 * (The type names are not case-sensitive.)
+	 * <p>
+	 * The type names are not case-sensitive.
 	 */
 	public BasicValuedMapping resolveCastTargetType(String name) {
 		switch ( name.toLowerCase() ) {
 			case "string": return getBasicTypeForJavaType( String.class );
 			case "character": return getBasicTypeForJavaType( Character.class );
 			case "byte": return getBasicTypeForJavaType( Byte.class );
+			case "short": return getBasicTypeForJavaType( Short.class );
 			case "integer": return getBasicTypeForJavaType( Integer.class );
 			case "long": return getBasicTypeForJavaType( Long.class );
 			case "float": return getBasicTypeForJavaType( Float.class );
@@ -298,14 +352,14 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				}
 
 				try {
-					final ClassLoaderService cls = getServiceRegistry().getService( ClassLoaderService.class );
-					final Class<?> javaTypeClass = cls.classForName( name );
-
+					final Class<?> javaTypeClass =
+							scope.getServiceRegistry().getService( ClassLoaderService.class )
+									.classForName( name );
 					final JavaType<?> jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
 					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
 					return basicTypeRegistry.resolve( jtd, jdbcType );
 				}
-				catch (Exception ignore) {
+				catch ( Exception ignore ) {
 				}
 
 				throw new HibernateException( "unrecognized cast target type: " + name );
@@ -314,32 +368,34 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	/**
-	 * Encapsulation of lifecycle concerns for a TypeConfiguration:<ol>
+	 * Encapsulation of lifecycle concerns of a {@link TypeConfiguration}:
+	 * <ol>
 	 *     <li>
-	 *         "Boot" is where the {@link TypeConfiguration} is first
-	 *         built as the boot-model ({@link org.hibernate.boot.model}) of
-	 *         the user's domain model is converted into the runtime-model
-	 *         ({@link org.hibernate.metamodel.model}). During this phase,
-	 *         {@link #getMetadataBuildingContext()} will be accessible but
-	 *         {@link #getSessionFactory} will throw an exception.
+	 *         "Boot" is where the {@link TypeConfiguration} is first built as
+	 *         {@linkplain org.hibernate.boot.model the boot model} of the domain
+	 *         model is converted into {@linkplain org.hibernate.metamodel.model
+	 *         the runtime model}. During this phase,
+	 *         {@link #getMetadataBuildingContext()} is accessible but
+	 *         {@link #getSessionFactory} throws an exception.
 	 *     </li>
 	 *     <li>
-	 *         "Runtime" is where the runtime-model is accessible.  During this
-	 *         phase {@link #getSessionFactory()} is accessible while
-	 *         {@link #getMetadataBuildingContext()} will now throw an exception
+	 *         "Runtime" is where the runtime model is accessible. During this
+	 *         phase, {@link #getSessionFactory()} is accessible but
+	 *         {@link #getMetadataBuildingContext()} throws an exception.
 	 *     </li>
 	 *     <li>
-	 *        "Sunset" is after the SessionFactory has been closed.  At this point, both
-	 *        {@link #getSessionFactory()} and {@link #getMetadataBuildingContext()}
-	 *        will now throw an exception
+	 *        "Sunset" happens after the {@link SessionFactory} has been closed.
+	 *        Both {@link #getSessionFactory()} and {@link #getMetadataBuildingContext()}
+	 *        throw exceptions.
 	 *     </li>
 	 * </ol>
 	 * <p>
-	 * {@link #getServiceRegistry()} is available for both "Boot" and "Runtime".
-	 *
-	 * Each stage or phase is consider a scope for the TypeConfiguration.
+	 * On the other hand, the {@linkplain #getServiceRegistry() service registry}
+	 * is available during both "Boot" and "Runtime" phases.
+	 * <p>
+	 * Each stage or phase is considered a scope for the {@link TypeConfiguration}.
 	 */
-	private static class Scope implements Serializable {
+	private static class Scope implements JdbcTypeIndicators, Serializable {
 		private final TypeConfiguration typeConfiguration;
 
 		private transient MetadataBuildingContext metadataBuildingContext;
@@ -348,71 +404,72 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
 
-		private final transient JdbcTypeIndicators currentSqlTypeIndicators = new JdbcTypeIndicators() {
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
 
-			@Override
-			public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getBuildingOptions().getDefaultTimeZoneStorage()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getDefaultTimeZoneStorageStrategy();
-			}
+		@Override
+		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+			return sessionFactory == null
+					? metadataBuildingContext.getBuildingOptions().getDefaultTimeZoneStorage()
+					: sessionFactory.getSessionFactoryOptions().getDefaultTimeZoneStorageStrategy();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForBoolean() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForBoolean()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
-			}
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForBoolean()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForDuration() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForDuration()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
-			}
+		@Override
+		public int getPreferredSqlTypeCodeForDuration() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForDuration()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForUuid() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForUuid()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
-			}
+		@Override
+		public int getPreferredSqlTypeCodeForUuid() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForUuid()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForInstant() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForInstant()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForInstant();
-			}
+		@Override
+		public int getPreferredSqlTypeCodeForInstant() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForInstant()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForInstant();
+		}
 
-			@Override
-			public int getPreferredSqlTypeCodeForArray() {
-				return sessionFactory == null
-						? getMetadataBuildingContext().getPreferredSqlTypeCodeForArray()
-						: getTypeConfiguration().getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForArray();
-			}
-		};
+		@Override
+		public int getPreferredSqlTypeCodeForArray() {
+			return sessionFactory == null
+					? metadataBuildingContext.getPreferredSqlTypeCodeForArray()
+					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForArray();
+		}
 
-		public Scope(TypeConfiguration typeConfiguration) {
+		@Override
+		public Dialect getDialect() {
+			return sessionFactory == null
+					? metadataBuildingContext.getMetadataCollector().getDatabase().getDialect()
+					: sessionFactory.getJdbcServices().getDialect();
+		}
+
+		private Scope(TypeConfiguration typeConfiguration) {
 			this.typeConfiguration = typeConfiguration;
 		}
 
-		public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
-			return currentSqlTypeIndicators;
-		}
-
-		public MetadataBuildingContext getMetadataBuildingContext() {
+		private MetadataBuildingContext getMetadataBuildingContext() {
 			if ( metadataBuildingContext == null ) {
 				throw new HibernateException( "TypeConfiguration is not currently scoped to MetadataBuildingContext" );
 			}
 			return metadataBuildingContext;
 		}
 
-		public ServiceRegistry getServiceRegistry() {
+		private ServiceRegistry getServiceRegistry() {
 			if ( metadataBuildingContext != null ) {
 				return metadataBuildingContext.getBootstrapContext().getServiceRegistry();
 			}
@@ -422,11 +479,21 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return null;
 		}
 
-		public void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
+		private JpaCompliance getJpaCompliance() {
+			if ( metadataBuildingContext != null ) {
+				return metadataBuildingContext.getBootstrapContext().getJpaCompliance();
+			}
+			else if ( sessionFactory != null ) {
+				return sessionFactory.getSessionFactoryOptions().getJpaCompliance();
+			}
+			return null;
+		}
+
+		private void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
 			this.metadataBuildingContext = metadataBuildingContext;
 		}
 
-		public SessionFactoryImplementor getSessionFactory() {
+		private SessionFactoryImplementor getSessionFactory() {
 			if ( sessionFactory == null ) {
 				if ( sessionFactoryName == null && sessionFactoryUuid == null ) {
 					throw new HibernateException( "TypeConfiguration was not yet scoped to SessionFactory" );
@@ -447,30 +514,34 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		/**
-		 * Used by TypeFactory scoping.
+		 * Used by {@link TypeConfiguration} scoping.
 		 *
-		 * @param factory The SessionFactory that the TypeFactory is being bound to
+		 * @param factory The {@link SessionFactory} to which the {@link TypeConfiguration} is being bound
 		 */
-		void setSessionFactory(SessionFactoryImplementor factory) {
+		private void setSessionFactory(SessionFactoryImplementor factory) {
 			if ( this.sessionFactory != null ) {
 				log.scopingTypesToSessionFactoryAfterAlreadyScoped( this.sessionFactory, factory );
 			}
 			else {
 				this.sessionFactoryUuid = factory.getUuid();
-				String sfName = factory.getSessionFactoryOptions().getSessionFactoryName();
-				if ( sfName == null ) {
-					final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
-							.getService( CfgXmlAccessService.class );
-					if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-						sfName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
-					}
-				}
-				this.sessionFactoryName = sfName;
+				this.sessionFactoryName = getFactoryName( factory );
 			}
 			this.sessionFactory = factory;
 		}
 
-		public void unsetSessionFactory(SessionFactory factory) {
+		private static String getFactoryName(SessionFactoryImplementor factory) {
+			final String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
+			if ( factoryName == null ) {
+				final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
+						.getService( CfgXmlAccessService.class );
+				if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
+					return cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
+				}
+			}
+			return factoryName;
+		}
+
+		private void unsetSessionFactory(SessionFactory factory) {
 			log.debugf( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
 			this.sessionFactory = null;
 		}
@@ -495,6 +566,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			}
 
 			return this;
+		}
+
+		private Class<?> entityClassForEntityName(String entityName) {
+			return sessionFactory == null
+					? metadataBuildingContext.getMetadataCollector().getEntityBinding( entityName ).getMappedClass()
+					: sessionFactory.getMappingMetamodel().findEntityDescriptor( entityName ).getMappedClass();
 		}
 	}
 
@@ -726,4 +803,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return matchesJavaType( type, Duration.class );
 	}
 
+	@Internal @SuppressWarnings("unchecked")
+	public <J> MutabilityPlan<J> createMutabilityPlan(Class<? extends MutabilityPlan<?>> planClass) {
+		final ManagedBean<? extends MutabilityPlan<?>> planBean =
+				scope.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( planClass );
+		return (MutabilityPlan<J>) planBean.getBeanInstance();
+	}
 }

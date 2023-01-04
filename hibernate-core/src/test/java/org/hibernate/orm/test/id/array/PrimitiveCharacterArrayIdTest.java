@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * @author <a href="mailto:p.krauzowicz@visiona.pl">Piotr Krauzowicz</a>
+ * @author Piotr Krauzowicz
  * @author Gail Badner
  */
 @DomainModel(

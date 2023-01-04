@@ -14,6 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies how optimistic lock checking works for the annotated entity.
+ * <p>
  * Optimistic lock checking may detect that an optimistic lock has failed,
  * and that the transaction should be aborted, by comparing either:
  * <ul>
@@ -22,6 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     entity instance, or
  * <li>{@linkplain OptimisticLockType#ALL all fields} of the entity.
  * </ul>
+ * <p>
  * An optimistic lock is usually checked by including a restriction in a
  * SQL {@code update} or {@code delete} statement. If the database reports
  * that zero rows were updated, it is inferred that another transaction

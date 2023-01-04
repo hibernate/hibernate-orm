@@ -7,7 +7,8 @@
 package org.hibernate;
 
 /**
- * Indicates an attempt was made to use a closed resource (Session, SessionFactory, etc).
+ * Indicates an attempt was made to use a closed resource, such as
+ * a closed {@link Session} or {@link SessionFactory}.
  *
  * @author Steve Ebersole
  */

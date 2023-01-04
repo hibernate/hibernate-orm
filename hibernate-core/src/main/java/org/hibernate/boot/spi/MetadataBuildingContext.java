@@ -12,10 +12,10 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
- * Describes the context in which the process of building Metadata out of MetadataSources occurs.
- *
- * BindingContext are generally hierarchical getting more specific as we "go
- * down".  E.g.  global -> PU -> document -> mapping
+ * Describes the context in which the process of building {@link org.hibernate.boot.Metadata}
+ * from {@link org.hibernate.boot.MetadataSources} occurs.
+ * <p>
+ * {@link MetadataBuildingContext}s are hierarchical: global, persistence unit, document, mapping.
  *
  * @author Steve Ebersole
  *

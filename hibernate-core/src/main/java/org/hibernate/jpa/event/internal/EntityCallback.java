@@ -17,7 +17,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 /**
  * Represents a JPA callback on the entity itself
  *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Kabir Khan
  * @author Steve Ebersole
  */
 final class EntityCallback extends AbstractCallback {

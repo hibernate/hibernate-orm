@@ -39,6 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>an entity graph is explicit, and simply specifies that each path
  *     from the root of the graph should be fetched.
  * </ul>
+ * <p>
  * However, a fetch profile is not by nature rooted at any one particular
  * entity, and so {@code @FetchProfile} is not required to annotate the
  * entity classes it affects. It may even occur as a package-level

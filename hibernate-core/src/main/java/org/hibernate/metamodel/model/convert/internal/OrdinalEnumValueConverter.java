@@ -50,7 +50,7 @@ public class OrdinalEnumValueConverter<E extends Enum<E>, N extends Number> impl
 
 	@Override
 	public int getJdbcTypeCode() {
-		return jdbcType.getJdbcTypeCode();
+		return jdbcType.getDefaultSqlTypeCode();
 	}
 
 	@Override

@@ -169,6 +169,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		return false;
+	}
+
+	@Override
 	public int getMaxVarbinaryLength() {
 		//there's no varbinary type, only byte
 		return -1;

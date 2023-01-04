@@ -11,7 +11,7 @@ import java.io.Serializable;
 /**
  * Statistics relating to a particular query written in HQL or SQL.
  * <p>
- * Note that for a cached query, the number of cache missed is the
+ * Note that for a cached query, the number of cache misses is the
  * same as the number of queries actually executed against the
  * database.
  *

@@ -36,6 +36,7 @@ public class InheritanceSchemaUpdateTest extends BaseUnitTestCase {
 					.addAnnotatedClass( Step.class )
 					.addAnnotatedClass( GroupStep.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			try {

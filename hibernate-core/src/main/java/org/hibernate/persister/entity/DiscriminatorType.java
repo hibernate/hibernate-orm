@@ -19,6 +19,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.type.AbstractType;
@@ -64,18 +66,16 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 		if ( discriminatorValue == null ) {
 			return null;
 		}
-		final String entityName = persister.getSubclassForDiscriminatorValue( discriminatorValue );
-		if ( entityName == null ) {
+		final DiscriminatorValueDetails valueDetails = persister.getDiscriminatorMapping().resolveDiscriminatorValue( discriminatorValue );
+		if ( valueDetails == null ) {
 			throw new HibernateException( "Unable to resolve discriminator value [" + discriminatorValue + "] to entity name" );
 		}
-		final EntityPersister entityPersister = persister.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+
+		final EntityMappingType indicatedEntity = valueDetails.getIndicatedEntity();
 		//noinspection unchecked
-		return entityPersister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				? (T) entityPersister.getJavaType().getJavaTypeClass()
-				: (T) entityName;
+		return indicatedEntity.getRepresentationStrategy().getMode() == RepresentationMode.POJO
+				? (T) indicatedEntity.getJavaType().getJavaTypeClass()
+				: (T) indicatedEntity.getEntityName();
 	}
 
 	@Override

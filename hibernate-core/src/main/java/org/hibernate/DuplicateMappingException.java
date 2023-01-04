@@ -7,7 +7,8 @@
 package org.hibernate;
 
 /**
- * Raised whenever a duplicate for a certain type occurs.  Duplicate class, table, property name etc.
+ * Raised whenever a duplicate for a certain type occurs,
+ * such as a duplicate class, table, or property name.
  * 
  * @author Max Rydahl Andersen
  * @author Steve Ebersole
@@ -69,7 +70,7 @@ public class DuplicateMappingException extends MappingException {
 	private final String type;
 
 	/**
-	 * Creates a DuplicateMappingException using the given type and name.
+	 * Creates a {@code DuplicateMappingException} using the given type and name.
 	 *
 	 * @param type The type of the duplicated thing.
 	 * @param name The name of the duplicated thing.
@@ -79,7 +80,7 @@ public class DuplicateMappingException extends MappingException {
 	}
 
 	/**
-	 * Creates a DuplicateMappingException using the given customMessage, type and name.
+	 * Creates a {@code DuplicateMappingException} using the given customMessage, type and name.
 	 *
 	 * @param customMessage A custom exception message explaining the exception condition
 	 * @param type The type of the duplicated thing.

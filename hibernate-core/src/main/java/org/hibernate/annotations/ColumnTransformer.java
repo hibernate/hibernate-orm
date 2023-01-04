@@ -22,15 +22,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>A {@link #write} expression must contain exactly one JDBC-style '?' placeholder.
  * <li>A {@link #read} expression may not contain JDBC-style placeholders.
  * </ul>
+ * <p>
  * For example:
  * <pre>
- * {@code
- * @Column(name="credit_card_num")
- * @ColumnTransformer(read="decrypt(credit_card_num)"
+ * &#64;Column(name="credit_card_num")
+ * &#64;ColumnTransformer(read="decrypt(credit_card_num)"
  *                    write="encrypt(?)")
  * String creditCardNumber;
- * }
  * </pre>
+ * <p>
  * A column transformer {@link #write} expression transforms the value of a persistent
  * attribute of an entity as it is being written to the database.
  * <ul>
@@ -43,9 +43,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     in-memory state of the Java entity instance should be considered unsynchronized
  *     with the database after every SQL {@code insert} or {@code update} is executed.
  * </ul>
+ * <p>
  * In the second scenario, we may ask Hibernate to resynchronize the in-memory state
  * with the database after each {@code insert} or {@code update} by annotating the
- * persistent attribute {@link Generated @Generated(value=ALWAYS, writable=true)}.
+ * persistent attribute {@link Generated @Generated(event={INSERT,UPDATE}, writable=true)}.
  * This results in a SQL {@code select} after every {@code insert} or {@code update}.
  *
  * @see ColumnTransformers

@@ -11,7 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 /**
- * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>
+ * @author Manuel Bernhardt
  */
 @Entity
 public class Room {

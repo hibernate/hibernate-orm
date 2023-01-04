@@ -6,13 +6,9 @@
  */
 package org.hibernate.internal;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.PessimisticLockScope;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -21,13 +17,13 @@ import org.hibernate.LockOptions;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -70,8 +66,13 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.type.FormatMapper;
+import org.hibernate.type.format.FormatMapper;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.PessimisticLockScope;
+
+import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
@@ -83,19 +84,19 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 
 /**
  * Internal component.
- *
+ * <p>
  * Collects any components that any Session implementation will likely need
  * for faster access and reduced allocations.
  * Conceptually this acts as an immutable caching intermediary between Session
  * and SessionFactory.
- * Designed to be immutable, and shared across Session instances.
- *
- * Assumes to be created infrequently, possibly only once per SessionFactory.
- *
+ * <p>
+ * Designed to be immutable, shared across Session instances, and created infrequently,
+ * possibly only once per SessionFactory.
+ * <p>
  * If the Session is requiring to retrieve (or compute) anything from the SessionFactory,
  * and this computation would result in the same outcome for any Session created on
  * this same SessionFactory, then it belongs in a final field of this class.
- *
+ * <p>
  * Finally, consider also limiting the size of each Session: some fields could be good
  * candidates to be replaced with access via this object.
  *
@@ -178,14 +179,14 @@ public final class FastSessionServices {
 	private final FormatMapper jsonFormatMapper;
 	private final FormatMapper xmlFormatMapper;
 
-	FastSessionServices(SessionFactoryImpl sf) {
-		Objects.requireNonNull( sf );
-		final ServiceRegistryImplementor sr = sf.getServiceRegistry();
-		final JdbcServices jdbcServices = sf.getJdbcServices();
-		final SessionFactoryOptions sessionFactoryOptions = sf.getSessionFactoryOptions();
+	FastSessionServices(SessionFactoryImplementor sessionFactory) {
+		Objects.requireNonNull( sessionFactory );
+		final ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 
 		// Pre-compute all iterators on Event listeners:
-		final EventListenerRegistry eventListenerRegistry = sr.getService( EventListenerRegistry.class );
+		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		this.eventListenerGroup_AUTO_FLUSH = listeners( eventListenerRegistry, EventType.AUTO_FLUSH );
 		this.eventListenerGroup_CLEAR = listeners( eventListenerRegistry, EventType.CLEAR );
 		this.eventListenerGroup_DELETE = listeners( eventListenerRegistry, EventType.DELETE );
@@ -230,30 +231,34 @@ public final class FastSessionServices {
 		this.preferredSqlTypeCodeForBoolean = sessionFactoryOptions.getPreferredSqlTypeCodeForBoolean();
 		this.defaultTimeZoneStorageStrategy = sessionFactoryOptions.getDefaultTimeZoneStorageStrategy();
 		this.defaultJdbcBatchSize = sessionFactoryOptions.getJdbcBatchSize();
-		this.requiresMultiTenantConnectionProvider = sf.getSessionFactoryOptions().isMultiTenancyEnabled();
+		this.requiresMultiTenantConnectionProvider = sessionFactory.getSessionFactoryOptions().isMultiTenancyEnabled();
 
 		//Some "hot" services:
-		this.connectionProvider = requiresMultiTenantConnectionProvider ? null : sr.getService( ConnectionProvider.class );
-		this.multiTenantConnectionProvider = requiresMultiTenantConnectionProvider ? sr.getService( MultiTenantConnectionProvider.class ) : null;
-		this.classLoaderService = sr.getService( ClassLoaderService.class );
-		this.transactionCoordinatorBuilder = sr.getService( TransactionCoordinatorBuilder.class );
-		this.jdbcServices = sr.getService( JdbcServices.class );
-		this.entityCopyObserverFactory = sr.getService( EntityCopyObserverFactory.class );
+		this.connectionProvider = requiresMultiTenantConnectionProvider
+				? null
+				: serviceRegistry.getService( ConnectionProvider.class );
+		this.multiTenantConnectionProvider = requiresMultiTenantConnectionProvider
+				? serviceRegistry.getService( MultiTenantConnectionProvider.class )
+				: null;
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
+		this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		this.entityCopyObserverFactory = serviceRegistry.getService( EntityCopyObserverFactory.class );
 
-		this.isJtaTransactionAccessible = isTransactionAccessible( sf, transactionCoordinatorBuilder );
+		this.isJtaTransactionAccessible = isTransactionAccessible( sessionFactory, transactionCoordinatorBuilder );
 
-		this.defaultSessionProperties = initializeDefaultSessionProperties( sf );
+		this.defaultSessionProperties = initializeDefaultSessionProperties( sessionFactory );
 		this.defaultCacheStoreMode = determineCacheStoreMode( defaultSessionProperties );
 		this.defaultCacheRetrieveMode = determineCacheRetrieveMode( defaultSessionProperties );
 		this.initialSessionCacheMode = CacheModeHelper.interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
 		this.discardOnClose = sessionFactoryOptions.isReleaseResourcesOnCloseEnabled();
-		this.defaultJdbcObservers = new ConnectionObserverStatsBridge( sf );
+		this.defaultJdbcObservers = new ConnectionObserverStatsBridge( sessionFactory );
 		this.defaultSessionEventListeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
 		this.defaultLockOptions = initializeDefaultLockOptions( defaultSessionProperties );
 		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
 		this.jsonFormatMapper = sessionFactoryOptions.getJsonFormatMapper();
 		this.xmlFormatMapper = sessionFactoryOptions.getXmlFormatMapper();
-		this.batchBuilder = sr.getService( BatchBuilder.class );
+		this.batchBuilder = serviceRegistry.getService( BatchBuilder.class );
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
@@ -271,27 +276,29 @@ public final class FastSessionServices {
 		return elr.getEventListenerGroup( type );
 	}
 
-	private static boolean isTransactionAccessible(SessionFactoryImpl sf, TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
+	private static boolean isTransactionAccessible(
+			SessionFactoryImplementor factory,
+			TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
 		// JPA requires that access not be provided to the transaction when using JTA.
 		// This is overridden when SessionFactoryOptions isJtaTransactionAccessEnabled() is true.
-		return !( sf.getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled()
-				&& transactionCoordinatorBuilder.isJta()
-				&& !sf.getSessionFactoryOptions().isJtaTransactionAccessEnabled() );
+		return !factory.getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled()
+			|| !transactionCoordinatorBuilder.isJta()
+			|| factory.getSessionFactoryOptions().isJtaTransactionAccessEnabled();
 	}
 
-	private static Map<String, Object> initializeDefaultSessionProperties(SessionFactoryImpl sf) {
-		HashMap<String,Object> p = new HashMap<>();
+	private static Map<String, Object> initializeDefaultSessionProperties(SessionFactoryImplementor factory) {
+		final HashMap<String,Object> settings = new HashMap<>();
 
 		//Static defaults:
-		p.putIfAbsent( AvailableSettings.FLUSH_MODE, FlushMode.AUTO.name() );
-		p.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
-		p.putIfAbsent( JAKARTA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
-		p.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
-		p.putIfAbsent( JAKARTA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
-		p.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
-		p.putIfAbsent( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
-		p.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
-		p.putIfAbsent( JAKARTA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+		settings.putIfAbsent( AvailableSettings.FLUSH_MODE, FlushMode.AUTO.name() );
+		settings.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
+		settings.putIfAbsent( JAKARTA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
+		settings.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
+		settings.putIfAbsent( JAKARTA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
+		settings.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		settings.putIfAbsent( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		settings.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+		settings.putIfAbsent( JAKARTA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
 
 		//Defaults defined by SessionFactory configuration:
 		final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
@@ -309,41 +316,31 @@ public final class FastSessionServices {
 				LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE,
 				LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT
 		};
-		final Map<String, Object> properties = sf.getProperties();
+		final Map<String, Object> properties = factory.getProperties();
 		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
 			if ( properties.containsKey( key ) ) {
-				p.put( key, properties.get( key ) );
+				settings.put( key, properties.get( key ) );
 			}
 		}
-		return Collections.unmodifiableMap( p );
+		return unmodifiableMap( settings );
 	}
 
 	/**
 	 * @param properties the Session properties
-	 * @return either the CacheStoreMode as defined in the Session specific properties, or as defined in the
-	 *  properties shared across all sessions (the defaults).
+	 * @return either the CacheStoreMode as defined in the Session specific properties,
+	 *         or as defined in the properties shared across all sessions (the defaults).
 	 */
 	CacheStoreMode getCacheStoreMode(final Map<String, Object> properties) {
-		if ( properties == null ) {
-			return this.defaultCacheStoreMode;
-		}
-		else {
-			return determineCacheStoreMode( properties );
-		}
+		return properties == null ? defaultCacheStoreMode : determineCacheStoreMode( properties );
 	}
 
 	/**
 	 * @param properties the Session properties
-	 * @return either the CacheRetrieveMode as defined in the Session specific properties, or as defined in the
-	 *  properties shared across all sessions (the defaults).
+	 * @return either the CacheRetrieveMode as defined in the Session specific properties,
+	 *         or as defined in the properties shared across all sessions (the defaults).
 	 */
 	CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties) {
-		if ( properties == null ) {
-			return this.defaultCacheRetrieveMode;
-		}
-		else {
-			return determineCacheRetrieveMode( properties );
-		}
+		return properties == null ? defaultCacheRetrieveMode : determineCacheRetrieveMode( properties );
 	}
 
 	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {

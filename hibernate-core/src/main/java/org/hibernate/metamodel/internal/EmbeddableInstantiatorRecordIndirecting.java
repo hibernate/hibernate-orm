@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.util.Arrays;
-
 import org.hibernate.InstantiationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
@@ -25,28 +23,15 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 		this.index = index;
 	}
 
-	public static EmbeddableInstantiatorRecordIndirecting of(Class<?> javaType) {
+	public static EmbeddableInstantiatorRecordIndirecting of(Class<?> javaType, String[] propertyNames) {
 		final String[] componentNames = ReflectHelper.getRecordComponentNames( javaType );
 		final int[] index = new int[componentNames.length];
-		if ( resolveIndex( componentNames, index ) ) {
+		if ( EmbeddableHelper.resolveIndex( propertyNames, componentNames, index ) ) {
 			return new EmbeddableInstantiatorRecordIndirectingWithGap( javaType, index );
 		}
 		else {
 			return new EmbeddableInstantiatorRecordIndirecting(javaType, index);
 		}
-	}
-
-	private static boolean resolveIndex(String[] componentNames, int[] index) {
-		final String[] sortedComponentNames = componentNames.clone();
-		Arrays.sort( sortedComponentNames );
-		boolean hasGaps = false;
-		for ( int i = 0; i < componentNames.length; i++ ) {
-			final int newIndex = Arrays.binarySearch( sortedComponentNames, componentNames[i] );
-			index[i] = newIndex;
-			hasGaps = hasGaps || newIndex < 0;
-		}
-
-		return hasGaps;
 	}
 
 	@Override
@@ -64,7 +49,7 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 			return constructor.newInstance( values );
 		}
 		catch ( Exception e ) {
-			throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+			throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 		}
 	}
 
@@ -93,7 +78,7 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 				return constructor.newInstance( values );
 			}
 			catch ( Exception e ) {
-				throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+				throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
 			}
 		}
 	}

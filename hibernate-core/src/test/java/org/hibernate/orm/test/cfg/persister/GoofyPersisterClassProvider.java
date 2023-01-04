@@ -27,7 +27,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
@@ -58,9 +57,9 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -79,7 +78,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ * @author Emmanuel Bernard
  */
 public class GoofyPersisterClassProvider implements PersisterClassResolver {
 	@Override
@@ -723,11 +722,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public String getSubclassForDiscriminatorValue(Object value) {
-			return null;
-		}
-
-		@Override
 		public NaturalIdMapping getNaturalIdMapping() {
 			return null;
 		}
@@ -773,7 +767,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
+		public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
 
 		}
 
@@ -814,7 +808,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		public CollectionType getCollectionType() {
-			throw new NotYetImplementedException();
+			throw new UnsupportedOperationException();
 		}
 
 		public Type getKeyType() {

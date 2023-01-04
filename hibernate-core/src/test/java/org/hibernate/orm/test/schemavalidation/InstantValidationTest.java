@@ -76,10 +76,12 @@ public class InstantValidationTest implements ExecutionOptions {
 		oldMetadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( TestEntityOld.class )
 				.buildMetadata();
+		oldMetadata.orderColumns( false );
 		oldMetadata.validate();
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( TestEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		try {

@@ -6,6 +6,10 @@
  */
 package org.hibernate.mapping;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -20,6 +24,8 @@ import org.jboss.logging.Logger;
  */
 public class PrimaryKey extends Constraint {
 	private static final Logger log = Logger.getLogger( PrimaryKey.class );
+
+	private int[] originalOrder;
 
 	public PrimaryKey(Table table){
 		setTable( table );
@@ -72,7 +78,7 @@ public class PrimaryKey extends Constraint {
 		return buf.append(')').toString();
 	}
 
-	@Override @Deprecated(since="6.2")
+	@Override @Deprecated(since="6.2", forRemoval = true)
 	public String sqlConstraintString(SqlStringGenerationContext context, String constraintName, String defaultCatalog, String defaultSchema) {
 		Dialect dialect = context.getDialect();
 		StringBuilder buf = new StringBuilder();
@@ -97,5 +103,39 @@ public class PrimaryKey extends Constraint {
 	@Override
 	public String getExportIdentifier() {
 		return StringHelper.qualify( getTable().getExportIdentifier(), "PK-" + getName() );
+	}
+
+	public List<Column> getColumnsInOriginalOrder() {
+		if ( originalOrder == null ) {
+			return getColumns();
+		}
+		final List<Column> columns = getColumns();
+		final Column[] columnsInOriginalOrder = new Column[columns.size()];
+		for ( int i = 0; i < columnsInOriginalOrder.length; i++ ) {
+			columnsInOriginalOrder[i] = columns.get( originalOrder[i] );
+		}
+		return Arrays.asList( columnsInOriginalOrder );
+	}
+
+	@Internal
+	public void reorderColumns(List<Column> reorderedColumns) {
+		if ( originalOrder != null ) {
+			assert getColumns().equals( reorderedColumns );
+			return;
+		}
+		assert getColumns().size() == reorderedColumns.size() && getColumns().containsAll( reorderedColumns );
+		final List<Column> columns = getColumns();
+		originalOrder = new int[columns.size()];
+		for ( int i = 0; i < reorderedColumns.size(); i++ ) {
+			final Column reorderedColumn = reorderedColumns.get( i );
+			originalOrder[i] = columns.indexOf( reorderedColumn );
+		}
+		columns.clear();
+		columns.addAll( reorderedColumns );
+	}
+
+	@Internal
+	public int[] getOriginalOrder() {
+		return originalOrder;
 	}
 }

@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.IndexedConsumer;
@@ -50,7 +49,6 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class DiscriminatedCollectionPart implements DiscriminatedAssociationModelPart, CollectionPart {
 	private final Nature nature;
-	private final SessionFactoryImplementor sessionFactory;
 
 	private final NavigableRole partRole;
 	private final CollectionPersister collectionDescriptor;
@@ -75,8 +73,6 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 				bootValueMapping,
 				creationProcess
 		);
-
-		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
 	@Override
@@ -125,6 +121,12 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	@Override
 	public FetchOptions getMappedFetchOptions() {
 		return discriminatorMapping;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return discriminatorMapping.getDiscriminatorPart().isPartitioned()
+				|| discriminatorMapping.getKeyPart().isPartitioned();
 	}
 
 	@Override

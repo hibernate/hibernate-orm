@@ -33,7 +33,7 @@ import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 /**
- * Standard implementation of SemanticQueryInterpreter
+ * Standard implementation of {@link HqlTranslator}.
  *
  * @author Steve Ebersole
  */

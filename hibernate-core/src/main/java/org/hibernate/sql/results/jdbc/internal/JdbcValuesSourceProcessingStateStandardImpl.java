@@ -15,6 +15,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
@@ -47,7 +48,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private final BiConsumer<EntityKey,LoadingEntityEntry> loadingEntityEntryConsumer;
 
 	private Map<EntityKey, LoadingEntityEntry> loadingEntityMap;
-	private Map<EntityKey, Initializer> initializerMap;
 	private Map<EntityUniqueKey, Initializer> initializerByUniquKeyMap;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private List<CollectionInitializer> arrayInitializers;
@@ -115,17 +115,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public void registerInitializer(
-			EntityKey entityKey,
-			Initializer initializer) {
-		if ( initializerMap == null ) {
-			initializerMap = new HashMap<>();
-		}
-		initializerMap.put( entityKey, initializer );
-
-	}
-
-	@Override
 	public void registerInitializer(EntityUniqueKey entityKey, Initializer initializer) {
 		if ( initializerByUniquKeyMap == null ) {
 			initializerByUniquKeyMap = new HashMap<>();
@@ -136,11 +125,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	@Override
 	public Initializer findInitializer(EntityUniqueKey entityKey) {
 		return initializerByUniquKeyMap == null ? null : initializerByUniquKeyMap.get( entityKey );
-	}
-
-	@Override
-	public Initializer findInitializer(EntityKey entityKey) {
-		return initializerMap == null ? null : initializerMap.get( entityKey );
 	}
 
 	@Override

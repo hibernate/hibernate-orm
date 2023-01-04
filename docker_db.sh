@@ -176,7 +176,7 @@ db2_11_5() {
     while [[ $OUTPUT != *"INSTANCE"* ]]; do
         echo "Waiting for DB2 to start..."
         sleep 10
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2 2>&1)
     done
     $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2 'connect to orm_test' && /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
 }
@@ -190,7 +190,7 @@ db2_10_5() {
     while [[ $OUTPUT != *"DB2START"* ]]; do
         echo "Waiting for DB2 to start..."
         sleep 10
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2 2>&1)
     done
     $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2 su - db2inst1 bash -c "/home/db2inst1/sqllib/bin/db2 create database orm_test &&
     /home/db2inst1/sqllib/bin/db2 'connect to orm_test' &&
@@ -252,7 +252,7 @@ EOF
     while [[ $OUTPUT != *"Setup has completed."* ]]; do
         echo "Waiting for DB2 to start..."
         sleep 10
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2spatial)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2spatial 2>&1)
     done
     sleep 10
     echo "Enabling spatial extender"
@@ -450,24 +450,57 @@ oracle_setup() {
     echo "Oracle successfully started"
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
-cat <<EOF | \$ORACLE_HOME/bin/sqlplus sys/Oracle18@localhost/XE as sysdba
-alter database tempfile '\$ORACLE_BASE/oradata/XE/temp01.dbf' resize 400M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/system01.dbf' resize 1000M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/sysaux01.dbf' resize 600M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/undotbs01.dbf' resize 300M;
+cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
+-- Increasing redo logs
 alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/redo04.log' size 500M reuse;
 alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/redo05.log' size 500M reuse;
 alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/redo06.log' size 500M reuse;
-
 alter system switch logfile;
 alter system switch logfile;
 alter system switch logfile;
 alter system checkpoint;
-
 alter database drop logfile group 1;
 alter database drop logfile group 2;
 alter database drop logfile group 3;
+!rm \$ORACLE_BASE/oradata/XE/redo01.log
+!rm \$ORACLE_BASE/oradata/XE/redo02.log
+!rm \$ORACLE_BASE/oradata/XE/redo03.log
+
+-- Increasing SYSAUX data file
+alter database datafile '\$ORACLE_BASE/oradata/XE/sysaux01.dbf' resize 600M;
+
+-- Modifying database init parameters
 alter system set open_cursors=1000 sid='*' scope=both;
+alter system set session_cached_cursors=500 sid='*' scope=spfile;
+alter system set db_securefile=ALWAYS sid='*' scope=spfile;
+alter system set dispatchers='(PROTOCOL=TCP)(SERVICE=XEXDB)(DISPATCHERS=0)' sid='*' scope=spfile;
+alter system set recyclebin=OFF sid='*' SCOPE=SPFILE;
+
+-- Comment the 2 next lines to be able to use Diagnostics Pack features
+alter system set sga_target=0m sid='*' scope=both;
+alter system set statistics_level=BASIC sid='*' scope=spfile;
+
+-- Restart the database
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE OPEN;
+
+-- Switch to the XEPDB1 pluggable database
+alter session set container=xepdb1;
+
+-- Modify XEPDB1 datafiles and tablespaces
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/system01.dbf' resize 320M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/sysaux01.dbf' resize 360M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 400M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' autoextend on next 16M;
+alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' resize 400M;
+alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' autoextend on next 16M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/users01.dbf' resize 100M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/users01.dbf' autoextend on next 16M;
+alter tablespace USERS nologging;
+alter tablespace SYSTEM nologging;
+alter tablespace SYSAUX nologging;
+
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
 EOF\""
@@ -489,7 +522,7 @@ oracle_setup_old() {
     done
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
-cat <<EOF | \$ORACLE_HOME/bin/sqlplus sys/Oracle18@localhost/XE as sysdba
+cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
 alter database tempfile '\$ORACLE_BASE/oradata/XE/temp.dbf' resize 400M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/system.dbf' resize 1000M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/sysaux.dbf' resize 700M;
@@ -506,29 +539,35 @@ alter system checkpoint;
 alter database drop logfile group 1;
 alter database drop logfile group 2;
 alter system set open_cursors=1000 sid='*' scope=both;
+alter system set session_cached_cursors=500 sid='*' scope=spfile;
+alter system set recyclebin=OFF sid='*' SCOPE=spfile;
 alter system set processes=150 scope=spfile;
 alter system set filesystemio_options=asynch scope=spfile;
 alter system set disk_asynch_io=true scope=spfile;
+
+shutdown immediate;
+startup;
+
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
 EOF\""
-  echo "Waiting for Oracle to restart after configuration..."
-  $CONTAINER_CLI stop oracle
-  $CONTAINER_CLI start oracle
-  HEALTHSTATUS=
-  until [ "$HEALTHSTATUS" == "healthy" ];
-  do
-      echo "Waiting for Oracle to start..."
-      sleep 5;
-      # On WSL, health-checks intervals don't work for Podman, so run them manually
-      if command -v podman > /dev/null; then
-        $CONTAINER_CLI healthcheck run oracle > /dev/null
-      fi
-      HEALTHSTATUS="`$CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
-      HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
-      HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
-  done
-  sleep 2;
+#  echo "Waiting for Oracle to restart after configuration..."
+#  $CONTAINER_CLI stop oracle
+#  $CONTAINER_CLI start oracle
+#  HEALTHSTATUS=
+#  until [ "$HEALTHSTATUS" == "healthy" ];
+#  do
+#      echo "Waiting for Oracle to start..."
+#      sleep 5;
+#      # On WSL, health-checks intervals don't work for Podman, so run them manually
+#      if command -v podman > /dev/null; then
+#        $CONTAINER_CLI healthcheck run oracle > /dev/null
+#      fi
+#      HEALTHSTATUS="`$CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
+#      HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
+#      HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
+#  done
+#  sleep 2;
   echo "Oracle successfully started"
 }
 
@@ -579,15 +618,15 @@ hana() {
     temp_dir=$(mktemp -d)
     echo '{"master_password" : "H1bernate_test"}' >$temp_dir/password.json
     chmod 777 -R $temp_dir
-    $CONTAINER_CLI rm -f hana || true
-    $CONTAINER_CLI run -d --name hana -p 39013:39013 -p 39017:39017 -p 39041-39045:39041-39045 -p 1128-1129:1128-1129 -p 59013-59014:59013-59014 \
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f hana || true
+    $PRIVILEGED_CLI $CONTAINER_CLI run -d --name hana -p 39013:39013 -p 39017:39017 -p 39041-39045:39041-39045 -p 1128-1129:1128-1129 -p 59013-59014:59013-59014 \
       --memory=8g \
       --ulimit nofile=1048576:1048576 \
       --sysctl kernel.shmmax=1073741824 \
       --sysctl net.ipv4.ip_local_port_range='40000 60999' \
       --sysctl kernel.shmmni=4096 \
       --sysctl kernel.shmall=8388608 \
-      -v $temp_dir:/config \
+      -v $temp_dir:/config:Z \
       docker.io/saplabs/hanaexpress:2.00.061.00.20220519.1 \
       --passwords-url file:///config/password.json \
       --agree-to-sap-license
@@ -596,7 +635,7 @@ hana() {
     while [[ $OUTPUT != *"Startup finished"* ]]; do
         echo "Waiting for HANA to start..."
         sleep 10
-        OUTPUT=$($CONTAINER_CLI logs hana)
+        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs hana 2>&1)
     done
     echo "HANA successfully started"
 }

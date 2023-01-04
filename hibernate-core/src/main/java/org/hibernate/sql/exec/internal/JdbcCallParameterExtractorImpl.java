@@ -9,10 +9,7 @@ package org.hibernate.sql.exec.internal;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.BindableType;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.OutputableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 

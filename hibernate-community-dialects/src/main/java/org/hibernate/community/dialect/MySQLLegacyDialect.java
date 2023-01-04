@@ -11,7 +11,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Arrays;
 
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -246,6 +245,12 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		// MySQL has no real concept of LOBs, so we can just use longtext/longblob with the materialized JDBC APIs
+		return false;
+	}
+
+	@Override
 	protected String castType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
@@ -337,7 +342,7 @@ public class MySQLLegacyDialect extends Dialect {
 				)
 				.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
 				.withTypeCapacity( maxMediumLobLen, "mediumblob" );
-		if ( getMaxVarcharLength() < maxLobLen ) {
+		if ( getMaxVarbinaryLength() < maxLobLen ) {
 			varbinaryBuilder.withTypeCapacity( maxLobLen, "blob" );
 		}
 		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
@@ -555,7 +560,7 @@ public class MySQLLegacyDialect extends Dialect {
 		//also natively supports ANSI-style substring()
 		functionFactory.position();
 		functionFactory.nowCurdateCurtime();
-		functionFactory.truncate();
+		functionFactory.trunc_truncate();
 		functionFactory.insert();
 		functionFactory.bitandorxornot_operator();
 		functionFactory.bitAndOr();

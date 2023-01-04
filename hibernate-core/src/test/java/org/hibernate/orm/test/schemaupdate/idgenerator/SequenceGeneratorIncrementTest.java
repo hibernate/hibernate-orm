@@ -230,6 +230,7 @@ public class SequenceGeneratorIncrementTest {
 			metadataSources.addResource( hbm );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 	}
 

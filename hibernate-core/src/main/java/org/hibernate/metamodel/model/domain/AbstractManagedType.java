@@ -31,12 +31,13 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -62,7 +63,7 @@ public abstract class AbstractManagedType<J>
 			String hibernateTypeName,
 			JavaType<J> javaType,
 			ManagedDomainType<? super J> superType,
-			JpaMetamodel domainMetamodel) {
+			JpaMetamodelImplementor domainMetamodel) {
 		super( javaType, domainMetamodel );
 		this.hibernateTypeName = hibernateTypeName;
 		this.superType = superType;
@@ -197,13 +198,11 @@ public abstract class AbstractManagedType<J>
 		if ( attribute1 == attribute2 ) {
 			return true;
 		}
-		final RuntimeMetamodels runtimeMetamodels = jpaMetamodel().getTypeConfiguration()
-				.getSessionFactory()
-				.getRuntimeMetamodels();
-		final EntityMappingType entity1 = runtimeMetamodels.getEntityMappingType(
+		final MappingMetamodel runtimeMetamodels = jpaMetamodel().getMappingMetamodel();
+		final EntityMappingType entity1 = runtimeMetamodels.getEntityDescriptor(
 				attribute1.getDeclaringType().getTypeName()
 		);
-		final EntityMappingType entity2 = runtimeMetamodels.getEntityMappingType(
+		final EntityMappingType entity2 = runtimeMetamodels.getEntityDescriptor(
 				attribute2.getDeclaringType().getTypeName()
 		);
 

@@ -12,12 +12,12 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A simple implementation of AbstractAuxiliaryDatabaseObject in which the CREATE and DROP strings are
- * provided up front.  Contains simple facilities for templating the catalog and schema
- * names into the provided strings.
+ * A simple implementation of {@link AbstractAuxiliaryDatabaseObject} in which the
+ * {@code CREATE} and {@code DROP} strings are provided up front. Contains simple
+ * facilities for templating the catalog and schema names into the provided strings.
  * <p>
- * This is the form created when the mapping documents use &lt;create/&gt; and
- * &lt;drop/&gt;.
+ * This is the form created when the mapping documents use {@code <create/>} and
+ * {@code <drop/>}.
  *
  * @author Steve Ebersole
  */

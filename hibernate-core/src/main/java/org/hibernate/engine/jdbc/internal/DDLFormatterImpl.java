@@ -7,6 +7,7 @@
 package org.hibernate.engine.jdbc.internal;
 
 import java.util.Locale;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -26,6 +27,9 @@ public class DDLFormatterImpl implements Formatter {
 	 */
 	public static final DDLFormatterImpl INSTANCE = new DDLFormatterImpl();
 
+	private static final Set<String> BREAKS = Set.of( "drop", "alter", "modify", "add", "references", "foreign", "on" );
+	private static final Set<String> QUOTES = Set.of( "\"", "`", "]", "[", "'" );
+
 	@Override
 	public String format(String sql) {
 		if ( isEmpty( sql ) ) {
@@ -41,7 +45,7 @@ public class DDLFormatterImpl implements Formatter {
 			return formatAlterTable( sql );
 		}
 		else if ( lowerCaseSql.startsWith( "create" ) ) {
-			return sql;
+			return INITIAL_LINE + sql;
 		}
 		else if ( lowerCaseSql.startsWith( "alter table" ) ) {
 			return formatAlterTable( sql );
@@ -79,6 +83,7 @@ public class DDLFormatterImpl implements Formatter {
 		final StringBuilder result = new StringBuilder( 60 ).append( INITIAL_LINE );
 		final StringTokenizer tokens = new StringTokenizer( sql, " (,)'[]\"", true );
 
+		boolean first = true;
 		boolean quoted = false;
 		while ( tokens.hasMoreTokens() ) {
 			final String token = tokens.nextToken();
@@ -86,11 +91,12 @@ public class DDLFormatterImpl implements Formatter {
 				quoted = !quoted;
 			}
 			else if ( !quoted ) {
-				if ( isBreak( token ) ) {
+				if ( !first && isBreak( token ) ) {
 					result.append( OTHER_LINES );
 				}
 			}
 			result.append( token );
+			first = false;
 		}
 
 		return result.toString();
@@ -135,19 +141,11 @@ public class DDLFormatterImpl implements Formatter {
 	}
 
 	private static boolean isBreak(String token) {
-		return "drop".equals( token )
-			|| "add".equals( token )
-			|| "references".equals( token )
-			|| "foreign".equals( token )
-			|| "on".equals( token );
+		return BREAKS.contains( token );
 	}
 
-	private static boolean isQuote(String tok) {
-		return "\"".equals( tok )
-			|| "`".equals( tok )
-			|| "]".equals( tok )
-			|| "[".equals( tok )
-			|| "'".equals( tok );
+	private static boolean isQuote(String token) {
+		return QUOTES.contains( token );
 	}
 
 }

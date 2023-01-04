@@ -63,7 +63,6 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -76,6 +75,7 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.DECIMAL;
@@ -99,7 +99,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * A {@linkplain Dialect SQL dialect} for H2.
@@ -263,7 +262,6 @@ public class H2Dialect extends Dialect {
 		functionFactory.log10();
 		functionFactory.mod_operator();
 		functionFactory.rand();
-		functionFactory.truncate();
 		functionFactory.soundex();
 		functionFactory.translate();
 		functionFactory.bitand();
@@ -278,6 +276,9 @@ public class H2Dialect extends Dialect {
 		if ( useLocalTime ) {
 			functionFactory.localtimeLocaltimestamp();
 		}
+		functionFactory.trunc();
+//		functionFactory.truncate();
+		functionFactory.dateTrunc();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
 		functionFactory.ascii();
@@ -591,6 +592,18 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "alter column " + columnName + " set data type " + columnType;
+		// if only altering the type, no need to specify the whole definition
+//		return "alter column " + columnName + " " + columnDefinition;
+	}
+
+	@Override
 	public boolean supportsCommentOn() {
 		return true;
 	}
@@ -776,6 +789,14 @@ public class H2Dialect extends Dialect {
 				: H2IdentityColumnSupport.INSTANCE;
 	}
 
+	/**
+	 * @return {@code true} because we can use {@code select ... from final table (insert .... )}
+	 */
+	@Override
+	public boolean supportsInsertReturning() {
+		return getVersion().isSameOrAfter( 2 );
+	}
+
 	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int position) throws SQLException {
 		return position;
@@ -835,5 +856,15 @@ public class H2Dialect extends Dialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	@Override
+	public String rowId(String rowId) {
+		return "_rowid_";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return BIGINT;
 	}
 }

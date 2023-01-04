@@ -30,10 +30,15 @@ import jakarta.persistence.TemporalType;
 
 import java.util.List;
 
+import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 
 /**
- * A SQL dialect for DB2 for z/OS, previously known as "Db2 UDB for z/OS" and as "Db2 UDB for z/OS and OS/390".
+ * A SQL dialect for DB2 for z/OS version 12.1 and above, previously known as:
+ * <ul>
+ * <li>"Db2 UDB for z/OS", and
+ * <li>"Db2 UDB for z/OS and OS/390".
+ * </ul>
  *
  * @author Christian Beikov
  */
@@ -203,5 +208,24 @@ public class DB2zDialect extends DB2Dialect {
 				return new DB2zSqlAstTranslator<>( sessionFactory, statement, getVersion() );
 			}
 		};
+	}
+
+	// I speculate that this is a correct implementation of rowids for DB2 for z/OS,
+	// just on the basis of the DB2 docs, but I currently have no way to test it
+	// Note that the implementation inherited from DB2Dialect for LUW will not work!
+
+	@Override
+	public String rowId(String rowId) {
+		return rowId.isEmpty() ? "rowid_" : rowId;
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return ROWID;
+	}
+
+	@Override
+	public String getRowIdColumnString(String rowId) {
+		return rowId( rowId ) + " rowid not null generated always";
 	}
 }

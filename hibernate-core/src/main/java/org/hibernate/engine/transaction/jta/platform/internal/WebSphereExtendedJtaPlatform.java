@@ -35,7 +35,7 @@ import org.hibernate.HibernateException;
  * This class is reported to work on WAS version 6 in any of the standard J2EE/Java EE component containers.
  *
  * @author Gavin King
- * @author <a href="mailto:jesper@udby.com>Jesper Udby</a>
+ * @author Jesper Udby
  * @author Steve Ebersole
  */
 public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {

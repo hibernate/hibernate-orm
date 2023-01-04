@@ -449,13 +449,13 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		public ExtractionContext createExtractionContext(
 				ServiceRegistry serviceRegistry,
 				JdbcEnvironment jdbcEnvironment,
-				SqlStringGenerationContext sqlStringGenerationContext,
+				SqlStringGenerationContext context,
 				DdlTransactionIsolator ddlTransactionIsolator,
 				ExtractionContext.DatabaseObjectAccess databaseObjectAccess) {
 			return new ImprovedExtractionContextImpl(
 					serviceRegistry,
 					jdbcEnvironment,
-					sqlStringGenerationContext,
+					context,
 					ddlTransactionIsolator,
 					databaseObjectAccess
 			);

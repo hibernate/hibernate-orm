@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.FilterConfiguration;
@@ -109,15 +108,15 @@ public class Subclass extends PersistentClass {
 	}
 
 	@Override
-	public void addProperty(Property p) {
-		super.addProperty(p);
-		getSuperclass().addSubclassProperty(p);
+	public void addProperty(Property property) {
+		super.addProperty( property );
+		getSuperclass().addSubclassProperty( property );
 	}
 
 	@Override
-	public void addMappedSuperclassProperty(Property p) {
-		super.addMappedSuperclassProperty( p );
-		getSuperclass().addSubclassProperty(p);
+	public void addMappedSuperclassProperty(Property property) {
+		super.addMappedSuperclassProperty( property );
+		getSuperclass().addSubclassProperty( property );
 	}
 
 	@Override
@@ -242,14 +241,13 @@ public class Subclass extends PersistentClass {
 
 	@Override
 	public boolean isJoinedSubclass() {
-		return getTable()!=getRootTable();
+		return getTable() != getRootTable();
 	}
 
 	public void createForeignKey() {
-		if ( !isJoinedSubclass() ) {
-			throw new AssertionFailure( "not a joined-subclass" );
+		if ( isJoinedSubclass() ) {
+			getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );
 		}
-		getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );
 	}
 
 	@Override
@@ -284,12 +282,14 @@ public class Subclass extends PersistentClass {
 
 	@Override
 	public boolean isClassOrSuperclassJoin(Join join) {
-		return super.isClassOrSuperclassJoin(join) || getSuperclass().isClassOrSuperclassJoin(join);
+		return super.isClassOrSuperclassJoin( join )
+			|| getSuperclass().isClassOrSuperclassJoin( join );
 	}
 
 	@Override
 	public boolean isClassOrSuperclassTable(Table table) {
-		return super.isClassOrSuperclassTable(table) || getSuperclass().isClassOrSuperclassTable(table);
+		return super.isClassOrSuperclassTable( table )
+			|| getSuperclass().isClassOrSuperclassTable( table );
 	}
 
 	@Override
@@ -309,8 +309,8 @@ public class Subclass extends PersistentClass {
 
 	@Override
 	public java.util.Set<String> getSynchronizedTables() {
-		HashSet<String> result = new HashSet<>();
-		result.addAll(synchronizedTables);
+		final HashSet<String> result = new HashSet<>();
+		result.addAll( synchronizedTables );
 		result.addAll( getSuperclass().getSynchronizedTables() );
 		return result;
 	}
@@ -322,15 +322,15 @@ public class Subclass extends PersistentClass {
 
 	@Override
 	public java.util.List<FilterConfiguration> getFilters() {
-		java.util.List<FilterConfiguration> filters = new ArrayList<>(super.getFilters());
-		filters.addAll(getSuperclass().getFilters());
+		final ArrayList<FilterConfiguration> filters = new ArrayList<>( super.getFilters() );
+		filters.addAll( getSuperclass().getFilters() );
 		return filters;
 	}
 
 	@Override
 	public boolean hasSubselectLoadableCollections() {
-		return super.hasSubselectLoadableCollections() ||
-			getSuperclass().hasSubselectLoadableCollections();
+		return super.hasSubselectLoadableCollections()
+			|| getSuperclass().hasSubselectLoadableCollections();
 	}
 
 	@Override

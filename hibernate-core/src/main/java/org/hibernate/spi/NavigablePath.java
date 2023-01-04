@@ -13,9 +13,9 @@ import org.hibernate.Incubating;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * Compound-name where each path references to a domain or mapping model-part relative to a root path.
- *
- * Generally, the root path is an entity-name or a collection-role.
+ * A compound name where the root path element is an entity name or a collection role
+ * and each the path sub-path from the root references a domain or mapping model part
+ * relative to a root path.
  *
  * @author Steve Ebersole
  */

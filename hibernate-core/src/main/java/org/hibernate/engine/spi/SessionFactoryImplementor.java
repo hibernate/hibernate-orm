@@ -10,13 +10,11 @@ import java.io.Serializable;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.spi.EventEngine;
@@ -161,12 +159,19 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * Contract for resolving this SessionFactory on deserialization
+	 *
+	 * @deprecated this is no longer used
 	 */
+	@Deprecated(since = "6.2", forRemoval = true)
 	interface DeserializationResolver<T extends SessionFactoryImplementor> extends Serializable {
 		T resolve();
 	}
 
-	DeserializationResolver getDeserializationResolver();
+	/**
+	 * @deprecated this is never called
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
+	DeserializationResolver<?> getDeserializationResolver();
 
 
 

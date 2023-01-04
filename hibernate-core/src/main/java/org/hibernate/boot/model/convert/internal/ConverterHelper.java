@@ -17,8 +17,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.model.internal.HCANNHelper;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.annotations.HCANNHelper;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 

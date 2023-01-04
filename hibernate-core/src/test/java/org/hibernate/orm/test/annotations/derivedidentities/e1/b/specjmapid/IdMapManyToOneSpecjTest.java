@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * A test.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
+ * @author Stale W. Pedersen
  */
 public class IdMapManyToOneSpecjTest extends BaseNonConfigCoreFunctionalTestCase {
 

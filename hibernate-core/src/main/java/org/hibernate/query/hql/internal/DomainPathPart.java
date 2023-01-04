@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
- * Specialized "intermediate" SemanticPathPart for processing domain model paths
+ * Specialized "intermediate" SemanticPathPart for processing domain model paths/
  *
  * @author Steve Ebersole
  */

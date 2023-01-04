@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
@@ -89,7 +88,7 @@ public class MultiNaturalIdLoaderStandard<E> implements MultiNaturalIdLoader<E> 
 		}
 
 		if ( options.isOrderReturnEnabled() ) {
-			throw new NotYetImplementedFor6Exception( getClass() );
+			throw new UnsupportedOperationException( "Support for ordered loading by multiple natural-id values is not supported" );
 		}
 
 		return results;

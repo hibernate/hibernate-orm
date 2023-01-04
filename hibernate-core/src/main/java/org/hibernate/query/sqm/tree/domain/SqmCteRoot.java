@@ -7,7 +7,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
@@ -93,9 +92,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	@Override
 	public SqmCorrelatedRoot<T> createCorrelation() {
-		// todo: implement
-		throw new NotYetImplementedFor6Exception( getClass());
-//		return new SqmCorrelatedRoot<>( this );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

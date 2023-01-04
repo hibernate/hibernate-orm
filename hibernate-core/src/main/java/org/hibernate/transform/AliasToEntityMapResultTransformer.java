@@ -16,7 +16,10 @@ import org.hibernate.query.TypedTupleTransformer;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated since {@link ResultTransformer} is deprecated
  */
+@Deprecated
 public class AliasToEntityMapResultTransformer implements ResultTransformer<Map<String,Object>>, TypedTupleTransformer<Map<String,Object>> {
 
 	public static final AliasToEntityMapResultTransformer INSTANCE = new AliasToEntityMapResultTransformer();

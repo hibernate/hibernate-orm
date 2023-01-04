@@ -11,7 +11,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Arrays;
 
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -124,7 +123,7 @@ public class MySQLDialect extends Dialect {
 				Integer precision,
 				Integer scale,
 				Long length) {
-			switch ( jdbcType.getDefaultSqlTypeCode() ) {
+			switch ( jdbcType.getDdlTypeCode() ) {
 				case Types.BIT:
 					// MySQL allows BIT with a length up to 64 (less the default length 255)
 					if ( length != null ) {
@@ -244,6 +243,12 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useMaterializedLobWhenCapacityExceeded() {
+		// MySQL has no real concept of LOBs, so we can just use longtext/longblob with the materialized JDBC APIs
+		return false;
+	}
+
+	@Override
 	protected String castType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
@@ -333,7 +338,7 @@ public class MySQLDialect extends Dialect {
 				)
 				.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
 				.withTypeCapacity( maxMediumLobLen, "mediumblob" );
-		if ( getMaxVarcharLength() < maxLobLen ) {
+		if ( getMaxVarbinaryLength() < maxLobLen ) {
 			varbinaryBuilder.withTypeCapacity( maxLobLen, "blob" );
 		}
 		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
@@ -545,7 +550,7 @@ public class MySQLDialect extends Dialect {
 		//also natively supports ANSI-style substring()
 		functionFactory.position();
 		functionFactory.nowCurdateCurtime();
-		functionFactory.truncate();
+		functionFactory.trunc_truncate();
 		functionFactory.insert();
 		functionFactory.bitandorxornot_operator();
 		functionFactory.bitAndOr();
@@ -853,6 +858,17 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getDropUniqueKeyString() {
 		return " drop index ";
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		// no way to change just the column type, leaving other attributes intact
+		return "modify column " + columnName + " " + columnDefinition;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
 	}
 
 	@Override

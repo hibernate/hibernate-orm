@@ -9,7 +9,6 @@ package org.hibernate.sql.model.ast.builder;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -95,11 +94,11 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 
 	@Override
 	public void setWhere(String fragment) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void addWhereFragment(String fragment) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 }

@@ -272,7 +272,7 @@ public class CteInsertHandler implements InsertHandler {
 									rowNumberColumn
 							);
 						}
-						if ( !assignsId && entityDescriptor.getGenerator().generatedByDatabase() ) {
+						if ( !assignsId && entityDescriptor.getGenerator().generatedOnExecution() ) {
 							querySpec.getSelectClause().addSqlSelection(
 									new SqlSelectionImpl(
 											1,
@@ -336,7 +336,7 @@ public class CteInsertHandler implements InsertHandler {
 		processingStateStack.push( oldState );
 		sqmConverter.pruneTableGroupJoins();
 
-		if ( !assignsId && entityDescriptor.getGenerator().generatedByDatabase() ) {
+		if ( !assignsId && entityDescriptor.getGenerator().generatedOnExecution() ) {
 			// Add the row number to the assignments
 			final CteColumn rowNumberColumn = cteTable.getCteColumns()
 					.get( cteTable.getCteColumns().size() - 1 );
@@ -412,13 +412,7 @@ public class CteInsertHandler implements InsertHandler {
 			{
 				final QuerySpec rowsWithSequenceQuery = new QuerySpec( true );
 				rowsWithSequenceQuery.getFromClause().addRoot(
-						new CteTableGroup(
-								new NamedTableReference(
-										baseTableName,
-										"e",
-										false
-								)
-						)
+						new CteTableGroup( new NamedTableReference( baseTableName, "e" ) )
 				);
 				rowsWithSequenceQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
@@ -469,18 +463,13 @@ public class CteInsertHandler implements InsertHandler {
 				final TableGroup baseTableGroup = new TableGroupImpl(
 						navigablePath,
 						null,
-						new NamedTableReference(
-								baseTableName,
-								"e",
-								false
-						),
+						new NamedTableReference( baseTableName, "e" ),
 						null
 				);
 				final TableGroup rowsWithSequenceTableGroup = new CteTableGroup(
 						new NamedTableReference(
 								ROW_NUMBERS_WITH_SEQUENCE_VALUE,
-								"t",
-								false
+								"t"
 						)
 				);
 				baseTableGroup.addTableGroupJoin(
@@ -580,7 +569,7 @@ public class CteInsertHandler implements InsertHandler {
 				statement.addCteStatement( entityCte );
 			}
 		}
-		else if ( !assignsId && entityDescriptor.getGenerator().generatedByDatabase() ) {
+		else if ( !assignsId && entityDescriptor.getGenerator().generatedOnExecution() ) {
 			final String baseTableName = "base_" + entityCteTable.getTableExpression();
 			final CteStatement baseEntityCte = new CteStatement(
 					entityCteTable.withName( baseTableName ),
@@ -639,8 +628,7 @@ public class CteInsertHandler implements InsertHandler {
 						new NamedTableReference(
 								// We want to return the insertion count of the base table
 								baseInsertCte,
-								CTE_TABLE_IDENTIFIER,
-								false
+								CTE_TABLE_IDENTIFIER
 						)
 				)
 		);
@@ -777,7 +765,7 @@ public class CteInsertHandler implements InsertHandler {
 		final Generator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
 		final List<Map.Entry<List<CteColumn>, Assignment>> tableAssignments = assignmentsByTable.get( rootTableReference );
 		if ( ( tableAssignments == null || tableAssignments.isEmpty() )
-				&& !( identifierGenerator.generatedByDatabase() ) ) {
+				&& !identifierGenerator.generatedOnExecution() ) {
 			throw new IllegalStateException( "There must be at least a single root table assignment" );
 		}
 
@@ -805,7 +793,7 @@ public class CteInsertHandler implements InsertHandler {
 			final QuerySpec insertSelectSpec = new QuerySpec( true );
 			CteStatement finalCteStatement = null;
 			final CteTable dmlResultCte;
-			if ( i == 0 && !assignsId && identifierGenerator.generatedByDatabase() ) {
+			if ( i == 0 && !assignsId && identifierGenerator.generatedOnExecution() ) {
 				// Special handling for identity generation
 				final String cteTableName = getCteTableName( tableExpression, "base_" );
 				if ( statement.getCteStatement( cteTableName ) != null ) {
@@ -815,11 +803,7 @@ public class CteInsertHandler implements InsertHandler {
 				final String baseTableName = "base_" + queryCte.getCteTable().getTableExpression();
 				insertSelectSpec.getFromClause().addRoot(
 						new CteTableGroup(
-								new NamedTableReference(
-										baseTableName,
-										"e",
-										false
-								)
+								new NamedTableReference( baseTableName, "e" )
 						)
 				);
 				final CteColumn rowNumberColumn = queryCte.getCteTable().getCteColumns().get(
@@ -864,18 +848,13 @@ public class CteInsertHandler implements InsertHandler {
 				final TableGroup baseTableGroup = new TableGroupImpl(
 						navigablePath,
 						null,
-						new NamedTableReference(
-								baseTableName,
-								"e",
-								false
-						),
+						new NamedTableReference( baseTableName, "e" ),
 						null
 				);
 				final TableGroup rootInsertCteTableGroup = new CteTableGroup(
 						new NamedTableReference(
 								getCteTableName( tableExpression ),
-								"t",
-								false
+								"t"
 						)
 				);
 				baseTableGroup.addTableGroupJoin(
@@ -947,8 +926,7 @@ public class CteInsertHandler implements InsertHandler {
 						new CteTableGroup(
 							new NamedTableReference(
 									dmlResultCte.getTableExpression(),
-									"e",
-									false
+									"e"
 							)
 						)
 				);
@@ -997,8 +975,7 @@ public class CteInsertHandler implements InsertHandler {
 						new CteTableGroup(
 								new NamedTableReference(
 										queryCte.getCteTable().getTableExpression(),
-										"e",
-										false
+										"e"
 								)
 						)
 				);
@@ -1074,7 +1051,7 @@ public class CteInsertHandler implements InsertHandler {
 			if ( finalCteStatement != null ) {
 				statement.addCteStatement( finalCteStatement );
 			}
-			if ( i == 0 && !assignsId && identifierGenerator.generatedByDatabase() ) {
+			if ( i == 0 && !assignsId && identifierGenerator.generatedOnExecution() ) {
 				// Special handling for identity generation
 				statement.addCteStatement( queryCte );
 			}

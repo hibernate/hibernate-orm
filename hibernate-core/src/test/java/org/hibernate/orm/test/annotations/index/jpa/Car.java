@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
 
 
 /**
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  */
 @Entity
 @Table(indexes = {

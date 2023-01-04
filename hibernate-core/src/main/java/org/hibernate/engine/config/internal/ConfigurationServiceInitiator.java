@@ -13,7 +13,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * The ServiceInitiator for the ConfigurationService
+ * The {@link org.hibernate.service.spi.ServiceInitiator} for the {@link ConfigurationService}.
  *
  * @author Steve Ebersole
  */

@@ -96,7 +96,7 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 
 	@Override
 	public int getSqlType() {
-		return jdbcType.getDefaultSqlTypeCode();
+		return jdbcType.getDdlTypeCode();
 	}
 
 	@Override

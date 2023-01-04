@@ -74,6 +74,7 @@ public class NumericValidationTest implements ExecutionOptions {
 		metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( TestEntity.class )
 				.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 
 		try {

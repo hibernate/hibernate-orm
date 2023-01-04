@@ -7,11 +7,8 @@
 package org.hibernate.boot.spi;
 
 /**
- * Contract for things that need to be aware of JPA {@code orm.xml}-defined persistence-unit-defaults.  Only
- * MetadataBuildingOptions are supported to implement this contract.
- * <p>
- * NOTE: it is expected that this contract will go away as we migrate to Jandex for annotation processing
- * and move to the annotation binding constructs done on the metamodel branch.
+ * Contract for things that need to be aware of JPA {@code orm.xml}-defined persistence-unit-defaults.
+ * Only {@link MetadataBuildingOptions} are supported to implement this contract.
  *
  * @since 5.0
  *

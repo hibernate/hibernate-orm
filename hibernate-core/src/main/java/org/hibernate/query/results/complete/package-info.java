@@ -7,9 +7,9 @@
 
 /**
  * Support for immutable result/fetch builder graph nodes built from static sources
- * such as JPA's {@link jakarta.persistence.SqlResultSetMapping} or `hbm.xml` mapping
- * {@code <resultset/>}.
- *
+ * such as {@link jakarta.persistence.SqlResultSetMapping} or the {@code hbm.xml}
+ * mapping element {@code <resultset/>}.
+ * <p>
  * The differentiation from {@link org.hibernate.query.results.dynamic} is that here
  * we have up-front knowledge of the complete mapping graph and can perform optimized
  * resolution process

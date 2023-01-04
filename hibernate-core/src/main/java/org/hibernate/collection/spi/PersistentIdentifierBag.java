@@ -26,17 +26,18 @@ import org.hibernate.type.Type;
 import static org.hibernate.generator.EventType.INSERT;
 
 /**
- * An {@code IdentifierBag} implements "bag" semantics more efficiently than
- * a regular {@code Bag} by adding a synthetic identifier column to the
- * table. This identifier is unique for all rows in the table, allowing very
- * efficient updates and deletes. The value of the identifier is never exposed
- * to the application.
+ * An "identifier bag" implements "bag" semantics more efficiently than a
+ * regular bag by adding a synthetic identifier column to the table. This
+ * identifier is unique over all rows in the table, allowing very efficient
+ * updates and deletes. The value of the identifier is never exposed to the
+ * application.
  * <p>
- * {@code IdentifierBag}s may not be used for a many-to-one association.
+ * Identifier bags may not be used for a many-to-one association.
  * Furthermore, there is no reason to use {@code inverse="true"}.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */

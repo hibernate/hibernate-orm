@@ -24,7 +24,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 /**
  * Specialized consumer for processing domain model paths occurring as part
- * of a join predicate
+ * of a join predicate.
  *
  * @author Steve Ebersole
  */

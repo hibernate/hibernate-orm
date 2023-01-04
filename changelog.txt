@@ -3,6 +3,68 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.0.CR1 (December 22, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32077
+
+** Bug
+    * [HHH-15900] - ID attributes  with "select" generator are mapped to identity columns
+    * [HHH-15847] - DDL check constraint creation broken
+    * [HHH-15828] - setting TIMEZONE_DEFAULT_STORAGE to COLUMN does not work
+    * [HHH-15820] - inconsistent DDL generated Instant and ZonedDateTime, OffsetDateTime on Oracle
+    * [HHH-15819] - extract(offset hour|minute from datetime) are broken
+    * [HHH-15814] - Add missing current timestamp methods in CockroachDB  dialect 
+    * [HHH-15801] - IdentifierGeneratorHelper should compare column names case insensitively
+    * [HHH-15775] - Connection error can result in UnknownServiceException, hiding actual exception
+    * [HHH-15767] - missing unique constraints from optional @OneToOne
+    * [HHH-15750] - Hibernate.isInitialized() broken for EnhancementAsProxyLazinessInterceptor
+    * [HHH-15748] - Use JSON DDL type on Oracle 21+ and BLOB on 12+
+    * [HHH-15741] - Explicit declaration assigned identifier generator does not work
+    * [HHH-15715] - broken links in 6 docs
+    * [HHH-15709] - HQL local datetime literals on Postgres, Cockroach H2
+    * [HHH-15704] - ManyToManyTest produces invalid foreign keys
+    * [HHH-15689] - SessionFactoryOptionsBuilder.addEntityNameResolvers() has no effect
+    * [HHH-15687] - IllegalArgumentException with Type parameters and multiple bounds
+    * [HHH-15682] - static final instances of LockOptions are mutable
+    * [HHH-15679] - Respect the offset of OffsetTime when persisting/loading data
+    * [HHH-15670] - RequiresDialectFeature.reverse() not implemented
+    * [HHH-15669] - Oracle 21 and 11 spatial test failure
+    * [HHH-15668] - Cockroach test failure: BatchOptimisticLockingTest.testBatchAndOptimisticLocking
+    * [HHH-15634] - Lazy basic property does not get updated on change
+    * [HHH-15627] - useless error message of multi-@JoinColumn mapping does not specify referencedColumnName
+    * [HHH-15571] - Bundle-Manifest has no 'Bundle-Version'
+    * [HHH-15565] - @Table(fetch=SELECT) is gone from H6
+    * [HHH-15549] - incorrect DDL mapping DECIMAL -> BOOLEAN on Oracle
+    * [HHH-15545] - @NotFound(Ignore) defaults to eager loading
+    * [HHH-15522] - Hibernate.isInitialized method not working for Envers Collections
+    * [HHH-15505] - Getter of loaded entity returns null when using bytecode enhancement on entity whose field is defined both in mapped superclass and concrete entity
+    * [HHH-15485] - Tests for Collections in default FetchGroup are not enabling this property
+    * [HHH-15463] - Adjust JdbcType based on DDL capacity for varchar/varbinary like types
+    * [HHH-15159] - Orphan removal of an entity with an @ElementCollection causes a ConstraintViolationException
+
+** Deprecation
+    * [HHH-15788] - deprecate GenerationTime
+    * [HHH-15772] - deprecate @Target, @Proxy, @Polymorphism
+    * [HHH-15714] - deprecate FilterKey and QuerySpacesHelper
+    * [HHH-15701] - deprecated CacheModeType
+    * [HHH-15697] - deprecate lock(entityName,...)
+    * [HHH-15684] - SelectionQuery.setAliasSpecificLockMode() confusion
+    * [HHH-15680] - deprecate LockRequest and buildLockRequest(), and have lock() accept LockOptions
+    * [HHH-15676] - deprecate SessionFactory.getFilterDefinition()
+
+** Improvement
+    * [HHH-15926] - allow @Type and @CompositeType to be applied as meta-annotations
+    * [HHH-15919] - add trunc() / truncate() to the portable HQL functions
+    * [HHH-15912] - adaptive handling of DDL types for Java enums mapped as ORDINAL
+    * [HHH-15899] - Add @PartitionKey annotation
+    * [HHH-15898] - Add @Instantiator annotation to mark canonical constructor for embeddables
+    * [HHH-15887] - Avoid megamorphic calls on JdbcValuesSourceProcessingState#getSession
+    * [HHH-15886] - Micro optimisations in NavigableRole equals and hashcode
+    * [HHH-15879] - Introduce a fetchable key for Fetchable within FetchableContainer
+    * [HHH-15878] - Micro optimisations of StatefulPersistenceContext#clear
+
+
 Changes in 6.1.2.Final (August 03, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

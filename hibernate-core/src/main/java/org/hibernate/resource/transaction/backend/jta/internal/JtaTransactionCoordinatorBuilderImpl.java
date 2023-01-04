@@ -16,6 +16,8 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
+import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
+
 /**
  * Concrete builder for JTA-based TransactionCoordinator instances.
  *
@@ -44,8 +46,8 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 
 	@Override
 	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
-		// todo : I want to change this to PhysicalConnectionHandlingMode#IMMEDIATE_ACQUISITION_AND_HOLD
-		return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
+		// todo : I want to change this to IMMEDIATE_ACQUISITION_AND_HOLD
+		return DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 	}
 
 	@Override
@@ -55,7 +57,7 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
+		jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
 	}
 
 }

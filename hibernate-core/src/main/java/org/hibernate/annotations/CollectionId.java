@@ -26,12 +26,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface CollectionId {
 	/**
-	 * The column containing the collection-id
+	 * The column containing the collection id.
 	 */
 	Column column() default @Column;
 
 	/**
-	 * Implementation for generating values
+	 * Implementation for generating values.
 	 *
 	 * @apiNote Mutually exclusive with {@link #generator()}
 	 */
@@ -39,10 +39,9 @@ public @interface CollectionId {
 
 	/**
 	 * The generator name.
-	 *
-	 * Can specify either a built-in strategy ("sequence", e.g.)
-	 * or a named generatorIdentifierGenerator
-	 * ({@link jakarta.persistence.SequenceGenerator}, e.g.)
+	 * <p>
+	 * Can specify either a built-in strategy ({@code "sequence"}, for example)
+	 * or a named JPA id generator.
 	 *
 	 * @apiNote Mutually exclusive with {@link #generatorImplementation()}
 	 */

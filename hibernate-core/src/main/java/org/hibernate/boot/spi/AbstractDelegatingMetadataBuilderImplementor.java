@@ -22,6 +22,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -35,10 +36,9 @@ import org.jboss.jandex.IndexView;
  *
  * @author Gunnar Morling
  *
- * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
- * to a specialization of {@link MetadataBuilderImplementor}
+ * @param <T> The specific subclass; Allows subclasses to narrow the return type of the contract methods
+ *            to a specialization of {@link MetadataBuilderImplementor}.
  */
-@SuppressWarnings("unused")
 public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends MetadataBuilderImplementor>  implements MetadataBuilderImplementor {
 
 	private final MetadataBuilderImplementor delegate;
@@ -79,6 +79,12 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	@Override
 	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
 		delegate.applyPhysicalNamingStrategy( namingStrategy );
+		return getThis();
+	}
+
+	@Override
+	public MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+		delegate.applyColumnOrderingStrategy( columnOrderingStrategy );
 		return getThis();
 	}
 

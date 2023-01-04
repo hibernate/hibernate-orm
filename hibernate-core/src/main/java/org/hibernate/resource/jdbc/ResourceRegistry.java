@@ -13,7 +13,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 /**
- * A registry for tracking JDBC resources
+ * A registry for tracking JDBC resources.
  *
  * @author Steve Ebersole
  */

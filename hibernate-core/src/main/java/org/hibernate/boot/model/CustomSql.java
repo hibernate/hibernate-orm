@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 
 /**
  * Models the information for custom SQL execution defined as part of
- * the mapping for a primary/secondary table
+ * the mapping for a primary or secondary table.
  *
  * @author Steve Ebersole
  */

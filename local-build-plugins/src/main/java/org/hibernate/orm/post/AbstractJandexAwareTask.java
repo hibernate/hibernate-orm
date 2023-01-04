@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import javax.inject.Inject;
 
 import org.gradle.api.DefaultTask;
@@ -89,16 +90,24 @@ public class AbstractJandexAwareTask extends DefaultTask {
 	}
 
 	protected void processAnnotations(DotName annotationName, TreeSet<Inclusion> inclusions) {
-		final Index index = getIndexManager().getIndex();
-		final List<AnnotationInstance> usages = index.getAnnotations( annotationName );
+		processAnnotations( inclusions::add, annotationName );
+	}
 
-		usages.forEach( (usage) -> {
-			final AnnotationTarget usageLocation = usage.target();
-			final Inclusion inclusion = determinePath( usageLocation );
-			if ( inclusion != null ) {
-				inclusions.add( inclusion );
-			}
-		} );
+	protected void processAnnotations(Consumer<Inclusion> inclusions, DotName... annotationNames) {
+		final Index index = getIndexManager().getIndex();
+
+		for ( int i = 0; i < annotationNames.length; i++ ) {
+			final DotName annotationName = annotationNames[ i ];
+			final List<AnnotationInstance> usages = index.getAnnotations( annotationName );
+
+			usages.forEach( (usage) -> {
+				final AnnotationTarget usageLocation = usage.target();
+				final Inclusion inclusion = determinePath( usageLocation );
+				if ( inclusion != null ) {
+					inclusions.accept( inclusion );
+				}
+			} );
+		}
 	}
 
 	protected void writeReport(TreeSet<Inclusion> inclusions) {
@@ -116,7 +125,13 @@ public class AbstractJandexAwareTask extends DefaultTask {
 		}
 	}
 
+	protected void writeReportHeader(OutputStreamWriter fileWriter) {
+		// by default, nothing to do
+	}
+
 	private void writeReport(TreeSet<Inclusion> inclusions, OutputStreamWriter fileWriter) {
+		writeReportHeader( fileWriter );
+
 		String previousPath = null;
 		for ( Inclusion inclusion : inclusions ) {
 			if ( previousPath != null && inclusion.getPath().startsWith( previousPath ) ) {

@@ -28,7 +28,7 @@ import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.jboss.logging.Logger;
 
 /**
- * The Hibernate {@link PersistenceProvider} implementation
+ * The best-ever implementation of a JPA {@link PersistenceProvider}.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -112,7 +112,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				continue;
 			}
 
-			if (providedClassLoaderService != null) {
+			if ( providedClassLoaderService != null ) {
 				return getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoaderService );
 			}
 			else {

@@ -24,5 +24,5 @@ public interface TableMigrator {
 			Table table,
 			Metadata metadata,
 			TableInformation tableInfo,
-			SqlStringGenerationContext sqlStringGenerationContext);
+			SqlStringGenerationContext context);
 }

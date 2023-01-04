@@ -12,11 +12,11 @@ import java.util.Locale;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.internal.AnnotatedJoinColumn;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -55,6 +55,7 @@ public class Tests {
 			metadataBuilder.applyPhysicalNamingStrategy( PhysicalNamingStrategyImpl.INSTANCE );
 
 			final Metadata metadata = metadataBuilder.build();
+			( (MetadataImplementor) metadata ).orderColumns( false );
 			( (MetadataImplementor) metadata ).validate();
 
 			final PersistentClass languageBinding = metadata.getEntityBinding( Language.class.getName() );

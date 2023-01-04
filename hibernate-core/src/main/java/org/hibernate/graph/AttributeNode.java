@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 /**
  * Hibernate extension to the JPA entity-graph AttributeNode contract.
  *
- * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
+ * @author Strong Liu
  * @author Steve Ebersole
  * @author Andrea Boriero
  */

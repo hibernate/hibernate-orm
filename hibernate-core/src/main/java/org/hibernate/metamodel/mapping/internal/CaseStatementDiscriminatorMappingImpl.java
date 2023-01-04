@@ -48,33 +48,35 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			int[] notNullColumnTableNumbers,
 			String[] notNullColumnNames,
 			String[] discriminatorValues,
+			boolean[] discriminatorAbstract,
 			Map<String,String> subEntityNameByTableName,
 			DiscriminatorType<?> incomingDiscriminatorType,
+			Map<Object, DiscriminatorValueDetails> valueMappings,
 			MappingModelCreationProcess creationProcess) {
-		super( entityDescriptor, incomingDiscriminatorType, creationProcess );
+		super( entityDescriptor, incomingDiscriminatorType, valueMappings, creationProcess );
 
 		for ( int i = 0; i < discriminatorValues.length; i++ ) {
-			final String tableName = tableNames[notNullColumnTableNumbers[i]];
-			final String subEntityName = subEntityNameByTableName.get( tableName );
-			final String oneSubEntityColumn = notNullColumnNames[i];
-
-			final String rawDiscriminatorValue = discriminatorValues[i];
-			final Object discriminatorValue = getUnderlyingJdbcMappingType().getJavaTypeDescriptor().wrap( rawDiscriminatorValue, null );
-
-			tableDiscriminatorDetailsMap.put(
-					tableName,
-					new TableDiscriminatorDetails(
-							tableName,
-							oneSubEntityColumn,
-							discriminatorValue,
-							subEntityName
-					)
-			);
+			if ( !discriminatorAbstract[i] ) {
+				final String tableName = tableNames[notNullColumnTableNumbers[i]];
+				final String subEntityName = subEntityNameByTableName.get( tableName );
+				final String oneSubEntityColumn = notNullColumnNames[i];
+				final String discriminatorValue = discriminatorValues[i];
+				tableDiscriminatorDetailsMap.put(
+						tableName,
+						new TableDiscriminatorDetails(
+								tableName,
+								oneSubEntityColumn,
+								getUnderlyingJdbcMappingType().getJavaTypeDescriptor()
+										.wrap( discriminatorValue, null ),
+								subEntityName
+						)
+				);
+			}
 		}
 	}
 
 	@Override
-	public boolean isPhysical() {
+	public boolean hasPhysicalColumn() {
 		return false;
 	}
 
@@ -216,6 +218,16 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 
 	@Override
 	public boolean isUpdateable() {
+		return false;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return false;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
 		return false;
 	}
 

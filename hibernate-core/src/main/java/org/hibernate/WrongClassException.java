@@ -9,8 +9,8 @@ package org.hibernate;
 import java.util.Locale;
 
 /**
- * Thrown when loading an entity (by identifier) results in a value that cannot be treated as the subclass
- * type requested by the caller.
+ * Thrown when loading an entity (by identifier) results in a value that
+ * cannot be treated as the subclass type requested by the caller.
  *
  * @author Gavin King
  */
@@ -19,7 +19,7 @@ public class WrongClassException extends HibernateException {
 	private final String entityName;
 
 	/**
-	 * Constructs a WrongClassException using the supplied information.
+	 * Constructs a {@code WrongClassException} using the supplied information.
 	 *  @param message A message explaining the exception condition
 	 * @param identifier The identifier of the entity
 	 * @param entityName The entity-type requested

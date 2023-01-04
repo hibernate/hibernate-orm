@@ -12,6 +12,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
- * Hibernate extensions to the JPA CriteriaBuilder.
+ * Hibernate extensions to the JPA {@link CriteriaBuilder}.
  *
  * @author Steve Ebersole
  */
@@ -214,6 +215,16 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return the rounded value
 	 */
 	<T extends Number> JpaExpression<T> round(Expression<T> x, Integer n);
+
+	/**
+	 * Create an expression that returns the first argument
+	 * truncated to the number of decimal places given by the
+	 * second argument.
+	 * @param x base
+	 * @param n number of decimal places
+	 * @return the truncated value
+	 */
+	<T extends Number> JpaExpression<T> truncate(Expression<T> x, Integer n);
 
 	/**
 	 *  Create expression to return current local date.
@@ -755,10 +766,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	/**
 	 * Create a predicate that tests whether a Map is empty.
-	 * <p>
-	 * NOTE : Due to type-erasure we cannot name this the same as
-	 * {@link CriteriaBuilder#isEmpty}
 	 *
+	 * @apiNote Due to type-erasure we cannot name this the same as
+	 *          {@link CriteriaBuilder#isEmpty}.
 	 *
 	 * @param mapExpression The expression resolving to a Map which we
 	 * want to check for emptiness
@@ -768,11 +778,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<M extends Map<?,?>> JpaPredicate isMapEmpty(JpaExpression<M> mapExpression);
 
 	/**
-	 * Create a predicate that tests whether a Map is
-	 * not empty.
-	 * <p>
-	 * NOTE : Due to type-erasure we cannot name this the same as
-	 * {@link CriteriaBuilder#isNotEmpty}
+	 * Create a predicate that tests whether a Map is not empty.
+	 *
+	 * @apiNote Due to type-erasure we cannot name this the same as
+	 *          {@link CriteriaBuilder#isNotEmpty}
 	 *
 	 * @param mapExpression The expression resolving to a Map which we
 	 * want to check for non-emptiness
@@ -783,9 +792,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	/**
 	 * Create an expression that tests the size of a map.
-	 * <p>
-	 * NOTE : Due to type-erasure we cannot name this the same as
-	 * {@link CriteriaBuilder#size}
+	 *
+	 * @apiNote Due to type-erasure we cannot name this the same as
+	 *          {@link CriteriaBuilder#size}
 	 *
 	 * @param mapExpression The expression resolving to a Map for which we
 	 * want to know the size
@@ -893,6 +902,521 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	JpaSearchOrder desc(JpaCteCriteriaAttribute x, boolean nullsFirst);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Non-standard HQL functions
+
+	/**
+	 * Embed native {@code pattern} that will be unquoted and embedded in the generated SQL.
+	 * Occurrences of {@code ?} in the pattern are replaced with the remaining {@code arguments}
+	 * of the function.
+	 *
+	 * @param pattern native SQL pattern
+	 * @param type type of this expression
+	 * @param arguments optional arguments to the SQL pattern
+	 * @param <T> type of this expression
+	 *
+	 * @return native SQL expression
+	 */
+	@Incubating
+	<T> JpaExpression<T> sql(String pattern, Class<T> type, Expression<?>... arguments);
+
+	/**
+	 * Format a date, time, or datetime according to a pattern.
+	 * The pattern must be written in a subset of the pattern language defined by
+	 * Java’s {@link java.time.format.DateTimeFormatter}.
+	 * <p>
+	 * See {@link org.hibernate.dialect.Dialect#appendDatetimeFormat}
+	 * for a full list of pattern elements.
+	 *
+	 * @param datetime the datetime expression to format
+	 * @param pattern the pattern to use for formatting
+	 *
+	 * @return format expression
+	 */
+	@Incubating
+	JpaFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern);
+
+	/**
+	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#YEAR} of a date, time, or datetime expression.
+	 *
+	 * @param datetime the date, time, or datetime to extract the value from
+	 *
+	 * @return the extracted value
+	 */
+	@Incubating
+	JpaFunction<Integer> year(Expression<? extends TemporalAccessor> datetime);
+
+	/**
+	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#MONTH} of a date, time, or datetime expression.
+	 *
+	 * @param datetime the date, time, or datetime to extract the value from
+	 *
+	 * @return the extracted value
+	 */
+	@Incubating
+	JpaFunction<Integer> month(Expression<? extends TemporalAccessor> datetime);
+
+	/**
+	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#DAY} of a date, time, or datetime expression.
+	 *
+	 * @param datetime the date, time, or datetime to extract the value from
+	 *
+	 * @return the extracted value
+	 */
+	@Incubating
+	JpaFunction<Integer> day(Expression<? extends TemporalAccessor> datetime);
+
+	/**
+	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#HOUR} of a date, time, or datetime expression.
+	 *
+	 * @param datetime the date, time, or datetime to extract the value from
+	 *
+	 * @return the extracted value
+	 */
+	@Incubating
+	JpaFunction<Integer> hour(Expression<? extends TemporalAccessor> datetime);
+
+	/**
+	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#MINUTE} of a date, time, or datetime expression.
+	 *
+	 * @param datetime the date, time, or datetime to extract the value from
+	 *
+	 * @return the extracted value
+	 */
+	@Incubating
+	JpaFunction<Integer> minute(Expression<? extends TemporalAccessor> datetime);
+
+	/**
+	 * Extracts the {@link org.hibernate.query.sqm.TemporalUnit#SECOND} of a date, time, or datetime expression.
+	 *
+	 * @param datetime the date, time, or datetime to extract the value from
+	 *
+	 * @return the extracted value
+	 */
+	@Incubating
+	JpaFunction<Float> second(Expression<? extends TemporalAccessor> datetime);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(Expression<String> string, String replacement, int start);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, int start);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(Expression<String> string, String replacement, Expression<Integer> start);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, Expression<Integer> start);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(Expression<String> string, String replacement, int start, int length);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, int start, int length);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(Expression<String> string, String replacement, Expression<Integer> start, int length);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			Expression<Integer> start,
+			int length);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(Expression<String> string, String replacement, int start, Expression<Integer> length);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			int start,
+			Expression<Integer> length);
+
+	/**
+	 * @see #overlay(Expression, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> overlay(
+			Expression<String> string,
+			String replacement,
+			Expression<Integer> start,
+			Expression<Integer> length);
+
+	/**
+	 * Overlay the {@code string} expression with the {@code replacement} expression,
+	 * starting from index {@code start} and substituting a number of characters
+	 * corresponding to the length of the {@code replacement} expression or the
+	 * {@code length} parameter if specified.
+	 *
+	 * @param string string expression to be manipulated
+	 * @param replacement string expression to replace in original
+	 * @param start start position
+	 * @param length optional, number of characters to substitute
+	 *
+	 * @return overlay expression
+	 */
+	@Incubating
+	JpaFunction<String> overlay(
+			Expression<String> string,
+			Expression<String> replacement,
+			Expression<Integer> start,
+			Expression<Integer> length);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Expression<String> x, int length);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Expression<String> x, Expression<Integer> length);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Expression<String> x, int length, char padChar);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length, char padChar);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Expression<String> x, Expression<Integer> length, char padChar);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length, char padChar);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Expression<String> x, int length, Expression<Character> padChar);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length, Expression<Character> padChar);
+
+	/**
+	 * @see #pad(Trimspec, Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> pad(Expression<String> x, Expression<Integer> length, Expression<Character> padChar);
+
+	/**
+	 * Pad the specified string expression with whitespace or with the {@code padChar} character if specified.
+	 * Optionally pass a {@link jakarta.persistence.criteria.CriteriaBuilder.Trimspec} to pad the
+	 * string expression with {@code LEADING} or {@code TRAILING} (default) characters.
+	 *
+	 * @param ts optional {@link jakarta.persistence.criteria.CriteriaBuilder.Trimspec}
+	 * @param x string expression to pad
+	 * @param length length of the result string after padding
+	 * @param padChar optional pad character
+	 *
+	 * @return pad expression
+	 */
+	@Incubating
+	JpaFunction<String> pad(
+			Trimspec ts,
+			Expression<String> x,
+			Expression<Integer> length,
+			Expression<Character> padChar);
+
+	/**
+	 * @see #left(Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> left(Expression<String> x, int length);
+
+	/**
+	 * Extract the {@code length} leftmost characters of a string.
+	 *
+	 * @param x original string
+	 * @param length number of characters
+	 *
+	 * @return left expression
+	 */
+	@Incubating
+	JpaFunction<String> left(Expression<String> x, Expression<Integer> length);
+
+	/**
+	 * @see #right(Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> right(Expression<String> x, int length);
+
+	/**
+	 * Extract the {@code length} rightmost characters of a string.
+	 *
+	 * @param x original string
+	 * @param length number of characters
+	 *
+	 * @return left expression
+	 */
+	@Incubating
+	JpaFunction<String> right(Expression<String> x, Expression<Integer> length);
+
+	/**
+	 * @see #replace(Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> replace(Expression<String> x, String pattern, String replacement);
+
+	/**
+	 * @see #replace(Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> replace(Expression<String> x, String pattern, Expression<String> replacement);
+
+	/**
+	 * @see #replace(Expression, Expression, Expression)
+	 */
+	@Incubating
+	JpaFunction<String> replace(Expression<String> x, Expression<String> pattern, String replacement);
+
+	/**
+	 * Replace all occurrences of {@code pattern} within the original string with {@code replacement}.
+	 *
+	 * @param x original string
+	 * @param pattern the string to be replaced
+	 * @param replacement the new replacement string
+	 *
+	 * @return replace expression
+	 */
+	@Incubating
+	JpaFunction<String> replace(Expression<String> x, Expression<String> pattern, Expression<String> replacement);
+
+	@Incubating
+	JpaFunction<String> collate(Expression<String> x, String collation);
+
+	/**
+	 * Create an expression that returns the base-10 logarithm
+	 * of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return base-10 logarithm
+	 */
+	@Incubating
+	JpaExpression<Double> log10(Expression<? extends Number> x);
+
+	/**
+	 * @see #log(Expression, Expression)
+	 */
+	@Incubating
+	JpaExpression<Double> log(Number b, Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the logarithm of {@code x} to the base {@code b}.
+	 *
+	 * @param b base
+	 * @param x expression
+	 *
+	 * @return arbitrary-base logarithm
+	 */
+	@Incubating
+	JpaExpression<Double> log(Expression<? extends Number> b, Expression<? extends Number> x);
+
+	/**
+	 * Literal expression corresponding to the value of pi.
+	 *
+	 * @return pi expression
+	 */
+	@Incubating
+	JpaExpression<Double> pi();
+
+	/**
+	 * Create an expression that returns the sine of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return sine
+	 */
+	@Incubating
+	JpaExpression<Double> sin(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the cosine of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return cosine
+	 */
+	@Incubating
+	JpaExpression<Double> cos(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the tangent of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return tangent
+	 */
+	@Incubating
+	JpaExpression<Double> tan(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the inverse sine of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return inverse sine
+	 */
+	@Incubating
+	JpaExpression<Double> asin(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the inverse cosine of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return inverse cosine
+	 */
+	@Incubating
+	JpaExpression<Double> acos(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the inverse tangent of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return inverse tangent
+	 */
+	@Incubating
+	JpaExpression<Double> atan(Expression<? extends Number> x);
+
+	/**
+	 * @see #atan2(Expression, Expression)
+	 */
+	@Incubating
+	JpaExpression<Double> atan2(Number y, Expression<? extends Number> x);
+
+	/**
+	 * @see #atan2(Expression, Expression)
+	 */
+	@Incubating
+	JpaExpression<Double> atan2(Expression<? extends Number> y, Number x);
+
+	/**
+	 * Create an expression that returns the inverse tangent of {@code y} over {@code x}.
+	 *
+	 * @param y y coordinate
+	 * @param x x coordinate
+	 *
+	 * @return 2-argument inverse tangent
+	 */
+	@Incubating
+	JpaExpression<Double> atan2(Expression<? extends Number> y, Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the hyperbolic sine of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return hyperbolic sine
+	 */
+	@Incubating
+	JpaExpression<Double> sinh(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the hyperbolic cosine of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return hyperbolic cosine
+	 */
+	@Incubating
+	JpaExpression<Double> cosh(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that returns the hyperbolic tangent of its argument.
+	 *
+	 * @param x expression
+	 *
+	 * @return hyperbolic tangent
+	 */
+	@Incubating
+	JpaExpression<Double> tanh(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that converts an angle measured in radians
+	 * to an approximately equivalent angle measured in degrees.
+	 *
+	 * @param x expression
+	 *
+	 * @return degrees
+	 */
+	@Incubating
+	JpaExpression<Double> degrees(Expression<? extends Number> x);
+
+	/**
+	 * Create an expression that converts an angle measured in degrees
+	 * to an approximately equivalent angle measured in radians.
+	 *
+	 * @param x expression
+	 *
+	 * @return radians
+	 */
+	@Incubating
+	JpaExpression<Double> radians(Expression<? extends Number> x);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Window functions

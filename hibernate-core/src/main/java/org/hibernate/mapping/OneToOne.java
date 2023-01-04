@@ -12,7 +12,6 @@ import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
@@ -91,16 +90,6 @@ public class OneToOne extends ToOne {
 					isConstrained(),
 					getBuildingContext()
 			);
-		}
-	}
-
-	@Override
-	public void createForeignKey() throws MappingException {
-		// Ensure properties are sorted before we create a foreign key
-		sortProperties();
-		if ( isForeignKeyEnabled() && constrained && referencedPropertyName==null) {
-			//TODO: handle the case of a foreign key to something other than the pk
-			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
 		}
 	}
 

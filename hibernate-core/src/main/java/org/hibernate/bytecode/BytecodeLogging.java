@@ -6,7 +6,6 @@
  */
 package org.hibernate.bytecode;
 
-import org.hibernate.boot.jaxb.JaxbLogger;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;

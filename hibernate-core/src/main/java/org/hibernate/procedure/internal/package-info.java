@@ -6,6 +6,6 @@
  */
 
 /**
- * Defines the internal support for implementing stored procedure calling.
+ * Defines the internal implementation of the stored procedure SPI.
  */
 package org.hibernate.procedure.internal;

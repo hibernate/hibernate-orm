@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.model.source.internal;
 
-import org.hibernate.cfg.SecondPass;
+import org.hibernate.boot.spi.SecondPass;
 
 /**
  * Because {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy} often requires

@@ -24,6 +24,7 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
 import org.hibernate.query.criteria.JpaJoinedFrom;
@@ -204,10 +205,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			final SqmAttributeJoin<?, ?> lhsAttributeJoin = (SqmAttributeJoin<?, ?>) lhs;
 			if ( lhsAttributeJoin.getReferencedPathSource() instanceof EntityDomainType<?> ) {
 				final String entityName = ( (EntityDomainType<?>) lhsAttributeJoin.getReferencedPathSource() ).getHibernateEntityName();
-				return (ModelPartContainer) creationState.getCreationContext().getQueryEngine()
-						.getTypeConfiguration()
-						.getSessionFactory()
-						.getRuntimeMetamodels()
+				return (ModelPartContainer) creationState.getCreationContext()
+						.getJpaMetamodel()
 						.getMappingMetamodel()
 						.getEntityDescriptor( entityName )
 						.findSubPart( attributeJoin.getAttribute().getName(), null );
@@ -229,10 +228,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 				assert lhs instanceof SqmCrossJoin<?>;
 				entityName = ( (SqmCrossJoin<?>) lhs ).getEntityName();
 			}
-			return (ModelPartContainer) creationState.getCreationContext().getQueryEngine()
-					.getTypeConfiguration()
-					.getSessionFactory()
-					.getRuntimeMetamodels()
+			return (ModelPartContainer) creationState.getCreationContext()
+					.getJpaMetamodel()
 					.getMappingMetamodel()
 					.getEntityDescriptor( entityName )
 					.findSubPart( attributeJoin.getAttribute().getName(), null );
@@ -620,6 +617,19 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 					"The JPA specification does not support subqueries in the from clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );
 		}
+	}
+
+	@Override
+	public <X> JpaCrossJoin<X> crossJoin(Class<X> entityJavaType) {
+		return crossJoin( nodeBuilder().getDomainModel().entity( entityJavaType ) );
+	}
+
+	@Override
+	public <X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity) {
+		final SqmCrossJoin<X> crossJoin = new SqmCrossJoin<>( entity, null, findRoot() );
+		// noinspection unchecked
+		addSqmJoin( (SqmJoin<T, ?>) crossJoin );
+		return crossJoin;
 	}
 
 	@Override

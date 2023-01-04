@@ -29,10 +29,11 @@ import org.hibernate.dialect.Dialect;
  *     {@linkplain java.time.ZonedDateTime#getZone() zone} in which the
  *     instant is represented.
  * </ul>
+ * <p>
  * We must also consider the physical representation of the zoned datetime
  * in the database table.
  * <p>
- * The {@link #DEFAULT default strategy} guarantees that a round trip
+ * The {@linkplain #DEFAULT default strategy} guarantees that a round trip
  * preserves the instant. Whether the zone or offset is preserved depends
  * on whether the underlying database has a {@code timestamp with time zone}
  * type which preserves offsets:
@@ -43,6 +44,7 @@ import org.hibernate.dialect.Dialect;
  *     so that datetimes retrieved from the database will be represented in
  *     UTC.
  * </ul>
+ * <p>
  * When this default strategy is not appropriate, recommended alternatives
  * are:
  * <ul>
@@ -82,6 +84,7 @@ public enum TimeZoneStorageType {
 	 * <li>passes them through in the JVM default time zone
 	 *    otherwise.
 	 * </ul>
+	 * <p>
 	 * Provided partly for backward compatibility with older
 	 * versions of Hibernate
 	 */

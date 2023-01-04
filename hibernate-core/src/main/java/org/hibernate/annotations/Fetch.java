@@ -22,6 +22,7 @@ import java.lang.annotation.Target;
  * <li>{@linkplain FetchMode#JOIN join fetching} is used for
  *     {@linkplain jakarta.persistence.FetchType#EAGER eager} fetching.
  * </ul>
+ * <p>
  * The default fetching strategy specified by this annotation may be
  * overridden in a given {@linkplain FetchProfile fetch profile}.
  *

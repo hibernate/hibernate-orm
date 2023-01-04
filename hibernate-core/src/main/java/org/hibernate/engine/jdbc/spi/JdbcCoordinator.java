@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.function.Supplier;
 
@@ -72,7 +73,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	StatementPreparer getStatementPreparer();
 
 	/**
-	 * Obtain the resultset extractor associated with this JDBC coordinator.
+	 * Obtain the {@link ResultSet} extractor associated with this JDBC coordinator.
 	 *
 	 * @return This coordinator's resultset extractor
 	 */

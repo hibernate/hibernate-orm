@@ -88,7 +88,7 @@ public class MetadataBuildingProcess {
 	private static final Logger log = Logger.getLogger( MetadataBuildingProcess.class );
 
 	/**
-	 * Unified single phase for MetadataSources->Metadata process
+	 * Unified single phase for MetadataSources to Metadata process
 	 *
 	 * @param sources The MetadataSources
 	 * @param options The building options
@@ -103,7 +103,7 @@ public class MetadataBuildingProcess {
 	}
 
 	/**
-	 * First step of 2-phase for MetadataSources->Metadata process
+	 * First step of two-phase for MetadataSources to Metadata process
 	 *
 	 * @param sources The MetadataSources
 	 * @param bootstrapContext The bootstrapContext
@@ -129,7 +129,7 @@ public class MetadataBuildingProcess {
 	}
 
 	/**
-	 * Second step of 2-phase for MetadataSources->Metadata process
+	 * Second step of two-phase for MetadataSources to Metadata process
 	 *
 	 * @param managedResources The token/memento from 1st phase
 	 * @param options The building options
@@ -417,16 +417,16 @@ public class MetadataBuildingProcess {
 		}
 
 		final int preferredSqlTypeCodeForArray = getPreferredSqlTypeCodeForArray( serviceRegistry );
-		if ( preferredSqlTypeCodeForArray == SqlTypes.ARRAY ) {
-			adaptToPreferredSqlTypeCode( jdbcTypeRegistry, dialectArrayDescriptor, SqlTypes.ARRAY, SqlTypes.VARBINARY );
-		}
-		else {
+		if ( preferredSqlTypeCodeForArray != SqlTypes.ARRAY ) {
 			adaptToPreferredSqlTypeCode(
 					jdbcTypeRegistry,
 					dialectArrayDescriptor,
 					SqlTypes.ARRAY,
 					preferredSqlTypeCodeForArray
 			);
+		}
+		else {
+			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.ARRAY, SqlTypes.VARBINARY );
 		}
 
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
@@ -449,6 +449,10 @@ public class MetadataBuildingProcess {
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( JsonJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.INSTANCE );
+
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_BLOB, SqlTypes.BLOB );
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_CLOB, SqlTypes.CLOB );
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_NCLOB, SqlTypes.NCLOB );
 
 		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 		// Fallback to the biggest varchar DdlType when json is requested

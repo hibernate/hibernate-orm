@@ -11,7 +11,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * Occurs after an entity instance is fully loaded.
  *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>, Gavin King
+ * @author Kabir Khan, Gavin King
  */
 public class PostLoadEvent extends AbstractEvent {
 	private Object entity;

@@ -48,9 +48,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 		if ( jdbcType instanceof ArrayJdbcType ) {
 			return ( (ArrayJdbcType) jdbcType ).resolveType(
 					typeConfiguration,
-					typeConfiguration.getServiceRegistry()
-							.getService( JdbcServices.class )
-							.getDialect(),
+					indicators.getDialect(),
 					recommendedComponentJdbcType,
 					ColumnTypeInformation.EMPTY
 			);

@@ -28,13 +28,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
-import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -103,8 +102,7 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister
-		extends EntityMappingType, Loadable, RootTableGroupProducer, AttributeSource {
+public interface EntityPersister extends EntityMappingType, RootTableGroupProducer, AttributeSource {
 
 	/**
 	 * Finish the initialization of this object.
@@ -474,7 +472,7 @@ public interface EntityPersister
 		return getIdentifierGenerator();
 	}
 
-	default InMemoryGenerator getVersionGenerator() {
+	default BeforeExecutionGenerator getVersionGenerator() {
 		return new VersionGeneration( getVersionMapping() );
 	}
 
@@ -1016,14 +1014,6 @@ public interface EntityPersister
 	}
 
 	boolean canUseReferenceCacheEntries();
-
-	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate() {
-		return null;
-	}
-
-	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegateForProperty(String uniqueKeyPropertyName) {
-		return null;
-	}
 
 	/**
 	 * The property name of the "special" identifier property in HQL

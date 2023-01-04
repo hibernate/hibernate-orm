@@ -10,13 +10,12 @@ import org.hibernate.Incubating;
 import org.hibernate.mapping.Collection;
 
 /**
- * Resolve the collection semantics for the given mapped collection
+ * Resolve the collection semantics for the given mapped collection.
  *
- * todo (6.0) ...
- *
- * Ideally would act as the contract that allows pluggable resolution of
- * non-Java Collection types - maybe as part of a generalized reflection
- * on the attribute to determine its nature/classification
+ * @apiNote Ideally, this would act as the contract that allows pluggable
+ *          resolution of non-Java Collection types, perhaps as part of a
+ *          generalized reflection on the attribute to determine its
+ *          nature/classification
  *
  * @author Steve Ebersole
  */

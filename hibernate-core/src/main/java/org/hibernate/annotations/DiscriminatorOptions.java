@@ -19,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Hardy Ferentschik
  */
-@Target({ TYPE })
+@Target(TYPE)
 @Retention(RUNTIME)
 public @interface DiscriminatorOptions {
 	/**
@@ -29,8 +29,8 @@ public @interface DiscriminatorOptions {
 	 * there are discriminator column values which do <em>not</em>
 	 * map to any subtype of the root entity type.
 	 *
-	 * @return {@code true} if allowd discriminator values must always
-	 *         by explicitly enumerated
+	 * @return {@code true} if allowed discriminator values must always
+	 *         be explicitly enumerated
 	 */
 	boolean force() default false;
 

@@ -53,10 +53,8 @@ public class SingleTableSubclass extends Subclass {
 
 	public void validate(Metadata mapping) throws MappingException {
 		if ( getDiscriminator() == null ) {
-			throw new MappingException(
-					"No discriminator found for " + getEntityName()
-							+ ". Discriminator is needed when 'single-table-per-hierarchy' "
-							+ "is used and a class has subclasses"
+			throw new MappingException( "No discriminator defined by '" + getSuperclass().getEntityName()
+					+ "' which is a root class in a 'SINGLE_TABLE' inheritance hierarchy"
 			);
 		}
 		super.validate( mapping );

@@ -19,8 +19,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
@@ -31,12 +29,8 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResult;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -328,7 +322,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 	@Override
 	public NamedResultSetMappingMemento toMemento(String name) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

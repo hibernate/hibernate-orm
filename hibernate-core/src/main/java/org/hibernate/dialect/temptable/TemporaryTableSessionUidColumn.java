@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.temptable;
 
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 
 /**
@@ -15,12 +16,14 @@ public class TemporaryTableSessionUidColumn extends TemporaryTableColumn {
 	public TemporaryTableSessionUidColumn(
 			TemporaryTable containingTable,
 			JdbcMapping jdbcMapping,
-			String sqlTypeName) {
+			String sqlTypeName,
+			Size size) {
 		super(
 				containingTable,
 				TemporaryTableHelper.SESSION_ID_COLUMN_NAME,
 				jdbcMapping,
 				sqlTypeName,
+				size,
 				false,
 				true
 		);

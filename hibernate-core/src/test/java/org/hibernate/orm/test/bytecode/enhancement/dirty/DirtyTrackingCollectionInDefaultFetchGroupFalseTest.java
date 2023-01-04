@@ -67,7 +67,7 @@ public class DirtyTrackingCollectionInDefaultFetchGroupFalseTest extends BaseCor
                     // We want to test with this setting set to false explicitly,
                     // because another test already takes care of the default.
                     optionsBuilder.enableCollectionInDefaultFetchGroup( false );
-                    return new SessionFactoryBuilderImpl( metadata, optionsBuilder );
+                    return new SessionFactoryBuilderImpl( metadata, optionsBuilder, bootstrapContext );
                 }
         );
     }

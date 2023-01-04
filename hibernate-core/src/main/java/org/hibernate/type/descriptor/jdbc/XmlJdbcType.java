@@ -14,6 +14,7 @@ import java.sql.SQLXML;
 
 import org.hibernate.dialect.XmlHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -21,7 +22,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Specialized type mapping for {@code SQLXML} and the XML SQL data type.
+ * Specialized type mapping for {@link SQLXML} and the XML SQL data type.
  *
  * @author Christian Beikov
  */
@@ -54,7 +55,10 @@ public class XmlJdbcType implements AggregateJdbcType {
 	}
 
 	@Override
-	public AggregateJdbcType resolveAggregateJdbcType(EmbeddableMappingType mappingType, String sqlType) {
+	public AggregateJdbcType resolveAggregateJdbcType(
+			EmbeddableMappingType mappingType,
+			String sqlType,
+			RuntimeModelCreationContext creationContext) {
 		return new XmlJdbcType( mappingType );
 	}
 

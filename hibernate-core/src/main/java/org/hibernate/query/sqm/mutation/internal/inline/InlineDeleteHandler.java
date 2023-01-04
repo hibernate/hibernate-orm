@@ -157,8 +157,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 			DomainQueryExecutionContext executionContext) {
 		final NamedTableReference targetTableReference = new NamedTableReference(
 				targetTableExpression,
-				DeleteStatement.DEFAULT_ALIAS,
-				false
+				DeleteStatement.DEFAULT_ALIAS
 		);
 
 		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );

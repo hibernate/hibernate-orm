@@ -10,7 +10,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.InDatabaseGenerator;
+import org.hibernate.generator.OnExecutionGenerator;
 
 import java.util.EnumSet;
 
@@ -18,7 +18,7 @@ import static org.hibernate.generator.EventTypeSets.fromArray;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
- * A fairly generic {@link InDatabaseGenerator} which marks a property as generated in the
+ * A fairly generic {@link OnExecutionGenerator} which marks a property as generated in the
  * database with semantics given explicitly by a {@link Generated @Generated} annotation.
  *
  * @see Generated
@@ -26,7 +26,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-public class GeneratedGeneration implements InDatabaseGenerator {
+public class GeneratedGeneration implements OnExecutionGenerator {
 
 	private final EnumSet<EventType> eventTypes;
 	private final boolean writable;
@@ -39,7 +39,7 @@ public class GeneratedGeneration implements InDatabaseGenerator {
 	}
 
 	public GeneratedGeneration(Generated annotation) {
-		eventTypes = annotation.value() == GenerationTime.ALWAYS
+		eventTypes = annotation.value() == GenerationTime.INSERT
 				? fromArray( annotation.event() )
 				: annotation.value().eventTypes();
 		sql = isEmpty( annotation.sql() ) ? null : new String[] { annotation.sql() };

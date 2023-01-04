@@ -424,7 +424,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return value;
+		return getJdbcMapping().convertToRelationalValue( value );
 	}
 
 	@Override
@@ -460,7 +460,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, keySide.getModelPart() );
+		valueConsumer.consume( disassemble( domainValue, session ), keySide.getModelPart() );
 	}
 
 	@Override
@@ -506,7 +506,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, targetSide.getModelPart().getJdbcMapping() );
+		valuesConsumer.consume( offset, disassemble( value, session ), targetSide.getModelPart().getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
@@ -544,6 +544,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public boolean isUpdateable() {
 		return keySide.getModelPart().isUpdateable();
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return keySide.getModelPart().isPartitioned();
 	}
 
 	@Override

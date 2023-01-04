@@ -50,6 +50,7 @@ public class SchemaUpdateWithKeywordAutoQuotingEnabledTest extends BaseUnitTestC
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 		metadataSources.addAnnotatedClass( Match.class );
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		metadata.orderColumns( false );
 		metadata.validate();
 		try {
 			createSchema();

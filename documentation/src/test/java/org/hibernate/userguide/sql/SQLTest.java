@@ -10,16 +10,16 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.userguide.model.Account;
 import org.hibernate.userguide.model.AddressType;
@@ -38,6 +38,7 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -185,7 +186,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-all-columns-scalar-query-example[]
 			List<Object[]> persons = session.createNativeQuery(
-				"SELECT * FROM Person")
+				"SELECT * FROM Person", Object[].class)
 			.list();
 			//end::sql-hibernate-all-columns-scalar-query-example[]
 			assertEquals(3, persons.size());
@@ -193,12 +194,13 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-15914" )
 	public void test_sql_hibernate_custom_column_selection_scalar_query_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-custom-column-selection-scalar-query-example[]
 			List<Object[]> persons = session.createNativeQuery(
-				"SELECT id, name FROM Person")
+				"SELECT id, name FROM Person", Object[].class)
 			.list();
 
 			for(Object[] person : persons) {
@@ -216,7 +218,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-scalar-query-explicit-result-set-example[]
 			List<Object[]> persons = session.createNativeQuery(
-				"SELECT * FROM Person")
+				"SELECT * FROM Person", Object[].class)
 			.addScalar("id", StandardBasicTypes.LONG)
 			.addScalar("name", StandardBasicTypes.STRING)
 			.list();
@@ -237,7 +239,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-scalar-query-partial-explicit-result-set-example[]
 			List<Object[]> persons = session.createNativeQuery(
-				"SELECT * FROM Person")
+				"SELECT * FROM Person", Object[].class)
 			.addScalar("id", StandardBasicTypes.LONG)
 			.addScalar("name")
 			.list();
@@ -269,8 +271,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-entity-query-example[]
 			List<Person> persons = session.createNativeQuery(
-				"SELECT * FROM Person")
-			.addEntity(Person.class)
+				"SELECT * FROM Person", Person.class)
 			.list();
 			//end::sql-hibernate-entity-query-example[]
 			assertEquals(3, persons.size());
@@ -297,8 +298,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::sql-hibernate-entity-query-explicit-result-set-example[]
 			List<Person> persons = session.createNativeQuery(
 				"SELECT id, name, nickName, address, createdOn, version " +
-				"FROM Person")
-			.addEntity(Person.class)
+				"FROM Person", Person.class)
 			.list();
 			//end::sql-hibernate-entity-query-explicit-result-set-example[]
 			assertEquals(3, persons.size());
@@ -325,8 +325,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::sql-hibernate-entity-associations-query-many-to-one-example[]
 			List<Phone> phones = session.createNativeQuery(
 				"SELECT id, phone_number, phone_type, person_id " +
-				"FROM Phone")
-			.addEntity(Phone.class)
+				"FROM Phone", Phone.class)
 			.list();
 			//end::sql-hibernate-entity-associations-query-many-to-one-example[]
 			assertEquals(3, phones.size());
@@ -357,8 +356,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Phone> tuples = session.createNativeQuery(
 				"SELECT {ph.*}, {pr.*} " +
 				"FROM Phone ph " +
-				"JOIN Person pr ON ph.person_id = pr.id")
-			.addEntity("ph", Phone.class)
+				"JOIN Person pr ON ph.person_id = pr.id", Phone.class, "ph")
 			.addJoin("pr", "ph.person")
 			.list();
 
@@ -378,8 +376,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Phone> phones = session.createNativeQuery(
 		"SELECT {ph.*}, {pr.*} " +
 				"FROM Phone ph " +
-				"JOIN Person pr ON ph.person_id = pr.id")
-			.addEntity("ph", Phone.class)
+				"JOIN Person pr ON ph.person_id = pr.id", Phone.class, "ph")
 			.addJoin("pr", "ph.person")
 			.setTupleTransformer( (TupleTransformer<Phone>) (tuple, aliases) -> (Phone) tuple[0] )
 			.list();
@@ -421,8 +418,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Phone> phones = session.createNativeQuery(
 				"SELECT {ph.*}, {c.*} " +
 				"FROM Phone ph " +
-				"JOIN phone_call c ON c.phone_id = ph.id")
-			.addEntity("ph", Phone.class)
+				"JOIN phone_call c ON c.phone_id = ph.id", Phone.class, "ph")
 			.addJoin("c", "ph.calls")
 			.list();
 
@@ -444,8 +440,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Phone> tuples = session.createNativeQuery(
 				"SELECT {ph.*}, {c.*} " +
 				"FROM Phone ph " +
-				"JOIN phone_call c ON c.phone_id = ph.id")
-			.addEntity("ph", Phone.class)
+				"JOIN phone_call c ON c.phone_id = ph.id", Phone.class, "ph")
 			.addJoin("c", "ph.calls")
 			.list();
 
@@ -502,6 +497,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-15914" )
 	public void test_sql_hibernate_multi_entity_query_alias_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
@@ -509,7 +505,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Object> entities = session.createNativeQuery(
 				"SELECT {pr.*}, {pt.*} " +
 				"FROM Person pr, Partner pt " +
-				"WHERE pr.name = pt.name")
+				"WHERE pr.name = pt.name", Object.class)
 			.addEntity("pr", Person.class)
 			.addEntity("pt", Partner.class)
 			.list();
@@ -525,8 +521,15 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::sql-hibernate-dto-query-example[]
 			List<PersonSummaryDTO> dtos = session.createNativeQuery(
 				"SELECT p.id as \"id\", p.name as \"name\" " +
-				"FROM Person p")
-			.setResultTransformer(Transformers.aliasToBean(PersonSummaryDTO.class))
+				"FROM Person p", Tuple.class)
+			.setTupleTransformer(
+					(tuple, aliases) -> {
+						PersonSummaryDTO dto = new PersonSummaryDTO();
+						dto.setId( (Long)tuple[0] );
+						dto.setName( (String)tuple[1] );
+						return dto;
+					}
+			)
 			.list();
 			//end::sql-hibernate-dto-query-example[]
 			assertEquals(3, dtos.size());
@@ -541,8 +544,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<CreditCardPayment> payments = session.createNativeQuery(
 				"SELECT * " +
 				"FROM Payment p " +
-				"JOIN CreditCardPayment cp on cp.id = p.id")
-			.addEntity(CreditCardPayment.class)
+				"JOIN CreditCardPayment cp on cp.id = p.id", CreditCardPayment.class)
 			.list();
 			//end::sql-hibernate-inheritance-query-example[]
 			assertEquals(1, payments.size());
@@ -572,8 +574,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = session.createNativeQuery(
 				"SELECT * " +
 				"FROM Person " +
-				"WHERE name like :name")
-			.addEntity(Person.class)
+				"WHERE name like :name", Person.class)
 			.setParameter("name", "J%")
 			.list();
 			//end::sql-hibernate-query-parameters-example[]
@@ -586,7 +587,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-scalar-named-query-example[]
 			List<String> names = entityManager.createNamedQuery(
-				"find_person_name")
+				"find_person_name", String.class)
 			.getResultList();
 			//end::sql-jpa-scalar-named-query-example[]
 			assertEquals(3, names.size());
@@ -611,7 +612,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-multiple-scalar-values-named-query-example[]
 			List<Object[]> tuples = entityManager.createNamedQuery(
-				"find_person_name_and_nickName")
+				"find_person_name_and_nickName", Object[].class)
 			.getResultList();
 
 			for(Object[] tuple : tuples) {
@@ -628,8 +629,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-multiple-scalar-values-named-query-example[]
-			List<Object[]> tuples = session.getNamedQuery(
-				"find_person_name_and_nickName")
+			List<Object[]> tuples = session.createNamedQuery(
+				"find_person_name_and_nickName", Object[].class)
 			.list();
 
 			for(Object[] tuple : tuples) {
@@ -646,10 +647,12 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-multiple-scalar-values-dto-named-query-example[]
 			List<PersonNames> personNames = entityManager.createNamedQuery(
-				"find_person_name_and_nickName_dto")
+				"find_person_name_and_nickName_dto", PersonNames.class)
 			.getResultList();
 			//end::sql-jpa-multiple-scalar-values-dto-named-query-example[]
 			assertEquals(3, personNames.size());
+			assertThat( personNames.get(0) ).isNotNull();
+			assertThat( personNames.get(0) ).isInstanceOf(PersonNames.class);
 		});
 	}
 
@@ -658,8 +661,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-multiple-scalar-values-dto-named-query-example[]
-			List<PersonNames> personNames = session.getNamedQuery(
-				"find_person_name_and_nickName_dto")
+			List<PersonNames> personNames = session.createNamedQuery(
+				"find_person_name_and_nickName_dto", PersonNames.class)
 			.list();
 			//end::sql-hibernate-multiple-scalar-values-dto-named-query-example[]
 			assertEquals(3, personNames.size());
@@ -671,8 +674,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-multiple-scalar-values-dto-hibernate-named-query-example[]
-			List<PersonPhoneCount> personNames = session.getNamedNativeQuery(
-				"get_person_phone_count")
+			List<PersonPhoneCount> personNames = session.createNamedQuery(
+				"get_person_phone_count", PersonPhoneCount.class)
 			.getResultList();
 			//end::sql-hibernate-multiple-scalar-values-dto-hibernate-named-query-example[]
 			assertEquals(2, personNames.size());
@@ -686,11 +689,13 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-named-query-example[]
 			List<Person> persons = entityManager.createNamedQuery(
-				"find_person_by_name")
+				"find_person_by_name", Person.class)
 			.setParameter("name", "J%")
 			.getResultList();
 			//end::sql-jpa-entity-named-query-example[]
 			assertEquals(1, persons.size());
+			assertThat( persons ).hasSize( 1 );
+			assertThat( persons.get( 0 ) ).isInstanceOf( Person.class );
 		});
 	}
 
@@ -699,8 +704,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-entity-named-query-example[]
-			List<Person> persons = session.getNamedQuery(
-				"find_person_by_name")
+			List<Person> persons = session.createNamedQuery(
+				"find_person_by_name", Person.class)
 			.setParameter("name", "J%")
 			.list();
 			//end::sql-hibernate-entity-named-query-example[]
@@ -716,7 +721,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-entity-associations_named-query-example[]
 			List<Object[]> tuples = entityManager.createNamedQuery(
-				"find_person_with_phones_by_name")
+				"find_person_with_phones_by_name", Object[].class)
 			.setParameter("name", "J%")
 			.getResultList();
 
@@ -726,6 +731,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			}
 			//end::sql-jpa-entity-associations_named-query-example[]
 			assertEquals(1, tuples.size());
+			assertThat( tuples.get(0).getClass().isArray() ).isTrue();
 		});
 	}
 
@@ -737,8 +743,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-entity-associations_named-query-example[]
-			List<Object[]> tuples = session.getNamedQuery(
-				"find_person_with_phones_by_name")
+			List<Object[]> tuples = session.createNamedQuery(
+				"find_person_with_phones_by_name", Object[].class)
 			.setParameter("name", "J%")
 			.list();
 
@@ -756,7 +762,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::sql-jpa-composite-key-entity-associations_named-query-example[]
 			List<Object[]> tuples = entityManager.createNamedQuery(
-				"find_all_spaceships")
+				"find_all_spaceships", Object[].class)
 			.getResultList();
 
 			for(Object[] tuple : tuples) {
@@ -778,8 +784,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-composite-key-entity-associations_named-query-example[]
-			List<Object[]> tuples = session.getNamedQuery(
-				"find_all_spaceships")
+			List<Object[]> tuples = session.createNamedQuery(
+				"find_all_spaceships", Object[].class)
 			.list();
 
 			for(Object[] tuple : tuples) {

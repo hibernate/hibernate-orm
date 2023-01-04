@@ -61,6 +61,7 @@ dependencies {
         transitive = true
     }
     testImplementation "joda-time:joda-time:2.3"
+    testImplementation dbLibs.h2
 
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld
@@ -193,7 +194,6 @@ processTestResources {
 
 sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
 }
 
 task testJar(type: Jar, dependsOn: testClasses) {
@@ -282,7 +282,7 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
     }
 
     // We execute the Java 17 tests in a custom test task
-    task java17Test(type: Test) {
+    task testJava17(type: Test) {
         javaLauncher = javaToolchains.launcherFor {
             languageVersion = gradle.ext.javaVersions.test.launcher
         }
@@ -299,5 +299,12 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
 
     testClasses.dependsOn compileTestJava17Java
     // And run this as part of the check task by default
-    check.dependsOn java17Test
+    check.dependsOn testJava17
+}
+
+javadoc {
+    configure(options) {
+        overview = 'src/main/javadoc/overview.html'
+        stylesheetFile = new File(projectDir, 'src/main/javadoc/stylesheet.css')
+    }
 }

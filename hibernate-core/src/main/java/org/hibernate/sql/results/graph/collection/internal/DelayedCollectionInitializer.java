@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -29,6 +30,12 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
+		if ( parentAccess != null ) {
+			final EntityInitializer parentEntityInitializer = parentAccess.findFirstEntityInitializer();
+			if ( parentEntityInitializer != null && parentEntityInitializer.isInitialized() ) {
+				return;
+			}
+		}
 		resolveInstance( rowProcessingState, false );
 	}
 

@@ -92,7 +92,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
- * A {@linkplain Dialect SQL dialect} for Apache Derby.
+ * A {@linkplain Dialect SQL dialect} for Apache Derby 10.14.2 and above.
  *
  * @author Simon Johnston
  * @author Gavin King
@@ -168,49 +168,42 @@ public class DerbyDialect extends Dialect {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-		//long varchar is the right type to use for lengths between 32_672 and 32_700
-		int maxLongVarcharLength = 32_700;
+		int varcharDdlTypeCapacity = 32_672;
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARBINARY, columnType( BLOB ), columnType( VARBINARY ), this )
-						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARBINARY ) )
+				CapacityDependentDdlType.builder( VARBINARY, columnType( LONG32VARBINARY ), columnType( VARBINARY ), this )
+						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARBINARY ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( CLOB ), columnType( VARCHAR ), this )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARCHAR ) )
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), columnType( VARCHAR ), this )
+						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NVARCHAR, columnType( CLOB ), columnType( NVARCHAR ), this )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARCHAR ) )
+				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32VARCHAR ), columnType( NVARCHAR ), this )
+						.withTypeCapacity( varcharDdlTypeCapacity, columnType( NVARCHAR ) )
 						.build()
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, columnType( BLOB ), columnType( VARBINARY ), this )
+				CapacityDependentDdlType.builder( BINARY, columnType( LONG32VARBINARY ), columnType( VARBINARY ), this )
 						.withTypeCapacity( 254, "char($l) for bit data" )
-						.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARBINARY ) )
+						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARBINARY ) )
 						.build()
 		);
 
 		// This is the maximum size for the CHAR datatype on Derby
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( CHAR, columnType( CLOB ), columnType( CHAR ), this )
+				CapacityDependentDdlType.builder( CHAR, columnType( LONG32VARCHAR ), columnType( CHAR ), this )
 						.withTypeCapacity( 254, columnType( CHAR ) )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NCHAR, columnType( CLOB ), columnType( NCHAR ), this )
+				CapacityDependentDdlType.builder( NCHAR, columnType( LONG32NVARCHAR ), columnType( NCHAR ), this )
 						.withTypeCapacity( 254, columnType( NCHAR ) )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
-						.withTypeCapacity( maxLongVarcharLength, columnType( LONG32NVARCHAR ) )
 						.build()
 		);
 	}
@@ -218,6 +211,11 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public int getMaxVarcharLength() {
 		return 32_672;
+	}
+
+	@Override
+	public int getMaxVarcharCapacity() {
+		return 32_700;
 	}
 
 	@Override
@@ -302,6 +300,7 @@ public class DerbyDialect extends Dialect {
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		functionFactory.power_expLn();
 		functionFactory.round_floor();
+		functionFactory.trunc_floor();
 		functionFactory.octetLength_pattern( "length(?1)" );
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 
@@ -868,7 +867,7 @@ public class DerbyDialect extends Dialect {
 	 * <pre>
 	 *     The DECLARE GLOBAL TEMPORARY TABLE statement defines a temporary table for the current connection.
 	 * </pre>
-	 *
+	 * <p>
 	 * {@link DB2Dialect} returns a {@link GlobalTemporaryTableMutationStrategy} that
 	 * will make temporary tables created at startup and hence unavailable for subsequent connections.<br/>
 	 * see HHH-10238.

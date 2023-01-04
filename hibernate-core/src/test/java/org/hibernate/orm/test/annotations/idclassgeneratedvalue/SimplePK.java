@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * A SimplePK.
  *
- * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
+ * @author Stale W. Pedersen
  */
 public class SimplePK implements Serializable {
 	private final Long id1;

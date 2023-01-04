@@ -28,7 +28,7 @@ import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
 import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;
 
 /**
- * A PropertyAccess based on mix of getter/setter method and/or field.
+ * A {@link PropertyAccess} based on mix of getter/setter method and/or field.
  *
  * @author Steve Ebersole
  */

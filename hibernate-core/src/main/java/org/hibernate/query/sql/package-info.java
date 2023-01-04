@@ -6,7 +6,7 @@
  */
 
 /**
- * Package defining support for native SQL queries
+ * Package defining support for native SQL queries.
  *
  * @see org.hibernate.query.NativeQuery
  * @see org.hibernate.query.sql.spi.NativeQueryImplementor

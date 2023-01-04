@@ -36,10 +36,10 @@ public final class EntityKey implements Serializable {
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
-	 * <p>
-	 * NOTE : This signature has changed to accommodate both entity mode and multi-tenancy, both of which relate to
-	 * the Session to which this key belongs.  To help minimize the impact of these changes in the future, the
-	 * {@link SessionImplementor#generateEntityKey} method was added to hide the session-specific changes.
+	 *
+	 * @apiNote This signature has changed to accommodate both entity mode and multi-tenancy, both of which relate to
+	 *          the session to which this key belongs. To help minimize the impact of these changes in the future, the
+	 *          {@link SessionImplementor#generateEntityKey} method was added to hide the session-specific changes.
 	 *
 	 * @param id The entity id
 	 * @param persister The entity persister

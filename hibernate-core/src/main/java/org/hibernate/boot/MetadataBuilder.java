@@ -16,6 +16,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.metamodel.CollectionClassification;
@@ -94,6 +95,20 @@ public interface MetadataBuilder {
 	MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy);
 
 	/**
+	 * Specify the {@link ColumnOrderingStrategy}.
+	 * <p>
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY}
+	 * setting if using property-based configuration.
+	 *
+	 * @param columnOrderingStrategy The {@link ColumnOrderingStrategy}
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
+	 */
+	MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy);
+
+	/**
 	 * Specify the second-level cache mode.
 	 * <p>
 	 * Its default is defined by the {@code javax.persistence.sharedCache.mode} setting if using
@@ -126,11 +141,11 @@ public interface MetadataBuilder {
 	/**
 	 * Allows specifying a specific Jandex index to use for reading annotation information.
 	 * <p>
-	 * It is <i>important</i> to understand that if a Jandex index is passed in, it is expected that
-	 * this Jandex index already contains all entries for all classes.  No additional indexing will be
-	 * done in this case.
-	 * <p>
-	 * NOTE : Here for future expansion.  At the moment the passed Jandex index is not used.
+	 * It's important to understand that if a Jandex index is passed in, it is expected that
+	 * this Jandex index already contains all entries for all classes. No additional indexing
+	 * will be done in this case.
+	 *
+	 * @apiNote Here for future expansion. At the moment the passed Jandex index is not used.
 	 *
 	 * @param jandexView The Jandex index to use.
 	 *
@@ -190,7 +205,7 @@ public interface MetadataBuilder {
 
 	/**
 	 * Should we process or ignore explicitly defined discriminators in the case
-	 * of joined-subclasses.  The legacy behavior of Hibernate was to ignore the
+	 * of joined subclasses? The legacy behavior of Hibernate was to ignore the
 	 * discriminator annotations because Hibernate (unlike some providers) does
 	 * not need discriminators to determine the concrete type when it comes to
 	 * joined inheritance.  However, for portability reasons we do now allow using
@@ -219,7 +234,8 @@ public interface MetadataBuilder {
 	 * Again the premise here is JPA portability, bearing in mind that some
 	 * JPA provider need these discriminators.
 	 * <p>
-	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
+	 * Its default is defined by the
+	 * {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
 	 * setting if using property-based configuration.
 	 *
 	 * @param enabled Should we implicitly create discriminator for joined
@@ -294,7 +310,8 @@ public interface MetadataBuilder {
 	MetadataBuilder applyBasicType(UserType<?> type, String... keys);
 
 	/**
-	 * Apply an explicit TypeContributor (implicit application via ServiceLoader will still happen too)
+	 * Apply an explicit {@link TypeContributor}
+	 * (implicit application via {@link java.util.ServiceLoader} will still happen too)
 	 *
 	 * @param typeContributor The contributor to apply
 	 *
@@ -303,8 +320,8 @@ public interface MetadataBuilder {
 	MetadataBuilder applyTypes(TypeContributor typeContributor);
 
 	/**
-	 * Apply a CacheRegionDefinition to be applied to an entity, collection or query while building the
-	 * Metadata object.
+	 * Apply a {@link CacheRegionDefinition} to be applied to an entity, collection,
+	 * or query while building the {@link Metadata} object.
 	 *
 	 * @param cacheRegionDefinition The cache region definition to apply
 	 *
@@ -313,26 +330,30 @@ public interface MetadataBuilder {
 	MetadataBuilder applyCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition);
 
 	/**
-	 * Apply a ClassLoader for use while building the Metadata.
+	 * Apply a {@link ClassLoader} for use while building the {@link Metadata}.
 	 * <p>
-	 * Ideally we should avoid accessing ClassLoaders when perform 1st phase of bootstrap.  This
-	 * is a ClassLoader that can be used in cases when we have to.  IN EE managed environments, this
-	 * is the ClassLoader mandated by
-	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}.  This ClassLoader
-	 * is thrown away by the container afterwards.  The idea being that the Class can still be enhanced
-	 * in the application ClassLoader.  In other environments, pass a ClassLoader that performs the
-	 * same function if desired.
+	 * Ideally we should avoid accessing {@code ClassLoader}s when perform 1st phase of bootstrap.
+	 * This is a {@code ClassLoader} that can be used in cases where we absolutely must.
+	 * <p>
+	 * In EE managed environments, this is the {@code ClassLoader} mandated by
+	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}.
+	 * This {@code ClassLoader} is discarded by the container afterward, the idea being that the
+	 * {@link Class} can still be enhanced in the application {@code ClassLoader}.
+	 * <p>
+	 * In other environments, pass a {@code ClassLoader} that performs the same function, if desired.
 	 *
-	 * @param tempClassLoader ClassLoader for use during building the Metadata
+	 * @param tempClassLoader {@code ClassLoader} for use while building the {@code Metadata}
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader);
 
 	/**
-	 * Apply a specific ordering to the processing of sources.  Note that unlike most
-	 * of the methods on this contract that deal with multiple values internally, this
-	 * one *replaces* any already set (its more a setter) instead of adding to.
+	 * Apply a specific ordering to the processing of sources.
+	 * <p>
+	 * Unlike most of the methods of this interface (which deal with multiple
+	 * values internally), this one <em>replaces</em> any source processing
+	 * order that was already set.
 	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER}
 	 * setting if using property-based configuration.
@@ -342,11 +363,22 @@ public interface MetadataBuilder {
 	 * @return {@code this} for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER
+	 *
+	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this irrelevant
 	 */
+	@Deprecated(since = "6", forRemoval = true)
 	MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes);
 
+	/**
+	 * Contribute a {@link SqmFunctionDescriptor} to HQL.
+	 *
+	 * @see org.hibernate.dialect.function.StandardSQLFunction
+	 */
 	MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function);
 
+	/**
+	 * Contribute an {@link AuxiliaryDatabaseObject}.
+	 */
 	MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
 	/**
@@ -369,7 +401,8 @@ public interface MetadataBuilder {
 	<O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass);
 
 	/**
-	 * Adds an AttributeConverter by its Class plus a boolean indicating whether to auto apply it.
+	 * Adds an {@link AttributeConverter} by {@code Class},
+	 * explicitly indicating whether to auto-apply it.
 	 *
 	 * @param attributeConverterClass The AttributeConverter class.
 	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
@@ -389,7 +422,8 @@ public interface MetadataBuilder {
 	<O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter);
 
 	/**
-	 * Adds an AttributeConverter instance, explicitly indicating whether to auto-apply.
+	 * Adds an {@link AttributeConverter} instance,
+	 * explicitly indicating whether to auto-apply it.
 	 *
 	 * @param attributeConverter The AttributeConverter instance.
 	 * @param autoApply Should the AttributeConverter be auto applied to property types as specified
@@ -399,6 +433,10 @@ public interface MetadataBuilder {
 	 */
 	MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply);
 
+	/**
+	 * @deprecated since {@link IdGeneratorStrategyInterpreter} is deprecated
+	 */
+	@Deprecated(since = "6")
 	MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter);
 
 	/**

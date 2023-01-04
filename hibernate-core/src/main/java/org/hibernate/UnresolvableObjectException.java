@@ -19,7 +19,8 @@ public class UnresolvableObjectException extends HibernateException {
 	private final String entityName;
 
 	/**
-	 * Constructs an UnresolvableObjectException using the specified information.
+	 * Constructs an {@code UnresolvableObjectException} using the specified information.
+	 *
 	 *  @param identifier The identifier of the entity which could not be resolved
 	 * @param entityName The name of the entity which could not be resolved
 	 */
@@ -34,7 +35,7 @@ public class UnresolvableObjectException extends HibernateException {
 	}
 
 	/**
-	 * Factory method for building and throwing an UnresolvableObjectException if the entity is null.
+	 * Factory method for building and throwing an {@code UnresolvableObjectException} if the entity is null.
 	 *
 	 * @param entity The entity to check for nullness
 	 * @param identifier The identifier of the entity

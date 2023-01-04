@@ -7,16 +7,24 @@
 package org.hibernate.boot.registry.selector;
 
 /**
- * Responsible for providing the registrations of strategy selector(s).  Can be registered directly with the
- * {@link org.hibernate.boot.registry.BootstrapServiceRegistry} or located via discovery.
+ * Responsible for providing the registrations of one or more strategy selectors.
+ * <p>
+ * A {@code StrategyRegistrationProvider} may be made available either by:
+ * <ul>
+ * <li>registering it directly with the
+ *     {@link org.hibernate.boot.registry.BootstrapServiceRegistry} by calling
+ *     {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder#applyStrategySelectors},
+ *     or
+ * <li>by making it discoverable via the Java {@link java.util.ServiceLoader} facility.
+ * </ul>
  *
  * @author Steve Ebersole
  */
 public interface StrategyRegistrationProvider {
 	/**
-	 * Get all StrategyRegistrations announced by this provider.
+	 * Get all {@link StrategyRegistration}s announced by this provider.
 	 *
-	 * @return All StrategyRegistrations
+	 * @return All {@link StrategyRegistration}s
 	 */
 	Iterable<StrategyRegistration> getStrategyRegistrations();
 }

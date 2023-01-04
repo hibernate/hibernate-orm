@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.hibernate.MappingException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SQLDelete;
@@ -32,6 +31,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -224,8 +224,12 @@ public class DefaultCatalogAndSchemaTest {
 				break;
 			case SESSION_FACTORY_SERVICE_REGISTRY:
 				serviceRegistry = createStandardServiceRegistry( configuredDefaultCatalog, configuredDefaultSchema );
-				sfb = new SessionFactoryBuilderImpl( metadata, new SessionFactoryOptionsBuilder( serviceRegistry,
-						((MetadataImpl) metadata).getBootstrapContext() ) );
+				BootstrapContext bootstrapContext = ((MetadataImpl) metadata).getBootstrapContext();
+				sfb = new SessionFactoryBuilderImpl(
+						metadata,
+						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext),
+						bootstrapContext
+				);
 				break;
 			default:
 				throw new IllegalStateException( "Unknown settings mode: " + settingsMode );
@@ -392,20 +396,11 @@ public class DefaultCatalogAndSchemaTest {
 
 		verifyOnlyQualifier( insertSqls, SqlType.RUNTIME, jpaEntityName, expectedQualifier );
 
-		try {
-			verifyOnlyQualifierOptional( persister.getIdentitySelectString(), SqlType.RUNTIME,
-					jpaEntityName, expectedQualifier );
+		String identitySelectString = persister.getIdentitySelectString();
+		if ( identitySelectString != null ) {
+			verifyOnlyQualifierOptional( identitySelectString, SqlType.RUNTIME, jpaEntityName, expectedQualifier );
 		}
-		catch (MappingException e) {
-			if ( e.getMessage().contains( "does not support identity key generation" ) ) {
-				// For some reason Oracle12cIdentityColumnSupport#supportsInsertSelectIdentity() returns true,
-				// but getIdentitySelectString is not implemented, resulting in runtime exceptions.
-				// Whatever, we'll just ignore this for now.
-			}
-			else {
-				throw e;
-			}
-		}
+
 		final MutationOperationGroup staticSqlUpdateGroup = persister.getUpdateCoordinator().getStaticUpdateGroup();
 		final String[] sqlUpdateStrings = new String[staticSqlUpdateGroup.getNumberOfOperations()];
 		staticSqlUpdateGroup.forEachOperation( (tablePosition, operation) -> {

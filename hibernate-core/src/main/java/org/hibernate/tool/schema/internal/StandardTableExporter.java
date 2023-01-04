@@ -17,22 +17,21 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.spi.Exporter;
 
 import static java.util.Collections.addAll;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.appendColumn;
 
 /**
  * An {@link Exporter} for {@linkplain Table tables}.
@@ -73,6 +72,12 @@ public class StandardTableExporter implements Exporter<Table> {
 				}
 				appendColumn( createTable, column, table, metadata, dialect, context );
 			}
+			if ( table.getRowId() != null ) {
+				String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
+				if ( rowIdColumn != null ) {
+					createTable.append(", ").append( rowIdColumn );
+				}
+			}
 			if ( table.hasPrimaryKey() ) {
 				createTable.append( ", " ).append( table.getPrimaryKey().sqlConstraintString( dialect ) );
 			}
@@ -98,97 +103,6 @@ public class StandardTableExporter implements Exporter<Table> {
 		catch (Exception e) {
 			throw new MappingException( "Error creating SQL create commands for table : " + tableName, e );
 		}
-	}
-
-	static void appendColumn(
-			StringBuilder statement,
-			Column column,
-			Table table,
-			Metadata metadata,
-			Dialect dialect,
-			SqlStringGenerationContext context) {
-
-		statement.append( column.getQuotedName( dialect ) );
-
-		final String columnType = column.getSqlType( metadata.getDatabase().getTypeConfiguration(), dialect, metadata );
-		if ( isIdentityColumn( column, table, metadata, dialect ) ) {
-			// to support dialects that have their own identity data type
-			if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-				statement.append( ' ' ).append( columnType );
-			}
-			final String identityColumnString = dialect.getIdentityColumnSupport()
-					.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
-			statement.append( ' ' ).append( identityColumnString );
-		}
-		else {
-			if ( column.hasSpecializedTypeDeclaration() ) {
-				statement.append( ' ' ).append( column.getSpecializedTypeDeclaration() );
-			}
-			else if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
-				statement.append( ' ' ).append( columnType );
-			}
-
-			final String defaultValue = column.getDefaultValue();
-			if ( defaultValue != null ) {
-				statement.append( " default " ).append( defaultValue );
-			}
-
-			final String generatedAs = column.getGeneratedAs();
-			if ( generatedAs != null) {
-				statement.append( dialect.generatedAs( generatedAs ) );
-			}
-
-			if ( column.isNullable() ) {
-				statement.append( dialect.getNullColumnString(columnType) );
-			}
-			else {
-				statement.append( " not null" );
-			}
-		}
-
-		if ( column.isUnique() && !table.isPrimaryKey(column) ) {
-			final String keyName = Constraint.generateName( "UK_", table, column);
-			final UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-			uk.addColumn(column);
-			statement.append(
-					dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment( column, context )
-			);
-		}
-
-		if ( dialect.supportsColumnCheck() && column.hasCheckConstraint() ) {
-			statement.append( column.checkConstraint() );
-		}
-
-		final String columnComment = column.getComment();
-		if ( columnComment != null ) {
-			statement.append( dialect.getColumnComment( columnComment ) );
-		}
-	}
-
-	private static boolean isIdentityColumn(Column column, Table table, Metadata metadata, Dialect dialect) {
-		// Try to find out the name of the primary key in case the dialect needs it to create an identity
-		return isPrimaryKeyIdentity( table, metadata, dialect )
-			&& column.getQuotedName( dialect ).equals( getPrimaryKeyColumnName( table, dialect ) );
-	}
-
-	private static String getPrimaryKeyColumnName(Table table, Dialect dialect) {
-		return table.hasPrimaryKey()
-				? table.getPrimaryKey().getColumns().get(0).getQuotedName( dialect )
-				: null;
-	}
-
-	private static boolean isPrimaryKeyIdentity(Table table, Metadata metadata, Dialect dialect) {
-		// TODO: this is the much better form moving forward as we move to metamodel
-		//return hasPrimaryKey
-		//				&& table.getPrimaryKey().getColumnSpan() == 1
-		//				&& table.getPrimaryKey().getColumn( 0 ).isIdentity();
-		MetadataImplementor metadataImplementor = (MetadataImplementor) metadata;
-		return table.hasPrimaryKey()
-			&& table.getIdentifierValue() != null
-			&& table.getIdentifierValue().isIdentityColumn(
-					metadataImplementor.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
-					dialect
-			);
 	}
 
 	/**
@@ -238,8 +152,8 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
-			for ( String constraint : table.getCheckConstraints() ) {
-				buf.append( ", check (" ).append( constraint ).append( ')' );
+			for ( CheckConstraint constraint : table.getChecks() ) {
+				buf.append( "," ).append( constraint.constraintString() );
 			}
 			final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
 			if ( aggregateSupport != null && aggregateSupport.supportsComponentCheckConstraints() ) {
@@ -318,7 +232,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 		else {
 			for ( Column subColumn : value.getColumns() ) {
-				final String checkConstraint = subColumn.getCheckConstraint();
+				final String checkConstraint = getCheckConstraint( subColumn );
 				if ( !subColumn.isNullable() || checkConstraint != null ) {
 					final String subColumnName = subColumn.getQuotedName( dialect );
 					final String columnExpression = aggregateSupport.aggregateComponentCustomReadExpression(
@@ -358,6 +272,19 @@ public class StandardTableExporter implements Exporter<Table> {
 			}
 		}
 		return separator;
+	}
+
+	private static String getCheckConstraint(Column subColumn) {
+		final List<CheckConstraint> checkConstraints = subColumn.getCheckConstraints();
+		if ( checkConstraints.isEmpty() ) {
+			return null;
+		}
+		else if ( checkConstraints.size() > 1 ) {
+			throw new MappingException( "Multiple check constraints not supported for aggregate columns" );
+		}
+		else {
+			return checkConstraints.get(0).getConstraint();
+		}
 	}
 
 	protected String tableCreateString(boolean hasPrimaryKey) {

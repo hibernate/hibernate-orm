@@ -16,6 +16,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedConsumer;
@@ -68,7 +69,6 @@ import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResul
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
-import org.hibernate.generator.Generator;
 
 import org.jboss.logging.Logger;
 
@@ -80,7 +80,17 @@ public class PluralAttributeMappingImpl
 		implements PluralAttributeMapping, FetchOptions {
 	private static final Logger log = Logger.getLogger( PluralAttributeMappingImpl.class );
 
+	/**
+	 * Allows callback after creation of the attribute mapping.
+	 *
+	 * Support for the {@linkplain CollectionPersister collection},
+	 * {@linkplain CollectionPart element} and {@linkplain CollectionPart index}
+	 * descriptors
+	 */
 	public interface Aware {
+		/**
+		 * Injects the created attribute mapping
+		 */
 		void injectAttributeMapping(PluralAttributeMapping attributeMapping);
 	}
 
@@ -349,6 +359,11 @@ public class PluralAttributeMappingImpl
 	@Override
 	public FetchTiming getTiming() {
 		return fetchTiming;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return false;
 	}
 
 	@Override
@@ -652,6 +667,7 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
+	@Override
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor fkDescriptor) {
 		this.fkDescriptor = fkDescriptor;
 	}

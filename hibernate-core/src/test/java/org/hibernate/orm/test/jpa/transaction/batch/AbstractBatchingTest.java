@@ -127,8 +127,7 @@ public abstract class AbstractBatchingTest {
 				// a legacy implementation does not call abortBatch().
 				final JdbcServices jdbcServices = jdbcCoordinator.getJdbcSessionOwner()
 						.getJdbcSessionContext()
-						.getServiceRegistry()
-						.getService( JdbcServices.class );
+						.getJdbcServices();
 				throw jdbcServices.getSqlExceptionHelper().convert(
 						new SQLException( "fake SQLException" ),
 						"could not perform addBatch",

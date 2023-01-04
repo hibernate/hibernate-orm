@@ -13,21 +13,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Index;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Index;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.UniqueConstraint;
+
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 
 /**
- * Identifier generator definition, should be immutable.
+ * Models the definition of an {@linkplain org.hibernate.id.IdentityGenerator identifier generator}
+ *
+ * @implSpec Should be immutable.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard

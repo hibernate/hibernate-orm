@@ -56,6 +56,7 @@ public class SchemaUpdateJoinColumnNoConstraintTest extends BaseUnitTestCase {
 					.addAnnotatedClass( Parent.class )
 					.addAnnotatedClass( Child.class )
 					.buildMetadata();
+			metadata.orderColumns( false );
 			metadata.validate();
 
 			new SchemaUpdate()

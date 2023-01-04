@@ -7,12 +7,12 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.QueryException;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -75,18 +75,21 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	 * that is run at startup for named queries, and can be done in an IDE.
 	 */
 	@Override
-	public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-		delegate.validate(arguments, functionName, queryEngine);
+	public void validate(
+			List<? extends SqmTypedNode<?>> arguments,
+			String functionName,
+			MappingMetamodel metamodel) {
+		delegate.validate( arguments, functionName, metamodel );
 		int count = 0;
 		for (SqmTypedNode<?> argument : arguments) {
-			JdbcTypeIndicators indicators = queryEngine.getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+			JdbcTypeIndicators indicators = metamodel.getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
 			SqmExpressible<?> nodeType = argument.getNodeType();
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if ( nodeType!=null ) {
 				JavaType<?> javaType = nodeType.getExpressibleJavaType();
 				if (javaType != null) {
 					try {
-						final JdbcType jdbcType = getJdbcType( queryEngine, argument, indicators, javaType );
+						final JdbcType jdbcType = getJdbcType( metamodel, argument, indicators, javaType );
 						checkType(
 								count, functionName, type,
 								jdbcType.getDefaultSqlTypeCode(),
@@ -126,14 +129,14 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	}
 
 	private JdbcType getJdbcType(
-			QueryEngine queryEngine,
+			MappingMetamodel metamodel,
 			SqmTypedNode<?> argument,
 			JdbcTypeIndicators indicators,
 			JavaType<?> javaType) {
 		// For enum types, we must try to resolve the JdbcMapping of a possible path
 		// to be sure we use the correct JdbcType for the validation
 		final JdbcMapping mapping = javaType.getJavaTypeClass().isEnum()
-				? getJdbcMapping( argument, queryEngine )
+				? getJdbcMapping( argument, metamodel )
 				: null;
 		if ( mapping == null ) {
 			return javaType.getRecommendedJdbcType( indicators );
@@ -143,25 +146,25 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		}
 	}
 
-	private JdbcMapping getJdbcMapping(SqmTypedNode<?> argument, QueryEngine queryEngine) {
+	private JdbcMapping getJdbcMapping(SqmTypedNode<?> argument, MappingMetamodel metamodel) {
 		if ( argument instanceof SqmPath<?> ) {
 			final SqmPath<?> path = (SqmPath<?>) argument;
-			final ModelPartContainer modelPartContainer = getModelPartContainer( path.getLhs(), queryEngine );
+			final ModelPartContainer modelPartContainer = getModelPartContainer( path.getLhs(), metamodel );
 			final ModelPart part = modelPartContainer.findSubPart( path.getReferencedPathSource().getPathName(), null );
 			return part.getJdbcMappings().get( 0 );
 		}
 		return null;
 	}
 
-	private ModelPartContainer getModelPartContainer(SqmPath<?> path, QueryEngine queryEngine) {
+	private ModelPartContainer getModelPartContainer(SqmPath<?> path, MappingMetamodel metamodel) {
 		final SqmPath<?> lhs = path.getLhs();
 		if ( lhs == null ) {
 			assert path instanceof SqmFrom<?, ?>;
 			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) path.getNodeType().getSqmPathType();
-			return queryEngine.getTypeConfiguration().getSessionFactory().getRuntimeMetamodels().getEntityMappingType( entityDomainType.getHibernateEntityName() );
+			return metamodel.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 		}
 		else {
-			final ModelPartContainer modelPartContainer = getModelPartContainer( lhs, queryEngine );
+			final ModelPartContainer modelPartContainer = getModelPartContainer( lhs, metamodel );
 			return (ModelPartContainer) modelPartContainer.findSubPart( path.getReferencedPathSource().getPathName(), null );
 		}
 	}

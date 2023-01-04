@@ -9,7 +9,6 @@ package org.hibernate.id;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
-import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.factory.spi.StandardGenerator;
@@ -22,7 +21,7 @@ import org.hibernate.type.Type;
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
 import static org.hibernate.id.IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.loader.PropertyPath.IDENTIFIER_MAPPER_PROPERTY;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
  * <b>foreign</b>

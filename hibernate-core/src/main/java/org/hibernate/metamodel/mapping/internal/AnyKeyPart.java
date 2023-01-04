@@ -56,6 +56,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final boolean nullable;
 	private final boolean insertable;
 	private final boolean updateable;
+	private final boolean partitioned;
 	private final JdbcMapping jdbcMapping;
 
 	public AnyKeyPart(
@@ -70,6 +71,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
+			boolean partitioned,
 			JdbcMapping jdbcMapping) {
 		this.navigableRole = navigableRole;
 		this.table = table;
@@ -82,6 +84,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.nullable = nullable;
 		this.insertable = insertable;
 		this.updateable = updateable;
+		this.partitioned = partitioned;
 		this.jdbcMapping = jdbcMapping;
 	}
 
@@ -113,6 +116,11 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public boolean isUpdateable() {
 		return updateable;
+	}
+
+	@Override
+	public boolean isPartitioned() {
+		return partitioned;
 	}
 
 	@Override

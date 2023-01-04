@@ -42,7 +42,7 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 		this.embedded = embedded;
 		this.hasIdentifierMapper = false;
 		this.identifierGenerator = identifierGenerator;
-		this.identifierAssignedByInsert = identifierGenerator.generatedByDatabase();
+		this.identifierAssignedByInsert = identifierGenerator.generatedOnExecution();
 	}
 
 	/**
@@ -63,7 +63,7 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 		this.embedded = embedded;
 		this.hasIdentifierMapper = hasIdentifierMapper;
 		this.identifierGenerator = identifierGenerator;
-		this.identifierAssignedByInsert = identifierGenerator.generatedByDatabase();
+		this.identifierAssignedByInsert = identifierGenerator.generatedOnExecution();
 	}
 
 	@Override

@@ -9,10 +9,10 @@ package org.hibernate.relational;
 import org.hibernate.Incubating;
 
 /**
- * Allows programmatic {@link #exportMappedObjects schema export},
- * {@link #validateMappedObjects schema validation},
- * {@link #truncateMappedObjects data cleanup}, and
- * {@link #dropMappedObjects schema cleanup} as a convenience for
+ * Allows programmatic {@linkplain #exportMappedObjects schema export},
+ * {@linkplain #validateMappedObjects schema validation},
+ * {@linkplain #truncateMappedObjects data cleanup}, and
+ * {@linkplain #dropMappedObjects schema cleanup} as a convenience for
  * writing tests.
  *
  * @see org.hibernate.SessionFactory#getSchemaManager()
@@ -24,7 +24,7 @@ import org.hibernate.Incubating;
 public interface SchemaManager {
 	/**
 	 * Export database objects mapped by Hibernate entities.
-	 *
+	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaCreator}.
 	 *
 	 * @param createSchemas if {@code true}, attempt to create schemas,

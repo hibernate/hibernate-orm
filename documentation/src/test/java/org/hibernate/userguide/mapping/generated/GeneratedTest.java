@@ -19,6 +19,8 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.UPDATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -82,7 +84,7 @@ public class GeneratedTest {
 
 		private String middleName5;
 
-		@Generated
+		@Generated(event = {INSERT,UPDATE})
 		@Column(columnDefinition =
 			"AS CONCAT(" +
 			"	COALESCE(firstName, ''), " +

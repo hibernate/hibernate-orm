@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * @author <a href="mailto:ovidiu@feodorov.com">Ovidiu Feodorov</a>
+ * @author Ovidiu Feodorov
  * @author Gail Badner
  */
 @DomainModel(

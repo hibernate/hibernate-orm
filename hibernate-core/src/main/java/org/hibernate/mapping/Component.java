@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.Database;
@@ -34,11 +36,12 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
@@ -48,9 +51,9 @@ import static org.hibernate.id.IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
- * <p>
- * Note that the name of this class is historical and unfortunate. An embeddable class holds a "component"
- * of the state of an entity. It has absolutely nothing to do with modularity in software engineering.
+ *
+ * @apiNote The name of this class is historical and unfortunate. An embeddable class holds a "component"
+ *          of the state of an entity. It has absolutely nothing to do with modularity in software engineering.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -70,6 +73,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private Map<String,MetaAttribute> metaAttributes;
 
 	private Class<? extends EmbeddableInstantiator> customInstantiator;
+	private Constructor<?> instantiator;
+	private String[] instantiatorPropertyNames;
 
 	// cache the status of the type
 	private volatile Type type;
@@ -615,6 +620,15 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		}
 	}
 
+	@Internal
+	public String[] getPropertyNames() {
+		final String[] propertyNames = new String[properties.size()];
+		for ( int i = 0; i < properties.size(); i++ ) {
+			propertyNames[i] = properties.get( i ).getName();
+		}
+		return propertyNames;
+	}
+
 	public static class StandardGenerationContextLocator
 			implements CompositeNestedGeneratedValueGenerator.GenerationContextLocator {
 		private final String entityName;
@@ -640,8 +654,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
-			if ( !subgenerator.generatedByDatabase() ) {
-				Object generatedId = ( (InMemoryGenerator) subgenerator).generate( session, incomingObject, null, INSERT );
+			if ( !subgenerator.generatedOnExecution() ) {
+				Object generatedId = ( (BeforeExecutionGenerator) subgenerator).generate( session, incomingObject, null, INSERT );
 				injector.set( injectionContext, generatedId );
 			}
 			else {
@@ -670,6 +684,35 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
+	public boolean isValid(Mapping mapping) throws MappingException {
+		if ( !super.isValid( mapping ) ) {
+			return false;
+		}
+		if ( instantiatorPropertyNames != null ) {
+			if ( instantiatorPropertyNames.length < properties.size() ) {
+				throw new MappingException( "component type [" + componentClassName + "] specifies " + instantiatorPropertyNames.length + " properties for the instantiator but has " + properties.size() + " properties" );
+			}
+			final HashSet<String> assignedPropertyNames = CollectionHelper.setOfSize( properties.size() );
+			for ( String instantiatorPropertyName : instantiatorPropertyNames ) {
+				if ( getProperty( instantiatorPropertyName ) == null ) {
+					throw new MappingException( "could not find property [" + instantiatorPropertyName + "] defined in the @Instantiator withing component [" + componentClassName + "]" );
+				}
+				assignedPropertyNames.add( instantiatorPropertyName );
+			}
+			if ( assignedPropertyNames.size() != properties.size() ) {
+				final ArrayList<String> missingProperties = new ArrayList<>();
+				for ( Property property : properties ) {
+					if ( !assignedPropertyNames.contains( property.getName() ) ) {
+						missingProperties.add( property.getName() );
+					}
+				}
+				throw new MappingException( "component type [" + componentClassName + "] has " + properties.size() + " properties but the instantiator only assigns " + assignedPropertyNames.size() + " properties. missing properties: " + missingProperties );
+			}
+		}
+		return true;
+	}
+
+	@Override
 	public boolean isSorted() {
 		return originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY;
 	}
@@ -678,7 +721,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public int[] sortProperties() {
 		return sortProperties( false );
 	}
-
 
 	private int[] sortProperties(boolean forceRetainOriginalOrder) {
 		if ( originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY ) {
@@ -751,4 +793,18 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public void setCustomInstantiator(Class<? extends EmbeddableInstantiator> customInstantiator) {
 		this.customInstantiator = customInstantiator;
 	}
+
+	public Constructor<?> getInstantiator() {
+		return instantiator;
+	}
+
+	public String[] getInstantiatorPropertyNames() {
+		return instantiatorPropertyNames;
+	}
+
+	public void setInstantiator(Constructor<?> instantiator, String[] instantiatorPropertyNames) {
+		this.instantiator = instantiator;
+		this.instantiatorPropertyNames = instantiatorPropertyNames;
+	}
+
 }

@@ -33,7 +33,7 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.generator.Generator;
-import org.hibernate.generator.InMemoryGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -116,8 +116,8 @@ public abstract class AbstractSaveEventListener<C>
 
 		final EntityPersister persister = source.getEntityPersister( entityName, entity );
 		Generator generator = persister.getGenerator();
-		if ( !generator.generatedByDatabase() ) {
-			final Object generatedId = ( (InMemoryGenerator) generator ).generate( source, entity, null, INSERT );
+		if ( !generator.generatedOnExecution() ) {
+			final Object generatedId = ( (BeforeExecutionGenerator) generator ).generate( source, entity, null, INSERT );
 			if ( generatedId == null ) {
 				throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
 			}

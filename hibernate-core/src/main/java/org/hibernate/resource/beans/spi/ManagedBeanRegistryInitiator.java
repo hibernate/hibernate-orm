@@ -113,7 +113,7 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 			return (BeanContainer) containerClass.newInstance();
 		}
 		catch (Exception e) {
-			throw new InstantiationException( "Unable to instantiate specified BeanContainer : " + containerClass.getName(), containerClass, e );
+			throw new InstantiationException( "Unable to instantiate specified BeanContainer", containerClass, e );
 		}
 	}
 

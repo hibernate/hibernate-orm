@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
@@ -35,6 +36,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.SqlTypes;
 
 /**
  * A SQL AST translator for SQL Server.
@@ -369,6 +371,28 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null
+				&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			switch ( operator ) {
+				case EQUAL:
+				case NOT_DISTINCT_FROM:
+				case NOT_EQUAL:
+				case DISTINCT_FROM:
+					appendSql( "cast(" );
+					lhs.accept( this );
+					appendSql( " as nvarchar(max))" );
+					appendSql( operator.sqlText() );
+					appendSql( "cast(" );
+					rhs.accept( this );
+					appendSql( " as nvarchar(max))" );
+					return;
+				default:
+					// Fall through
+					break;
+			}
+		}
 		renderComparisonEmulateIntersect( lhs, operator, rhs );
 	}
 

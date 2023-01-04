@@ -9,19 +9,16 @@ package org.hibernate.procedure.internal;
 
 import java.sql.Types;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.OutputableType;
-import org.hibernate.query.BindableType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
-import org.hibernate.query.internal.BindingTypeHelper;
+import org.hibernate.query.BindableType;
+import org.hibernate.query.OutputableType;
 import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
-import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -33,18 +30,18 @@ import jakarta.persistence.ParameterMode;
  */
 public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	private final ProcedureCallImplementor<T> procedureCall;
-	private final int jdbcTypeCode;
+	private final int sqlTypeCode;
 
 	private OutputableType<T> ormType;
 
-	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, int jdbcTypeCode) {
+	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, int sqlTypeCode) {
 		this.procedureCall = procedureCall;
-		this.jdbcTypeCode = jdbcTypeCode;
+		this.sqlTypeCode = sqlTypeCode;
 	}
 
 	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, OutputableType<T> ormType) {
 		this.procedureCall = procedureCall;
-		this.jdbcTypeCode = ormType.getJdbcType().getJdbcTypeCode();
+		this.sqlTypeCode = ormType.getJdbcType().getDefaultSqlTypeCode();
 		this.ormType = ormType;
 	}
 
@@ -85,7 +82,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public int getJdbcTypeCode() {
-		return jdbcTypeCode;
+		return sqlTypeCode;
 	}
 
 	@Override
@@ -110,9 +107,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public Class getParameterType() {
-
-//		return ormType == null ? null : ormType.getJavaType();
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -122,7 +117,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public void applyAnticipatedType(BindableType type) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -137,7 +132,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 				return new FunctionReturnImpl<>( procedureCall, ormType );
 			}
 			else {
-				return new FunctionReturnImpl<>( procedureCall, jdbcTypeCode );
+				return new FunctionReturnImpl<>( procedureCall, sqlTypeCode );
 			}
 		};
 	}

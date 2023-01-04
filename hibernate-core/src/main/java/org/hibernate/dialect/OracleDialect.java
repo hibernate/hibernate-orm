@@ -11,16 +11,12 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -49,9 +45,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -80,12 +74,9 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.BooleanJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
-import org.hibernate.type.descriptor.jdbc.BooleanJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
@@ -97,7 +88,10 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.HOUR;
 import static org.hibernate.query.sqm.TemporalUnit.MINUTE;
@@ -126,7 +120,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
- * A {@linkplain Dialect SQL dialect} for Oracle 8i and above.
+ * A {@linkplain Dialect SQL dialect} for Oracle 11g Release 2 and above.
  *
  * @author Steve Ebersole
  * @author Gavin King
@@ -134,11 +128,14 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  */
 public class OracleDialect extends Dialect {
 
-	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b" );
-	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\sby\\b" );
-	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border\\sby\\b" );
-	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
-	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b", CASE_INSENSITIVE );
+	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\s+by\\b", CASE_INSENSITIVE );
+	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border\\s+by\\b", CASE_INSENSITIVE );
+	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b", CASE_INSENSITIVE );
+
+	private static final Pattern SQL_STATEMENT_TYPE_PATTERN =
+			Pattern.compile( "^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", CASE_INSENSITIVE );
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
@@ -222,6 +219,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.bitand();
 		functionFactory.lastDay();
 		functionFactory.toCharNumberDateTimestamp();
+		functionFactory.dateTrunc_trunc();
 		functionFactory.ceiling_ceil();
 		functionFactory.concat_pipeOperator();
 		functionFactory.rownumRowid();
@@ -329,6 +327,10 @@ public class OracleDialect extends Dialect {
 		return "current_timestamp";
 	}
 
+	@Override
+	public boolean supportsInsertReturningGeneratedKeys() {
+		return getVersion().isSameOrAfter( 12 );
+	}
 
 	/**
 	 * Oracle doesn't have any sort of {@link Types#BOOLEAN}
@@ -429,7 +431,7 @@ public class OracleDialect extends Dialect {
 	 * Oracle supports a limited list of temporal fields in the
 	 * extract() function, but we can emulate some of them by
 	 * using to_char() with a format string instead of extract().
-	 *
+	 * <p>
 	 * Thus, the additional supported fields are
 	 * {@link TemporalUnit#DAY_OF_YEAR},
 	 * {@link TemporalUnit#DAY_OF_MONTH},
@@ -684,7 +686,8 @@ public class OracleDialect extends Dialect {
 	@Override
 	protected void initDefaultProperties() {
 		super.initDefaultProperties();
-		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, Boolean.toString( getVersion().isSameOrAfter( 12 ) ) );
+		getDefaultProperties().setProperty( BATCH_VERSIONED_DATA,
+				Boolean.toString( getVersion().isSameOrAfter( 12 ) ) );
 	}
 
 	@Override
@@ -883,6 +886,16 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "modify " + columnName + " " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return OracleSequenceSupport.INSTANCE;
 	}
@@ -1057,50 +1070,35 @@ public class OracleDialect extends Dialect {
 	}
 
 	/**
-	 * For Oracle, the FOR UPDATE clause cannot be applied when using ORDER BY, DISTINCT or views.
+	 * The {@code FOR UPDATE} clause cannot be applied when using {@code ORDER BY}, {@code DISTINCT} or views.
 	 *
-	 * @see <a href="https://docs.oracle.com/database/121/SQLRF/statements_10002.htm#SQLRF01702">Oracle FOR UPDATE restrictions</a>
+	 * @see <a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/SELECT.html">Oracle FOR UPDATE restrictions</a>
 	 */
 	@Override
 	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
-		if ( StringHelper.isEmpty( sql ) || queryOptions == null ) {
+		if ( isEmpty( sql ) || queryOptions == null ) {
+			// ugh, used by DialectFeatureChecks (gotta be a better way)
 			return true;
 		}
 
-		sql = sql.toLowerCase( Locale.ROOT );
-
 		return DISTINCT_KEYWORD_PATTERN.matcher( sql ).find()
-				|| GROUP_BY_KEYWORD_PATTERN.matcher( sql ).find()
-				|| UNION_KEYWORD_PATTERN.matcher( sql ).find()
-				|| (
-						queryOptions.hasLimit()
-								&& (
-										ORDER_BY_KEYWORD_PATTERN.matcher( sql ).find()
-												|| queryOptions.getLimit().getFirstRow() != null
-								)
-				);
+			|| GROUP_BY_KEYWORD_PATTERN.matcher( sql ).find()
+			|| UNION_KEYWORD_PATTERN.matcher( sql ).find()
+			|| ORDER_BY_KEYWORD_PATTERN.matcher( sql ).find() && queryOptions.hasLimit()
+			|| queryOptions.hasLimit() && queryOptions.getLimit().getFirstRow() != null;
 	}
 
 	@Override
 	public String getQueryHintString(String sql, String hints) {
-		String statementType = statementType(sql);
-
-		final int pos = sql.indexOf( statementType );
-		if ( pos > -1 ) {
-			final StringBuilder buffer = new StringBuilder( sql.length() + hints.length() + 8 );
-			if ( pos > 0 ) {
-				buffer.append( sql, 0, pos );
-			}
-			buffer
-			.append( statementType )
-			.append( " /*+ " )
-			.append( hints )
-			.append( " */" )
-			.append( sql.substring( pos + statementType.length() ) );
-			sql = buffer.toString();
+		final String statementType = statementType( sql );
+		final int start = sql.indexOf( statementType );
+		if ( start < 0 ) {
+			return sql;
 		}
-
-		return sql;
+		else {
+			int end = start + statementType.length();
+			return sql.substring( 0, end ) + " /*+ " + hints + " */" + sql.substring( end );
+		}
 	}
 
 	@Override
@@ -1138,13 +1136,13 @@ public class OracleDialect extends Dialect {
 	}
 
 	private String statementType(String sql) {
-		Matcher matcher = SQL_STATEMENT_TYPE_PATTERN.matcher( sql );
-
+		final Matcher matcher = SQL_STATEMENT_TYPE_PATTERN.matcher( sql );
 		if ( matcher.matches() && matcher.groupCount() == 1 ) {
 			return matcher.group(1);
 		}
-
-		throw new IllegalArgumentException( "Can't determine SQL statement type for statement: " + sql );
+		else {
+			throw new IllegalArgumentException( "Can't determine SQL statement type for statement: " + sql );
+		}
 	}
 
 	@Override
@@ -1407,5 +1405,10 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String getCreateUserDefinedTypeKindString() {
 		return "object";
+	}
+
+	@Override
+	public String rowId(String rowId) {
+		return "rowid";
 	}
 }

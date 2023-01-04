@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
@@ -20,9 +20,11 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 /**
- * Repository for references to named things related with queries.  This includes
- * named HQL, JPAQL, native and procedure queries as well as named result-set
- * mappings
+ * Repository for references to named things related to queries. This includes:
+ * <ul>
+ * <li>named HQL, JPQL, native, and procedure queries,
+ * <li>along with named result set mappings.
+ * </ul>
  *
  * @author Steve Ebersole
  */
@@ -70,6 +72,11 @@ public interface NamedObjectRepository {
 	Map<String, HibernateException> checkNamedQueries(QueryEngine queryPlanCache);
 
 	/**
+	 * Validate the named queries and throw an exception if any are broken
+	 */
+	void validateNamedQueries(QueryEngine queryEngine);
+
+	/**
 	 * Resolve the named query with the given name.
 	 */
 	NamedQueryMemento resolve(
@@ -80,7 +87,8 @@ public interface NamedObjectRepository {
 	/**
 	 * Prepare for runtime use
 	 */
-	void prepare(SessionFactoryImplementor sessionFactory, MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext);
+	// TODO: avoid passing in the whole SessionFactory here, it's not necessary
+	void prepare(SessionFactoryImplementor sessionFactory, Metadata bootMetamodel);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

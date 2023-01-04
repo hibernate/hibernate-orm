@@ -1053,8 +1053,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *                         (not statisics) is being returned.
 	 *                     </li>
 	 *                 </ul>
-	 *                 NOTE: Hibernate ignores statistics and does not
-	 *                       care about the actual type of index.
+	 *                 Note that Hibernate ignores statistics and does not care
+	 *                 about the actual type of index.
 	 *             </li>
 	 *             <li>
 	 *                 column label {@link #getResultSetColumnNameLabel} -
@@ -1221,7 +1221,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *                 column label {@link #getResultSetPrimaryKeyColumnNameLabel} -
 	 *                 primary key column name being imported
 	 *             </li>
-	 *         </ul>,
+	 *         </ul>
 	 *         The ResultSet must be ordered by the primary key
 	 *         catalog/schema/table and column position within the key.
 	 *     </li>

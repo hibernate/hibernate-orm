@@ -13,11 +13,13 @@ import java.util.concurrent.Callable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.transaction.spi.IsolationDelegate;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
+import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 
 /**
  * @author Andrea Boriero
@@ -27,6 +29,17 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 
 	private final JdbcConnectionAccess connectionAccess;
 	private final SqlExceptionHelper sqlExceptionHelper;
+
+	public JdbcIsolationDelegate(TransactionCoordinatorOwner transactionCoordinatorOwner) {
+		this( transactionCoordinatorOwner.getJdbcSessionOwner() );
+	}
+
+	public JdbcIsolationDelegate(JdbcSessionOwner jdbcSessionOwner) {
+		this(
+				jdbcSessionOwner.getJdbcConnectionAccess(),
+				jdbcSessionOwner.getJdbcSessionContext().getJdbcServices().getSqlExceptionHelper()
+		);
+	}
 
 	public JdbcIsolationDelegate(JdbcConnectionAccess connectionAccess, SqlExceptionHelper sqlExceptionHelper) {
 		this.connectionAccess = connectionAccess;
@@ -45,7 +58,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 	public <T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted) throws HibernateException {
 		boolean wasAutoCommit = false;
 		try {
-			Connection connection = jdbcConnectionAccess().obtainConnection();
+			final Connection connection = jdbcConnectionAccess().obtainConnection();
 			try {
 				if ( transacted ) {
 					if ( connection.getAutoCommit() ) {
@@ -62,14 +75,14 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 
 				return result;
 			}
-			catch (Exception e) {
+			catch ( Exception e ) {
 				try {
 					if ( transacted && !connection.isClosed() ) {
 						connection.rollback();
 					}
 				}
-				catch (Exception ignore) {
-					LOG.unableToRollbackConnection( ignore );
+				catch ( Exception exception ) {
+					LOG.unableToRollbackConnection( exception );
 				}
 
 				if ( e instanceof HibernateException ) {
@@ -87,19 +100,19 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 					try {
 						connection.setAutoCommit( true );
 					}
-					catch (Exception ignore) {
+					catch ( Exception ignore ) {
 						LOG.trace( "was unable to reset connection back to auto-commit" );
 					}
 				}
 				try {
 					jdbcConnectionAccess().releaseConnection( connection );
 				}
-				catch (Exception ignore) {
+				catch ( Exception ignore ) {
 					LOG.unableToReleaseIsolatedConnection( ignore );
 				}
 			}
 		}
-		catch (SQLException sqle) {
+		catch ( SQLException sqle ) {
 			throw sqlExceptionHelper().convert( sqle, "unable to obtain isolated JDBC connection" );
 		}
 	}
@@ -110,11 +123,11 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 		try {
 			return callable.call();
 		}
-		catch (HibernateException e) {
+		catch ( HibernateException e ) {
 			throw e;
 		}
-		catch (Exception e) {
-			throw new HibernateException(e);
+		catch ( Exception e ) {
+			throw new HibernateException( e );
 		}
 	}
 }

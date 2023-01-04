@@ -9,43 +9,50 @@ package org.hibernate.engine.spi;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * Defines the "internal contract" for {@link Session} and other parts of Hibernate such
- * as {@link org.hibernate.type.Type}, {@link EntityPersister}
- * and {@link org.hibernate.persister.collection.CollectionPersister} implementations.
- *
- * A Session, through this interface and SharedSessionContractImplementor, implements:
+ * Defines the "internal contract" between {@link Session} and other parts of Hibernate
+ * including implementors of {@link org.hibernate.type.Type}, {@link EntityPersister},
+ * and {@link org.hibernate.persister.collection.CollectionPersister}.
+ * <p>
+ * The {@code Session}, via this interface and {@link SharedSessionContractImplementor},
+ * implements:
  * <ul>
  *     <li>
- *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionOwner} to drive the behavior
- *         of the {@link org.hibernate.resource.jdbc.spi.JdbcSessionContext} delegate
+ *         {@link JdbcSessionOwner}, and so the session also acts as the orchestrator
+ *         of a "JDBC session", and may be used to construct a {@link JdbcCoordinator}.
  *     </li>
  *     <li>
- *         {@link TransactionCoordinatorBuilder.Options}
- *         to drive the creation of the {@link TransactionCoordinator} delegate
+ *         {@link TransactionCoordinatorBuilder.Options}, allowing the session to control
+ *         the creation of the {@link TransactionCoordinator} delegate when it is passed
+ *         as an argument to
+ *         {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder#buildTransactionCoordinator}
  *     </li>
  *     <li>
- *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for
- *         JDBC LOB instance creation
+ *         {@link LobCreationContext}, and so the session may act as the context for
+ *         JDBC LOB instance creation.
  *     </li>
  *     <li>
- *         {@link org.hibernate.type.descriptor.WrapperOptions} to fulfill the behavior
- *         needed while binding/extracting values to/from JDBC as part of the {@code Type}
- *         contracts
+ *         {@link WrapperOptions}, and so the session may influence the process of binding
+ *         and extracting values to and from JDBC, which is performed by implementors of
+ *         {@link org.hibernate.type.descriptor.jdbc.JdbcType}.
  *     </li>
  * </ul>
  *
  * See also {@link org.hibernate.event.spi.EventSource} which extends this interface
- * providing s bridge to the event generation features of {@link org.hibernate.event}.
+ * provides a bridge to the event generation features of {@link org.hibernate.event}.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -69,12 +76,21 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
 
+	/**
+	 * Get the {@link ActionQueue} associated with this session.
+	 */
 	ActionQueue getActionQueue();
 
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
+	/**
+	 * Initiate a flush to force deletion of a re-persisted entity.
+	 */
 	void forceFlush(EntityEntry e) throws HibernateException;
 
+	/**
+	 * Cascade the lock operation to the given child entity.
+	 */
 	void lock(String entityName, Object child, LockOptions lockOptions);
 
 	/**

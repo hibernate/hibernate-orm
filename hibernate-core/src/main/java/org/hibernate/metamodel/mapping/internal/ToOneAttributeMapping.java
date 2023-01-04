@@ -281,9 +281,10 @@ public class ToOneAttributeMapping
 				if ( CollectionPart.Nature.fromNameExact( navigableRole.getParent().getLocalName() ) != null ) {
 					// * the to-one's parent is directly a collection element or index
 					// * therefore, its parent-parent should be the collection itself
-					final String pluralAttributeName = StringHelper.unqualify( navigableRole.getParent().getParent().getLocalName() );
-					final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) declaringEntityPersister.findAttributeMapping( pluralAttributeName );
+					final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) declaringEntityPersister.findByPath(
+							navigableRole.getParent().getParent().getFullPath().substring( declaringEntityPersister.getNavigableRole().getFullPath().length() + 1 )  );
 					assert pluralAttribute != null;
+
 					final QueryableCollection persister = (QueryableCollection) pluralAttribute.getCollectionDescriptor();
 					isKeyTableNullable = !persister.getTableName().equals( targetTableName );
 				}
@@ -714,6 +715,11 @@ public class ToOneAttributeMapping
 	@Override
 	public boolean isFkOptimizationAllowed() {
 		return canUseParentTableGroup;
+	}
+
+	@Override
+	public boolean hasPartitionedSelectionMapping() {
+		return foreignKeyDescriptor.hasPartitionedSelectionMapping();
 	}
 
 	public String getReferencedPropertyName() {
@@ -1476,8 +1482,7 @@ public class ToOneAttributeMapping
 					navigablePath,
 					this,
 					tableGroupToUse,
-					null,
-					creationState
+					null
 			);
 			entityResult.afterInitialize( entityResult, creationState );
 			//noinspection unchecked

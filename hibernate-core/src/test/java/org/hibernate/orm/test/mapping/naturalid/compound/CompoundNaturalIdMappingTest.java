@@ -8,7 +8,6 @@ package org.hibernate.orm.test.mapping.naturalid.compound;
 
 import java.util.List;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -18,12 +17,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.jupiter.api.Test;
-
-import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -44,6 +40,7 @@ public class CompoundNaturalIdMappingTest {
 					.addAnnotatedClass( PostalCarrier.class )
 					.addAnnotatedClass( Country.class )
 					.buildMetadata();
+			( (MetadataImplementor) meta ).orderColumns( false );
 			( (MetadataImplementor) meta ).validate();
 
 			final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) meta.buildSessionFactory();

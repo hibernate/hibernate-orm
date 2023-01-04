@@ -616,7 +616,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		);
 	}
 
-	private void throwLazyInitializationExceptionIfNotConnected() {
+	void throwLazyInitializationExceptionIfNotConnected() {
 		if ( !isConnectedToSession() ) {
 			throwLazyInitializationException( "no session or session was closed" );
 		}
@@ -625,7 +625,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 	}
 
-	private void throwLazyInitializationException(String message) {
+	void throwLazyInitializationException(String message) {
 		throw new LazyInitializationException(
 				"failed to lazily initialize a collection" +
 						(role == null ? "" : " of role: " + role) +

@@ -21,9 +21,9 @@ import jakarta.persistence.TemporalType;
 
 /**
  * Defines the aspects of query execution and parameter binding that apply to all
- * forms of querying - HQL, {@linkplain jakarta.persistence.criteria.CriteriaBuilder
- * criteria queries}, and {@link org.hibernate.procedure.ProcedureCall stored
- * procedure calls}.
+ * forms of querying: HQL/JPQL queries, native SQL queries,
+ * {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria queries}, and
+ * {@linkplain org.hibernate.procedure.ProcedureCall stored procedure calls}.
  *
  * @author Steve Ebersole
  * @author Gavin King
@@ -118,7 +118,11 @@ public interface CommonQueryContract {
 	CommonQueryContract setComment(String comment);
 
 	/**
-	 * Apply hints to the query.
+	 * Set a hint. The hints understood by Hibernate are enumerated by
+	 * {@link org.hibernate.jpa.AvailableHints}.
+	 *
+	 * @see org.hibernate.jpa.HibernateHints
+	 * @see org.hibernate.jpa.SpecHints
 	 */
 	CommonQueryContract setHint(String hintName, Object value);
 
@@ -139,7 +143,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameter(String, Object)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(String, Object, BindableType)
 	 */
 	<P> CommonQueryContract setParameter(String parameter, P value, Class<P> type);
@@ -147,8 +150,6 @@ public interface CommonQueryContract {
 	/**
 	 * Bind the given argument to a named query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> CommonQueryContract setParameter(String parameter, P value, BindableType<P> type);
 
@@ -185,7 +186,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameter(int, Object)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(int, Object, BindableType)
 	 */
 	<P> CommonQueryContract setParameter(int parameter, P value, Class<P> type);
@@ -193,8 +193,6 @@ public interface CommonQueryContract {
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
 	 * {@link BindableType}.
-	 *
-	 * @see BindableType#parameterType
 	 */
 	<P> CommonQueryContract setParameter(int parameter, P value, BindableType<P> type);
 
@@ -242,7 +240,6 @@ public interface CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 */
 	<P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value, Class<P> type);
@@ -295,7 +292,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -336,7 +332,6 @@ public interface CommonQueryContract {
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(java.lang.String, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -377,7 +372,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -417,7 +411,6 @@ public interface CommonQueryContract {
 	 * If unable to infer an appropriate {@link BindableType}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(int, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -459,7 +452,6 @@ public interface CommonQueryContract {
 	 * infer an appropriate {@link BindableType}, fall back to using
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
@@ -502,7 +494,6 @@ public interface CommonQueryContract {
 	 * infer an appropriate {@link BindableType}, fall back to using
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see BindableType#parameterType(Class)
 	 * @see #setParameterList(QueryParameter, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression

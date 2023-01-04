@@ -431,7 +431,7 @@ public class MultiLoadTest {
 
 					final EntityEntry entry = session.getPersistenceContext()
 							.getEntry( deletedEntity );
-					assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
+					assertTrue( entry.getStatus().isDeletedOrGone() );
 
 					final int paramCount = StringHelper.countUnquoted(
 							statementInspector.getSqlQueries().get( 0 ),
@@ -496,9 +496,8 @@ public class MultiLoadTest {
 							.equals( 2 ) ).findAny().orElse( null );
 					assertNotNull( deletedEntity );
 
-					final EntityEntry entry = ( (SharedSessionContractImplementor) session ).getPersistenceContext()
-							.getEntry( deletedEntity );
-					assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
+					final EntityEntry entry = session.getPersistenceContext().getEntry( deletedEntity );
+					assertTrue( entry.getStatus().isDeletedOrGone() );
 
 					final int paramCount = StringHelper.countUnquoted(
 							statementInspector.getSqlQueries().get( 0 ),

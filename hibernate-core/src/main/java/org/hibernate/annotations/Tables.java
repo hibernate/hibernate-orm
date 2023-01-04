@@ -16,9 +16,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * A grouping of {@link Table}s.
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated since {@link Table} is deprecated
  */
 @Target(TYPE)
 @Retention(RUNTIME)
+@Deprecated(since = "6.2", forRemoval = true)
 public @interface Tables {
 	/**
 	 * The table grouping.

@@ -44,11 +44,6 @@ public class AnonymousTupleBasicEntityIdentifierMapping
 	}
 
 	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return delegate.getIdentifier( entity, session );
-	}
-
-	@Override
 	public Object getIdentifier(Object entity) {
 		return delegate.getIdentifier( entity );
 	}

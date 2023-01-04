@@ -16,6 +16,8 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -24,11 +26,12 @@ import org.hibernate.type.Type;
 
 
 /**
- * A persistent wrapper for a {@code java.util.Set}. The underlying
+ * A persistent wrapper for a {@link java.util.Set}. The underlying
  * collection is a {@code HashSet}.
  *
- * @apiNote Incubating in terms of making this non-internal.  These contracts
- * will be getting cleaned up in following releases.
+ * @apiNote Incubating in terms of making this non-internal.
+ *          These contracts will be getting cleaned up in following
+ *          releases.
  *
  * @author Gavin King
  */
@@ -221,6 +224,27 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 		else {
 			return false;
 		}
+	}
+
+	@Internal
+	public boolean queuedRemove(Object element) {
+		final CollectionEntry entry = getSession().getPersistenceContextInternal().getCollectionEntry( PersistentSet.this );
+		if ( entry == null ) {
+			throwLazyInitializationExceptionIfNotConnected();
+			throwLazyInitializationException("collection not associated with session");
+		}
+		else {
+			final CollectionPersister persister = entry.getLoadedPersister();
+			if ( hasQueuedOperations() ) {
+				getSession().flush();
+			}
+			if ( persister.elementExists( entry.getLoadedKey(), element, getSession() ) ) {
+				elementRemoved = true;
+				queueOperation( new SimpleRemove( (E) element ) );
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

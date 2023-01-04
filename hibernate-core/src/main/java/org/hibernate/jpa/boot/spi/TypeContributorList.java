@@ -11,10 +11,14 @@ import java.util.List;
 import org.hibernate.boot.model.TypeContributor;
 
 /**
+ * An object that provides a list of {@link TypeContributor}s to the JPA persistence provider.
+ * <p>
+ * An implementation may be registered with the JPA provider using the property
+ * {@value org.hibernate.jpa.boot.spi.JpaSettings#TYPE_CONTRIBUTORS}.
+ *
  * @author Brett Meyer
- * 
- * TODO: Not a fan of this name or entry point into EMFBuilderImpl
  */
+// TODO: Not a fan of this name or entry point into EMFBuilderImpl
 public interface TypeContributorList {
 	List<TypeContributor> getTypeContributors();
 }

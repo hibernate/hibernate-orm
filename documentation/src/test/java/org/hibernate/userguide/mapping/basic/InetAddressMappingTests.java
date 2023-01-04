@@ -39,7 +39,7 @@ import static org.hamcrest.Matchers.is;
 public class InetAddressMappingTests {
 
 	@Test
-	public void verifyMappings(SessionFactoryScope scope) {
+	public void verifyMappings(SessionFactoryScope scope) throws Exception {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
@@ -53,7 +53,7 @@ public class InetAddressMappingTests {
 		final JdbcType realType;
 		if (intervalType instanceof AdjustableJdbcType) {
 			realType = ((AdjustableJdbcType) intervalType).resolveIndicatedType(
-					() -> mappingMetamodel.getTypeConfiguration(),
+					mappingMetamodel.getTypeConfiguration().getCurrentBaseSqlTypeIndicators(),
 					jdbcMapping.getJavaTypeDescriptor()
 			);
 		}
@@ -62,19 +62,26 @@ public class InetAddressMappingTests {
 		}
 		assertThat( jdbcMapping.getJdbcType(), is( realType));
 
+		EntityWithInetAddress entity = new EntityWithInetAddress( 1, InetAddress.getLocalHost() );
 		scope.inTransaction(
 				(session) -> {
-					try {
-						session.persist( new EntityWithInetAddress( 1, InetAddress.getLocalHost() ) );
-					}
-					catch (UnknownHostException e) {
-						throw new RuntimeException( e );
-					}
+					session.persist( entity );
 				}
 		);
 
 		scope.inTransaction(
 				(session) -> session.find( EntityWithInetAddress.class, 1)
+		);
+
+		scope.inTransaction(
+				(session) -> {
+					session.createQuery(
+									"from EntityWithInetAddress e where e.address = :param",
+									EntityWithInetAddress.class
+							)
+							.setParameter( "param", entity.address )
+							.getResultList();
+				}
 		);
 	}
 

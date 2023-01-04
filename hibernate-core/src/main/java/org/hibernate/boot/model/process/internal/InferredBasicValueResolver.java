@@ -25,7 +25,6 @@ import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -37,6 +36,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.SqlTypes.SMALLINT;
+import static org.hibernate.type.SqlTypes.TINYINT;
 
 /**
  * BasicValue.Resolution resolver for cases where no explicit
@@ -102,9 +104,13 @@ public class InferredBasicValueResolver {
 					jdbcMapping = new SerializableType( explicitJavaType );
 				}
 				else {
-					jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
-							explicitJavaType,
-							inferredJdbcType
+					jdbcMapping = resolveSqlTypeIndicators(
+							stdIndicators,
+							typeConfiguration.getBasicTypeRegistry().resolve(
+									explicitJavaType,
+									inferredJdbcType
+							),
+							explicitJavaType
 					);
 				}
 			}
@@ -204,9 +210,13 @@ public class InferredBasicValueResolver {
 					// one, to create a mapping
 					final JdbcType recommendedJdbcType = reflectedJtd.getRecommendedJdbcType( stdIndicators );
 					if ( recommendedJdbcType != null ) {
-						jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
-								reflectedJtd,
-								recommendedJdbcType
+						jdbcMapping = resolveSqlTypeIndicators(
+								stdIndicators,
+								typeConfiguration.getBasicTypeRegistry().resolve(
+										reflectedJtd,
+										recommendedJdbcType
+								),
+								reflectedJtd
 						);
 					}
 					else if ( reflectedJtd instanceof SerializableJavaType
@@ -344,19 +354,19 @@ public class InferredBasicValueResolver {
 			TypeConfiguration typeConfiguration) {
 		return ordinalResolution(
 				enumJavaType,
-				integerJavaType( explicitJavaType, typeConfiguration ),
-				integerJdbcType( explicitJdbcType, typeConfiguration ),
+				ordinalJavaType( explicitJavaType, typeConfiguration ),
+				ordinalJdbcType( explicitJdbcType, enumJavaType, typeConfiguration ),
 				typeConfiguration
 		);
 	}
 
-	private static JdbcType integerJdbcType(JdbcType explicitJdbcType, TypeConfiguration typeConfiguration) {
+	private static JdbcType ordinalJdbcType(JdbcType explicitJdbcType, EnumJavaType<?> enumJavaType, TypeConfiguration typeConfiguration) {
 		return explicitJdbcType != null
 				? explicitJdbcType
-				: typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SMALLINT );
+				: typeConfiguration.getJdbcTypeRegistry().getDescriptor( enumJavaType.hasManyValues() ? SMALLINT : TINYINT );
 	}
 
-	private static <N extends Number> JavaType<N> integerJavaType(JavaType<N> explicitJavaType, TypeConfiguration typeConfiguration) {
+	private static <N extends Number> JavaType<N> ordinalJavaType(JavaType<N> explicitJavaType, TypeConfiguration typeConfiguration) {
 		if ( explicitJavaType != null ) {
 			if ( !Integer.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
 				throw new MappingException(

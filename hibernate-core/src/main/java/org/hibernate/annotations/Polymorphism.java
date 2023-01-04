@@ -23,7 +23,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * is neither an entity class nor a mapped superclass. The
  * query will return all entities which inherit the type.
  * For example, the query
- *     <pre>{@code from java.lang.Object}</pre>
+ * <pre>from java.lang.Object</pre>
+ * <p>
  * will return every entity mapped by Hibernate!
  * <p>
  * This can be thought of as allowing a sort of "poor man's"

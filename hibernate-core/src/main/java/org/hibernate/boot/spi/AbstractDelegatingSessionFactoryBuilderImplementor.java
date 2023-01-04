@@ -10,8 +10,9 @@ package org.hibernate.boot.spi;
  * Convenience base class for custom implementors of {@link SessionFactoryBuilderImplementor}, using delegation
  *
  * @author Guillaume Smet
- * @param <T> The type of a specific sub-class; Allows sub-classes to narrow down the return-type of the contract methods
- * to a specialization of {@link SessionFactoryBuilderImplementor}
+ *
+ * @param <T> The specific subclass; Allows subclasses to narrow the return type of the contract methods
+ *            to a specialization of {@link MetadataBuilderImplementor}.
  */
 public abstract class AbstractDelegatingSessionFactoryBuilderImplementor<T extends SessionFactoryBuilderImplementor>
 		extends AbstractDelegatingSessionFactoryBuilder<T> implements SessionFactoryBuilderImplementor {

@@ -8,10 +8,14 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TiDBDialect;
 
 import org.hibernate.testing.TestForIssue;
@@ -474,6 +478,48 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testRoundTruncFunctions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select trunc(32.92345f)").getSingleResult(), is(32f) );
+					assertThat( session.createQuery("select trunc(32.92345f,3)").getSingleResult(), is(32.923f) );
+					assertThat( session.createQuery("select trunc(-32.92345f)").getSingleResult(), is(-32f) );
+					assertThat( session.createQuery("select trunc(-32.92345f,3)").getSingleResult(), is(-32.923f) );
+					assertThat( session.createQuery("select truncate(32.92345f)").getSingleResult(), is(32f) );
+					assertThat( session.createQuery("select truncate(32.92345f,3)").getSingleResult(), is(32.923f) );
+					assertThat( session.createQuery("select round(32.92345f)").getSingleResult(), is(33f) );
+					assertThat( session.createQuery("select round(32.92345f,1)").getSingleResult(), is(32.9f) );
+					assertThat( session.createQuery("select round(32.92345f,3)").getSingleResult(), is(32.923f) );
+					assertThat( session.createQuery("select round(32.923451f,4)").getSingleResult(), is(32.9235f) );
+
+					assertThat( session.createQuery("select trunc(32.92345d)").getSingleResult(), is(32d) );
+					assertThat( session.createQuery("select trunc(32.92345d,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select trunc(-32.92345d)").getSingleResult(), is(-32d) );
+					assertThat( session.createQuery("select trunc(-32.92345d,3)").getSingleResult(), is(-32.923d) );
+					assertThat( session.createQuery("select truncate(32.92345d)").getSingleResult(), is(32d) );
+					assertThat( session.createQuery("select truncate(32.92345d,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select round(32.92345d)").getSingleResult(), is(33d) );
+					assertThat( session.createQuery("select round(32.92345d,1)").getSingleResult(), is(32.9d) );
+					assertThat( session.createQuery("select round(32.92345d,3)").getSingleResult(), is(32.923d) );
+					assertThat( session.createQuery("select round(32.923451d,4)").getSingleResult(), is(32.9235d) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(DB2Dialect.class)
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
+	public void testDateTruncFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select date_trunc(year,current_timestamp)").getSingleResult();
+				}
+		);
+	}
+
+	@Test
 	public void testLowerUpperFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -794,7 +840,9 @@ public class FunctionTests {
 
 					assertThat( session.createQuery("select cast(1 as Boolean)").getSingleResult(), is(true) );
 					assertThat( session.createQuery("select cast(0 as Boolean)").getSingleResult(), is(false) );
-					assertThat( session.createQuery("select cast('123' as Integer)").getSingleResult(), is(123) );
+					assertThat( session.createQuery("select cast('1234' as Integer)").getSingleResult(), is(1234) );
+					assertThat( session.createQuery("select cast('1234' as Short)").getSingleResult(), is((short) 1234) );
+					assertThat( session.createQuery("select cast('123' as Byte)").getSingleResult(), is((byte) 123) );
 					assertThat( session.createQuery("select cast('123' as Long)").getSingleResult(), is(123l) );
 					assertThat( session.createQuery("select cast('123.12' as Float)").getSingleResult(), is(123.12f) );
 
@@ -806,6 +854,14 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('1911-10-09' as LocalDate)").getSingleResult(), is(LocalDate.of(1911,10,9)) );
 					assertThat( session.createQuery("select cast('12:13:14' as LocalTime)").getSingleResult(), is(LocalTime.of(12,13,14)) );
 					assertThat( session.createQuery("select cast('1911-10-09 12:13:14' as LocalDateTime)").getSingleResult(), is(LocalDateTime.of(1911,10,9,12,13,14)) );
+
+					assertThat( session.createQuery("select cast(local datetime as LocalTime)").getSingleResult(), instanceOf(LocalTime.class) );
+					assertThat( session.createQuery("select cast(local datetime as LocalDate)").getSingleResult(), instanceOf(LocalDate.class) );
+					assertThat( session.createQuery("select cast('1911-10-09 12:13:14.123' as LocalDateTime)").getSingleResult(), instanceOf(LocalDateTime.class) );
+
+					assertThat( session.createQuery("select cast('12:13:14' as Time)").getSingleResult(), instanceOf(Time.class) );
+					assertThat( session.createQuery("select cast('1911-10-09' as Date)").getSingleResult(), instanceOf(Date.class) );
+					assertThat( session.createQuery("select cast('1911-10-09 12:13:14.123' as Timestamp)").getSingleResult(), instanceOf(Timestamp.class) );
 
 					assertThat( session.createQuery("select cast(date 1911-10-09 as String)").getSingleResult(), is("1911-10-09") );
 					assertThat( session.createQuery("select cast(time 12:13:14 as String)").getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000") ) );

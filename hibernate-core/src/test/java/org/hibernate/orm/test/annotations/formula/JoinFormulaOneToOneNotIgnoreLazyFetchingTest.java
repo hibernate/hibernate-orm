@@ -8,21 +8,12 @@ package org.hibernate.orm.test.annotations.formula;
 
 import java.io.Serializable;
 import java.util.List;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.cfg.AnnotationBinder;
+import org.hibernate.boot.model.internal.ToOneBinder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -34,6 +25,15 @@ import org.junit.Test;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -44,10 +44,10 @@ public class JoinFormulaOneToOneNotIgnoreLazyFetchingTest extends BaseEntityMana
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() )
+			Logger.getMessageLogger( CoreMessageLogger.class, ToOneBinder.class.getName() )
 	);
 
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );
 
 
 	@Override

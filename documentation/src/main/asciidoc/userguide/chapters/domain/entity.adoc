@@ -500,6 +500,11 @@ For entities, the custom persister must implement the https://docs.jboss.org/hib
 
 For collections, the custom persister must implement the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/persister/collection/CollectionPersister.html[`CollectionPersister`] interface.
 
+NOTE: Supplying a custom persister has been allowed historically, but has never been fully supported.
+Hibernate 6 provides better, alternative ways to accomplish the use cases for a custom persister.  As
+of 6.2 `@Persister` has been formally deprecated.
+
+
 [[entity-persister-mapping]]
 .Entity persister mapping
 ====

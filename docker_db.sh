@@ -522,7 +522,7 @@ oracle_setup_old() {
     done
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
-cat <<EOF | \$ORACLE_HOME/bin/sqlplus sys/Oracle18@localhost/XE as sysdba
+cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
 alter database tempfile '\$ORACLE_BASE/oradata/XE/temp.dbf' resize 400M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/system.dbf' resize 1000M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/sysaux.dbf' resize 700M;
@@ -539,29 +539,35 @@ alter system checkpoint;
 alter database drop logfile group 1;
 alter database drop logfile group 2;
 alter system set open_cursors=1000 sid='*' scope=both;
+alter system set session_cached_cursors=500 sid='*' scope=spfile;
+alter system set recyclebin=OFF sid='*' SCOPE=spfile;
 alter system set processes=150 scope=spfile;
 alter system set filesystemio_options=asynch scope=spfile;
 alter system set disk_asynch_io=true scope=spfile;
+
+shutdown immediate;
+startup;
+
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
 EOF\""
-  echo "Waiting for Oracle to restart after configuration..."
-  $CONTAINER_CLI stop oracle
-  $CONTAINER_CLI start oracle
-  HEALTHSTATUS=
-  until [ "$HEALTHSTATUS" == "healthy" ];
-  do
-      echo "Waiting for Oracle to start..."
-      sleep 5;
-      # On WSL, health-checks intervals don't work for Podman, so run them manually
-      if command -v podman > /dev/null; then
-        $CONTAINER_CLI healthcheck run oracle > /dev/null
-      fi
-      HEALTHSTATUS="`$CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
-      HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
-      HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
-  done
-  sleep 2;
+#  echo "Waiting for Oracle to restart after configuration..."
+#  $CONTAINER_CLI stop oracle
+#  $CONTAINER_CLI start oracle
+#  HEALTHSTATUS=
+#  until [ "$HEALTHSTATUS" == "healthy" ];
+#  do
+#      echo "Waiting for Oracle to start..."
+#      sleep 5;
+#      # On WSL, health-checks intervals don't work for Podman, so run them manually
+#      if command -v podman > /dev/null; then
+#        $CONTAINER_CLI healthcheck run oracle > /dev/null
+#      fi
+#      HEALTHSTATUS="`$CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
+#      HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
+#      HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
+#  done
+#  sleep 2;
   echo "Oracle successfully started"
 }
 

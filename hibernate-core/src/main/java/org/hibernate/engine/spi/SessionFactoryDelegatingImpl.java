@@ -349,12 +349,12 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.isOpen();
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
 		return delegate.resolveParameterBindType( bindValue );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> BindableType<T> resolveParameterBindType(Class<T> clazz) {
 		return delegate.resolveParameterBindType( clazz );
 	}

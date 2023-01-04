@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.QueryException;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -43,7 +42,7 @@ public class ChrLiteralEmulation extends AbstractSqmSelfRenderingFunctionDescrip
 								StandardArgumentsValidators.exactly(1),
 								new ArgumentsValidator() {
 									@Override
-									public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, MappingMetamodel metamodel) {
+									public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, TypeConfiguration typeConfiguration) {
 										if ( !( arguments.get( 0 ) instanceof SqmLiteral<?> ) ) {
 											throw new QueryException(
 													String.format(

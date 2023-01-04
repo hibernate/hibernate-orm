@@ -101,7 +101,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName(), queryEngine);
+		argumentsValidator.validate( arguments, getName(), typeConfiguration );
 
 		return generateSqmFunctionExpression(
 				arguments,
@@ -118,7 +118,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName(), queryEngine );
+		argumentsValidator.validate( arguments, getName(), typeConfiguration );
 
 		return generateSqmAggregateFunctionExpression(
 				arguments,
@@ -137,7 +137,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName(), queryEngine );
+		argumentsValidator.validate( arguments, getName(), typeConfiguration );
 
 		return generateSqmOrderedSetAggregateFunctionExpression(
 				arguments,
@@ -158,7 +158,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName(), queryEngine );
+		argumentsValidator.validate( arguments, getName(), typeConfiguration );
 
 		return generateSqmWindowFunctionExpression(
 				arguments,
@@ -233,7 +233,8 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 * Return an SQM node or subtree representing an invocation of this window function
 	 * with the given arguments. This method may be overridden in the case of
 	 * function descriptors that wish to customize creation of the node.
-	 *  @param arguments the arguments of the function invocation
+	 *
+	 * @param arguments the arguments of the function invocation
 	 * @param respectNulls
 	 * @param fromFirst
 	 * @param impliedResultType the function return type as inferred from its usage

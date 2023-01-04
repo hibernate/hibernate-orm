@@ -384,11 +384,6 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public EntityPersister resolveEntityDescriptor(EntityDomainType<?> entityDomainType) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public EntityPersister getEntityDescriptor(String entityName) {
 		final EntityPersister entityPersister = entityPersisterMap.get( entityName );
 		if ( entityPersister == null ) {
@@ -757,14 +752,10 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public MappingModelExpressible<?> lenientlyResolveMappingExpressible(
+	public MappingModelExpressible<?> resolveMappingExpressible(
 			SqmExpressible<?> sqmExpressible,
-			Function<NavigablePath, TableGroup> tableGroupLocator) {
-		return resolveMappingExpressible(sqmExpressible, tableGroupLocator );
-	}
-
-	@Override
-	public MappingModelExpressible<?> resolveMappingExpressible(SqmExpressible<?> sqmExpressible, Function<NavigablePath, TableGroup> tableGroupLocator) {
+			Function<NavigablePath,
+					TableGroup> tableGroupLocator) {
 		if ( sqmExpressible instanceof SqmPath ) {
 			final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpressible;
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();

@@ -704,11 +704,6 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsParametersInInsertSelect() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		return false;
 	}

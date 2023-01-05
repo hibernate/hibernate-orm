@@ -142,7 +142,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 	private String getSqlDropStrings(String tableName, ForeignKey foreignKey, Dialect dialect) {
 		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
-		buf.append( dialect.getDropForeignKeyString() );
+		buf.append(" ").append( dialect.getDropForeignKeyString() ).append(" ");
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			buf.append( "if exists " );
 		}

@@ -17,6 +17,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface ColumnAliasExtractor {
 	/**
 	 * Extract the unique column alias.

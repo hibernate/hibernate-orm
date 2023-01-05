@@ -22,7 +22,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import jakarta.persistence.ParameterMode;
 
 /**
- * Standard implementation of CallableStatementSupport
+ * Standard implementation of {@link org.hibernate.procedure.spi.CallableStatementSupport}.
  *
  * @author Steve Ebersole
  */

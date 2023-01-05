@@ -6,18 +6,12 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableHelper;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-
-import org.jboss.logging.Logger;
 
 /**
  * Strategy based on ANSI SQL's definition of a "local temporary table" (local to each db session).
@@ -25,7 +19,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class LocalTemporaryTableStrategy {
-	private static final Logger log = Logger.getLogger( LocalTemporaryTableStrategy.class );
 
 	public static final String SHORT_NAME = "local_temporary";
 	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables";

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.hql;
 import java.io.Serializable;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class Constructor implements Serializable {
 	private static int CONSTRUCTOR_EXECUTION_COUNT = 0;

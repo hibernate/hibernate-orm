@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 @DomainModel(

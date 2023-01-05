@@ -31,7 +31,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
  * Class responsible for extracting SQL statements from import script. Supports instructions/comments and quoted
  * strings spread over multiple lines. Each statement must end with semicolon.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  * @author Steve Ebersole
  */
 public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {

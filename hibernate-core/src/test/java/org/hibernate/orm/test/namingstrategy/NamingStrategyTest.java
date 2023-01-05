@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Emmanuel Bernard
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class NamingStrategyTest extends BaseSessionFactoryFunctionalTest {
 

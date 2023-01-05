@@ -17,7 +17,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @RequiresDialect({ H2Dialect.class })
 @TestForIssue(jiraKey = "HHH-6662")

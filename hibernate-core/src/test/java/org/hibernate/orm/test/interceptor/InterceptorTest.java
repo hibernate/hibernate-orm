@@ -40,7 +40,7 @@ import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	@Override

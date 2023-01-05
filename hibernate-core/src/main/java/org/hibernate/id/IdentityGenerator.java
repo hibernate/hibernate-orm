@@ -14,11 +14,11 @@ import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
 
 /**
- * An {@link OnExecutionGenerator} that handles {@code IDENTITY}/"autoincrement" columns
- * on those databases which support them.
+ * An {@link OnExecutionGenerator} that handles {@code IDENTITY}/"autoincrement"
+ * columns on those databases which support them.
  * <p>
- * Delegates to the {@link org.hibernate.dialect.identity.IdentityColumnSupport} provided
- * by the {@linkplain Dialect#getIdentityColumnSupport() dialect}.
+ * Delegates to the {@link org.hibernate.dialect.identity.IdentityColumnSupport}
+ * provided by the {@linkplain Dialect#getIdentityColumnSupport() dialect}.
  * <p>
  * The actual work involved in retrieving the primary key value is the job of a
  * {@link org.hibernate.id.insert.InsertGeneratedIdentifierDelegate}, either:
@@ -28,10 +28,13 @@ import org.hibernate.id.insert.InsertReturningDelegate;
  * <li>a {@link org.hibernate.id.insert.BasicSelectingDelegate}.
  * </ul>
  *
+ * @see jakarta.persistence.GenerationType#IDENTITY
  * @see org.hibernate.dialect.identity.IdentityColumnSupport
  * @see org.hibernate.id.insert.InsertGeneratedIdentifierDelegate
  *
  * @author Christoph Sturm
+ *
+ * @implNote This also implements the {@code identity} generation type in {@code hbm.xml} mappings.
  */
 public class IdentityGenerator
 		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
@@ -48,7 +51,7 @@ public class IdentityGenerator
 
 	@Override
 	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(PostInsertIdentityPersister persister) {
-		Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
+		final Dialect dialect = persister.getFactory().getJdbcServices().getDialect();
 		if ( persister.getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
 			return dialect.getIdentityColumnSupport().buildGetGeneratedKeysDelegate( persister, dialect );
 		}

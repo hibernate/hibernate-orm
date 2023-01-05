@@ -24,26 +24,42 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
+import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.PersistentIdentifierGenerator.CATALOG;
+import static org.hibernate.id.PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER;
+import static org.hibernate.id.PersistentIdentifierGenerator.PK;
+import static org.hibernate.id.PersistentIdentifierGenerator.SCHEMA;
+import static org.hibernate.internal.util.StringHelper.split;
+
 /**
- * <b>increment</b>
+ * An {@link IdentifierGenerator} that returns a {@code long}, constructed by counting
+ * from the maximum primary key value obtained by querying the table or tables at startup.
  * <p>
- * An {@code IdentifierGenerator} that returns a {@code long}, constructed by
- * counting from the maximum primary key value at startup. Not safe for use in a
- * cluster!
+ * This id generator is not safe unless a single VM has exclusive access to the database.
  * <p>
- * Mapping parameters supported, but not usually needed: tables, column.
- * (The tables parameter specified a comma-separated list of table names.)
+ * Mapping parameters supported, but not usually needed: {@value #TABLES}, {@value #COLUMN}.
+ * (The {@value #TABLES} parameter specifies a comma-separated list of table names.)
  *
  * @author Gavin King
  * @author Steve Ebersole
  * @author Brett Meyer
+ *
+ * @implNote This also implements the {@code increment} generation type in {@code hbm.xml} mappings.
  */
 public class IncrementGenerator implements IdentifierGenerator, StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
+
+	/**
+	 * A parameter identifying the column holding the id.
+	 */
+	public static final String COLUMN = "column";
+	/**
+	 * A parameter specifying a list of tables over which the generated id should be unique.
+	 */
+	public static final String TABLES = "tables";
 
 	private Class<?> returnClass;
 	private String column;
@@ -74,29 +90,29 @@ public class IncrementGenerator implements IdentifierGenerator, StandardGenerato
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		final ObjectNameNormalizer normalizer =
-				(ObjectNameNormalizer) parameters.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
+				(ObjectNameNormalizer) parameters.get( IDENTIFIER_NORMALIZER );
 
-		column = parameters.getProperty( "column" );
+		column = parameters.getProperty( COLUMN );
 		if ( column == null ) {
-			column = parameters.getProperty( PersistentIdentifierGenerator.PK );
+			column = parameters.getProperty( PK );
 		}
 		column = normalizer.normalizeIdentifierQuoting( column ).render( jdbcEnvironment.getDialect() );
 
 		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 
 		final String schema = normalizer.toDatabaseIdentifierText(
-				parameters.getProperty( PersistentIdentifierGenerator.SCHEMA )
+				parameters.getProperty( SCHEMA )
 		);
 		final String catalog = normalizer.toDatabaseIdentifierText(
-				parameters.getProperty( PersistentIdentifierGenerator.CATALOG )
+				parameters.getProperty( CATALOG )
 		);
 
-		String tableList = parameters.getProperty( "tables" );
+		String tableList = parameters.getProperty( TABLES );
 		if ( tableList == null ) {
 			tableList = parameters.getProperty( PersistentIdentifierGenerator.TABLES );
 		}
 		physicalTableNames = new ArrayList<>();
-		for ( String tableName : StringHelper.split( ", ", tableList ) ) {
+		for ( String tableName : split( ", ", tableList ) ) {
 			physicalTableNames.add( new QualifiedTableName( identifierHelper.toIdentifier( catalog ),
 					identifierHelper.toIdentifier( schema ), identifierHelper.toIdentifier( tableName ) ) );
 		}
@@ -128,7 +144,7 @@ public class IncrementGenerator implements IdentifierGenerator, StandardGenerato
 	}
 
 	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {
-		previousValueHolder = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
+		previousValueHolder = getIntegralDataTypeHolder( returnClass );
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Fetching initial value: %s", sql );

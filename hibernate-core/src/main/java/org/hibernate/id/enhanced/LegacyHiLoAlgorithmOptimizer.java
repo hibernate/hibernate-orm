@@ -36,12 +36,12 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	}
 
 	/**
-	 * Constructs a LegacyHiLoAlgorithmOptimizer
+	 * Constructs a {@code LegacyHiLoAlgorithmOptimizer}
 	 *
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public LegacyHiLoAlgorithmOptimizer(Class returnClass, int incrementSize) {
+	public LegacyHiLoAlgorithmOptimizer(Class<?> returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );
@@ -124,7 +124,6 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	 *
 	 * @return Value for property 'lastValue'.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
 	public synchronized IntegralDataTypeHolder getLastValue() {
 		return noTenantGenerationState().value;
 	}

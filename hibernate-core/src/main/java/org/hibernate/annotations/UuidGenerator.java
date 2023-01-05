@@ -39,7 +39,7 @@ public @interface UuidGenerator {
 		RANDOM,
 		/**
 		 * Applies a time-based generation strategy consistent with IETF RFC 4122.
-		 * Uses IP address rather than mac address.
+		 * Uses IP address rather than MAC address.
 		 *
 		 * @implNote Can be a bottleneck due to the need to synchronize in order
 		 *           to increment an internal count as part of the algorithm.

@@ -9,12 +9,12 @@ package org.hibernate.id.enhanced;
 import org.hibernate.HibernateException;
 
 /**
- * Common support for optimizer implementations.
+ * Common support for {@link Optimizer} implementations.
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractOptimizer implements Optimizer {
-	protected final Class returnClass;
+	protected final Class<?> returnClass;
 	protected final int incrementSize;
 
 	/**
@@ -23,7 +23,7 @@ public abstract class AbstractOptimizer implements Optimizer {
 	 * @param returnClass The expected id class.
 	 * @param incrementSize The increment size
 	 */
-	AbstractOptimizer(Class returnClass, int incrementSize) {
+	AbstractOptimizer(Class<?> returnClass, int incrementSize) {
 		if ( returnClass == null ) {
 			throw new HibernateException( "return class is required" );
 		}
@@ -37,8 +37,7 @@ public abstract class AbstractOptimizer implements Optimizer {
 	 *
 	 * @return Value for property 'returnClass'.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public final Class getReturnClass() {
+	public final Class<?> getReturnClass() {
 		return returnClass;
 	}
 

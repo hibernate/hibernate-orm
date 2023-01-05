@@ -11,10 +11,10 @@ import java.io.Serializable;
 import org.hibernate.id.IntegralDataTypeHolder;
 
 /**
- * An optimizer that performs no optimization.  The database is hit for
- * every request.
- *
- * Using this implementation is probably not the most efficient choice.
+ * An optimizer that performs no optimization. A round-trip to
+ * the database is required for each new id.
+ * <p>
+ * This implementation is not the most efficient one.
  */
 public final class NoopOptimizer extends AbstractOptimizer {
 	private IntegralDataTypeHolder lastSourceValue;
@@ -25,7 +25,7 @@ public final class NoopOptimizer extends AbstractOptimizer {
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public NoopOptimizer(Class returnClass, int incrementSize) {
+	public NoopOptimizer(Class<?> returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 	}
 

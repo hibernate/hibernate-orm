@@ -18,9 +18,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Specify a custom persister.
  *
  * @author Shawn Clowater
+ *
+ * @deprecated Alternative depends on reason for custom persister
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated( since = "6" )
 public @interface Persister {
 	/**
 	 * The custom persister class.

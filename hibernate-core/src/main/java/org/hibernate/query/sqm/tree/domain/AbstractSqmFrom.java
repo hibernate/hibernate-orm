@@ -104,7 +104,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	/**
-	 * Intended for use with {@link SqmTreatedRoot} -> {@link SqmRoot}
+	 * Intended for use with {@link SqmTreatedRoot} to {@link SqmRoot}
 	 */
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,

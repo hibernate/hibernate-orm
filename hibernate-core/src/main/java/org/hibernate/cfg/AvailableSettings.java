@@ -44,6 +44,11 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  *     <li>via {@link Configuration#setProperty(String, String)}, or
  *     <li>via {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#applySetting(String, Object)}.
  * </ul>
+ * <p>
+ * Note that Hibernate does not distinguish between JPA-defined configuration
+ * properties and "native" configuration properties. Any property listed here
+ * may be used to configure Hibernate no matter what configuration mechanism
+ * or bootstrap API is used.
  *
  * @author Steve Ebersole
  */

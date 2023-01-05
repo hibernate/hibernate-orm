@@ -118,7 +118,7 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * An easy way to be sure that session and transaction management is being done correctly
  * is to {@linkplain SessionFactory#inTransaction(Consumer) let the factory do it}:
  * <pre>
- * sessionFactory.inTransaction(session -> {
+ * sessionFactory.inTransaction(session -&gt; {
  *     //do the work
  *     ...
  * });
@@ -127,7 +127,7 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * A session may be used to {@linkplain #doWork(Work) execute JDBC work} using its JDBC
  * connection and transaction:
  * <pre>
- * session.doWork(connection -> {
+ * session.doWork(connection -&gt; {
  *     try ( PreparedStatement ps = connection.prepareStatement( " ... " ) ) {
  *         ps.execute();
  *     }

@@ -6,6 +6,9 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.binder.internal.CommentBinder;
+import org.hibernate.binder.internal.CommentsBinder;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -15,18 +18,17 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specify a custom persister.
+ * A list of {@link Comment}s.
+ * <p>
+ * If there are multiple {@link Comment}s on a class or attribute,
+ * they must have distinct {@link Comment#on() on} members.
  *
- * @author Shawn Clowater
- *
- * @deprecated Alternative depends on reason for custom persister
+ * @author Gavin King
  */
-@Target({TYPE, METHOD, FIELD})
+@TypeBinderType(binder = CommentsBinder.class)
+@AttributeBinderType(binder = CommentsBinder.class)
+@Target({METHOD, FIELD, TYPE})
 @Retention(RUNTIME)
-@Deprecated( since = "6" )
-public @interface Persister {
-	/**
-	 * The custom persister class.
-	 */
-	Class<?> impl();
+public @interface Comments {
+	Comment[] value();
 }

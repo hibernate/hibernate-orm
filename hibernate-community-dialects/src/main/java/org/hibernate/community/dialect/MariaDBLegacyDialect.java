@@ -9,6 +9,7 @@ package org.hibernate.community.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -25,11 +26,9 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -83,23 +82,23 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry(queryEngine);
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
 		if ( getVersion().isSameOrAfter( 10, 2 ) ) {
-			CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory( queryEngine );
+			CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory(functionContributions);
 			commonFunctionFactory.windowFunctions();
 			commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-			queryEngine.getSqmFunctionRegistry().registerNamed(
+			functionContributions.getFunctionRegistry().registerNamed(
 					"json_valid",
-					queryEngine.getTypeConfiguration()
+					functionContributions.getTypeConfiguration()
 							.getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.BOOLEAN )
 			);
 			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
 				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
-				queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
-						.setInvariantType( queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
+				functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
+						.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
 						.setExactArgumentCount( 1 )
 						.setParameterTypes(NUMERIC)
 						.register();

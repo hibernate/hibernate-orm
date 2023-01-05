@@ -390,7 +390,7 @@ public class MetadataBuildingProcess {
 
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
-		dialect.contributeTypes( typeContributions, options.getServiceRegistry() );
+		dialect.contribute( typeContributions, options.getServiceRegistry() );
 		// Capture the dialect configured JdbcTypes so that we can detect if a TypeContributor overwrote them,
 		// which has precedence over the fallback and preferred type registrations
 		final JdbcType dialectUuidDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.UUID );

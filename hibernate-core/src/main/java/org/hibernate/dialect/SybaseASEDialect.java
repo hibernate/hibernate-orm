@@ -567,8 +567,8 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public String getTableTypeString() {
-		//HHH-7298 I don't know if this would break something or cause some side affects
-		//but it is required to use 'select for update'
+		//HHH-7298 I don't know if this would break something or cause
+		//some side effects, but it is required to use 'select for update'
 		return " lock datarows";
 	}
 

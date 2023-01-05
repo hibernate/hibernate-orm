@@ -9,16 +9,12 @@ package org.hibernate.userguide.pc;
 import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NoResultException;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
 import org.hibernate.Session;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
@@ -92,9 +88,11 @@ public class FilterSqlFragementAliasTest extends BaseEntityManagerFunctionalTest
 	//tag::pc-filter-sql-fragment-alias-example[]
 	@Entity(name = "Account")
 	@Table(name = "account")
+	@Comment(on="account", value = "The account table")
 	@SecondaryTable(
 		name = "account_details"
 	)
+	@Comment(on="account_details", value = "The account details secondary table")
 	@SQLDelete(
 		sql = "UPDATE account_details SET deleted = true WHERE id = ? "
 	)

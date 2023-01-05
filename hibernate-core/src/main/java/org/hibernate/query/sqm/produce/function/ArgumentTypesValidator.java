@@ -10,25 +10,20 @@ import org.hibernate.QueryException;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.lang.reflect.Type;
 import java.sql.Types;
@@ -50,19 +45,30 @@ import static org.hibernate.type.SqlTypes.isTemporalType;
 
 /**
  * Typechecks the arguments of HQL functions based on the assigned JDBC types.
- * The main purpose for doing this is that we want to be able to check named
- * queries at startup or build time, and we want to be able to check all queries
- * in the IDE.
+ *
+ * @apiNote Originally, the main purpose for doing this was that we wanted to be
+ *          able to check named queries at startup or build time, and we wanted
+ *          to be able to check all queries in the IDE. But since Hibernate 6
+ *          it's of more general importance.
+ *
+ * @implNote Access to the {@link MappingMetamodel} is very problematic here,
+ *           since we are sometimes called in a context where we have not built
+ *           a {@link org.hibernate.internal.SessionFactoryImpl}, and therefore
+ *           we have no persisters.
  *
  * @author Gavin King
  */
 public class ArgumentTypesValidator implements ArgumentsValidator {
+	// a JDBC type code of an enum when we don't know if it's mapped STRING or ORDINAL
+	// this number has to be distinct from every code in SqlTypes!
+	private static final int ENUM_UNKNOWN_JDBC_TYPE = -101977;
+
 	final ArgumentsValidator delegate;
 	private final FunctionParameterType[] types;
 
 	public ArgumentTypesValidator(ArgumentsValidator delegate, FunctionParameterType... types) {
 		this.types = types;
-		if (delegate == null ) {
+		if ( delegate == null ) {
 			delegate = StandardArgumentsValidators.exactly(types.length);
 		}
 		this.delegate = delegate;
@@ -78,21 +84,20 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			MappingMetamodel metamodel) {
-		delegate.validate( arguments, functionName, metamodel );
+			TypeConfiguration typeConfiguration) {
+		delegate.validate( arguments, functionName, typeConfiguration);
 		int count = 0;
 		for (SqmTypedNode<?> argument : arguments) {
-			JdbcTypeIndicators indicators = metamodel.getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+			JdbcTypeIndicators indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
 			SqmExpressible<?> nodeType = argument.getNodeType();
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
-			if ( nodeType!=null ) {
+			if ( nodeType != null ) {
 				JavaType<?> javaType = nodeType.getExpressibleJavaType();
 				if (javaType != null) {
 					try {
-						final JdbcType jdbcType = getJdbcType( metamodel, argument, indicators, javaType );
 						checkType(
 								count, functionName, type,
-								jdbcType.getDefaultSqlTypeCode(),
+								getJdbcType( indicators, javaType ),
 								javaType.getJavaTypeClass()
 						);
 					}
@@ -128,44 +133,13 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		}
 	}
 
-	private JdbcType getJdbcType(
-			MappingMetamodel metamodel,
-			SqmTypedNode<?> argument,
-			JdbcTypeIndicators indicators,
-			JavaType<?> javaType) {
-		// For enum types, we must try to resolve the JdbcMapping of a possible path
-		// to be sure we use the correct JdbcType for the validation
-		final JdbcMapping mapping = javaType.getJavaTypeClass().isEnum()
-				? getJdbcMapping( argument, metamodel )
-				: null;
-		if ( mapping == null ) {
-			return javaType.getRecommendedJdbcType( indicators );
+	private int getJdbcType(JdbcTypeIndicators indicators, JavaType<?> javaType) {
+		if ( javaType.getJavaTypeClass().isEnum() ) {
+			// magic value indicates it can be coerced STRING or ORDINAL
+			return ENUM_UNKNOWN_JDBC_TYPE;
 		}
 		else {
-			return mapping.getJdbcType();
-		}
-	}
-
-	private JdbcMapping getJdbcMapping(SqmTypedNode<?> argument, MappingMetamodel metamodel) {
-		if ( argument instanceof SqmPath<?> ) {
-			final SqmPath<?> path = (SqmPath<?>) argument;
-			final ModelPartContainer modelPartContainer = getModelPartContainer( path.getLhs(), metamodel );
-			final ModelPart part = modelPartContainer.findSubPart( path.getReferencedPathSource().getPathName(), null );
-			return part.getJdbcMappings().get( 0 );
-		}
-		return null;
-	}
-
-	private ModelPartContainer getModelPartContainer(SqmPath<?> path, MappingMetamodel metamodel) {
-		final SqmPath<?> lhs = path.getLhs();
-		if ( lhs == null ) {
-			assert path instanceof SqmFrom<?, ?>;
-			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) path.getNodeType().getSqmPathType();
-			return metamodel.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
-		}
-		else {
-			final ModelPartContainer modelPartContainer = getModelPartContainer( lhs, metamodel );
-			return (ModelPartContainer) modelPartContainer.findSubPart( path.getReferencedPathSource().getPathName(), null );
+			return javaType.getRecommendedJdbcType( indicators ).getDefaultSqlTypeCode();
 		}
 	}
 
@@ -225,7 +199,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 				}
 				break;
 			case STRING:
-				if ( !isCharacterType(code) ) {
+				if ( !isCharacterType(code) && code != ENUM_UNKNOWN_JDBC_TYPE ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;
@@ -240,7 +214,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 				}
 				break;
 			case INTEGER:
-				if ( !isIntegral(code) ) {
+				if ( !isIntegral(code) && code != ENUM_UNKNOWN_JDBC_TYPE ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;
@@ -291,7 +265,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 
 	@Override
 	public String getSignature() {
-		String sig = this.delegate.getSignature();
+		String sig = delegate.getSignature();
 		for (int i=0; i<types.length; i++) {
 			String argName = types.length == 1 ? "arg" : "arg" + i;
 			sig = sig.replace(argName, types[i] + " " + argName);

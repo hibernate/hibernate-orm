@@ -15,8 +15,6 @@ import org.hibernate.query.named.RowReaderMemento;
 import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
-import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -30,7 +28,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 @SuppressWarnings("rawtypes")
 public class StandardRowReader<T> implements RowReader<T> {
 	private final List<DomainResultAssembler<?>> resultAssemblers;
-	private final List<Initializer> initializers;
+	private final InitializersList initializers;
 	private final RowTransformer<T> rowTransformer;
 	private final Class<T> domainResultJavaType;
 
@@ -38,29 +36,14 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	public StandardRowReader(
 			List<DomainResultAssembler<?>> resultAssemblers,
-			List<Initializer> initializers,
+			InitializersList initializers,
 			RowTransformer<T> rowTransformer,
 			Class<T> domainResultJavaType) {
 		this.resultAssemblers = resultAssemblers;
 		this.initializers = initializers;
 		this.rowTransformer = rowTransformer;
-
 		this.assemblerCount = resultAssemblers.size();
 		this.domainResultJavaType = domainResultJavaType;
-
-		logDebugInfo();
-	}
-
-	protected void logDebugInfo() {
-		// we'd really need some form of description for the assemblers and initializers for this
-		// to be useful.
-		//
-		// todo (6.0) : consider whether this ^^ is worth it
-
-//		if ( ! ResultsLogger.DEBUG_ENABLED ) {
-//			return;
-//		}
-
 	}
 
 	@Override
@@ -87,7 +70,13 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	@Override
+	@Deprecated
 	public List<Initializer> getInitializers() {
+		return initializers.asList();
+	}
+
+	@Override
+	public InitializersList getInitializersList() {
 		return initializers;
 	}
 
@@ -112,54 +101,20 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	private void afterRow(RowProcessingState rowProcessingState) {
 		LoadingLogger.LOGGER.trace( "StandardRowReader#afterRow" );
-
-		initializers.forEach( initializer -> initializer.finishUpRow( rowProcessingState ) );
+		initializers.finishUpRow( rowProcessingState );
 	}
 
 	@SuppressWarnings("ForLoopReplaceableByForEach")
 	private void coordinateInitializers(RowProcessingState rowProcessingState) {
-
-		final int numberOfInitializers = initializers.size();
-
-		for ( int i = 0; i < numberOfInitializers; i++ ) {
-			final Initializer initializer = initializers.get( i );
-			if ( ! initializer.isCollectionInitializer() ) {
-				initializer.resolveKey( rowProcessingState );
-			}
-		}
-
-		for ( int i = 0; i < numberOfInitializers; i++ ) {
-			final Initializer initializer = initializers.get( i );
-			if ( initializer.isCollectionInitializer() ) {
-				initializer.resolveKey( rowProcessingState );
-			}
-		}
-
-		for ( int i = 0; i < numberOfInitializers; i++ ) {
-			Initializer initializer = initializers.get( i );
-			if ( !( initializer instanceof EntityDelayedFetchInitializer ) && ! (initializer instanceof EntitySelectFetchInitializer ) ) {
-				initializer.resolveInstance( rowProcessingState );
-			}
-		}
-
-		for ( int i = 0; i < numberOfInitializers; i++ ) {
-			Initializer initializer = initializers.get( i );
-			if ( initializer instanceof EntityDelayedFetchInitializer || initializer instanceof EntitySelectFetchInitializer ) {
-				initializer.resolveInstance( rowProcessingState );
-			}
-		}
-
-		for ( int i = 0; i < numberOfInitializers; i++ ) {
-			initializers.get( i ).initializeInstance( rowProcessingState );
-		}
+		initializers.resolveKeys( rowProcessingState );
+		initializers.resolveInstances( rowProcessingState );
+		initializers.initializeInstance( rowProcessingState );
 	}
 
 	@Override
 	@SuppressWarnings("ForLoopReplaceableByForEach")
 	public void finishUp(JdbcValuesSourceProcessingState processingState) {
-		for ( int i = 0; i < initializers.size(); i++ ) {
-			initializers.get( i ).endLoading( processingState.getExecutionContext() );
-		}
+		initializers.endLoading( processingState.getExecutionContext() );
 	}
 
 	@Override

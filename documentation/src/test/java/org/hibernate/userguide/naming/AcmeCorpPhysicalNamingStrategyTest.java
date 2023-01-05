@@ -9,8 +9,10 @@ package org.hibernate.userguide.naming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +29,9 @@ public class AcmeCorpPhysicalNamingStrategyTest {
 
 	@Before
 	public void prepareServiceRegistry() {
-		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
+				.build();
 	}
 
 	@After

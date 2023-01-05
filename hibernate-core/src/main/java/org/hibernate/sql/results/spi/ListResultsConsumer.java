@@ -172,7 +172,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 
 			if ( this.uniqueSemantic == UniqueSemantic.FILTER
-					|| this.uniqueSemantic == UniqueSemantic.ASSERT && rowProcessingState.hasCollectionInitializers
+					|| this.uniqueSemantic == UniqueSemantic.ASSERT && rowProcessingState.hasCollectionInitializers()
 					|| this.uniqueSemantic == UniqueSemantic.ALLOW && isEnityResultType ) {
 				while ( rowProcessingState.next() ) {
 					results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) );

@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.identity.SQLiteIdentityColumnSupport;
@@ -37,7 +38,6 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -55,7 +55,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -266,14 +265,14 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 		final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.mod_operator();
 		functionFactory.leftRight_substr();
 		functionFactory.concat_pipeOperator();
@@ -289,32 +288,32 @@ public class SQLiteDialect extends Dialect {
 		functionFactory.substring_substr();
 		functionFactory.chr_char();
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				integerType,
 				"instr(?2,?1)",
 				"instr(?2,?1,?3)",
 				STRING, STRING, INTEGER,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				stringType,
 				"(substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1))||?1)",
 				"(substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1))||?1)",
 				STRING, INTEGER, STRING,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature("(string, length[, padding])");
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"rpad",
 				stringType,
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1)))",
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1)))",
 				STRING, INTEGER, STRING,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature("(string, length[, padding])");
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "strftime")
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder("format", "strftime")
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(TEMPORAL, STRING)
@@ -322,14 +321,14 @@ public class SQLiteDialect extends Dialect {
 				.register();
 
 		if (!supportsMathFunctions() ) {
-			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder(
+			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
 					"floor",
 					"(cast(?1 as int)-(?1<cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )
 					.setExactArgumentCount( 1 )
 					.setParameterTypes(NUMERIC)
 					.register();
-			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder(
+			functionContributions.getFunctionRegistry().patternDescriptorBuilder(
 					"ceiling",
 					"(cast(?1 as int)+(?1>cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )

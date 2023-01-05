@@ -55,7 +55,6 @@ public class RowIdJdbcType implements JdbcType {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
@@ -70,7 +69,7 @@ public class RowIdJdbcType implements JdbcType {
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return getJavaType().wrap( statement.getObject( name ), options );
+				return getJavaType().wrap( statement.getRowId( name ), options );
 			}
 		};
 	}

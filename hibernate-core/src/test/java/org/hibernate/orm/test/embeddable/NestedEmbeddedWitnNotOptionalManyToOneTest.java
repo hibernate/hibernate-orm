@@ -88,7 +88,7 @@ public class NestedEmbeddedWitnNotOptionalManyToOneTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "ChildEntity")
 	public static class ChildEntity {
 		@Id
 		private Integer id;

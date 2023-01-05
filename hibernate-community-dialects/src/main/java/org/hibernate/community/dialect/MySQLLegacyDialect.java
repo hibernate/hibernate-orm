@@ -14,6 +14,7 @@ import java.sql.Types;
 
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DatabaseVersion;
@@ -50,7 +51,6 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
@@ -517,10 +517,10 @@ public class MySQLLegacyDialect extends Dialect {
 //	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		functionFactory.soundex();
 		functionFactory.radians();
@@ -544,7 +544,7 @@ public class MySQLLegacyDialect extends Dialect {
 		functionFactory.lastDay();
 		functionFactory.date();
 		functionFactory.timestamp();
-		time( queryEngine );
+		time(functionContributions);
 
 		functionFactory.utcDateTimeTimestamp();
 		functionFactory.rand();
@@ -574,9 +574,9 @@ public class MySQLLegacyDialect extends Dialect {
 		functionFactory.makedateMaketime();
 		functionFactory.localtimeLocaltimestamp();
 
-		BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
-		SqmFunctionRegistry functionRegistry = queryEngine.getSqmFunctionRegistry();
+		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		functionRegistry.noArgsBuilder( "localtime" )
 				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
 				.setUseParenthesesWhenNoArgs( false )
@@ -681,8 +681,8 @@ public class MySQLLegacyDialect extends Dialect {
 		return super.castPattern( from, to );
 	}
 
-	private void time(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "time" )
+	private void time(FunctionContributions queryEngine) {
+		queryEngine.getFunctionRegistry().namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
@@ -869,12 +869,12 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	public String getDropForeignKeyString() {
-		return " drop foreign key ";
+		return "drop foreign key";
 	}
 
 	@Override
 	public String getDropUniqueKeyString() {
-		return " drop index ";
+		return "drop index";
 	}
 
 	@Override

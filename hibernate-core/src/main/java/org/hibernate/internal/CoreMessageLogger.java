@@ -1690,12 +1690,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(
 			id = 483,
-			value = "An experimental feature has been enabled (" +
+			value = "An experimental - and now also deprecated - feature has been enabled (" +
 					AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED +
 					"=true) that instantiates empty composite/embedded " +
 					"objects when all of its attribute values are null. This feature has known issues and " +
-					"should not be used in production until it is stabilized. See Hibernate Jira " +
-					"issue HHH-11936 for details."
+					"should not be used in production. See Hibernate Jira issue HHH-11936 for details."
 	)
 	void emptyCompositesEnabled();
 

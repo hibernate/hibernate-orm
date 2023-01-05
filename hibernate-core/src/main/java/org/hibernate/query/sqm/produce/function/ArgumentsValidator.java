@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -25,17 +25,17 @@ public interface ArgumentsValidator {
 	/**
 	 * Perform validation that may be done using the {@link SqmTypedNode} tree and assigned Java types.
 	 *
-	 * @deprecated Use {@link #validate(List, String, MappingMetamodel)}
+	 * @deprecated Use {@link #validate(List, String, TypeConfiguration)}
 	 */
 	@Deprecated(since = "6.2")
 	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
-		validate( arguments, functionName, queryEngine.getTypeConfiguration().getSessionFactory().getMappingMetamodel() );
+		validate( arguments, functionName, queryEngine.getTypeConfiguration() );
 	}
 
 	/**
 	 * Perform validation that may be done using the {@link SqmTypedNode} tree and assigned Java types.
 	 */
-	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, MappingMetamodel metamodel) {}
+	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, TypeConfiguration typeConfiguration) {}
 
 	/**
 	 * Pretty-print the signature of the argument list.

@@ -7,8 +7,8 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.QueryException;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 import java.util.Locale;
@@ -43,7 +43,7 @@ public final class StandardArgumentsValidators {
 		public void validate(
 				List<? extends SqmTypedNode<?>> arguments,
 				String functionName,
-				MappingMetamodel metamodel) {
+				TypeConfiguration typeConfiguration) {
 			if ( !arguments.isEmpty() ) {
 				throw new QueryException(
 						String.format(
@@ -71,7 +71,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					MappingMetamodel metamodel) {
+					TypeConfiguration typeConfiguration) {
 				if ( arguments.size() < minNumOfArgs ) {
 					throw new QueryException(
 							String.format(
@@ -108,7 +108,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					MappingMetamodel metamodel) {
+					TypeConfiguration typeConfiguration) {
 				if ( arguments.size() != number ) {
 					throw new QueryException(
 							String.format(
@@ -147,7 +147,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					MappingMetamodel metamodel) {
+					TypeConfiguration typeConfiguration) {
 				if ( arguments.size() > maxNumOfArgs ) {
 					throw new QueryException(
 							String.format(
@@ -182,7 +182,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					MappingMetamodel metamodel) {
+					TypeConfiguration typeConfiguration) {
 				if (arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs) {
 					throw new QueryException(
 							String.format(
@@ -221,7 +221,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					MappingMetamodel metamodel) {
+					TypeConfiguration typeConfiguration) {
 				for ( SqmTypedNode<?> argument : arguments ) {
 					Class<?> argType = argument.getNodeJavaType().getJavaTypeClass();
 					if ( !javaType.isAssignableFrom( argType ) ) {
@@ -250,11 +250,11 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					MappingMetamodel metamodel) {
+					TypeConfiguration typeConfiguration) {
 				validators.forEach( individualValidator -> individualValidator.validate(
 						arguments,
 						functionName,
-						metamodel
+						typeConfiguration
 				) );
 			}
 		};

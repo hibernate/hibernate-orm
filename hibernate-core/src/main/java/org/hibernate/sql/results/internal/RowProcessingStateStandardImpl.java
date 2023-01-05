@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.List;
-
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
@@ -28,16 +26,14 @@ import org.hibernate.sql.results.spi.RowReader;
  * Standard RowProcessingState implementation
  */
 public class RowProcessingStateStandardImpl extends BaseExecutionContext implements RowProcessingState {
-	private static final Initializer[] NO_INITIALIZERS = new Initializer[0];
 
 	private final JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState;
 
-	private final Initializer[] initializers;
+	private final InitializersList initializers;
 
 	private final RowReader<?> rowReader;
 	private final JdbcValues jdbcValues;
 	private final ExecutionContext executionContext;
-	public final boolean hasCollectionInitializers;
 
 	public RowProcessingStateStandardImpl(
 			JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState,
@@ -49,30 +45,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 		this.executionContext = executionContext;
 		this.rowReader = rowReader;
 		this.jdbcValues = jdbcValues;
-
-		final List<Initializer> initializers = rowReader.getInitializers();
-		if ( initializers == null || initializers.isEmpty() ) {
-			this.initializers = NO_INITIALIZERS;
-			hasCollectionInitializers = false;
-		}
-		else {
-			//noinspection ToArrayCallWithZeroLengthArrayArgument
-			this.initializers = initializers.toArray( new Initializer[initializers.size()] );
-			hasCollectionInitializers = hasCollectionInitializers(this.initializers);
-		}
-	}
-
-	private static boolean hasCollectionInitializers(Initializer[] initializers) {
-		for ( int i = 0; i < initializers.length; i++ ) {
-			if ( initializers[i].isCollectionInitializer() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean hasCollectionInitializers(){
-		return this.hasCollectionInitializers;
+		this.initializers = rowReader.getInitializersList();
 	}
 
 	@Override
@@ -177,12 +150,10 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 
 	@Override
 	public Initializer resolveInitializer(NavigablePath path) {
-		for ( Initializer initializer : initializers ) {
-			if ( initializer.getNavigablePath().equals( path ) ) {
-				return initializer;
-			}
-		}
+		return this.initializers.resolveInitializer( path );
+	}
 
-		return null;
+	public boolean hasCollectionInitializers() {
+		return this.initializers.hasCollectionInitializers();
 	}
 }

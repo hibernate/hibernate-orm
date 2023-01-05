@@ -2035,7 +2035,7 @@ public class EntityBinder {
 			QualifiedTableName logicalName,
 			Table table) {
 		final Join join = new Join();
-		join.setPersistentClass( persistentClass );
+		persistentClass.addJoin( join );
 
 		final InFlightMetadataCollector.EntityTableXref tableXref
 				= context.getMetadataCollector().getEntityTableXref( persistentClass.getEntityName() );

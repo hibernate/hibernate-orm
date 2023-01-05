@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 /**
- * Actions to perform in regards to an temporary table after each use.
+ * Actions to perform in regard to a temporary table after each use.
  *
  * @author Steve Ebersole
  */

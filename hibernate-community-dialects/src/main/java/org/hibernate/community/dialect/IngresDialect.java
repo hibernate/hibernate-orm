@@ -8,6 +8,7 @@ package org.hibernate.community.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.identity.Ingres10IdentityColumnSupport;
 import org.hibernate.community.dialect.identity.Ingres9IdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
@@ -29,7 +30,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -235,16 +235,16 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
 
-		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Common functions
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(queryEngine);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.log();
 		functionFactory.rand();
 		functionFactory.soundex();
@@ -272,22 +272,22 @@ public class IngresDialect extends Dialect {
 		functionFactory.dateTrunc();
 		functionFactory.bitLength_pattern( "octet_length(hex(?1))*4" );
 
-		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
+		final BasicType<Integer> integerType = functionContributions.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				integerType,
 				"position(?1 in ?2)",
 				"(position(?1 in substring(?2 from ?3))+(?3)-1)",
 				STRING, STRING, INTEGER,
-				queryEngine.getTypeConfiguration()
+				functionContributions.getTypeConfiguration()
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", integerType );
+		functionContributions.getFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", integerType );
 
 		functionFactory.bitandorxornot_bitAndOrXorNot();
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "squeeze" )
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "squeeze" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( stringType )
 				.register();

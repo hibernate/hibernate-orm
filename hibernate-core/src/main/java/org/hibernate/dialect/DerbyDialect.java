@@ -565,12 +565,6 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsParametersInInsertSelect() {
-		//TODO: check this
-		return true;
-	}
-
-	@Override
 	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		return false;
 	}

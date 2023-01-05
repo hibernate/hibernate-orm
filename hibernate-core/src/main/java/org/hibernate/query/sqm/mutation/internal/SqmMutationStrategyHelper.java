@@ -40,8 +40,10 @@ public class SqmMutationStrategyHelper {
 	}
 
 	/**
-	 * Standard resolution of SqmMutationStrategy to use for a given
-	 * entity hierarchy.
+	 * Standard resolution of {@link SqmMultiTableMutationStrategy} to use for a given entity hierarchy.
+	 *
+	 * @see org.hibernate.dialect.Dialect#getFallbackSqmMutationStrategy
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableMutationStrategy
 	 */
 	public static SqmMultiTableMutationStrategy resolveStrategy(
 			RootClass entityBootDescriptor,
@@ -61,8 +63,10 @@ public class SqmMutationStrategyHelper {
 	}
 
 	/**
-	 * Standard resolution of SqmInsertStrategy to use for a given
-	 * entity hierarchy.
+	 * Standard resolution of {@link SqmMultiTableInsertStrategy} to use for a given entity hierarchy.
+	 *
+	 * @see org.hibernate.dialect.Dialect#getFallbackSqmInsertStrategy
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableInsertStrategy
 	 */
 	public static SqmMultiTableInsertStrategy resolveInsertStrategy(
 			RootClass entityBootDescriptor,

@@ -81,7 +81,8 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 
 	@Override
 	public NClob getReplacement(NClob original, NClob target, SharedSessionContractImplementor session) {
-		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeNClob( original, target, session );
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy()
+				.mergeNClob( original, target, session );
 	}
 
 	@SuppressWarnings("unchecked")

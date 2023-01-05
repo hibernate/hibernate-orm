@@ -869,12 +869,12 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	public String getDropForeignKeyString() {
-		return " drop foreign key ";
+		return "drop foreign key";
 	}
 
 	@Override
 	public String getDropUniqueKeyString() {
-		return " drop index ";
+		return "drop index";
 	}
 
 	@Override

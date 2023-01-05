@@ -96,7 +96,7 @@ public class ForeignKeyDropTest extends BaseUnitTestCase {
 	private boolean checkDropForeignKeyConstraint(String tableName) throws IOException {
 		boolean matches = false;
 		String regex = getDialect().getAlterTableString( tableName );
-		regex += getDialect().getDropForeignKeyString();
+		regex += " " + getDialect().getDropForeignKeyString() + " ";
 
 		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
 			regex += "if exists ";

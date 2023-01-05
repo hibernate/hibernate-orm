@@ -19,7 +19,7 @@ import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.jboss.logging.Logger;
 
 /**
- * Default implementation
+ * Default implementation of {@link SchemaNameResolver}.
  *
  * @author Steve Ebersole
  */

@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Entity
 public class Article implements Serializable {

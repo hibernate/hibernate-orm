@@ -10,7 +10,7 @@ package org.hibernate.dialect;
  * A dialect for Microsoft SQL Server 2005.
  *
  * @author Yoryos Valotasios
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  *
  * @deprecated use {@code SQLServerDialect(9)}
  */

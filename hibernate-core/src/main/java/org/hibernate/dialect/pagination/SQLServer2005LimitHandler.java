@@ -23,7 +23,7 @@ import static java.util.regex.Pattern.compile;
  * A {@link LimitHandler} compatible with SQL Server 2005 and later
  * that uses {@code top()} and {@code rownumber()}.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  * @author Chris Cranford
  * @author Gavin King
  */

@@ -45,7 +45,7 @@ import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  * @author Brett Meyer
  */
 public class OrderByTest extends BaseCoreFunctionalTestCase {

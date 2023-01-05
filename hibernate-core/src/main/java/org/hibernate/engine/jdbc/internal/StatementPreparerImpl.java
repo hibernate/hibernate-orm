@@ -25,7 +25,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
  * Standard implementation of {@link StatementPreparer}.
  *
  * @author Steve Ebersole
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  * @author Brett Meyer
 */
 class StatementPreparerImpl implements StatementPreparer {

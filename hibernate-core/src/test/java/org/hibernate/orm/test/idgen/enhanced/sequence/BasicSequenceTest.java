@@ -24,7 +24,7 @@ import static org.junit.Assert.assertThat;
 
 /**
  * @author Steve Ebersole
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @DomainModel(
 		xmlMappings = {

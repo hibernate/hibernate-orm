@@ -15,7 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Entity
 public class Document implements Serializable {

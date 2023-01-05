@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * Plural annotation for {@link SkipForDialect}.
  * Useful when more than one dialect needs to be skipped because of a different reason.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })

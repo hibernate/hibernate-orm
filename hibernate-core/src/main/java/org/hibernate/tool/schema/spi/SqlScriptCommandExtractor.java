@@ -16,7 +16,7 @@ import org.hibernate.service.ServiceRegistry;
 /**
  * Contract for extracting statements from source/import/init scripts.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  *
  * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_IMPORT_FILES
  * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_LOAD_SCRIPT_SOURCE

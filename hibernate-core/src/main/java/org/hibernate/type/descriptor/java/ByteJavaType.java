@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * Descriptor for {@link Byte} handling.
  *
  * @author Steve Ebersole
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class ByteJavaType extends AbstractClassJavaType<Byte>
 		implements PrimitiveJavaType<Byte>, VersionJavaType<Byte> {

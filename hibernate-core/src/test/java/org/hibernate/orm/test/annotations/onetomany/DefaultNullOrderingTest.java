@@ -26,7 +26,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @TestForIssue(jiraKey = "HHH-465")
 @RequiresDialect(value = H2Dialect.class,

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.mapping.converted.enums;
 import java.io.Serializable;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class UnspecifiedEnumTypeEntity implements Serializable {
 	public static enum E1 { X, Y }

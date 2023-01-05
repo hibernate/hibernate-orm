@@ -17,7 +17,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @TestForIssue( jiraKey = "HHH-2403" )
 @RequiresDialect(value = H2Dialect.class,

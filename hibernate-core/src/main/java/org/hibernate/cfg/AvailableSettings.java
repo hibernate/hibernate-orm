@@ -23,6 +23,9 @@ import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.query.spi.QueryPlan;
 import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -894,6 +897,7 @@ public interface AvailableSettings {
 	 *
 	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this attribute irrelevant
 	 */
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	@Deprecated(since = "6", forRemoval = true)
 	String ARTIFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
 
@@ -1159,6 +1163,7 @@ public interface AvailableSettings {
 	 * @deprecated Will be removed without replacement. See HHH-15631
 	 */
 	@Deprecated(forRemoval = true)
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String USE_REFLECTION_OPTIMIZER = "hibernate.bytecode.use_reflection_optimizer";
 
 	/**
@@ -1408,6 +1413,7 @@ public interface AvailableSettings {
 	 * @deprecated this is only honored for {@code hibernate-infinispan}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String CACHE_KEYS_FACTORY = "hibernate.cache.keys_factory";
 
 	/**
@@ -1685,10 +1691,10 @@ public interface AvailableSettings {
 	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema commands
 	 * should be written to DDL script file, specifies if schema commands should be appended to
 	 * the end of the file rather than written at the beginning of the file.
-	 *
+	 * <p>
 	 * Values are: {@code true} for appending schema commands to the end of the file, {@code false}
 	 * for writing schema commands at the beginning.
-	 *
+	 * <p>
 	 * The default value is {@code true}
 	 */
 	String HBM2DDL_SCRIPTS_CREATE_APPEND = "hibernate.hbm2ddl.schema-generation.script.append";
@@ -2467,6 +2473,7 @@ public interface AvailableSettings {
 	 * no {@code @OrderColumn}.
 	 */
 	@Deprecated( since = "6.0" )
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
 
 	/**
@@ -3091,6 +3098,7 @@ public interface AvailableSettings {
 	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
 	@Deprecated(forRemoval = true)
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String ENHANCER_ENABLE_DIRTY_TRACKING = "hibernate.enhancer.enableDirtyTracking";
 
 	/**
@@ -3098,6 +3106,7 @@ public interface AvailableSettings {
 	 *
 	 * @deprecated Will be removed without replacement. See HHH-15641
 	 */
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	@Deprecated(forRemoval = true)
 	String ENHANCER_ENABLE_LAZY_INITIALIZATION = "hibernate.enhancer.enableLazyInitialization";
 
@@ -3148,7 +3157,7 @@ public interface AvailableSettings {
 	String VALIDATE_XML = "hibernate.validate_xml";
 
 	/**
-	 * Enables processing `hbm.xml` mappings by transforming them to `mapping.xml` and using
+	 * Enables processing {@code hbm.xml} mappings by transforming them to {@code mapping.xml} and using
 	 * that processor.  Default is false, must be opted-into.
 	 *
 	 * @since 6.1
@@ -3156,7 +3165,7 @@ public interface AvailableSettings {
 	String TRANSFORM_HBM_XML = "hibernate.transform_hbm_xml.enabled";
 
 	/**
-	 * How features in a `hbm.xml` file which are not supported for transformation should be handled.
+	 * How features in a {@code hbm.xml} file which are not supported for transformation should be handled.
 	 * <p>
 	 * Default is {@link org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling#ERROR}
 	 *
@@ -3164,4 +3173,31 @@ public interface AvailableSettings {
 	 * @since 6.1
 	 */
 	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
+
+	/**
+	 * Allows creation of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#PERSISTENT persistent}
+	 * temporary tables at application startup to be disabled. By default, table creation is enabled.
+	 */
+	String BULK_ID_STRATEGY_PERSISTENT_TEMPORARY_CREATE_TABLES = PersistentTableStrategy.CREATE_ID_TABLES;
+	/**
+	 * Allows dropping of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#PERSISTENT persistent}
+	 * temporary tables at application shutdown to be disabled. By default, table dropping is enabled.
+	 */
+	String BULK_ID_STRATEGY_PERSISTENT_TEMPORARY_DROP_TABLES = PersistentTableStrategy.DROP_ID_TABLES;
+	/**
+	 * Allows creation of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#GLOBAL global}
+	 * temporary tables at application startup to be disabled. By default, table creation is enabled.
+	 */
+	String BULK_ID_STRATEGY_GLOBAL_TEMPORARY_CREATE_TABLES = GlobalTemporaryTableStrategy.CREATE_ID_TABLES;
+	/**
+	 * Allows dropping of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#GLOBAL global}
+	 * temporary tables at application shutdown to be disabled. By default, table dropping is enabled.
+	 */
+	String BULK_ID_STRATEGY_GLOBAL_TEMPORARY_DROP_TABLES = GlobalTemporaryTableStrategy.DROP_ID_TABLES;
+	/**
+	 * Allows dropping of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#LOCAL local}
+	 * temporary tables at transaction commit to be enabled. By default, table dropping is disabled,
+	 * and the database will drop the temporary tables automatically.
+	 */
+	String BULK_ID_STRATEGY_LOCAL_TEMPORARY_DROP_TABLES = LocalTemporaryTableStrategy.DROP_ID_TABLES;
 }

@@ -48,33 +48,37 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
  * <table>
  * <caption>General configuration parameters</caption>
  * 	 <tr>
- *     <td><b>NAME</b></td>
- *     <td><b>DEFAULT</b></td>
- *     <td><b>DESCRIPTION</b></td>
+ *     <td><b>Parameter name</b></td>
+ *     <td><b>Default value</b></td>
+ *     <td><b>Interpretation</b></td>
  *   </tr>
  *   <tr>
- *     <td>{@link #SEQUENCE_PARAM}</td>
- *     <td>N/A</td>
+ *     <td>{@value #SEQUENCE_PARAM}</td>
+ *     <td></td>
  *     <td>The name of the sequence/table to use to store/retrieve values</td>
  *   </tr>
  *   <tr>
- *     <td>{@link #INITIAL_PARAM}</td>
- *     <td>{@link #DEFAULT_INITIAL_VALUE}</td>
- *     <td>The initial value to be stored for the given segment; the effect in terms of storage varies based on {@link Optimizer} and {@link DatabaseStructure}</td>
+ *     <td>{@value #INITIAL_PARAM}</td>
+ *     <td>{@value #DEFAULT_INITIAL_VALUE}</td>
+ *     <td>The initial value to be stored for the given segment;
+ *         the effect in terms of storage varies based on {@link Optimizer}
+ *         and {@link DatabaseStructure}</td>
  *   </tr>
  *   <tr>
- *     <td>{@link #INCREMENT_PARAM}</td>
- *     <td>{@link #DEFAULT_INCREMENT_SIZE}</td>
- *     <td>The increment size for the underlying segment; the effect in terms of storage varies based on {@link Optimizer} and {@link DatabaseStructure}</td>
+ *     <td>{@value #INCREMENT_PARAM}</td>
+ *     <td>{@value #DEFAULT_INCREMENT_SIZE}</td>
+ *     <td>The increment size for the underlying segment;
+ *         the effect in terms of storage varies based on {@link Optimizer}
+ *         and {@link DatabaseStructure}</td>
  *   </tr>
  *   <tr>
- *     <td>{@link #OPT_PARAM}</td>
- *     <td><i>depends on defined increment size</i></td>
+ *     <td>{@value #OPT_PARAM}</td>
+ *     <td><em>depends on defined increment size</em></td>
  *     <td>Allows explicit definition of which optimization strategy to use</td>
  *   </tr>
  *   <tr>
- *     <td>{@link #FORCE_TBL_PARAM}</td>
- *     <td><b><i>false</i></b></td>
+ *     <td>{@value #FORCE_TBL_PARAM}</td>
+ *     <td>{@code false}</td>
  *     <td>Allows explicit definition of which optimization strategy to use</td>
  *   </tr>
  * </table>
@@ -83,19 +87,19 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
  * <table>
  * <caption>Table configuration parameters</caption>
  * 	 <tr>
- *     <td><b>NAME</b></td>
- *     <td><b>DEFAULT</b></td>
- *     <td><b>DESCRIPTION</b></td>
+ *     <td><b>Parameter name</b></td>
+ *     <td><b>Default value</b></td>
+ *     <td><b>Interpretation</b></td>
  *   </tr>
  *   <tr>
- *     <td>{@link #VALUE_COLUMN_PARAM}</td>
- *     <td>{@link #DEF_VALUE_COLUMN}</td>
+ *     <td>{@value #VALUE_COLUMN_PARAM}</td>
+ *     <td>{@value #DEF_VALUE_COLUMN}</td>
  *     <td>The name of column which holds the sequence value for the given segment</td>
  *   </tr>
  * </table>
  *
  * @author Steve Ebersole
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class SequenceStyleGenerator
 		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
@@ -134,7 +138,8 @@ public class SequenceStyleGenerator
 	// table-specific parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Indicates the name of the column holding the identifier values.  The default value is {@link #DEF_VALUE_COLUMN}
+	 * Indicates the name of the column holding the identifier values.
+	 * The default value is {@value #DEF_VALUE_COLUMN}
 	 */
 	public static final String VALUE_COLUMN_PARAM = "value_column";
 

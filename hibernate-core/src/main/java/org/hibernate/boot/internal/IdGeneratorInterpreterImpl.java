@@ -30,7 +30,7 @@ import jakarta.persistence.TableGenerator;
 public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterpreter {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( IdGeneratorInterpreterImpl.class );
 
-	private IdGeneratorStrategyInterpreter fallbackInterpreter = FallbackInterpreter.INSTANCE;
+	private final IdGeneratorStrategyInterpreter fallbackInterpreter = FallbackInterpreter.INSTANCE;
 	private ArrayList<IdGeneratorStrategyInterpreter> delegates;
 
 	@Override
@@ -88,16 +88,13 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 		@Override
 		public String determineGeneratorName(GenerationType generationType, GeneratorNameDeterminationContext context) {
 			switch ( generationType ) {
-				case IDENTITY: {
+				case IDENTITY:
 					return "identity";
-				}
-				case SEQUENCE: {
+				case SEQUENCE:
 					return SequenceStyleGenerator.class.getName();
-				}
-				case TABLE: {
+				case TABLE:
 					return org.hibernate.id.enhanced.TableGenerator.class.getName();
-				}
-				case AUTO: {
+				case AUTO:
 					if ( "increment".equalsIgnoreCase( context.getGeneratedValueGeneratorName() ) ) {
 						return IncrementGenerator.class.getName();
 					}
@@ -108,14 +105,12 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 					}
 
 					return SequenceStyleGenerator.class.getName();
-				}
-				default: {
+				default:
 					// UNKNOWN
 					if ( "UUID".equals( generationType.name() ) ) {
 						return UUIDGenerator.class.getName();
 					}
 					throw new UnsupportedOperationException( "Unsupported generation type:" + generationType );
-				}
 			}
 		}
 

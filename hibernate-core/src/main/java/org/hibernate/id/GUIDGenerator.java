@@ -17,7 +17,9 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * Generates {@code string} values using the SQL Server NEWID() function.
+ * The legacy id generator named {@code guid}.
+ * <p>
+ * Generates {@code string} values using the SQL Server {@code NEWID()} function.
  *
  * @author Joseph Fifield
  *

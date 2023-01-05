@@ -23,7 +23,7 @@ import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPrope
  * key of the entity, either:
  * <ul>
  * <li>the mapped {@linkplain org.hibernate.annotations.NaturalId} of the entity, or
- * <li>a property specified using the parameter named {@code "key"}.
+ * <li>a property specified using the parameter named {@value #KEY}.
  * </ul>
  * <p>
  * The second approach is provided for backward compatibility with older versions of
@@ -74,14 +74,22 @@ import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPrope
  * @see org.hibernate.id.insert.UniqueKeySelectingDelegate
  *
  * @author Gavin King
+ *
+ * @implNote This also implements the {@code select} generation type in {@code hbm.xml} mappings.
  */
 public class SelectGenerator
 		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, StandardGenerator {
+
+	/**
+	 * The property specifying the unique key name.
+	 */
+	public static final String KEY = "key";
+
 	private String uniqueKeyPropertyName;
 
 	@Override
 	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {
-		uniqueKeyPropertyName = parameters.getProperty( "key" );
+		uniqueKeyPropertyName = parameters.getProperty( KEY );
 	}
 
 	@Override

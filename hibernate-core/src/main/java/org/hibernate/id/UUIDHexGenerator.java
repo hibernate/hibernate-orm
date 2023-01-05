@@ -12,24 +12,33 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+
 /**
- * <b>uuid</b>
+ * The legacy id generator named {@code uuid} / {@code uuid.hex}.
  * <p>
- * A {@code UUIDGenerator} that returns a string of length 32,
+ * A {@link UUIDGenerator} that returns a string of length 32,
  * This string will consist of only hex digits. Optionally,
  * the string may be generated with separators between each
  * component of the UUID.
  * <p>
- * Mapping parameters supported: separator.
+ * Mapping parameter supported: {@value #SEPARATOR}.
  *
  * @author Gavin King
+ *
+ * @deprecated This remains around as an implementation detail of {@code hbm.xml} mappings.
  */
+@Deprecated(since = "6")
 public class UUIDHexGenerator extends AbstractUUIDGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDHexGenerator.class );
+
+	/**
+	 * The configuration parameter specifying the separator to use.
+	 */
+	public static final String SEPARATOR = "separator";
 
 	private static boolean WARNED;
 
@@ -45,7 +54,7 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator {
 
 	@Override
 	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
-		sep = ConfigurationHelper.getString( "separator", parameters, "" );
+		sep = getString( SEPARATOR, parameters, "" );
 	}
 
 	@Override

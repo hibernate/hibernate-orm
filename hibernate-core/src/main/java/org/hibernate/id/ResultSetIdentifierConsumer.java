@@ -18,7 +18,7 @@ import java.sql.ResultSet;
  *
  * @deprecated this interface is unnecessary and no longer used
  */
-@Deprecated(since = "6.2")
+@Deprecated(since = "6.2", forRemoval = true)
 public interface ResultSetIdentifierConsumer {
 	/**
 	 * Given a result set, consume/extract the necessary values and construct an

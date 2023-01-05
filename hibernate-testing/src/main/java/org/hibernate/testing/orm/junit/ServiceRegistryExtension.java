@@ -26,6 +26,7 @@ import org.hibernate.service.spi.ServiceContributor;
 
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService.JavaServiceDescriptor;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -190,7 +191,7 @@ public class ServiceRegistryExtension
 		@Override
 		public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder ssrb) {
 			// set some baseline test settings
-			ssrb.applySetting( AvailableSettings.STATEMENT_INSPECTOR, org.hibernate.testing.jdbc.SQLStatementInspector.class );
+			ssrb.applySetting( AvailableSettings.STATEMENT_INSPECTOR, SQLStatementInspector.class );
 			ssrb.applySetting( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 			ssrb.applySetting( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 			ssrb.applySetting( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );

@@ -21,7 +21,7 @@ public interface SchemaNameResolver {
 	 * Given a JDBC {@link Connection}, resolve the name of the schema (if one) to which it connects.
 	 *
 	 * @param connection The JDBC connection
-	 * @param dialect The Dialect
+	 * @param dialect The {@link Dialect}
 	 *
 	 * @return The name of the schema (may be null).
 	 */

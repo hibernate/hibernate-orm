@@ -7,25 +7,25 @@
 package org.hibernate.query.sqm;
 
 /**
- * The kind of fetch to use for the FETCH clause.
+ * The kind of fetch to use for the {@code FETCH} clause.
  *
  * @author Christian Beikov
  */
 public enum FetchClauseType {
 	/**
-	 * Exact row count like for LIMIT clause or FETCH FIRST x ROWS ONLY.
+	 * Exact row count like for {@code LIMIT} clause or {@code FETCH FIRST n ROWS ONLY}.
 	 */
 	ROWS_ONLY,
 	/**
-	 * Also fetches ties if the last value is not unique FETCH FIRST x ROWS WITH TIES.
+	 * Also fetches ties if the last value is not unique {@code FETCH FIRST n ROWS WITH TIES}.
 	 */
 	ROWS_WITH_TIES,
 	/**
-	 * Row count in percent FETCH FIRST x PERCENT ROWS ONLY.
+	 * Row count in percent {@code FETCH FIRST n PERCENT ROWS ONLY}.
 	 */
 	PERCENT_ONLY,
 	/**
-	 * Also fetches ties if the last value is not unique FETCH FIRST x PERCENT ROWS WITH TIES.
+	 * Also fetches ties if the last value is not unique {@code FETCH FIRST n PERCENT ROWS WITH TIES}.
 	 */
 	PERCENT_WITH_TIES;
 }

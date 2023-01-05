@@ -20,6 +20,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.Test;
 
 /**
@@ -36,12 +37,23 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void jdbc() {
+		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
+				// "jdbc" is the default, but for explicitness
+				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc")
+				.build();
+
+		/*
 		//tag::transactions-api-jdbc-example[]
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				// "jdbc" is the default, but for explicitness
 				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc")
 				.build();
 
+		//end::transactions-api-jdbc-example[]
+        */
+
+		//tag::transactions-api-jdbc-example[]
 		Metadata metadata = new MetadataSources(serviceRegistry)
 				.addAnnotatedClass(Customer.class)
 				.getMetadataBuilder()
@@ -81,12 +93,23 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void cmt() {
+		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
+				// "jdbc" is the default, but for explicitness
+				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
+				.build();
+
+		/*
 		//tag::transactions-api-cmt-example[]
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				// "jdbc" is the default, but for explicitness
 				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
 				.build();
 
+		//end::transactions-api-cmt-example[]
+		*/
+
+		//tag::transactions-api-cmt-example[]
 		Metadata metadata = new MetadataSources(serviceRegistry)
 				.addAnnotatedClass(Customer.class)
 				.getMetadataBuilder()
@@ -131,12 +154,23 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void bmt() {
+		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
+				// "jdbc" is the default, but for explicitness
+				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
+				.build();
+
+		/*
 		//tag::transactions-api-bmt-example[]
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				// "jdbc" is the default, but for explicitness
 				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
 				.build();
 
+		//end::transactions-api-bmt-example[]
+		*/
+
+		//tag::transactions-api-bmt-example[]
 		Metadata metadata = new MetadataSources(serviceRegistry)
 				.addAnnotatedClass(Customer.class)
 				.getMetadataBuilder()

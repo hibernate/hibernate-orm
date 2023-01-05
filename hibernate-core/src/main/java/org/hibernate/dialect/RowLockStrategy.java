@@ -7,7 +7,7 @@
 package org.hibernate.dialect;
 
 /**
- * The strategy for rendering which row to lock with the FOR UPDATE OF clause.
+ * The strategy for rendering which row to lock with the {@code FOR UPDATE OF} clause.
  *
  * @author Christian Beikov
  */

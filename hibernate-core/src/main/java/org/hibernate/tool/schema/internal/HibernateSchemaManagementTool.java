@@ -67,7 +67,8 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 
 /**
- * The standard Hibernate implementation for performing schema management.
+ * The standard Hibernate implementation of {@link SchemaManagementTool}
+ * for performing schema management.
  *
  * @author Steve Ebersole
  */

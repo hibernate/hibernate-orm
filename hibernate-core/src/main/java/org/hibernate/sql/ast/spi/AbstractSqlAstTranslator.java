@@ -6300,9 +6300,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {
-		final boolean useSelectionPosition = dialect.supportsOrdinalSelectItemReference();
-
-		if ( useSelectionPosition ) {
+		if ( dialect.supportsOrdinalSelectItemReference() ) {
 			appendSql( expression.getSelection().getJdbcResultSetIndex() );
 		}
 		else {

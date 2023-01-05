@@ -73,8 +73,8 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 
 	@Override
 	public Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
-		return session.getJdbcServices().getJdbcEnvironment().getDialect()
-				.getLobMergeStrategy().mergeClob( original, target, session );
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy()
+				.mergeClob( original, target, session );
 	}
 
 	@SuppressWarnings("unchecked")

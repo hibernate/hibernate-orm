@@ -451,6 +451,7 @@ oracle_setup() {
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
+set timing on
 -- Increasing redo logs (but limit to 200M because of TMPFS and move them into the TMPFS folder)
 alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo04.log' size 100M reuse;
 alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo05.log' size 100M reuse;
@@ -490,7 +491,7 @@ alter system set db_cache_size=160M sid='*' scope=both;
 alter system set pga_aggregate_target=300M sid='*' scope=both;
 
 -- Restart the database (abort to not wait for S001 process to die)
-SHUTDOWN ABORT;
+SHUTDOWN immediate;
 STARTUP MOUNT;
 ALTER DATABASE OPEN;
 
@@ -500,7 +501,7 @@ alter session set container=xepdb1;
 -- Modify XEPDB1 datafiles and tablespaces
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/system01.dbf' resize 320M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/sysaux01.dbf' resize 360M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 300M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 400M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' autoextend on next 16M;
 -- alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' resize 400M;
 alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' autoextend on next 16M;
@@ -512,6 +513,11 @@ alter tablespace SYSAUX nologging;
 
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
+
+!cat /proc/meminfo
+!cat /proc/cpuinfo
+!cat /proc/swaps
+
 EOF\""
 }
 

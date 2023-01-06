@@ -31,6 +31,9 @@ import org.hibernate.metamodel.spi.ValueAccess;
  * regular embeddable class} with the same logical structure as the
  * {@linkplain #returnedClass() value type managed by the custom type}.
  * <p>
+ * Properties of this embeddable class are sorted alphabetically by
+ * name, and assigned an index based on this ordering.
+ * <p>
  * For example, if we were to implement a {@code CompositeUserType}
  * for a {@code MonetaryAmount} class, we would also provide a
  * {@code MonetaryAmountEmbeddable} class with a field for each
@@ -39,8 +42,91 @@ import org.hibernate.metamodel.spi.ValueAccess;
  * and is never referenced in any entity class. It is a source of
  * metadata only.
  * <p>
- * Properties of this embeddable class are sorted alphabetically by
- * name, and assigned an index based on this ordering.
+ * Here's a full implementation of {@code CompositeUserType} for an
+ * immutable {@code MonetaryAmount} class:
+ * <pre>
+ * public class MonetaryAmountUserType implements CompositeUserType&lt;MonetaryAmount&gt; {
+ *
+ *    &#64;Override
+ *    public Object getPropertyValue(MonetaryAmount component, int property) {
+ *         switch ( property ) {
+ *             case 0:
+ *                 return component.getCurrency();
+ *             case 1:
+ *                 return component.getValue();
+ *         }
+ *         throw new HibernateException( "Illegal property index: " + property );
+ *    }
+ *
+ *    &#64;Override
+ *    public MonetaryAmount instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+ *         final BigDecimal value = valueAccess.getValue(0, BigDecimal.class);
+ *         final Currency currency = valueAccess.getValue(1, Currency.class);
+ *
+ *         if ( value == null && currency == null ) {
+ *             return null;
+ *         }
+ *         return new MonetaryAmount( value, currency );
+ *    }
+ *
+ *    &#64;Override
+ *    public Class embeddable() {
+ *         return MonetaryAmountEmbeddable.class;
+ *    }
+ *
+ *    &#64;Override
+ *    public Class<MonetaryAmount> returnedClass() {
+ *         return MonetaryAmount.class;
+ *    }
+ *
+ *    &#64;Override
+ *    public boolean isMutable() {
+ *         return false;
+ *    }
+ *
+ *    &#64;Override
+ *    public MonetaryAmount deepCopy(MonetaryAmount value) {
+ *         return value; // MonetaryAmount is immutable
+ *    }
+ *
+ *    &#64;Override
+ *    public boolean equals(MonetaryAmount x, MonetaryAmount y) {
+ *         if ( x == y ) {
+ *             return true;
+ *        }
+ *         if ( x == null || y == null ) {
+ *             return false;
+ *        }
+ *         return x.equals( y );
+ *    }
+ *
+ *     &#64;Override
+ *     public Serializable disassemble(MonetaryAmount value) {
+ *         return value;
+ *     }
+ *
+ *     &#64;Override
+ *     public MonetaryAmount assemble(Serializable cached, Object owner) {
+ *         return (MonetaryAmount) cached;
+ *     }
+ *
+ *     &#64;Override
+ *     public MonetaryAmount replace(MonetaryAmount original, MonetaryAmount target, Object owner) {
+ *         return original;
+ *     }
+ *
+ *     &#64;Override
+ *     public int hashCode(MonetaryAmount x) throws HibernateException {
+ *         return x.hashCode();
+ *     }
+ *
+ *     // the embeddable class which acts as a source of metadata
+ *     public static class MonetaryAmountEmbeddable {
+ *         private BigDecimal value;
+ *         private Currency currency;
+ *     }
+ * }
+ * </pre>
  * <p>
  * Every implementor of {@code CompositeUserType} must be immutable
  * and must declare a public default constructor.

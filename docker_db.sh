@@ -451,10 +451,10 @@ oracle_setup() {
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
--- Increasing redo logs (but limit because of TMPFS)
-alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/redo04.log' size 200M reuse;
-alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/redo05.log' size 200M reuse;
-alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/redo06.log' size 200M reuse;
+-- Increasing redo logs (but limit to 200M because of TMPFS and move them into the TMPFS folder)
+alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo04.log' size 200M reuse;
+alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo05.log' size 200M reuse;
+alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo06.log' size 200M reuse;
 alter system switch logfile;
 alter system switch logfile;
 alter system switch logfile;
@@ -482,6 +482,7 @@ alter system set statistics_level=BASIC sid='*' scope=spfile;
 
 -- Further reduce stress on undo tablespace
 alter system set undo_retention=1 sid='*' scope=spfile;
+
 -- Reduce database buffer cache
 alter system set db_cache_size=160M sid='*' scope=both;
 
@@ -496,9 +497,9 @@ alter session set container=xepdb1;
 -- Modify XEPDB1 datafiles and tablespaces
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/system01.dbf' resize 320M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/sysaux01.dbf' resize 360M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 400M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 300M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' autoextend on next 16M;
-alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' resize 400M;
+-- alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' resize 400M;
 alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' autoextend on next 16M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/users01.dbf' resize 100M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/users01.dbf' autoextend on next 16M;

@@ -19,7 +19,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Registers a custom {@linkplain UserType user type} implementation
- * to be used by default for all references to a particular basic type.
+ * to be used by default for all references to a particular class of
+ * {@linkplain jakarta.persistence.Basic basic type}.
  * <p>
  * May be overridden for a specific entity field or property using
  * {@link Type @Type}.
@@ -36,6 +37,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 @Repeatable( TypeRegistrations.class )
 public @interface TypeRegistration {
+	/**
+	 * The basic type described by the {@link #userType}.
+	 */
 	Class<?> basicClass();
+
+	/**
+	 * The {@link UserType}.
+	 */
 	Class<? extends UserType<?>> userType();
 }

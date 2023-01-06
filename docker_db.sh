@@ -451,10 +451,10 @@ oracle_setup() {
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
--- Increasing redo logs
-alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/redo04.log' size 500M reuse;
-alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/redo05.log' size 500M reuse;
-alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/redo06.log' size 500M reuse;
+-- Increasing redo logs (but limit because of TMPFS)
+alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/redo04.log' size 200M reuse;
+alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/redo05.log' size 200M reuse;
+alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/redo06.log' size 200M reuse;
 alter system switch logfile;
 alter system switch logfile;
 alter system switch logfile;
@@ -480,8 +480,13 @@ alter system set recyclebin=OFF sid='*' SCOPE=SPFILE;
 alter system set sga_target=0m sid='*' scope=both;
 alter system set statistics_level=BASIC sid='*' scope=spfile;
 
--- Restart the database
-SHUTDOWN IMMEDIATE;
+-- Further reduce stress on undo tablespace
+alter system set undo_retention=1 sid='*' scope=spfile;
+-- Reduce database buffer cache
+alter system set db_cache_size=160M sid='*' scope=both;
+
+-- Restart the database (abort to not wait for S001 process to die)
+SHUTDOWN ABORT;
 STARTUP MOUNT;
 ALTER DATABASE OPEN;
 
@@ -605,12 +610,17 @@ oracle_21() {
     $CONTAINER_CLI rm -f oracle || true
     # We need to use the defaults
     # SYSTEM/Oracle18
-    $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+    sudo mkdir -p ./tmpfs
+    sudo mount -t tmpfs -o size=1800M tmpfs ./tmpfs
+    sudo chown `id -nu`:`id -ng` ./tmpfs
+    sudo rm -fr ./tmpfs/*
+    #$CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+    $CONTAINER_CLI run --name oracle -d --mount=type=bind,src=./tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,relabel=shared,U=true -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
        --health-cmd healthcheck.sh \
        --health-interval 5s \
        --health-timeout 5s \
        --health-retries 10 \
-       docker.io/gvenzl/oracle-xe:21.3.0-full
+       docker.io/loiclefevre/oracle-xe:21.3.0-full
     oracle_setup
 }
 

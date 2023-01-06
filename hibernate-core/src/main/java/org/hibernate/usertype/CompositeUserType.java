@@ -70,12 +70,12 @@ import org.hibernate.metamodel.spi.ValueAccess;
  *    }
  *
  *    &#64;Override
- *    public Class embeddable() {
+ *    public Class&lt;MonetaryAmountEmbeddable&gt; embeddable() {
  *         return MonetaryAmountEmbeddable.class;
  *    }
  *
  *    &#64;Override
- *    public Class<MonetaryAmount> returnedClass() {
+ *    public Class&lt;MonetaryAmount&gt; returnedClass() {
  *         return MonetaryAmount.class;
  *    }
  *

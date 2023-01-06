@@ -588,7 +588,7 @@ public class BootstrapTest {
 
             MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
 
-            metadataBuilder.applyBasicType(BitSetUserType.INSTANCE, "bitset");
+            metadataBuilder.applyBasicType(new BitSetUserType(), "bitset");
             //end::basic-custom-type-register-UserType-example[]
         }
         catch (Exception ignore) {

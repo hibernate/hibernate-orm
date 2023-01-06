@@ -94,11 +94,5 @@ public class BitSetUserType implements UserType<BitSet> {
     public BitSet assemble(Serializable cached, Object owner)  {
         return deepCopy((BitSet) cached);
     }
-
-    @Override
-    public BitSet replace(BitSet original, BitSet target, Object owner)
-			throws HibernateException {
-        return deepCopy(original);
-    }
 }
 //end::basic-custom-type-BitSetUserType-example[]

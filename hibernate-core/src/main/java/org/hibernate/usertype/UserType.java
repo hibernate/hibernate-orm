@@ -102,11 +102,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  *     public Period assemble(Serializable cached, Object owner) {
  *         return (Period) cached; //Period is immutable
  *     }
- *
- *     &#64;Override
- *     public Period replace(Period detached, Period managed, Object owner) {
- *         return detached;
- *     }
  * }
  * </pre>
  * <p>
@@ -395,7 +390,9 @@ public interface UserType<J> {
 	 *
 	 * @see org.hibernate.Session#merge(Object)
 	 */
-	J replace(J detached, J managed, Object owner);
+	default J replace(J detached, J managed, Object owner) {
+		return deepCopy( detached );
+	}
 
 	/**
 	 * The default column length, for use in DDL generation.

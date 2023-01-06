@@ -22,7 +22,6 @@ import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -48,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				OneToManyBidirectionalTest.Item.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true"),
@@ -84,7 +83,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testFetchingSameAssociationTwice(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					Statistics statistics = session.getSessionFactory().getStatistics();
@@ -135,7 +134,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testRetrievingItem(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					Statistics statistics = session.getSessionFactory().getStatistics();
@@ -356,7 +355,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testRetrievingOrder(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
 			Statistics statistics = session.getSessionFactory().getStatistics();
 			statistics.clear();
@@ -591,7 +590,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testItemFetchJoin(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
 			Statistics statistics = session.getSessionFactory().getStatistics();
 			statistics.clear();
@@ -624,7 +623,7 @@ public class OneToManyBidirectionalTest {
 
 	@Test
 	public void testItemJoinWithFetchJoin(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		Assertions.assertThrows( IllegalArgumentException.class, () ->
 				scope.inTransaction( session -> {
 					Statistics statistics = session.getSessionFactory().getStatistics();

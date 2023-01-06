@@ -16,7 +16,6 @@ import java.util.Objects;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.internal.util.collections.CollectionHelper;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Index;
@@ -26,6 +25,7 @@ import jakarta.persistence.UniqueConstraint;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * Models the definition of an {@linkplain org.hibernate.id.IdentityGenerator identifier generator}
@@ -47,7 +47,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 			final Map<String, String> parameters) {
 		this.name = name;
 		this.strategy = strategy;
-		this.parameters = CollectionHelper.isEmpty( parameters ) ? emptyMap() : unmodifiableMap( parameters );
+		this.parameters = isEmpty( parameters ) ? emptyMap() : unmodifiableMap( parameters );
 	}
 
 	public IdentifierGeneratorDefinition(

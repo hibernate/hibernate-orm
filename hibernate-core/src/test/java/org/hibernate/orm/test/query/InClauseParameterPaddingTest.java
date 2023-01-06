@@ -12,11 +12,9 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,12 +34,7 @@ import static org.junit.Assert.assertTrue;
 				@Setting(name = AvailableSettings.USE_SQL_COMMENTS, value = "true"),
 				@Setting(name = AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, value = "true")
 		},
-		settingProviders = {
-				@SettingProvider(
-						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = DefaultSQLStatementInspectorSettingProvider.class
-				)
-		}
+		useCollectingStatementInspector = true
 )
 public class InClauseParameterPaddingTest {
 
@@ -76,7 +69,7 @@ public class InClauseParameterPaddingTest {
 			EntityManagerFactoryScope scope,
 			String expectedInClause,
 			Integer... ids) {
-		final SQLStatementInspector sqlStatementInterceptor = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 
 		scope.inTransaction( entityManager -> {

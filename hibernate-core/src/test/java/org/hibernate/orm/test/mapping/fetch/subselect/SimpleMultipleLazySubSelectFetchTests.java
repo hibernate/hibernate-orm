@@ -44,12 +44,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 		SimpleMultipleLazySubSelectFetchTests.Thing.class,
 		SimpleMultipleLazySubSelectFetchTests.Trinket.class,
 })
-@SessionFactory( statementInspectorClass = SQLStatementInspector.class )
+@SessionFactory( useCollectingStatementInspector = true )
 public class SimpleMultipleLazySubSelectFetchTests {
 
 	@Test
 	public void smokeTest(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

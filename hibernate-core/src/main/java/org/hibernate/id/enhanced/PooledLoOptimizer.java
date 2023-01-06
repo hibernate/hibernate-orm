@@ -16,8 +16,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 
 /**
- * Variation of {@link PooledOptimizer} which interprets the incoming database value as the lo value, rather than
- * the hi value.
+ * Variation of {@link PooledOptimizer} which interprets the incoming database
+ * value as the lo value, rather than the hi value.
  *
  * @author Steve Ebersole
  *
@@ -39,12 +39,12 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 	}
 
 	/**
-	 * Constructs a PooledLoOptimizer.
+	 * Constructs a {@code PooledLoOptimizer}.
 	 *
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public PooledLoOptimizer(Class returnClass, int incrementSize) {
+	public PooledLoOptimizer(Class<?> returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );

@@ -16,7 +16,7 @@ import static java.util.regex.Pattern.compile;
 /**
  * Handler not supporting query LIMIT clause. JDBC API is used to set maximum number of returned rows.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class NoopLimitHandler extends AbstractLimitHandler {
 

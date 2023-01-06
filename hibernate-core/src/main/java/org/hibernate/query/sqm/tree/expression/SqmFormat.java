@@ -15,7 +15,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
- * Effectively a query-literal but we want to handle it specially in the SQM -> SQL AST conversion
+ * Effectively a query-literal but we want to handle it specially in the SQM to SQL AST conversion
  *
  * @author Gavin King
  */

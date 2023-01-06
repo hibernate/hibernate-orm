@@ -17,15 +17,14 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 
 /**
- * Optimizer which uses a pool of values, storing the next low value of the
- * range in the database.
+ * Optimizer which uses a pool of values, storing the next low value of the range
+ * in the database.
  * <p>
- * Note that this optimizer works essentially the same as the
- * {@link HiLoOptimizer} except that here the bucket ranges are actually
- * encoded into the database structures.
+ * This optimizer works essentially the same as the {@link HiLoOptimizer}, except
+ * that here the bucket ranges are actually encoded into the database structures.
  * <p>
- * Note if you prefer that the database value be interpreted as the bottom end of our current range,
- * then use the {@link PooledLoOptimizer} strategy
+ * If you prefer that the database value be interpreted as the bottom end of our
+ * current range, then use the {@link PooledLoOptimizer} strategy.
  *
  * @author Steve Ebersole
  *
@@ -45,12 +44,12 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 	private long initialValue = -1;
 
 	/**
-	 * Constructs a PooledOptimizer
+	 * Constructs a {@code PooledOptimizer}
 	 *
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public PooledOptimizer(Class returnClass, int incrementSize) {
+	public PooledOptimizer(Class<?> returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );

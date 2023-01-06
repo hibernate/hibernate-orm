@@ -94,7 +94,7 @@ public class SubselectFetchCollectionFromBatchTest {
 			return new EmployeeGroup[] { group1, group2 };
 		});
 
-		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (s) -> {

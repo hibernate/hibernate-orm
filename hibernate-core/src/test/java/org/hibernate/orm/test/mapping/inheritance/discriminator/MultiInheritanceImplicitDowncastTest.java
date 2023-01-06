@@ -80,7 +80,7 @@ import jakarta.persistence.OrderColumn;
 				MultiInheritanceImplicitDowncastTest.PolymorphicSub1.class,
 				MultiInheritanceImplicitDowncastTest.PolymorphicSub2.class
 		})
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class MultiInheritanceImplicitDowncastTest {
 
 	@Test
@@ -117,7 +117,7 @@ public class MultiInheritanceImplicitDowncastTest {
 	}
 
 	private void testMultiJoinAddition(SessionFactoryScope scope, String joinColumnBase, String hql) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				s -> {
 					sqlStatementInterceptor.clear();

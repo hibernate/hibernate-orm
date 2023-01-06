@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				Key.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class OneToManyTest {
 	public static final String CARD_ID = "cardId";
 	public static final String CARD_FIELD_ID = "cardFieldId";
@@ -81,7 +81,7 @@ public class OneToManyTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

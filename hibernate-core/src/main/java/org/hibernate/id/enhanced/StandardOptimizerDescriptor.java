@@ -17,31 +17,32 @@ import org.jboss.logging.Logger;
  */
 public enum StandardOptimizerDescriptor {
 	/**
-	 * Describes the optimizer for no optimization
+	 * Describes the optimizer for no optimization.
 	 */
 	NONE( "none", NoopOptimizer.class ),
 	/**
-	 * Describes the optimizer for using a custom "hilo" algorithm optimization
+	 * Describes the optimizer for using a custom "hilo" algorithm optimization.
 	 */
 	HILO( "hilo", HiLoOptimizer.class ),
 	/**
-	 * Describes the optimizer for using a custom "hilo" algorithm optimization, following the legacy
-	 * Hibernate hilo algorithm
+	 * Describes the optimizer for using a custom "hilo" algorithm optimization, following the
+	 * legacy Hibernate hilo algorithm.
 	 */
 	LEGACY_HILO( "legacy-hilo", LegacyHiLoAlgorithmOptimizer.class ),
 	/**
-	 * Describes the optimizer for use with tables/sequences that store the chunk information.  Here, specifically the
-	 * hi value is stored in the database.
+	 * Describes the optimizer for use with tables/sequences that store the chunk information.
+	 * Here, specifically the hi value is stored in the database.
 	 */
 	POOLED( "pooled", PooledOptimizer.class, true ),
 	/**
-	 * Describes the optimizer for use with tables/sequences that store the chunk information.  Here, specifically the
-	 * lo value is stored in the database.
+	 * Describes the optimizer for use with tables/sequences that store the chunk information.
+	 * Here, specifically the lo value is stored in the database.
 	 */
 	POOLED_LO( "pooled-lo", PooledLoOptimizer.class, true ),
 	/**
-	 * Describes the optimizer for use with tables/sequences that store the chunk information.  Here, specifically the
-	 * lo value is stored in the database and ThreadLocal used to cache the generation state.
+	 * Describes the optimizer for use with tables/sequences that store the chunk information.
+	 * Here, specifically the lo value is stored in the database and ThreadLocal used to cache
+	 * the generation state.
 	 */
 	POOLED_LOTL( "pooled-lotl", PooledLoThreadLocalOptimizer.class, true );
 
@@ -78,8 +79,9 @@ public enum StandardOptimizerDescriptor {
 	 *
 	 * @param externalName The external name
 	 *
-	 * @return The corresponding enum value; if no external name is supplied, {@link #NONE} is returned; if an
-	 * unrecognized external name is supplied, {@code null} is returned
+	 * @return The corresponding enum value; if no external name is supplied,
+	 * {@link #NONE} is returned; if an unrecognized external name is supplied,
+	 * {@code null} is returned
 	 */
 	public static StandardOptimizerDescriptor fromExternalName(String externalName) {
 		if ( StringHelper.isEmpty( externalName ) ) {

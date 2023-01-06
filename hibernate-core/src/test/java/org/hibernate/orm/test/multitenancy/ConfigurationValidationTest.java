@@ -20,7 +20,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @TestForIssue(jiraKey = "HHH-7311")
 public class ConfigurationValidationTest extends BaseUnitTestCase {

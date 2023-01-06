@@ -18,7 +18,7 @@ import jakarta.persistence.OneToMany;
 /**
  * Entity used to test {@code NULL} values ordering in SQL {@code ORDER BY} clause.
  * Implementation note: By default H2 places {@code NULL} values first.
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Entity
 public class Zoo implements Serializable {

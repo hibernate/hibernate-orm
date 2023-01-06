@@ -46,7 +46,7 @@ import static org.junit.Assert.assertFalse;
 				NaturalIdDereferenceTest.BookRefRef.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class NaturalIdDereferenceTest {
 
 	@BeforeEach
@@ -80,7 +80,7 @@ public class NaturalIdDereferenceTest {
 
 	@Test
 	public void naturalIdDereferenceTest(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -95,7 +95,7 @@ public class NaturalIdDereferenceTest {
 
 	@Test
 	public void normalIdDereferenceFromAlias(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -110,7 +110,7 @@ public class NaturalIdDereferenceTest {
 
 	@Test
 	public void naturalIdDereferenceFromAlias(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -125,7 +125,7 @@ public class NaturalIdDereferenceTest {
 
 	@Test
 	public void normalIdDereferenceFromImplicitJoin(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -139,7 +139,7 @@ public class NaturalIdDereferenceTest {
 
 	@Test
 	public void naturalIdDereferenceFromImplicitJoin(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -158,7 +158,7 @@ public class NaturalIdDereferenceTest {
 	 */
 	@Test
 	public void nestedNaturalIdDereferenceFromImplicitJoin(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -176,7 +176,7 @@ public class NaturalIdDereferenceTest {
 	 */
 	@Test
 	public void nestedNaturalIdDereferenceFromImplicitJoin2(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -190,7 +190,7 @@ public class NaturalIdDereferenceTest {
 
 	@Test
 	public void doNotDereferenceNaturalIdIfIsReferenceToPrimaryKey(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -204,7 +204,7 @@ public class NaturalIdDereferenceTest {
 
 	@Test
 	public void selectedEntityIsNotDereferencedForPrimaryKey(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -229,7 +229,7 @@ public class NaturalIdDereferenceTest {
 	 */
 	@Test
 	public void selectedEntityIsNotDereferencedForNaturalId(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -249,7 +249,7 @@ public class NaturalIdDereferenceTest {
 	 */
 	@Test
 	public void dereferenceNaturalIdInJoin(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -273,7 +273,7 @@ public class NaturalIdDereferenceTest {
 	 */
 	@Test
 	public void dereferenceNaturalIdInJoin2(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -294,7 +294,7 @@ public class NaturalIdDereferenceTest {
 	 */
 	@Test
 	public void dereferenceNaturalIdInJoin3(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -316,7 +316,7 @@ public class NaturalIdDereferenceTest {
 	 */
 	@Test
 	public void dereferenceNaturalIdInJoin4(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {

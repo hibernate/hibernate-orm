@@ -20,7 +20,7 @@ import org.hibernate.tool.schema.spi.SqlScriptException;
  * Class responsible for extracting SQL statements from import script. Treats each line as a complete SQL statement.
  * Comment lines shall start with {@code --}, {@code //} or {@code /*} character sequence.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  * @author Steve Ebersole
  */
 public class SingleLineSqlScriptExtractor implements SqlScriptCommandExtractor {

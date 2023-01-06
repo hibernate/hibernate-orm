@@ -8,7 +8,7 @@ package org.hibernate.id;
 import org.hibernate.HibernateException;
 
 /**
- * Thrown by {@code IdentifierGenerator} implementation class when
+ * Thrown by an {@link IdentifierGenerator} implementation class when
  * ID generation fails.
  *
  * @see IdentifierGenerator

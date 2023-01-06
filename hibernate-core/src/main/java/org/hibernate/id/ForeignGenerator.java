@@ -24,17 +24,25 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
- * <b>foreign</b>
+ * The legacy id generator named {@code foreign}.
  * <p>
  * An {@code Identifier} generator that uses the value of the id property of an
- * associated object
+ * associated object.
  * <p>
- * One mapping parameter is required: property.
+ * One mapping parameter is required: {@value PROPERTY}.
  *
  * @author Gavin King
+ *
+ * @deprecated This remains around as an implementation detail of {@code hbm.xml} mappings.
  */
+@Deprecated(since = "6")
 public class ForeignGenerator implements IdentifierGenerator, StandardGenerator {
 	private static final CoreMessageLogger LOG = messageLogger( ForeignGenerator.class );
+
+	/**
+	 * The parameter which specifies the property holding a reference to the associated object.
+	 */
+	public static final String PROPERTY = "property";
 
 	private String entityName;
 	private String propertyName;
@@ -70,7 +78,7 @@ public class ForeignGenerator implements IdentifierGenerator, StandardGenerator 
 
 	@Override
 	public void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
-		propertyName = parameters.getProperty( "property" );
+		propertyName = parameters.getProperty( PROPERTY );
 		entityName = parameters.getProperty( ENTITY_NAME );
 		if ( propertyName==null ) {
 			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );

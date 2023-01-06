@@ -2145,8 +2145,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param lockOptions The lock options to apply
 	 * @param tableName The name of the table to which to apply the lock hint.
 	 * @return The table with any required lock hints.
-	 *
-	 * @author Helge Schulz
 	 */
 	public String appendLockHint(LockOptions lockOptions, String tableName){
 		return tableName;

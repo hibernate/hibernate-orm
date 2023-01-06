@@ -25,7 +25,7 @@ import static org.hibernate.orm.test.mapping.manytoone.ManyToOneBidirectionalTes
  * @author Andrea Boriero
  */
 @DomainModel( annotatedClasses = { EntityTest.class, EntityTest2.class } )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class ManyToOneBidirectionalTest {
 
 	@BeforeEach
@@ -46,7 +46,7 @@ public class ManyToOneBidirectionalTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

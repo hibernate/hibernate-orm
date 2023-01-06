@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Formula;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Entity
 @Table(name = "folders")

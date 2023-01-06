@@ -20,7 +20,7 @@ import static java.util.regex.Pattern.compile;
 /**
  * Default implementation of {@link LimitHandler} interface. 
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
 

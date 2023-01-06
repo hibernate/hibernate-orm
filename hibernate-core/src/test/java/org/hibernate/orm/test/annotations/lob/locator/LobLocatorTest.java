@@ -19,7 +19,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class LobLocatorTest extends BaseCoreFunctionalTestCase {
 	@Override

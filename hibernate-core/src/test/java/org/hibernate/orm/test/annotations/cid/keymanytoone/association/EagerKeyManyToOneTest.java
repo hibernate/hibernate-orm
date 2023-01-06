@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		annotatedClasses = {
 				Card.class, CardField.class, Key.class
 		})
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EagerKeyManyToOneTest {
 	public static final String CARD_ID = "cardId";
 	public static final String KEY_ID = "keyId";
@@ -59,7 +59,7 @@ public class EagerKeyManyToOneTest {
 
 	@Test
 	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

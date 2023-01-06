@@ -20,14 +20,14 @@ import jakarta.persistence.ManyToOne;
 		annotatedClasses = { HqlExplicitLeftJoinTest.EntityA.class, HqlExplicitLeftJoinTest.EntityB.class }
 )
 @SessionFactory(
-		statementInspectorClass = SQLStatementInspector.class
+		useCollectingStatementInspector = true
 )
 @TestForIssue( jiraKey = "HHH-15342")
 public class HqlExplicitLeftJoinTest {
 
 	@Test
 	public void testExplicitLeftJoin(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -46,7 +46,7 @@ public class HqlExplicitLeftJoinTest {
 
 	@Test
 	public void testExplicitLeftJoin2(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -65,7 +65,7 @@ public class HqlExplicitLeftJoinTest {
 
 	@Test
 	public void testImplicitJoin(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -85,7 +85,7 @@ public class HqlExplicitLeftJoinTest {
 
 	@Test
 	public void testImplicitJoin2(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -104,7 +104,7 @@ public class HqlExplicitLeftJoinTest {
 
 	@Test
 	public void testImplicitJoinWithNoExplicitJoins(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {

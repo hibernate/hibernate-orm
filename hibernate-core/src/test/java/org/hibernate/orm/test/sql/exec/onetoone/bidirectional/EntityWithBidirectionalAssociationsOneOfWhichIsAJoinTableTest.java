@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @ServiceRegistry
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@BeforeEach
@@ -78,7 +78,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@Test
 	public void testGetParent(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -108,7 +108,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@Test
 	public void testGetChild(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Male son = session.get( Male.class, 2 );
@@ -142,7 +142,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 
 	@Test
 	public void testHqlSelectSon(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -168,7 +168,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 	public void testHqlSelectParent(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+					SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 					statementInspector.clear();
 					final Parent parent = session.createQuery(
 							"SELECT p FROM Parent p JOIN p.son WHERE p.id = :id",

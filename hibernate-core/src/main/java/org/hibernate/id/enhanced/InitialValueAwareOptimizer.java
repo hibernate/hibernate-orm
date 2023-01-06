@@ -20,8 +20,9 @@ public interface InitialValueAwareOptimizer {
 	 * <p>
 	 * {@code -1} is used to indicate that the user did not specify.
 	 *
-	 * @param initialValue The initial value specified by the user, or {@code -1} to indicate that the
-	 * user did not specify.
+	 * @param initialValue The initial value specified by the user,
+	 *                     or {@code -1} to indicate that the user
+	 *                     did not specify an initial value.
 	 */
 	void injectInitialValue(long initialValue);
 }

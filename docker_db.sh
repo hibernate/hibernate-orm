@@ -452,9 +452,9 @@ oracle_setup() {
     $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
 -- Increasing redo logs (but limit to 200M because of TMPFS and move them into the TMPFS folder)
-alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo04.log' size 200M reuse;
-alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo05.log' size 200M reuse;
-alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo06.log' size 200M reuse;
+alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo04.log' size 100M reuse;
+alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo05.log' size 100M reuse;
+alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo06.log' size 100M reuse;
 alter system switch logfile;
 alter system switch logfile;
 alter system switch logfile;
@@ -486,6 +486,9 @@ alter system set undo_retention=1 sid='*' scope=spfile;
 -- Reduce database buffer cache
 alter system set db_cache_size=160M sid='*' scope=both;
 
+-- Limit PGA
+alter system set pga_aggregate_target=300M sid='*' scope=both;
+
 -- Restart the database (abort to not wait for S001 process to die)
 SHUTDOWN ABORT;
 STARTUP MOUNT;
@@ -501,7 +504,7 @@ alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 3
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' autoextend on next 16M;
 -- alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' resize 400M;
 alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' autoextend on next 16M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/users01.dbf' resize 100M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/users01.dbf' resize 64M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/users01.dbf' autoextend on next 16M;
 alter tablespace USERS nologging;
 alter tablespace SYSTEM nologging;
@@ -612,12 +615,14 @@ oracle_21() {
     # We need to use the defaults
     # SYSTEM/Oracle18
     #sudo mkdir -p ./tmpfs
-    #sudo mount -t tmpfs -o size=1800M tmpfs ./tmpfs
+    #sudo mount -t tmpfs -o size=1500M tmpfs ./tmpfs
     #sudo chown `id -nu`:`id -ng` ./tmpfs
     #sudo rm -fr ./tmpfs/*
     #$CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
-    #PODMAN $CONTAINER_CLI run --name oracle -d --mount=type=bind,src=./tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,relabel=shared,U=true -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
-    $CONTAINER_CLI run --name oracle -d --mount type=tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,tmpfs-size=1887436800 -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+    # PODMAN:
+    # $CONTAINER_CLI run --name oracle -d --mount=type=bind,src=./tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,relabel=shared,U=true -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+    # DOCKER:
+    $CONTAINER_CLI run --name oracle -d --mount type=tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,tmpfs-size=1572864000 -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
        --health-cmd healthcheck.sh \
        --health-interval 5s \
        --health-timeout 5s \

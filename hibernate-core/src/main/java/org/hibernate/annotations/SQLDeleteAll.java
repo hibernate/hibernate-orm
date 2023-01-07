@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface SQLDeleteAll {
 	/**
-	 * Procedure name or SQL DELETE statement.
+	 * Procedure name or SQL {@code DELETE} statement.
 	 */
 	String sql();
 

@@ -21,23 +21,23 @@ import jakarta.persistence.SqlResultSetMapping;
 public class ResultSetMappingSecondPass implements QuerySecondPass {
 //	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsetMappingSecondPass.class );
 
-	private final SqlResultSetMapping ann;
+	private final SqlResultSetMapping annotation;
 	private final MetadataBuildingContext context;
 	private final boolean isDefault;
 
-	public ResultSetMappingSecondPass(SqlResultSetMapping ann, MetadataBuildingContext context, boolean isDefault) {
-		this.ann = ann;
+	public ResultSetMappingSecondPass(SqlResultSetMapping annotation, MetadataBuildingContext context, boolean isDefault) {
+		this.annotation = annotation;
 		this.context = context;
 		this.isDefault = isDefault;
 	}
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		if ( ann == null ) {
+		if ( annotation == null ) {
 			return;
 		}
 
-		final SqlResultSetMappingDescriptor mappingDefinition = SqlResultSetMappingDescriptor.from( ann, context );
+		final SqlResultSetMappingDescriptor mappingDefinition = SqlResultSetMappingDescriptor.from( annotation );
 
 		if ( isDefault ) {
 			context.getMetadataCollector().addDefaultResultSetMapping( mappingDefinition );

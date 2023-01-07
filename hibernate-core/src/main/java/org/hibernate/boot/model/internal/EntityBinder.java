@@ -69,6 +69,7 @@ import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLInserts;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.annotations.SecondaryRow;
@@ -1273,6 +1274,13 @@ public class EntityBinder {
 		if ( sqlDeleteAll != null ) {
 			throw new AnnotationException("@SQLDeleteAll does not apply to entities: "
 					+ persistentClass.getEntityName());
+		}
+
+		final SQLSelect sqlSelect = annotatedClass.getAnnotation( SQLSelect.class );
+		if ( sqlSelect != null ) {
+			final String loaderName = persistentClass.getEntityName() + "$SQLSelect";
+			persistentClass.setLoaderName( loaderName );
+			QueryBinder.bindNativeQuery( loaderName, sqlSelect, annotatedClass, context );
 		}
 
 		final Loader loader = annotatedClass.getAnnotation( Loader.class );

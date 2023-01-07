@@ -453,9 +453,9 @@ oracle_setup() {
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
 set timing on
 -- Increasing redo logs (but limit to 200M because of TMPFS and move them into the TMPFS folder)
-alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo04.log' size 100M reuse;
-alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo05.log' size 100M reuse;
-alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo06.log' size 100M reuse;
+alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo04.log' size 200M reuse;
+alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo05.log' size 200M reuse;
+alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo06.log' size 200M reuse;
 alter system switch logfile;
 alter system switch logfile;
 alter system switch logfile;

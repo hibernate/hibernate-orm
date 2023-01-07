@@ -13,7 +13,7 @@ package org.hibernate.annotations;
  * intended effect, for example, that an {@code UPDATE} statement actually changed
  * the expected number of rows.
  *
- * @author L�szl� Benke
+ * @author László Benke
  *
  * @see SQLInsert#check()
  * @see SQLUpdate#check()

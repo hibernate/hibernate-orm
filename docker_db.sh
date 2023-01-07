@@ -453,9 +453,9 @@ oracle_setup() {
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
 set timing on
 -- Increasing redo logs (but limit to 200M because of TMPFS and move them into the TMPFS folder)
-alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo04.log' size 200M reuse;
-alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo05.log' size 200M reuse;
-alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo06.log' size 200M reuse;
+alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo04.log' size 400M reuse;
+alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo05.log' size 400M reuse;
+alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/XEPDB1/redo06.log' size 400M reuse;
 alter system switch logfile;
 alter system switch logfile;
 alter system switch logfile;
@@ -486,12 +486,12 @@ alter system set statistics_level=BASIC sid='*' scope=spfile;
 alter system set undo_retention=1 sid='*' scope=spfile;
 
 -- Reduce database buffer cache
-alter system set db_cache_size=188M sid='*' scope=both;
+alter system set db_cache_size=160M sid='*' scope=both;
 
 -- Limit PGA
-alter system set pga_aggregate_target=300M sid='*' scope=both;
+alter system set pga_aggregate_target=200M sid='*' scope=both;
 
-alter system set sga_max_size=600M sid='*' scope=spfile;
+alter system set sga_max_size=572M sid='*' scope=spfile;
 alter system set db_block_checksum=OFF sid='*' scope=spfile;
 
 -- Restart the database (abort to not wait for S001 process to die)
@@ -513,7 +513,7 @@ alter system set undo_retention=1 sid='*' scope=both;
 -- Modify XEPDB1 datafiles and tablespaces
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/system01.dbf' resize 320M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/sysaux01.dbf' resize 360M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 400M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 300M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' autoextend on next 16M;
 -- alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' resize 400M;
 alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' autoextend on next 16M;

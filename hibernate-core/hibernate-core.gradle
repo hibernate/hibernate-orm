@@ -308,3 +308,7 @@ javadoc {
         stylesheetFile = new File(projectDir, 'src/main/javadoc/stylesheet.css')
     }
 }
+
+tasks.withType(Test).configureEach {
+    maxParallelForks = 2
+}

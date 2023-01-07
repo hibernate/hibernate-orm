@@ -38,6 +38,7 @@ import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.FilterJoinTables;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -1345,6 +1346,13 @@ public abstract class CollectionBinder {
 			collection.setLoaderName( loaderName );
 			// TODO: pass in the collection element type here
 			QueryBinder.bindNativeQuery( loaderName, sqlSelect, null, buildingContext );
+		}
+
+		final HQLSelect hqlSelect = property.getAnnotation( HQLSelect.class );
+		if ( hqlSelect != null ) {
+			final String loaderName = collection.getRole() + "$HQLSelect";
+			collection.setLoaderName( loaderName );
+			QueryBinder.bindQuery( loaderName, hqlSelect, buildingContext );
 		}
 
 		final Loader loader = property.getAnnotation( Loader.class );

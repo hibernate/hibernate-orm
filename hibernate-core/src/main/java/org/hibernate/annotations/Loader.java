@@ -19,9 +19,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * collection, overriding the SQL that Hibernate generates by default.
  *
  * @author László Benke
+ *
+ * @deprecated Use {@link SQLSelect} or {@link HQLSelect}.
  */
 @Target( {TYPE, FIELD, METHOD} )
 @Retention( RUNTIME )
+@Deprecated(since = "6.2")
 public @interface Loader {
 	/**
 	 * The named query to use for loading the entity or collection.

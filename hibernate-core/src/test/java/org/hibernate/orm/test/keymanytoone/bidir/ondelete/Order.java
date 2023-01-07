@@ -9,7 +9,7 @@ package org.hibernate.orm.test.keymanytoone.bidir.ondelete;
 import java.io.Serializable;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class Order implements Serializable {
 	private Customer customer;

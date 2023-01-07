@@ -31,7 +31,7 @@ import static org.hibernate.orm.test.mapping.manytoone.ManyToOneBidirectionalCir
 				EntityTest2.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class ManyToOneBidirectionalCircularityTest {
 
 	@BeforeEach
@@ -50,7 +50,7 @@ public class ManyToOneBidirectionalCircularityTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

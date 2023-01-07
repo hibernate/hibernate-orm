@@ -44,7 +44,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				LazyToOneWithJoinFetchModeTests.SimpleEntity.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
@@ -69,7 +69,7 @@ public class LazyToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testFind(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -92,7 +92,7 @@ public class LazyToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHql(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -124,7 +124,7 @@ public class LazyToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinManyToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -158,7 +158,7 @@ public class LazyToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinOneToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -192,7 +192,7 @@ public class LazyToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinFetchManyToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -224,7 +224,7 @@ public class LazyToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinManyToOneAndOneToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -256,7 +256,7 @@ public class LazyToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinFetchOneToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -287,7 +287,7 @@ public class LazyToOneWithJoinFetchModeTests {
 
 	@Test
 	public void testHqlJoinFetchManyToOneAndOneToOne(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();

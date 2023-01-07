@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
  * Unit test of the behavior of the SQLServerDialect utility methods
  *
  * @author Valotasion Yoryos
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  * @author Chris Cranford
  */
 public class SQLServer2005DialectTestCase extends BaseUnitTestCase {

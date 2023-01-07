@@ -36,7 +36,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @DomainModel(
 		annotatedClasses = { LazyManyToOneTest.Child.class, LazyManyToOneTest.Parent.class }
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "2"))
 @JiraKey("HHH-15449")
 public class LazyManyToOneTest {
@@ -70,7 +70,7 @@ public class LazyManyToOneTest {
 
 	@Test
 	public void testGetResultList(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {

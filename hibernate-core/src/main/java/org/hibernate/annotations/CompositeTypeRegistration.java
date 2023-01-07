@@ -33,6 +33,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 @Repeatable( CompositeTypeRegistrations.class )
 public @interface CompositeTypeRegistration {
+	/**
+	 * The embeddable type described by the {@link #userType}.
+	 */
 	Class<?> embeddableClass();
+
+	/**
+	 * The {@link CompositeUserType}.
+	 */
 	Class<? extends CompositeUserType<?>> userType();
 }

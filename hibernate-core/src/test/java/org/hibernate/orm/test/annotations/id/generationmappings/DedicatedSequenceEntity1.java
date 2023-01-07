@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Entity
 @Table(name = "DEDICATED_SEQ_TBL1")

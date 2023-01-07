@@ -20,7 +20,7 @@ public enum TemporaryTableKind {
 	 * <p>
 	 * The table is created once on application startup, unless {@value org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy#CREATE_ID_TABLES}
 	 * is disabled and dropped on application startup unless {@value org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy#CREATE_ID_TABLES}
-	 * and {@value org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy#DROP_ID_TABLES} are
+	 * or {@value org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy#DROP_ID_TABLES} are
 	 * disabled.
 	 */
 	PERSISTENT,
@@ -39,7 +39,7 @@ public enum TemporaryTableKind {
 	 * <p>
 	 * The table is created once on application startup, unless {@value org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy#CREATE_ID_TABLES}
 	 * is disabled and dropped on application startup unless {@value org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy#CREATE_ID_TABLES}
-	 * and {@value org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy#DROP_ID_TABLES} are
+	 * or {@value org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy#DROP_ID_TABLES} are
 	 * disabled.
 	 */
 	GLOBAL;

@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * Plural annotation for {@link RequiresDialect}.
  * Useful when test needs to be run against more than one dialect because of a different reason.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })

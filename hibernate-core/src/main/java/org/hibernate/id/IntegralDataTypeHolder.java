@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Defines a common api for dealing with data of integral data type.
+ * Defines a common API for dealing with data of integral data type.
  *
  * @author Steve Ebersole
  */
@@ -39,7 +39,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException;
 
 	/**
-	 * Bind this holders internal value to the given result set.
+	 * Bind this holder's internal value to the given result set.
 	 *
 	 * @param preparedStatement The JDBC prepared statement
 	 * @param position The position at which to bind

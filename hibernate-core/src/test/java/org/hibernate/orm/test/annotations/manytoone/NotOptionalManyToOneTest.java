@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 				Child.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class NotOptionalManyToOneTest {
 
 	@BeforeEach
@@ -59,7 +59,7 @@ public class NotOptionalManyToOneTest {
 
 	@Test
 	public void testInnerJoinIsUsed(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 				ManyToOneEmbeddedIdWithLazyToOneFKTest.Subsystem.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class ManyToOneEmbeddedIdWithLazyToOneFKTest {
 
 	@BeforeEach
@@ -76,7 +76,7 @@ public class ManyToOneEmbeddedIdWithLazyToOneFKTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -110,7 +110,7 @@ public class ManyToOneEmbeddedIdWithLazyToOneFKTest {
 
 	@Test
 	public void testHql(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		/*
 			select
@@ -169,7 +169,7 @@ public class ManyToOneEmbeddedIdWithLazyToOneFKTest {
 
 	@Test
 	public void testHqlJoin(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -203,7 +203,7 @@ public class ManyToOneEmbeddedIdWithLazyToOneFKTest {
 
 	@Test
 	public void testHqlJoinFetch(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -236,7 +236,7 @@ public class ManyToOneEmbeddedIdWithLazyToOneFKTest {
 
 	@Test
 	public void testHql2(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

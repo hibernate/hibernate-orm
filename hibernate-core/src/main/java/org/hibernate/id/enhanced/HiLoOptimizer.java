@@ -20,26 +20,29 @@ import org.jboss.logging.Logger;
  * optimization.
  * <p>
  * A 'hilo' algorithm is simply a means for a single value stored in the
- * database to represent a "bucket" of possible, contiguous values.  The
+ * database to represent a "bucket" of possible, contiguous values. The
  * database value identifies which particular bucket we are on.
  * <p>
  * This database value must be paired with another value that defines the
  * size of the bucket; the number of possible values available.
- * The {@link #getIncrementSize() incrementSize} serves this purpose.  The
+ * The {@link #getIncrementSize() incrementSize} serves this purpose. The
  * naming here is meant more for consistency in that this value serves the
  * same purpose as the increment supplied to the {@link PooledOptimizer}.
  * <p>
- * The general algorithms used to determine the bucket are:<ol>
+ * The general algorithms used to determine the bucket is:
+ * <ol>
  * <li>{@code upperLimit = (databaseValue * incrementSize) + 1}</li>
  * <li>{@code lowerLimit = upperLimit - incrementSize}</li>
  * </ol>
- * As an example, consider a case with incrementSize of 20.  Initially the
+ * <p>
+ * As an example, consider a case with incrementSize of 20. Initially, the
  * database holds 1:<ol>
  * <li>{@code upperLimit = (1 * 20) + 1 = 21}</li>
  * <li>{@code lowerLimit = 21 - 20 = 1}</li>
  * </ol>
+ * <p>
  * From there we increment the value from lowerLimit until we reach the
- * upperLimit, at which point we would define a new bucket.  The database
+ * upperLimit, at which point we would define a new bucket. The database
  * now contains 2, though incrementSize remains unchanged:<ol>
  * <li>{@code upperLimit = (2 * 20) + 1 = 41}</li>
  * <li>{@code lowerLimit = 41 - 20 = 21}</li>
@@ -61,12 +64,12 @@ public class HiLoOptimizer extends AbstractOptimizer {
 
 
 	/**
-	 * Constructs a HiLoOptimizer
+	 * Constructs a {@code HiLoOptimizer}
 	 *
 	 * @param returnClass The Java type of the values to be generated
 	 * @param incrementSize The increment size.
 	 */
-	public HiLoOptimizer(Class returnClass, int incrementSize) {
+	public HiLoOptimizer(Class<?> returnClass, int incrementSize) {
 		super( returnClass, incrementSize );
 		if ( incrementSize < 1 ) {
 			throw new HibernateException( "increment size cannot be less than 1" );

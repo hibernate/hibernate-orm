@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 				EmbeddableWithManyToOneTest.EntityTest2.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EmbeddableWithManyToOneTest {
 
 	@BeforeEach
@@ -78,7 +78,7 @@ public class EmbeddableWithManyToOneTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -112,7 +112,7 @@ public class EmbeddableWithManyToOneTest {
 					session.save( entityTest2 );
 				}
 		);
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -152,7 +152,7 @@ public class EmbeddableWithManyToOneTest {
 					session.save( entityTest2 );
 				}
 		);
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

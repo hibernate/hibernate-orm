@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.id;
 
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.TestForIssue;
@@ -14,10 +13,8 @@ import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/id/Person.hbm.xml"
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class SequenceGeneratorTest {
 
 
@@ -51,7 +48,7 @@ public class SequenceGeneratorTest {
 		);
 
 		assertTrue( person.getId() > 0 );
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		assertTrue( statementInspector.getSqlQueries()
 							.stream()
 							.filter( sql -> sql.contains( "product_sequence" ) )

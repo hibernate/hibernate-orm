@@ -24,13 +24,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(
 		annotatedClasses = { CompareEntityValuedPathsTest.Person.class }
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @TestForIssue(jiraKey = "HHH-15349")
 public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testCompareOneToManyUK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -54,7 +54,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testCompareOneToManyPK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -78,7 +78,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testManyToOneIsNull(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -98,7 +98,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testComparePKWithOneToManyUK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -123,7 +123,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testCompareUKWithOneToManyPK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -148,7 +148,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testComparePKWithMappedByOneToManyPK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -172,7 +172,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testComparePKWithMappedByOneToManyUK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -196,7 +196,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testOneToManyUKIsNotNull(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -217,7 +217,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testOneToManyPKIsNotNull(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -238,7 +238,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testCompareOneToManyUKWithOneToManyPK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -260,7 +260,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testCompareOneToManyPKWithOneToManyUK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -282,7 +282,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testCompareOneToManyUKWithSubqueryOneToManyPK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -303,7 +303,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testCompareOneToManyPKWithSubqueryOneToManyUK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -324,7 +324,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testCompareManyToOneUK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
@@ -347,7 +347,7 @@ public class CompareEntityValuedPathsTest {
 
 	@Test
 	public void testCompareManyToOnePK(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();

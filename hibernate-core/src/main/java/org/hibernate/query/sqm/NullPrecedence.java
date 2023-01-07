@@ -9,7 +9,7 @@ package org.hibernate.query.sqm;
 /**
  * Defines precedence of null values within {@code ORDER BY} clause.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public enum NullPrecedence {
 	/**

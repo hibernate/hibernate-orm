@@ -15,7 +15,7 @@ import jakarta.persistence.ManyToOne;
 import org.hibernate.annotations.Formula;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Entity
 public class Item implements Serializable {

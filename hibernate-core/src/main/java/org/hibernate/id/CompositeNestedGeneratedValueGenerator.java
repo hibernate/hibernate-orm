@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -47,6 +48,7 @@ import org.hibernate.id.factory.spi.StandardGenerator;
  *
  * @author Steve Ebersole
  */
+@Internal
 public class CompositeNestedGeneratedValueGenerator
 		implements IdentifierGenerator, StandardGenerator, IdentifierGeneratorAggregator, Serializable {
 	/**

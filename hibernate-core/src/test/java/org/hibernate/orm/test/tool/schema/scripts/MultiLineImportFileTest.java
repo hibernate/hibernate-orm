@@ -20,7 +20,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @TestForIssue(jiraKey = "HHH-2403")
 @RequiresDialect(value = H2Dialect.class,

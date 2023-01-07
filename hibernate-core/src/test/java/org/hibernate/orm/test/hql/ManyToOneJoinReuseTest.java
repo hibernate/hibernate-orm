@@ -7,8 +7,6 @@
 
 package org.hibernate.orm.test.hql;
 
-import java.util.Set;
-
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
@@ -36,13 +34,13 @@ import jakarta.persistence.criteria.JoinType;
 				ManyToOneJoinReuseTest.BookList.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class ManyToOneJoinReuseTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-15648")
 	public void fetchAndImplicitPath(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
@@ -62,7 +60,7 @@ public class ManyToOneJoinReuseTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-15645")
 	public void joinAndImplicitPath(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {

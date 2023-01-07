@@ -13,7 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @Entity
 public class LobHolder {

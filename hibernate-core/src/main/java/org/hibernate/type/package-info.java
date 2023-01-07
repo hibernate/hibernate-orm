@@ -15,7 +15,7 @@
  * importance to application developers, though it remains a very important
  * internal abstraction.
  *
- * <h3>Basic types</h3>
+ * <h3 id="basic">Basic types</h3>
  *
  * For {@linkplain jakarta.persistence.Basic basic} types, we prefer to model the
  * type mapping in terms the combination of:
@@ -59,7 +59,7 @@
  * See {@link org.hibernate.annotations} for information on how to influence basic
  * type mappings using annotations.
  *
- * <h3>Custom types</h3>
+ * <h3 id="custom">Custom types</h3>
  *
  * The package {@link org.hibernate.usertype} provides a way for application developers
  * to define new types without being exposed to the full complexity of the {@code Type}

@@ -43,7 +43,7 @@ import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isNotIni
 				LoadAndFetchGraphTest.EEntity.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @TestForIssue(jiraKey = "HHH-14097")
 public class LoadAndFetchGraphTest {
 
@@ -171,7 +171,7 @@ public class LoadAndFetchGraphTest {
 
 	@Test
 	void testQueryById(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -195,7 +195,7 @@ public class LoadAndFetchGraphTest {
 
 	@Test
 	void testQueryByIdWithLoadGraph(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -226,7 +226,7 @@ public class LoadAndFetchGraphTest {
 
 	@Test
 	void testQueryByIdWithFetchGraph(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -256,7 +256,7 @@ public class LoadAndFetchGraphTest {
 
 	@Test
 	void testQueryByIdWithFetchGraph2(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

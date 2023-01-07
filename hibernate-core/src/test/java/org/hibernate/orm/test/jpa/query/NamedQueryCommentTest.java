@@ -24,12 +24,10 @@ import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,12 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		integrationSettings = {
 				@Setting( name = AvailableSettings.USE_SQL_COMMENTS, value = "true" )
 		},
-		settingProviders = {
-				@SettingProvider(
-						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = DefaultSQLStatementInspectorSettingProvider.class
-				)
-		}
+		useCollectingStatementInspector = true
 )
 @TestForIssue(jiraKey = "HHH-11640")
 public class NamedQueryCommentTest {
@@ -62,7 +55,7 @@ public class NamedQueryCommentTest {
 	@BeforeAll
 	public void setUp(EntityManagerFactoryScope scope) {
 
-		statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		statementInspector = scope.getCollectingStatementInspector();
 
 		scope.inTransaction(
 				entityManager -> {

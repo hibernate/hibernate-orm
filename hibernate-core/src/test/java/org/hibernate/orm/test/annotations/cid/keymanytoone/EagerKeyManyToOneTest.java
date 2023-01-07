@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		annotatedClasses = {
 				Card.class, CardField.class, Key.class
 		})
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 public class EagerKeyManyToOneTest {
 	public static final String CARD_ID = "cardId";
 	public static final String CARD_MODEL = "Gran Torino";
@@ -65,7 +65,7 @@ public class EagerKeyManyToOneTest {
 		// meant to test against regression relating to http://opensource.atlassian.com/projects/hibernate/browse/HHH-2277
 		// and http://opensource.atlassian.com/projects/hibernate/browse/HHH-4147
 
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

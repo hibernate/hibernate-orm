@@ -18,10 +18,11 @@ import org.hibernate.service.ServiceRegistry;
 import static org.hibernate.id.enhanced.TableGenerator.DEF_TABLE;
 
 /**
- * ImplicitDatabaseObjectNamingStrategy using a single structure for
- * all implicit names:<ul>
- *     <li>{@value ImplicitDatabaseObjectNamingStrategy#DEF_SEQUENCE} for sequences</li>
- *     <li>{@value TableGenerator#DEF_TABLE} for tables</li>
+ * An {@link ImplicitDatabaseObjectNamingStrategy} using a single structure for all
+ * implicit names:
+ * <ul>
+ *     <li>{@value ImplicitDatabaseObjectNamingStrategy#DEF_SEQUENCE} for sequences
+ *     <li>{@value TableGenerator#DEF_TABLE} for tables
  * </ul>
  *
  * @author Andrea Boriero

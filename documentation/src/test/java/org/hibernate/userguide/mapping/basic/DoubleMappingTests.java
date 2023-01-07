@@ -80,7 +80,7 @@ public class DoubleMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfDoubles").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfDoubles").executeUpdate()
 		);
 	}
 

@@ -122,6 +122,10 @@
  *         <li>{@link org.hibernate.annotations.Nationalized}
  *         </ul>
  *     <li><p>
+ *         Furthermore, a {@link org.hibernate.annotations.JavaTypeRegistration} or
+ *         {@link org.hibernate.annotations.JdbcTypeRegistration} allows the choice
+ *         of {@code JavaType} or {@code JdbcType} to be made <em>implicitly</em>.
+ *     <li><p>
  *         A compositional type mapping also comes with a
  *         {@link org.hibernate.type.descriptor.java.MutabilityPlan}, which is usually
  *         chosen by the {@code JavaType}, but which may be overridden using the
@@ -133,12 +137,15 @@
  *     all come in specialized flavors for handling map keys, list indexes, and so on.
  * <li><p>
  *     Alternatively, a program may implement the {@link org.hibernate.usertype.UserType}
- *     interface and associate it with a field or property explicitly using the
- *     {@link org.hibernate.annotations.Type @Type} annotation, or implicitly using the
- *     {@link org.hibernate.annotations.TypeRegistration @TypeRegistration} annotation.
+ *     interface and associate it with a field or property
+ *     <ul>
+ *     <li>explicitly, using the {@link org.hibernate.annotations.Type @Type} annotation,
+ *         or
+ *     <li>implicitly, using the {@link org.hibernate.annotations.TypeRegistration @TypeRegistration}
+ *         annotation.
+ *     </ul>
  *     <p>
  *     There are some specialized flavors of the {@code @Type} annotation too.
- * </li>
  * </ul>
  * <p>
  * These two approaches cannot be used together. A {@code UserType} always takes precedence
@@ -164,6 +171,21 @@
  * <p>
  * See the <em>User Guide</em> or the package {@link org.hibernate.type} for further
  * discussion.
+ *
+ * <h3 id="composite-types">Composite types</h3>
+ *
+ * A <em>composite type</em> is a type which maps to multiple columns. An example of a
+ * composite type is an {@linkplain jakarta.persistence.Embeddable embeddable} object,
+ * but this is not the only sort of composite type in Hibernate.
+ * <p>
+ * A program may implement the {@link org.hibernate.usertype.CompositeUserType}
+ * interface and associate it with a field or property:
+ * <ul>
+ * <li>explicitly, using the {@link org.hibernate.annotations.CompositeType @CompositeType}
+ *     annotation, or
+ * <li>implicitly, using the {@link org.hibernate.annotations.CompositeTypeRegistration @CompositeTypeRegistration}
+ *     annotation.
+ * </ul>
  *
  * <h3 id="second-level-cache">Second level cache</h3>
  * <p>

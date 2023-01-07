@@ -10,15 +10,12 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.Hibernate;
-import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,13 +27,10 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 @TestForIssue(jiraKey = "HHH-13944")
-@ServiceRegistry(
-		settings = @Setting( name = AvailableSettings.STATEMENT_INSPECTOR, value = "org.hibernate.testing.jdbc.SQLStatementInspector" )
-)
 @DomainModel(
 		annotatedClasses = { Skill.class, Teacher.class, Student.class }
 )
-@SessionFactory
+@SessionFactory( useCollectingStatementInspector = true )
 public class OneToManySizeTest2 {
 	@Test
 	public void testSize(SessionFactoryScope scope) {

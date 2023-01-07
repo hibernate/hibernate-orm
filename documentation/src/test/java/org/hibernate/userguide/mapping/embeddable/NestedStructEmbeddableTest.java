@@ -262,7 +262,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 	protected void cleanupTest() {
 		inTransaction(
 				session -> {
-					session.createQuery( "delete from StructHolder h" ).executeUpdate();
+					session.createMutationQuery( "delete from StructHolder h" ).executeUpdate();
 				}
 		);
 	}
@@ -409,7 +409,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 	public void testDeleteWhere() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "delete StructHolder b where b.struct is not null" ).executeUpdate();
+					entityManager.createMutationQuery( "delete StructHolder b where b.struct is not null" ).executeUpdate();
 					assertNull( entityManager.find( StructHolder.class, 1L ) );
 
 				}
@@ -420,7 +420,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 	public void testUpdateAggregate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "update StructHolder b set b.struct = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update StructHolder b set b.struct = null" ).executeUpdate();
 					assertNull( entityManager.find( StructHolder.class, 1L ).getAggregate() );
 				}
 		);
@@ -430,7 +430,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "update StructHolder b set b.struct.nested.theString = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update StructHolder b set b.struct.nested.theString = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
 					assertStructEquals( struct, entityManager.find( StructHolder.class, 1L ).getAggregate() );
@@ -442,7 +442,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "update StructHolder b set b.struct.nested.theString = null, b.struct.nested.theUuid = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update StructHolder b set b.struct.nested.theString = null, b.struct.nested.theUuid = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
@@ -456,7 +456,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
-					entityManager.createQuery(
+					entityManager.createMutationQuery(
 							"update StructHolder b set " +
 									"b.struct.nested.theInt = :theInt," +
 									"b.struct.nested.theDouble = :theDouble," +

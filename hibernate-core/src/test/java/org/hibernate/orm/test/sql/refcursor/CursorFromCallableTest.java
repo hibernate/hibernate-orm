@@ -30,7 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 @RequiresDialect( OracleDialect.class )
 public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {

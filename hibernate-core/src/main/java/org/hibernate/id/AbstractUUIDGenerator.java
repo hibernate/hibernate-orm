@@ -18,7 +18,10 @@ import org.hibernate.internal.util.BytesHelper;
  *
  * @see UUIDHexGenerator
  * @author Gavin King
+ *
+ * @deprecated since {@link UUIDHexGenerator} is deprecated
  */
+@Deprecated(since = "6")
 public abstract class AbstractUUIDGenerator implements IdentifierGenerator, StandardGenerator {
 
 	private static final int IP;

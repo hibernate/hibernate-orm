@@ -16,12 +16,12 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
- * <b>assigned</b>
- * <p>
- * An {@code IdentifierGenerator} that returns the current identifier assigned
+ * An {@link IdentifierGenerator} that returns the current identifier assigned
  * to an instance.
  *
  * @author Gavin King
+ *
+ * @implNote This also implements the {@code assigned} generation type in {@code hbm.xml} mappings.
  */
 public class Assigned implements IdentifierGenerator, StandardGenerator {
 	private String entityName;

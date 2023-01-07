@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class Customer implements Serializable {
 	private Long id;

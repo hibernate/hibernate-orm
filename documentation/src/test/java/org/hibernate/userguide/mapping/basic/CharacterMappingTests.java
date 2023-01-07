@@ -75,7 +75,7 @@ public class CharacterMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfCharacters").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfCharacters").executeUpdate()
 		);
 	}
 

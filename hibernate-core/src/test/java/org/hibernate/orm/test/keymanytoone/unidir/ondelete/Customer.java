@@ -9,7 +9,7 @@ package org.hibernate.orm.test.keymanytoone.unidir.ondelete;
 import java.io.Serializable;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public class Customer implements Serializable {
 	private Long id;

@@ -78,7 +78,7 @@ public class MutationQueryExampleTests {
 		scope.inTransaction( (session) -> {
 			//tag::example-hql-named-mutation-query-query[]
 			// cannot be validated until execution
-			Query query = session.createNamedQuery( "get_person_by_name" );
+			Query query = session.createNamedQuery( "get_person_by_name", Person.class );
 			query.getResultList();
 			//end::example-hql-named-mutation-query-query[]
 		} );

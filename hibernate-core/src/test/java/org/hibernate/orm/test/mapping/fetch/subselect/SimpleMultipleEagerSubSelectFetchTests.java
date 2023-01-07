@@ -44,7 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		SimpleMultipleEagerSubSelectFetchTests.Thing.class,
 		SimpleMultipleEagerSubSelectFetchTests.Trinket.class,
 })
-@SessionFactory( statementInspectorClass = SQLStatementInspector.class )
+@SessionFactory( useCollectingStatementInspector = true )
 public class SimpleMultipleEagerSubSelectFetchTests {
 
 	@Test

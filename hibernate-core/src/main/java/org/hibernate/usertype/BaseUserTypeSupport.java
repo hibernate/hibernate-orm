@@ -112,9 +112,4 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	public T assemble(Serializable cached, Object owner) throws HibernateException {
 		return javaType().getMutabilityPlan().assemble( cached, null );
 	}
-
-	@Override
-	public T replace(T original, T target, Object owner) throws HibernateException {
-		return deepCopy( original );
-	}
 }

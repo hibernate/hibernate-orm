@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
 
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.Metadata;
@@ -29,6 +29,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
@@ -337,14 +338,14 @@ public class BootstrapTest {
         @Override
         public void integrate(
                 Metadata metadata,
-                SessionFactoryImplementor sessionFactory,
-                SessionFactoryServiceRegistry serviceRegistry) {
+                BootstrapContext bootstrapContext,
+                SessionFactoryImplementor sessionFactory) {
 
             // As you might expect, an EventListenerRegistry is the thing with which event
             // listeners are registered
             // It is a service so we look it up using the service registry
             final EventListenerRegistry eventListenerRegistry =
-                serviceRegistry.getService(EventListenerRegistry.class);
+                bootstrapContext.getServiceRegistry().getService(EventListenerRegistry.class);
 
             // If you wish to have custom determination and handling of "duplicate" listeners,
             // you would have to add an implementation of the
@@ -388,7 +389,7 @@ public class BootstrapTest {
         }
     }
 
-    public class CustomSessionFactoryInterceptor extends EmptyInterceptor {}
+    public class CustomSessionFactoryInterceptor implements Interceptor {}
 
     public class CustomSessionFactoryObserver implements SessionFactoryObserver {
 
@@ -588,7 +589,7 @@ public class BootstrapTest {
 
             MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
 
-            metadataBuilder.applyBasicType(BitSetUserType.INSTANCE, "bitset");
+            metadataBuilder.applyBasicType(new BitSetUserType(), "bitset");
             //end::basic-custom-type-register-UserType-example[]
         }
         catch (Exception ignore) {

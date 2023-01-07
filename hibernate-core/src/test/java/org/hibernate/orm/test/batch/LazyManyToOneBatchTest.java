@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				LazyManyToOneBatchTest.Parent.class
 		}
 )
-@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = @Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "2")
 )
@@ -67,7 +67,7 @@ public class LazyManyToOneBatchTest {
 
 	@Test
 	public void testSelect(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

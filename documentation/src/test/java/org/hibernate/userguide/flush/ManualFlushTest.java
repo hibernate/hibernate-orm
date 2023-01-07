@@ -58,7 +58,7 @@ public class ManualFlushTest extends BaseEntityManagerFunctionalTestCase {
                 .getSingleResult()).intValue() == 0);
 
             assertTrue(((Number) session
-                .createNativeQuery("select count(*) from Person")
+                .createNativeQuery("select count(*) from Person", Integer.class)
                 .uniqueResult()).intValue() == 0);
             //end::flushing-manual-flush-example[]
         });

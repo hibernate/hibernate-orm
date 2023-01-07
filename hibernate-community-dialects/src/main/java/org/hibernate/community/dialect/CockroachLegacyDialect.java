@@ -42,6 +42,7 @@ import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -383,9 +384,9 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.degrees();
 		functionFactory.radians();
 		functionFactory.pi();
-		functionFactory.trunc(); //TODO: emulate second arg
 		functionFactory.log();
 		functionFactory.log10_log();
+		functionFactory.round();
 
 		functionFactory.bitandorxornot_operator();
 		functionFactory.bitAndOr();
@@ -407,6 +408,11 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+
+		functionContributions.getFunctionRegistry().register(
+				"trunc", new PostgreSQLTruncRoundFunction( "trunc", getVersion().isSameOrAfter( 22, 2 ) )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}
 
 	@Override

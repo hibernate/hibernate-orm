@@ -16,7 +16,7 @@ import org.hibernate.query.spi.QueryOptions;
  * Contract defining dialect-specific limit and offset handling.
  * Most implementations extend {@link AbstractLimitHandler}.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak
  */
 public interface LimitHandler {
 	/**

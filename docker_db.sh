@@ -637,11 +637,12 @@ oracle_21() {
     #sudo mount -t tmpfs -o size=1500M tmpfs ./tmpfs
     #sudo chown `id -nu`:`id -ng` ./tmpfs
     #sudo rm -fr ./tmpfs/*
-    $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+
     # PODMAN:
     # $CONTAINER_CLI run --name oracle -d --mount=type=bind,src=./tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,relabel=shared,U=true -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
     # DOCKER:
     #$CONTAINER_CLI run --name oracle -d --mount type=tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,tmpfs-size=1572864000 -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+    $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
        --health-cmd healthcheck.sh \
        --health-interval 5s \
        --health-timeout 5s \

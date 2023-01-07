@@ -360,7 +360,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 					&& Objects.equals( legacyFetchBuilders, that.legacyFetchBuilders );
 		}
 		else {
-			return !that.isDynamic && mappingIdentifier.equals( that.mappingIdentifier );
+			return !that.isDynamic && mappingIdentifier != null && mappingIdentifier.equals( that.mappingIdentifier );
 		}
 	}
 }

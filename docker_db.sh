@@ -472,6 +472,7 @@ alter database datafile '\$ORACLE_BASE/oradata/XE/sysaux01.dbf' resize 600M;
 
 -- Modifying database init parameters
 alter system set open_cursors=1000 sid='*' scope=both;
+alter system set PROCESSES=300 sid='*' scope=spfile;
 alter system set session_cached_cursors=500 sid='*' scope=spfile;
 alter system set db_securefile=ALWAYS sid='*' scope=spfile;
 alter system set dispatchers='(PROTOCOL=TCP)(SERVICE=XEXDB)(DISPATCHERS=0)' sid='*' scope=spfile;
@@ -490,6 +491,9 @@ alter system set db_cache_size=160M sid='*' scope=both;
 -- Limit PGA
 alter system set pga_aggregate_target=200M sid='*' scope=both;
 
+alter system set sga_max_size=572M sid='*' scope=spfile;
+alter system set db_block_checksum=OFF sid='*' scope=spfile;
+
 -- Restart the database (abort to not wait for S001 process to die)
 SHUTDOWN abort;
 
@@ -498,8 +502,13 @@ SHUTDOWN abort;
 STARTUP MOUNT;
 ALTER DATABASE OPEN;
 
+set pagesize 10000
+show parameter
+
 -- Switch to the XEPDB1 pluggable database
 alter session set container=xepdb1;
+
+alter system set undo_retention=1 sid='*' scope=both;
 
 -- Modify XEPDB1 datafiles and tablespaces
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/system01.dbf' resize 320M;

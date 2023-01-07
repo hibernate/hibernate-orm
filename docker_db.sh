@@ -513,7 +513,7 @@ alter system set undo_retention=1 sid='*' scope=both;
 -- Modify XEPDB1 datafiles and tablespaces
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/system01.dbf' resize 320M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/sysaux01.dbf' resize 360M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 300M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 400M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' autoextend on next 16M;
 -- alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' resize 400M;
 alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' autoextend on next 16M;
@@ -637,16 +637,16 @@ oracle_21() {
     #sudo mount -t tmpfs -o size=1500M tmpfs ./tmpfs
     #sudo chown `id -nu`:`id -ng` ./tmpfs
     #sudo rm -fr ./tmpfs/*
-    #$CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+    $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
     # PODMAN:
     # $CONTAINER_CLI run --name oracle -d --mount=type=bind,src=./tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,relabel=shared,U=true -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
     # DOCKER:
-    $CONTAINER_CLI run --name oracle -d --mount type=tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,tmpfs-size=1572864000 -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+    #$CONTAINER_CLI run --name oracle -d --mount type=tmpfs,dst=/opt/oracle/oradata/XE/XEPDB1,tmpfs-size=1572864000 -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
        --health-cmd healthcheck.sh \
        --health-interval 5s \
        --health-timeout 5s \
        --health-retries 10 \
-       docker.io/loiclefevre/oracle-xe:21.3.0-full
+       docker.io/gvenzl/oracle-xe:21.3.0-full
     oracle_setup
 }
 

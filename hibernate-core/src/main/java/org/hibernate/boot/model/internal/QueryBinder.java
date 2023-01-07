@@ -17,14 +17,18 @@ import org.hibernate.FlushMode;
 import org.hibernate.Remove;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
+import org.hibernate.annotations.HQLSelect;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
 import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
+import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
+import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -156,6 +160,32 @@ public abstract class QueryBinder {
 	}
 
 	public static void bindNativeQuery(
+			String name,
+			SQLSelect sqlSelect,
+			XClass annotatedClass,
+			MetadataBuildingContext context) {
+		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( name )
+				.setFlushMode( FlushMode.MANUAL )
+				.setSqlString( sqlSelect.sql() )
+				.setQuerySpaces( setOf( sqlSelect.querySpaces() ) );
+
+		if ( annotatedClass != null ) {
+			builder.setResultSetMappingClassName( annotatedClass.getName() );
+		}
+
+		final SqlResultSetMapping resultSetMapping = sqlSelect.resultSetMapping();
+		if ( resultSetMapping.columns().length != 0
+				|| resultSetMapping.entities().length != 0
+				|| resultSetMapping.classes().length != 0) {
+			context.getMetadataCollector()
+					.addResultSetMapping( SqlResultSetMappingDescriptor.from( resultSetMapping, name ) );
+			builder.setResultSetMappingName( name );
+		}
+
+		context.getMetadataCollector().addNamedNativeQuery( builder.build() );
+	}
+
+	public static void bindNativeQuery(
 			org.hibernate.annotations.NamedNativeQuery namedNativeQuery,
 			MetadataBuildingContext context) {
 		if ( namedNativeQuery == null ) {
@@ -178,16 +208,15 @@ public abstract class QueryBinder {
 				.setSqlString( namedNativeQuery.query() )
 				.setResultSetMappingName( resultSetMappingName )
 				.setResultSetMappingClassName( resultSetMappingClassName )
-				.setQuerySpaces( null )
 				.setCacheable( namedNativeQuery.cacheable() )
-				.setCacheRegion(nullIfEmpty(namedNativeQuery.cacheRegion()))
+				.setCacheRegion( nullIfEmpty( namedNativeQuery.cacheRegion() ) )
 				.setCacheMode(  getCacheMode( namedNativeQuery )  )
 				.setTimeout( namedNativeQuery.timeout() < 0 ? null : namedNativeQuery.timeout() )
 				.setFetchSize( namedNativeQuery.fetchSize() < 0 ? null : namedNativeQuery.fetchSize() )
 				.setFlushMode( getFlushMode( namedNativeQuery.flushMode() ) )
 				.setReadOnly( namedNativeQuery.readOnly() )
 				.setQuerySpaces( setOf( namedNativeQuery.querySpaces() ) )
-				.setComment(nullIfEmpty(namedNativeQuery.comment()));
+				.setComment( nullIfEmpty( namedNativeQuery.comment() ) );
 
 		if ( namedNativeQuery.callable() ) {
 			final NamedProcedureCallDefinition definition =
@@ -318,6 +347,18 @@ public abstract class QueryBinder {
 				bindNativeQuery( namedNativeQuery, context );
 			}
 		}
+	}
+
+	public static void bindQuery(
+			String name,
+			HQLSelect hqlSelect,
+			MetadataBuildingContext context) {
+		final NamedHqlQueryDefinition hqlQueryDefinition = new NamedHqlQueryDefinition.Builder( name )
+				.setFlushMode( FlushMode.MANUAL )
+				.setHqlString( hqlSelect.query() )
+				.build();
+
+		context.getMetadataCollector().addNamedQuery( hqlQueryDefinition );
 	}
 
 	public static void bindQuery(

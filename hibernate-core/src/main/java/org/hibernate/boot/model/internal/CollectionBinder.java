@@ -63,6 +63,7 @@ import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
@@ -1292,7 +1293,7 @@ public abstract class CollectionBinder {
 		binder.setUpdatable( updatable );
 		Property prop = binder.makeProperty();
 		//we don't care about the join stuffs because the column is on the association table.
-		if (! declaringClassSet) {
+		if ( !declaringClassSet ) {
 			throw new AssertionFailure( "DeclaringClass is not set in CollectionBinder while binding" );
 		}
 		propertyHolder.addProperty( prop, declaringClass );
@@ -1336,6 +1337,14 @@ public abstract class CollectionBinder {
 					sqlDeleteAll.callable(),
 					fromResultCheckStyle( sqlDeleteAll.check() )
 			);
+		}
+
+		final SQLSelect sqlSelect = property.getAnnotation( SQLSelect.class );
+		if ( sqlSelect != null ) {
+			final String loaderName = collection.getRole() + "$SQLSelect";
+			collection.setLoaderName( loaderName );
+			// TODO: pass in the collection element type here
+			QueryBinder.bindNativeQuery( loaderName, sqlSelect, null, buildingContext );
 		}
 
 		final Loader loader = property.getAnnotation( Loader.class );

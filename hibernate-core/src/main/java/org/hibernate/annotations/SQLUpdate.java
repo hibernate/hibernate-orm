@@ -51,7 +51,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(SQLUpdates.class)
 public @interface SQLUpdate {
 	/**
-	 * Procedure name or SQL UPDATE statement.
+	 * Procedure name or SQL {@code UPDATE} statement.
 	 */
 	String sql();
 

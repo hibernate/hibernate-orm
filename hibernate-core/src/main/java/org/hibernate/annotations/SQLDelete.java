@@ -32,7 +32,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(SQLDeletes.class)
 public @interface SQLDelete {
 	/**
-	 * Procedure name or SQL DELETE statement.
+	 * Procedure name or SQL {@code DELETE} statement.
 	 */
 	String sql();
 

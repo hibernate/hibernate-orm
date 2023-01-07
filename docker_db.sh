@@ -486,24 +486,24 @@ alter system set statistics_level=BASIC sid='*' scope=spfile;
 alter system set undo_retention=1 sid='*' scope=spfile;
 
 -- Reduce database buffer cache
-alter system set db_cache_size=160M sid='*' scope=both;
+alter system set db_cache_size=188M sid='*' scope=both;
 
 -- Limit PGA
-alter system set pga_aggregate_target=200M sid='*' scope=both;
+alter system set pga_aggregate_target=300M sid='*' scope=both;
 
-alter system set sga_max_size=572M sid='*' scope=spfile;
+alter system set sga_max_size=600M sid='*' scope=spfile;
 alter system set db_block_checksum=OFF sid='*' scope=spfile;
 
 -- Restart the database (abort to not wait for S001 process to die)
 SHUTDOWN abort;
 
-!cat /proc/meminfo
+-- !cat /proc/meminfo
 
 STARTUP MOUNT;
 ALTER DATABASE OPEN;
 
-set pagesize 10000
-show parameter
+-- set pagesize 10000
+-- show parameter
 
 -- Switch to the XEPDB1 pluggable database
 alter session set container=xepdb1;
@@ -526,10 +526,10 @@ alter tablespace SYSAUX nologging;
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant all privileges to hibernate_orm_test;
 
-!cat /proc/meminfo
+-- !cat /proc/meminfo
 
-set pagesize 10000
-show parameter
+-- set pagesize 10000
+-- show parameter
 
 EOF\""
 }

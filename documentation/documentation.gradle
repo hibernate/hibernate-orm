@@ -309,3 +309,6 @@ sourceSets.test.resources {
 
 checkstyleMain.exclude '**/org/hibernate/userguide/model/*'
 
+tasks.withType(Test).configureEach {
+	maxParallelForks = 2
+}

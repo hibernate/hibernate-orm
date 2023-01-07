@@ -69,3 +69,7 @@ tasks."matrix_mariadb" {
         println "Starting test: " + descriptor
     }
 }
+
+tasks.withType(Test).configureEach {
+    maxParallelForks = 2
+}

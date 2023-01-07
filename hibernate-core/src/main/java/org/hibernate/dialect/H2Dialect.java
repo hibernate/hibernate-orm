@@ -662,7 +662,14 @@ public class H2Dialect extends Dialect {
 					final int idx = message.indexOf( "violation: " );
 					if ( idx > 0 ) {
 						String constraintName = message.substring( idx + "violation: ".length() );
-						if ( sqle.getSQLState().equals( "23506" ) ) {
+						if ( sqle.getSQLState().equals( "23505" ) ) {
+							final int from = constraintName.indexOf( "." );
+							final int till = constraintName.indexOf( " " );
+							if ( 0 < from && from < till ) {
+								constraintName = constraintName.substring( from + 1, till );
+							}
+						}
+						else if ( sqle.getSQLState().equals( "23506" ) ) {
 							constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
 						}
 						return constraintName;

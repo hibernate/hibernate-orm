@@ -162,6 +162,8 @@ edb_14() {
     # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
     (cd edb; $CONTAINER_CLI build -t edb-test:14 -f edb14.Dockerfile .)
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:14
+    cat /proc/meminfo
+    cat /proc/swaps
 }
 
 db2() {
@@ -488,10 +490,13 @@ alter system set undo_retention=1 sid='*' scope=spfile;
 alter system set db_cache_size=160M sid='*' scope=both;
 
 -- Limit PGA
-alter system set pga_aggregate_target=300M sid='*' scope=both;
+alter system set pga_aggregate_target=200M sid='*' scope=both;
 
 -- Restart the database (abort to not wait for S001 process to die)
 SHUTDOWN immediate;
+
+!cat /proc/meminfo
+
 STARTUP MOUNT;
 ALTER DATABASE OPEN;
 
@@ -501,7 +506,7 @@ alter session set container=xepdb1;
 -- Modify XEPDB1 datafiles and tablespaces
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/system01.dbf' resize 320M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/sysaux01.dbf' resize 360M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 400M;
+alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' resize 300M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/XEPDB1/undotbs01.dbf' autoextend on next 16M;
 -- alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' resize 400M;
 alter database tempfile '\$ORACLE_BASE/oradata/XE/XEPDB1/temp01.dbf' autoextend on next 16M;
@@ -515,8 +520,6 @@ create user hibernate_orm_test identified by hibernate_orm_test quota unlimited 
 grant all privileges to hibernate_orm_test;
 
 !cat /proc/meminfo
-!cat /proc/cpuinfo
-!cat /proc/swaps
 
 EOF\""
 }

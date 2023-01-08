@@ -21,4 +21,7 @@ public class WithLongStrings {
 
     @Column(length = LONG32)
     public String long32;
+
+    @Column(length = LOB_DEFAULT+1)
+    public String clob;
 }

@@ -285,6 +285,16 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public void joinTransaction() {
+		delegate.joinTransaction();
+	}
+
+	@Override
+	public boolean isJoinedToTransaction() {
+		return delegate.isJoinedToTransaction();
+	}
+
+	@Override
 	public HibernateCriteriaBuilder getCriteriaBuilder() {
 		return delegate.getCriteriaBuilder();
 	}

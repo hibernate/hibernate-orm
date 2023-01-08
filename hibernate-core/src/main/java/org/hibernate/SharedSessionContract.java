@@ -64,8 +64,29 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	 * Get the {@link Transaction} instance associated with this session.
 	 *
 	 * @return a Transaction instance
+	 *
+	 * @see jakarta.persistence.EntityManager#getTransaction()
 	 */
 	Transaction getTransaction();
+
+	/**
+	 * Join the currently-active JTA transaction.
+	 *
+	 * @see jakarta.persistence.EntityManager#joinTransaction()
+	 *
+	 * @since 6.2
+	 */
+	void joinTransaction();
+
+	/**
+	 * Check if the session is joined to the current transaction.
+	 *
+	 * @see #joinTransaction()
+	 * @see jakarta.persistence.EntityManager#isJoinedToTransaction()
+	 *
+	 * @since 6.2
+	 */
+	boolean isJoinedToTransaction();
 
 	/**
 	 * Obtain a {@link ProcedureCall} based on a named template

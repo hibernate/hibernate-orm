@@ -52,7 +52,7 @@ public class ConcatPipeFunction extends AbstractSqmSelfRenderingFunctionDescript
 		String separator = "(";
 		for ( int i = 0; i < sqlAstArguments.size(); i++ ) {
 			final Expression expression = (Expression) sqlAstArguments.get( i );
-			final JdbcType jdbcType = expression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+			final JdbcType jdbcType = expression.getExpressionType().getSingleJdbcMapping().getJdbcType();
 			sqlAppender.appendSql( separator );
 			switch ( jdbcType.getDdlTypeCode() ) {
 				case SqlTypes.CLOB:

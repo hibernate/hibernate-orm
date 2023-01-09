@@ -108,7 +108,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 				sessionFactory.getTypeConfiguration()
 		);
 
-		final JdbcMapping jdbcMapping = sqlSelection.getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = sqlSelection.getExpressionType().getSingleJdbcMapping();
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnName,

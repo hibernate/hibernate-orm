@@ -95,6 +95,19 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return jdbcMapping;
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return jdbcMapping;
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, jdbcMapping );
 		return getJdbcTypeCount();

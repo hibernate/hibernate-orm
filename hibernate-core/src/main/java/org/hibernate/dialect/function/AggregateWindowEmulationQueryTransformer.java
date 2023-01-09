@@ -184,9 +184,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 					// so we need to introduce an intermediate selection item
 					final int valuesPosition = selectClause.getSqlSelections().size();
 					final String columnName = "col" + valuesPosition;
-					final JdbcMapping jdbcMapping = realExpression.getExpressionType()
-							.getJdbcMappings()
-							.get( 0 );
+					final JdbcMapping jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
 					final ColumnReference columnReference = new ColumnReference(
 							identifierVariable,
 							columnName,
@@ -248,9 +246,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 							// so we need to introduce an intermediate selection item
 							final int valuesPosition = selectClause.getSqlSelections().size();
 							final String columnName = "col" + valuesPosition;
-							final JdbcMapping jdbcMapping = realExpression.getExpressionType()
-									.getJdbcMappings()
-									.get( 0 );
+							final JdbcMapping jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
 							final ColumnReference columnReference = new ColumnReference(
 									identifierVariable,
 									columnName,
@@ -309,9 +305,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 						// so we need to introduce an intermediate selection item
 						final int valuesPosition = selectClause.getSqlSelections().size();
 						final String columnName = "col" + valuesPosition;
-						final JdbcMapping jdbcMapping = realExpression.getExpressionType()
-								.getJdbcMappings()
-								.get( 0 );
+						final JdbcMapping jdbcMapping = realExpression.getExpressionType().getSingleJdbcMapping();
 						final ColumnReference columnReference = new ColumnReference(
 								identifierVariable,
 								columnName,

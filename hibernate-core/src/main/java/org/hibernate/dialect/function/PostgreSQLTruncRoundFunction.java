@@ -58,7 +58,7 @@ public class PostgreSQLTruncRoundFunction extends AbstractSqmSelfRenderingFuncti
 	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, SqlAstTranslator<?> walker) {
 		final int numberOfArguments = arguments.size();
 		final Expression firstArg = (Expression) arguments.get( 0 );
-		final JdbcType jdbcType = firstArg.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		final JdbcType jdbcType = firstArg.getExpressionType().getSingleJdbcMapping().getJdbcType();
 		if ( numberOfArguments == 1 || supportsTwoArguments && jdbcType.isDecimal() ) {
 			// use native two-argument function
 			sqlAppender.appendSql( getName() );

@@ -355,6 +355,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return jdbcMappings.get( index );
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		int span = 0;
 		for ( ; span < jdbcMappings.size(); span++ ) {

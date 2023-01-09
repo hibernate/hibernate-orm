@@ -42,6 +42,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -107,9 +109,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 						partName,
 						partName,
 						selectableNode.getExpressible(),
-						sqlSelection.getExpressionType()
-								.getJdbcMappings()
-								.get( 0 ),
+						sqlSelection.getExpressionType().getSingleJdbcMapping(),
 						modelParts.size()
 				);
 			}
@@ -146,7 +146,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 					.getIdentifierMapping();
 			final EntityIdentifierMapping newIdentifierMapping;
 			if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-				final String attributeName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
+				final String attributeName = identifierMapping.getAttributeName();
 				if ( identifierMapping.getPartMappingType() instanceof ManagedMappingType ) {
 					//noinspection unchecked
 					final Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) ( (ManagedDomainType<?>) ( (EntityDomainType<?>) domainType ).getIdentifierDescriptor().getSqmPathType() ).getAttributes();
@@ -182,10 +182,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 					newIdentifierMapping = new AnonymousTupleBasicEntityIdentifierMapping(
 							selectionExpression + "_" + attributeName,
 							sqmExpressible,
-							sqlSelections.get( selectionIndex )
-									.getExpressionType()
-									.getJdbcMappings()
-									.get( 0 ),
+							sqlSelections.get( selectionIndex ).getExpressionType().getSingleJdbcMapping(),
 							(BasicEntityIdentifierMapping) identifierMapping
 					);
 				}
@@ -205,7 +202,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 							sqmExpressible,
 							attributeType,
 							sqlSelections,
-							selectionIndex,
+							selectionIndex + index,
 							selectionExpression + "_" + attribute.getName(),
 							attribute.getName(),
 							modelPartContainer.findSubPart( attribute.getName(), null ),
@@ -248,7 +245,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 						sqmExpressible,
 						attributeType,
 						sqlSelections,
-						selectionIndex,
+						selectionIndex + index,
 						selectionExpression + "_" + attribute.getName(),
 						attribute.getName(),
 						modelPartContainer.findSubPart( attribute.getName(), null ),
@@ -264,10 +261,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 					partName,
 					selectionExpression,
 					sqmExpressible,
-					sqlSelections.get( selectionIndex )
-							.getExpressionType()
-							.getJdbcMappings()
-							.get( 0 ),
+					sqlSelections.get( selectionIndex ).getExpressionType().getSingleJdbcMapping(),
 					fetchableIndex
 			);
 		}

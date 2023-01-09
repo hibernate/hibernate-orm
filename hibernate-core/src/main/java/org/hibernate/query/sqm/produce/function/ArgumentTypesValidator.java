@@ -173,12 +173,15 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	}
 
 	private int validateArgument(int count, JdbcMappingContainer expressionType, String functionName) {
-		List<JdbcMapping> mappings = expressionType.getJdbcMappings();
-		for (JdbcMapping mapping : mappings) {
+		final int jdbcTypeCount = expressionType.getJdbcTypeCount();
+		for ( int i = 0; i < jdbcTypeCount; i++ ) {
+			final JdbcMapping mapping = expressionType.getJdbcMapping( i );
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if (type != null) {
 				checkType(
-						count, functionName, type,
+						count,
+						functionName,
+						type,
 						mapping.getJdbcType().getDefaultSqlTypeCode(),
 						mapping.getJavaTypeDescriptor().getJavaType()
 				);

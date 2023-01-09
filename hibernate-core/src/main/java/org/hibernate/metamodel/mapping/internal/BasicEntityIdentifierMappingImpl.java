@@ -221,7 +221,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				entityPersister.getIdentifierMapping().getJdbcMappings().get( 0 ),
+				entityPersister.getIdentifierMapping().getSingleJdbcMapping(),
 				navigablePath
 		);
 	}

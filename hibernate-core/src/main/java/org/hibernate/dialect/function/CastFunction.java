@@ -59,11 +59,11 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	@Override
 	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, SqlAstTranslator<?> walker) {
 		final Expression source = (Expression) arguments.get( 0 );
-		final JdbcMapping sourceMapping = source.getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping sourceMapping = source.getExpressionType().getSingleJdbcMapping();
 		final CastType sourceType = getCastType( sourceMapping );
 
 		final CastTarget castTarget = (CastTarget) arguments.get( 1 );
-		final JdbcMapping targetJdbcMapping = castTarget.getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping targetJdbcMapping = castTarget.getExpressionType().getSingleJdbcMapping();
 		final CastType targetType = getCastType( targetJdbcMapping );
 
 		String cast = dialect.castPattern( sourceType, targetType );

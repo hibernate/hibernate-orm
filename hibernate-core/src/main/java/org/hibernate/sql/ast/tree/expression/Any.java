@@ -50,7 +50,7 @@ public class Any implements Expression, DomainResultProducer {
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JdbcMapping jdbcMapping = type.getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = type.getSingleJdbcMapping();
 		return new BasicResult<>(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
@@ -70,7 +70,7 @@ public class Any implements Expression, DomainResultProducer {
 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getJdbcMappings().get( 0 ).getJdbcJavaType(),
+				type.getSingleJdbcMapping().getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

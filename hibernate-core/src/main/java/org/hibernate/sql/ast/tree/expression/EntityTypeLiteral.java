@@ -60,6 +60,16 @@ public class EntityTypeLiteral
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return discriminatorType.getJdbcMapping( index );
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return discriminatorType.getSingleJdbcMapping();
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return discriminatorType.forEachJdbcType( offset, action );
 	}

@@ -76,7 +76,7 @@ public class TimestampaddFunction
 
 	PatternRenderer patternRenderer(TemporalUnit unit, Expression interval, Expression to) {
 		TemporalType temporalType = getSqlTemporalType( to.getExpressionType() );
-		IntervalType intervalType = getSqlIntervalType( interval.getExpressionType().getJdbcMappings().get(0) );
+		IntervalType intervalType = getSqlIntervalType( interval.getExpressionType().getSingleJdbcMapping() );
 		return new PatternRenderer( dialect.timestampaddPattern( unit, temporalType, intervalType ) );
 	}
 
@@ -117,7 +117,7 @@ public class TimestampaddFunction
 				asList( sqlAstArguments ),
 				impliedResultType != null
 						? impliedResultType
-						: (ReturnableType<?>) to.getExpressionType().getJdbcMappings().get( 0 ),
+						: (ReturnableType<?>) to.getExpressionType().getSingleJdbcMapping(),
 				to.getExpressionType()
 		);
 	}

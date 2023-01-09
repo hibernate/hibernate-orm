@@ -79,7 +79,7 @@ public interface SelectableConsumer {
 
 		@Override
 		public JdbcMapping getJdbcMapping() {
-			return base.getJdbcMappings().get( index );
+			return base.getJdbcMapping( index );
 		}
 
 		@Override

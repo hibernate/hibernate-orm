@@ -134,13 +134,18 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Percent fetches or ties fetches aren't supported in DB2
-		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 11.1
 		// Check if current query part is already row numbering to avoid infinite recursion
-		return getQueryPartForRowNumbering() != queryPart && (
-				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| getDB2Version().isBefore( 11, 1 ) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
-		);
+		if ( getQueryPartForRowNumbering() == queryPart ) {
+			return false;
+		}
+		// Percent fetches or ties fetches aren't supported in DB2
+		if ( useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart ) ) {
+			return true;
+		}
+		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 11.1
+		return getDB2Version().isBefore( 11, 1 )
+				&& queryPart.getFetchClauseExpression() != null
+				&& !( queryPart.getFetchClauseExpression() instanceof Literal );
 	}
 
 	protected boolean supportsOffsetClause() {

@@ -28,6 +28,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
  * @author Lukasz Antoniak
  * @author Brett Meyer
 */
+@SuppressWarnings("resource")
 class StatementPreparerImpl implements StatementPreparer {
 	private final JdbcCoordinatorImpl jdbcCoordinator;
 	private final JdbcServices jdbcServices;

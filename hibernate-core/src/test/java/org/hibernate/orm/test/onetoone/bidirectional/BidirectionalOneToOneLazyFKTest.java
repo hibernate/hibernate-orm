@@ -102,7 +102,7 @@ public class BidirectionalOneToOneLazyFKTest {
 	}
 
 	@Entity(name = "FooEntity")
-	@Table(name = "foo")
+	@Table(name = "foo_table")
 	public static class FooEntity {
 		@Id
 		@GeneratedValue
@@ -151,7 +151,7 @@ public class BidirectionalOneToOneLazyFKTest {
 	}
 
 	@Entity(name = "BarEntity")
-	@Table(name = "bar")
+	@Table(name = "bar_table")
 	public static class BarEntity {
 		@Id
 		@GeneratedValue

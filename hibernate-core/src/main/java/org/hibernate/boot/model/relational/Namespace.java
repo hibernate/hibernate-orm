@@ -11,9 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -96,6 +94,18 @@ public class Namespace {
 		return tables.get( logicalTableName );
 	}
 
+	public void registerTable(Identifier logicalName, Table table) {
+		final Table previous = tables.put( logicalName, table );
+		if ( previous != null ) {
+			log.debugf(
+					"Replacing Table registration(%s) : %s -> %s",
+					logicalName,
+					previous,
+					table
+			);
+		}
+	}
+
 	/**
 	 * Creates a mapping Table instance.
 	 *
@@ -131,6 +141,13 @@ public class Namespace {
 
 	public Sequence locateSequence(Identifier name) {
 		return sequences.get( name );
+	}
+
+	public void registerSequence(Identifier logicalName, Sequence sequence) {
+		if ( sequences.containsKey( logicalName ) ) {
+			throw new HibernateException( "Sequence was already registered with that name [" + logicalName.toString() + "]" );
+		}
+		sequences.put( logicalName, sequence );
 	}
 
 	public Sequence createSequence(Identifier logicalName, Function<Identifier,Sequence> creator) {

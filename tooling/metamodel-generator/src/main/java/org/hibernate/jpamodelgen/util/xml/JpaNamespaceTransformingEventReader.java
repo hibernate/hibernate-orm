@@ -30,11 +30,12 @@ import javax.xml.stream.util.EventReaderDelegate;
  */
 public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 	private static final String VERSION_ATTRIBUTE_NAME = "version";
-	private static final String DEFAULT_VERSION = "2.1";
+	private static final String DEFAULT_PERSISTENCE_VERSION = "3.0";
+	private static final String DEFAULT_ORM_VERSION = "3.1";
 
-	private static final String DEFAULT_PERSISTENCE_NAMESPACE = "http://xmlns.jcp.org/xml/ns/persistence";
-	private static final String DEFAULT_ORM_NAMESPACE = "http://xmlns.jcp.org/xml/ns/persistence/orm";
-	private static final Map<String, String> NAMESPACE_MAPPING = new HashMap<String, String>( 2 );
+	private static final String DEFAULT_PERSISTENCE_NAMESPACE = "https://jakarta.ee/xml/ns/persistence";
+	private static final String DEFAULT_ORM_NAMESPACE = "https://jakarta.ee/xml/ns/persistence/orm";
+	private static final Map<String, String> NAMESPACE_MAPPING = new HashMap<String, String>( 8 );
 
 	static {
 		NAMESPACE_MAPPING.put(
@@ -43,6 +44,30 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 		);
 		NAMESPACE_MAPPING.put(
 				"http://java.sun.com/xml/ns/persistence/orm",
+				DEFAULT_ORM_NAMESPACE
+		);
+		NAMESPACE_MAPPING.put(
+				"http://xmlns.jcp.org/xml/ns/persistence",
+				DEFAULT_PERSISTENCE_NAMESPACE
+		);
+		NAMESPACE_MAPPING.put(
+				"http://xmlns.jcp.org/xml/ns/persistence/orm",
+				DEFAULT_ORM_NAMESPACE
+		);
+		NAMESPACE_MAPPING.put(
+				"https://java.sun.com/xml/ns/persistence",
+				DEFAULT_PERSISTENCE_NAMESPACE
+		);
+		NAMESPACE_MAPPING.put(
+				"https://java.sun.com/xml/ns/persistence/orm",
+				DEFAULT_ORM_NAMESPACE
+		);
+		NAMESPACE_MAPPING.put(
+				"https://xmlns.jcp.org/xml/ns/persistence",
+				DEFAULT_PERSISTENCE_NAMESPACE
+		);
+		NAMESPACE_MAPPING.put(
+				"https://xmlns.jcp.org/xml/ns/persistence/orm",
 				DEFAULT_ORM_NAMESPACE
 		);
 	}
@@ -133,13 +158,25 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 		while ( existingAttributesIterator.hasNext() ) {
 			Attribute attribute = (Attribute) existingAttributesIterator.next();
 			if ( VERSION_ATTRIBUTE_NAME.equals( attribute.getName().getLocalPart() ) ) {
-				if ( !DEFAULT_VERSION.equals( attribute.getName().getPrefix() ) ) {
-					newElementAttributeList.add(
-							xmlEventFactory.createAttribute(
-									attribute.getName(),
-									DEFAULT_VERSION
-							)
-					);
+				if ( currentDocumentNamespaceUri.equals( DEFAULT_PERSISTENCE_NAMESPACE ) ) {
+					if ( !DEFAULT_PERSISTENCE_VERSION.equals( attribute.getName().getPrefix() ) ) {
+						newElementAttributeList.add(
+								xmlEventFactory.createAttribute(
+										attribute.getName(),
+										DEFAULT_PERSISTENCE_VERSION
+								)
+						);
+					}
+				}
+				else {
+					if ( !DEFAULT_ORM_VERSION.equals( attribute.getName().getPrefix() ) ) {
+						newElementAttributeList.add(
+								xmlEventFactory.createAttribute(
+										attribute.getName(),
+										DEFAULT_ORM_VERSION
+								)
+						);
+					}
 				}
 			}
 			else {

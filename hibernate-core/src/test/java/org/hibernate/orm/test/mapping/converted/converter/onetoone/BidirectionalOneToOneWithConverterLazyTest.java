@@ -8,10 +8,8 @@ package org.hibernate.orm.test.mapping.converted.converter.onetoone;
 
 import java.io.Serializable;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
-
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -36,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Marco Belladelli
  */
-@SessionFactory
+@SessionFactory(useCollectingStatementInspector = true)
 @DomainModel(annotatedClasses = {
 		BidirectionalOneToOneWithConverterLazyTest.FooEntity.class,
 		BidirectionalOneToOneWithConverterLazyTest.BarEntity.class,
@@ -72,24 +70,17 @@ public class BidirectionalOneToOneWithConverterLazyTest {
 
 	@Test
 	public void testBidirectionalFetch(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
 			FooEntity foo = session.find( FooEntity.class, 1L );
-
-			final AtomicInteger queryExecutionCount = new AtomicInteger();
-			session.getEventListenerManager().addListener( new StatisticalLoggingSessionEventListener() {
-				@Override
-				public void jdbcExecuteStatementStart() {
-					super.jdbcExecuteStatementStart();
-					queryExecutionCount.getAndIncrement();
-				}
-			} );
+			statementInspector.clear();
 
 			BarEntity bar = foo.getBar();
-			assertEquals( 0, queryExecutionCount.get() );
+			statementInspector.assertExecutedCount( 0 );
 			assertEquals( 0.5, bar.getaDouble() );
 
 			FooEntity associatedFoo = bar.getFoo();
-			assertEquals( 0, queryExecutionCount.get() );
+			statementInspector.assertExecutedCount( 0 );
 			assertEquals( "foo_name", associatedFoo.getName() );
 			assertEquals( foo, associatedFoo );
 
@@ -99,24 +90,17 @@ public class BidirectionalOneToOneWithConverterLazyTest {
 
 	@Test
 	public void testBidirectionalFetchInverse(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
 			BarEntity bar = session.find( BarEntity.class, 1L );
-
-			final AtomicInteger queryExecutionCount = new AtomicInteger();
-			session.getEventListenerManager().addListener( new StatisticalLoggingSessionEventListener() {
-				@Override
-				public void jdbcExecuteStatementStart() {
-					super.jdbcExecuteStatementStart();
-					queryExecutionCount.getAndIncrement();
-				}
-			} );
+			statementInspector.clear();
 
 			FooEntity foo = bar.getFoo();
-			assertEquals( 0, queryExecutionCount.get() );
+			statementInspector.assertExecutedCount( 0 );
 			assertEquals( "foo_name", foo.getName() );
 
 			BarEntity associatedBar = foo.getBar();
-			assertEquals( 0, queryExecutionCount.get() );
+			statementInspector.assertExecutedCount( 0 );
 			assertEquals( 0.5, associatedBar.getaDouble() );
 			assertEquals( bar, associatedBar );
 

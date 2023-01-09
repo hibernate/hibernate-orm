@@ -223,6 +223,16 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return attribute.getJdbcMapping( index );
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return attribute.getSingleJdbcMapping();
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return attribute.forEachJdbcType( offset, action );
 	}

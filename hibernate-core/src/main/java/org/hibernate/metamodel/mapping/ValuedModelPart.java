@@ -33,6 +33,16 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	}
 
 	@Override
+	default JdbcMapping getJdbcMapping(int index) {
+		return ModelPart.super.getJdbcMapping( index );
+	}
+
+	@Override
+	default JdbcMapping getSingleJdbcMapping() {
+		return ModelPart.super.getSingleJdbcMapping();
+	}
+
+	@Override
 	default int forEachSelectable(int offset, SelectableConsumer consumer) {
 		return ModelPart.super.forEachSelectable( offset, consumer );
 	}

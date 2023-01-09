@@ -4023,10 +4023,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 				JdbcMappingContainer durationType = scaledExpression.getExpressionType();
 				Duration duration;
-				if ( durationType.getJdbcMappings()
-						.get( 0 )
-						.getJdbcType()
-						.isInterval() ) {
+				if ( durationType.getSingleJdbcMapping().getJdbcType().isInterval() ) {
 					// For interval types, we need to extract the epoch for integer arithmetic for the 'by unit' operator
 					duration = new Duration(
 							extractEpoch( scaledExpression ),
@@ -4152,15 +4149,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			assert fkKeyPart instanceof EmbeddableValuedModelPart;
 			final EmbeddableValuedModelPart compositeFkPart = (EmbeddableValuedModelPart) fkKeyPart;
-			final List<JdbcMapping> jdbcMappings = compositeFkPart.getJdbcMappings();
-			final List<Expression> tupleElements = new ArrayList<>( jdbcMappings.size() );
-			compositeFkPart.forEachSelectable( (position, selectable) -> tupleElements.add(
-					getSqlExpressionResolver().resolveSqlExpression(
-							tableReference,
-							selectable
-					)
-			) );
-
+			final int count = compositeFkPart.getJdbcTypeCount();
+			final ArrayList<Expression> tupleElements = new ArrayList<>( count );
+			for ( int i = 0; i < count; i++ ) {
+				tupleElements.add(
+						getSqlExpressionResolver().resolveSqlExpression(
+								tableReference,
+								compositeFkPart.getSelectable( i )
+						)
+				);
+			}
 			return new SqlTuple( tupleElements, compositeFkPart );
 		}
 	}
@@ -4658,7 +4656,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									false,
 									null,
 									null,
-									expression.getExpressionType().getJdbcMappings().get( 0 )
+									expression.getExpressionType().getSingleJdbcMapping()
 							)
 					);
 				}
@@ -4761,10 +4759,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									false,
 									null,
 									null,
-									sqlSelections.get( 0 ).getExpressionType().getJdbcMappings().get( 0 )
+									sqlSelections.get( 0 ).getExpressionType().getSingleJdbcMapping()
 							)
 					),
-					(ReturnableType<?>) sqlSelections.get( 0 ).getExpressionType().getJdbcMappings().get( 0 ),
+					(ReturnableType<?>) sqlSelections.get( 0 ).getExpressionType().getSingleJdbcMapping(),
 					sqlSelections.get( 0 ).getExpressionType()
 			);
 		}
@@ -5186,7 +5184,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			SqmParameter<?> sourceSqmParameter,
 			List<SqmParameter<?>> sqmParameters,
 			MappingModelExpressible<?> valueMapping) {
-		final JdbcMapping jdbcMapping = valueMapping.getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = valueMapping.getSingleJdbcMapping();
 		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
 			if ( sqmParameter == sourceSqmParameter ) {
 				continue;
@@ -5389,8 +5387,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			// Prefer the model part type instead of the bind type if possible as the model part type contains size information
 			if ( inferredValueMapping instanceof ModelPart ) {
-				final JdbcMapping paramJdbcMapping = paramModelType.getJdbcMappings().get( 0 );
-				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getJdbcMappings().get( 0 );
+				final JdbcMapping paramJdbcMapping = paramModelType.getSingleJdbcMapping();
+				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getSingleJdbcMapping();
 				// If the bind type has a different JDBC type, we prefer that
 				if ( paramJdbcMapping.getJdbcType() == inferredJdbcMapping.getJdbcType() ) {
 					return resolveInferredValueMappingForParameter( inferredValueMapping );
@@ -6227,11 +6225,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			BasicValuedMapping durationType = (BasicValuedMapping) toDuration.getNodeType();
 			Duration duration;
-			if ( scaledMagnitude.getExpressionType()
-					.getJdbcMappings()
-					.get( 0 )
-					.getJdbcType()
-					.isInterval() ) {
+			if ( scaledMagnitude.getExpressionType().getSingleJdbcMapping().getJdbcType().isInterval() ) {
 				duration = new Duration( extractEpoch( scaledMagnitude ), SECOND, durationType );
 			}
 			else {

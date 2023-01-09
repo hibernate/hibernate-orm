@@ -210,6 +210,16 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return identifierMapping.getJdbcMapping( index );
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return identifierMapping.getSingleJdbcMapping();
+	}
+
+	@Override
 	public int forEachSelectable(SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );
 	}

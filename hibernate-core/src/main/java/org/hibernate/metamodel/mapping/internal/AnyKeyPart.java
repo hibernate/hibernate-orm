@@ -285,6 +285,19 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return jdbcMapping;
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return jdbcMapping;
+	}
+
+	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
 	}

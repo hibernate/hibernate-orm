@@ -403,8 +403,8 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 		}
 		else {
 			final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
-			if ( lhsExpressionType != null
-					&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
+					&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
 				// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 				switch ( operator ) {
 					case DISTINCT_FROM:
@@ -451,8 +451,8 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	protected void renderComparisonStandard(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
-		if ( lhsExpressionType != null
-				&& lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
+				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
 			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
 				case EQUAL:

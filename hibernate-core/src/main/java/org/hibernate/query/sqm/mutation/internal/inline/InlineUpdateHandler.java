@@ -529,7 +529,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 							new ColumnReference(
 									rootTableGroup.resolveTableReference( tableExpression ),
 									columnNames.get( 0 ),
-									entityDescriptor.getIdentifierMapping().getJdbcMappings().get( 0 )
+									entityDescriptor.getIdentifierMapping().getSingleJdbcMapping()
 							)
 					)
 			);

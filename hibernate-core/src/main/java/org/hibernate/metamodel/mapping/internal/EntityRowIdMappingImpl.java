@@ -113,6 +113,12 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	}
 
 	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return getJdbcMapping();
+	}
+
+
+	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return rowIdType.disassemble( value, session );
 	}

@@ -749,7 +749,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public static TemporalType getSqlTemporalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
-		return getSqlTemporalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcType() );
+		return getSqlTemporalType( jdbcMappings.getSingleJdbcMapping().getJdbcType() );
 	}
 
 	public static TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
@@ -780,7 +780,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public static IntervalType getSqlIntervalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
-		return getSqlIntervalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcType() );
+		return getSqlIntervalType( jdbcMappings.getSingleJdbcMapping().getJdbcType() );
 	}
 
 	public static IntervalType getSqlIntervalType(JdbcType descriptor) {

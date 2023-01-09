@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
@@ -30,6 +29,7 @@ import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -42,10 +42,8 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.type.spi.TypeConfiguration;
 
-/**
- * @author Koen Aers
- */
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements SqlTupleContainer,
 		Assignable {
 
@@ -295,7 +293,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			EntityValuedModelPart treatedMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
 		final Expression sqlExpression;
 
 		if ( resultModelPart == null ) {
@@ -408,12 +405,23 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-				sqlExpression,
-				getExpressionType().getJavaType(),
-				null,
-				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
-		);
+		applySqlSelections( sqlExpression, creationState.getSqlAstCreationState() );
+	}
+
+	private void applySqlSelections(Expression sqlExpression, SqlAstCreationState creationState) {
+		if ( sqlExpression instanceof SqlTuple ) {
+			for ( Expression expression : ( (SqlTuple) sqlExpression ).getExpressions() ) {
+				applySqlSelections( expression, creationState );
+			}
+		}
+		else {
+			creationState.getSqlExpressionResolver().resolveSqlSelection(
+					sqlExpression,
+					getExpressionType().getJavaType(),
+					null,
+					creationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
+			);
+		}
 	}
 
 	@Override

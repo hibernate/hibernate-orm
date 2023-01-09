@@ -2600,7 +2600,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * This is because the translation from the types to strings is not guaranteed to result in the same ordering.
 	 */
 	private SqlAstNode wrapRowComponentAsOrderPreservingConcatArgument(Expression expression) {
-		final JdbcMapping jdbcMapping = expression.getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 		switch ( jdbcMapping.getCastType() ) {
 			case STRING:
 				return expression;
@@ -2640,7 +2640,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private int wrapRowComponentAsOrderPreservingConcatArgumentSizeEstimate(Expression expression) {
-		final JdbcMapping jdbcMapping = expression.getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 		switch ( jdbcMapping.getCastType() ) {
 			case STRING:
 				if ( expression.getExpressionType() instanceof SqlTypedMapping ) {
@@ -2683,7 +2683,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * This is because the translation from the types to strings is not guaranteed to preserve equality.
 	 */
 	private SqlAstNode wrapRowComponentAsEqualityPreservingConcatArgument(Expression expression) {
-		final JdbcMapping jdbcMapping = expression.getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 		switch ( jdbcMapping.getCastType() ) {
 			case STRING:
 				return expression;
@@ -2726,7 +2726,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private int wrapRowComponentAsEqualityPreservingConcatArgumentSizeEstimate(Expression expression) {
-		final JdbcMapping jdbcMapping = expression.getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 		switch ( jdbcMapping.getCastType() ) {
 			case STRING:
 				if ( expression.getExpressionType() instanceof SqlTypedMapping ) {
@@ -3143,7 +3143,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				false,
 				null,
 				null,
-				expression.getExpressionType().getJdbcMappings().get( 0 )
+				expression.getExpressionType().getSingleJdbcMapping()
 		);
 	}
 
@@ -4034,7 +4034,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							}
 							final Number bindValue = (Number) binding.getBindValue();
 							//noinspection unchecked
-							offsetParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcValueBinder().bind(
+							offsetParameter.getExpressionType().getSingleJdbcMapping().getJdbcValueBinder().bind(
 									statement,
 									bindValue.intValue() + offsetValue,
 									startPosition,
@@ -4114,7 +4114,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				dynamicOffset = null;
 			}
 			//noinspection unchecked
-			fetchParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcValueBinder().bind(
+			fetchParameter.getExpressionType().getSingleJdbcMapping().getJdbcValueBinder().bind(
 					statement,
 					bindValue.intValue() + offsetValue,
 					startPosition,
@@ -5073,7 +5073,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			);
 		}
 		else {
-			arguments.add( new CastTarget( expression.getExpressionType().getJdbcMappings().get( 0 ) ) );
+			arguments.add( new CastTarget( expression.getExpressionType().getSingleJdbcMapping() ) );
 		}
 		castFunction().render( this, arguments, this );
 	}
@@ -6553,7 +6553,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			assert jdbcParameter.getExpressionType().getJdbcTypeCount() == 1;
-			final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 );
+			final JdbcMapping jdbcMapping = jdbcParameter.getExpressionType().getSingleJdbcMapping();
 			//noinspection unchecked
 			final JdbcLiteralFormatter<Object> literalFormatter = jdbcMapping.getJdbcLiteralFormatter();
 			if ( literalFormatter == null ) {

@@ -462,7 +462,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				BasicType<String> stringType,
 				BasicType<Integer> integerType,
 				Expression offsetExpression) {
-			if ( offsetExpression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType().isString() ) {
+			if ( offsetExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString() ) {
 				return offsetExpression;
 			}
 			else {
@@ -553,7 +553,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				BasicType<String> stringType,
 				BasicType<Integer> integerType,
 				Expression offsetExpression) {
-			if ( offsetExpression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType().isString() ) {
+			if ( offsetExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString() ) {
 				return concat(
 						concatFunction,
 						stringType,
@@ -668,7 +668,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				BasicType<String> stringType,
 				BasicType<Integer> integerType,
 				Expression offsetExpression) {
-			if ( offsetExpression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType().isString() ) {
+			if ( offsetExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString() ) {
 				return new SelfRenderingFunctionSqlAstExpression(
 						"substring",
 						substringFunction,

@@ -22,6 +22,10 @@ import org.hibernate.mapping.UserDefinedType;
  * <p>
  * An {@linkplain ColumnOrderingStrategy} may be selected using the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY}.
+ *
+ * @see org.hibernate.cfg.Configuration#setColumnOrderingStrategy(ColumnOrderingStrategy)
+ * @see org.hibernate.boot.MetadataBuilder#applyColumnOrderingStrategy(ColumnOrderingStrategy)
+ * @see org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY
  */
 @Incubating
 public interface ColumnOrderingStrategy {

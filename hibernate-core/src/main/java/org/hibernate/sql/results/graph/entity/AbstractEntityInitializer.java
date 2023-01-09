@@ -378,7 +378,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( !missing ) {
+		if ( !missing && !isInitialized ) {
 			// Special case map proxy to avoid stack overflows
 			// We know that a map proxy will always be of "the right type" so just use that object
 			final LoadingEntityEntry existingLoadingEntry =
@@ -388,6 +388,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 			if ( entityInstance == null ) {
 				resolveEntityInstance( rowProcessingState, existingLoadingEntry, entityKey.getIdentifier() );
+			}
+			else if ( existingLoadingEntry != null && existingLoadingEntry.getEntityInitializer() != this ) {
+				isInitialized = true;
 			}
 		}
 	}
@@ -411,7 +414,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final Object entityInstanceFromExecutionContext =
 				rowProcessingState.getJdbcValuesSourceProcessingState().getExecutionContext().getEntityInstance();
 		if ( isProxyInstance( proxy ) ) {
-			if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+			if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -428,7 +431,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					this.isInitialized = true;
 				}
 			}
-			else if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+			else if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -440,6 +443,19 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 			upgradeLockMode( rowProcessingState );
 		}
+	}
+
+	private boolean useEntityInstanceFromExecutionContext(
+			Object entityInstanceFromExecutionContext,
+			SharedSessionContractImplementor session) {
+		if ( this instanceof EntityResultInitializer
+				&& entityInstanceFromExecutionContext != null
+				&& entityKey.getIdentifier()
+				.equals( entityDescriptor.getIdentifier( entityInstanceFromExecutionContext, session ) )
+		) {
+			return true;
+		}
+		return false;
 	}
 
 	private void upgradeLockMode(RowProcessingState rowProcessingState) {

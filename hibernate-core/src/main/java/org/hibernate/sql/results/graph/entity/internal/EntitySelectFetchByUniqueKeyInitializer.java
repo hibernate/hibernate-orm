@@ -15,6 +15,7 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -39,6 +40,16 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 	public void initializeInstance(RowProcessingState rowProcessingState) {
 		if ( entityInstance != null || isInitialized ) {
 			return;
+		}
+
+		final EntityInitializer parentEntityInitializer = getParentEntityInitializer( parentAccess );
+		if ( parentEntityInitializer != null && parentEntityInitializer.getEntityKey() != null ) {
+			// make sure parentEntityInitializer.resolveInstance has been called before
+			parentEntityInitializer.resolveInstance( rowProcessingState );
+			if ( parentEntityInitializer.isInitialized() ) {
+				isInitialized = true;
+				return;
+			}
 		}
 
 		if ( !isAttributeAssignableToConcreteDescriptor() ) {
@@ -95,4 +106,10 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 		isInitialized = true;
 	}
 
+	private EntityInitializer getParentEntityInitializer(FetchParentAccess parentAccess) {
+		if ( parentAccess != null ) {
+			return parentAccess.findFirstEntityInitializer();
+		}
+		return null;
+	}
 }

@@ -155,7 +155,8 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( queryGroup );
-		if ( emulateFetchClause || !supportsOffsetClause() && hasOffset( queryGroup ) ) {
+		if ( emulateFetchClause ||
+				getQueryPartForRowNumbering() != queryGroup && !supportsOffsetClause() && hasOffset( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, emulateFetchClause );
 		}
 		else {
@@ -166,7 +167,8 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( querySpec );
-		if ( emulateFetchClause || !supportsOffsetClause() && hasOffset( querySpec ) ) {
+		if ( emulateFetchClause ||
+				getQueryPartForRowNumbering() != querySpec && !supportsOffsetClause() && hasOffset( querySpec ) ) {
 			emulateFetchOffsetWithWindowFunctions( querySpec, emulateFetchClause );
 		}
 		else {

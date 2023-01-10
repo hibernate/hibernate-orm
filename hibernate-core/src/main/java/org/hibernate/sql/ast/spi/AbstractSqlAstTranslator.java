@@ -1444,7 +1444,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
 		final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
 		final boolean needsSelectAliases = this.needsSelectAliases;
+		final SqlAstNodeRenderingMode oldParameterRenderingMode = getParameterRenderingMode();
 		try {
+			this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			String queryGroupAlias = null;
 			// See the field documentation of queryPartForRowNumbering etc. for an explanation about this
 			final QueryPart currentQueryPart = queryPartStack.getCurrent();
@@ -1543,6 +1545,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			this.queryPartForRowNumbering = queryPartForRowNumbering;
 			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
 			this.needsSelectAliases = needsSelectAliases;
+			this.parameterRenderingMode = oldParameterRenderingMode;
 		}
 	}
 
@@ -1553,9 +1556,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final boolean needsSelectAliases = this.needsSelectAliases;
 		final Predicate additionalWherePredicate = this.additionalWherePredicate;
 		final ForUpdateClause forUpdate = this.forUpdate;
+		final SqlAstNodeRenderingMode oldParameterRenderingMode = getParameterRenderingMode();
 		try {
 			this.additionalWherePredicate = null;
 			this.forUpdate = null;
+			this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			// See the field documentation of queryPartForRowNumbering etc. for an explanation about this
 			// In addition, we also reset the row numbering if the currently row numbered query part is a query group
 			// which means this query spec is a part of that query group.
@@ -1618,6 +1623,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
 			this.needsSelectAliases = needsSelectAliases;
 			this.additionalWherePredicate = additionalWherePredicate;
+			this.parameterRenderingMode = oldParameterRenderingMode;
 			if ( queryPartForRowNumbering == null ) {
 				this.forUpdate = forUpdate;
 			}

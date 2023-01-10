@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.persister.entity.AttributeMappingsList;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -110,5 +111,9 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 			}
 		}
 		return false;
+	}
+
+	default EntityPersister asEntityPersister() {
+		return null;
 	}
 }

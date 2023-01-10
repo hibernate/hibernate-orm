@@ -114,4 +114,10 @@ public interface Loadable extends EntityPersister {
 	 * @return The proper table alias for qualifying the given column.
 	 */
 	String getTableAliasForColumn(String columnName, String rootAlias);
+
+	@Override
+	default Loadable asLoadable() {
+		return this;
+	}
+
 }

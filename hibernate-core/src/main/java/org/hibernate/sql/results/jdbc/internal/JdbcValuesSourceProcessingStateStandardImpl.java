@@ -199,7 +199,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 						callback.invokeAfterLoadActions(
 								getSession(),
 								loadingEntityEntry.getEntityInstance(),
-								(Loadable) loadingEntityEntry.getDescriptor()
+								loadingEntityEntry.getDescriptor().asLoadable()
 						);
 					}
 				}

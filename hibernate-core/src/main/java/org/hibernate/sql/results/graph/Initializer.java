@@ -81,7 +81,7 @@ public interface Initializer {
 			final EntityPersister concreteDescriptor = parentAccess.findFirstEntityInitializer()
 					.getConcreteDescriptor();
 			if ( concreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
-				final EntityPersister declaringType = (EntityPersister) referencedModelPart.getDeclaringType();
+				final EntityPersister declaringType = referencedModelPart.getDeclaringType().asEntityPersister();
 				if ( concreteDescriptor != declaringType ) {
 					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getEntityName() ) ) {
 						return false;

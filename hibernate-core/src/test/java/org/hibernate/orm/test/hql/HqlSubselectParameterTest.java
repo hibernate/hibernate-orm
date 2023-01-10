@@ -66,7 +66,6 @@ public class HqlSubselectParameterTest {
 	public static class Bookmark {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		@Column(name = "id", nullable = false, unique = true, updatable = false)
 		private Long key;
 
@@ -79,7 +78,6 @@ public class HqlSubselectParameterTest {
 	public static class Resource {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		@Column(name = "id", nullable = false, unique = true, updatable = false)
 		private Long key;
 

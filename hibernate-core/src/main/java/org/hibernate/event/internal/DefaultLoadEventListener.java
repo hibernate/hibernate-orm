@@ -545,7 +545,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			session.getPersistenceContextInternal().getNaturalIdResolutions()
 					.cacheResolutionFromLoad(
 							event.getEntityId(),
-							persister.getNaturalIdMapping().extractNaturalIdFromEntity( entity, session ),
+							persister.getNaturalIdMapping().extractNaturalIdFromEntity( entity ),
 							persister
 					);
 		}

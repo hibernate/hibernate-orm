@@ -29,7 +29,7 @@ public interface NaturalIdResolutions {
 
 	/**
 	 * Removes a natural-id-to-identifier resolution.
-	 *
+	 * <p>
 	 * Handles both the local (transactional) and shared (second-level) caches.
 	 *
 	 * @return The cached values, if any.  May be different from incoming values.
@@ -50,7 +50,7 @@ public interface NaturalIdResolutions {
 
 	/**
 	 * Removes any local cross-reference, returning the previously cached value if one.
-	 *
+	 * <p>
 	 * Again, this only effects the persistence-context cache, not the L2 cache
 	 */
 	Object removeLocalResolution(Object id, Object naturalId, EntityMappingType entityDescriptor);
@@ -93,10 +93,10 @@ public interface NaturalIdResolutions {
 
 	/**
 	 * Part of the "load synchronization process".
-	 *
+	 * <p>
 	 * Responsible for maintaining cross-reference entries when natural-id values were found
 	 * to have changed.
-	 *
+	 * <p>
 	 * Also responsible for tracking the old values as no longer valid until the next flush
 	 * because otherwise going to the database would just re-pull the old values as valid.
 	 * In this responsibility, {@link #cleanupFromSynchronizations} is the inverse process

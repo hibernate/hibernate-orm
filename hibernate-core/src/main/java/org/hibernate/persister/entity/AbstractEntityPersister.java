@@ -74,10 +74,8 @@ import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CollectionKey;
@@ -2708,8 +2706,6 @@ public abstract class AbstractEntityPersister
 		return true;
 	}
 
-	private static final boolean[] SINGLE_TRUE = new boolean[] { true };
-
 	public final boolean checkVersion(final boolean[] includeProperty) {
 		return includeProperty[getVersionProperty()] || isVersionGeneratedOnExecution();
 	}
@@ -3859,10 +3855,10 @@ public abstract class AbstractEntityPersister
 		final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
 		final Object naturalIdSnapshot = entitySnapshot == StatefulPersistenceContext.NO_ROW
 				? null
-				: naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot, session );
+				: naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot );
 
 		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this );
-		final Object naturalId = naturalIdMapping.extractNaturalIdFromEntity( entity, session );
+		final Object naturalId = naturalIdMapping.extractNaturalIdFromEntity( entity );
 		naturalIdResolutions.manageLocalResolution( id, naturalId, this, CachedNaturalIdValueSource.UPDATE );
 	}
 
@@ -5256,8 +5252,6 @@ public abstract class AbstractEntityPersister
 			int fetchableIndex,
 			MappingModelCreationProcess creationProcess) {
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
-		final JdbcServices jdbcServices = creationContext.getJdbcServices();
-		final Dialect dialect = creationContext.getDialect();
 
 		final String attrName = tupleAttrDefinition.getName();
 		final Type attrType = tupleAttrDefinition.getType();
@@ -5336,7 +5330,7 @@ public abstract class AbstractEntityPersister
 					assert attrColumnExpression.equals( selectable.getText( creationContext.getDialect() ) );
 
 					customReadExpr = selectable.getTemplate(
-							dialect,
+							creationContext.getDialect(),
 							creationContext.getTypeConfiguration(),
 							creationContext.getFunctionRegistry()
 					);

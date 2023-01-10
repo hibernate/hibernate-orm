@@ -44,7 +44,7 @@ public class NaturalIdCacheKey implements Serializable {
 		final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
 
 		this.naturalIdValues = naturalIdMapping.disassemble( naturalIdValues, session );
-		this.hashCode = naturalIdMapping.calculateHashCode( naturalIdValues, session );
+		this.hashCode = naturalIdMapping.calculateHashCode( naturalIdValues );
 
 		initTransients();
 	}

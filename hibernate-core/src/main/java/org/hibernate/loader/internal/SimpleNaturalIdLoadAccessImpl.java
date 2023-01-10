@@ -66,21 +66,13 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	@Override
 	public T getReference(Object naturalIdValue) {
 		verifySimplicity( naturalIdValue );
-
-		final SessionImplementor session = getContext().getSession();
-		final Object normalizedNaturalIdValue = entityPersister().getNaturalIdMapping().normalizeInput( naturalIdValue, session );
-
-		return doGetReference( normalizedNaturalIdValue );
+		return doGetReference( entityPersister().getNaturalIdMapping().normalizeInput( naturalIdValue) );
 	}
 
 	@Override
 	public T load(Object naturalIdValue) {
 		verifySimplicity( naturalIdValue );
-
-		final SessionImplementor session = getContext().getSession();
-		final Object normalizedNaturalIdValue = entityPersister().getNaturalIdMapping().normalizeInput( naturalIdValue, session );
-
-		return doLoad( normalizedNaturalIdValue );
+		return doLoad( entityPersister().getNaturalIdMapping().normalizeInput( naturalIdValue) );
 	}
 
 	private void verifySimplicity(Object naturalIdValue) {

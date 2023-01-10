@@ -51,18 +51,12 @@ public class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> i
 
 	@Override
 	public final T getReference() {
-		final SessionImplementor session = getContext().getSession();
-		final Object normalizedValue = entityPersister().getNaturalIdMapping().normalizeInput( naturalIdParameters, session );
-
-		return doGetReference( normalizedValue );
+		return doGetReference( entityPersister().getNaturalIdMapping().normalizeInput( naturalIdParameters ) );
 	}
 
 	@Override
 	public final T load() {
-		final SessionImplementor session = getContext().getSession();
-		final Object normalizedValue = entityPersister().getNaturalIdMapping().normalizeInput( naturalIdParameters, session );
-
-		return doLoad( normalizedValue );
+		return doLoad( entityPersister().getNaturalIdMapping().normalizeInput( naturalIdParameters ) );
 	}
 
 	@Override

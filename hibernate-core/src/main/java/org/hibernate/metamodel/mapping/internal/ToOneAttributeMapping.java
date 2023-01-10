@@ -147,6 +147,10 @@ public class ToOneAttributeMapping
 	private final Set<String> targetKeyPropertyNames;
 
 	private final Cardinality cardinality;
+	/*
+	 Capture the other side's name of a possibly bidirectional association to allow resolving circular fetches.
+	 It may be null if the referenced property is a non-entity.
+	 */
 	private final String bidirectionalAttributeName;
 	private final TableGroupProducer declaringTableGroupProducer;
 
@@ -222,10 +226,10 @@ public class ToOneAttributeMapping
 			else {
 				cardinality = Cardinality.MANY_TO_ONE;
 			}
+			final PersistentClass entityBinding = manyToOne.getMetadata()
+					.getEntityBinding( manyToOne.getReferencedEntityName() );
 			if ( referencedPropertyName == null ) {
 				String bidirectionalAttributeName = null;
-				final PersistentClass entityBinding = manyToOne.getMetadata()
-						.getEntityBinding( manyToOne.getReferencedEntityName() );
 				if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE ) {
 					// Handle join table cases
 					for ( Join join : entityBinding.getJoinClosure() ) {
@@ -271,7 +275,11 @@ public class ToOneAttributeMapping
 				this.bidirectionalAttributeName = bidirectionalAttributeName;
 			}
 			else {
-				this.bidirectionalAttributeName = referencedPropertyName;
+				// Only set the bidirectional attribute name if the referenced property can actually be circular i.e. an entity type
+				final Property property = entityBinding.getProperty( referencedPropertyName );
+				this.bidirectionalAttributeName = property != null && property.getValue() instanceof EntityType
+						? referencedPropertyName
+						: null;
 			}
 			if ( bootValue.isNullable() ) {
 				isKeyTableNullable = true;
@@ -991,8 +999,7 @@ public class ToOneAttributeMapping
 			}
 			return false;
 		}
-		return parentNavigablePath.getLocalName().equals( bidirectionalAttributeName ) ||
-				parentNavigablePath.getLocalName().equals( identifyingColumnsTableExpression );
+		return parentNavigablePath.getLocalName().equals( bidirectionalAttributeName );
 	}
 
 	public String getBidirectionalAttributeName(){

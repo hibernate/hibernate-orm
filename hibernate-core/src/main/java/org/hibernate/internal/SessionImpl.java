@@ -127,7 +127,6 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
-import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -2746,31 +2745,6 @@ public class SessionImpl
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
 		}
-	}
-
-	@Override
-	public void joinTransaction() {
-		checkOpen();
-		if ( !getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
-			log.callingJoinTransactionOnNonJtaEntityManager();
-			return;
-		}
-
-		try {
-			getTransactionCoordinator().explicitJoin();
-		}
-		catch ( TransactionRequiredForJoinException e ) {
-			throw new TransactionRequiredException( e.getMessage() );
-		}
-		catch ( HibernateException he ) {
-			throw getExceptionConverter().convert( he );
-		}
-	}
-
-	@Override
-	public boolean isJoinedToTransaction() {
-		checkOpen();
-		return getTransactionCoordinator().isJoined();
 	}
 
 	@Override

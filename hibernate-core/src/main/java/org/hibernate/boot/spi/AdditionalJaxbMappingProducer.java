@@ -16,8 +16,7 @@ import org.jboss.jandex.IndexView;
 /**
  * @author Steve Ebersole
  *
- * @deprecated Intended for Envers integration until we can migrate Envers
- *             away from XML generation for building its model.
+ * @deprecated Use {@linkplain AdditionalMappingContributor} instead
  */
 @Deprecated
 public interface AdditionalJaxbMappingProducer {

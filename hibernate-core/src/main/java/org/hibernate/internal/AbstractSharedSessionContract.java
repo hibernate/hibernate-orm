@@ -84,6 +84,7 @@ import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -537,6 +538,31 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				throw new HibernateException( "Exception pulsing TransactionCoordinator", e );
 			}
 		}
+	}
+
+	@Override
+	public void joinTransaction() {
+		checkOpen();
+		if ( !getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
+			log.callingJoinTransactionOnNonJtaEntityManager();
+			return;
+		}
+
+		try {
+			getTransactionCoordinator().explicitJoin();
+		}
+		catch ( TransactionRequiredForJoinException e ) {
+			throw new TransactionRequiredException( e.getMessage() );
+		}
+		catch ( HibernateException he ) {
+			throw getExceptionConverter().convert( he );
+		}
+	}
+
+	@Override
+	public boolean isJoinedToTransaction() {
+		checkOpen();
+		return getTransactionCoordinator().isJoined();
 	}
 
 	protected void delayedAfterCompletion() {

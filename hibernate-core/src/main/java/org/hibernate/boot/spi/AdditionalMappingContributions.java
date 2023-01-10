@@ -21,9 +21,28 @@ import org.hibernate.mapping.Table;
  */
 @Incubating
 public interface AdditionalMappingContributions {
+	/**
+	 * Contribute mappings in the form of {@code hbm.xml} JAXB bindings
+	 */
 	void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding, Origin origin);
+
+	/**
+	 * Contribute a materialized PersistentClass
+	 */
 	void contributeEntity(PersistentClass entity);
+
+	/**
+	 * Contribute a materialized Table
+	 */
 	void contributeTable(Table table);
+
+	/**
+	 * Contribute a materialized Sequence
+	 */
 	void contributeSequence(Sequence sequence);
+
+	/**
+	 * Contribute a materialized AuxiliaryDatabaseObject
+	 */
 	void contributeAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 }

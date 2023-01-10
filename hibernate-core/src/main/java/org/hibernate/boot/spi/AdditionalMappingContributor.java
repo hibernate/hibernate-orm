@@ -19,6 +19,9 @@ import org.hibernate.boot.jaxb.internal.MappingBinder;
  */
 @Incubating
 public interface AdditionalMappingContributor {
+	/**
+	 * The name of this contributor.
+	 */
 	default String getContributorName() {
 		return null;
 	}

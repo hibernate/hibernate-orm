@@ -318,15 +318,19 @@ public class MetadataBuildingProcess {
 
 		processor.finishUp();
 
-		processAdditionalMappingContributions( options, metadataCollector, classLoaderService, rootMetadataBuildingContext );
-		processAdditionalJaxbMappingProducer( options, metadataCollector, classLoaderService, rootMetadataBuildingContext, jandexView );
+		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
+		processAdditionalJaxbMappingProducer( metadataCollector, options, jandexView, classLoaderService, rootMetadataBuildingContext );
 
 		applyExtraQueryImports( managedResources, metadataCollector );
 
 		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
 	}
 
-	private static void processAdditionalMappingContributions(MetadataBuildingOptions options, InFlightMetadataCollectorImpl metadataCollector, ClassLoaderService classLoaderService, MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
+	private static void processAdditionalMappingContributions(
+			InFlightMetadataCollectorImpl metadataCollector,
+			MetadataBuildingOptions options,
+			ClassLoaderService classLoaderService,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
 		final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 		final AdditionalMappingContributionsImpl contributions = new AdditionalMappingContributionsImpl(
 				metadataCollector,
@@ -396,13 +400,10 @@ public class MetadataBuildingProcess {
 			this.hierarchyBuilder = hierarchyBuilder;
 		}
 
-		public String getCurrentContributor() {
-			return currentContributor;
-		}
-
 		public void setCurrentContributor(String contributor) {
 			this.currentContributor = contributor == null ? "orm" : contributor;
 		}
+
 		@Override
 		public void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding, Origin origin) {
 			if ( ! options.isXmlMappingEnabled() ) {
@@ -447,8 +448,12 @@ public class MetadataBuildingProcess {
 		}
 	}
 
-	@Deprecated
-	private static void processAdditionalJaxbMappingProducer(MetadataBuildingOptions options, InFlightMetadataCollectorImpl metadataCollector, ClassLoaderService classLoaderService, MetadataBuildingContextRootImpl rootMetadataBuildingContext, IndexView jandexView) {
+	private static void processAdditionalJaxbMappingProducer(
+			InFlightMetadataCollectorImpl metadataCollector,
+			MetadataBuildingOptions options,
+			IndexView jandexView,
+			ClassLoaderService classLoaderService,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
 		if ( options.isXmlMappingEnabled() ) {
 			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
 			if ( producers != null ) {

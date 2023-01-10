@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
@@ -39,6 +40,7 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface NaturalIdMapping extends VirtualModelPart {
 	String PART_NAME = "{natural-id}";
 
@@ -80,7 +82,7 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	 *
 	 * @return The extracted natural id values.  This is a normalized
 	 */
-	Object extractNaturalIdFromEntityState(Object[] state, SharedSessionContractImplementor session);
+	Object extractNaturalIdFromEntityState(Object[] state);
 
 	/**
 	 * Given an entity instance, extract the normalized natural id representation
@@ -89,31 +91,28 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	 *
 	 * @return The extracted natural id values
 	 */
-	Object extractNaturalIdFromEntity(Object entity, SharedSessionContractImplementor session);
-
+	Object extractNaturalIdFromEntity(Object entity);
 
 	/**
 	 * Normalize a user-provided natural-id value into the representation Hibernate uses internally
 	 *
 	 * @param incoming The user-supplied value
-	 *
 	 * @return The normalized, internal representation
 	 */
-	Object normalizeInput(Object incoming, SharedSessionContractImplementor session);
+	Object normalizeInput(Object incoming);
 
 	/**
 	 * Validates a natural id value(s) for the described natural-id based on the expected internal representation
 	 */
-	void validateInternalForm(Object naturalIdValue, SharedSessionContractImplementor session);
+	void validateInternalForm(Object naturalIdValue);
 
 	/**
 	 * Calculate the hash-code of a natural-id value
 	 *
 	 * @param value The natural-id value
-	 *
 	 * @return The hash-code
 	 */
-	int calculateHashCode(Object value, SharedSessionContractImplementor session);
+	int calculateHashCode(Object value);
 
 	/**
 	 * Make a loader capable of loading a single entity by natural-id

@@ -14,31 +14,43 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.Session;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryExtraState;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 
+import static org.hibernate.LockMode.PESSIMISTIC_FORCE_INCREMENT;
+import static org.hibernate.engine.internal.AbstractEntityEntry.BooleanState.EXISTS_IN_DATABASE;
+import static org.hibernate.engine.internal.AbstractEntityEntry.BooleanState.IS_BEING_REPLICATED;
+import static org.hibernate.engine.internal.AbstractEntityEntry.EnumState.LOCK_MODE;
+import static org.hibernate.engine.internal.AbstractEntityEntry.EnumState.PREVIOUS_STATUS;
+import static org.hibernate.engine.internal.AbstractEntityEntry.EnumState.STATUS;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
+import static org.hibernate.engine.spi.CachedNaturalIdValueSource.LOAD;
+import static org.hibernate.engine.spi.Status.DELETED;
+import static org.hibernate.engine.spi.Status.GONE;
+import static org.hibernate.engine.spi.Status.MANAGED;
+import static org.hibernate.engine.spi.Status.READ_ONLY;
+import static org.hibernate.engine.spi.Status.SAVING;
+import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
- * A base implementation of EntityEntry
+ * A base implementation of {@link EntityEntry}.
  *
  * @author Gavin King
  * @author Emmanuel Bernard
@@ -94,19 +106,19 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final EntityPersister persister,
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {
-		setCompressedValue( EnumState.STATUS, status );
+		setCompressedValue( STATUS, status );
 		// not useful strictly speaking but more explicit
-		setCompressedValue( EnumState.PREVIOUS_STATUS, null );
+		setCompressedValue( PREVIOUS_STATUS, null );
 		// only retain loaded state if the status is not Status.READ_ONLY
-		if ( status != Status.READ_ONLY ) {
+		if ( status != READ_ONLY ) {
 			this.loadedState = loadedState;
 		}
 		this.id = id;
 		this.rowId = rowId;
-		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, existsInDatabase );
+		setCompressedValue( EXISTS_IN_DATABASE, existsInDatabase );
 		this.version = version;
-		setCompressedValue( EnumState.LOCK_MODE, lockMode );
-		setCompressedValue( BooleanState.IS_BEING_REPLICATED, disableVersionIncrement );
+		setCompressedValue( LOCK_MODE, lockMode );
+		setCompressedValue( IS_BEING_REPLICATED, disableVersionIncrement );
 		this.persister = persister;
 		this.persistenceContext = persistenceContext;
 	}
@@ -127,99 +139,94 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final boolean existsInDatabase,
 			final boolean isBeingReplicated,
 			final PersistenceContext persistenceContext) {
-		if ( factory == null ) {
-			this.persister = null;
-		}
-		else {
-			this.persister = factory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
-		}
+		this.persister = factory == null
+				? null
+				: factory.getRuntimeMetamodels().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 		this.id = id;
-		setCompressedValue( EnumState.STATUS, status );
-		setCompressedValue( EnumState.PREVIOUS_STATUS, previousStatus );
+		setCompressedValue( STATUS, status );
+		setCompressedValue( PREVIOUS_STATUS, previousStatus );
 		this.loadedState = loadedState;
 		setDeletedState( deletedState );
 		this.version = version;
-		setCompressedValue( EnumState.LOCK_MODE, lockMode );
-		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, existsInDatabase );
-		setCompressedValue( BooleanState.IS_BEING_REPLICATED, isBeingReplicated );
+		setCompressedValue( LOCK_MODE, lockMode );
+		setCompressedValue( EXISTS_IN_DATABASE, existsInDatabase );
+		setCompressedValue( IS_BEING_REPLICATED, isBeingReplicated );
 		this.rowId = null; // this is equivalent to the old behavior...
 		this.persistenceContext = persistenceContext;
 	}
 
 	@Override
 	public LockMode getLockMode() {
-		return getCompressedValue( EnumState.LOCK_MODE );
+		return getCompressedValue( LOCK_MODE );
 	}
 
 	@Override
 	public void setLockMode(LockMode lockMode) {
-		setCompressedValue( EnumState.LOCK_MODE, lockMode );
+		setCompressedValue( LOCK_MODE, lockMode );
 	}
 
 
 	@Override
 	public Status getStatus() {
-		return getCompressedValue( EnumState.STATUS );
+		return getCompressedValue( STATUS );
 	}
 
 	private Status getPreviousStatus() {
-		return getCompressedValue( EnumState.PREVIOUS_STATUS );
+		return getCompressedValue( PREVIOUS_STATUS );
 	}
 
 	@Override
 	public void setStatus(Status status) {
-		if ( status == Status.READ_ONLY ) {
+		if ( status == READ_ONLY ) {
 			//memory optimization
 			loadedState = null;
 		}
 
 		final Status currentStatus = this.getStatus();
-
 		if ( currentStatus != status ) {
-			setCompressedValue( EnumState.PREVIOUS_STATUS, currentStatus );
-			setCompressedValue( EnumState.STATUS, status );
+			setCompressedValue( PREVIOUS_STATUS, currentStatus );
+			setCompressedValue( STATUS, status );
 		}
 	}
 
 	@Override
-	public Object getId() {
+	public final Object getId() {
 		return id;
 	}
 
 	@Override
-	public Object[] getLoadedState() {
+	public final Object[] getLoadedState() {
 		return loadedState;
 	}
-
-	private static final Object[] DEFAULT_DELETED_STATE = null;
 
 	@Override
 	public Object[] getDeletedState() {
 		final EntityEntryExtraStateHolder extra = getExtraState( EntityEntryExtraStateHolder.class );
-		return extra != null ? extra.getDeletedState() : DEFAULT_DELETED_STATE;
+		return extra == null ? null : extra.getDeletedState();
 	}
 
 	@Override
 	public void setDeletedState(Object[] deletedState) {
-		EntityEntryExtraStateHolder extra = getExtraState( EntityEntryExtraStateHolder.class );
-		if ( extra == null && deletedState == DEFAULT_DELETED_STATE ) {
-			//this is the default value and we do not store the extra state
-			return;
+		final EntityEntryExtraStateHolder existingExtra = getExtraState( EntityEntryExtraStateHolder.class );
+		if ( existingExtra != null ) {
+			existingExtra.setDeletedState( deletedState );
 		}
-		if ( extra == null ) {
-			extra = new EntityEntryExtraStateHolder();
-			addExtraState( extra );
+		else if ( deletedState != null ) {
+			final EntityEntryExtraStateHolder newExtra = new EntityEntryExtraStateHolder();
+			newExtra.setDeletedState( deletedState );
+			addExtraState( newExtra );
 		}
-		extra.setDeletedState( deletedState );
+		//else this is the default value, we do not store the extra state
 	}
 
 	@Override
 	public boolean isExistsInDatabase() {
-		return getCompressedValue( BooleanState.EXISTS_IN_DATABASE );
+		return getCompressedValue( EXISTS_IN_DATABASE );
 	}
 
 	@Override
-	public Object getVersion() {
+	public final Object getVersion() {
 		return version;
 	}
 
@@ -229,7 +236,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public EntityPersister getPersister() {
+	public final EntityPersister getPersister() {
 		return persister;
 	}
 
@@ -252,7 +259,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@Override
 	public boolean isBeingReplicated() {
-		return getCompressedValue( BooleanState.IS_BEING_REPLICATED );
+		return getCompressedValue( IS_BEING_REPLICATED );
 	}
 
 	@Override
@@ -262,21 +269,18 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@Override
 	public void postUpdate(Object entity, Object[] updatedState, Object nextVersion) {
-		this.loadedState = updatedState;
+		loadedState = updatedState;
 		setLockMode( LockMode.WRITE );
 
-		final EntityPersister persister = getPersister();
 		if ( persister.isVersioned() ) {
-			this.version = nextVersion;
+			version = nextVersion;
 			persister.setValue( entity, persister.getVersionProperty(), nextVersion );
 		}
 
-		ManagedTypeHelper.processIfSelfDirtinessTracker( entity, AbstractEntityEntry::clearDirtyAttributes );
+		processIfSelfDirtinessTracker( entity, AbstractEntityEntry::clearDirtyAttributes );
 
 		final SharedSessionContractImplementor session = getPersistenceContext().getSession();
-		session
-				.getFactory()
-				.getCustomEntityDirtinessStrategy()
+		session.getFactory().getCustomEntityDirtinessStrategy()
 				.resetDirty( entity, persister, session.asSessionImplementor() );
 	}
 
@@ -286,19 +290,19 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@Override
 	public void postDelete() {
-		setCompressedValue( EnumState.PREVIOUS_STATUS, getStatus() );
-		setCompressedValue( EnumState.STATUS, Status.GONE );
-		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, false );
+		setCompressedValue( PREVIOUS_STATUS, getStatus() );
+		setCompressedValue( STATUS, GONE );
+		setCompressedValue( EXISTS_IN_DATABASE, false );
 	}
 
 	@Override
 	public void postInsert(Object[] insertedState) {
-		setCompressedValue( BooleanState.EXISTS_IN_DATABASE, true );
+		setCompressedValue( EXISTS_IN_DATABASE, true );
 	}
 
 	@Override
 	public boolean isNullifiable(boolean earlyInsert, SharedSessionContractImplementor session) {
-		if ( getStatus() == Status.SAVING ) {
+		if ( getStatus() == SAVING ) {
 			return true;
 		}
 		else if ( earlyInsert ) {
@@ -311,132 +315,134 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 	@Override
 	public Object getLoadedValue(String propertyName) {
-		if ( loadedState == null || propertyName == null ) {
-			return null;
-		}
-		else {
-			final AttributeMapping attributeMapping = persister.findAttributeMapping( propertyName );
-			final int propertyIndex = attributeMapping.getStateArrayPosition();
-			return loadedState[propertyIndex];
-		}
+		return loadedState == null || propertyName == null
+				? null
+				: loadedState[ propertyIndex( propertyName ) ];
+	}
+
+	private int propertyIndex(String propertyName) {
+		return persister.findAttributeMapping( propertyName ).getStateArrayPosition();
 	}
 
 	@Override
 	public void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection<?> collection) {
 		// nothing to do if status is READ_ONLY
-		if ( getStatus() != Status.READ_ONLY ) {
+		if ( getStatus() != READ_ONLY ) {
 			assert propertyName != null;
 			assert loadedState != null;
 
-			final int propertyIndex = persister.findAttributeMapping( propertyName ).getStateArrayPosition();
-			loadedState[propertyIndex] = collection;
+			loadedState[ propertyIndex( propertyName ) ] = collection;
 		}
 	}
 
 	@Override
 	public boolean requiresDirtyCheck(Object entity) {
 		return isModifiableEntity()
-				&& ( !isUnequivocallyNonDirty( entity ) );
+			&& !isUnequivocallyNonDirty( entity );
 	}
 
-	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
-		if ( ManagedTypeHelper.isSelfDirtinessTracker( entity ) ) {
-			boolean uninitializedProxy = false;
+		if ( isSelfDirtinessTracker( entity ) ) {
+			final boolean uninitializedProxy;
 			if ( isPersistentAttributeInterceptable( entity ) ) {
-				final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( entity );
-				final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+				final PersistentAttributeInterceptor interceptor =
+						asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor = (EnhancementAsProxyLazinessInterceptor) interceptor;
-					return !enhancementAsProxyLazinessInterceptor.hasWrittenFieldNames();
+					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor =
+							(EnhancementAsProxyLazinessInterceptor) interceptor;
+					return !enhancementAsProxyLazinessInterceptor.hasWrittenFieldNames(); //EARLY EXIT!
+				}
+				else {
+					uninitializedProxy = false;
 				}
 			}
 			else if ( isHibernateProxy( entity ) ) {
-				uninitializedProxy = HibernateProxy.extractLazyInitializer( entity ).isUninitialized();
+				uninitializedProxy = extractLazyInitializer( entity ).isUninitialized();
+			}
+			else {
+				uninitializedProxy = false;
 			}
 			// we never have to check an uninitialized proxy
-			return uninitializedProxy || !persister.hasCollections()
+			return uninitializedProxy
+				|| !persister.hasCollections()
 					&& !persister.hasMutableProperties()
-					&& !ManagedTypeHelper.asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes();
+					&& !asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes();
 		}
-
-		if ( isPersistentAttributeInterceptable( entity ) ) {
-			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( entity );
-			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				// we never have to check an uninitialized proxy
-				return true;
+		else {
+			if ( isPersistentAttributeInterceptable( entity ) ) {
+				final PersistentAttributeInterceptor interceptor =
+						asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+					// we never have to check an uninitialized proxy
+					return true; //EARLY EXIT!
+				}
 			}
-		}
 
-		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
-				getPersistenceContext().getSession().getFactory().getCustomEntityDirtinessStrategy();
-		final Session session = getPersistenceContext().getSession().asSessionImplementor();
-		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), session  ) ) {
-			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), session );
+			final SessionImplementor session = getPersistenceContext().getSession().asSessionImplementor();
+			final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
+					session.getFactory().getCustomEntityDirtinessStrategy();
+			return customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), session  )
+				&& !customEntityDirtinessStrategy.isDirty( entity, getPersister(), session );
 		}
-
-		if ( getPersister().hasMutableProperties() ) {
-			return false;
-		}
-
-		return false;
 	}
 
 	@Override
 	public boolean isModifiableEntity() {
 		final Status status = getStatus();
 		final Status previousStatus = getPreviousStatus();
-		return getPersister().isMutable()
-				&& status != Status.READ_ONLY
-				&& ! ( status == Status.DELETED && previousStatus == Status.READ_ONLY );
+		return persister.isMutable()
+			&& status != READ_ONLY
+			&& ! ( status == DELETED && previousStatus == READ_ONLY );
 	}
 
 	@Override
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
 		loadedState[ persister.getVersionProperty() ] = version;
-		setLockMode( LockMode.PESSIMISTIC_FORCE_INCREMENT );
+		setLockMode( PESSIMISTIC_FORCE_INCREMENT );
 		persister.setValue( entity, getPersister().getVersionProperty(), nextVersion );
 	}
 
 	@Override
 	public boolean isReadOnly() {
 		final Status status = getStatus();
-		if (status != Status.MANAGED && status != Status.READ_ONLY) {
+		if ( status != MANAGED && status != READ_ONLY ) {
 			throw new HibernateException("instance was not in a valid state");
 		}
-		return status == Status.READ_ONLY;
+		return status == READ_ONLY;
 	}
 
 	@Override
 	public void setReadOnly(boolean readOnly, Object entity) {
-		if ( readOnly == isReadOnly() ) {
-			// simply return since the status is not being changed
-			return;
-		}
-		if ( readOnly ) {
-			setStatus( Status.READ_ONLY );
-			loadedState = null;
-		}
-		else {
-			if ( ! persister.isMutable() ) {
-				throw new IllegalStateException( "Cannot make an immutable entity modifiable." );
+		if ( readOnly != isReadOnly() ) {
+			if ( readOnly ) {
+				setStatus( READ_ONLY );
+				loadedState = null;
 			}
-			setStatus( Status.MANAGED );
-			loadedState = getPersister().getValues( entity );
-			getPersistenceContext().getNaturalIdResolutions().manageLocalResolution(
-					id, loadedState, persister,
-					CachedNaturalIdValueSource.LOAD
-			);
+			else {
+				if ( ! persister.isMutable() ) {
+					throw new IllegalStateException( "Cannot make an entity of immutable type '"
+							+ persister.getEntityName() + "' modifiable" );
+				}
+				setStatus( MANAGED );
+				loadedState = persister.getValues( entity );
+				if ( persister.hasNaturalIdentifier() ) {
+					getPersistenceContext().getNaturalIdResolutions().manageLocalResolution(
+							id,
+							persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState ),
+							persister,
+							LOAD
+					);
+				}
+			}
 		}
 	}
 
 	@Override
 	public String toString() {
-		return "EntityEntry" +
-				MessageHelper.infoString( getPersister().getEntityName(), id ) +
-				'(' + getStatus() + ')';
+		return "EntityEntry"
+			+ infoString( getPersister().getEntityName(), id )
+			+ '(' + getStatus() + ')';
 	}
 
 	@Override
@@ -466,7 +472,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public <T extends EntityEntryExtraState> T getExtraState(Class<T> extraStateType) {
 		if ( next == null ) {
 			return null;
@@ -555,11 +561,11 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 		private EnumState(int offset, Class<E> enumType) {
 			final E[] enumConstants = enumType.getEnumConstants();
 
-			// In case any of the enums cannot be stored in 4 bits anymore, we'd have to re-structure the compressed
-			// state int
+			// In case any of the enums cannot be stored in 4 bits anymore,
+			// we'd have to re-structure the compressed state int
 			if ( enumConstants.length > 15 ) {
-				throw new AssertionFailure( "Cannot store enum type " + enumType.getName() + " in compressed state as"
-						+ " it has too many values." );
+				throw new AssertionFailure( "Cannot store enum type " + enumType.getName()
+						+ " in compressed state as it has too many values." );
 			}
 
 			this.offset = offset;

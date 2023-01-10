@@ -96,7 +96,7 @@ public class EntityUpdateAction extends EntityAction {
 			previousNaturalIdValues = determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
 			session.getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
 					id,
-					naturalIdMapping.extractNaturalIdFromEntityState( state, session ),
+					naturalIdMapping.extractNaturalIdFromEntityState( state ),
 					persister,
 					CachedNaturalIdValueSource.UPDATE
 			);
@@ -111,7 +111,7 @@ public class EntityUpdateAction extends EntityAction {
 			SharedSessionContractImplementor session) {
 		return previousState == null
 				? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
-				: naturalIdMapping.extractNaturalIdFromEntityState( previousState, session );
+				: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
 	}
 
 	protected Object[] getState() {
@@ -183,7 +183,7 @@ public class EntityUpdateAction extends EntityAction {
 		if ( naturalIdMapping != null ) {
 			session.getPersistenceContextInternal().getNaturalIdResolutions().manageSharedResolution(
 					id,
-					naturalIdMapping.extractNaturalIdFromEntityState( state, session),
+					naturalIdMapping.extractNaturalIdFromEntityState( state ),
 					previousNaturalIdValues,
 					persister,
 					CachedNaturalIdValueSource.UPDATE

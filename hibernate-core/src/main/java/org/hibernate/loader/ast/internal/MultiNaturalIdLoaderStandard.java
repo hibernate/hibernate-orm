@@ -74,7 +74,7 @@ public class MultiNaturalIdLoaderStandard<E> implements MultiNaturalIdLoader<E> 
 				(naturalId, session1) -> {
 					// `naturalId` here is the one passed in by the API as part of the values array
 					// todo (6.0) : use this to help create the ordered results
-					return entityDescriptor.getNaturalIdMapping().normalizeInput( naturalId, session );
+					return entityDescriptor.getNaturalIdMapping().normalizeInput( naturalId );
 				},
 				session.getLoadQueryInfluencers(),
 				lockOptions,

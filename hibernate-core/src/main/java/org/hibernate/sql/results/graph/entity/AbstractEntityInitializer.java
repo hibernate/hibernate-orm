@@ -448,14 +448,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private boolean useEntityInstanceFromExecutionContext(
 			Object entityInstanceFromExecutionContext,
 			SharedSessionContractImplementor session) {
-		if ( this instanceof EntityResultInitializer
-				&& entityInstanceFromExecutionContext != null
-				&& entityKey.getIdentifier()
-				.equals( entityDescriptor.getIdentifier( entityInstanceFromExecutionContext, session ) )
-		) {
-			return true;
-		}
-		return false;
+		return this instanceof EntityResultInitializer
+			&& entityInstanceFromExecutionContext != null
+			&& entityKey.getIdentifier()
+				.equals( entityDescriptor.getIdentifier( entityInstanceFromExecutionContext, session ) );
 	}
 
 	private void upgradeLockMode(RowProcessingState rowProcessingState) {
@@ -482,18 +478,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private boolean isExistingEntityInitialized(Object existingEntity) {
 		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
 		if ( lazyInitializer != null ) {
-			if ( lazyInitializer.isUninitialized() ) {
-				return false;
-			}
-			return true;
+			return !lazyInitializer.isUninitialized();
 		}
 		else if ( isPersistentAttributeInterceptable( existingEntity ) ) {
-			final PersistentAttributeInterceptor persistentAttributeInterceptor = asPersistentAttributeInterceptable(
-					entityInstance ).$$_hibernate_getInterceptor();
-			if ( persistentAttributeInterceptor == null || persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor )  {
-				return false;
-			}
-			return true;
+			final PersistentAttributeInterceptor persistentAttributeInterceptor =
+					asPersistentAttributeInterceptable( entityInstance ).$$_hibernate_getInterceptor();
+			return persistentAttributeInterceptor != null
+				&& !( persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor );
 		}
 
 		return true;
@@ -742,7 +733,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		updateCaches( toInitialize, rowProcessingState, session, persistenceContext, entityIdentifier, version );
 
-		registerNaturalIdResolution( session, persistenceContext, entityIdentifier );
+		registerNaturalIdResolution( persistenceContext, entityIdentifier );
 
 		takeSnapshot( rowProcessingState, session, persistenceContext, entityEntry );
 
@@ -778,13 +769,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private void registerNaturalIdResolution(
-			SharedSessionContractImplementor session,
-			PersistenceContext persistenceContext,
-			Object entityIdentifier) {
+	private void registerNaturalIdResolution(PersistenceContext persistenceContext, Object entityIdentifier) {
 		if ( entityDescriptor.getNaturalIdMapping() != null ) {
-			final Object naturalId = entityDescriptor.getNaturalIdMapping()
-					.extractNaturalIdFromEntityState( resolvedEntityState, session);
+			final Object naturalId =
+					entityDescriptor.getNaturalIdMapping().extractNaturalIdFromEntityState( resolvedEntityState );
 			persistenceContext.getNaturalIdResolutions()
 					.cacheResolutionFromLoad( entityIdentifier, naturalId, entityDescriptor );
 		}

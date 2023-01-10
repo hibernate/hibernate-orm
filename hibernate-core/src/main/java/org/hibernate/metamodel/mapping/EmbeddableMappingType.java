@@ -9,8 +9,8 @@ package org.hibernate.metamodel.mapping;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;

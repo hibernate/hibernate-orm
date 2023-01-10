@@ -10,9 +10,11 @@ package org.hibernate.mapping;
  * A consumer like {@link java.util.function.Consumer} but also accepts an integer as index.
  *
  * @author Christian Beikov
+ *
+ * @deprecated Use {@link org.hibernate.internal.util.IndexedConsumer} instead
  */
+@Deprecated
 @FunctionalInterface
 public interface IndexedConsumer<T> {
-
 	void accept(int index, T t);
 }

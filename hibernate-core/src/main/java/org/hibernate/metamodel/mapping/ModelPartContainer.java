@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.function.Consumer;
 
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 
 /**
  * Access to a group of ModelPart by name or for iteration.

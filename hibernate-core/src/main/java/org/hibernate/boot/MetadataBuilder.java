@@ -10,6 +10,7 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -368,6 +369,16 @@ public interface MetadataBuilder {
 	 */
 	@Deprecated(since = "6", forRemoval = true)
 	MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes);
+
+	/**
+	 * Apply an explicit {@link FunctionContributor}
+	 * (implicit application via {@link java.util.ServiceLoader} will still happen too)
+	 *
+	 * @param functionContributor The contributor to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	MetadataBuilder applyFunctions(FunctionContributor functionContributor);
 
 	/**
 	 * Contribute a {@link SqmFunctionDescriptor} to HQL.

@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -65,6 +65,8 @@ import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
+
+import static java.util.Collections.emptyList;
 
 /**
  * A convenience API making it easier to bootstrap an instance of Hibernate.
@@ -125,8 +127,6 @@ import jakarta.persistence.SharedCacheMode;
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
 
-	public static final String ARTEFACT_PROCESSING_ORDER = AvailableSettings.ARTIFACT_PROCESSING_ORDER;
-
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final MetadataSources metadataSources;
 	private final ClassmateContext classmateContext;
@@ -137,6 +137,7 @@ public class Configuration {
 	private final List<BasicType<?>> basicTypes = new ArrayList<>();
 	private List<UserTypeRegistration> userTypeRegistrations;
 	private final List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
+	private final List<FunctionContributor> functionContributorRegistrations = new ArrayList<>();
 	private Map<String, NamedHqlQueryDefinition> namedQueries;
 	private Map<String, NamedNativeQueryDefinition> namedSqlQueries;
 	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
@@ -159,6 +160,9 @@ public class Configuration {
 	private ColumnOrderingStrategy columnOrderingStrategy;
 	private Properties properties;
 	private SharedCacheMode sharedCacheMode;
+
+	@Deprecated(since = "6", forRemoval = true)
+	public static final String ARTEFACT_PROCESSING_ORDER = AvailableSettings.ARTIFACT_PROCESSING_ORDER;
 
 	/**
 	 * Create a new instance, using a default {@link BootstrapServiceRegistry}
@@ -403,6 +407,14 @@ public class Configuration {
 	 */
 	public Configuration registerTypeContributor(TypeContributor typeContributor) {
 		typeContributorRegistrations.add( typeContributor );
+		return this;
+	}
+
+	/**
+	 * Add a {@link FunctionContributor} to this configuration.
+	 */
+	public Configuration registerFunctionContributor(FunctionContributor functionContributor) {
+		functionContributorRegistrations.add( functionContributor );
 		return this;
 	}
 
@@ -816,20 +828,20 @@ public class Configuration {
 			metadataBuilder.applySharedCacheMode( sharedCacheMode );
 		}
 
-		if ( !typeContributorRegistrations.isEmpty() ) {
-			for ( TypeContributor typeContributor : typeContributorRegistrations ) {
-				metadataBuilder.applyTypes( typeContributor );
-			}
+		for ( TypeContributor typeContributor : typeContributorRegistrations ) {
+			metadataBuilder.applyTypes( typeContributor );
+		}
+
+		for ( FunctionContributor functionContributor : functionContributorRegistrations ) {
+			metadataBuilder.applyFunctions( functionContributor );
 		}
 
 		if ( userTypeRegistrations != null ) {
 			userTypeRegistrations.forEach( registration ->  registration.registerType( metadataBuilder ) );
 		}
 
-		if ( !basicTypes.isEmpty() ) {
-			for ( BasicType<?> basicType : basicTypes ) {
-				metadataBuilder.applyBasicType( basicType );
-			}
+		for ( BasicType<?> basicType : basicTypes ) {
+			metadataBuilder.applyBasicType( basicType );
 		}
 
 		if ( customFunctionDescriptors != null ) {
@@ -1029,9 +1041,7 @@ public class Configuration {
 	}
 
 	public java.util.Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
-		return namedEntityGraphMap == null
-				? Collections.emptyList()
-				: namedEntityGraphMap.values();
+		return namedEntityGraphMap == null ? emptyList() : namedEntityGraphMap.values();
 	}
 
 

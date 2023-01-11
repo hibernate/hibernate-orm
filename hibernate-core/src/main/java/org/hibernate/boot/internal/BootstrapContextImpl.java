@@ -38,6 +38,7 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -55,6 +56,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final MetadataBuildingOptions metadataBuildingOptions;
 
 	private final TypeConfiguration typeConfiguration;
+	private final SqmFunctionRegistry sqmFunctionRegistry;
 	private final MutableJpaCompliance jpaCompliance;
 
 	private final ClassLoaderAccessImpl classLoaderAccess;
@@ -108,6 +110,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 		this.typeConfiguration = new TypeConfiguration();
 		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService );
+		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 	}
 
 	@Override
@@ -123,6 +126,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return sqmFunctionRegistry;
 	}
 
 	@Override

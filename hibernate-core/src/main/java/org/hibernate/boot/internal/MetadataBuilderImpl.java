@@ -27,6 +27,8 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
@@ -72,6 +74,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.type.BasicType;
@@ -342,6 +345,27 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	public MetadataBuilder noConstraintByDefault() {
 		this.options.noConstraintByDefault = true;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyFunctions(FunctionContributor functionContributor) {
+		functionContributor.contributeFunctions( new FunctionContributions() {
+			@Override
+			public SqmFunctionRegistry getFunctionRegistry() {
+				return bootstrapContext.getFunctionRegistry();
+			}
+
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return bootstrapContext.getTypeConfiguration();
+			}
+
+			@Override
+			public ServiceRegistry getServiceRegistry() {
+				return bootstrapContext.getServiceRegistry();
+			}
+		}  );
 		return this;
 	}
 

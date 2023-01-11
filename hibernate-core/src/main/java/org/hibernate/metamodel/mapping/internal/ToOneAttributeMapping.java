@@ -362,7 +362,6 @@ public class ToOneAttributeMapping
 			isInternalLoadNullable = isNullable();
 		}
 
-
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
@@ -380,15 +379,9 @@ public class ToOneAttributeMapping
 				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
 					this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
-					addPrefixedPropertyNames(
+					addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							targetKeyPropertyName,
-							compositeType.getSubtypes()[0],
-							declaringEntityPersister.getFactory()
-					);
-					addPrefixedPropertyNames(
-							targetKeyPropertyNames,
-							ForeignKeyDescriptor.PART_NAME,
 							compositeType.getSubtypes()[0],
 							declaringEntityPersister.getFactory()
 					);
@@ -401,15 +394,9 @@ public class ToOneAttributeMapping
 							propertyType,
 							declaringEntityPersister.getFactory()
 					);
-					addPrefixedPropertyNames(
+					addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							targetKeyPropertyName,
-							propertyType,
-							declaringEntityPersister.getFactory()
-					);
-					addPrefixedPropertyNames(
-							targetKeyPropertyNames,
-							ForeignKeyDescriptor.PART_NAME,
 							propertyType,
 							declaringEntityPersister.getFactory()
 					);
@@ -417,15 +404,9 @@ public class ToOneAttributeMapping
 			}
 			else {
 				this.targetKeyPropertyName = entityBinding.getIdentifierProperty().getName();
-				addPrefixedPropertyNames(
+				addPrefixedPropertyPaths(
 						targetKeyPropertyNames,
 						targetKeyPropertyName,
-						propertyType,
-						declaringEntityPersister.getFactory()
-				);
-				addPrefixedPropertyNames(
-						targetKeyPropertyNames,
-						ForeignKeyDescriptor.PART_NAME,
 						propertyType,
 						declaringEntityPersister.getFactory()
 				);
@@ -435,15 +416,9 @@ public class ToOneAttributeMapping
 		else if ( bootValue.isReferenceToPrimaryKey() ) {
 			this.targetKeyPropertyName = referencedPropertyName;
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
-			addPrefixedPropertyNames(
+			addPrefixedPropertyPaths(
 					targetKeyPropertyNames,
 					targetKeyPropertyName,
-					bootValue.getType(),
-					declaringEntityPersister.getFactory()
-			);
-			addPrefixedPropertyNames(
-					targetKeyPropertyNames,
-					ForeignKeyDescriptor.PART_NAME,
 					bootValue.getType(),
 					declaringEntityPersister.getFactory()
 			);
@@ -458,15 +433,9 @@ public class ToOneAttributeMapping
 					&& compositeType.getPropertyNames().length == 1 ) {
 				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 				this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
-				addPrefixedPropertyNames(
+				addPrefixedPropertyPaths(
 						targetKeyPropertyNames,
 						targetKeyPropertyName,
-						compositeType.getSubtypes()[0],
-						declaringEntityPersister.getFactory()
-				);
-				addPrefixedPropertyNames(
-						targetKeyPropertyNames,
-						ForeignKeyDescriptor.PART_NAME,
 						compositeType.getSubtypes()[0],
 						declaringEntityPersister.getFactory()
 				);
@@ -480,15 +449,9 @@ public class ToOneAttributeMapping
 				if ( ( mapsIdAttributeName = findMapsIdPropertyName( entityMappingType, referencedPropertyName ) ) != null ) {
 					final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 					targetKeyPropertyNames.add( targetKeyPropertyName );
-					addPrefixedPropertyNames(
+					addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							mapsIdAttributeName,
-							entityMappingType.getEntityPersister().getIdentifierType(),
-							declaringEntityPersister.getFactory()
-					);
-					addPrefixedPropertyNames(
-							targetKeyPropertyNames,
-							ForeignKeyDescriptor.PART_NAME,
 							entityMappingType.getEntityPersister().getIdentifierType(),
 							declaringEntityPersister.getFactory()
 					);
@@ -664,6 +627,31 @@ public class ToOneAttributeMapping
 			return persister.getIdentifierPropertyName();
 		}
 		return null;
+	}
+
+	private static void addPrefixedPropertyPaths(
+			Set<String> targetKeyPropertyNames,
+			String prefix,
+			Type type,
+			SessionFactoryImplementor factory) {
+		addPrefixedPropertyNames(
+				targetKeyPropertyNames,
+				prefix,
+				type,
+				factory
+		);
+		addPrefixedPropertyNames(
+				targetKeyPropertyNames,
+				ForeignKeyDescriptor.PART_NAME,
+				type,
+				factory
+		);
+		addPrefixedPropertyNames(
+				targetKeyPropertyNames,
+				EntityIdentifierMapping.ROLE_LOCAL_NAME,
+				type,
+				factory
+		);
 	}
 
 	public static void addPrefixedPropertyNames(

@@ -8,14 +8,12 @@ package org.hibernate;
 
 import java.sql.Connection;
 
-import org.hibernate.query.Query;
-
 /**
- * Represents a consolidation of all stateless session creation options into a builder style delegate.
+ * Allows creation of a new {@link StatelessSession} with specific options.
  *
  * @author Steve Ebersole
  */
-public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
+public interface StatelessSessionBuilder {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -30,7 +28,7 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connection(Connection connection);
+	StatelessSessionBuilder connection(Connection connection);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -39,5 +37,5 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T tenantIdentifier(String tenantIdentifier);
+	StatelessSessionBuilder tenantIdentifier(String tenantIdentifier);
 }

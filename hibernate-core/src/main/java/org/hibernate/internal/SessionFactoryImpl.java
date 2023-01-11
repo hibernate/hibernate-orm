@@ -187,7 +187,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private final transient WrapperOptions wrapperOptions;
 	private final transient SessionBuilderImpl defaultSessionOpenOptions;
 	private final transient SessionBuilderImpl temporarySessionOpenOptions;
-	private final transient StatelessSessionBuilder<?> defaultStatelessOptions;
+	private final transient StatelessSessionBuilder defaultStatelessOptions;
 	private final transient EntityNameResolver entityNameResolver;
 
 	private final transient SchemaManager schemaManager;

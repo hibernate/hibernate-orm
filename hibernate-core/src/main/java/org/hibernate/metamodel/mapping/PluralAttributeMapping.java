@@ -11,8 +11,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Filter;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.Loadable;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;

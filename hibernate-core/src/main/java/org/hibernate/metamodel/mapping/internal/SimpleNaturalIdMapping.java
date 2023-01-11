@@ -15,11 +15,11 @@ import java.util.function.BiConsumer;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -71,10 +71,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = getDeclaringType().getEntityPersister();
 
-		final Object naturalId = extractNaturalIdFromEntityState( currentState, session );
+		final Object naturalId = extractNaturalIdFromEntityState( currentState );
 		final Object snapshot = loadedState == null
 				? persistenceContext.getNaturalIdSnapshot( id, persister )
-				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState, session );
+				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
 
 		if ( ! areEqual( naturalId, snapshot, session ) ) {
 			throw new HibernateException(
@@ -89,7 +89,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public Object extractNaturalIdFromEntityState(Object[] state, SharedSessionContractImplementor session) {
+	public Object extractNaturalIdFromEntityState(Object[] state) {
 		if ( state == null ) {
 			return null;
 		}
@@ -102,12 +102,12 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public Object extractNaturalIdFromEntity(Object entity, SharedSessionContractImplementor session) {
+	public Object extractNaturalIdFromEntity(Object entity) {
 		return attribute.getPropertyAccess().getGetter().get( entity );
 	}
 
 	@Override
-	public void validateInternalForm(Object naturalIdValue, SharedSessionContractImplementor session) {
+	public void validateInternalForm(Object naturalIdValue) {
 		if ( naturalIdValue == null ) {
 			return;
 		}
@@ -135,13 +135,13 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
+	public int calculateHashCode(Object value) {
 		//noinspection unchecked
 		return value == null ? 0 : ( (JavaType<Object>) getJavaType() ).extractHashCode( value );
 	}
 
 	@Override
-	public Object normalizeInput(Object incoming, SharedSessionContractImplementor session) {
+	public Object normalizeInput(Object incoming) {
 		return normalizeIncomingValue( incoming );
 	}
 

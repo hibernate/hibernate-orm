@@ -11,8 +11,8 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.Any;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;

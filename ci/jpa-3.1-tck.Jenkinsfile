@@ -21,8 +21,8 @@ pipeline {
     }
     parameters {
         choice(name: 'IMAGE_JDK', choices: ['jdk11'], description: 'The JDK base image version to use for the TCK image.')
-        string(name: 'TCK_VERSION', defaultValue: '3.1.0', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')
-        string(name: 'TCK_SHA', defaultValue: '21441d1b1ec04fb696febcb897beb103cfee8d7d50137fec7c564e32626d9941', description: 'The SHA256 of the Jakarta JPA TCK that is distributed under https://download.eclipse.org/jakartaee/persistence/3.0/jakarta-persistence-tck-${TCK_VERSION}.zip.sha256')
+        string(name: 'TCK_VERSION', defaultValue: '3.1.1', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')
+        string(name: 'TCK_SHA', defaultValue: 'b954b39440b331eb4584187d2d8245f82c4d2aa8b02d2e04bd42498a5751312b', description: 'The SHA256 of the Jakarta JPA TCK that is distributed under https://download.eclipse.org/jakartaee/persistence/3.1/jakarta-persistence-tck-${TCK_VERSION}.zip.sha256')
         booleanParam(name: 'NO_SLEEP', defaultValue: true, description: 'Whether the NO_SLEEP patch should be applied to speed up the TCK execution')
 	}
     stages {

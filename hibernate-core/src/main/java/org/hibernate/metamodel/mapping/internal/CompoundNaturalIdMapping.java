@@ -17,11 +17,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
 import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
@@ -59,7 +59,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	// todo (6.0) : create a composite MappingType for this descriptor's Object[]?
 
 	private final List<SingularAttributeMapping> attributes;
-	private final JavaType<?> jtd;
 
 	private List<JdbcMapping> jdbcMappings;
 
@@ -67,12 +66,8 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			EntityMappingType declaringType,
 			List<SingularAttributeMapping> attributes,
 			MappingModelCreationProcess creationProcess) {
-		super( declaringType, isMutable( declaringType, attributes, creationProcess ) );
+		super( declaringType, isMutable( attributes ) );
 		this.attributes = attributes;
-
-		jtd = creationProcess.getCreationContext().getTypeConfiguration().getJavaTypeRegistry().getDescriptor(
-				Object[].class
-		);
 
 		creationProcess.registerInitializationCallback(
 				"Determine compound natural-id JDBC mappings ( " + declaringType.getEntityName() + ")",
@@ -90,10 +85,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		);
 	}
 
-	private static boolean isMutable(
-			EntityMappingType entityDescriptor,
-			List<SingularAttributeMapping> attributes,
-			MappingModelCreationProcess creationProcess) {
+	private static boolean isMutable(List<SingularAttributeMapping> attributes) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attributeMapping = attributes.get( i );
 			final AttributeMetadata metadata = attributeMapping.getAttributeMetadata();
@@ -106,7 +98,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public Object[] extractNaturalIdFromEntityState(Object[] state, SharedSessionContractImplementor session) {
+	public Object[] extractNaturalIdFromEntityState(Object[] state) {
 		if ( state == null ) {
 			return null;
 		}
@@ -126,7 +118,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public Object[] extractNaturalIdFromEntity(Object entity, SharedSessionContractImplementor session) {
+	public Object[] extractNaturalIdFromEntity(Object entity) {
 		final Object[] values = new Object[ attributes.size() ];
 
 		for ( int i = 0; i < attributes.size(); i++ ) {
@@ -138,7 +130,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	@SuppressWarnings( "rawtypes" )
-	public Object[] normalizeInput(Object incoming, SharedSessionContractImplementor session) {
+	public Object[] normalizeInput(Object incoming) {
 		if ( incoming instanceof Object[] ) {
 			return (Object[]) incoming;
 		}
@@ -157,7 +149,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public void validateInternalForm(Object naturalIdValue, SharedSessionContractImplementor session) {
+	public void validateInternalForm(Object naturalIdValue) {
 		if ( naturalIdValue == null ) {
 			return;
 		}
@@ -179,7 +171,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
+	public int calculateHashCode(Object value) {
 		return 0;
 	}
 
@@ -194,11 +186,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = getDeclaringType().getEntityPersister();
 
-		final Object[] naturalId = extractNaturalIdFromEntityState( currentState, session );
+		final Object[] naturalId = extractNaturalIdFromEntityState( currentState );
 
 		final Object snapshot = loadedState == null
 				? persistenceContext.getNaturalIdSnapshot( id, persister )
-				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState, session );
+				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
 		final Object[] previousNaturalId = (Object[]) snapshot;
 
 		assert naturalId.length == getNaturalIdAttributes().size();
@@ -553,8 +545,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	private static class AssemblerImpl implements DomainResultAssembler<Object[]> {
-		private final NavigablePath navigablePath;
-		private final CompoundNaturalIdMapping naturalIdMapping;
 		private final JavaType<Object[]> jtd;
 
 		private final DomainResultAssembler<?>[] subAssemblers;
@@ -565,8 +555,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				CompoundNaturalIdMapping naturalIdMapping,
 				JavaType<Object[]> jtd,
 				AssemblerCreationState creationState) {
-			this.navigablePath = navigablePath;
-			this.naturalIdMapping = naturalIdMapping;
 			this.jtd = jtd;
 
 			// we don't even register the Initializer here... its really no-op.

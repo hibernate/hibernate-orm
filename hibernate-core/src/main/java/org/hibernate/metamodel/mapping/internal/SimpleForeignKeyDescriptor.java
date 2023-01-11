@@ -15,7 +15,7 @@ import java.util.function.IntFunction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;

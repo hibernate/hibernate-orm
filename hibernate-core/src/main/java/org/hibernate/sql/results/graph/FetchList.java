@@ -12,12 +12,10 @@ import java.util.stream.StreamSupport;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * This is essentially a List of Fetch(es), but exposing

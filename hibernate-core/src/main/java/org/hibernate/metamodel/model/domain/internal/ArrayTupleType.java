@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;

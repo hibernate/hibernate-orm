@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.expression;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.DiscriminatorType;

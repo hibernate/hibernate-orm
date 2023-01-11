@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 
 /**
  * Contract for things at the domain mapping level that can be bound

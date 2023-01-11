@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 
 /**
  * Container for one-or-more JdbcMappings

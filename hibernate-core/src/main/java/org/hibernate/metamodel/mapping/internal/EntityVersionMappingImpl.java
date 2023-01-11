@@ -14,7 +14,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.VersionValue;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.EntityMappingType;

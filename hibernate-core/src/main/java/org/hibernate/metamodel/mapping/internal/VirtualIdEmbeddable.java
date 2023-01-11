@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;

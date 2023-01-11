@@ -54,7 +54,7 @@ stage('Configure') {
 
 	if ( env.CHANGE_ID ) {
 		if ( pullRequest.labels.contains( 'cockroachdb' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'LongDuration', longRunning: true ) )
+			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ) )
 		}
 		if ( pullRequest.labels.contains( 'hana' ) ) {
 			this.environments.add( new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ) )
@@ -237,7 +237,7 @@ stage('Build') {
 									break;
 								case "cockroachdb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v22.1.10').pull()
+										docker.image('cockroachdb/cockroach:v22.2.2').pull()
 									}
 									sh "./docker_db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"

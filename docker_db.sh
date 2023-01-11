@@ -641,7 +641,47 @@ hana() {
 }
 
 cockroachdb() {
-  cockroachdb_22_1
+  cockroachdb_22_2
+}
+
+cockroachdb_22_2() {
+  $CONTAINER_CLI rm -f cockroach || true
+  LOG_CONFIG="
+sinks:
+  stderr:
+    channels: all
+    filter: ERROR
+    redact: false
+    exit-on-error: true
+"
+  $CONTAINER_CLI run -d --name=cockroach -m 3g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v22.2.2 start-single-node \
+    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        # Note we need to redirect stderr to stdout to capture the logs
+        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
+  done
+  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
+  #settings documented in https://www.cockroachlabs.com/docs/v22.1/local-testing.html#use-a-local-single-node-cluster-with-in-memory-storage
+  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+SET CLUSTER SETTING kv.raft_log.disable_synchronization_unsafe = true;
+SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
+SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
+SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
+SET CLUSTER SETTING jobs.retention_time = '15s';
+SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
+SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+
+quit
+EOF
+"
+  echo "Cockroachdb successfully started"
+
 }
 
 cockroachdb_22_1() {
@@ -654,7 +694,7 @@ sinks:
     redact: false
     exit-on-error: true
 "
-  $CONTAINER_CLI run -d --name=cockroach -m 3g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v22.1.11 start-single-node \
+  $CONTAINER_CLI run -d --name=cockroach -m 3g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v22.1.13 start-single-node \
     --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
@@ -732,6 +772,7 @@ if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
     echo -e "\tcockroachdb"
+    echo -e "\tcockroachdb_22_2"
     echo -e "\tcockroachdb_22_1"
     echo -e "\tcockroachdb_21_1"
     echo -e "\tdb2"

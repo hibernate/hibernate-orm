@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;

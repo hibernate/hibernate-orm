@@ -9,7 +9,7 @@ package org.hibernate.persister.entity;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 
 /**

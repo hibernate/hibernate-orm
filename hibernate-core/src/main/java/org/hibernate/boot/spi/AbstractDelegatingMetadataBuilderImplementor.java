@@ -16,6 +16,7 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -194,6 +195,12 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	public MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes) {
 		delegate.applySourceProcessOrdering( sourceTypes );
 		return getThis();
+	}
+
+	@Override
+	public MetadataBuilder applyFunctions(FunctionContributor functionContributor) {
+		delegate.applyFunctions( functionContributor );
+		return this;
 	}
 
 	@Override

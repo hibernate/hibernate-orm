@@ -23,7 +23,7 @@ public class TreatedNavigablePath extends NavigablePath {
 	public TreatedNavigablePath(NavigablePath parent, String entityTypeName, String alias) {
 		super(
 				parent,
-				entityTypeName,
+				"#" + entityTypeName,
 				alias,
 				"treat(" + parent + " as " + entityTypeName + ")",
 				TreatedNavigablePath::calculateTreatedFullPath,

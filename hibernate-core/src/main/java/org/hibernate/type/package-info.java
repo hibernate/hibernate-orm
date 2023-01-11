@@ -22,7 +22,7 @@
  * <ul>
  * <li>a {@link org.hibernate.type.descriptor.java.JavaType}, with
  * <li>a {@link org.hibernate.type.descriptor.jdbc.JdbcType}, and,
- * <li>possibly, a {@linkplain org.hibernate.metamodel.model.convert.spi.BasicValueConverter
+ * <li>possibly, a {@linkplain org.hibernate.type.descriptor.converter.spi.BasicValueConverter
  *     converter}, though this is not usually needed.
  * </ul>
  * <p>
@@ -48,7 +48,7 @@
  * This approach provides quite some flexibility in allowing a given Java type to
  * map to a range of JDBC types. However, when the built-in conversions don't handle
  * a particular mapping, a
- * {@linkplain org.hibernate.metamodel.model.convert.spi.BasicValueConverter converter}
+ * {@linkplain org.hibernate.type.descriptor.converter.spi.BasicValueConverter converter}
  * may assist in the conversion process. For example, a JPA
  * {@link jakarta.persistence.AttributeConverter} might be provided.
  * <p>

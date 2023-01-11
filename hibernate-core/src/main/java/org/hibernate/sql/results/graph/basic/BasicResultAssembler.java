@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;

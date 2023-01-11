@@ -4,19 +4,19 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.model.convert.internal;
+package org.hibernate.type.descriptor.converter.internal;
 
 import java.io.Serializable;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static java.util.Arrays.sort;
-import static org.hibernate.metamodel.model.convert.internal.EnumHelper.getEnumeratedValues;
+import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on

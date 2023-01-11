@@ -8,12 +8,13 @@ package org.hibernate.query.results.dynamic;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
+
 import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.resource.beans.spi.ManagedBean;

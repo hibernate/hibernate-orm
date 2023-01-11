@@ -168,11 +168,7 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 
 	@Override
 	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return new SqmTreatedSimplePath<>(
-				this,
-				treatTarget,
-				nodeBuilder()
-		);
+		return getTreatedPath( treatTarget );
 	}
 
 //	@Override

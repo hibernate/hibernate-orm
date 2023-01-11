@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
@@ -106,7 +107,7 @@ public class TreatPathTest {
 				testCriteriaTreat( entityManager, "synonyms", List.of( "ciao" ) );
 			}
 			catch (Exception e) {
-				assertEquals( UnsupportedOperationException.class, e.getClass() );
+				assertEquals( NotYetImplementedFor6Exception.class, e.getClass() );
 			}
 		} );
 	}

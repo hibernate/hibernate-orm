@@ -1604,4 +1604,36 @@ public class FunctionTests {
 		);
 	}
 
+	@Test
+	public void testIn(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( 1,
+							session.createQuery("select 1 where 1 in (:list)")
+									.setParameterList("list",List.of(1,2))
+									.list().size() );
+					assertEquals( 0,
+							session.createQuery("select 1 where 1 in (:list)")
+									.setParameterList("list",List.of(0,3,2))
+									.list().size() );
+					assertEquals( 0,
+							session.createQuery("select 1 where 1 in (:list)")
+									.setParameterList("list",List.of())
+									.list().size() );
+					assertEquals( 1,
+							session.createQuery("select 1 where 1 in :list")
+									.setParameterList("list",List.of(1,2))
+									.list().size() );
+					assertEquals( 0,
+							session.createQuery("select 1 where 1 in :list")
+									.setParameterList("list",List.of(0,3,2))
+									.list().size() );
+					assertEquals( 0,
+							session.createQuery("select 1 where 1 in :list")
+									.setParameterList("list",List.of())
+									.list().size() );
+				}
+		);
+	}
+
 }

@@ -13,20 +13,25 @@ import java.util.function.Supplier;
 import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -161,6 +166,20 @@ public class SingularAttributeImpl<D,J>
 					false,
 					metadataContext
 			);
+		}
+
+		@Override
+		public NavigablePath createNavigablePath(SqmPath parent, String alias) {
+			if ( parent == null ) {
+				throw new IllegalArgumentException(
+						"`lhs` cannot be null for a sub-navigable reference - " + parent
+				);
+			}
+			NavigablePath navigablePath = parent.getNavigablePath();
+			if ( parent.getReferencedPathSource() instanceof PluralPersistentAttribute<?, ?, ?> ) {
+				navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
+			}
+			return new EntityIdentifierNavigablePath( navigablePath, SqmCreationHelper.determineAlias( alias ), getName() );
 		}
 	}
 

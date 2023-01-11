@@ -93,7 +93,6 @@ public interface SessionBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	@SuppressWarnings("UnusedReturnValue")
 	SessionBuilder autoClear(boolean autoClear);
 
 	/**
@@ -130,7 +129,7 @@ public interface SessionBuilder {
 	 * Remove all listeners intended for the built session currently held here,
 	 * including any auto-apply ones; in other words, start with a clean slate.
 	 *
-	 * {@code this}, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
 	SessionBuilder clearEventListeners();
 

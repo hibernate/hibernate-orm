@@ -291,7 +291,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			Class<R> expectedResultType,
 			SqmCreationOptions creationOptions,
 			SqmCreationContext creationContext) {
-		return new SemanticQueryBuilder<R>( expectedResultType, creationOptions, creationContext ).visitStatement( hqlParseTree );
+		return new SemanticQueryBuilder<>( expectedResultType, creationOptions, creationContext ).visitStatement( hqlParseTree );
 	}
 
 	private final Class<R> expectedResultType;
@@ -843,7 +843,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		final String searchAttributeName = visitIdentifier( (HqlParser.IdentifierContext) ctx.getChild( ctx.getChildCount() - 1 ) );
 		final HqlParser.SearchSpecificationsContext searchCtx = (HqlParser.SearchSpecificationsContext) ctx.getChild( 4 );
-		final List<JpaSearchOrder> searchOrders = new ArrayList<>( ( searchCtx.getChildCount() + 1 ) >> 1 );;
+		final List<JpaSearchOrder> searchOrders = new ArrayList<>( ( searchCtx.getChildCount() + 1 ) >> 1 );
 		final List<ParseTree> children = searchCtx.children;
 		final JpaCteCriteriaType<?> type = cteDefinition.getType();
 		for ( int i = 0; i < children.size(); i += 2 ) {
@@ -913,9 +913,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmQueryPart<Object> visitQuerySpecExpression(HqlParser.QuerySpecExpressionContext ctx) {
+	public SqmQueryPart<?> visitQuerySpecExpression(HqlParser.QuerySpecExpressionContext ctx) {
 		final List<ParseTree> children = ctx.children;
-		final SqmQueryPart<Object> queryPart = visitQuery( (HqlParser.QueryContext) children.get( 0 ) );
+		final SqmQueryPart<?> queryPart = visitQuery( (HqlParser.QueryContext) children.get( 0 ) );
 		if ( children.size() > 1 ) {
 			visitQueryOrder( queryPart, (HqlParser.QueryOrderContext) children.get( 1 ) );
 		}
@@ -1115,28 +1115,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmQuerySpec<Object> visitQuery(HqlParser.QueryContext ctx) {
-		//noinspection unchecked
-		final SqmQuerySpec<Object> sqmQuerySpec = (SqmQuerySpec<Object>) currentQuerySpec();
-		final int fromIndex;
-		if ( ctx.getChild( 0 ) instanceof HqlParser.FromClauseContext ) {
-			fromIndex = 0;
-		}
-		else {
-			fromIndex = 1;
-		}
+	public SqmQuerySpec<?> visitQuery(HqlParser.QueryContext ctx) {
+		final SqmQuerySpec<?> sqmQuerySpec = currentQuerySpec();
 
 		// visit from-clause first!!!
-		visitFromClause( (HqlParser.FromClauseContext) ctx.getChild( fromIndex ) );
+		visitFromClause( ctx.fromClause() );
 
 		final SqmSelectClause selectClause;
-		if ( fromIndex == 1 ) {
-			selectClause = visitSelectClause( (HqlParser.SelectClauseContext) ctx.getChild( 0 ) );
-		}
-		else if ( ctx.getChild( ctx.getChildCount() - 1 ) instanceof HqlParser.SelectClauseContext ) {
-			selectClause = visitSelectClause( (HqlParser.SelectClauseContext) ctx.getChild( ctx.getChildCount() - 1 ) );
-		}
-		else {
+		if ( ctx.selectClause() == null ) {
 			if ( creationOptions.useStrictJpaCompliance() ) {
 				throw new StrictJpaComplianceViolation(
 						"Encountered implicit select-clause, but strict JPQL compliance was requested",
@@ -1146,24 +1132,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			log.debugf( "Encountered implicit select clause : %s", ctx.getText() );
 			selectClause = buildInferredSelectClause( sqmQuerySpec.getFromClause() );
 		}
+		else {
+			selectClause = visitSelectClause( ctx.selectClause() );
+		}
 		sqmQuerySpec.setSelectClause( selectClause );
 
-		int currentIndex = fromIndex + 1;
 		final SqmWhereClause whereClause = new SqmWhereClause( creationContext.getNodeBuilder() );
-		if ( currentIndex < ctx.getChildCount() && ctx.getChild( currentIndex ) instanceof HqlParser.WhereClauseContext ) {
-			whereClause.setPredicate( (SqmPredicate) ctx.getChild( currentIndex++ ).accept( this ) );
+		if ( ctx.whereClause() != null ) {
+			whereClause.setPredicate( (SqmPredicate) ctx.whereClause().accept( this ) );
 		}
 		sqmQuerySpec.setWhereClause( whereClause );
 
-		if ( currentIndex < ctx.getChildCount() && ctx.getChild( currentIndex ) instanceof HqlParser.GroupByClauseContext ) {
-			sqmQuerySpec.setGroupByClauseExpressions(
-					visitGroupByClause( (HqlParser.GroupByClauseContext) ctx.getChild( currentIndex++ ) )
-			);
+		if ( ctx.groupByClause() != null ) {
+			sqmQuerySpec.setGroupByClauseExpressions( visitGroupByClause( ctx.groupByClause() ) );
 		}
-		if ( currentIndex < ctx.getChildCount() && ctx.getChild( currentIndex ) instanceof HqlParser.HavingClauseContext ) {
-			sqmQuerySpec.setHavingClausePredicate(
-					visitHavingClause( (HqlParser.HavingClauseContext) ctx.getChild( currentIndex ) )
-			);
+		if ( ctx.havingClause() != null ) {
+			sqmQuerySpec.setHavingClausePredicate( visitHavingClause( ctx.havingClause() ) );
 		}
 
 		return sqmQuerySpec;

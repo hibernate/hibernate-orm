@@ -73,10 +73,9 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	@Override
 	public JdbcMappingContainer getExpressionType() {
-		if ( type instanceof SqlExpressible) {
-			return (JdbcMappingContainer) type;
-		}
-		return expressible;
+		return type instanceof SqlExpressible
+				? (JdbcMappingContainer) type
+				: expressible;
 	}
 
 	protected FunctionRenderingSupport getRenderer() {
@@ -107,8 +106,12 @@ public class SelfRenderingFunctionSqlAstExpression
 			jdbcJavaType = jdbcMapping.getJdbcJavaType();
 			converter = jdbcMapping.getValueConverter();
 		}
-		else {
+		else if ( type != null ) {
 			jdbcJavaType = type.getExpressibleJavaType();
+			converter = null;
+		}
+		else {
+			jdbcJavaType = null;
 			converter = null;
 		}
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
@@ -123,7 +126,7 @@ public class SelfRenderingFunctionSqlAstExpression
 						)
 						.getValuesArrayPosition(),
 				resultVariable,
-				type.getExpressibleJavaType(),
+				type == null ? null : type.getExpressibleJavaType(),
 				converter
 		);
 	}
@@ -178,9 +181,15 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return type instanceof SqlExpressible
-				? ( (SqlExpressible) type ).getJdbcMapping()
-				: ( (SqlExpressible) expressible ).getJdbcMapping();
+		if ( type instanceof SqlExpressible ) {
+			return ( (SqlExpressible) type ).getJdbcMapping();
+		}
+		else if ( expressible instanceof SqlExpressible ) {
+			return ( (SqlExpressible) expressible ).getJdbcMapping();
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override

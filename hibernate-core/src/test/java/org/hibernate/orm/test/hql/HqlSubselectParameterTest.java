@@ -38,9 +38,9 @@ public class HqlSubselectParameterTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Resource resource = new Resource();
+					Resource resource = new Resource( 1L, null );
 					session.persist( resource );
-					Bookmark bookmark = new Bookmark();
+					Bookmark bookmark = new Bookmark( 1L, null );
 					session.persist( bookmark );
 
 				}
@@ -53,7 +53,7 @@ public class HqlSubselectParameterTest {
 				session -> {
 					String query = "select rsrc, (select count(mrk.key) from bookmark as mrk where mrk.key=:identityKey) as myBookmarks from resource as rsrc";
 					List<Object[]> objects = session.createQuery( query, Object[].class )
-							.setParameter( "identityKey", 100l )
+							.setParameter( "identityKey", 100L )
 							.getResultList();
 
 					assertThat( objects.size() ).isEqualTo( 1 );
@@ -64,24 +64,34 @@ public class HqlSubselectParameterTest {
 	@Entity(name = "bookmark")
 	@Table(name = "o_bookmark")
 	public static class Bookmark {
-
 		@Id
 		@Column(name = "id", nullable = false, unique = true, updatable = false)
 		private Long key;
-
 		private String name;
 
+		public Bookmark() {
+		}
+
+		public Bookmark(Long key, String name) {
+			this.key = key;
+			this.name = name;
+		}
 	}
 
 	@Entity(name = "resource")
 	@Table(name = "o_resource")
 	public static class Resource {
-
 		@Id
 		@Column(name = "id", nullable = false, unique = true, updatable = false)
 		private Long key;
-
 		private String name;
 
+		public Resource() {
+		}
+
+		public Resource(Long key, String name) {
+			this.key = key;
+			this.name = name;
+		}
 	}
 }

@@ -12,20 +12,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import jakarta.persistence.metamodel.MapAttribute;
-import jakarta.persistence.metamodel.PluralAttribute;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * @author Steve Ebersole
@@ -181,6 +183,17 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 					name -> pathSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( pathSource ) )
 			);
 		}
+	}
+
+	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(EntityDomainType<S> treatTarget) {
+		final NavigablePath treat = getNavigablePath().treatAs( treatTarget.getHibernateEntityName() );
+		//noinspection unchecked
+		SqmTreatedPath<T, S> path = (SqmTreatedPath<T, S>) getLhs().getReusablePath( treat.getLocalName() );
+		if ( path == null ) {
+			path = new SqmTreatedSimplePath<>( this, treatTarget, nodeBuilder() );
+			getLhs().registerReusablePath( path );
+		}
+		return path;
 	}
 
 	@Override

@@ -2041,8 +2041,8 @@ public interface AvailableSettings {
 	 * {@link jakarta.persistence.ManyToMany many-to-many} association whose target
 	 * type defines the restriction.
 	 * <p>
-	 * By default, the restriction is not applied. When this setting is enabled, the
-	 * restriction is applied.
+	 * By default, the restriction is applied. When this setting is disabled, the
+	 * restriction is not applied.
 	 * <p>
 	 * The setting has no effect on a collection of {@link jakarta.persistence.Embeddable
 	 * embeddable} values containing a {@link jakarta.persistence.ManyToOne many-to-one}

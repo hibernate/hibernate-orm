@@ -13,7 +13,7 @@ import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spatial.GeolatteGeometryJavaType;
 import org.hibernate.tool.schema.Action;

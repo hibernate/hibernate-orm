@@ -9,6 +9,7 @@ package org.hibernate.boot.model.process.internal;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.function.Supplier;
+
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
@@ -18,8 +19,8 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
-import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
+import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
+import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicType;

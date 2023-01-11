@@ -17,7 +17,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.StringJavaType;

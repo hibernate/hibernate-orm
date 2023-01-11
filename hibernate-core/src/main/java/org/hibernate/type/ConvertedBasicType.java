@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 
 /**
  * Extension for implementations of {@link BasicType} which have an implied

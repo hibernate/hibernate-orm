@@ -8,6 +8,7 @@ package org.hibernate.userguide.mapping.basic.bitset;
 
 import java.sql.Types;
 import java.util.BitSet;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Converter;
@@ -17,8 +18,8 @@ import jakarta.persistence.Table;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;

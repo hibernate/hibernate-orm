@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;

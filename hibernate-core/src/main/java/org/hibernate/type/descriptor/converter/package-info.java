@@ -6,9 +6,23 @@
  */
 
 /**
- * Support for handling JPA {@link jakarta.persistence.AttributeConverter}
- * instances as part of the Hibernate {@link org.hibernate.type.Type} system.
+ * Defines basic-typed value conversions, including support for handling JPA
+ * {@link jakarta.persistence.AttributeConverter} instances as part of the
+ * Hibernate {@link org.hibernate.type.Type} system. The main contract is
+ * {@link org.hibernate.type.descriptor.converter.spi.BasicValueConverter}.
+ * <p>
+ * All basic value conversions are defined by this namespace, including:
+ * <ul>
+ * <li>Java {@code enum} conversions via
+ *     {@link org.hibernate.type.descriptor.converter.spi.EnumValueConverter},
+ *     and
+ * <li>support for {@link jakarta.persistence.AttributeConverter} via
+ *     {@link org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter}.
+ * </ul>
  *
- * @see org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl
+ * @see org.hibernate.type.descriptor.converter.spi.BasicValueConverter
  */
+@Incubating
 package org.hibernate.type.descriptor.converter;
+
+import org.hibernate.Incubating;

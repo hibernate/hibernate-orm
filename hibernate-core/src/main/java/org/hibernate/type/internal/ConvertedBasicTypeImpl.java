@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.ConvertedBasicType;

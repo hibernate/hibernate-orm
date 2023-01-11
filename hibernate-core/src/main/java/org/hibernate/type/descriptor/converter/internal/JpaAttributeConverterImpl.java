@@ -4,17 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.model.convert.internal;
+package org.hibernate.type.descriptor.converter.internal;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;

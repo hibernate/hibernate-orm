@@ -31,7 +31,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.spi.NavigablePath;

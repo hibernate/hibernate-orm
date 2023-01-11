@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;

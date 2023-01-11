@@ -4,13 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.type.descriptor.converter;
+package org.hibernate.type.descriptor.converter.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
 
 import org.hibernate.SharedSessionContract;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -64,17 +64,11 @@ public class AttributeConverterMutabilityPlanImpl<T> extends MutableMutabilityPl
 
 	@Override
 	public Serializable disassemble(T value, SharedSessionContract session) {
-		if ( mutable ) {
-			return (Serializable) converter.toRelationalValue( value );
-		}
-		return (Serializable) value;
+		return mutable ? (Serializable) converter.toRelationalValue(value) : (Serializable) value;
 	}
 
 	@Override
 	public T assemble(Serializable cached, SharedSessionContract session) {
-		if ( mutable ) {
-			return (T) converter.toDomainValue( cached );
-		}
-		return (T) cached;
+		return mutable ? (T) converter.toDomainValue(cached) : (T) cached;
 	}
 }

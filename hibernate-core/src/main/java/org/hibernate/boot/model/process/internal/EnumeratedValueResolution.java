@@ -8,7 +8,7 @@ package org.hibernate.boot.model.process.internal;
 
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;

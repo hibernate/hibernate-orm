@@ -47,7 +47,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
 				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
 				if ( tableGroupJoin.getJoinedGroup().isFetched()
-						&& fetchable.getFetchableName().equals( navigablePath.getLocalName() )
+						&& fetchable.getNavigableRole().getLocalName().equals( navigablePath.getLocalName() )
 						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
 					return navigablePath;
 				}

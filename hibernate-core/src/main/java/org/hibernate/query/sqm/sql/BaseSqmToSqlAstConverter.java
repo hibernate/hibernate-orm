@@ -272,6 +272,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -382,6 +383,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -7162,7 +7164,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //				.getOrMakeJavaDescriptor( namedClass );
 	}
 
-	private void addFetch(ImmutableFetchList.Builder fetches, FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
+	@Override
+	public Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
+		final EntityIdentifierMapping identifierMapping = fetchParent.getEntityValuedModelPart()
+				.getEntityMappingType()
+				.getIdentifierMapping();
+		final Fetchable fetchableIdentifierMapping = (Fetchable) identifierMapping;
+		return createFetch( fetchParent, fetchableIdentifierMapping, true );
+	}
+
+	private Fetch createFetch(FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
 		final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );
 		final Map.Entry<Integer, List<SqlSelection>> sqlSelectionsToTrack = trackedFetchSelectionsForGroup.get( resolvedNavigablePath );
 		final int sqlSelectionStartIndexForFetch;
@@ -7308,8 +7319,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 
 				if ( biDirectionalFetch != null ) {
-					fetches.add( biDirectionalFetch );
-					return;
+					return biDirectionalFetch;
 				}
 			}
 			final Fetch fetch = buildFetch(
@@ -7344,8 +7354,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						currentBagRole = fetchable.getNavigableRole().getNavigableName();
 					}
 				}
-				fetches.add( fetch );
 			}
+			return fetch;
 		}
 		finally {
 			if ( incrementFetchDepth ) {
@@ -7374,10 +7384,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final int size = referencedMappingContainer.getNumberOfFetchables();
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( referencedMappingContainer );
 		for ( int i = 0; i < keySize; i++ ) {
-			addFetch( fetches, fetchParent, referencedMappingContainer.getKeyFetchable( i ), true );
+			final Fetch fetch = createFetch( fetchParent, referencedMappingContainer.getKeyFetchable( i ), true );
+			if ( fetch != null ) {
+				fetches.add( fetch );
+			}
 		}
 		for ( int i = 0; i < size; i++ ) {
-			addFetch( fetches, fetchParent, referencedMappingContainer.getFetchable( i ), false );
+			final Fetch fetch = createFetch( fetchParent, referencedMappingContainer.getFetchable( i ), false );
+			if ( fetch != null ) {
+				fetches.add( fetch );
+			}
 		}
 		return fetches.build();
 	}

@@ -287,16 +287,19 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	@Deprecated
 	public void contributeType(BasicType<?> type) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 	}
 
 	@Override
+	@Deprecated
 	public void contributeType(BasicType<?> type, String... keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
+	@Deprecated
 	public void contributeType(UserType<?> type, String[] keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
 	}
@@ -304,6 +307,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return bootstrapContext.getTypeConfiguration();
+	}
+
+	@Override
+	public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+		bootstrapContext.addAttributeConverterDescriptor(
+				new ClassBasedConverterDescriptor( converterClass, bootstrapContext.getClassmateContext() )
+		);
 	}
 
 	@Override
@@ -319,6 +329,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	@Deprecated
 	public MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes) {
 		Collections.addAll( options.sourceProcessOrdering, sourceTypes );
 		return this;

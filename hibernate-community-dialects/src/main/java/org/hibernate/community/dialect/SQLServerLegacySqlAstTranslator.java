@@ -11,16 +11,15 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -252,6 +251,10 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 			else if ( version.isBefore( 11 ) || !isRowsOnlyFetchClauseType( queryPart ) ) {
 				return OffsetFetchClauseMode.EMULATED;
 			}
+			else if ( !queryPart.hasSortSpecifications() && ((QuerySpec) queryPart).getSelectClause().isDistinct() ) {
+				// order by (select 0) workaround for offset / fetch does not work when query is distinct
+				return OffsetFetchClauseMode.EMULATED;
+			}
 			else {
 				return OffsetFetchClauseMode.STANDARD;
 			}
@@ -311,14 +314,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected void renderFetchPlusOffsetExpression(
-			Expression fetchClauseExpression,
-			Expression offsetClauseExpression,
-			int offset) {
-		renderFetchPlusOffsetExpressionAsSingleParameter( fetchClauseExpression, offsetClauseExpression, offset );
-	}
-
-	@Override
 	protected void visitSqlSelections(SelectClause selectClause) {
 		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
 		final OffsetFetchClauseMode offsetFetchClauseMode = getOffsetFetchClauseMode( querySpec );
@@ -346,7 +341,7 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	protected void renderEmptyOrderBy() {
 		// Always need an order by clause: https://blog.jooq.org/2014/05/13/sql-server-trick-circumvent-missing-order-by-clause/
-		appendSql( "order by @@version" );
+		appendSql( "order by (select 0)" );
 	}
 
 	@Override
@@ -355,7 +350,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 			if ( getDialect().getVersion().isBefore( 9 ) && !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 				throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 			}
-			// Note that SQL Server is very strict i.e. it requires an order by clause for TOP or OFFSET
 			final OffsetFetchClauseMode offsetFetchClauseMode = getOffsetFetchClauseMode( queryPart );
 			if ( offsetFetchClauseMode == OffsetFetchClauseMode.STANDARD ) {
 				if ( !queryPart.hasSortSpecifications() ) {
@@ -386,10 +380,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				if ( fetchExpression != null ) {
 					renderFetch( fetchExpression, null, fetchClauseType );
 				}
-			}
-			else if ( offsetFetchClauseMode == OffsetFetchClauseMode.TOP_ONLY && !queryPart.hasSortSpecifications() ) {
-				appendSql( ' ' );
-				renderEmptyOrderBy();
 			}
 		}
 	}

@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
@@ -23,6 +24,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -154,7 +156,7 @@ public class MetadataBuildingProcess {
 				options
 		);
 
-		handleTypes( bootstrapContext, options );
+		handleTypes( bootstrapContext, options, metadataCollector );
 
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
@@ -520,13 +522,26 @@ public class MetadataBuildingProcess {
 //		return new JandexInitManager( options.getJandexView(), classLoaderAccess, autoIndexMembers );
 //	}
 
-	private static void handleTypes(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
-		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
+	private static void handleTypes(
+			BootstrapContext bootstrapContext,
+			MetadataBuildingOptions options,
+			ConverterRegistry converterRegistry) {
+		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService(ClassLoaderService.class);
 
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-		final TypeContributions typeContributions = () -> typeConfiguration;
+		final TypeContributions typeContributions = new TypeContributions() {
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
+			}
+
+			@Override
+			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+				converterRegistry.addAttributeConverter( converterClass );
+			}
+		};
 
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();

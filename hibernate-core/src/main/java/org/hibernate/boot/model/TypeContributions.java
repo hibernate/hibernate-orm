@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model;
 
+import jakarta.persistence.AttributeConverter;
+import org.hibernate.Incubating;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypeTemplate;
@@ -21,11 +23,13 @@ import org.hibernate.usertype.UserType;
  * {@link TypeConfiguration}, either by a {@link org.hibernate.dialect.Dialect}
  * or by a {@link TypeContributor}.
  *
- * @see TypeContributor
- *
  * @author Steve Ebersole
+ * @see TypeContributor
  */
 public interface TypeContributions {
+	/**
+	 * The {@link TypeConfiguration} to contribute to
+	 */
 	TypeConfiguration getTypeConfiguration();
 
 	/**
@@ -46,10 +50,21 @@ public interface TypeContributions {
 
 	/**
 	 * Register a {@link UserType} as the implicit (auto-applied)
-	 * type for values of type {@link UserType#returnedClass()}
+	 * type for values of type {@link UserType#returnedClass()}.
 	 */
-	default <T> void contributeType(UserType<T> type) {
+	default void contributeType(UserType<?> type) {
 		contributeType( type, type.returnedClass().getName() );
+	}
+
+	/**
+	 * Register an {@link AttributeConverter} class.
+	 *
+	 * @since 6.2
+	 */
+	@Incubating
+	default void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+		// default implementation for backward compatibility
+		throw new UnsupportedOperationException();
 	}
 
 	/**

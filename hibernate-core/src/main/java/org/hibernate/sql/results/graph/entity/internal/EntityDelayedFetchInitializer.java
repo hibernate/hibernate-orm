@@ -24,8 +24,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
-import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -84,7 +82,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 		}
 
 		final EntityInitializer parentEntityInitializer = getParentEntityInitializer( parentAccess );
-		if ( parentEntityInitializer != null && parentEntityInitializer.isInitialized() ) {
+		if ( parentEntityInitializer != null && parentEntityInitializer.isEntityInitialized() ) {
 			return;
 		}
 
@@ -224,6 +222,11 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 	@Override
 	public EntityKey getEntityKey() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isEntityInitialized() {
+		return false;
 	}
 
 	@Override

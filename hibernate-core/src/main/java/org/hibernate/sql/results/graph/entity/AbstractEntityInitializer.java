@@ -984,7 +984,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	@Override
-	public boolean isInitialized() {
+	public boolean isEntityInitialized() {
 		return isInitialized;
 	}
 

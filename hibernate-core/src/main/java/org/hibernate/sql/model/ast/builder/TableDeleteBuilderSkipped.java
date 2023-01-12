@@ -23,7 +23,11 @@ public class TableDeleteBuilderSkipped implements TableDeleteBuilder {
 	}
 
 	@Override
-	public void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+	public void addKeyRestriction(
+			String columnName,
+			String columnWriteFragment,
+			JdbcMapping jdbcMapping,
+			boolean isNullable) {
 	}
 
 	@Override

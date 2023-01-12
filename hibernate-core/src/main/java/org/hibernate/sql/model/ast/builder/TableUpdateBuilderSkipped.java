@@ -33,7 +33,11 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+	public void addKeyRestriction(
+			String columnName,
+			String columnWriteFragment,
+			JdbcMapping jdbcMapping,
+			boolean isNullable) {
 		// nothing to do
 	}
 
@@ -58,7 +62,7 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public void addKeyColumn(String columnName, String valueExpression, JdbcMapping jdbcMapping) {
+	public void addKeyColumn(String columnName, String valueExpression, JdbcMapping jdbcMapping, boolean isNullable) {
 		// nothing to do
 	}
 

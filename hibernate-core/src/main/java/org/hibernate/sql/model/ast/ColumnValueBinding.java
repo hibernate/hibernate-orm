@@ -20,10 +20,16 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 public class ColumnValueBinding {
 	private final ColumnReference columnReference;
 	private final ColumnWriteFragment valueExpression;
+	private final boolean isNullable;
 
 	public ColumnValueBinding(ColumnReference columnReference, ColumnWriteFragment valueExpression) {
+		this( columnReference, valueExpression, false );
+	}
+
+	public ColumnValueBinding(ColumnReference columnReference, ColumnWriteFragment valueExpression, boolean isNullable) {
 		this.columnReference = columnReference;
 		this.valueExpression = valueExpression;
+		this.isNullable = isNullable;
 	}
 
 	public ColumnReference getColumnReference() {
@@ -32,6 +38,10 @@ public class ColumnValueBinding {
 
 	public ColumnWriteFragment getValueExpression() {
 		return valueExpression;
+	}
+
+	public boolean isNullable() {
+		return isNullable;
 	}
 
 	@Override

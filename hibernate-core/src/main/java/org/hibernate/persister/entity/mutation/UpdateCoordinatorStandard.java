@@ -1087,7 +1087,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					keyColumn -> tableUpdateBuilder.addKeyRestriction(
 							keyColumn.getColumnName(),
 							"?",
-							keyColumn.getJdbcMapping()
+							keyColumn.getJdbcMapping(),
+							false
 					)
 			);
 		}

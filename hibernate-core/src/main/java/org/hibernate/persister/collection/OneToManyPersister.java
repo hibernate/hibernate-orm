@@ -616,7 +616,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			SharedSessionContractImplementor session,
 			JdbcValueConsumer jdbcValueConsumer) {
 		final PluralAttributeMapping pluralAttribute = getAttributeMapping();
-//		pluralAttribute.getKeyDescriptor().decompose( keyValue, jdbcValueConsumer, session );
+		pluralAttribute.getKeyDescriptor().decompose( keyValue, jdbcValueConsumer, session );
 		pluralAttribute.getElementDescriptor().decompose( rowValue, jdbcValueConsumer, session );
 	}
 

@@ -526,7 +526,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				getAttributeMapping().getElementDescriptor().decompose(
 						snapshotElement,
 						(jdbcValue, jdbcValueMapping) -> {
-							if ( jdbcValueMapping.isNullable() && jdbcValueMapping.isFormula() ) {
+							if ( jdbcValueMapping.isFormula() ) {
 								return;
 							}
 							restrictor.consume( jdbcValue, jdbcValueMapping );
@@ -603,18 +603,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			pluralAttribute
 					.getKeyDescriptor()
 					.getKeyPart()
-					.forEachSelectable( (index, selectable) -> deleteBuilder.addKeyRestriction( selectable ) );
+					.forEachSelectable( deleteBuilder::addKeyRestriction );
 
 			if ( hasIndex && !indexContainsFormula ) {
 				assert pluralAttribute.getIndexDescriptor() != null;
-				pluralAttribute
-						.getIndexDescriptor()
-						.forEachSelectable( (index, selectable) -> deleteBuilder.addKeyRestriction( selectable ) );
+				pluralAttribute.getIndexDescriptor().forEachSelectable( deleteBuilder::addKeyRestriction );
 			}
 			else {
-				pluralAttribute
-						.getElementDescriptor()
-						.forEachSelectable( (index, selectable) -> deleteBuilder.addKeyRestriction( selectable ) );
+				pluralAttribute.getElementDescriptor().forEachSelectable( deleteBuilder::addKeyRestriction );
 			}
 		}
 

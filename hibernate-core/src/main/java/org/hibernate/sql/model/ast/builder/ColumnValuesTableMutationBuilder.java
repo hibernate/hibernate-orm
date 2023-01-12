@@ -35,7 +35,7 @@ public interface ColumnValuesTableMutationBuilder {
 	/**
 	 * Add a key column
 	 */
-	void addKeyColumn(String columnName, String valueExpression, JdbcMapping jdbcMapping);
+	void addKeyColumn(String columnName, String valueExpression, JdbcMapping jdbcMapping, boolean isNullable);
 
 	/**
 	 * Add a key column
@@ -44,7 +44,8 @@ public interface ColumnValuesTableMutationBuilder {
 		addKeyColumn(
 				selectableMapping.getSelectionExpression(),
 				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
+				selectableMapping.getJdbcMapping(),
+				selectableMapping.isNullable()
 		);
 	}
 }

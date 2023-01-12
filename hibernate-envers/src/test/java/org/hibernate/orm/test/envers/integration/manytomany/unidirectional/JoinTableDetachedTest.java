@@ -100,7 +100,6 @@ public class JoinTableDetachedTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-15393", message = "Work for HHH-15393 (write-paths) causes a failure" )
 	public void testRevisionsCounts() {
 		Assert.assertEquals(
 				Arrays.asList( 1, 2, 3, 4, 5 ), getAuditReader().getRevisions(
@@ -113,7 +112,6 @@ public class JoinTableDetachedTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-15393", message = "Work for HHH-15393 (write-paths) causes a failure" )
 	public void testHistoryOfCollectionEntity() {
 		// Revision 1
 		JoinTableEntity collectionEntity = new JoinTableEntity( collectionEntityId, "some data" );

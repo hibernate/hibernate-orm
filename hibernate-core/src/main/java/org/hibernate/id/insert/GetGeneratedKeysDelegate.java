@@ -72,7 +72,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 				throw new MappingException("wrong number of generated columns");
 			}
 			for ( int i = 0; i < columnValues.length; i++ ) {
-				builder.addKeyColumn( columnNames[i], columnValues[i], identifierMapping.getJdbcMapping() );
+				builder.addKeyColumn( columnNames[i], columnValues[i], identifierMapping.getJdbcMapping(), false );
 			}
 		}
 

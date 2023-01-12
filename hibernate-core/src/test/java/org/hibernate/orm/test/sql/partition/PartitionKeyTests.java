@@ -73,7 +73,7 @@ public class PartitionKeyTests {
 	    @Id
 	    private Integer id;
 		@PartitionKey
-		@Column(name = "tenant_id", updatable = false)
+		@Column(name = "tenant_id", updatable = false, nullable = false)
 		private Integer tenantId;
 	    @Basic
 		private String name;

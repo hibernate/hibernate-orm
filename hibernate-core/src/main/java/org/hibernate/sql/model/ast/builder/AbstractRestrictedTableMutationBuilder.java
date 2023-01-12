@@ -60,12 +60,17 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	}
 
 	@Override
-	public void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+	public void addKeyRestriction(
+			String columnName,
+			String columnWriteFragment,
+			JdbcMapping jdbcMapping,
+			boolean isNullable) {
 		addColumn(
 				columnName,
 				columnWriteFragment,
 				jdbcMapping,
 				ParameterUsage.RESTRICT,
+				isNullable,
 				keyRestrictionBindings
 		);
 	}
@@ -89,7 +94,7 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 			optimisticLockBindings = new ArrayList<>();
 		}
 
-		addColumn( columnName, columnWriteFragment, jdbcMapping, ParameterUsage.RESTRICT, optimisticLockBindings );
+		addColumn( columnName, columnWriteFragment, jdbcMapping, ParameterUsage.RESTRICT, false, optimisticLockBindings );
 	}
 
 	@Override

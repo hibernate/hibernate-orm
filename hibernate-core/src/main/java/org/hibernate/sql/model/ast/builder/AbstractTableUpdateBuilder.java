@@ -91,7 +91,7 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 			String columnName,
 			String columnWriteFragment,
 			JdbcMapping jdbcMapping) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping );
+		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping, false );
 
 		if ( jdbcMapping.getJdbcType().isLob() && getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindings == null ) {
@@ -108,7 +108,7 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	public void addKeyColumn(
 			String columnName,
 			String columnWriteFragment,
-			JdbcMapping jdbcMapping) {
-		addColumn( columnName, columnWriteFragment, jdbcMapping, keyBindings );
+			JdbcMapping jdbcMapping, boolean isNullable) {
+		addColumn( columnName, columnWriteFragment, jdbcMapping, isNullable, keyBindings );
 	}
 }

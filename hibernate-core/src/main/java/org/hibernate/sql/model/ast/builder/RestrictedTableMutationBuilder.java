@@ -22,12 +22,9 @@ import org.hibernate.sql.model.ast.RestrictedTableMutation;
  */
 public interface RestrictedTableMutationBuilder<O extends MutationOperation, M extends RestrictedTableMutation<O>> extends TableMutationBuilder<M> {
 	/**
-	 * Add a restriction as long as the selectable is not a formula and is not nullable
+	 * Add a restriction as long as the selectable is not a formula
 	 */
 	default void addKeyRestriction(SelectableMapping selectableMapping) {
-		if ( selectableMapping.isNullable() ) {
-			return;
-		}
 		addKeyRestrictionLeniently( selectableMapping );
 	}
 
@@ -52,14 +49,15 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 		addKeyRestriction(
 				selectableMapping.getSelectionExpression(),
 				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
+				selectableMapping.getJdbcMapping(),
+				selectableMapping.isNullable()
 		);
 	}
 
 	/**
 	 * Add restriction based on the column in the table's key
 	 */
-	void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping);
+	void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping, boolean isNullable);
 
 	void addNullOptimisticLockRestriction(SelectableMapping column);
 

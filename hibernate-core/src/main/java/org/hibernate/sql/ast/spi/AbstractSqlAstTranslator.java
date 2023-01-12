@@ -4888,7 +4888,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected final boolean isParameter(Expression expression) {
-		return expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation;
+		return expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation
+				|| expression instanceof ColumnWriteFragment && "?".equals( ( (ColumnWriteFragment) expression ).getFragment() );
 	}
 
 	protected final boolean isLiteral(Expression expression) {
@@ -7849,9 +7850,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					else {
 						sqlBuffer.append( " and " );
 					}
-					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					sqlBuffer.append( '=' );
-					columnValueBinding.getValueExpression().accept( this );
+					visitRelationalPredicate(
+							new ComparisonPredicate(
+									columnValueBinding.getColumnReference(),
+									columnValueBinding.isNullable()
+											? ComparisonOperator.NOT_DISTINCT_FROM
+											: ComparisonOperator.EQUAL,
+									columnValueBinding.getValueExpression()
+							)
+					);
 				} );
 
 				if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
@@ -7914,9 +7921,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				sqlBuffer.append( " where " );
 
 				tableDelete.forEachKeyBinding( (columnPosition, columnValueBinding) -> {
-					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					sqlBuffer.append( "=" );
-					columnValueBinding.getValueExpression().accept( this );
+					visitRelationalPredicate(
+							new ComparisonPredicate(
+									columnValueBinding.getColumnReference(),
+									columnValueBinding.isNullable()
+											? ComparisonOperator.NOT_DISTINCT_FROM
+											: ComparisonOperator.EQUAL,
+									columnValueBinding.getValueExpression()
+							)
+					);
 
 					if ( columnPosition < tableDelete.getNumberOfKeyBindings() - 1 ) {
 						sqlBuffer.append( " and " );

@@ -77,7 +77,7 @@ public abstract class AbstractTableInsertBuilder
 
 	@Override
 	public void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping );
+		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping, false );
 
 		if ( jdbcMapping.getJdbcType().isLob() && getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindingList == null ) {
@@ -91,8 +91,12 @@ public abstract class AbstractTableInsertBuilder
 	}
 
 	@Override
-	public void addKeyColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
-		addColumn( columnName, columnWriteFragment, jdbcMapping, keyBindingList );
+	public void addKeyColumn(
+			String columnName,
+			String columnWriteFragment,
+			JdbcMapping jdbcMapping,
+			boolean isNullable) {
+		addColumn( columnName, columnWriteFragment, jdbcMapping, isNullable, keyBindingList );
 	}
 
 	@Override

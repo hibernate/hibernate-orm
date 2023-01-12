@@ -369,7 +369,8 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 				(columnMapping) -> tableDeleteBuilder.addKeyRestriction(
 						columnMapping.getColumnName(),
 						columnMapping.getWriteExpression(),
-						columnMapping.getJdbcMapping()
+						columnMapping.getJdbcMapping(),
+						false
 				)
 		);
 	}

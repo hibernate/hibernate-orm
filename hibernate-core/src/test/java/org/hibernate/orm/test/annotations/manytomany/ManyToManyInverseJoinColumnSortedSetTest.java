@@ -60,6 +60,15 @@ public class ManyToManyInverseJoinColumnSortedSetTest extends BaseCoreFunctional
 			ContainedEntity contained1 = session.get( ContainedEntity.class, 1 );
 			contained1.getContaining().remove( containing );
 			containing.getContained().remove( contained1 );
+			/*
+			delete
+    			from
+        	containing_contained
+    			where
+       		containing_id=?
+       		and
+       		inverse = ?
+			 */
 			assertThat( containing.getContained() )
 					.extracting( ContainedEntity::getId )
 					.containsExactly( 2 );

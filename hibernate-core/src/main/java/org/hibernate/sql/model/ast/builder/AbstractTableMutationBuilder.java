@@ -81,8 +81,9 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 			String columnName,
 			String columnWriteFragment,
 			JdbcMapping jdbcMapping,
+			boolean isNullable,
 			List<ColumnValueBinding> list) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping );
+		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping, isNullable );
 		list.add( valueBinding );
 	}
 
@@ -91,23 +92,26 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 			String columnWriteFragment,
 			JdbcMapping jdbcMapping,
 			ParameterUsage parameterUsage,
+			boolean isNullable,
 			List<ColumnValueBinding> list) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping, parameterUsage );
+		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping, parameterUsage, isNullable );
 		list.add( valueBinding );
 	}
 
 	protected ColumnValueBinding createValueBinding(
 			String columnName,
 			String columnWriteFragment,
-			JdbcMapping jdbcMapping) {
-		return createValueBinding( columnName, columnWriteFragment, jdbcMapping, ParameterUsage.SET );
+			JdbcMapping jdbcMapping,
+			boolean isNullable) {
+		return createValueBinding( columnName, columnWriteFragment, jdbcMapping, ParameterUsage.SET, isNullable );
 	}
 
 	protected ColumnValueBinding createValueBinding(
 			String columnName,
 			String customWriteExpression,
 			JdbcMapping jdbcMapping,
-			ParameterUsage parameterUsage) {
+			ParameterUsage parameterUsage,
+			boolean isNullable) {
 		final ColumnReference columnReference = new ColumnReference( mutatingTable, columnName, jdbcMapping );
 		final ColumnWriteFragment columnWriteFragment;
 		if ( customWriteExpression.contains( "?" ) ) {
@@ -141,7 +145,7 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 		else {
 			columnWriteFragment = new ColumnWriteFragment( customWriteExpression, jdbcMapping );
 		}
-		return new ColumnValueBinding( columnReference, columnWriteFragment ) ;
+		return new ColumnValueBinding( columnReference, columnWriteFragment, isNullable ) ;
 	}
 
 	protected abstract void handleParameterCreation(ColumnValueParameter parameter);

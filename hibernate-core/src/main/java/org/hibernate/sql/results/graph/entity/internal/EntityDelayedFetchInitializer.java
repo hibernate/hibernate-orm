@@ -251,9 +251,4 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 		return "EntityDelayedFetchInitializer(" + LoggingHelper.toLoggableString( navigablePath ) + ")";
 	}
 
-	@Override
-	public boolean isEntityResultInitializer() {
-		return true;
-	}
-
 }

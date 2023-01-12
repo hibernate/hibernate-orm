@@ -64,7 +64,4 @@ public interface EntityInitializer extends FetchParentAccess {
 		return false;
 	}
 
-	default boolean isEntityResultInitializer() {
-		return false;
-	}
 }

@@ -2253,9 +2253,11 @@ public class EntityBinder {
 
 	public AccessType getExplicitAccessType(XAnnotatedElement element) {
 		AccessType accessType = null;
-		final Access access = element.getAnnotation( Access.class );
-		if ( access != null ) {
-			accessType = AccessType.getAccessStrategy( access.value() );
+		if ( element != null ) {
+			final Access access = element.getAnnotation( Access.class );
+			if ( access != null ) {
+				accessType = AccessType.getAccessStrategy( access.value() );
+			}
 		}
 		return accessType;
 	}

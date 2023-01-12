@@ -38,6 +38,8 @@ import org.junit.jupiter.api.Test;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -858,6 +860,10 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast(local datetime as LocalTime)").getSingleResult(), instanceOf(LocalTime.class) );
 					assertThat( session.createQuery("select cast(local datetime as LocalDate)").getSingleResult(), instanceOf(LocalDate.class) );
 					assertThat( session.createQuery("select cast('1911-10-09 12:13:14.123' as LocalDateTime)").getSingleResult(), instanceOf(LocalDateTime.class) );
+
+					assertThat( session.createQuery("select cast(local datetime as Instant)").getSingleResult(), instanceOf(Instant.class) );
+					assertThat( session.createQuery("select cast(offset datetime as Instant)").getSingleResult(), instanceOf(Instant.class) );
+					assertThat( session.createQuery("select cast(1000000000 as Duration)").getSingleResult(), instanceOf(Duration.class) );
 
 					assertThat( session.createQuery("select cast('12:13:14' as Time)").getSingleResult(), instanceOf(Time.class) );
 					assertThat( session.createQuery("select cast('1911-10-09' as Date)").getSingleResult(), instanceOf(Date.class) );

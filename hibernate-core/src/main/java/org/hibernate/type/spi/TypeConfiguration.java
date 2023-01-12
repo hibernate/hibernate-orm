@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -331,6 +332,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "time": return getBasicTypeForJavaType( Time.class );
 			case "date": return getBasicTypeForJavaType( java.sql.Date.class );
 			case "timestamp": return getBasicTypeForJavaType( Timestamp.class );
+			case "instant": return getBasicTypeForJavaType( Instant.class );
+			case "duration": return getBasicTypeForJavaType( Duration.class );
 			case "localtime": return getBasicTypeForJavaType( LocalTime.class );
 			case "localdate": return getBasicTypeForJavaType( LocalDate.class );
 			case "localdatetime": return getBasicTypeForJavaType( LocalDateTime.class );

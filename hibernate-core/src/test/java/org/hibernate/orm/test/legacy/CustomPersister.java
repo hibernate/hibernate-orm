@@ -697,6 +697,11 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public boolean hasCollectionNotReferencingPK() {
+		return false;
+	}
+
+	@Override
 	public int[] getNaturalIdentifierProperties() {
 		return null;
 	}

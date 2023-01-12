@@ -272,6 +272,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public boolean hasCollectionNotReferencingPK() {
+			return false;
+		}
+
+		@Override
 		public boolean hasCascades() {
 			return false;
 		}

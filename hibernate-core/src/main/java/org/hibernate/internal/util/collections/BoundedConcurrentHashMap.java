@@ -34,7 +34,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -332,7 +332,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		private final ConcurrentLinkedQueue<HashEntry<K, V>> accessQueue;
 
-		private final AtomicLong accessQueueSize;
+		private final AtomicInteger accessQueueSize;
 		private final Segment<K, V> segment;
 		private final int maxBatchQueueSize;
 		private final int trimDownSize;
@@ -347,13 +347,13 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			this.batchThresholdFactor = batchThresholdFactor;
 			this.accessQueue = new ConcurrentLinkedQueue<>();
 			this.evicted = new HashSet<>();
-			this.accessQueueSize = new AtomicLong();
+			this.accessQueueSize = new AtomicInteger();
 		}
 
 		@Override
 		public void execute() {
 			assert segment.isHeldByCurrentThread();
-			long removed = 0;
+			int removed = 0;
 			HashEntry<K, V> e;
 			try {
 				while ((e = accessQueue.poll()) != null) {
@@ -385,7 +385,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			// counter-intuitive:
 			// Why not placing this *before* appending the entry to the access queue?
 			// we don't want the eviction to kick-in if the access queue doesn't contain enough entries.
-			final long size = accessQueueSize.incrementAndGet();
+			final int size = accessQueueSize.incrementAndGet();
 			return size >= maxBatchQueueSize * batchThresholdFactor;
 		}
 
@@ -402,7 +402,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			assert segment.isHeldByCurrentThread();
 			remove( e );
 			// we could have multiple instances of e in accessQueue; remove them all
-			long removed = 0;
+			int removed = 0;
 			while ( accessQueue.remove( e ) ) {
 				removed--;
 			}
@@ -413,7 +413,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		public void clear() {
 			assert segment.isHeldByCurrentThread();
 			super.clear();
-			long removed = 0;
+			int removed = 0;
 			while (accessQueue.poll() != null) {
 				removed++;
 			}
@@ -865,7 +865,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 */
 		private final ConcurrentLinkedQueue<LIRSHashEntry<K, V>> accessQueue;
 
-		private final AtomicLong accessQueueSize;
+		private final AtomicInteger accessQueueSize;
 
 		/**
 		 * The maxBatchQueueSize
@@ -926,7 +926,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			this.maxBatchQueueSize = maxBatchSize > MAX_BATCH_SIZE ? MAX_BATCH_SIZE : maxBatchSize;
 			this.batchThresholdFactor = batchThresholdFactor;
 			this.accessQueue = new ConcurrentLinkedQueue<LIRSHashEntry<K, V>>();
-			this.accessQueueSize = new AtomicLong();
+			this.accessQueueSize = new AtomicInteger();
 		}
 
 		private static int calculateLIRSize(int maximumSize) {
@@ -938,7 +938,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		public void execute() {
 			assert segment.isHeldByCurrentThread();
 			Set<HashEntry<K, V>> evicted = new HashSet<>();
-			long removed = 0;
+			int removed = 0;
 			try {
 				LIRSHashEntry<K, V> e;
 				while ( (e = accessQueue.poll()) != null ) {
@@ -1005,7 +1005,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			// counter-intuitive:
 			// Why not placing this *before* appending the entry to the access queue?
 			// we don't want the eviction to kick-in if the access queue doesn't contain enough entries.
-			final long size = accessQueueSize.incrementAndGet();
+			final int size = accessQueueSize.incrementAndGet();
 			return size >= maxBatchQueueSize * batchThresholdFactor;
 		}
 
@@ -1021,7 +1021,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		public void onEntryRemove(HashEntry<K, V> e) {
 			assert segment.isHeldByCurrentThread();
 			( (LIRSHashEntry<K, V>) e ).remove();
-			long removed = 0;
+			int removed = 0;
 			// we could have multiple instances of e in accessQueue; remove them all
 			while ( accessQueue.remove( e ) ) {
 				removed++;
@@ -1032,7 +1032,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		@Override
 		public void clear() {
 			assert segment.isHeldByCurrentThread();
-			long removed = 0;
+			int removed = 0;
 			while (accessQueue.poll() != null) {
 				removed++;
 			}

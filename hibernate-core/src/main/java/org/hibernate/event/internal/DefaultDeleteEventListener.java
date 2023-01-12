@@ -263,6 +263,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			&& !persister.hasSubclasses() //TODO: should be unnecessary, using EntityPersister.getSubclassPropertyTypeClosure(), etc
 			&& !persister.hasCascadeDelete()
 			&& !persister.hasNaturalIdentifier()
+			&& !persister.hasCollectionNotReferencingPK()
 			&& !hasRegisteredRemoveCallbacks( persister )
 			&& !hasCustomEventListeners( source );
 	}

@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,6 +37,7 @@ import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -1129,6 +1131,28 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public void setSubselectLoadableCollections(boolean hasSubselectCollections) {
 		this.hasSubselectLoadableCollections = hasSubselectCollections;
+	}
+
+	public boolean hasNaturalIdCollections() {
+		return hasNaturalIdCollections( properties );
+	}
+
+	private boolean hasNaturalIdCollections(Collection<Property> properties) {
+		for ( Property property : properties ) {
+			final Value value = property.getValue();
+			if ( value instanceof Component ) {
+				if ( hasNaturalIdCollections( ( (Component) value ).getProperties() ) ) {
+					return true;
+				}
+			}
+			else if ( value instanceof org.hibernate.mapping.Collection ) {
+				final org.hibernate.mapping.Collection collection = (org.hibernate.mapping.Collection) value;
+				if ( !( (CollectionType) collection.getType() ).useLHSPrimaryKey() ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public boolean hasPartitionedSelectionMapping() {

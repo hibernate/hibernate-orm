@@ -283,6 +283,15 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	boolean hasSubselectLoadableCollections();
 
 	/**
+	 * Determine whether this entity contains references to persistent collections
+	 * which use a natural identifier instead of the primary key.
+	 *
+	 * @return True if the entity contains a natural id collection; false otherwise.
+	 * @since 6.2
+	 */
+	boolean hasNaturalIdCollections();
+
+	/**
 	 * Determine whether this entity has any
 	 * (non-{@linkplain org.hibernate.engine.spi.CascadeStyles#NONE none}) cascading.
 	 *

@@ -299,6 +299,11 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean hasNaturalIdCollections() {
+			return false;
+		}
+
+		@Override
 		public boolean hasCascades() {
 			return false;
 		}

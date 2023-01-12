@@ -355,6 +355,7 @@ public abstract class AbstractEntityPersister
 	protected final int batchSize;
 	private final boolean hasSubselectLoadableCollections;
 	private final boolean hasPartitionedSelectionMapping;
+	private final boolean hasNaturalIdCollections;
 	protected final String rowIdName;
 
 	// The optional SQL string defined in the where attribute
@@ -533,6 +534,7 @@ public abstract class AbstractEntityPersister
 		batchSize = batch;
 		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections();
 		hasPartitionedSelectionMapping = persistentClass.hasPartitionedSelectionMapping();
+		hasNaturalIdCollections = persistentClass.hasNaturalIdCollections();
 
 		propertyMapping = new BasicEntityPropertyMapping( this );
 
@@ -4433,6 +4435,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean hasSubselectLoadableCollections() {
 		return hasSubselectLoadableCollections;
+	}
+
+	@Override
+	public boolean hasNaturalIdCollections() {
+		return hasNaturalIdCollections;
 	}
 
 	@Override

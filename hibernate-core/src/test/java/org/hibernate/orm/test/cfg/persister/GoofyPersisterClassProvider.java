@@ -272,6 +272,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public boolean hasNaturalIdCollections() {
+			return false;
+		}
+
+		@Override
 		public boolean hasCascades() {
 			return false;
 		}

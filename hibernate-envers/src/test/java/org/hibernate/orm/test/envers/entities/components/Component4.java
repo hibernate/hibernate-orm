@@ -63,7 +63,6 @@ public class Component4 {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((description == null) ? 0 : description.hashCode());
 		result = prime * result + ((key == null) ? 0 : key.hashCode());
 		result = prime * result + ((value == null) ? 0 : value.hashCode());
 		return result;
@@ -80,9 +79,6 @@ public class Component4 {
 
 		Component4 other = (Component4) obj;
 
-		if ( description != null ? !description.equals( other.description ) : other.description != null ) {
-			return false;
-		}
 		if ( key != null ? !key.equals( other.key ) : other.key != null ) {
 			return false;
 		}

@@ -48,10 +48,6 @@ public class NestedEmbeddableDefaultAccessTests {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-14063" )
-	@FailureExpected(
-			reason = "When an embeddable is a key or element of a collection, access-type is " +
-					"not properly propagated to nested embeddables"
-	)
 	public void verifyElementCollectionMapping(DomainModelScope scope) {
 		scope.withHierarchy( MyEntity.class, (descriptor) -> {
 			final Property outerEmbeddedList = descriptor.getProperty( "outerEmbeddableList" );

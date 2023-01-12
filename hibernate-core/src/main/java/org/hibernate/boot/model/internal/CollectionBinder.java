@@ -2172,12 +2172,20 @@ public abstract class CollectionBinder {
 			CollectionPropertyHolder holder,
 			Class<? extends CompositeUserType<?>> compositeUserType) {
 		//TODO be smart with isNullable
+		final AccessType accessType = accessType( property, collection.getOwner() );
+		// We create a new entity binder here because it is needed for processing the embeddable
+		// Since this is an element collection, there is no real entity binder though,
+		// so we just create an "empty shell" for the purpose of avoiding null checks in the fillEmbeddable() method etc.
+		final EntityBinder entityBinder = new EntityBinder();
+		// Copy over the access type that we resolve for the element collection,
+		// so that nested components use the same access type. This fixes HHH-15966
+		entityBinder.setPropertyAccessType( accessType );
 		final Component component = fillEmbeddable(
 				holder,
 				getSpecialMembers( elementClass ),
-				accessType( property, collection.getOwner() ),
+				accessType,
 				true,
-				new EntityBinder(),
+				entityBinder,
 				false,
 				false,
 				true,

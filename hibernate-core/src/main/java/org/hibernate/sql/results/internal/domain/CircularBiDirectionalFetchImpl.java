@@ -248,7 +248,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 				return null;
 			}
 
-			return (EntityInitializer) parentInitializer;
+			return parentInitializer.asEntityInitializer();
 		}
 
 		@Override

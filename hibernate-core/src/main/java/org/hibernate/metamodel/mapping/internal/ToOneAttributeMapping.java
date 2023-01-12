@@ -1009,7 +1009,7 @@ public class ToOneAttributeMapping
 			}
 			return false;
 		}
-		else if ( parentNavigablePath.getParent() != null && creationState.resolveModelPart( parentNavigablePath.getParent() ) instanceof EmbeddedCollectionPart ) {//todo: handle recursively?
+		else if ( isParentEmbeddedCollectionPart( creationState, parentNavigablePath.getParent() ) ) {
 			/*
 				class EntityA{
 					@OneToOne(mappedBy = "identicallyNamedAssociation", fetch = FetchType.EAGER)
@@ -1079,6 +1079,22 @@ public class ToOneAttributeMapping
 			return false;
 		}
 		return parentNavigablePath.isSuffix( bidirectionalAttributePath );
+	}
+
+	private boolean isParentEmbeddedCollectionPart(DomainResultCreationState creationState, NavigablePath parentNavigablePath) {
+		while ( parentNavigablePath != null ) {
+			final ModelPart parentModelPart = creationState.resolveModelPart( parentNavigablePath );
+			if ( parentModelPart instanceof EmbeddedCollectionPart ) {
+				return true;
+			}
+			else if ( parentModelPart instanceof EmbeddableValuedModelPart ) {
+				parentNavigablePath = parentNavigablePath.getParent();
+			}
+			else {
+				return false;
+			}
+		}
+		return false;
 	}
 
 	private Fetch createCircularBiDirectionalFetch(

@@ -265,6 +265,11 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
+	protected String getFromDualForSelectOnly() {
+		return getDialect().getVersion().isBefore( 5, 7 ) ? getFromDual() : "";
+	}
+
+	@Override
 	public MySQLDialect getDialect() {
 		return (MySQLDialect) super.getDialect();
 	}

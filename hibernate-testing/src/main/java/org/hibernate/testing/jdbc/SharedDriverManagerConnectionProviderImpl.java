@@ -7,12 +7,15 @@
 package org.hibernate.testing.jdbc;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Database;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -25,6 +28,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  */
 public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConnectionProviderImpl {
 
+	public static boolean USER_CREATED = false;
 	private static final SharedDriverManagerConnectionProviderImpl INSTANCE = new SharedDriverManagerConnectionProviderImpl();
 
 	public static SharedDriverManagerConnectionProviderImpl getInstance() {
@@ -40,6 +44,30 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 		if ( !c.isCompatible( config ) ) {
 			if ( config != null ) {
 				super.stop();
+			}
+			if(c.url.startsWith(Database.ORACLE.getUrlPrefix())) {
+				try {
+					final String oldUserName = (String) configurationValues.get(AvailableSettings.USER);
+					final String password = (String) configurationValues.get(AvailableSettings.PASS);
+					final String newUserName = oldUserName + "_" + ProcessHandle.current().pid();
+
+					if(!USER_CREATED) {
+						final Properties props = new Properties();
+						props.put("user",oldUserName);
+						props.put("password",password);
+						try (Connection con = DriverManager.getConnection(c.url, props)) {
+							try (Statement s = con.createStatement()) {
+								s.execute("create user "+newUserName+" identified by \""+password+"\" quota unlimited on users");
+								s.execute("grant all privileges to "+newUserName);
+								USER_CREATED = true;
+							}
+						}
+					}
+					configurationValues.put(AvailableSettings.USER,newUserName);
+				}
+				catch (SQLException e) {
+					throw new IllegalStateException( (String) configurationValues.get(AvailableSettings.USER)+" / "+(String) configurationValues.get(AvailableSettings.PASS) ,e );
+				}
 			}
 			super.configure( configurationValues );
 			config = c;

@@ -12,6 +12,7 @@ import java.sql.Driver;
 import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 
 /**
  * @author Christian Beikov
@@ -34,7 +35,7 @@ public final class JdbcConnectionContext {
 			url = connectionProperties.getProperty(
 					AvailableSettings.URL );
 			user = connectionProperties.getProperty(
-					AvailableSettings.USER );
+					AvailableSettings.USER ) + ( SharedDriverManagerConnectionProviderImpl.USER_CREATED ?  "_" + ProcessHandle.current().pid() : "" );
 			password = connectionProperties.getProperty(
 					AvailableSettings.PASS );
 			Properties p = new Properties();

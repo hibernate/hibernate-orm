@@ -233,6 +233,11 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	}
 
 	@Override
+	public boolean isEntityInitialized() {
+		return isInitialized;
+	}
+
+	@Override
 	public Object getParentKey() {
 		return parentAccess.getParentKey();
 	}

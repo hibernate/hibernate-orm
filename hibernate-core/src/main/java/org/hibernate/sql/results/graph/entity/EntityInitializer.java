@@ -60,8 +60,9 @@ public interface EntityInitializer extends FetchParentAccess {
 		return this;
 	}
 
-	default boolean isInitialized() {
-		return false;
-	}
+	/**
+	 * @return true if the current entity associated to this EntityInitializer has been initialized
+	 */
+	boolean isEntityInitialized();
 
 }

@@ -58,6 +58,11 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 		return objects;
 	}
 
+	@Override
+	public boolean isEntityInitialized() {
+		return false;
+	}
+
 	private static class ParentInfo {
 		private final Object parentInstance;
 		private final int propertyIndex;

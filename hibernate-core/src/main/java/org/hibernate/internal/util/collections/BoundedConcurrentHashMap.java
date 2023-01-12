@@ -270,10 +270,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		HashEntry<K, V> createNewEntry(K key, int hash, HashEntry<K, V> next, V value);
 
 		/**
-		 * Invokes eviction policy algorithm and returns set of evicted entries.
-		 * <p>
-		 * <p>
-		 * Set cannot be null but could possibly be an empty set.
+		 * Invokes eviction policy algorithm.
 		 */
 		void execute();
 
@@ -339,11 +336,11 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		private final float batchThresholdFactor;
 		private final Set<HashEntry<K, V>> evicted;
 
-		public LRU(Segment<K, V> s, int capacity, float lf, int maxBatchSize, float batchThresholdFactor) {
+		LRU(Segment<K, V> s, int capacity, float lf, int maxBatchSize, float batchThresholdFactor) {
 			super( capacity, lf, true );
 			this.segment = s;
 			this.trimDownSize = capacity;
-			this.maxBatchQueueSize = maxBatchSize > MAX_BATCH_SIZE ? MAX_BATCH_SIZE : maxBatchSize;
+			this.maxBatchQueueSize = Math.min( maxBatchSize, MAX_BATCH_SIZE );
 			this.batchThresholdFactor = batchThresholdFactor;
 			this.accessQueue = new ConcurrentLinkedQueue<>();
 			this.evicted = new HashSet<>();
@@ -425,7 +422,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			return Eviction.LRU;
 		}
 
-		protected boolean isAboveThreshold() {
+		private boolean isAboveThreshold() {
 			return size() > trimDownSize;
 		}
 
@@ -825,9 +822,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * Removes this entry from the cache. This operation is not specified in
 		 * the paper, which does not account for forced eviction.
 		 */
-		private V remove() {
+		private void remove() {
 			boolean wasHot = ( state == Recency.LIR_RESIDENT );
-			V result = value;
 			LIRSHashEntry<K, V> end = owner != null ? owner.queueEnd() : null;
 			evict();
 
@@ -837,8 +833,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					end.migrateToStack();
 				}
 			}
-
-			return result;
 		}
 	}
 
@@ -894,7 +888,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * accessed more recently than the last hot entry are present in the stack).
 		 * The stack is ordered by recency, with its most recently accessed entry
 		 * at the top, and its least recently accessed entry at the bottom.</li>
-		 * <p>
 		 * <li>The LIRS queue, Q, which enqueues all cold entries for eviction. Cold
 		 * entries (by definition in the queue) may be absent from the stack (due to
 		 * pruning of the stack). Cold entries are added to the end of the queue
@@ -919,11 +912,11 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		private int hotSize;
 
 
-		public LIRS(Segment<K, V> s, int capacity, int maxBatchSize, float batchThresholdFactor) {
+		LIRS(Segment<K, V> s, int capacity, int maxBatchSize, float batchThresholdFactor) {
 			this.segment = s;
 			this.maximumSize = capacity;
 			this.maximumHotSize = calculateLIRSize( capacity );
-			this.maxBatchQueueSize = maxBatchSize > MAX_BATCH_SIZE ? MAX_BATCH_SIZE : maxBatchSize;
+			this.maxBatchQueueSize = Math.min( maxBatchSize, MAX_BATCH_SIZE );
 			this.batchThresholdFactor = batchThresholdFactor;
 			this.accessQueue = new ConcurrentLinkedQueue<LIRSHashEntry<K, V>>();
 			this.accessQueueSize = new AtomicInteger();
@@ -997,8 +990,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		/*
-			   * Invoked without holding a lock on Segment
-			   */
+		* Invoked without holding a lock on Segment
+		*/
 		@Override
 		public boolean onEntryHit(HashEntry<K, V> e) {
 			accessQueue.add( (LIRSHashEntry<K, V>) e );
@@ -1168,7 +1161,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@SuppressWarnings("unchecked")
-		static <K, V> Segment<K, V>[] newArray(int i) {
+		private static <K, V> Segment<K, V>[] newArray(int i) {
 			return new Segment[i];
 		}
 
@@ -1359,68 +1352,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 
-		void rehash() {
-			HashEntry<K, V>[] oldTable = table;
-			int oldCapacity = oldTable.length;
-			if ( oldCapacity >= MAXIMUM_CAPACITY ) {
-				return;
-			}
-
-			/*
-					  * Reclassify nodes in each list to new Map.  Because we are
-					  * using power-of-two expansion, the elements from each bin
-					  * must either stay at same index, or move with a power of two
-					  * offset. We eliminate unnecessary node creation by catching
-					  * cases where old nodes can be reused because their next
-					  * fields won't change. Statistically, at the default
-					  * threshold, only about one-sixth of them need cloning when
-					  * a table doubles. The nodes they replace will be garbage
-					  * collectable as soon as they are no longer referenced by any
-					  * reader thread that may be in the midst of traversing table
-					  * right now.
-					  */
-
-			HashEntry<K, V>[] newTable = HashEntry.newArray( oldCapacity << 1 );
-			threshold = (int) ( newTable.length * loadFactor );
-			int sizeMask = newTable.length - 1;
-			for ( int i = 0; i < oldCapacity; i++ ) {
-				// We need to guarantee that any existing reads of old Map can
-				//  proceed. So we cannot yet null out each bin.
-				HashEntry<K, V> e = oldTable[i];
-
-				if ( e != null ) {
-					HashEntry<K, V> next = e.next;
-					int idx = e.hash & sizeMask;
-
-					//  Single node on list
-					if ( next == null ) {
-						newTable[idx] = e;
-					}
-					else {
-						// Reuse trailing consecutive sequence at same slot
-						HashEntry<K, V> lastRun = e;
-						int lastIdx = idx;
-						for ( HashEntry<K, V> last = next; last != null; last = last.next ) {
-							int k = last.hash & sizeMask;
-							if ( k != lastIdx ) {
-								lastIdx = k;
-								lastRun = last;
-							}
-						}
-						newTable[lastIdx] = lastRun;
-
-						// Clone all remaining nodes
-						for ( HashEntry<K, V> p = e; p != lastRun; p = p.next ) {
-							int k = p.hash & sizeMask;
-							HashEntry<K, V> n = newTable[k];
-							newTable[k] = eviction.createNewEntry( p.key, p.hash, n, p.value );
-						}
-					}
-				}
-			}
-			table = newTable;
-		}
-
 		/**
 		 * Remove; match on key only if value null, else match both.
 		 */
@@ -1535,7 +1466,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		concurrencyLevel = Math.max( concurrencyLevel, 1 ); // concurrencyLevel cannot be less than 1
 
 		// minimum two elements per segment
-		if ( capacity < concurrencyLevel * 2 && capacity != 1 ) {
+		if ( capacity < concurrencyLevel << 1 && capacity != 1 ) {
 			throw new IllegalArgumentException( "Maximum capacity has to be at least twice the concurrencyLevel" );
 		}
 
@@ -2002,28 +1933,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	public Set<Entry<K, V>> entrySet() {
 		Set<Entry<K, V>> es = entrySet;
 		return es != null ? es : ( entrySet = new EntrySet() );
-	}
-
-	/**
-	 * Returns an enumeration of the keys in this table.
-	 *
-	 * @return an enumeration of the keys in this table
-	 *
-	 * @see #keySet()
-	 */
-	public Enumeration<K> keys() {
-		return new KeyIterator();
-	}
-
-	/**
-	 * Returns an enumeration of the values in this table.
-	 *
-	 * @return an enumeration of the values in this table
-	 *
-	 * @see #values()
-	 */
-	public Enumeration<V> elements() {
-		return new ValueIterator();
 	}
 
 	/* ---------------- Iterator Support -------------- */

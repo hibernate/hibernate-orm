@@ -546,7 +546,7 @@ public final class ConfigurationHelper {
 			return explicitSetting;
 		}
 
-		return SqlTypes.INTERVAL_SECOND;
+		return SqlTypes.NUMERIC;
 	}
 
 	@Incubating

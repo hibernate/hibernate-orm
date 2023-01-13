@@ -628,8 +628,8 @@ public interface PersistenceContext {
 
 	/**
 	 * Change the default for entities and proxies loaded into this persistence
-	 * context from modifiable to read-only mode, or from modifiable to read-only
-	 * mode.
+	 * context from modifiable to read-only mode, or from read-only mode to
+	 * modifiable.
 	 *
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but

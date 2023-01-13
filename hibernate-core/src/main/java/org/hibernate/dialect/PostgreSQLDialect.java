@@ -1315,7 +1315,6 @@ public class PostgreSQLDialect extends Dialect {
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructJdbcType.INSTANCE );
 			}
 

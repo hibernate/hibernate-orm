@@ -32,7 +32,6 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDriverKind;
 import org.hibernate.dialect.PostgreSQLInetJdbcType;
-import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
 import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
 import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
 import org.hibernate.dialect.PostgreSQLStructJdbcType;
@@ -1331,7 +1330,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructJdbcType.INSTANCE );
 			}
 

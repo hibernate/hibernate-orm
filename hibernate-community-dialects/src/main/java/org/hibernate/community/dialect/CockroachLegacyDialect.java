@@ -32,7 +32,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDriverKind;
 import org.hibernate.dialect.PostgreSQLInetJdbcType;
-import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
 import org.hibernate.dialect.PostgreSQLJsonJdbcType;
 import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
 import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
@@ -328,7 +327,6 @@ public class CockroachLegacyDialect extends Dialect {
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 
 				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );

@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.Duration;
-import java.time.Instant;
 
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;

@@ -486,7 +486,6 @@ public class SqlTypes {
 	 * for a temporal duration given terms of seconds and fractional seconds.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_DURATION_JDBC_TYPE
-	 * @see org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType
 	 * @see org.hibernate.dialect.H2DurationIntervalSecondJdbcType
 	 */
 	public static final int INTERVAL_SECOND = 3100;

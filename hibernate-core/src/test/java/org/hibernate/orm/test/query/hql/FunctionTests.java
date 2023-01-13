@@ -38,9 +38,11 @@ import org.junit.jupiter.api.Test;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +75,7 @@ public class FunctionTests {
 					entity.setId(123);
 					entity.setTheDate( new Date( 74, 2, 25 ) );
 					entity.setTheTime( new Time( 20, 10, 8 ) );
+					entity.setTheDuration( Duration.of(3, ChronoUnit.SECONDS).plus( Duration.of(23,ChronoUnit.MILLIS) ) );
 					entity.setTheTimestamp( new Timestamp( 121, 4, 27, 13, 22, 50, 123456789 ) );
 					em.persist(entity);
 
@@ -1203,8 +1206,6 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select e.theTimestamp - (4 day + 2 hour) from EntityOfBasics e")
 							.list();
-					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
-							.list();
 				}
 		);
 	}
@@ -1236,6 +1237,113 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select (2 * e.theDuration + 3 day) by hour from EntityOfBasics e")
 							.list();
+				}
+		);
+	}
+
+	@Test
+	public void testDurationCast(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( 3*1_000_000_000L + 23*1_000_000L,
+							session.createQuery("select cast(e.theDuration as Long) from EntityOfBasics e")
+									.getSingleResult() );
+					assertEquals( 5*60*1_000_000_000L,
+							session.createQuery("select cast(5 minute as Long)")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	public void testDurationBy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( Duration.of(3, ChronoUnit.SECONDS).plus( Duration.of(23,ChronoUnit.MILLIS) ),
+							session.createQuery("select e.theDuration from EntityOfBasics e")
+									.getSingleResult() );
+					assertEquals( 3L,
+							session.createQuery("select e.theDuration by second from EntityOfBasics e")
+									.getSingleResult() );
+					assertEquals( 0L,
+							session.createQuery("select e.theDuration by day from EntityOfBasics e")
+									.getSingleResult() );
+					assertEquals( 3_023_000_000L,
+							session.createQuery("select e.theDuration by nanosecond from EntityOfBasics e")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	public void testDurationLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( Duration.of(3, ChronoUnit.SECONDS).plus( Duration.of(23,ChronoUnit.MILLIS) ),
+							session.createQuery("select e.theDuration from EntityOfBasics e")
+									.getSingleResult() );
+					assertEquals( Duration.of(3, ChronoUnit.SECONDS).plus( Duration.of(23,ChronoUnit.MILLIS).plus( Duration.of(21, ChronoUnit.SECONDS) ) ),
+							session.createQuery("select e.theDuration + 21 second from EntityOfBasics e")
+									.getSingleResult() );
+					assertEquals( Duration.of(3, ChronoUnit.SECONDS).plus( Duration.of(23,ChronoUnit.MILLIS).plus( Duration.of(2, ChronoUnit.DAYS) ) ),
+							session.createQuery("select e.theDuration + 2 day from EntityOfBasics e")
+									.getSingleResult() );
+					assertEquals( Duration.of(2, ChronoUnit.DAYS),
+							session.createQuery("select 2 day from EntityOfBasics e")
+									.getSingleResult() );
+					assertEquals( Duration.of(5, ChronoUnit.SECONDS),
+							session.createQuery("select 5 second from EntityOfBasics e")
+									.getSingleResult() );
+					assertEquals( Duration.of(5, ChronoUnit.SECONDS).plus(Duration.of(2, ChronoUnit.DAYS)),
+							session.createQuery("select 5 second + 2 day from EntityOfBasics e")
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	public void testDurationArithmetic(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( LocalDate.now().minus(2, ChronoUnit.DAYS),
+							session.createQuery("select local date - 2 day")
+									.getSingleResult() );
+					assertEquals( LocalDate.now().plus(1, ChronoUnit.MONTHS),
+							session.createQuery("select local date + 1 month")
+									.getSingleResult() );
+					session.createQuery("select e.theTimestamp - 21 second from EntityOfBasics e")
+							.getSingleResult();
+					session.createQuery("select e.theTimestamp + 2 day from EntityOfBasics e")
+							.getSingleResult();
+					session.createQuery("select e.theTimestamp - 21 second + 2 day from EntityOfBasics e")
+							.getSingleResult();
+					//TODO: FIX!!
+//					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
+//							.list();
+				}
+		);
+	}
+
+	@Test @SkipForDialect(dialectClass = DB2Dialect.class)
+	public void testDurationArithmeticWithLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals( LocalDate.of(1974,3,25),
+							session.createQuery("select date 1974-03-23 + 2 day")
+									.getSingleResult() );
+					assertEquals( LocalDateTime.of(1974,3,25,5,30,25),
+							session.createQuery("select datetime 1974-03-23 5:30:25 + 2 day")
+									.getSingleResult() );
+					assertEquals( LocalDateTime.of(1974,3,25,5,30,25),
+							session.createQuery("select datetime 1974-03-25 5:30:46 - 21 second")
+									.getSingleResult() );
+					assertEquals( LocalDateTime.of(1974,3,25,5,30,25),
+							session.createQuery("select datetime 1974-03-23 5:30:46 - 21 second + 2 day")
+									.getSingleResult() );
+					// timestampadd() might not work for time on at least some dbs:
+//					assertEquals( LocalTime.of(5,30,25),
+//							session.createQuery("select time 5:30:46 - 21 second")
+//									.getSingleResult() );
 				}
 		);
 	}

@@ -32,6 +32,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -211,6 +212,11 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return delegate.getTypeConfiguration();
+	}
+
+	@Override
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return delegate.getFunctionRegistry();
 	}
 
 	@Override

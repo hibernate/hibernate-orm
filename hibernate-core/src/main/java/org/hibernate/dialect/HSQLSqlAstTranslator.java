@@ -217,14 +217,14 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
-		if ( lhsExpressionType == null ) {
+		if ( lhsExpressionType == null || lhsExpressionType.getJdbcTypeCount() != 1 ) {
 			renderComparisonStandard( lhs, operator, rhs );
 			return;
 		}
 		switch ( operator ) {
 			case DISTINCT_FROM:
 			case NOT_DISTINCT_FROM:
-				if ( lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType() instanceof ArrayJdbcType ) {
+				if ( lhsExpressionType.getSingleJdbcMapping().getJdbcType() instanceof ArrayJdbcType ) {
 					// HSQL implements distinct from semantics for arrays
 					lhs.accept( this );
 					appendSql( operator == ComparisonOperator.DISTINCT_FROM ? "<>" : "=" );

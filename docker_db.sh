@@ -451,6 +451,7 @@ oracle_setup() {
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
     $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
+set timing on
 -- Increasing redo logs
 alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/redo04.log' size 500M reuse;
 alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/redo05.log' size 500M reuse;
@@ -478,7 +479,7 @@ alter system set recyclebin=OFF sid='*' SCOPE=SPFILE;
 
 -- Comment the 2 next lines to be able to use Diagnostics Pack features
 alter system set sga_target=0m sid='*' scope=both;
-alter system set statistics_level=BASIC sid='*' scope=spfile;
+-- alter system set statistics_level=BASIC sid='*' scope=spfile;
 
 -- Restart the database
 SHUTDOWN IMMEDIATE;

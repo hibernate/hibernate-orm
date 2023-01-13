@@ -39,7 +39,7 @@ public class Distinct implements Expression, SqlExpressible, SqlAstNode {
 
 		if ( getExpressionType() != null ) {
 			assert getExpressionType().getJdbcTypeCount() == 1;
-			return getExpressionType().getJdbcMappings().get( 0 );
+			return getExpressionType().getSingleJdbcMapping();
 		}
 
 		return null;

@@ -165,7 +165,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 			converter = null;
 		}
 		else {
-			final JdbcMapping jdbcMapping = expression.getExpressionType().getJdbcMappings().get( 0 );
+			final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 			javaType = jdbcMapping.getMappedJavaType();
 			jdbcJavaType = jdbcMapping.getJdbcJavaType();
 			converter = jdbcMapping.getValueConverter();

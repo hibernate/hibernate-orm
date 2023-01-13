@@ -73,6 +73,12 @@ public abstract class AbstractJdbcParameter
 	}
 
 	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return jdbcMapping;
+	}
+
+
+	@Override
 	public void bindParameterValue(
 			PreparedStatement statement,
 			int startPosition,

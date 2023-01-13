@@ -73,6 +73,19 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
+	default JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return this;
+	}
+
+	@Override
+	default JdbcMapping getSingleJdbcMapping() {
+		return this;
+	}
+
+	@Override
 	default JavaType<T> getMappedJavaType() {
 		return getJavaTypeDescriptor();
 	}

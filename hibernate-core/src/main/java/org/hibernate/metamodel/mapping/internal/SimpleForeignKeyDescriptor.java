@@ -494,6 +494,19 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return Collections.singletonList( targetSide.getModelPart().getJdbcMapping() );
 	}
 
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return targetSide.getModelPart().getJdbcMapping();
+	}
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return targetSide.getModelPart().getJdbcMapping();
+	}
+
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, targetSide.getModelPart().getJdbcMapping() );

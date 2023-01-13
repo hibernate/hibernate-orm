@@ -137,6 +137,19 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	}
 
 	@Override
+	default JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return this;
+	}
+
+	@Override
+	default JdbcMapping getSingleJdbcMapping() {
+		return this;
+	}
+
+	@Override
 	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
 		action.accept( 0, this );
 		return 1;

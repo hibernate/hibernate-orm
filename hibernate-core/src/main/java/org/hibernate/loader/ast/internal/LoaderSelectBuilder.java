@@ -576,41 +576,55 @@ public class LoaderSelectBuilder {
 			TableGroup tableGroup,
 			PluralAttributeMapping pluralAttributeMapping,
 			SqlAstCreationState astCreationState) {
-		pluralAttributeMapping.applyBaseRestrictions(
-				querySpec::applyPredicate,
-				tableGroup,
-				true,
-				loadQueryInfluencers.getEnabledFilters(),
-				null,
-				astCreationState
-		);
+		final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
+		if ( parentNavigablePath == null ) {
+			pluralAttributeMapping.applyBaseRestrictions(
+					querySpec::applyPredicate,
+					tableGroup,
+					true,
+					loadQueryInfluencers.getEnabledFilters(),
+					null,
+					astCreationState
+			);
+			pluralAttributeMapping.applyBaseManyToManyRestrictions(
+					querySpec::applyPredicate,
+					tableGroup,
+					true,
+					loadQueryInfluencers.getEnabledFilters(),
+					null,
+					astCreationState
+			);
+		}
+		else {
+			final TableGroup parentTableGroup = astCreationState.getFromClauseAccess().getTableGroup(
+					parentNavigablePath );
+			TableGroupJoin pluralTableGroupJoin = null;
+			for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+				if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
+					pluralTableGroupJoin = nestedTableGroupJoin;
+					break;
+				}
+			}
 
-		pluralAttributeMapping.applyBaseManyToManyRestrictions(
-				(filterPredicate) -> {
-					final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
-					if ( parentNavigablePath == null ) {
-						querySpec.applyPredicate( filterPredicate );
-					}
-					else {
-						final TableGroup parentTableGroup = astCreationState.getFromClauseAccess().getTableGroup( parentNavigablePath );
-						TableGroupJoin pluralTableGroupJoin = null;
-						for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-							if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
-								pluralTableGroupJoin = nestedTableGroupJoin;
-								break;
-							}
-						}
+			assert pluralTableGroupJoin != null;
 
-						assert pluralTableGroupJoin != null;
-						pluralTableGroupJoin.applyPredicate( filterPredicate );
-					}
-				},
-				tableGroup,
-				true,
-				loadQueryInfluencers.getEnabledFilters(),
-				null,
-				astCreationState
-		);
+			pluralAttributeMapping.applyBaseRestrictions(
+					pluralTableGroupJoin::applyPredicate,
+					tableGroup,
+					true,
+					loadQueryInfluencers.getEnabledFilters(),
+					null,
+					astCreationState
+			);
+			pluralAttributeMapping.applyBaseManyToManyRestrictions(
+					pluralTableGroupJoin::applyPredicate,
+					tableGroup,
+					true,
+					loadQueryInfluencers.getEnabledFilters(),
+					null,
+					astCreationState
+			);
+		}
 	}
 
 	private void applyFiltering(

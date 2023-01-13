@@ -177,6 +177,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			return;
 		}
 
+		if ( isParentInstanceNull() ) {
+			compositeInstance = NULL_MARKER;
+			return;
+		}
+
 		// IMPORTANT: This method might be called multiple times for the same role for a single row.
 		// 		EmbeddableAssembler calls it as part of its `#assemble` and the RowReader calls it
 		// 		as part of its normal Initializer handling
@@ -263,7 +268,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			compositeInstance = createCompositeInstance(
 					navigablePath,
 					representationStrategy,
-					processingState,
 					sessionFactory
 			);
 		}
@@ -272,6 +276,30 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				"Created composite instance [%s]",
 				navigablePath
 		);
+	}
+
+	private boolean isParentInstanceNull() {
+		if ( embedded instanceof CompositeIdentifierMapping ) {
+			return false;
+		}
+		FetchParentAccess parentAccess = fetchParentAccess;
+
+		while ( parentAccess != null && parentAccess.isEmbeddableInitializer() ) {
+			if ( parentAccess.getInitializedPart() instanceof CompositeIdentifierMapping ) {
+				return false;
+			}
+			parentAccess = parentAccess.getFetchParentAccess();
+		}
+
+		if ( parentAccess == null ) {
+			return false;
+		}
+
+		final EntityInitializer entityInitializer = parentAccess.asEntityInitializer();
+		if ( entityInitializer != null && entityInitializer.getParentKey() == null ) {
+			return true;
+		}
+		return false;
 	}
 
 	private void extractRowState(RowProcessingState processingState) {
@@ -340,7 +368,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private Object createCompositeInstance(
 			NavigablePath navigablePath,
 			EmbeddableRepresentationStrategy representationStrategy,
-			RowProcessingState processingState,
 			SessionFactoryImplementor sessionFactory) {
 		if ( !createEmptyCompositesEnabled && stateAllNull == TRUE ) {
 			return NULL_MARKER;

@@ -65,6 +65,7 @@ import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.Action;
@@ -153,6 +154,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return bootstrapContext.getTypeConfiguration();
+	}
+
+	@Override
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return bootstrapContext.getFunctionRegistry();
 	}
 
 	@Override

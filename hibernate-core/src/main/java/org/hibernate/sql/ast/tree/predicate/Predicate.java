@@ -37,7 +37,7 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 	default DomainResult<Boolean> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final JdbcMapping jdbcMapping = getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = getExpressionType().getSingleJdbcMapping();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
 				jdbcMapping.getJdbcJavaType(),
@@ -55,7 +55,7 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				getExpressionType().getJdbcMappings().get( 0 ).getJdbcJavaType(),
+				getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
 				null,
 				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

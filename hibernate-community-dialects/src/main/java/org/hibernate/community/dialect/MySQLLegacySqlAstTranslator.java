@@ -239,6 +239,11 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
+	protected String getFromDualForSelectOnly() {
+		return getDialect().getVersion().isBefore( 5, 7 ) ? getFromDual() : "";
+	}
+
+	@Override
 	public MySQLDialect getDialect() {
 		return (MySQLDialect) super.getDialect();
 	}

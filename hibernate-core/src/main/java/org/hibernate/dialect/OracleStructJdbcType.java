@@ -325,7 +325,7 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 		else {
 			assert attributeMapping.getJdbcTypeCount() == 1;
 			jdbcValueCount = 1;
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMappings().get( 0 );
+			final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
 			final Object jdbcValue;
 			if ( rawJdbcValue == null ) {
 				jdbcValue = null;
@@ -391,7 +391,7 @@ public class OracleStructJdbcType implements AggregateJdbcType {
 				assert attributeMapping.getJdbcTypeCount() == 1;
 				final Object rawJdbcValue = targetJdbcValues[jdbcIndex];
 				if ( rawJdbcValue != null ) {
-					final JdbcMapping jdbcMapping = attributeMapping.getJdbcMappings().get( 0 );
+					final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
 					switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 						case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 						case SqlTypes.TIMESTAMP_UTC:

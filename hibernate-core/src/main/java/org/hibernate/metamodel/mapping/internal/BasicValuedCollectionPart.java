@@ -287,6 +287,19 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return getJdbcMapping();
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return getJdbcMapping();
+	}
+
+	@Override
 	public FetchStyle getStyle() {
 		return FetchStyle.JOIN;
 	}

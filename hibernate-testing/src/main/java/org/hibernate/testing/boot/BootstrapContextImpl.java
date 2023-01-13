@@ -27,6 +27,7 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -60,6 +61,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return delegate.getTypeConfiguration();
+	}
+
+	@Override
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return delegate.getFunctionRegistry();
 	}
 
 	@Override

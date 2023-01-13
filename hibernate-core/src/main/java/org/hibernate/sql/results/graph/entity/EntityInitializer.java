@@ -7,8 +7,8 @@
 package org.hibernate.sql.results.graph.entity;
 
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 
 /**
  * Initializer implementation for initializing entity references.
@@ -60,11 +60,9 @@ public interface EntityInitializer extends FetchParentAccess {
 		return this;
 	}
 
-	default boolean isInitialized() {
-		return false;
-	}
+	/**
+	 * @return true if the current entity associated to this EntityInitializer has been initialized
+	 */
+	boolean isEntityInitialized();
 
-	default boolean isEntityResultInitializer() {
-		return false;
-	}
 }

@@ -197,6 +197,11 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		return getSelectableMappings().getJdbcMappings();
 	}
 
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return getSelectableMappings().getSelectable( index ).getJdbcMapping();
+	}
+
 	private SelectableMappings getSelectableMappings() {
 		if (selectableMappings == null) {
 			// This is expected to happen when processing a

@@ -84,7 +84,7 @@ public class QueryEngine {
 			MetadataImplementor metadata,
 			QueryEngineOptions queryEngineOptions,
 			Dialect dialect) {
-		final SqmFunctionRegistry sqmFunctionRegistry = new SqmFunctionRegistry();
+		final SqmFunctionRegistry sqmFunctionRegistry = metadata.getFunctionRegistry();
 
 		queryEngineOptions.getCustomSqlFunctionMap().forEach( sqmFunctionRegistry::register );
 

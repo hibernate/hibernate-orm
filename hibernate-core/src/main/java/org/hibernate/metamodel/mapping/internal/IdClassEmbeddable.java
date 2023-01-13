@@ -400,6 +400,11 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return selectableMappings.getSelectable( index ).getJdbcMapping();
+	}
+
+	@Override
 	public int forEachJdbcValue(
 			Object value,
 			int offset,

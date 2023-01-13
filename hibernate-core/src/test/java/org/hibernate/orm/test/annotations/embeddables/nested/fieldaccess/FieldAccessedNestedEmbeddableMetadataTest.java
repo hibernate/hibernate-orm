@@ -33,7 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class FieldAccessedNestedEmbeddableMetadataTest {
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-9089")
 	public void testEnumTypeInterpretation() {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 

@@ -124,7 +124,7 @@ public class Over<T> implements Expression, DomainResultProducer<T> {
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				expression.getExpressionType().getJdbcMappings().get( 0 )
+				expression.getExpressionType().getSingleJdbcMapping()
 		);
 	}
 
@@ -136,7 +136,7 @@ public class Over<T> implements Expression, DomainResultProducer<T> {
 	private SqlSelection createSelection(SqlAstCreationState creationState) {
 		return creationState.getSqlExpressionResolver().resolveSqlSelection(
 				this,
-				expression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcJavaType(),
+				expression.getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
 				null,
 				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);

@@ -877,8 +877,24 @@ temporalLiteral
  * A literal datetime, in braces, or with the 'datetime' keyword
  */
 dateTimeLiteral
-	: LEFT_BRACE dateTime RIGHT_BRACE
-	| DATETIME dateTime
+	: localDateTimeLiteral
+	| zonedDateTimeLiteral
+	| offsetDateTimeLiteral
+	;
+
+localDateTimeLiteral
+	: LEFT_BRACE localDateTime RIGHT_BRACE
+	| LOCAL? DATETIME localDateTime
+	;
+
+zonedDateTimeLiteral
+	: LEFT_BRACE zonedDateTime RIGHT_BRACE
+	| ZONED? DATETIME zonedDateTime
+	;
+
+offsetDateTimeLiteral
+	: LEFT_BRACE offsetDateTime RIGHT_BRACE
+	| OFFSET? DATETIME offsetDateTimeWithMinutes
 	;
 
 /**
@@ -900,8 +916,26 @@ timeLiteral
 /**
  * A literal datetime
  */
-dateTime
-	: date time (zoneId | offset)?
+ dateTime
+ 	: localDateTime
+ 	| zonedDateTime
+ 	| offsetDateTime
+ 	;
+
+localDateTime
+	: date time
+	;
+
+zonedDateTime
+	: date time zoneId
+	;
+
+offsetDateTime
+	: date time offset
+	;
+
+offsetDateTimeWithMinutes
+	: date time offsetWithMinutes
 	;
 
 /**
@@ -923,6 +957,10 @@ time
  */
 offset
 	: (PLUS | MINUS) hour (COLON minute)?
+	;
+
+offsetWithMinutes
+	: (PLUS | MINUS) hour COLON minute
 	;
 
 year: INTEGER_LITERAL;
@@ -1174,19 +1212,19 @@ frameClause
  */
 frameStart
 	: UNBOUNDED PRECEDING
-    | expression PRECEDING
-    | CURRENT ROW
-    | expression FOLLOWING
+	| expression PRECEDING
+	| CURRENT ROW
+	| expression FOLLOWING
 	;
 
 /**
  * The end of the window content
  */
 frameEnd
-    : expression PRECEDING
-    | CURRENT ROW
-    | expression FOLLOWING
-    | UNBOUNDED FOLLOWING
+	: expression PRECEDING
+	| CURRENT ROW
+	| expression FOLLOWING
+	| UNBOUNDED FOLLOWING
 	;
 
 /**
@@ -1194,9 +1232,9 @@ frameEnd
  */
 frameExclusion
 	: EXCLUDE CURRENT ROW
-    | EXCLUDE GROUP
-    | EXCLUDE TIES
-    | EXCLUDE NO OTHERS
+	| EXCLUDE GROUP
+	| EXCLUDE TIES
+	| EXCLUDE NO OTHERS
 	;
 
 /**

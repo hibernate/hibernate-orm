@@ -412,6 +412,7 @@ import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
+import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
@@ -4035,9 +4036,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					);
 				}
 				else {
-					// The absolute value of the expression is in seconds
-					// as the fractional seconds are in the fraction part as can be seen in DurationJavaType
-					duration = new Duration( scaledExpression, SECOND, (BasicValuedMapping) durationType );
+					// Durations are stored as nanoseconds (see DurationJavaType)
+					duration = new Duration( scaledExpression, NANOSECOND, (BasicValuedMapping) durationType );
 				}
 
 				TemporalUnit appliedUnit = appliedByUnit.getUnit().getUnit();

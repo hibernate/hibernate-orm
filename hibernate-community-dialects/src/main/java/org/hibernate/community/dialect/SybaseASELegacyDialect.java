@@ -276,7 +276,6 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		//TODO!!
 		switch ( unit ) {
 			case NANOSECOND:
 				return "dateadd(ms,?2/1000000,?3)";
@@ -291,7 +290,6 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		//TODO!!
 		switch ( unit ) {
 			case NANOSECOND:
 				return "(cast(datediff(ms,?2,?3) as numeric(21))*1000000)";

@@ -261,17 +261,22 @@ public class SybaseASEDialect extends SybaseDialect {
 		return "current_bigdatetime()";
 	}
 
+	/**
+	 * Sybase ASE in principle supports microsecond
+	 * precision for {code bigdatetime}, but
+	 * unfortunately its duration arithmetic
+	 * functions have a nasty habit of overflowing.
+	 * So to give ourselves a little extra headroom,
+	 * we will use {@code millisecond} as the native
+	 * unit of precision.
+	 */
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-		// Sybase supports microsecond precision
-		// but when we use it we just get numerical
-		// overflows from timestamp arithmetic
 		return 1_000_000;
 	}
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		//TODO!!
 		switch ( unit ) {
 			case NANOSECOND:
 				return "dateadd(ms,?2/1000000,?3)";
@@ -286,7 +291,6 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		//TODO!!
 		switch ( unit ) {
 			case NANOSECOND:
 				return "(cast(datediff(ms,?2,?3) as numeric(21))*1000000)";

@@ -17,7 +17,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -59,6 +58,7 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
@@ -262,7 +262,7 @@ public final class FastSessionServices {
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
-		Object setMode = defaultSessionProperties.get( AvailableSettings.FLUSH_MODE );
+		Object setMode = defaultSessionProperties.get( HibernateHints.HINT_FLUSH_MODE );
 		return ConfigurationHelper.getFlushMode( setMode, FlushMode.AUTO );
 	}
 
@@ -290,7 +290,7 @@ public final class FastSessionServices {
 		final HashMap<String,Object> settings = new HashMap<>();
 
 		//Static defaults:
-		settings.putIfAbsent( AvailableSettings.FLUSH_MODE, FlushMode.AUTO.name() );
+		settings.putIfAbsent( HibernateHints.HINT_FLUSH_MODE, FlushMode.AUTO.name() );
 		settings.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
 		settings.putIfAbsent( JAKARTA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
 		settings.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
@@ -308,7 +308,7 @@ public final class FastSessionServices {
 				SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE,
 				SpecHints.HINT_SPEC_CACHE_STORE_MODE,
 
-				AvailableSettings.FLUSH_MODE,
+				HibernateHints.HINT_FLUSH_MODE,
 
 				LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE,
 				LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT,

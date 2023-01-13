@@ -85,7 +85,7 @@ in <<basic-custom-type>>.
 [cols="<.^,<.^,<.^,<.^",options="header",]
 |=================================================================================================
 |Hibernate type (org.hibernate.type package) |JDBC type |Java type |BasicTypeRegistry key(s)
-|DURATION |INTERVAL_SECOND |java.time.Duration |Duration, java.time.Duration
+|DURATION |NUMERIC |java.time.Duration |Duration, java.time.Duration
 |INSTANT |TIMESTAMP_UTC |java.time.Instant |Instant, java.time.Instant
 |LOCAL_DATE_TIME |TIMESTAMP |java.time.LocalDateTime |LocalDateTime, java.time.LocalDateTime
 |LOCAL_DATE |DATE |java.time.LocalDate |LocalDate, java.time.LocalDate

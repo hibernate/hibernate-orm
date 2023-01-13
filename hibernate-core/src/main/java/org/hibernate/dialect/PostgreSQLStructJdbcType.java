@@ -898,7 +898,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 		else {
 			assert attributeMapping.getJdbcTypeCount() == 1;
 			jdbcValueCount = 1;
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMappings().get( 0 );
+			final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
 			final Object jdbcValue = jdbcMapping.getJdbcJavaType().wrap(
 					rawJdbcValue,
 					options

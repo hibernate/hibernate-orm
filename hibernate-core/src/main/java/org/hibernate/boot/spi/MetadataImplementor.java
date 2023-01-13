@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.query.named.NamedObjectRepository;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -37,6 +38,11 @@ public interface MetadataImplementor extends Metadata {
 	 * Access to the {@link TypeConfiguration} belonging to the {@link BootstrapContext}
 	 */
 	TypeConfiguration getTypeConfiguration();
+
+	/**
+	 * Access to the {@link SqmFunctionRegistry} belonging to the {@link BootstrapContext}
+	 */
+	SqmFunctionRegistry getFunctionRegistry();
 
 	NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory);
 

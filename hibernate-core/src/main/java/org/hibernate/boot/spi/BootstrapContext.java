@@ -25,6 +25,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -56,6 +57,13 @@ public interface BootstrapContext {
 	 * @see TypeConfiguration
 	 */
 	TypeConfiguration getTypeConfiguration();
+
+	/**
+	 * The {@link SqmFunctionRegistry} belonging to this {@code BootstrapContext}.
+	 *
+	 * @see SqmFunctionRegistry
+	 */
+	SqmFunctionRegistry getFunctionRegistry();
 
 	/**
 	 * The {@link BeanInstanceProducer} to use when creating custom type references.

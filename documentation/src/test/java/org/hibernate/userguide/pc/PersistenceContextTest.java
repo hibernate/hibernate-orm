@@ -110,14 +110,14 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			person.setId(1L);
 			person.setName("John Doe");
 
-			session.save(person);
+			session.persist(person);
 			//end::pc-persist-native-example[]
 
 			//tag::pc-remove-native-example[]
-			session.delete(person);
+			session.remove(person);
 			//end::pc-remove-native-example[]
 
-			session.save(person);
+			session.persist(person);
 			Long personId = person.getId();
 
 			//tag::pc-get-reference-native-example[]
@@ -125,7 +125,7 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			book.setId(1L);
 			book.setIsbn("123-456-7890");
 			entityManager.persist(book);
-			book.setAuthor(session.load(Person.class, personId));
+			book.setAuthor(session.getReference(Person.class, personId));
 			//end::pc-get-reference-native-example[]
 		});
 		doInJPA(this::entityManagerFactory, entityManager -> {
@@ -276,7 +276,7 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			session.clear();
 			person.setName("Mr. John Doe");
 
-			session.saveOrUpdate(person);
+			session.merge(person);
 			//end::pc-detach-reattach-saveOrUpdate-example[]
 		});
 

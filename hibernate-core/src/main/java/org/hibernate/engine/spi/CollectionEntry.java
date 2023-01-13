@@ -231,8 +231,8 @@ public final class CollectionEntry implements Serializable {
 		loadedKey = getCurrentKey();
 		setLoadedPersister( getCurrentPersister() );
 
-		boolean resnapshot = collection.wasInitialized() &&
-				( isDoremove() || isDorecreate() || isDoupdate() );
+		boolean resnapshot = collection.wasInitialized()
+				&&  ( isDoremove() || isDorecreate() || isDoupdate() );
 		if ( resnapshot ) {
 			snapshot = loadedPersister == null || !loadedPersister.isMutable() ?
 					null :

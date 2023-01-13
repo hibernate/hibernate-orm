@@ -34,6 +34,9 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  * {@value org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY}.
  *
  * @see ImplicitNamingStrategy
+ * @see org.hibernate.cfg.Configuration#setPhysicalNamingStrategy(PhysicalNamingStrategy)
+ * @see org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy(PhysicalNamingStrategy)
+ * @see org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY
  *
  * @author Steve Ebersole
  */

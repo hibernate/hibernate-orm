@@ -104,6 +104,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -214,6 +215,11 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return bootstrapContext.getTypeConfiguration();
+	}
+
+	@Override
+	public SqmFunctionRegistry getFunctionRegistry() {
+		return bootstrapContext.getFunctionRegistry();
 	}
 
 	@Override

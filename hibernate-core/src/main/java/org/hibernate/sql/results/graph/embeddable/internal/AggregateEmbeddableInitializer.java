@@ -45,7 +45,7 @@ public interface AggregateEmbeddableInitializer extends EmbeddableInitializer {
 			return aggregateValuesArrayPositions;
 		}
 		else if ( fetchParentAccess instanceof EmbeddableInitializer ) {
-			final FetchParentAccess parentFetchParentAccess = ( (EmbeddableInitializer) fetchParentAccess ).getFetchParentAccess();
+			final FetchParentAccess parentFetchParentAccess = fetchParentAccess.getFetchParentAccess();
 			return determineAggregateValuesArrayPositions( parentFetchParentAccess, structSelection );
 		}
 		return new int[] { structSelection.getValuesArrayPosition() };

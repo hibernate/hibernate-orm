@@ -12,7 +12,7 @@ import java.util.Comparator;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;

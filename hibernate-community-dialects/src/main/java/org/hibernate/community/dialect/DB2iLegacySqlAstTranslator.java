@@ -34,12 +34,18 @@ public class DB2iLegacySqlAstTranslator<T extends JdbcOperation> extends DB2Lega
 
 	@Override
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Percent fetches or ties fetches aren't supported in DB2 iSeries
-		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 7.1
-		return getQueryPartForRowNumbering() != queryPart && (
-				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| version.isBefore(7, 10) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
-		);
+		// Check if current query part is already row numbering to avoid infinite recursion
+		if ( getQueryPartForRowNumbering() == queryPart ) {
+			return false;
+		}
+		// Percent fetches or ties fetches aren't supported in DB2
+		if ( useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart ) ) {
+			return true;
+		}
+		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 7.10
+		return  version.isBefore(7, 10)
+				&& queryPart.getFetchClauseExpression() != null
+				&& !( queryPart.getFetchClauseExpression() instanceof Literal );
 	}
 
 	@Override

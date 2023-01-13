@@ -25,6 +25,7 @@ import java.io.Serializable;
  * An implementation registered this way is shared between sessions.
  *
  * @see org.hibernate.cfg.AvailableSettings#STATEMENT_INSPECTOR
+ * @see org.hibernate.cfg.Configuration#setStatementInspector(StatementInspector)
  * @see org.hibernate.boot.SessionFactoryBuilder#applyStatementInspector(StatementInspector)
  * @see org.hibernate.SessionBuilder#statementInspector(StatementInspector)
  *

@@ -15,16 +15,19 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies that a named query should be used to load an entity,
- * overriding the SQL that Hibernate generates by default.
+ * Specifies that a named query should be used to load an entity or
+ * collection, overriding the SQL that Hibernate generates by default.
  *
- * @author L�szl� Benke
+ * @author László Benke
+ *
+ * @deprecated Use {@link SQLSelect} or {@link HQLSelect}.
  */
 @Target( {TYPE, FIELD, METHOD} )
 @Retention( RUNTIME )
+@Deprecated(since = "6.2")
 public @interface Loader {
 	/**
-	 * The named query to use for loading the entity.
+	 * The named query to use for loading the entity or collection.
 	 */
 	String namedQuery() default "";
 }

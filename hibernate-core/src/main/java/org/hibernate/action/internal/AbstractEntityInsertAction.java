@@ -198,7 +198,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		if ( naturalIdMapping != null ) {
 			getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(
 					getId(),
-					naturalIdMapping.extractNaturalIdFromEntityState( state, getSession() ),
+					naturalIdMapping.extractNaturalIdFromEntityState( state ),
 					getPersister(),
 					CachedNaturalIdValueSource.INSERT
 			);
@@ -213,7 +213,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	public void handleNaturalIdPostSaveNotifications(Object generatedId) {
 		final NaturalIdMapping naturalIdMapping = getPersister().getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
-			final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state, getSession() );
+			final Object naturalIdValues = naturalIdMapping.extractNaturalIdFromEntityState( state );
 			if ( isEarlyInsert() ) {
 				// with early insert, we still need to add a local (transactional) natural id cross-reference
 				getSession().getPersistenceContextInternal().getNaturalIdResolutions().manageLocalResolution(

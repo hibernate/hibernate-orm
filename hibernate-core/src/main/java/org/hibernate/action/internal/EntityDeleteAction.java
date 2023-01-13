@@ -13,7 +13,6 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
@@ -67,7 +66,7 @@ public class EntityDeleteAction extends EntityAction {
 			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
 					.removeLocalResolution(
 							getId(),
-							naturalIdMapping.extractNaturalIdFromEntityState( state, session ),
+							naturalIdMapping.extractNaturalIdFromEntityState( state ),
 							getPersister()
 					);
 		}

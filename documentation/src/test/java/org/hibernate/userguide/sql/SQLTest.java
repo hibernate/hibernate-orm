@@ -599,8 +599,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Session session = entityManager.unwrap(Session.class);
 			//tag::sql-hibernate-scalar-named-query-example[]
-			List<String> names = session.getNamedQuery(
-				"find_person_name")
+			List<String> names = session.createNamedQuery(
+				"find_person_name", String.class)
 			.list();
 			//end::sql-hibernate-scalar-named-query-example[]
 			assertEquals(3, names.size());

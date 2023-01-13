@@ -15,14 +15,14 @@
  * importance to application developers, though it remains a very important
  * internal abstraction.
  *
- * <h3>Basic types</h3>
+ * <h3 id="basic">Basic types</h3>
  *
  * For {@linkplain jakarta.persistence.Basic basic} types, we prefer to model the
  * type mapping in terms the combination of:
  * <ul>
  * <li>a {@link org.hibernate.type.descriptor.java.JavaType}, with
  * <li>a {@link org.hibernate.type.descriptor.jdbc.JdbcType}, and,
- * <li>possibly, a {@linkplain org.hibernate.metamodel.model.convert.spi.BasicValueConverter
+ * <li>possibly, a {@linkplain org.hibernate.type.descriptor.converter.spi.BasicValueConverter
  *     converter}, though this is not usually needed.
  * </ul>
  * <p>
@@ -48,7 +48,7 @@
  * This approach provides quite some flexibility in allowing a given Java type to
  * map to a range of JDBC types. However, when the built-in conversions don't handle
  * a particular mapping, a
- * {@linkplain org.hibernate.metamodel.model.convert.spi.BasicValueConverter converter}
+ * {@linkplain org.hibernate.type.descriptor.converter.spi.BasicValueConverter converter}
  * may assist in the conversion process. For example, a JPA
  * {@link jakarta.persistence.AttributeConverter} might be provided.
  * <p>
@@ -59,7 +59,7 @@
  * See {@link org.hibernate.annotations} for information on how to influence basic
  * type mappings using annotations.
  *
- * <h3>Custom types</h3>
+ * <h3 id="custom">Custom types</h3>
  *
  * The package {@link org.hibernate.usertype} provides a way for application developers
  * to define new types without being exposed to the full complexity of the {@code Type}

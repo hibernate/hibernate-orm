@@ -74,7 +74,7 @@ public class ShortMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfShorts").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfShorts").executeUpdate()
 		);
 	}
 

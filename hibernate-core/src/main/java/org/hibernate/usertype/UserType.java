@@ -16,21 +16,212 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * This interface should be implemented by user-defined custom types.
+ * This interface should be implemented by user-defined custom types
+ * that extend the set of {@linkplain org.hibernate.type.Type types}
+ * defined in {@link org.hibernate.type}.
+ * <p>
  * A custom type is <em>not</em> an actual persistent attribute type,
  * rather it is a class responsible for serializing instances of some
  * other class to and from JDBC. This other class should have "value"
  * semantics, since its identity is lost as part of this serialization
  * process.
  * <p>
+ * A custom type may be applied to an attribute of an entity either:
+ * <ul>
+ * <li>explicitly, using {@link org.hibernate.annotations.Type @Type},
+ *     or
+ * <li>implicitly, using
+ *     {@link org.hibernate.annotations.TypeRegistration @TypeRegistration}.
+ * </ul>
+ * <p>
+ * For example, this {@code UserType} persists {@link java.time.Period}
+ * to columns of type {@code varchar}:
+ * <pre>
+ * public class PeriodType implements UserType&lt;Period&gt; {
+ *     &#64;Override
+ *     public int getSqlType() {
+ *         return VARCHAR;
+ *     }
+ *
+ *     &#64;Override
+ *     public Class&lt;Period&gt; returnedClass() {
+ *         return Period.class;
+ *     }
+ *
+ *     &#64;Override
+ *     public boolean equals(Period x, Period y) {
+ *         return Objects.equals(x, y);
+ *     }
+ *
+ *     &#64;Override
+ *     public int hashCode(Period x) {
+ *         return x.hashCode();
+ *     }
+ *
+ *     &#64;Override
+ *     public Period nullSafeGet(ResultSet rs, int position,
+ *                               SharedSessionContractImplementor session, Object owner)
+ *                 throws SQLException {
+ *         String string = rs.getString( position );
+ *         return rs.wasNull() ? null : Period.parse(string);
+ *     }
+ *
+ *     &#64;Override
+ *     public void nullSafeSet(PreparedStatement st, Period value, int index,
+ *                             SharedSessionContractImplementor session)
+ *                 throws SQLException {
+ *         if ( value == null ) {
+ *             st.setNull(index, VARCHAR);
+ *         }
+ *         else {
+ *             st.setString(index, value.toString());
+ *         }
+ *     }
+ *
+ *     &#64;Override
+ *     public boolean isMutable() {
+ *         return false;
+ *     }
+ *
+ *     &#64;Override
+ *     public Period deepCopy(Period value) {
+ *         return value; //Period is immutable
+ *     }
+ *
+ *     &#64;Override
+ *     public Serializable disassemble(Period period) {
+ *         return period; //Period is immutable
+ *     }
+ *
+ *     &#64;Override
+ *     public Period assemble(Serializable cached, Object owner) {
+ *         return (Period) cached; //Period is immutable
+ *     }
+ * }
+ * </pre>
+ * <p>
+ * And it may be used like this:
+ * <pre>&#64;Type(PeriodType.class) Period period;</pre>
+ * <p>
+ * We could even use {@code @Type} as a meta-annotation:
+ * <pre>
+ * &#64;Type(PeriodType.class)
+ * &#64;Target({METHOD, FIELD})
+ * &#64;Retention(RUNTIME)
+ * public &#64;interface TimePeriod {}
+ * </pre>
+ * <p>
+ * And then use the {@code @TimePeriod} annotation to apply our {@code UserType}:
+ * <pre>&#64;TimePeriod Period period;</pre>
+ * <p>
+ * Finally, we could ask for our custom type to be used by default:
+ * <pre>&#64;TypeRegistration(basicClass = Period.class, userType = PeriodType.class)</pre>
+ * <p>
+ * Which completely relieves us of the need to annotate the field explicitly:
+ * <pre>Period period;</pre>
+ * <p>
+ * But on the other hand, our {@code UserType} is overkill. Like most
+ * immutable classes, {@code Period} is much easier to handle using a
+ * JPA attribute converter:
+ * <pre>
+ * &#64;Converter
+ * public class PeriodToStringConverter implements AttributeConverter&lt;Period,String&gt; {
+ *     &#64;Override
+ *     public String convertToDatabaseColumn(Period period) {
+ *         return period.toString();
+ *     }
+ *
+ *    &#64;Override
+ *    public Period convertToEntityAttribute(String string) {
+ *         return Period.parse(string);
+ *    }
+ * }
+ * </pre>
+ * <p>
+ * A {@code UserType} is much more useful when the persistent attribute
+ * type is mutable. For example:
+ * <p>
+ * <pre>
+ * public class BitSetUserType implements UserType&lt;BitSet&gt; {
+ *
+ *     &#64;Override
+ *     public int getSqlType() {
+ *         return Types.VARCHAR;
+ *     }
+ *
+ *     &#64;Override
+ *     public Class&lt;BitSet&gt; returnedClass() {
+ *         return BitSet.class;
+ *     }
+ *
+ *     &#64;Override
+ *     public boolean equals(BitSet x, BitSet y) {
+ *         return Objects.equals(x, y);
+ *     }
+ *
+ *     &#64;Override
+ *     public int hashCode(BitSet x) {
+ *         return x.hashCode();
+ *     }
+ *
+ *     &#64;Override
+ *     public BitSet nullSafeGet(ResultSet rs, int position,
+ *                               SharedSessionContractImplementor session, Object owner)
+ *                 throws SQLException {
+ *         String string = rs.getString(position);
+ *         return rs.wasNull()? null : parseBitSet(columnValue);
+ *     }
+ *
+ *     &#64;Override
+ *     public void nullSafeSet(PreparedStatement st, BitSet bitSet, int index,
+ *                             SharedSessionContractImplementor session)
+ *                 throws SQLException {
+ *         if (bitSet == null) {
+ *             st.setNull(index, VARCHAR);
+ *         }
+ *         else {
+ *             st.setString(index, formatBitSet(bitSet));
+ *         }
+ *     }
+ *
+ *     &#64;Override
+ *     public BitSet deepCopy(BitSet value) {
+ *         return bitSet == null ? null : (BitSet) bitSet.clone();
+ *     }
+ *
+ *     &#64;Override
+ *     public boolean isMutable() {
+ *         return true;
+ *     }
+ *
+ *     &#64;Override
+ *     public Serializable disassemble(BitSet value) {
+ *         return deepCopy(value);
+ *     }
+ *
+ *     &#64;Override
+ *     public BitSet assemble(Serializable cached, Object owner)
+ *             throws HibernateException {
+ *         return deepCopy((BitSet) cached);
+ *     }
+ * }
+ * </pre>
+ * <p>
  * Every implementor of {@code UserType} must be immutable and must
  * declare a public default constructor.
  * <p>
+ * A custom type implemented as a {@code UserType} is treated as a
+ * non-composite value, and does not have persistent attributes which
+ * may be used in queries. If a custom type does have attributes, and
+ * can be thought of as something more like an embeddable object, it
+ * might be better to implement {@link CompositeUserType}.
+ *
+ * @apiNote
  * This interface:
  * <ul>
  * <li>abstracts user code away from changes to the internal interface
@@ -41,26 +232,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  * <p>
  * The class {@link org.hibernate.type.CustomType} automatically adapts
  * between {@code UserType} and {@link org.hibernate.type.Type}.
- * <p>
  * In principle, a custom type could implement {@code Type} directly,
  * or extend one of the abstract classes in {@link org.hibernate.type}.
  * But this approach risks breakage resulting from future incompatible
  * changes to classes or interfaces in that package, and is therefore
  * discouraged.
- * <p>
- * A custom type implemented as a {@code UserType} is treated as a
- * non-composite value, and does not have persistent attributes which
- * may be used in queries. If a custom type does have attributes, and
- * can be thought of as something more like an embeddable object, it
- * might be better to implement {@link CompositeUserType}.
- * <p>
- * A custom type may be applied to an attribute of an entity either:
- * <ul>
- * <li>explicitly, using {@link org.hibernate.annotations.Type @Type},
- *     or
- * <li>implicitly, using
- *     {@link org.hibernate.annotations.TypeRegistration @TypeRegistration}.
- * </ul>
  *
  * @see org.hibernate.type.Type
  * @see org.hibernate.type.CustomType
@@ -214,7 +390,9 @@ public interface UserType<J> {
 	 *
 	 * @see org.hibernate.Session#merge(Object)
 	 */
-	J replace(J detached, J managed, Object owner);
+	default J replace(J detached, J managed, Object owner) {
+		return deepCopy( detached );
+	}
 
 	/**
 	 * The default column length, for use in DDL generation.

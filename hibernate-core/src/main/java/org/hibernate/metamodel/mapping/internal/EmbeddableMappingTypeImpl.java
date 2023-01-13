@@ -23,6 +23,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
@@ -30,7 +31,6 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
@@ -679,6 +679,11 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return getSelectableMappings().getJdbcMappings();
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return getSelectable( index ).getJdbcMapping();
 	}
 
 	@Override

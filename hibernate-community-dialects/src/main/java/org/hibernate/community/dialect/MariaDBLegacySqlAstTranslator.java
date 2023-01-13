@@ -222,6 +222,16 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
+	protected String getFromDual() {
+		return " from dual";
+	}
+
+	@Override
+	protected String getFromDualForSelectOnly() {
+		return getDialect().getVersion().isBefore( 10, 4 ) ? getFromDual() : "";
+	}
+
+	@Override
 	public MariaDBLegacyDialect getDialect() {
 		return this.dialect;
 	}

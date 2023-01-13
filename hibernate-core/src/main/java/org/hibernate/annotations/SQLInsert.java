@@ -48,7 +48,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(SQLInserts.class)
 public @interface SQLInsert {
 	/**
-	 * Procedure name or SQL INSERT statement.
+	 * Procedure name or SQL {@code INSERT} statement.
 	 */
 	String sql();
 

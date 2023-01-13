@@ -68,7 +68,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 			// signal start of transaction
 			session.getTransaction().begin();
 
-			session.createQuery("UPDATE customer set NAME = 'Sir. '||NAME")
+			session.createMutationQuery("UPDATE customer set NAME = 'Sir. '||NAME")
 					.executeUpdate();
 
 			// calls Connection#commit(), if an error
@@ -129,7 +129,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 			// no-ops
 			session.getTransaction().begin();
 
-			Number customerCount = (Number) session.createQuery("select count(c) from Customer c").uniqueResult();
+			Number customerCount = (Number) session.createSelectionQuery("select count(c) from Customer c").uniqueResult();
 
 			// Since we did not start the transaction (CMT),
 			// we also will not end it.  This call essentially
@@ -194,7 +194,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 			session.getTransaction().begin();
 
 			session.persist(new Customer());
-			Customer customer = (Customer) session.createQuery("select c from Customer c").uniqueResult();
+			Customer customer = (Customer) session.createSelectionQuery("select c from Customer c").uniqueResult();
 
 			// calls TM/UT commit method, assuming we are initiator.
 			session.getTransaction().commit();

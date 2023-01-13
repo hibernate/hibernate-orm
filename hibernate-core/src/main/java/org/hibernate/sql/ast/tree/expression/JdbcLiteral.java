@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -92,6 +92,19 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( jdbcMapping );
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return jdbcMapping;
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return jdbcMapping;
 	}
 
 	@Override

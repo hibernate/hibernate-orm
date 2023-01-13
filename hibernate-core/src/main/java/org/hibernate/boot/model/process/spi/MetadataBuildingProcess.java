@@ -15,14 +15,21 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.hbm.EntityHierarchyBuilder;
 import org.hibernate.boot.model.source.internal.hbm.EntityHierarchySourceImpl;
@@ -33,6 +40,8 @@ import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
+import org.hibernate.boot.spi.AdditionalMappingContributions;
+import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
@@ -43,6 +52,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -145,7 +156,7 @@ public class MetadataBuildingProcess {
 				options
 		);
 
-		handleTypes( bootstrapContext, options );
+		handleTypes( bootstrapContext, options, metadataCollector );
 
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
@@ -309,8 +320,143 @@ public class MetadataBuildingProcess {
 
 		processor.finishUp();
 
+		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
+		processAdditionalJaxbMappingProducer( metadataCollector, options, jandexView, classLoaderService, rootMetadataBuildingContext );
+
+		applyExtraQueryImports( managedResources, metadataCollector );
+
+		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
+	}
+
+	private static void processAdditionalMappingContributions(
+			InFlightMetadataCollectorImpl metadataCollector,
+			MetadataBuildingOptions options,
+			ClassLoaderService classLoaderService,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
+		final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
+		final AdditionalMappingContributionsImpl contributions = new AdditionalMappingContributionsImpl(
+				metadataCollector,
+				options,
+				rootMetadataBuildingContext,
+				hierarchyBuilder
+		);
+
+		final MappingBinder mappingBinder;
 		if ( options.isXmlMappingEnabled() ) {
-			//noinspection deprecation
+			mappingBinder = new MappingBinder(
+					classLoaderService,
+					new MappingBinder.Options() {
+						@Override
+						public boolean validateMappings() {
+							return false;
+						}
+
+						@Override
+						public boolean transformHbmMappings() {
+							return false;
+						}
+					}
+			);
+		}
+		else {
+			mappingBinder = null;
+		}
+
+		final Collection<AdditionalMappingContributor> additionalMappingContributors = classLoaderService.loadJavaServices( AdditionalMappingContributor.class );
+		additionalMappingContributors.forEach( (contributor) -> {
+			contributions.setCurrentContributor( contributor.getContributorName() );
+			try {
+				contributor.contribute(
+						contributions,
+						metadataCollector,
+						mappingBinder,
+						rootMetadataBuildingContext
+				);
+			}
+			finally {
+				contributions.setCurrentContributor( null );
+			}
+		} );
+
+		final ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
+		for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
+			binder.bindEntityHierarchy( entityHierarchySource );
+		}
+	}
+
+	private static class AdditionalMappingContributionsImpl implements AdditionalMappingContributions {
+		private final InFlightMetadataCollectorImpl metadataCollector;
+		private final MetadataBuildingOptions options;
+		private final MetadataBuildingContextRootImpl rootMetadataBuildingContext;
+		private final EntityHierarchyBuilder hierarchyBuilder;
+		private String currentContributor;
+
+		public AdditionalMappingContributionsImpl(
+				InFlightMetadataCollectorImpl metadataCollector,
+				MetadataBuildingOptions options,
+				MetadataBuildingContextRootImpl rootMetadataBuildingContext,
+				EntityHierarchyBuilder hierarchyBuilder) {
+			this.metadataCollector = metadataCollector;
+			this.options = options;
+			this.rootMetadataBuildingContext = rootMetadataBuildingContext;
+			this.hierarchyBuilder = hierarchyBuilder;
+		}
+
+		public void setCurrentContributor(String contributor) {
+			this.currentContributor = contributor == null ? "orm" : contributor;
+		}
+
+		@Override
+		public void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding, Origin origin) {
+			if ( ! options.isXmlMappingEnabled() ) {
+				return;
+			}
+
+			hierarchyBuilder.indexMappingDocument( new MappingDocument(
+					currentContributor,
+					hbmJaxbBinding,
+					origin,
+					rootMetadataBuildingContext
+			) );
+		}
+
+		@Override
+		public void contributeEntity(PersistentClass entity) {
+			metadataCollector.addEntityBinding( entity );
+		}
+
+		@Override
+		public void contributeTable(Table table) {
+			final Namespace namespace = metadataCollector.getDatabase().locateNamespace(
+					table.getCatalogIdentifier(),
+					table.getSchemaIdentifier()
+			);
+			namespace.registerTable( table.getNameIdentifier(), table );
+			metadataCollector.addTableNameBinding( table.getNameIdentifier(), table );
+		}
+
+		@Override
+		public void contributeSequence(Sequence sequence) {
+			final Namespace namespace = metadataCollector.getDatabase().locateNamespace(
+					sequence.getName().getCatalogName(),
+					sequence.getName().getSchemaName()
+			);
+			namespace.registerSequence( sequence.getName().getSequenceName(), sequence );
+		}
+
+		@Override
+		public void contributeAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+			metadataCollector.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
+		}
+	}
+
+	private static void processAdditionalJaxbMappingProducer(
+			InFlightMetadataCollectorImpl metadataCollector,
+			MetadataBuildingOptions options,
+			IndexView jandexView,
+			ClassLoaderService classLoaderService,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
+		if ( options.isXmlMappingEnabled() ) {
 			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
 			if ( producers != null ) {
 				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
@@ -348,10 +494,6 @@ public class MetadataBuildingProcess {
 				}
 			}
 		}
-
-		applyExtraQueryImports( managedResources, metadataCollector );
-
-		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
 	}
 
 	private static void applyExtraQueryImports(
@@ -380,13 +522,26 @@ public class MetadataBuildingProcess {
 //		return new JandexInitManager( options.getJandexView(), classLoaderAccess, autoIndexMembers );
 //	}
 
-	private static void handleTypes(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
-		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
+	private static void handleTypes(
+			BootstrapContext bootstrapContext,
+			MetadataBuildingOptions options,
+			ConverterRegistry converterRegistry) {
+		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService(ClassLoaderService.class);
 
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-		final TypeContributions typeContributions = () -> typeConfiguration;
+		final TypeContributions typeContributions = new TypeContributions() {
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
+			}
+
+			@Override
+			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+				converterRegistry.addAttributeConverter( converterClass );
+			}
+		};
 
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();

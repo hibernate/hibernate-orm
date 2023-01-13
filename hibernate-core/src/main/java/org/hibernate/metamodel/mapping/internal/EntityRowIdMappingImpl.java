@@ -10,7 +10,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -111,6 +111,12 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	public int getJdbcTypeCount() {
 		return 1;
 	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return getJdbcMapping();
+	}
+
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {

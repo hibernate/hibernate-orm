@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * An EntityEntry implementation for mutable entities.
+ * An {@link EntityEntry} implementation for mutable entities.
  *
  * @author Gavin King
  * @author Emmanuel Bernard

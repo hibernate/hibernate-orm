@@ -71,7 +71,7 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 			final Expression expression = expressions.get( i );
 			valuesArrayPositions[i] = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 					expression,
-					expression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcJavaType(),
+					expression.getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
 					null,
 					creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 			).getValuesArrayPosition();

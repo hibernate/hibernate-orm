@@ -20,7 +20,7 @@ import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.TestForIssue;

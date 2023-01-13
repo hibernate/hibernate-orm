@@ -2,11 +2,8 @@ package org.hibernate.userguide.associations;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -14,133 +11,139 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Fábio Ueno
  */
-public class NotFoundTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				NotFoundTest.Person.class,
+				NotFoundTest.City.class
+		},
+		useCollectingStatementInspector = true
+)
+public class NotFoundTest {
 
-	private SQLStatementInterceptor sqlStatementInterceptor;
+	@BeforeEach
+	public void createTestData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					//tag::associations-not-found-persist-example[]
+					City newYork = new City( 1, "New York" );
+					entityManager.persist( newYork );
 
-	@Override
-	protected void addConfigOptions(Map options) {
-		sqlStatementInterceptor = new SQLStatementInterceptor( options );
+					Person person = new Person( 1, "John Doe", newYork );
+					entityManager.persist( person );
+					//end::associations-not-found-persist-example[]
+				}
+		);
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				City.class
-		};
-	}
-
-	@Before
-	public void createTestData() {
-		inTransaction( entityManagerFactory(), (entityManager) -> {
-			//tag::associations-not-found-persist-example[]
-			City newYork = new City( 1, "New York" );
-			entityManager.persist( newYork );
-
-			Person person = new Person( 1, "John Doe", newYork );
-			entityManager.persist( person );
-			//end::associations-not-found-persist-example[]
-		} );
-	}
-
-	@After
-	public void dropTestData() {
-		inTransaction( entityManagerFactory(), (em) -> {
-			em.createMutationQuery( "delete Person" ).executeUpdate();
-			em.createMutationQuery( "delete City" ).executeUpdate();
-		} );
+	@AfterEach
+	public void dropTestData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete Person" ).executeUpdate();
+					entityManager.createQuery( "delete City" ).executeUpdate();
+				} );
 	}
 
 	@Test
-	public void test() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			//tag::associations-not-found-find-baseline[]
-			Person person = entityManager.find(Person.class, 1);
-			assertEquals("New York", person.getCity().getName());
-			//end::associations-not-found-find-baseline[]
-		});
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					//tag::associations-not-found-find-baseline[]
+					Person person = entityManager.find( Person.class, 1 );
+					assertEquals( "New York", person.getCity().getName() );
+					//end::associations-not-found-find-baseline[]
+				}
+		);
 
-		breakForeignKey();
+		breakForeignKey( scope );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			//tag::associations-not-found-non-existing-find-example[]
-			Person person = entityManager.find(Person.class, 1);
+		scope.inEntityManager(
+				entityManager -> {
+					//tag::associations-not-found-non-existing-find-example[]
+					Person person = entityManager.find( Person.class, 1 );
 
-			assertNull(null, person.getCity());
-			//end::associations-not-found-non-existing-find-example[]
-		});
-	}
-
-	private void breakForeignKey() {
-		inTransaction( entityManagerFactory(), (em) -> {
-			//tag::associations-not-found-break-fk[]
-			// the database allows this because there is no physical foreign-key
-			em.createMutationQuery( "delete City" ).executeUpdate();
-			//end::associations-not-found-break-fk[]
-		} );
+					assertNull( person.getCity(), "person.getCity() should be null" );
+					//end::associations-not-found-non-existing-find-example[]
+				}
+		);
 	}
 
 	@Test
-	public void queryTest() {
-		breakForeignKey();
+	public void queryTest(EntityManagerFactoryScope scope) {
+		breakForeignKey( scope );
 
-		inTransaction( entityManagerFactory(), (entityManager) -> {
-			//tag::associations-not-found-implicit-join-example[]
-			final List<Person> nullResults = entityManager
-					.createSelectionQuery( "from Person p where p.city.id is null", Person.class )
-					.list();
-			assertThat( nullResults ).isEmpty();
+		scope.inTransaction(
+				entityManager -> {
+					//tag::associations-not-found-implicit-join-example[]
+					final List<Person> nullResults = entityManager
+							.createQuery( "from Person p where p.city.id is null", Person.class )
+							.getResultList();
+					assertThat( nullResults ).isEmpty();
 
-			final List<Person> nonNullResults = entityManager
-					.createSelectionQuery( "from Person p where p.city.id is not null", Person.class )
-					.list();
-			assertThat( nonNullResults ).isEmpty();
-			//end::associations-not-found-implicit-join-example[]
-		} );
+					final List<Person> nonNullResults = entityManager
+							.createQuery( "from Person p where p.city.id is not null", Person.class )
+							.getResultList();
+					assertThat( nonNullResults ).isEmpty();
+					//end::associations-not-found-implicit-join-example[]
+				}
+		);
 	}
 
 	@Test
-	public void queryTestFk() {
-		breakForeignKey();
+	public void queryTestFk(EntityManagerFactoryScope scope) {
+		breakForeignKey( scope );
+		final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
 
-		inTransaction( entityManagerFactory(), (entityManager) -> {
-			sqlStatementInterceptor.clear();
-			//tag::associations-not-found-fk-function-example[]
-			final List<String> nullResults = entityManager
-					.createSelectionQuery( "select p.name from Person p where fk( p.city ) is null", String.class )
-					.list();
+		scope.inTransaction(
+				entityManager -> {
+					sqlStatementInspector.clear();
+					//tag::associations-not-found-fk-function-example[]
+					final List<String> nullResults = entityManager
+							.createQuery( "select p.name from Person p where fk( p.city ) is null", String.class )
+							.getResultList();
 
-			assertThat( nullResults ).isEmpty();
+					assertThat( nullResults ).isEmpty();
 
-			final List<String> nonNullResults = entityManager
-					.createSelectionQuery( "select p.name from Person p where fk( p.city ) is not null", String.class )
-					.list();
-			assertThat( nonNullResults ).hasSize( 1 );
-			assertThat( nonNullResults.get( 0 ) ).isEqualTo( "John Doe" );
-			//end::associations-not-found-fk-function-example[]
+					final List<String> nonNullResults = entityManager
+							.createQuery( "select p.name from Person p where fk( p.city ) is not null", String.class )
+							.getResultList();
+					assertThat( nonNullResults ).hasSize( 1 );
+					assertThat( nonNullResults.get( 0 ) ).isEqualTo( "John Doe" );
+					//end::associations-not-found-fk-function-example[]
 
-			// In addition, make sure that the two executed queries do not create a join
-			assertThat( sqlStatementInterceptor.getQueryCount() ).isEqualTo( 2 );
-			assertThat( sqlStatementInterceptor.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
-			assertThat( sqlStatementInterceptor.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
-		} );
+					// In addition, make sure that the two executed queries do not create a join
+					assertThat( sqlStatementInspector.getSqlQueries().size() ).isEqualTo( 2 );
+					assertThat( sqlStatementInspector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
+					assertThat( sqlStatementInspector.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
+				}
+		);
+	}
+
+	private void breakForeignKey(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					//tag::associations-not-found-break-fk[]
+					// the database allows this because there is no physical foreign-key
+					entityManager.createQuery( "delete City" ).executeUpdate();
+					//end::associations-not-found-break-fk[]
+				}
+		);
 	}
 
 	//tag::associations-not-found-domain-model-example[]

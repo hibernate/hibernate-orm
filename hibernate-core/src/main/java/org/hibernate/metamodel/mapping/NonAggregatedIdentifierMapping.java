@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.sql.results.graph.FetchOptions;

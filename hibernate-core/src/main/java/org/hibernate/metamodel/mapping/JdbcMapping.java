@@ -10,8 +10,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Incubating;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -134,6 +134,19 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	@Override
 	default List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( this );
+	}
+
+	@Override
+	default JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return this;
+	}
+
+	@Override
+	default JdbcMapping getSingleJdbcMapping() {
+		return this;
 	}
 
 	@Override

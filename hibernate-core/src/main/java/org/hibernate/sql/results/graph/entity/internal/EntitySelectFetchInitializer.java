@@ -39,7 +39,7 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 public class EntitySelectFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 	private static final String CONCRETE_NAME = EntitySelectFetchInitializer.class.getSimpleName();
 
-	private final FetchParentAccess parentAccess;
+	protected final FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
 	private final boolean isEnhancedForLazyLoading;
 
@@ -48,6 +48,11 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	private final ToOneAttributeMapping toOneMapping;
 
 	protected boolean isInitialized;
+
+	@Override
+	public FetchParentAccess getFetchParentAccess() {
+		return parentAccess;
+	}
 
 	protected Object entityInstance;
 
@@ -230,6 +235,11 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	@Override
 	public EntityKey getEntityKey() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isEntityInitialized() {
+		return isInitialized;
 	}
 
 	@Override

@@ -13,7 +13,7 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -158,10 +158,4 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	public T assemble(Serializable cached, Object owner) throws HibernateException {
 		return javaType.getMutabilityPlan().assemble( cached, null );
 	}
-
-	@Override
-	public T replace(T original, T target, Object owner) throws HibernateException {
-		return deepCopy( original );
-	}
-
 }

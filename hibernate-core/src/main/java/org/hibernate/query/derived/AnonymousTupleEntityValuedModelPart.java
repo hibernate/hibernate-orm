@@ -17,9 +17,9 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
@@ -207,6 +207,16 @@ public class AnonymousTupleEntityValuedModelPart
 		final List<JdbcMapping> results = new ArrayList<>();
 		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
 		return results;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return identifierMapping.getJdbcMapping( index );
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return identifierMapping.getSingleJdbcMapping();
 	}
 
 	@Override

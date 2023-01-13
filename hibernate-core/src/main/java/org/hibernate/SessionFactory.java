@@ -118,13 +118,6 @@ import jakarta.persistence.EntityManagerFactory;
  */
 public interface SessionFactory extends EntityManagerFactory, Referenceable, Serializable, java.io.Closeable {
 	/**
-	 * Get the special options used to build the factory.
-	 *
-	 * @return The special options used to build the factory.
-	 */
-	SessionFactoryOptions getSessionFactoryOptions();
-
-	/**
 	 * Obtain a {@linkplain SessionBuilder session builder} for creating
 	 * new {@link Session}s with certain customized options.
 	 *
@@ -410,4 +403,15 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 		return getDefinedFilterNames().contains( name );
 	}
 
+	/**
+	 * Get the {@linkplain SessionFactoryOptions options} used to build this factory.
+	 *
+	 * @return The special options used to build the factory.
+	 *
+	 * @deprecated There is no plan to remove this operation, but its use should be
+	 *             avoided since {@link SessionFactoryOptions} is an SPI type, and so
+	 *             this operation is a layer-breaker.
+	 */
+	@Deprecated(since = "6.2")
+	SessionFactoryOptions getSessionFactoryOptions();
 }

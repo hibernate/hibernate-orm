@@ -11,9 +11,11 @@ import org.hibernate.Incubating;
 import jakarta.persistence.AttributeConverter;
 
 /**
- * AttributeConverter registrations
+ * A registry for JPA {@linkplain AttributeConverter converters}.
  *
  * @author Gavin King
+ * @see AttributeConverter
+ * @since 6.2
  */
 @Incubating
 public interface ConverterRegistry {

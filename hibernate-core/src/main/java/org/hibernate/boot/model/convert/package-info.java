@@ -19,7 +19,7 @@
  * and {@link org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler}.
  * <p>
  * The runtime piece is defined by
- * {@link org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter}.
+ * {@link org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter}.
  * The bridge from boot-time to runtime is defined by
  * {@link org.hibernate.boot.model.convert.spi.ConverterDescriptor#createJpaAttributeConverter}.
  * This process also incorporates integration with

@@ -15,7 +15,7 @@ import java.util.function.IntFunction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -492,6 +492,19 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( targetSide.getModelPart().getJdbcMapping() );
+	}
+
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return targetSide.getModelPart().getJdbcMapping();
+	}
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return targetSide.getModelPart().getJdbcMapping();
 	}
 
 	@Override

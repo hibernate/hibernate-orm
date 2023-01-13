@@ -56,7 +56,7 @@ public class LengthFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
 		final Expression expression = (Expression) sqlAstArguments.get( 0 );
-		final JdbcType jdbcType = expression.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		final JdbcType jdbcType = expression.getExpressionType().getSingleJdbcMapping().getJdbcType();
 		switch ( jdbcType.getDdlTypeCode() ) {
 			case SqlTypes.CLOB:
 			case SqlTypes.NCLOB:

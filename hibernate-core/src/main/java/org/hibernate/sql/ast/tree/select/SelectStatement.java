@@ -85,9 +85,7 @@ public class SelectStatement extends AbstractStatement implements SqlAstNode, Ex
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		if ( selectClause.getSqlSelections().size() == 1 ) {
 			final SqlSelection first = selectClause.getSqlSelections().get( 0 );
-			final JdbcMapping jdbcMapping = first.getExpressionType()
-					.getJdbcMappings()
-					.get( 0 );
+			final JdbcMapping jdbcMapping = first.getExpressionType().getSingleJdbcMapping();
 
 			final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 					this,

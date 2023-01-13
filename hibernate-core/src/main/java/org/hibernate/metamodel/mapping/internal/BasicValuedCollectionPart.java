@@ -13,7 +13,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -284,6 +284,19 @@ public class BasicValuedCollectionPart
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( getJdbcMapping() );
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return getJdbcMapping();
+	}
+
+	@Override
+	public JdbcMapping getSingleJdbcMapping() {
+		return getJdbcMapping();
 	}
 
 	@Override

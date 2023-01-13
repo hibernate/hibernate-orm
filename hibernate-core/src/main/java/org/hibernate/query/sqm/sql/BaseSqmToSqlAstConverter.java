@@ -88,8 +88,8 @@ import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
-import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -412,6 +412,7 @@ import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
+import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
@@ -4023,10 +4024,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 				JdbcMappingContainer durationType = scaledExpression.getExpressionType();
 				Duration duration;
-				if ( durationType.getJdbcMappings()
-						.get( 0 )
-						.getJdbcType()
-						.isInterval() ) {
+				if ( durationType.getSingleJdbcMapping().getJdbcType().isInterval() ) {
 					// For interval types, we need to extract the epoch for integer arithmetic for the 'by unit' operator
 					duration = new Duration(
 							extractEpoch( scaledExpression ),
@@ -4035,9 +4033,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					);
 				}
 				else {
-					// The absolute value of the expression is in seconds
-					// as the fractional seconds are in the fraction part as can be seen in DurationJavaType
-					duration = new Duration( scaledExpression, SECOND, (BasicValuedMapping) durationType );
+					// Durations are stored as nanoseconds (see DurationJavaType)
+					duration = new Duration( scaledExpression, NANOSECOND, (BasicValuedMapping) durationType );
 				}
 
 				TemporalUnit appliedUnit = appliedByUnit.getUnit().getUnit();
@@ -4152,15 +4149,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			assert fkKeyPart instanceof EmbeddableValuedModelPart;
 			final EmbeddableValuedModelPart compositeFkPart = (EmbeddableValuedModelPart) fkKeyPart;
-			final List<JdbcMapping> jdbcMappings = compositeFkPart.getJdbcMappings();
-			final List<Expression> tupleElements = new ArrayList<>( jdbcMappings.size() );
-			compositeFkPart.forEachSelectable( (position, selectable) -> tupleElements.add(
-					getSqlExpressionResolver().resolveSqlExpression(
-							tableReference,
-							selectable
-					)
-			) );
-
+			final int count = compositeFkPart.getJdbcTypeCount();
+			final ArrayList<Expression> tupleElements = new ArrayList<>( count );
+			for ( int i = 0; i < count; i++ ) {
+				tupleElements.add(
+						getSqlExpressionResolver().resolveSqlExpression(
+								tableReference,
+								compositeFkPart.getSelectable( i )
+						)
+				);
+			}
 			return new SqlTuple( tupleElements, compositeFkPart );
 		}
 	}
@@ -4658,7 +4656,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									false,
 									null,
 									null,
-									expression.getExpressionType().getJdbcMappings().get( 0 )
+									expression.getExpressionType().getSingleJdbcMapping()
 							)
 					);
 				}
@@ -4761,10 +4759,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									false,
 									null,
 									null,
-									sqlSelections.get( 0 ).getExpressionType().getJdbcMappings().get( 0 )
+									sqlSelections.get( 0 ).getExpressionType().getSingleJdbcMapping()
 							)
 					),
-					(ReturnableType<?>) sqlSelections.get( 0 ).getExpressionType().getJdbcMappings().get( 0 ),
+					(ReturnableType<?>) sqlSelections.get( 0 ).getExpressionType().getSingleJdbcMapping(),
 					sqlSelections.get( 0 ).getExpressionType()
 			);
 		}
@@ -4797,7 +4795,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( lhs instanceof SqmTreatedPath<?, ?> ) {
 			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) lhs;
 			final Class<?> treatTargetJavaType = treatedPath.getTreatTarget().getJavaType();
-			final Class<?> originalJavaType = treatedPath.getWrappedPath().getJavaType();
+			final SqmPath<?> wrappedPath = treatedPath.getWrappedPath();
+			final Class<?> originalJavaType = wrappedPath.getJavaType();
 			if ( treatTargetJavaType.isAssignableFrom( originalJavaType ) ) {
 				// Treating a node to a super type can be ignored
 				return expression;
@@ -4812,12 +4811,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(
 						treatedPath.getTreatTarget().getHibernateEntityName()
 				);
-				conjunctTreatUsages.computeIfAbsent( treatedPath.getWrappedPath(), p -> new HashSet<>( 1 ) )
+				conjunctTreatUsages.computeIfAbsent( wrappedPath, p -> new HashSet<>( 1 ) )
 								.addAll( entityDescriptor.getSubclassEntityNames() );
 				return expression;
 			}
-			// Note: If the columns that are accessed are not shared with other entities, we could avoid this wrapping
-			return createCaseExpression( treatedPath.getWrappedPath(), treatedPath.getTreatTarget(), expression );
+			if ( wrappedPath instanceof DiscriminatorSqmPath ) {
+				// Note: If the columns that are accessed are not shared with other entities, we could avoid this wrapping
+				return createCaseExpression( wrappedPath, treatedPath.getTreatTarget(), expression );
+			}
+			return expression;
 		}
 		return expression;
 	}
@@ -5182,7 +5184,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			SqmParameter<?> sourceSqmParameter,
 			List<SqmParameter<?>> sqmParameters,
 			MappingModelExpressible<?> valueMapping) {
-		final JdbcMapping jdbcMapping = valueMapping.getJdbcMappings().get( 0 );
+		final JdbcMapping jdbcMapping = valueMapping.getSingleJdbcMapping();
 		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
 			if ( sqmParameter == sourceSqmParameter ) {
 				continue;
@@ -5385,8 +5387,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			// Prefer the model part type instead of the bind type if possible as the model part type contains size information
 			if ( inferredValueMapping instanceof ModelPart ) {
-				final JdbcMapping paramJdbcMapping = paramModelType.getJdbcMappings().get( 0 );
-				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getJdbcMappings().get( 0 );
+				final JdbcMapping paramJdbcMapping = paramModelType.getSingleJdbcMapping();
+				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getSingleJdbcMapping();
 				// If the bind type has a different JDBC type, we prefer that
 				if ( paramJdbcMapping.getJdbcType() == inferredJdbcMapping.getJdbcType() ) {
 					return resolveInferredValueMappingForParameter( inferredValueMapping );
@@ -6223,11 +6225,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			BasicValuedMapping durationType = (BasicValuedMapping) toDuration.getNodeType();
 			Duration duration;
-			if ( scaledMagnitude.getExpressionType()
-					.getJdbcMappings()
-					.get( 0 )
-					.getJdbcType()
-					.isInterval() ) {
+			if ( scaledMagnitude.getExpressionType().getSingleJdbcMapping().getJdbcType().isInterval() ) {
 				duration = new Duration( extractEpoch( scaledMagnitude ), SECOND, durationType );
 			}
 			else {

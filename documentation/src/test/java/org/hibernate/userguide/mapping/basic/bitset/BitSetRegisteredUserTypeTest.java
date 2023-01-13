@@ -61,8 +61,8 @@ public class BitSetRegisteredUserTypeTest extends BaseCoreFunctionalTestCase {
 		});
 
 		doInHibernate(this::sessionFactory, session -> {
-			Product product = (Product) session.getNamedNativeQuery(
-					"find_person_by_bitset")
+			Product product = (Product) session.createNamedQuery(
+					"find_person_by_bitset", Product.class)
 					.setParameter("id", 1L)
 					.getSingleResult();
 

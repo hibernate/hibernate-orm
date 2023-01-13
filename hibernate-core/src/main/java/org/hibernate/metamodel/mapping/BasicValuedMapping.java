@@ -29,5 +29,18 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 		return Collections.singletonList( getJdbcMapping() );
 	}
 
+	@Override
+	default JdbcMapping getJdbcMapping(int index) {
+		if ( index != 0 ) {
+			throw new IndexOutOfBoundsException( index );
+		}
+		return getJdbcMapping();
+	}
+
+	@Override
+	default JdbcMapping getSingleJdbcMapping() {
+		return getJdbcMapping();
+	}
+
 	JdbcMapping getJdbcMapping();
 }

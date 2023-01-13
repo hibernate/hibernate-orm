@@ -79,7 +79,7 @@ public class BasicCollectionMappingTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery("delete EntityOfCollections").executeUpdate()
+				(session) -> session.createMutationQuery("delete EntityOfCollections").executeUpdate()
 		);
 	}
 

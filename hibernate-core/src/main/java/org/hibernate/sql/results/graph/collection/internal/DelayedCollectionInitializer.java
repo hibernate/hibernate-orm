@@ -32,7 +32,7 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 	public void resolveInstance(RowProcessingState rowProcessingState) {
 		if ( parentAccess != null ) {
 			final EntityInitializer parentEntityInitializer = parentAccess.findFirstEntityInitializer();
-			if ( parentEntityInitializer != null && parentEntityInitializer.isInitialized() ) {
+			if ( parentEntityInitializer != null && parentEntityInitializer.isEntityInitialized() ) {
 				return;
 			}
 		}

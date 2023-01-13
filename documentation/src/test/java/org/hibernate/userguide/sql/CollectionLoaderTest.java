@@ -16,11 +16,9 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 
 import org.hibernate.annotations.Loader;
-import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -37,6 +35,7 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.annotations.ResultCheckStyle.COUNT;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -71,9 +70,11 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 			session.doWork(connection -> {
 				try(Statement statement = connection.createStatement();) {
 					statement.executeUpdate(String.format( "ALTER TABLE person %s valid %s",
-														   getDialect().getAddColumnString(), ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
+														   getDialect().getAddColumnString(),
+							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
 					statement.executeUpdate(String.format( "ALTER TABLE Person_phones %s valid %s",
-														   getDialect().getAddColumnString(), ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
+														   getDialect().getAddColumnString(),
+							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
 				}
 			});
 		});
@@ -91,55 +92,42 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 			return person;
 		});
 
-		try {
-
-			doInJPA(this::entityManagerFactory, entityManager -> {
-				Long postId = _person.getId();
-				Person person = entityManager.find(Person.class, postId);
-				assertEquals(2, person.getPhones().size());
-				person.getPhones().remove(0);
-				person.setName("Mr. John Doe");
-			});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Long postId = _person.getId();
+			Person person = entityManager.find(Person.class, postId);
+			assertEquals(2, person.getPhones().size());
+			person.getPhones().remove(0);
+			person.setName("Mr. John Doe");
+		});
 
 
-			doInJPA(this::entityManagerFactory, entityManager -> {
-				Long postId = _person.getId();
-				Person person = entityManager.find(Person.class, postId);
-				assertEquals(1, person.getPhones().size());
-			});
-		}
-		catch (Exception e) {
-			log.error("Throws NullPointerException because the bag is not initialized by the @Loader");
-		}
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Long postId = _person.getId();
+			Person person = entityManager.find(Person.class, postId);
+			assertEquals(1, person.getPhones().size());
+		});
 	}
 
 
 	//tag::sql-custom-crud-example[]
 	@Entity(name = "Person")
-	@SQLInsert(
-		sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) ",
-		check = ResultCheckStyle.COUNT
-	)
-	@SQLUpdate(
-		sql = "UPDATE person SET name = ? where id = ? ")
-	@SQLDelete(
-		sql = "UPDATE person SET valid = false WHERE id = ? ")
+	@SQLInsert(sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) ", check = COUNT)
+	@SQLUpdate(sql = "UPDATE person SET name = ? where id = ? ")
+	@SQLDelete(sql = "UPDATE person SET valid = false WHERE id = ? ")
 	@Loader(namedQuery = "find_valid_person")
-	@NamedNativeQueries({
-		@NamedNativeQuery(
-			name = "find_valid_person",
-			query = "SELECT id, name " +
-					"FROM person " +
-					"WHERE id = ? and valid = true",
-			resultClass = Person.class
-		),
-		@NamedNativeQuery(
-			name = "find_valid_phones",
-			query = "SELECT person_id, phones " +
-					"FROM Person_phones " +
-					"WHERE person_id = ? and valid = true "
-		)
-	})
+	@NamedNativeQuery(
+		name = "find_valid_person",
+		query = "SELECT id, name " +
+				"FROM person " +
+				"WHERE id = ? and valid = true",
+		resultClass = Person.class
+	)
+	@NamedNativeQuery(
+		name = "find_valid_phones",
+		query = "SELECT phones " +
+				"FROM Person_phones " +
+				"WHERE person_id = ? and valid = true "
+	)
 	public static class Person {
 
 		@Id
@@ -149,10 +137,8 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 		private String name;
 
 		@ElementCollection
-		@SQLInsert(
-			sql = "INSERT INTO person_phones (person_id, phones, valid) VALUES (?, ?, true) ")
-		@SQLDeleteAll(
-			sql = "UPDATE person_phones SET valid = false WHERE person_id = ?")
+		@SQLInsert(sql = "INSERT INTO person_phones (person_id, phones, valid) VALUES (?, ?, true) ")
+		@SQLDeleteAll(sql = "UPDATE person_phones SET valid = false WHERE person_id = ?")
 		@Loader(namedQuery = "find_valid_phones")
 		private List<String> phones = new ArrayList<>();
 

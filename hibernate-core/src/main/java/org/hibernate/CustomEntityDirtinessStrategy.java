@@ -19,6 +19,7 @@ import org.hibernate.type.Type;
  * work. This contract allows the application to take over the task of determining if an entity is dirty.
  *
  * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
+ * @see org.hibernate.cfg.Configuration#setCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)
  * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)
  *
  * @author Steve Ebersole

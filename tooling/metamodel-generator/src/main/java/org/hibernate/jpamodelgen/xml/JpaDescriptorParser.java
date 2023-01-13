@@ -47,8 +47,8 @@ public class JpaDescriptorParser {
 	private static final String DEFAULT_ORM_XML_LOCATION = "/META-INF/orm.xml";
 	private static final String SERIALIZATION_FILE_NAME = "Hibernate-Static-Metamodel-Generator.tmp";
 
-	private static final String PERSISTENCE_SCHEMA = "persistence_2_1.xsd";
-	private static final String ORM_SCHEMA = "orm_2_1.xsd";
+	private static final String PERSISTENCE_SCHEMA = "persistence_3_0.xsd";
+	private static final String ORM_SCHEMA = "orm_3_1.xsd";
 
 	private final Context context;
 	private final List<EntityMappings> entityMappings;

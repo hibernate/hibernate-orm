@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
@@ -59,6 +59,11 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 	@Override
 	default List<JdbcMapping> getJdbcMappings() {
 		return getEmbeddableTypeDescriptor().getJdbcMappings();
+	}
+
+	@Override
+	default JdbcMapping getJdbcMapping(int index) {
+		return getEmbeddableTypeDescriptor().getJdbcMapping( index );
 	}
 
 	@Override

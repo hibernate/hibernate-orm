@@ -21,7 +21,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.BasicType;

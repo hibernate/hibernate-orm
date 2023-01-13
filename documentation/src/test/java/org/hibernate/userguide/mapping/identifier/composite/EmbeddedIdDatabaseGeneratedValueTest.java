@@ -37,7 +37,7 @@ public class EmbeddedIdDatabaseGeneratedValueTest {
 			//tag::identifiers-composite-generated-database-example[]
 			OffsetDateTime currentTimestamp = (OffsetDateTime) entityManager
 			.createNativeQuery(
-				"SELECT CURRENT_TIMESTAMP")
+				"SELECT CURRENT_TIMESTAMP", OffsetDateTime.class)
 			.getSingleResult();
 
 			EventId id = new EventId();

@@ -42,6 +42,9 @@ import org.hibernate.Incubating;
  *          for example, "secondary table" rather than "join".
  *
  * @see PhysicalNamingStrategy
+ * @see org.hibernate.cfg.Configuration#setImplicitNamingStrategy(ImplicitNamingStrategy)
+ * @see org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy(ImplicitNamingStrategy)
+ * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
  *
  * @author Steve Ebersole
  */

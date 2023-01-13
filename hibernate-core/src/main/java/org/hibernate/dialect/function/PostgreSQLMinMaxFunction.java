@@ -88,7 +88,7 @@ public class PostgreSQLMinMaxFunction extends AbstractSqmSelfRenderingFunctionDe
 	}
 
 	private String renderArgument(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression arg) {
-		final JdbcMapping sourceMapping = arg.getExpressionType().getJdbcMappings().get( 0 );
+		final JdbcMapping sourceMapping = arg.getExpressionType().getSingleJdbcMapping();
 		// Cast uuid expressions to "text" first, aggregate that, and finally cast to uuid again
 		if ( sourceMapping.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.UUID ) {
 			sqlAppender.appendSql( "cast(" );

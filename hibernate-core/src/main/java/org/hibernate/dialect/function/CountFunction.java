@@ -370,7 +370,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			return true;
 		}
 		else {
-			final JdbcMapping sourceMapping = realArg.getExpressionType().getJdbcMappings().get( 0 );
+			final JdbcMapping sourceMapping = realArg.getExpressionType().getSingleJdbcMapping();
 			// No need to cast if we already have a string
 			if ( sourceMapping.getCastType() == CastType.STRING ) {
 				translator.render( realArg, defaultArgumentRenderingMode );

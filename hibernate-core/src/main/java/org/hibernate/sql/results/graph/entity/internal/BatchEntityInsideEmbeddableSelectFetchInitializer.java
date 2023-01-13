@@ -94,6 +94,11 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 		return objects;
 	}
 
+	@Override
+	public boolean isEntityInitialized() {
+		return false;
+	}
+
 	private static class ParentInfo {
 		private final EntityKey initializerEntityKey;
 		private final Object parentInstance;

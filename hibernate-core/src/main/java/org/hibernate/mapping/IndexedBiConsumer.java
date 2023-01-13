@@ -10,9 +10,13 @@ package org.hibernate.mapping;
  * A consumer like {@link java.util.function.BiConsumer} but also accepts an integer as index.
  *
  * @author Christian Beikov
+ *
+ * @deprecated Use {@link org.hibernate.internal.util.IndexedBiConsumer} instead
  */
+@Deprecated
 @FunctionalInterface
 public interface IndexedBiConsumer<T, U> {
 
 	void accept(int index, T t, U u);
 }
+

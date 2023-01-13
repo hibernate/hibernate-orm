@@ -38,6 +38,7 @@ import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.FilterJoinTables;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -63,6 +64,7 @@ import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
@@ -1292,7 +1294,7 @@ public abstract class CollectionBinder {
 		binder.setUpdatable( updatable );
 		Property prop = binder.makeProperty();
 		//we don't care about the join stuffs because the column is on the association table.
-		if (! declaringClassSet) {
+		if ( !declaringClassSet ) {
 			throw new AssertionFailure( "DeclaringClass is not set in CollectionBinder while binding" );
 		}
 		propertyHolder.addProperty( prop, declaringClass );
@@ -1336,6 +1338,21 @@ public abstract class CollectionBinder {
 					sqlDeleteAll.callable(),
 					fromResultCheckStyle( sqlDeleteAll.check() )
 			);
+		}
+
+		final SQLSelect sqlSelect = property.getAnnotation( SQLSelect.class );
+		if ( sqlSelect != null ) {
+			final String loaderName = collection.getRole() + "$SQLSelect";
+			collection.setLoaderName( loaderName );
+			// TODO: pass in the collection element type here
+			QueryBinder.bindNativeQuery( loaderName, sqlSelect, null, buildingContext );
+		}
+
+		final HQLSelect hqlSelect = property.getAnnotation( HQLSelect.class );
+		if ( hqlSelect != null ) {
+			final String loaderName = collection.getRole() + "$HQLSelect";
+			collection.setLoaderName( loaderName );
+			QueryBinder.bindQuery( loaderName, hqlSelect, buildingContext );
 		}
 
 		final Loader loader = property.getAnnotation( Loader.class );
@@ -2155,12 +2172,20 @@ public abstract class CollectionBinder {
 			CollectionPropertyHolder holder,
 			Class<? extends CompositeUserType<?>> compositeUserType) {
 		//TODO be smart with isNullable
+		final AccessType accessType = accessType( property, collection.getOwner() );
+		// We create a new entity binder here because it is needed for processing the embeddable
+		// Since this is an element collection, there is no real entity binder though,
+		// so we just create an "empty shell" for the purpose of avoiding null checks in the fillEmbeddable() method etc.
+		final EntityBinder entityBinder = new EntityBinder();
+		// Copy over the access type that we resolve for the element collection,
+		// so that nested components use the same access type. This fixes HHH-15966
+		entityBinder.setPropertyAccessType( accessType );
 		final Component component = fillEmbeddable(
 				holder,
 				getSpecialMembers( elementClass ),
-				accessType( property, collection.getOwner() ),
+				accessType,
 				true,
-				new EntityBinder(),
+				entityBinder,
 				false,
 				false,
 				true,

@@ -48,7 +48,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * List&lt;Document&gt; documents;
  * </pre>
  * <p>
- * By default, {@code @Where} restrictions declared for an entity are not
+ * By default, {@code @Where} restrictions declared for an entity are
  * applied when loading a collection of that entity type. This behavior is
  * controlled by:
  * <ol>
@@ -84,7 +84,7 @@ public @interface Where {
 	 * <p>
 	 * By default, the restriction is not applied unless the property
 	 * {@value org.hibernate.cfg.AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS}
-	 * is explicitly enabled.
+	 * is explicitly disabled.
 	 *
 	 * @return {@code true} if the restriction should be applied even
 	 *         if the configuration property is not enabled

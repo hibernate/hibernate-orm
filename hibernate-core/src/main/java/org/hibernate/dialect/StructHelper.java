@@ -78,7 +78,7 @@ public class StructHelper {
 		else {
 			assert attributeMapping.getJdbcTypeCount() == 1;
 			jdbcValueCount = 1;
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMappings().get( 0 );
+			final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
 			final Object jdbcValue = jdbcMapping.getJdbcJavaType().wrap(
 					rawJdbcValue,
 					options
@@ -165,7 +165,7 @@ public class StructHelper {
 		else {
 			assert attributeMapping.getJdbcTypeCount() == 1;
 			jdbcValueCount = 1;
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMappings().get( 0 );
+			final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
 			final JavaType<Object> relationalJavaType;
 			if ( jdbcMapping.getValueConverter() == null ) {
 				//noinspection unchecked

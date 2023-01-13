@@ -375,11 +375,11 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
-		if ( lhsExpressionType == null ) {
+		if ( lhsExpressionType == null || lhsExpressionType.getJdbcTypeCount() != 1 ) {
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 			return;
 		}
-		switch ( lhsExpressionType.getJdbcMappings().get( 0 ).getJdbcType().getDdlTypeCode() ) {
+		switch ( lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) {
 			case SqlTypes.SQLXML:
 				// In Oracle, XMLTYPE is not "comparable", so we have to use the xmldiff function for this purpose
 				switch ( operator ) {

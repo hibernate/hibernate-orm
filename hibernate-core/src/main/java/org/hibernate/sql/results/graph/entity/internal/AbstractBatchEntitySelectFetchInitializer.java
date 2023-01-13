@@ -134,6 +134,11 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	}
 
 	@Override
+	public FetchParentAccess getFetchParentAccess() {
+		return parentAccess;
+	}
+
+	@Override
 	public EntityPersister getConcreteDescriptor() {
 		return concreteDescriptor;
 	}

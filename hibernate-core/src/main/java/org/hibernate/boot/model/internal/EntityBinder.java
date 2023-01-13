@@ -53,6 +53,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.NaturalIdCache;
@@ -69,6 +70,7 @@ import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLInserts;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.annotations.SecondaryRow;
@@ -1275,6 +1277,20 @@ public class EntityBinder {
 					+ persistentClass.getEntityName());
 		}
 
+		final SQLSelect sqlSelect = annotatedClass.getAnnotation( SQLSelect.class );
+		if ( sqlSelect != null ) {
+			final String loaderName = persistentClass.getEntityName() + "$SQLSelect";
+			persistentClass.setLoaderName( loaderName );
+			QueryBinder.bindNativeQuery( loaderName, sqlSelect, annotatedClass, context );
+		}
+
+		final HQLSelect hqlSelect = annotatedClass.getAnnotation( HQLSelect.class );
+		if ( hqlSelect != null ) {
+			final String loaderName = persistentClass.getEntityName() + "$HQLSelect";
+			persistentClass.setLoaderName( loaderName );
+			QueryBinder.bindQuery( loaderName, hqlSelect, context );
+		}
+
 		final Loader loader = annotatedClass.getAnnotation( Loader.class );
 		if ( loader != null ) {
 			persistentClass.setLoaderName( loader.namedQuery() );
@@ -2237,9 +2253,11 @@ public class EntityBinder {
 
 	public AccessType getExplicitAccessType(XAnnotatedElement element) {
 		AccessType accessType = null;
-		final Access access = element.getAnnotation( Access.class );
-		if ( access != null ) {
-			accessType = AccessType.getAccessStrategy( access.value() );
+		if ( element != null ) {
+			final Access access = element.getAnnotation( Access.class );
+			if ( access != null ) {
+				accessType = AccessType.getAccessStrategy( access.value() );
+			}
 		}
 		return accessType;
 	}

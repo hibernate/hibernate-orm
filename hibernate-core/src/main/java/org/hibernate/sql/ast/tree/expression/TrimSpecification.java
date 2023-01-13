@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.sqm.TrimSpec;

@@ -92,7 +92,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	@Override
 	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
 		return selectByNaturalId(
-				naturalIdMapping().normalizeInput( naturalIdValue, session ),
+				naturalIdMapping().normalizeInput( naturalIdValue ),
 				options,
 				(tableGroup, creationState) -> entityDescriptor.createDomainResult(
 						new NavigablePath( entityDescriptor().getRootPathName() ),
@@ -262,7 +262,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	@Override
 	public Object resolveNaturalIdToId(Object naturalIdValue, SharedSessionContractImplementor session) {
 		return selectByNaturalId(
-				naturalIdMapping().normalizeInput( naturalIdValue, session ),
+				naturalIdMapping().normalizeInput( naturalIdValue ),
 				NaturalIdLoadOptions.NONE,
 				(tableGroup, creationState) -> entityDescriptor.getIdentifierMapping().createDomainResult(
 						tableGroup.getNavigablePath().append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),

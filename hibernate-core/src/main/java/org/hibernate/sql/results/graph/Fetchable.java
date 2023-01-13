@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;

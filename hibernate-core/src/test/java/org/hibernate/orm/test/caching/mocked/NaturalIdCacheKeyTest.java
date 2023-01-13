@@ -11,22 +11,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import org.hibernate.annotations.NaturalId;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.NaturalIdCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.junit.Test;
-
-import jakarta.persistence.Basic;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
@@ -53,7 +46,7 @@ public class NaturalIdCacheKeyTest {
         when( entityPersister.getRootEntityName() ).thenReturn( "EntityName" );
         when( entityPersister.getNaturalIdMapping() ).thenReturn( naturalIdMapping );
         when( naturalIdMapping.disassemble( any(), eq( sessionImplementor ) ) ).thenAnswer( invocation -> invocation.getArguments()[0] );
-        when( naturalIdMapping.calculateHashCode( any(), eq( sessionImplementor ) ) ).thenAnswer( invocation -> invocation.getArguments()[0].hashCode() );
+        when( naturalIdMapping.calculateHashCode( any() ) ).thenAnswer( invocation -> invocation.getArguments()[0].hashCode() );
 
 
         final NaturalIdCacheKey key = (NaturalIdCacheKey) DefaultCacheKeysFactory.staticCreateNaturalIdKey( new Object[] {"a", "b", "c"}, entityPersister, sessionImplementor );

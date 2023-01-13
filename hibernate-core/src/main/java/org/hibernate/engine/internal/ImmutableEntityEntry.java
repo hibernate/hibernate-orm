@@ -18,9 +18,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
+import static org.hibernate.engine.internal.AbstractEntityEntry.EnumState.LOCK_MODE;
+
 /**
- * An EntityEntry implementation for immutable entities.  Note that this implementation is not completely
- * immutable in terms of its internal state; the term immutable here refers to the entity it describes.
+ * An {@link EntityEntry} implementation for immutable entities.
+ *
+ * @implNote Note that this implementation is not completely immutable in terms of its internal state;
+ *           the term immutable here refers to the entity it describes.
  *
  * @author Gavin King
  * @author Emmanuel Bernard
@@ -82,13 +86,11 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 	public void setLockMode(LockMode lockMode) {
 		switch ( lockMode ) {
 			case NONE:
-			case READ: {
-				setCompressedValue( EnumState.LOCK_MODE, lockMode );
+			case READ:
+				setCompressedValue( LOCK_MODE, lockMode );
 				break;
-			}
-			default: {
+			default:
 				throw new UnsupportedLockAttemptException( "Lock mode not supported" );
-			}
 		}
 	}
 

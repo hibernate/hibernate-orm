@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.internal.util.IndexedConsumer;
 
 /**
  * Container for one-or-more JdbcMappings
@@ -29,6 +29,16 @@ public interface JdbcMappingContainer {
 		final List<JdbcMapping> results = new ArrayList<>();
 		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
 		return results;
+	}
+
+	default JdbcMapping getJdbcMapping(int index) {
+		return getJdbcMappings().get( index );
+	}
+
+	default JdbcMapping getSingleJdbcMapping() {
+		final List<JdbcMapping> jdbcMappings = getJdbcMappings();
+		assert jdbcMappings.size() == 1;
+		return jdbcMappings.get( 0 );
 	}
 
 	/**

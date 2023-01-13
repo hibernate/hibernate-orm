@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
@@ -31,7 +32,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
 				),
-				(EntityDomainType<S>) wrappedPath.getReferencedPathSource(),
+				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
 				wrappedPath.getLhs(),
 				nodeBuilder
 		);
@@ -48,7 +49,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
 				),
-				(EntityDomainType<S>) wrappedPath.getReferencedPathSource(),
+				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
 				wrappedPath.getLhs(),
 				nodeBuilder
 		);
@@ -93,6 +94,12 @@ public class SqmTreatedSimplePath<T, S extends T>
 	@Override
 	public <S1 extends S> SqmTreatedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) throws PathException {
 		return super.treatAs( treatJavaType );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public SqmPath<?> get(String attributeName) {
+		return resolvePath( attributeName, treatTarget.getSubPathSource( attributeName ) );
 	}
 
 	@Override

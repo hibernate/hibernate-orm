@@ -304,6 +304,7 @@ WITH				: [wW] [iI] [tT] [hH];
 WITHIN				: [wW] [iI] [tT] [hH] [iI] [nN];
 WITHOUT				: [wW] [iI] [tT] [hH] [oO] [uU] [tT];
 YEAR				: [yY] [eE] [aA] [rR];
+ZONED				: [zZ] [oO] [nN] [eE] [dD];
 
 // case-insensitive true, false and null recognition (split vote :)
 TRUE 	: [tT] [rR] [uU] [eE];

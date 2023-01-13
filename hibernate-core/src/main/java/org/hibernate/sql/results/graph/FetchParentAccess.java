@@ -41,4 +41,8 @@ public interface FetchParentAccess extends Initializer {
 	 * @apiNote If already resolved, the callback is triggered immediately
 	 */
 	void registerResolutionListener(Consumer<Object> resolvedParentConsumer);
+
+	default FetchParentAccess getFetchParentAccess(){
+		return null;
+	}
 }

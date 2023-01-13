@@ -336,12 +336,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// check to see if the natural id is mutable/immutable
 		if ( persister.getEntityMetamodel().hasImmutableNaturalId() ) {
 			// an immutable natural-id is not retrieved during a normal database-snapshot operation...
-			final Object dbValue = persister.getNaturalIdentifierSnapshot( id, session );
-
-			naturalIdResolutions.cacheResolutionFromLoad(
-					id, dbValue, persister
-			);
-			return dbValue;
+			final Object naturalIdFromDb = persister.getNaturalIdentifierSnapshot( id, session );
+			naturalIdResolutions.cacheResolutionFromLoad( id, naturalIdFromDb, persister );
+			return naturalIdFromDb;
 		}
 		else {
 			// for a mutable natural id there is a likelihood that the information will already be
@@ -356,9 +353,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			for ( int i = 0; i < props.length; i++ ) {
 				naturalIdSnapshotSubSet[i] = entitySnapshot[ props[i] ];
 			}
-			naturalIdResolutions.cacheResolutionFromLoad(
-					id, naturalIdSnapshotSubSet, persister
-			);
+			naturalIdResolutions.cacheResolutionFromLoad( id, naturalIdSnapshotSubSet, persister );
 			return naturalIdSnapshotSubSet;
 		}
 	}

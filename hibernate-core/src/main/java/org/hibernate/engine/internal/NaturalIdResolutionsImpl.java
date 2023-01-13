@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Resolution;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdLogging;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -421,12 +420,8 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		}
 		final EntityPersister persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 
-		final Object naturalIdValuesFromCurrentObjectState = naturalIdMapping.extractNaturalIdFromEntity( entity, session() );
-		final boolean changed = ! sameAsCached(
-				persister,
-				pk,
-				naturalIdValuesFromCurrentObjectState
-		);
+		final Object naturalIdValuesFromCurrentObjectState = naturalIdMapping.extractNaturalIdFromEntity( entity );
+		final boolean changed = !sameAsCached( persister, pk, naturalIdValuesFromCurrentObjectState );
 
 		if ( changed ) {
 			final Object cachedNaturalIdValues = findCachedNaturalIdById( pk, persister );
@@ -494,7 +489,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			throw new IllegalArgumentException( "Entity did not define a natural-id" );
 		}
 
-		naturalIdMapping.validateInternalForm( naturalIdValues, persistenceContext.getSession() );
+		naturalIdMapping.validateInternalForm( naturalIdValues );
 	}
 
 	private boolean isValidValue(Object naturalIdValues, EntityMappingType entityDescriptor) {
@@ -504,7 +499,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			throw new IllegalArgumentException( "Entity did not define a natural-id" );
 		}
 
-		naturalIdMapping.validateInternalForm( naturalIdValues, persistenceContext.getSession() );
+		naturalIdMapping.validateInternalForm( naturalIdValues );
 
 		// validateInternalForm would have thrown an exception if not
 		return true;
@@ -775,7 +770,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			final int prime = 31;
 			int hashCodeCalculation = 1;
 			hashCodeCalculation = prime * hashCodeCalculation + entityDescriptor.hashCode();
-			hashCodeCalculation = prime * hashCodeCalculation + entityDescriptor.getNaturalIdMapping().calculateHashCode( naturalIdValue, persistenceContext.getSession() );
+			hashCodeCalculation = prime * hashCodeCalculation + entityDescriptor.getNaturalIdMapping().calculateHashCode( naturalIdValue );
 
 			this.hashCode = hashCodeCalculation;
 		}

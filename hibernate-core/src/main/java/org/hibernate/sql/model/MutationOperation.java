@@ -8,7 +8,7 @@ package org.hibernate.sql.model;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.engine.jdbc.mutation.group.UnknownParameterException;
+import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 /**
@@ -76,24 +76,5 @@ public interface MutationOperation {
 	 */
 	TableMapping getTableDetails();
 
-	/**
-	 * Find the JDBC parameter to be used for the specified column.
-	 *
-	 * @return The descriptor, or null if none match.
-	 *
-	 * @see #getJdbcValueDescriptor
-	 */
-	JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage);
-
-	/**
-	 * Form of {@link #findValueDescriptor}, throwing an exception if not found as opposed
-	 * to simply returning null
-	 */
-	default JdbcValueDescriptor getJdbcValueDescriptor(String columnName, ParameterUsage usage) {
-		final JdbcValueDescriptor parameterDescriptor = findValueDescriptor( columnName, usage );
-		if ( parameterDescriptor == null ) {
-			throw new UnknownParameterException( getMutationType(), getMutationTarget(), getTableDetails().getTableName(), columnName, usage );
-		}
-		return parameterDescriptor;
-	}
+	boolean bindValues(BindingGroup bindingGroup, String columnName, ParameterUsage usage, Object value);
 }

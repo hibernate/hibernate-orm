@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -53,12 +54,9 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 			String columnName,
 			ParameterUsage usage,
 			SharedSessionContractImplementor session) {
-		final JdbcValueDescriptor jdbcValueDescriptor = jdbcValueDescriptorAccess.resolveValueDescriptor( tableName, columnName, usage );
-		if ( jdbcValueDescriptor == null ) {
+		if ( !jdbcValueDescriptorAccess.bindValues( resolveBindingGroup( tableName ),tableName, columnName, usage, value ) ) {
 			throw new UnknownParameterException( mutationType, mutationTarget, tableName, columnName, usage );
 		}
-
-		resolveBindingGroup( tableName ).bindValue( columnName, value, jdbcValueDescriptor );
 	}
 
 	private BindingGroup resolveBindingGroup(String tableName) {
@@ -122,7 +120,8 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 	 * Access to {@link JdbcValueDescriptor} values
 	 */
 	@FunctionalInterface
-	public interface JdbcValueDescriptorAccess {
-		JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage);
+	public interface JdbcValueDescriptorAccess {//todo: call it binder
+
+		boolean bindValues(BindingGroup bindingGroup, String tableName, String columnName, ParameterUsage usage, Object value);
 	}
 }

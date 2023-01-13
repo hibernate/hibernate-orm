@@ -16,6 +16,7 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
+import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Expectation;
@@ -118,62 +119,79 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		return new JdbcValueBindingsImpl(
 				MutationType.INSERT,
 				null,
-				(tableName, columnName, usage) -> {
-					assert tableName.equals( SANDBOX_TBL );
+				new JdbcValueBindingsImpl.JdbcValueDescriptorAccess() {
 
-					if ( columnName.equals( "ID" ) ) {
-						return new JdbcValueDescriptor() {
-							@Override
-							public String getColumnName() {
-								return "ID";
-							}
+					@Override
+					public boolean bindValues(BindingGroup bindingGroup, String tableName, String columnName, ParameterUsage usage, Object value) {
+						final JdbcValueDescriptor jdbcValueDescriptor = resolveValueDescriptor( tableName, columnName, usage );
+						if ( jdbcValueDescriptor == null ) {
+							return false;
+						}
 
-							@Override
-							public ParameterUsage getUsage() {
-								return ParameterUsage.SET;
-							}
-
-							@Override
-							public int getJdbcPosition() {
-								return 1;
-							}
-
-							@Override
-							public JdbcMapping getJdbcMapping() {
-								return session.getTypeConfiguration()
-										.getBasicTypeRegistry()
-										.resolve( StandardBasicTypes.INTEGER );
-							}
-						};
+						bindingGroup.bindValue( columnName, value, jdbcValueDescriptor );
+						return true;
 					}
 
-					if ( columnName.equals( "NAME" ) ) {
-						return new JdbcValueDescriptor() {
-							@Override
-							public String getColumnName() {
-								return "NAME";
-							}
+					public JdbcValueDescriptor resolveValueDescriptor(
+							String tableName,
+							String columnName,
+							ParameterUsage usage) {
+						assert tableName.equals( SANDBOX_TBL );
 
-							@Override
-							public ParameterUsage getUsage() {
-								return ParameterUsage.SET;
-							}
+						if ( columnName.equals( "ID" ) ) {
+							return new JdbcValueDescriptor() {
+								@Override
+								public String getColumnName() {
+									return "ID";
+								}
 
-							@Override
-							public int getJdbcPosition() {
-								return 2;
-							}
+								@Override
+								public ParameterUsage getUsage() {
+									return ParameterUsage.SET;
+								}
 
-							@Override
-							public JdbcMapping getJdbcMapping() {
-								return session.getTypeConfiguration()
-										.getBasicTypeRegistry()
-										.resolve( StandardBasicTypes.STRING );
-							}
-						};
+								@Override
+								public int getJdbcPosition() {
+									return 1;
+								}
+
+								@Override
+								public JdbcMapping getJdbcMapping() {
+									return session.getTypeConfiguration()
+											.getBasicTypeRegistry()
+											.resolve( StandardBasicTypes.INTEGER );
+								}
+							};
+						}
+
+						if ( columnName.equals( "NAME" ) ) {
+							return new JdbcValueDescriptor() {
+								@Override
+								public String getColumnName() {
+									return "NAME";
+								}
+
+								@Override
+								public ParameterUsage getUsage() {
+									return ParameterUsage.SET;
+								}
+
+								@Override
+								public int getJdbcPosition() {
+									return 2;
+								}
+
+								@Override
+								public JdbcMapping getJdbcMapping() {
+									return session.getTypeConfiguration()
+											.getBasicTypeRegistry()
+											.resolve( StandardBasicTypes.STRING );
+								}
+							};
+						}
+
+						throw new IllegalArgumentException( "Unknown column : " + columnName );
 					}
-
-					throw new IllegalArgumentException( "Unknown column : " + columnName );
 				}
 		);
 	}

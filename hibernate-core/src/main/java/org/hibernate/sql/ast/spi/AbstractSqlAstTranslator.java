@@ -7980,10 +7980,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
-		sqlBuffer.append( columnWriteFragment.getFragment() );
-		for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
-			parameterBinders.add( parameter.getParameterBinder() );
-			jdbcParameters.addParameter( parameter );
+		final SqlAstNodeRenderingMode parameterRenderingMode = getParameterRenderingMode();
+		if ( parameterRenderingMode != SqlAstNodeRenderingMode.DEFAULT && columnWriteFragment.getFragment().equals( "?" ) ) {
+			if ( parameterRenderingMode == SqlAstNodeRenderingMode.INLINE_PARAMETERS || parameterRenderingMode == SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
+				renderExpressionAsLiteral( columnWriteFragment, getJdbcParameterBindings() );
+			}
+			else {
+				renderCasted( columnWriteFragment );
+			}
+		}
+		else {
+			sqlBuffer.append( columnWriteFragment.getFragment() );
+			for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
+				parameterBinders.add( parameter.getParameterBinder() );
+				jdbcParameters.addParameter( parameter );
+			}
 		}
 	}
 }

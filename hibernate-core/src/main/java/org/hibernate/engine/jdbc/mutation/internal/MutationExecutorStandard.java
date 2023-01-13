@@ -21,6 +21,7 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
+import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -35,7 +36,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
  *
  * @author Steve Ebersole
  */
-public class MutationExecutorStandard extends AbstractMutationExecutor {
+public class MutationExecutorStandard extends AbstractMutationExecutor implements JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
 	private final MutationOperationGroup mutationOperationGroup;
 
 	/**
@@ -152,7 +153,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 		this.valueBindings = new JdbcValueBindingsImpl(
 				mutationOperationGroup.getMutationType(),
 				mutationOperationGroup.getMutationTarget(),
-				this::findJdbcValueDescriptor
+				this
 		);
 	}
 
@@ -161,8 +162,9 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 		return valueBindings;
 	}
 
-	private JdbcValueDescriptor findJdbcValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
-		return mutationOperationGroup.getOperation( tableName ).findValueDescriptor( columnName, usage );
+	@Override
+	public boolean bindValues(BindingGroup bindingGroup, String tableName, String columnName, ParameterUsage usage, Object value) {
+		return mutationOperationGroup.getOperation( tableName ).bindValues( bindingGroup, columnName, usage, value );
 	}
 
 	@Override

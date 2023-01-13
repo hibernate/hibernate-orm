@@ -111,15 +111,17 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	@Override
-	public JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage) {
+	public boolean bindValues(BindingGroup bindingGroup, String columnName, ParameterUsage usage, Object value) {
+		boolean found = false;
 		for ( int i = 0; i < jdbcValueDescriptors.size(); i++ ) {
 			final JdbcValueDescriptor descriptor = jdbcValueDescriptors.get( i );
 			if ( descriptor.getColumnName().equals( columnName )
 					&& descriptor.getUsage() == usage ) {
-				return descriptor;
+				found = true;
+				bindingGroup.bindValue( columnName, value, descriptor );
 			}
 		}
-		return null;
+		return found;
 	}
 
 	@Override

@@ -17,8 +17,6 @@ import org.hibernate.sql.model.MutationType;
 /**
  * Indicates an attempt to access the parameter for an unknown column
  *
- * @see org.hibernate.sql.model.MutationOperation#getJdbcValueDescriptor(String, ParameterUsage)
- *
  * @author Steve Ebersole
  */
 public class UnknownParameterException extends HibernateException {

@@ -6,10 +6,13 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
+import java.util.Locale;
+
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 import org.hibernate.sql.model.ValuesAnalysis;
@@ -18,7 +21,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecutor {
+public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecutor implements JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
 	private final SelfExecutingUpdateOperation operation;
 	private final JdbcValueBindingsImpl valueBindings;
 
@@ -28,12 +31,15 @@ public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecuto
 		this.valueBindings = new JdbcValueBindingsImpl(
 				operation.getMutationType(),
 				operation.getMutationTarget(),
-				this::findJdbcValueDescriptor
+				this
 		);
 	}
 
-	private JdbcValueDescriptor findJdbcValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
-		return operation.findValueDescriptor( columnName, usage );
+	@Override
+	public boolean bindValues(BindingGroup bindingGroup, String tableName, String columnName, ParameterUsage usage, Object value) {
+		assert operation.getTableDetails().getTableName().equals( tableName )
+				: String.format( Locale.ROOT, "table names did not match : `%s` & `%s`", tableName, operation.getTableDetails().getTableName()  );
+		return operation.bindValues( bindingGroup, columnName, usage, value );
 	}
 
 	@Override

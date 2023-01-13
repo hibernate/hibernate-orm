@@ -3288,7 +3288,30 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitDateTimeLiteral(HqlParser.DateTimeLiteralContext ctx) {
-		return ctx.getChild( 1 ).accept( this );
+		return ctx.getChild( 0 ).accept( this );
+	}
+
+	@Override
+	public Object visitLocalDateTimeLiteral(HqlParser.LocalDateTimeLiteralContext ctx) {
+		return ctx.localDateTime().accept( this );
+	}
+
+	@Override
+	public Object visitZonedDateTimeLiteral(HqlParser.ZonedDateTimeLiteralContext ctx) {
+		return ctx.zonedDateTime().accept( this );
+	}
+
+	@Override
+	public Object visitOffsetDateTimeLiteral(HqlParser.OffsetDateTimeLiteralContext ctx) {
+		if ( ctx.offsetDateTime() != null ) {
+			return ctx.offsetDateTime().accept(this);
+		}
+		else if ( ctx.offsetDateTimeWithMinutes() != null ) {
+			return ctx.offsetDateTimeWithMinutes().accept(this);
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -3336,42 +3359,48 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitDateTime(HqlParser.DateTimeContext ctx) {
-		final ParseTree parseTree = ctx.getChild( 2 );
-		if ( parseTree instanceof HqlParser.ZoneIdContext || parseTree == null ) {
-			return dateTimeLiteralFrom(
-					(HqlParser.DateContext) ctx.getChild( 0 ),
-					(HqlParser.TimeContext) ctx.getChild( 1 ),
-					(HqlParser.ZoneIdContext) parseTree
-			);
-		}
-		else {
-			return offsetDatetimeLiteralFrom(
-					(HqlParser.DateContext) ctx.getChild( 0 ),
-					(HqlParser.TimeContext) ctx.getChild( 1 ),
-					(HqlParser.OffsetContext) parseTree
-			);
-		}
+		return ctx.getChild( 0 ).accept( this );
 	}
 
-	private SqmLiteral<?> dateTimeLiteralFrom(
+	@Override
+	public Object visitLocalDateTime(HqlParser.LocalDateTimeContext ctx) {
+		return localDateTimeLiteralFrom( ctx.date(), ctx.time() );
+	}
+
+	@Override
+	public Object visitOffsetDateTime(HqlParser.OffsetDateTimeContext ctx) {
+		return offsetDatetimeLiteralFrom( ctx.date(), ctx.time(), ctx.offset() );
+	}
+
+	@Override
+	public Object visitOffsetDateTimeWithMinutes(HqlParser.OffsetDateTimeWithMinutesContext ctx) {
+		return offsetDatetimeLiteralFrom( ctx.date(), ctx.time(), ctx.offsetWithMinutes() );
+	}
+
+	@Override
+	public Object visitZonedDateTime(HqlParser.ZonedDateTimeContext ctx) {
+		return zonedDateTimeLiteralFrom( ctx.date(), ctx.time(), ctx.zoneId() );
+	}
+
+	private SqmLiteral<?> localDateTimeLiteralFrom(
+			HqlParser.DateContext date,
+			HqlParser.TimeContext time) {
+		return new SqmLiteral<>(
+				LocalDateTime.of( localDate( date ), localTime( time ) ),
+				resolveExpressibleTypeBasic( LocalDateTime.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmLiteral<?> zonedDateTimeLiteralFrom(
 			HqlParser.DateContext date,
 			HqlParser.TimeContext time,
 			HqlParser.ZoneIdContext timezone) {
-		if ( timezone == null ) {
-			return new SqmLiteral<>(
-					LocalDateTime.of( localDate( date ), localTime( time ) ),
-					resolveExpressibleTypeBasic( LocalDateTime.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		else {
-			final ZoneId zoneId = visitZoneId( timezone );
-			return new SqmLiteral<>(
-					ZonedDateTime.of( localDate( date ), localTime( time ), zoneId ),
-					resolveExpressibleTypeBasic( ZonedDateTime.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
+		return new SqmLiteral<>(
+				ZonedDateTime.of( localDate( date ), localTime( time ), visitZoneId( timezone ) ),
+				resolveExpressibleTypeBasic( ZonedDateTime.class ),
+				creationContext.getNodeBuilder()
+		);
 	}
 
 	@Override
@@ -3404,6 +3433,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
+	private SqmLiteral<?> offsetDatetimeLiteralFrom(
+			HqlParser.DateContext date,
+			HqlParser.TimeContext time,
+			HqlParser.OffsetWithMinutesContext offset) {
+		return new SqmLiteral<>(
+				OffsetDateTime.of( localDate( date ), localTime( time ), zoneOffset( offset ) ),
+				resolveExpressibleTypeBasic( OffsetDateTime.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
 	@Override
 	public Object visitDate(HqlParser.DateContext ctx) {
 		return new SqmLiteral<>(
@@ -3423,10 +3463,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private static LocalTime localTime(HqlParser.TimeContext ctx) {
-		final int hour = Integer.parseInt( ctx.getChild( 0 ).getText() );
-		final int minute = Integer.parseInt( ctx.getChild( 2 ).getText() );
-		if ( ctx.getChildCount() == 5 ) {
-			final String secondText = ctx.getChild( 4 ).getText();
+		final int hour = Integer.parseInt( ctx.hour().getText() );
+		final int minute = Integer.parseInt( ctx.minute().getText() );
+		if ( ctx.second() != null ) {
+			final String secondText = ctx.second().getText();
 			final int index = secondText.indexOf( '.');
 			if ( index < 0 ) {
 				return LocalTime.of(
@@ -3451,67 +3491,35 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private static LocalDate localDate(HqlParser.DateContext ctx) {
 		return LocalDate.of(
-				Integer.parseInt( ctx.getChild( 0 ).getText() ),
-				Integer.parseInt( ctx.getChild( 2 ).getText() ),
-				Integer.parseInt( ctx.getChild( 4 ).getText() )
+				Integer.parseInt( ctx.year().getText() ),
+				Integer.parseInt( ctx.month().getText() ),
+				Integer.parseInt( ctx.day().getText() )
 		);
 	}
 
 	private static ZoneOffset zoneOffset(HqlParser.OffsetContext offset) {
 		final int factor = ( (TerminalNode) offset.getChild( 0 ) ).getSymbol().getType() == PLUS ? 1 : -1;
-		final int hour = factor * Integer.parseInt( offset.getChild( 1 ).getText() );
+		final int hour = factor * Integer.parseInt( offset.hour().getText() );
 		if ( offset.getChildCount() == 2 ) {
 			return ZoneOffset.ofHours( hour );
 		}
 		return ZoneOffset.ofHoursMinutes(
 				hour,
-				factor * Integer.parseInt( offset.getChild( 3 ).getText() )
+				factor * Integer.parseInt( offset.minute().getText() )
 		);
 	}
 
-//	private SqmLiteral<OffsetDateTime> offsetDatetimeLiteralFrom(String literalText) {
-//		TemporalAccessor parsed = OFFSET_DATE_TIME.parse( literalText );
-//		return new SqmLiteral<>(
-//				OffsetDateTime.from( parsed ),
-//				resolveExpressibleTypeBasic( OffsetDateTime.class ),
-//				creationContext.getNodeBuilder()
-//		);
-//	}
-//
-//	private SqmLiteral<?> dateTimeLiteralFrom(String literalText) {
-//		//TO DO: return an OffsetDateTime when appropriate?
-//		TemporalAccessor parsed = DATE_TIME.parse( literalText );
-//		try {
-//			return new SqmLiteral<>(
-//					ZonedDateTime.from( parsed ),
-//					resolveExpressibleTypeBasic( ZonedDateTime.class ),
-//					creationContext.getNodeBuilder()
-//			);
-//		}
-//		catch (DateTimeException dte) {
-//			return new SqmLiteral<>(
-//					LocalDateTime.from( parsed ),
-//					resolveExpressibleTypeBasic( LocalDateTime.class ),
-//					creationContext.getNodeBuilder()
-//			);
-//		}
-//	}
-//
-//	private SqmLiteral<LocalDate> localDateLiteralFrom(String literalText) {
-//		return new SqmLiteral<>(
-//				LocalDate.from( ISO_LOCAL_DATE.parse( literalText ) ),
-//				resolveExpressibleTypeBasic( LocalDate.class ),
-//				creationContext.getNodeBuilder()
-//		);
-//	}
-//
-//	private SqmLiteral<LocalTime> localTimeLiteralFrom(String literalText) {
-//		return new SqmLiteral<>(
-//				LocalTime.from( ISO_LOCAL_TIME.parse( literalText ) ),
-//				resolveExpressibleTypeBasic( LocalTime.class ),
-//				creationContext.getNodeBuilder()
-//		);
-//	}
+	private static ZoneOffset zoneOffset(HqlParser.OffsetWithMinutesContext offset) {
+		final int factor = ( (TerminalNode) offset.getChild( 0 ) ).getSymbol().getType() == PLUS ? 1 : -1;
+		final int hour = factor * Integer.parseInt( offset.hour().getText() );
+		if ( offset.getChildCount() == 2 ) {
+			return ZoneOffset.ofHours( hour );
+		}
+		return ZoneOffset.ofHoursMinutes(
+				hour,
+				factor * Integer.parseInt( offset.minute().getText() )
+		);
+	}
 
 	private SqmLiteral<?> sqlTimestampLiteralFrom(String literalText) {
 		final TemporalAccessor parsed = DATE_TIME.parse( literalText.subSequence( 1, literalText.length() - 1 ) );

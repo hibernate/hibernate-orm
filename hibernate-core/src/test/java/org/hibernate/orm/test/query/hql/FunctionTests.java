@@ -1289,13 +1289,25 @@ public class FunctionTests {
 							session.createQuery("select e.theDuration + 2 day from EntityOfBasics e")
 									.getSingleResult() );
 					assertEquals( Duration.of(2, ChronoUnit.DAYS),
-							session.createQuery("select 2 day from EntityOfBasics e")
+							session.createQuery("select 2 day")
 									.getSingleResult() );
 					assertEquals( Duration.of(5, ChronoUnit.SECONDS),
-							session.createQuery("select 5 second from EntityOfBasics e")
+							session.createQuery("select 5 second")
 									.getSingleResult() );
 					assertEquals( Duration.of(5, ChronoUnit.SECONDS).plus(Duration.of(2, ChronoUnit.DAYS)),
-							session.createQuery("select 5 second + 2 day from EntityOfBasics e")
+							session.createQuery("select 5 second + 2 day")
+									.getSingleResult() );
+					assertEquals( Duration.of(30, ChronoUnit.SECONDS),
+							session.createQuery("select 3*(10 second)")
+									.getSingleResult() );
+					assertEquals( Duration.of(14, ChronoUnit.DAYS),
+							session.createQuery("select 2*(7 day)")
+									.getSingleResult() );
+					assertEquals( Duration.of(15, ChronoUnit.SECONDS).plus(Duration.of(6, ChronoUnit.DAYS)),
+							session.createQuery("select 3*(5 second + 2 day)")
+									.getSingleResult() );
+					assertEquals( Duration.of(6, ChronoUnit.SECONDS).plus( Duration.of(46,ChronoUnit.MILLIS) ),
+							session.createQuery("select 2 * e.theDuration from EntityOfBasics e")
 									.getSingleResult() );
 				}
 		);
@@ -1339,6 +1351,33 @@ public class FunctionTests {
 									.getSingleResult() );
 					assertEquals( LocalDateTime.of(1974,3,25,5,30,25),
 							session.createQuery("select datetime 1974-03-23 5:30:46 - 21 second + 2 day")
+									.getSingleResult() );
+					assertEquals( Duration.of(5, ChronoUnit.DAYS),
+							session.createQuery("select date 1974-03-25 - date 1974-03-20")
+									.getSingleResult() );
+					assertEquals( 5L,
+							session.createQuery("select (date 1974-03-25 - date 1974-03-20) by day")
+									.getSingleResult() );
+					assertEquals( 5*24*60L,
+							session.createQuery("select (date 1974-03-25 - date 1974-03-20) by minute")
+									.getSingleResult() );
+					assertEquals( Duration.of(25, ChronoUnit.SECONDS),
+							session.createQuery("select (datetime 1974-03-23 5:30:25 - datetime 1974-03-23 5:30:00)")
+									.getSingleResult() );
+					assertEquals( 25L,
+							session.createQuery("select (datetime 1974-03-23 5:30:25 - datetime 1974-03-23 5:30:00) by second")
+									.getSingleResult() );
+					assertEquals( 25L*1000000000,
+							session.createQuery("select (datetime 1974-03-23 5:30:25 - datetime 1974-03-23 5:30:00) by nanosecond")
+									.getSingleResult() );
+					assertEquals( Duration.of(10, ChronoUnit.MINUTES),
+							session.createQuery("select (datetime 1974-03-23 5:30:25 - datetime 1974-03-23 5:20:25)")
+									.getSingleResult() );
+					assertEquals( 10L,
+							session.createQuery("select (datetime 1974-03-23 5:30:25 - datetime 1974-03-23 5:20:25) by minute")
+									.getSingleResult() );
+					assertEquals( 10L*60,
+							session.createQuery("select (datetime 1974-03-23 5:30:25 - datetime 1974-03-23 5:20:25) by second")
 									.getSingleResult() );
 					// timestampadd() might not work for time on at least some dbs:
 //					assertEquals( LocalTime.of(5,30,25),

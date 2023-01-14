@@ -239,6 +239,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
@@ -4621,7 +4622,22 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @return the precision, specified as a quantity of
 	 *         nanoseconds
+	 *
 	 * @see TemporalUnit#NATIVE
+	 *
+	 * @implNote Getting this right is very important. It
+	 *           would be great if all platforms supported
+	 *           datetime arithmetic with nanosecond
+	 *           precision, since that is how we represent
+	 *           {@link Duration}. But they don't, and we
+	 *           don't want to fill up the SQL expression
+	 *           with many conversions to/from nanoseconds.
+	 *           (Not to mention the problems with numeric
+	 *           overflow that this sometimes causes.) So
+	 *           we need to pick the right value here,
+	 *           and implement {@link #timestampaddPattern}
+	 *           and {@link #timestampdiffPattern} consistent
+	 *           with our choice.
 	 */
 	public long getFractionalSecondPrecisionInNanos() {
 		return 1; //default to nanoseconds for now
@@ -5068,7 +5084,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				break;
 			case TIME:
 				appender.appendSql( JDBC_ESCAPE_START_TIME );
-				appendAsTime( appender, date );
+				appendAsLocalTime( appender, date );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			case TIMESTAMP:
@@ -5098,7 +5114,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				break;
 			case TIME:
 				appender.appendSql( JDBC_ESCAPE_START_TIME );
-				appendAsTime( appender, calendar );
+				appendAsLocalTime( appender, calendar );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			case TIMESTAMP:

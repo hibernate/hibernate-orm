@@ -902,7 +902,7 @@ offsetDateTimeLiteral
  */
 dateLiteral
 	: LEFT_BRACE date RIGHT_BRACE
-	| DATE date
+	| LOCAL? DATE date
 	;
 
 /**
@@ -910,7 +910,7 @@ dateLiteral
  */
 timeLiteral
 	: LEFT_BRACE time RIGHT_BRACE
-	| TIME time
+	| LOCAL? TIME time
 	;
 
 /**

@@ -48,6 +48,7 @@ public final class DateTimeUtils {
 	public static final String FORMAT_STRING_TIMESTAMP_WITH_MICROS_AND_OFFSET = FORMAT_STRING_TIMESTAMP_WITH_MICROS + "XXX";
 	public static final String FORMAT_STRING_TIMESTAMP_WITH_NANOS_AND_OFFSET = FORMAT_STRING_TIMESTAMP_WITH_NANOS + "XXX";
 	public static final String FORMAT_STRING_TIMESTAMP_WITH_MICROS_AND_OFFSET_NOZ = FORMAT_STRING_TIMESTAMP_WITH_MICROS + "xxx";
+	public static final String FORMAT_STRING_TIMESTAMP_WITH_NANOS_AND_OFFSET_NOZ = FORMAT_STRING_TIMESTAMP_WITH_NANOS + "xxx";
 
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_DATE = DateTimeFormatter.ofPattern( FORMAT_STRING_DATE, Locale.ENGLISH );
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIME_WITH_OFFSET = DateTimeFormatter.ofPattern( FORMAT_STRING_TIME_WITH_OFFSET, Locale.ENGLISH );
@@ -78,6 +79,10 @@ public final class DateTimeUtils {
 	);
 	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS_AND_OFFSET = DateTimeFormatter.ofPattern(
 			FORMAT_STRING_TIMESTAMP_WITH_NANOS_AND_OFFSET,
+			Locale.ENGLISH
+	);
+	public static final DateTimeFormatter DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS_AND_OFFSET_NOZ = DateTimeFormatter.ofPattern(
+			FORMAT_STRING_TIMESTAMP_WITH_NANOS_AND_OFFSET_NOZ,
 			Locale.ENGLISH
 	);
 
@@ -142,6 +147,24 @@ public final class DateTimeUtils {
 				jdbcTimeZone,
 				DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS,
 				DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS_AND_OFFSET
+		);
+	}
+
+	public static void appendAsTimestampWithNanos(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			boolean supportsOffset,
+			TimeZone jdbcTimeZone,
+			boolean allowZforZeroOffset) {
+		appendAsTimestamp(
+				appender,
+				temporalAccessor,
+				supportsOffset,
+				jdbcTimeZone,
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS,
+				allowZforZeroOffset
+						? DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS_AND_OFFSET
+						: DATE_TIME_FORMATTER_TIMESTAMP_WITH_NANOS_AND_OFFSET_NOZ
 		);
 	}
 

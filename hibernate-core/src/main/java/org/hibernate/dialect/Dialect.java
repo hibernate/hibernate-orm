@@ -239,6 +239,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
@@ -5083,7 +5084,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				break;
 			case TIME:
 				appender.appendSql( JDBC_ESCAPE_START_TIME );
-				appendAsTime( appender, date );
+				appendAsLocalTime( appender, date );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			case TIMESTAMP:
@@ -5113,7 +5114,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				break;
 			case TIME:
 				appender.appendSql( JDBC_ESCAPE_START_TIME );
-				appendAsTime( appender, calendar );
+				appendAsLocalTime( appender, calendar );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			case TIMESTAMP:

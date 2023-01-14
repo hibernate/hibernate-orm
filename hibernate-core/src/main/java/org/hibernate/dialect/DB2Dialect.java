@@ -11,7 +11,11 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
@@ -94,6 +98,10 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
  * A {@linkplain Dialect SQL dialect} for DB2 for LUW (Linux, Unix, and Windows) version 10.5 and above.
@@ -524,6 +532,83 @@ public class DB2Dialect extends Dialect {
 				pattern.append("?2) ?1s");
 		}
 		return pattern.toString();
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				appender.appendSql( "time '" );
+				appendAsLocalTime( appender, temporalAccessor );
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp '" );
+				appendAsTimestampWithNanos( appender, temporalAccessor, false, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, date );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				appender.appendSql( "time '" );
+				appendAsLocalTime( appender, date );
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp '" );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				appender.appendSql( "time '" );
+				appendAsLocalTime( appender, calendar );
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp '" );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override

@@ -867,8 +867,8 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('1911-10-09 12:13:14.123' as Timestamp)").getSingleResult(), instanceOf(Timestamp.class) );
 
 					assertThat( session.createQuery("select cast(date 1911-10-09 as String)").getSingleResult(), is("1911-10-09") );
-					assertThat( session.createQuery("select cast(time 12:13:14 as String)").getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000") ) );
-					assertThat( (String) session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)").getSingleResult(), startsWith("1911-10-09 12:13:14") );
+					assertThat( session.createQuery("select cast(time 12:13:14 as String)").getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000"), is("12.13.14") ) );
+					assertThat( (String) session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)").getSingleResult(), anyOf( startsWith("1911-10-09 12:13:14"), startsWith("1911-10-09-12.13.14") ) );
 
 					assertThat( session.createQuery("select cast(1 as NumericBoolean)").getSingleResult(), is(true) );
 					assertThat( session.createQuery("select cast(0 as NumericBoolean)").getSingleResult(), is(false) );
@@ -939,7 +939,7 @@ public class FunctionTests {
 							.list();
 					assertThat( session.createQuery("select str(69)").getSingleResult(), is("69") );
 					assertThat( session.createQuery("select str(date 1911-10-09)").getSingleResult(), is("1911-10-09") );
-					assertThat( session.createQuery("select str(time 12:13:14)").getSingleResult(), anyOf( is( "12:13:14"), is( "12:13:14.0000") ) );
+					assertThat( session.createQuery("select str(time 12:13:14)").getSingleResult(), anyOf( is( "12:13:14"), is( "12:13:14.0000"), is( "12.13.14") ) );
 				}
 		);
 	}
@@ -1336,7 +1336,7 @@ public class FunctionTests {
 		);
 	}
 
-	@Test @SkipForDialect(dialectClass = DB2Dialect.class)
+	@Test
 	public void testDurationArithmeticWithLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

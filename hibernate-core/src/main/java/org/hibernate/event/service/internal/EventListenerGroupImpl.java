@@ -7,9 +7,9 @@
 package org.hibernate.event.service.internal;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -30,6 +30,9 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+
 /**
  * Standard EventListenerGroup implementation
  *
@@ -46,8 +49,12 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private final CallbackRegistry callbackRegistry;
 	private final boolean isJpaBootstrap;
 
-	private Set<DuplicationStrategy> duplicationStrategies = DEFAULT_DUPLICATION_STRATEGIES;
-	private T[] listeners = null;
+	//TODO at least the list of listeners should be made constant;
+	//unfortunately a number of external integrations rely on being able to make
+	//changes to listeners at runtime, so this will require some planning.
+	private volatile Set<DuplicationStrategy> duplicationStrategies = DEFAULT_DUPLICATION_STRATEGIES;
+	private volatile T[] listeners = null;
+	private volatile List<T> listenersAsList = emptyList();
 
 	public EventListenerGroupImpl(
 			EventType<T> eventType,
@@ -77,13 +84,26 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	@Override
 	public void clear() {
 		//Odd semantics: we're expected (for backwards compatibility) to also clear the default DuplicationStrategy.
-		duplicationStrategies = new LinkedHashSet<>();;
-		listeners = null;
+		duplicationStrategies = new LinkedHashSet<>();
+		setListeners( null );
+	}
+
+	// For efficiency reasons we use both a representation as List and as array;
+	// ensure consistency between the two fields by delegating any mutation to both
+	// fields to this method.
+	private synchronized void setListeners(T[] newListeners) {
+		this.listeners = newListeners;
+		if ( newListeners == null || newListeners.length == 0 ) {
+			this.listenersAsList = emptyList();
+		}
+		else {
+			this.listenersAsList = asList( newListeners );
+		}
 	}
 
 	@Override
 	public void clearListeners() {
-		listeners = null;
+		setListeners( null );
 	}
 
 	@Override
@@ -192,27 +212,27 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private void internalAppend(T listener) {
 		prepareListener( listener );
+		final T[] listenersRead = this.listeners;
+		final T[] listenersWrite;
 
-		if ( listeners == null ) {
+		if ( listenersRead == null ) {
 			//noinspection unchecked
-			this.listeners = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
-			this.listeners[0] = listener;
+			listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
+			listenersWrite[0] = listener;
 		}
 		else {
-			final int size = this.listeners.length;
+			final int size = listenersRead.length;
 
 			//noinspection unchecked
-			final T[] newCopy = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
+			listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
 
 			// first copy the existing listeners
-			System.arraycopy( this.listeners, 0, newCopy, 0, size );
+			System.arraycopy( listenersRead, 0, listenersWrite, 0, size );
 
 			// and then put the new one after them
-			newCopy[size] = listener;
-
-			this.listeners = newCopy;
+			listenersWrite[size] = listener;
 		}
-
+		setListeners( listenersWrite );
 	}
 
 	@Override
@@ -231,35 +251,38 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private void internalPrepend(T listener) {
 		prepareListener( listener );
+		final T[] listenersRead = this.listeners;
+		final T[] listenersWrite;
 
-		if ( this.listeners == null ) {
+		if ( listenersRead == null ) {
 			//noinspection unchecked
-			this.listeners = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
-			this.listeners[0] = listener;
+			listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), 1 );
+			listenersWrite[0] = listener;
 		}
 		else {
-			final int size = this.listeners.length;
+			final int size = listenersRead.length;
 
 			//noinspection unchecked
-			final T[] newCopy = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
+			listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), size+1 );
 
 			// put the new one first
-			newCopy[0] = listener;
+			listenersWrite[0] = listener;
 
 			// and copy the rest after it
-			System.arraycopy( this.listeners, 0, newCopy, 1, size );
-
-			this.listeners = newCopy;
+			System.arraycopy( listenersRead, 0, listenersWrite, 1, size );
 		}
+		setListeners( listenersWrite );
 	}
 
 	private void handleListenerAddition(T listener, Consumer<T> additionHandler) {
-		if ( listeners == null ) {
+		final T[] listenersRead = this.listeners;
+		if ( listenersRead == null ) {
 			additionHandler.accept( listener );
 			return;
 		}
+		final T[] listenersWrite = (T[]) Array.newInstance( eventType.baseListenerInterface(), listenersRead.length );
+		System.arraycopy( listenersRead, 0, listenersWrite, 0, listenersRead.length );
 
-		final T[] localListenersRef = this.listeners;
 		final boolean debugEnabled = log.isDebugEnabled();
 
 		for ( DuplicationStrategy strategy : duplicationStrategies ) {
@@ -269,8 +292,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 			//		strategy's action.  Control it returned immediately after applying the action
 			//		on match - meaning no further strategies are checked...
 
-			for ( int i = 0; i < localListenersRef.length; i++ ) {
-				final T existingListener = localListenersRef[i];
+			for ( int i = 0; i < listenersRead.length; i++ ) {
+				final T existingListener = listenersRead[i];
 				if ( debugEnabled ) {
 					log.debugf(
 							"Checking incoming listener [`%s`] for match against existing listener [`%s`]",
@@ -300,12 +323,13 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 							}
 							prepareListener( listener );
 
-							listeners[i] = listener;
+							listenersWrite[i] = listener;
 						}
 					}
 
-					// we've found a match - we should return
-					//		- the match action has already been applied at this point
+					// we've found a match - we should return: the match action has already been applied at this point
+					// apply all pending changes:
+					setListeners( listenersWrite );
 					return;
 				}
 			}
@@ -340,7 +364,6 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		}
 	}
 
-
 	/**
 	 * Implementation note: should be final for performance reasons.
 	 * @deprecated this is not the most efficient way for iterating the event listeners.
@@ -349,12 +372,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	@Override
 	@Deprecated
 	public final Iterable<T> listeners() {
-		if ( listeners == null ) {
-			//noinspection unchecked
-			return Collections.EMPTY_LIST;
-		}
-
-		return Arrays.asList( listeners );
+		return this.listenersAsList;
 	}
 
 	private static Set<DuplicationStrategy> makeDefaultDuplicationStrategy() {

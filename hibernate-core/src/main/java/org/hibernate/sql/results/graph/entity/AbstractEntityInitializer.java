@@ -974,12 +974,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					.setId( entityKey.getIdentifier() )
 					.setPersister( concreteDescriptor );
 
-			final EventListenerGroup<PreLoadEventListener> listenerGroup = session.getFactory()
+			session.getFactory()
 					.getFastSessionServices()
-					.eventListenerGroup_PRE_LOAD;
-			for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
-				listener.onPreLoad( preLoadEvent );
-			}
+					.eventListenerGroup_PRE_LOAD
+					.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 		}
 	}
 

@@ -144,13 +144,11 @@ public class StandardCacheEntryImpl implements CacheEntry {
 				.setId( id )
 				.setPersister( persister );
 
-		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
+		session
 				.getFactory()
 				.getFastSessionServices()
-				.eventListenerGroup_PRE_LOAD;
-		for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
-			listener.onPreLoad( preLoadEvent );
-		}
+				.eventListenerGroup_PRE_LOAD
+				.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 
 		persister.setPropertyValues( instance, state );
 

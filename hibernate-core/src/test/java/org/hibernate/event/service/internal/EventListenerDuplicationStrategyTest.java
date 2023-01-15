@@ -33,13 +33,13 @@ public class EventListenerDuplicationStrategyTest {
 	public void testListenersIterator() {
 		listenerGroup.addDuplicationStrategy( ReplaceOriginalStrategy.INSTANCE );
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( OriginalListener.class );
 
 		tracker.reset();
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( ExpectedListener.class );
 	}
@@ -79,7 +79,7 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly(
 				OriginalListener.class,
@@ -122,7 +122,7 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( ExpectedListener.class, ExtraListener.class );
 	}
@@ -155,7 +155,7 @@ public class EventListenerDuplicationStrategyTest {
 		listenerGroup.appendListener( new OriginalListener( tracker ) );
 		listenerGroup.appendListener( new ExpectedListener( tracker ) );
 		listenerGroup.appendListener( new ExtraListener( tracker ) );
-		listenerGroup.listeners().forEach( listener -> listener.onClear( event ) );
+		listenerGroup.fireEventOnEachListener( event, ClearEventListener::onClear );
 
 		assertThat( tracker.callers ).containsExactly( OriginalListener.class, ExtraListener.class );
 	}

@@ -203,21 +203,50 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		final Map.Entry<Object,EntityEntry>[] entityEntries = persistenceContext.reentrantSafeEntityEntries();
 		final int count = entityEntries.length;
 
+		FlushEntityEvent entityEvent = null; //allow reuse of the event as it's heavily allocated in certain use cases
+		int eventGenerationId = 0; //Used to double-check the instance reuse won't cause problems
+
 		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
 
 			EntityEntry entry = me.getValue();
 			Status status = entry.getStatus();
 
+
 			if ( status != Status.LOADING && status != Status.GONE ) {
-				final FlushEntityEvent entityEvent = new FlushEntityEvent( source, me.getKey(), entry );
+				entityEvent = createOrReuseEventInstance( entityEvent, source, me.getKey(), entry );
+
+				entityEvent.setInstanceGenerationId( ++eventGenerationId );
+
 				flushListeners.fireEventOnEachListener( entityEvent, FlushEntityEventListener::onFlushEntity );
+				entityEvent.setAllowedToReuse( true );
+				assert entityEvent.getInstanceGenerationId() == eventGenerationId;
 			}
 		}
 
 		source.getActionQueue().sortActions();
 
 		return count;
+	}
+
+	/**
+	 * Reuses a FlushEntityEvent for a new purpose, if possible;
+	 * if not possible a new actual instance is returned.
+	 */
+	private FlushEntityEvent createOrReuseEventInstance(
+			FlushEntityEvent possiblyValidExistingInstance,
+			EventSource source,
+			Object key,
+			EntityEntry entry) {
+		FlushEntityEvent entityEvent = possiblyValidExistingInstance;
+		if ( entityEvent == null || (! entityEvent.isAllowedToReuse() ) ) {
+			//need to create a new instance
+			entityEvent = new FlushEntityEvent( source, key, entry );
+		}
+		else {
+			entityEvent.resetAndReuseEventInstance( key, entry );
+		}
+		return entityEvent;
 	}
 
 	/**

@@ -1737,14 +1737,28 @@ public interface AvailableSettings {
 	String HBM2DDL_LOAD_SCRIPT_SOURCE = "javax.persistence.sql-load-script-source";
 
 	/**
-	 * Reference to the {@link  org.hibernate.tool.schema.spi.SqlScriptCommandExtractor} implementation
-	 * class to use for parsing source/import files as defined by {@link #HBM2DDL_CREATE_SCRIPT_SOURCE},
-	 * {@link #HBM2DDL_DROP_SCRIPT_SOURCE} or {@link #HBM2DDL_IMPORT_FILES}.
+	 * The {@link org.hibernate.tool.schema.spi.SqlScriptCommandExtractor} implementation
+	 * to use for parsing source/import files specified by {@link #HBM2DDL_CREATE_SCRIPT_SOURCE},
+	 * {@link #HBM2DDL_DROP_SCRIPT_SOURCE} or {@link #HBM2DDL_IMPORT_FILES}. Either:
+	 * <ul>
+	 * <li>an instance of {@link org.hibernate.tool.schema.spi.SqlScriptCommandExtractor},
+	 * <li>a {@link Class} object representing a class that implements {@code SqlScriptCommandExtractor},
+	 *     or
+	 * <li>the name of a class that implements {@code SqlScriptCommandExtractor}.
+	 * </ul>
 	 * <p>
-	 * Reference may refer to an instance, a {@link Class} object representing a class that implements
-	 * {@code ImportSqlCommandExtractor}, or the name of a class that implements {@code ImportSqlCommandExtractor}.
+	 * The correct extractor to use depends on the format of the SQL script:
+	 * <ul>
+	 * <li>if the script has one complete SQL statement per line, use
+	 *     {@link org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor}, or
+	 * <li>if a script contains statements spread over multiple lines, use
+	 *     {@link org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor}.
+	 * </ul>
 	 * <p>
-	 * The default value is {@link org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor}.
+	 * The default value is {@code org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor}.
+	 *
+	 * @see org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor
+	 * @see org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor
 	 */
 	String HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR = "hibernate.hbm2ddl.import_files_sql_extractor";
 

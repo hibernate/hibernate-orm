@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
@@ -28,12 +29,19 @@ public interface FunctionContributions {
 	SqmFunctionRegistry getFunctionRegistry();
 
 	/**
-	 * Access to type information
+	 * Access to type information.
 	 */
 	TypeConfiguration getTypeConfiguration();
 
 	/**
-	 * Access to {@linkplain Service services}
+	 * Access to {@linkplain Service services}.
 	 */
 	ServiceRegistry getServiceRegistry();
+
+	/**
+	 * The {@linkplain Dialect SQL Dialect}.
+	 */
+	default Dialect getDialect() {
+		return getTypeConfiguration().getCurrentBaseSqlTypeIndicators().getDialect();
+	}
 }

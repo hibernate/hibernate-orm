@@ -9,6 +9,7 @@ package org.hibernate.internal.util.collections;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -123,6 +124,20 @@ public final class StandardStack<T> implements Stack<T> {
 			}
 		}
 
+		return null;
+	}
+
+	@Override
+	public <X,Y> X findCurrentFirstWithParameter(Y parameter, BiFunction<T, Y, X> biFunction) {
+		if ( internalStack == null ) {
+			return null;
+		}
+		for ( T t : internalStack ) {
+			final X result = biFunction.apply( t, parameter );
+			if ( result != null ) {
+				return result;
+			}
+		}
 		return null;
 	}
 

@@ -310,6 +310,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private JdbcParameter limitParameter;
 	private ForUpdateClause forUpdate;
 
+	private static Clause matchWithClause(Clause clause) {
+		if ( clause == Clause.WITH ) {
+			return Clause.WITH;
+		}
+		return null;
+	}
+
 	public Dialect getDialect() {
 		return dialect;
 	}
@@ -470,14 +477,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	public MutationStatement getCurrentDmlStatement() {
-		return statementStack.findCurrentFirst(
-				stmt -> {
-					if ( stmt instanceof MutationStatement && !( stmt instanceof InsertSelectStatement ) ) {
-						return (MutationStatement) stmt;
-					}
-					return null;
-				}
-		);
+		return statementStack.findCurrentFirst( AbstractSqlAstTranslator::matchMutationStatementNoInsertSelect );
+	}
+
+	private static MutationStatement matchMutationStatementNoInsertSelect(Statement stmt) {
+		if ( stmt instanceof MutationStatement && !( stmt instanceof InsertSelectStatement ) ) {
+			return (MutationStatement) stmt;
+		}
+		return null;
 	}
 
 	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
@@ -688,16 +695,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected boolean inOverOrWithinGroupClause() {
-		return clauseStack.findCurrentFirst(
-				clause -> {
-					switch ( clause ) {
-						case OVER:
-						case WITHIN_GROUP:
-							return true;
-					}
-					return null;
-				}
-		) != null;
+		return clauseStack.findCurrentFirst( AbstractSqlAstTranslator::matchOverOrWithinGroupClauses ) != null;
+	}
+
+	private static Boolean matchOverOrWithinGroupClauses(final Clause clause) {
+		switch ( clause ) {
+			case OVER:
+			case WITHIN_GROUP:
+				return Boolean.TRUE;
+			default:
+				return null;
+		}
 	}
 
 	protected Stack<Clause> getClauseStack() {
@@ -722,15 +730,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return currentCteStatement;
 	}
 
-	protected CteStatement getCteStatement(String cteName) {
-		return statementStack.findCurrentFirst(
-				stmt -> {
-					if ( stmt instanceof CteContainer ) {
-						return ( (CteContainer) stmt ).getCteStatement( cteName );
-					}
-					return null;
-				}
-		);
+	protected CteStatement getCteStatement(final String cteName) {
+		return statementStack.findCurrentFirstWithParameter( cteName, AbstractSqlAstTranslator::matchCteStatement );
+	}
+
+	private static CteStatement matchCteStatement(final Statement stmt, final String cteName) {
+		if ( stmt instanceof CteContainer ) {
+			final CteContainer cteContainer = (CteContainer) stmt;
+			return cteContainer.getCteStatement( cteName );
+		}
+		return null;
+	}
+
+	private static CteContainer matchCteContainerByStatement(final Statement stmt, final String cteName) {
+		if ( stmt instanceof CteContainer ) {
+			final CteContainer cteContainer = (CteContainer) stmt;
+			if ( cteContainer.getCteStatement( cteName ) != null ) {
+				return cteContainer;
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -1508,14 +1527,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			pushToTopLevel = !supportsNestedWithClause()
 					|| !supportsWithClauseInSubquery() && isInSubquery();
 		}
-		final boolean inNestedWithClause = clauseStack.findCurrentFirst(
-				clause -> {
-					if ( clause == Clause.WITH ) {
-						return Clause.WITH;
-					}
-					return null;
-				}
-		) != null;
+		final boolean inNestedWithClause = clauseStack.findCurrentFirst( AbstractSqlAstTranslator::matchWithClause ) != null;
 		clauseStack.push( Clause.WITH );
 		if ( !pushToTopLevel ) {
 			appendSql( "with " );
@@ -1796,17 +1808,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			if ( !supportsWithClauseInSubquery() && isInSubquery() ) {
 				final String cteName = tableGroup.getPrimaryTableReference().getTableId();
-				final CteContainer cteOwner = statementStack.findCurrentFirst(
-						stmt -> {
-							if ( stmt instanceof CteContainer ) {
-								final CteContainer cteContainer = (CteContainer) stmt;
-								if ( cteContainer.getCteStatement( cteName ) != null ) {
-									return cteContainer;
-								}
-							}
-							return null;
-						}
-				);
+				final CteContainer cteOwner = statementStack.findCurrentFirstWithParameter( cteName, AbstractSqlAstTranslator::matchCteContainerByStatement );
 				// If the CTE is owned by the root statement, it will be rendered as CTE, so we can refer to it
 				return cteOwner != statementStack.getRoot() && !cteOwner.getCteStatement( cteName ).isRecursive();
 			}

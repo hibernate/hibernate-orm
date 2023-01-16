@@ -404,13 +404,14 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			PropertyData inferredData) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 		column.setImplicit( true );
-		column.setNullable( false ); //I break the spec, but it's for good
+
 //		column.setPropertyHolder( propertyHolder );
 //		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 //		column.setJoins( secondaryTables );
 //		column.setContext( context );
 		column.setParent( parent );
 		column.bind();
+		column.setNullable( false ); //I break the spec, but it's for good
 		return column;
 	}
 
@@ -425,11 +426,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 //		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 //		column.setJoins( secondaryTables );
 //		column.setContext( context );
-		column.setNullable( false ); //I break the spec, but it's for good
 		//done after the annotation to override it
 		column.setParent( parent );
 		column.applyJoinAnnotation( joinColumn, inferredData.getPropertyName() );
 		column.bind();
+		column.setNullable( false ); //I break the spec, but it's for good
 		return column;
 	}
 

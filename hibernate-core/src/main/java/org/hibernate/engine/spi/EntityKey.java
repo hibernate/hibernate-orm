@@ -97,7 +97,8 @@ public final class EntityKey implements Serializable {
 	}
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
-		return persister.getIdentifierType().isEqual( otherKey.identifier, this.identifier, persister.getFactory() );
+		return this.identifier == otherKey.identifier ||
+			persister.getIdentifierType().isEqual( otherKey.identifier, this.identifier, persister.getFactory() );
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {

@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
@@ -42,6 +43,9 @@ public final class CollectionKey implements Serializable {
 			Type keyType,
 			SessionFactoryImplementor factory) {
 		this.role = role;
+		if ( key == null ) {
+			throw new AssertionFailure( "null identifier for collection of role (" + role + ")" );
+		}
 		this.key = key;
 		this.keyType = keyType;
 		this.factory = factory;
@@ -73,17 +77,18 @@ public final class CollectionKey implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(final Object other) {
 		if ( this == other ) {
 			return true;
 		}
-		if ( other == null || getClass() != other.getClass() ) {
+		if ( other == null || CollectionKey.class != other.getClass() ) {
 			return false;
 		}
 
 		final CollectionKey that = (CollectionKey) other;
 		return that.role.equals( role )
-				&& keyType.isEqual( that.key, key, factory );
+				&& ( this.key == that.key ||
+					keyType.isEqual( this.key, that.key, factory ) );
 	}
 
 	@Override

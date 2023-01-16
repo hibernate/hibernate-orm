@@ -165,7 +165,8 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean isEqual(Object one, Object another) {
-		return javaType.areEqual( (T) one, (T) another );
+		return ( one == another ) //optimisation to attempt avoid the need for the method on javaType:
+				|| javaType.areEqual( (T) one, (T) another );
 	}
 
 	@Override

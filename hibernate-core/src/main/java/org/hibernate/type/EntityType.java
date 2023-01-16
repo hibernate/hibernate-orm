@@ -363,6 +363,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		if ( x == null || y == null ) {
 			return x == y;
 		}
+		if ( x == y ) {
+			return true;
+		}
 
 		final EntityPersister persister = getAssociatedEntityPersister( factory );
 		final Class<?> mappedClass = persister.getMappedClass();
@@ -396,8 +399,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			}
 		}
 
-		return persister.getIdentifierType()
-				.isEqual( xid, yid, factory );
+		// Check for reference equality first as the type-specific checks by IdentifierType are sometimes non-trivial
+		return ( xid == yid ) || persister.getIdentifierType().isEqual( xid, yid, factory );
 	}
 
 	/**

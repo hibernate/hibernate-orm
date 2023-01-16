@@ -82,6 +82,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 					+ " entry (don't flush the Session after an exception occurs)" );
 		}
 
+		//Small optimisation: always try to avoid getIdentifierType().isEqual(..) when possible.
+		//(However it's not safe to invoke the equals() method as it might trigger side-effects)
+		if ( id == oid ) {
+			//No further checks necessary:
+			return;
+		}
+
 		if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
 			throw new HibernateException( "identifier of an instance of " + persister.getEntityName()
 					+ " was altered from " + oid + " to " + id );

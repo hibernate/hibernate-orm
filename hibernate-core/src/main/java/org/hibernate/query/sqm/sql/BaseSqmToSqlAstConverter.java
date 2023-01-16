@@ -573,6 +573,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.getJpaCriteriaParamResolutions();
 	}
 
+	private static Boolean stackMatchHelper(SqlAstProcessingState processingState, SqlAstProcessingState c) {
+		if ( !( processingState instanceof SqlAstQueryPartProcessingState ) ) {
+			return Boolean.FALSE;
+		}
+		if ( processingState == c ) {
+			return null;
+		}
+		final QueryPart part = ( (SqlAstQueryPartProcessingState) processingState ).getInflightQueryPart();
+		if ( part instanceof QueryGroup ) {
+			if ( ( (QueryGroup) part ).getQueryParts().isEmpty() ) {
+				return null;
+			}
+		}
+		return Boolean.FALSE;
+	}
+
+	private static Boolean matchSqlAstWithQueryPart(SqlAstProcessingState state, QueryPart cteQueryPartLocal) {
+		if ( state instanceof SqlAstQueryPartProcessingState ) {
+			if ( ( (SqlAstQueryPartProcessingState) state ).getInflightQueryPart() == cteQueryPartLocal ) {
+				return Boolean.TRUE;
+			}
+		}
+		return null;
+	}
+
 	public Map<SqmParameter<?>, MappingModelExpressible<?>> getSqmParameterMappingModelExpressibleResolutions() {
 		return sqmParameterMappingModelTypes;
 	}
@@ -2226,23 +2251,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Since we only want to create domain results for the first/left-most query spec within query groups,
 			// we have to check if the current query spec is the left-most.
 			// This is the case when all upper level in-flight query groups are still empty
-			collectDomainResults = needsDomainResults && processingStateStack.findCurrentFirst(
-					processingState -> {
-						if ( !( processingState instanceof SqlAstQueryPartProcessingState ) ) {
-							return Boolean.FALSE;
-						}
-						if ( processingState == current ) {
-							return null;
-						}
-						final QueryPart part = ( (SqlAstQueryPartProcessingState) processingState ).getInflightQueryPart();
-						if ( part instanceof QueryGroup ) {
-							if ( ( (QueryGroup) part ).getQueryParts().isEmpty() ) {
-								return null;
-							}
-						}
-						return Boolean.FALSE;
-					}
-			) == null;
+			collectDomainResults = needsDomainResults && processingStateStack.findCurrentFirstWithParameter( current, BaseSqmToSqlAstConverter::stackMatchHelper ) == null;
 		}
 		// this `currentSqlSelectionCollector().next()` is meant solely for resolving
 		// literal reference to a selection-item in the order-by or group-by clause.
@@ -2825,16 +2834,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		final QueryPart cteQueryPart = ( (SelectStatement) cteStatement.getCteDefinition() ).getQueryPart();
 		// If the query part of the CTE is one which we are currently processing, then this is a recursive CTE
-		if ( cteQueryPart instanceof QueryGroup && Boolean.TRUE == processingStateStack.findCurrentFirst(
-				state -> {
-					if ( state instanceof SqlAstQueryPartProcessingState ) {
-						if ( ( (SqlAstQueryPartProcessingState) state ).getInflightQueryPart() == cteQueryPart ) {
-							return Boolean.TRUE;
-						}
-					}
-					return null;
-				}
-		) ) {
+		if ( cteQueryPart instanceof QueryGroup && Boolean.TRUE == processingStateStack.findCurrentFirstWithParameter( cteQueryPart, BaseSqmToSqlAstConverter::matchSqlAstWithQueryPart ) ) {
 			cteStatement.setRecursive();
 		}
 		final AnonymousTupleTableGroupProducer tableGroupProducer = cteStatement.getCteTable().getTableGroupProducer();

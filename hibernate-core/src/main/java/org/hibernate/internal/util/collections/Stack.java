@@ -6,8 +6,11 @@
  */
 package org.hibernate.internal.util.collections;
 
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import org.hibernate.Incubating;
 
 /**
  * Stack implementation exposing useful methods for Hibernate needs.
@@ -62,4 +65,21 @@ public interface Stack<T> {
 	 * returned from `action` stops the iteration and is returned from here
 	 */
 	<X> X findCurrentFirst(Function<T, X> action);
+
+	/**
+	 * Runs a function on each couple defined as {Y,T} in which Y
+	 * is fixed, and T is each instance of this stack.
+	 * Not all Ts might be presented as the iteration is interrupted as
+	 * soon as the first non-null value is returned by the (bi)function,
+	 * which is then returned from this function.
+	 * @param parameter a parameter to be passed to the (bi)funtion
+	 * @param biFunction a (bi)function taking as input parameter Y and each of the T
+	 * from the current stack, and return type of X.
+	 * @return the first non-null result by the function, or null if no matches.
+	 * @param <X> the return type of the function
+	 * @param <Y> the type of the fixed parameter
+	 */
+	@Incubating
+	<X,Y> X findCurrentFirstWithParameter(Y parameter, BiFunction<T, Y, X> biFunction);
+
 }

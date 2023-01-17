@@ -8,8 +8,11 @@ package org.hibernate.orm.test.jpa.ql;
 
 import java.util.List;
 
+import org.hibernate.dialect.H2Dialect;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -38,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 })
 @SessionFactory
 @JiraKey("HHH-16023")
+@RequiresDialect(H2Dialect.class)
 public class NamedNativeQueryWithGenericsTest {
 	@Test
 	public void testNamedNativeQuery(SessionFactoryScope scope) {

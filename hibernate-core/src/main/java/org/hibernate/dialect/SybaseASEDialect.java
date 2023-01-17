@@ -261,39 +261,44 @@ public class SybaseASEDialect extends SybaseDialect {
 		return "current_bigdatetime()";
 	}
 
+	/**
+	 * Sybase ASE in principle supports microsecond
+	 * precision for {code bigdatetime}, but
+	 * unfortunately its duration arithmetic
+	 * functions have a nasty habit of overflowing.
+	 * So to give ourselves a little extra headroom,
+	 * we will use {@code millisecond} as the native
+	 * unit of precision.
+	 */
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		return 1_000_000;
+	}
+
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		//TODO!!
 		switch ( unit ) {
 			case NANOSECOND:
+				return "dateadd(ms,?2/1000000,?3)";
+//				return "dateadd(mcs,?2/1000,?3)";
 			case NATIVE:
-				// If the driver or database do not support bigdatetime and bigtime types,
-				// we try to operate on milliseconds instead
-				if ( jtdsDriver ) {
-					return "dateadd(millisecond,?2/1000000,?3)";
-				}
-				else {
-					return "dateadd(mcs,?2/1000,?3)";
-				}
+				return "dateadd(ms,?2,?3)";
+//				return "dateadd(mcs,?2,?3)";
 			default:
 				return "dateadd(?1,?2,?3)";
 		}
 	}
 
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
-		// If the database does not support bigdatetime and bigtime types,
-		// we try to operate on milliseconds instead
-		return 1_000;
-	}
-
-	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		//TODO!!
 		switch ( unit ) {
 			case NANOSECOND:
+				return "(cast(datediff(ms,?2,?3) as numeric(21))*1000000)";
+//				return "(cast(datediff(mcs,?2,?3) as numeric(21))*1000)";
+//				}
 			case NATIVE:
-				return "cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
+				return "cast(datediff(ms,?2,?3) as numeric(21))";
+//				return "cast(datediff(mcs,cast(?2 as bigdatetime),cast(?3 as bigdatetime)) as numeric(21))";
 			default:
 				return "datediff(?1,?2,?3)";
 		}

@@ -723,7 +723,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	/**
 	 * SQL server supports up to 7 decimal digits of
-	 * fractional second precision in a datetime2,
+	 * fractional second precision in {@code datetime2},
 	 * but unfortunately its duration arithmetic
 	 * functions have a nasty habit of overflowing.
 	 * So to give ourselves a little extra headroom,
@@ -778,16 +778,18 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		if ( unit == TemporalUnit.NATIVE ) {//use microsecond as the "native" precision
+		if ( unit == TemporalUnit.NATIVE ) {
+			//use microsecond as the "native" precision
 			return "datediff_big(microsecond,?2,?3)";
 		}
-
-		//datediff() returns an int, and can easily
-		//overflow when dealing with "physical"
-		//durations, so use datediff_big()
-		return unit.normalized() == NANOSECOND
-				? "datediff_big(?1,?2,?3)"
-				: "datediff(?1,?2,?3)";
+		else {
+			//datediff() returns an int, and can easily
+			//overflow when dealing with "physical"
+			//durations, so use datediff_big()
+			return unit.normalized() == NANOSECOND
+					? "datediff_big(?1,?2,?3)"
+					: "datediff(?1,?2,?3)";
+		}
 	}
 
 	@Override
@@ -796,8 +798,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( unit == TemporalUnit.NATIVE ) {
 			return "microsecond";
 		}
-
-		return super.translateDurationField( unit );
+		else {
+			return super.translateDurationField( unit );
+		}
 	}
 
 	@Override

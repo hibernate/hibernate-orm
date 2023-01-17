@@ -19,6 +19,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
@@ -339,16 +340,17 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmCteStatement<?> findCteStatement(String name) {
-			return processingStateStack.findCurrentFirst(
-					state -> {
-						if ( state.getProcessingQuery() instanceof SqmCteContainer ) {
-							final SqmCteContainer container = (SqmCteContainer) state.getProcessingQuery();
-							return container.getCteStatement( name );
-						}
-						return null;
-					}
-			);
+		public SqmCteStatement<?> findCteStatement(final String name) {
+			return processingStateStack.findCurrentFirstWithParameter( name, UnmappedPolymorphismReplacer::matchCteStatement );
+		}
+
+		private static SqmCteStatement<?> matchCteStatement(final SqmCreationProcessingState state, final String cteName) {
+			final SqmQuery<?> processingQuery = state.getProcessingQuery();
+			if ( processingQuery instanceof SqmCteContainer ) {
+				final SqmCteContainer container = (SqmCteContainer) processingQuery;
+				return container.getCteStatement( cteName );
+			}
+			return null;
 		}
 
 		@Override

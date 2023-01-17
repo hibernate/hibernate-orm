@@ -1944,15 +1944,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( currentPotentialRecursiveCte != null && name.equals( currentPotentialRecursiveCte.getName() ) ) {
 			return (SqmCteStatement<?>) currentPotentialRecursiveCte;
 		}
-		return processingStateStack.findCurrentFirst(
-				state -> {
-					if ( state.getProcessingQuery() instanceof SqmCteContainer ) {
-						final SqmCteContainer container = (SqmCteContainer) state.getProcessingQuery();
-						return container.getCteStatement( name );
-					}
-					return null;
-				}
-		);
+		return processingStateStack.findCurrentFirstWithParameter( name, SemanticQueryBuilder::matchCteStatement );
+	}
+
+	private static SqmCteStatement<?> matchCteStatement(SqmCreationProcessingState state, String n) {
+		if ( state.getProcessingQuery() instanceof SqmCteContainer ) {
+			final SqmCteContainer container = (SqmCteContainer) state.getProcessingQuery();
+			return container.getCteStatement( n );
+		}
+		return null;
 	}
 
 	@Override

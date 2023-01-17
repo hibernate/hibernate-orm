@@ -11,10 +11,12 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -72,7 +74,6 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOr
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
@@ -89,6 +90,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static org.hibernate.LockOptions.NO_WAIT;
+import static org.hibernate.LockOptions.SKIP_LOCKED;
+import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -104,6 +108,8 @@ import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -111,13 +117,15 @@ import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
-import static org.hibernate.type.SqlTypes.STRUCT;
 import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.STRUCT;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
  * A {@linkplain Dialect SQL dialect} for Oracle 11g Release 2 and above.
@@ -166,14 +174,14 @@ public class OracleDialect extends Dialect {
 
 	protected static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
-			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
+			try ( java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
 				// v$pdbs is available to any user on Autonomous database
-				try( ResultSet rs = s.executeQuery( "select p.name, t.region, t.base_size, t.service, t.infrastructure\n" +
-						"from v$pdbs p, JSON_TABLE(p.cloud_identity, '$' COLUMNS (region path '$.REGION', base_size number path '$.BASE_SIZE', service path '$.SERVICE', infrastructure path '$.INFRASTRUCTURE')) t" )) {
+				try ( ResultSet rs = s.executeQuery( "select p.name, t.region, t.base_size, t.service, t.infrastructure\n" +
+						"from v$pdbs p, JSON_TABLE(p.cloud_identity, '$' COLUMNS (region path '$.REGION', base_size number path '$.BASE_SIZE', service path '$.SERVICE', infrastructure path '$.INFRASTRUCTURE')) t" ) ) {
 					return rs.next();
 				}
 			}
-			catch (SQLException ex) {
+			catch ( SQLException ex ) {
 				// Ignore
 			}
 		}
@@ -531,9 +539,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampdiffPattern(
-			TemporalUnit unit,
-			TemporalType fromTemporalType, TemporalType toTemporalType) {
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
 		boolean timestamp = toTemporalType == TemporalType.TIMESTAMP || fromTemporalType == TemporalType.TIMESTAMP;
 		switch (unit) {
@@ -716,7 +722,7 @@ public class OracleDialect extends Dialect {
 				return jdbcTypeRegistry.getDescriptor( JSON );
 			case STRUCT:
 				if ( "MDSYS.SDO_GEOMETRY".equals( columnTypeName ) ) {
-					jdbcTypeCode = SqlTypes.GEOMETRY;
+					jdbcTypeCode = GEOMETRY;
 				}
 				else {
 					final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor(
@@ -728,17 +734,16 @@ public class OracleDialect extends Dialect {
 					}
 				}
 				break;
-			case Types.NUMERIC:
+			case NUMERIC:
 				if ( scale == -127 ) {
 					// For some reason, the Oracle JDBC driver reports FLOAT
 					// as NUMERIC with scale -127
-					if ( precision <= getFloatPrecision() ) {
-						return jdbcTypeRegistry.getDescriptor( Types.FLOAT );
-					}
-					return jdbcTypeRegistry.getDescriptor( Types.DOUBLE );
+					return precision <= getFloatPrecision()
+							? jdbcTypeRegistry.getDescriptor( FLOAT )
+							: jdbcTypeRegistry.getDescriptor( DOUBLE );
 				}
 				//intentional fall-through:
-			case Types.DECIMAL:
+			case DECIMAL:
 				if ( scale == 0 ) {
 					// Don't infer TINYINT or SMALLINT on Oracle, since the
 					// range of values of a NUMBER(3,0) or NUMBER(5,0) just
@@ -749,10 +754,10 @@ public class OracleDialect extends Dialect {
 						// since we can assume the most likely reason to find
 						// a column of type NUMBER(10,0) in an Oracle database
 						// is that it's intended to store an integer.
-						return jdbcTypeRegistry.getDescriptor( Types.INTEGER );
+						return jdbcTypeRegistry.getDescriptor( INTEGER );
 					}
 					else if ( precision <= 19 ) {
-						return jdbcTypeRegistry.getDescriptor( Types.BIGINT );
+						return jdbcTypeRegistry.getDescriptor( BIGINT );
 					}
 				}
 		}
@@ -1218,12 +1223,12 @@ public class OracleDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
+		switch ( timeout ) {
+			case NO_WAIT:
 				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
+			case SKIP_LOCKED:
 				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case LockOptions.WAIT_FOREVER:
+			case WAIT_FOREVER:
 				return lockString;
 			default:
 				return supportsWait() ? lockString + " wait " + Math.round(timeout / 1e3f) : lockString;
@@ -1248,6 +1253,32 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String getReadLockString(String aliases, int timeout) {
 		return getWriteLockString( aliases, timeout );
+	}
+
+	@Override
+	public boolean supportsTemporalLiteralOffset() {
+		// Oracle *does* support offsets, but only
+		// in the ANSI syntax, not in the JDBC
+		// escape-based syntax, which we use in
+		// almost all circumstances (see below)
+		return false;
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, TemporalAccessor temporalAccessor, TemporalType precision, TimeZone jdbcTimeZone) {
+		// we usually use the JDBC escape-based syntax
+		// because we want to let the JDBC driver handle
+		// TIME (a concept which does not exist in Oracle)
+		// but for the special case of timestamps with an
+		// offset we need to use the ANSI syntax
+		if ( precision == TemporalType.TIMESTAMP && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+			appender.appendSql( "timestamp '" );
+			appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+			appender.appendSql( '\'' );
+		}
+		else {
+			super.appendDateTimeLiteral( appender, temporalAccessor, precision, jdbcTimeZone );
+		}
 	}
 
 	@Override

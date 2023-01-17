@@ -48,22 +48,16 @@ public class LoadContexts {
 		}
 	}
 
-	public LoadingEntityEntry findLoadingEntityEntry(EntityKey entityKey) {
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
-				state -> state.findLoadingEntityLocally( entityKey )
-		);
+	public LoadingEntityEntry findLoadingEntityEntry(final EntityKey entityKey) {
+		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( entityKey, JdbcValuesSourceProcessingState::findLoadingEntityLocally );
 	}
 
-	public LoadingCollectionEntry findLoadingCollectionEntry(CollectionKey collectionKey) {
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
-				state -> state.findLoadingCollectionLocally( collectionKey )
-		);
+	public LoadingCollectionEntry findLoadingCollectionEntry(final CollectionKey collectionKey) {
+		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( collectionKey, JdbcValuesSourceProcessingState::findLoadingCollectionLocally );
 	}
 
-	public Initializer findInitializer(EntityUniqueKey key){
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
-				state -> state.findInitializer( key )
-		);
+	public Initializer findInitializer(final EntityUniqueKey key){
+		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( key, JdbcValuesSourceProcessingState::findInitializer );
 	}
 
 	/**
@@ -74,11 +68,6 @@ public class LoadContexts {
 	public PersistenceContext getPersistenceContext() {
 		return persistenceContext;
 	}
-
-	private SharedSessionContractImplementor getSession() {
-		return getPersistenceContext().getSession();
-	}
-
 
 	/**
 	 * Release internal state associated with *all* result sets.

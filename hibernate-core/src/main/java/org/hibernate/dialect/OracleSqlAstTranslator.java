@@ -147,7 +147,11 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	private boolean isPartOfQueryGroup() {
-		return getQueryPartStack().findCurrentFirst( part -> part instanceof QueryGroup ? part : null ) != null;
+		return getQueryPartStack().findCurrentFirst( OracleSqlAstTranslator::partIsQueryGroup ) != null;
+	}
+
+	private static QueryPart partIsQueryGroup(final QueryPart part) {
+		return part instanceof QueryGroup ? part : null;
 	}
 
 	@Override

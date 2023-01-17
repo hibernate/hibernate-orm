@@ -107,6 +107,12 @@ public class SQLStatementInspector implements StatementInspector {
 				.allSatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).doesNotStartWith( "update" ) );
 	}
 
+	public void assertUpdate() {
+		Assertions.assertThat( sqlQueries )
+				.isNotEmpty()
+				.anySatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).startsWith( "update" ) );
+	}
+
 	public static SQLStatementInspector extractFromSession(SessionImplementor session) {
 		return (SQLStatementInspector) session.getJdbcSessionContext().getStatementInspector();
 	}

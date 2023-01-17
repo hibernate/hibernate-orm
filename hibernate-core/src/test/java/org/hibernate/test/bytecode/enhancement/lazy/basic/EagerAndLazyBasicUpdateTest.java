@@ -86,8 +86,9 @@ public class EagerAndLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 			entity.setLazyProperty1( null );
 		} );
 
-		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		// When a lazy property is modified Hibernate does not perform any select
+		// but during flush an update is performed
+		statementInspector().assertUpdate();
 	}
 
 	@Test
@@ -130,8 +131,9 @@ public class EagerAndLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 			entity.setLazyProperty1( "lazy1_update" );
 		} );
 
-		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		// When a lazy property is modified Hibernate does not perform any select
+		// but during flush an update is performed
+		statementInspector().assertUpdate();
 	}
 
 	@Test
@@ -199,7 +201,7 @@ public class EagerAndLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 		initNonNull();
 		doInHibernate( this::sessionFactory, s -> {
 			LazyEntity entity = s.get( LazyEntity.class, entityId );
-			entity.setEagerProperty( "eager_update" );
+			entity.setEagerProperty( "eager_initial" );
 		} );
 
 		// We should not update entities when property values did not change
@@ -231,8 +233,9 @@ public class EagerAndLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 			entity.setLazyProperty1( null );
 		} );
 
-		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		// When a lazy property is modified Hibernate does not perform any select
+		// but during flush an update is performed
+		statementInspector().assertUpdate();
 	}
 
 	@Test
@@ -308,8 +311,9 @@ public class EagerAndLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 			entity.setLazyProperty2( null );
 		} );
 
-		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		// When a lazy property is modified Hibernate does not perform any select
+		// but during flush an update is performed
+		statementInspector().assertUpdate();
 	}
 
 	@Test

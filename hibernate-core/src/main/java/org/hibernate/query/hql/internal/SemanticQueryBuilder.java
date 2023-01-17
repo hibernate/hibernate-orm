@@ -300,8 +300,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private final Stack<DotIdentifierConsumer> dotIdentifierConsumerStack;
 
-	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>();
-	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
+	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>( ParameterDeclarationContext.class );
+	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>( SqmCreationProcessingState.class );
 
 	private final BasicDomainType<Integer> integerDomainType;
 	private final JavaType<List<?>> listJavaType;
@@ -323,7 +323,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		this.expectedResultType = expectedResultType;
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
-		this.dotIdentifierConsumerStack = new StandardStack<>( new BasicDotIdentifierConsumer( this ) );
+		this.dotIdentifierConsumerStack = new StandardStack<>(
+				DotIdentifierConsumer.class,
+				new BasicDotIdentifierConsumer( this )
+		);
 		this.parameterStyle = creationOptions.useStrictJpaCompliance()
 				? ParameterStyle.UNKNOWN
 				: ParameterStyle.MIXED;

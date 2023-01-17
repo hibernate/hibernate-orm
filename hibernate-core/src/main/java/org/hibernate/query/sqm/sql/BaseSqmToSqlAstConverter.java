@@ -468,8 +468,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
-	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
-	private final Stack<FromClauseIndex> fromClauseIndexStack = new StandardStack<>();
+	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>( SqlAstProcessingState.class );
+	private final Stack<FromClauseIndex> fromClauseIndexStack = new StandardStack<>( FromClauseIndex.class );
 	/*
 	 * Captures all entity names as which a table group was treated.
 	 * This information is used to prune tables from the table group.
@@ -486,11 +486,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private SqmJoin<?, ?> currentlyProcessingJoin;
 	protected Predicate additionalRestrictions;
 
-	private final Stack<Clause> currentClauseStack = new StandardStack<>();
-	private final Stack<Supplier<MappingModelExpressible<?>>> inferrableTypeAccessStack = new StandardStack<>(
-			() -> null
-	);
-	private final Stack<List<QueryTransformer>> queryTransformers = new StandardStack<>();
+	private final Stack<Clause> currentClauseStack = new StandardStack<>( Clause.class );
+	private final Stack<Supplier> inferrableTypeAccessStack = new StandardStack<>( Supplier.class );
+	private final Stack<List> queryTransformers = new StandardStack<>( List.class );
 	private boolean inTypeInference;
 	private boolean inImpliedResultTypeInference;
 	private Supplier<MappingModelExpressible<?>> functionImpliedResultTypeAccess;
@@ -513,6 +511,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			boolean deduplicateSelectionItems) {
 		super( creationContext.getServiceRegistry() );
 
+		this.inferrableTypeAccessStack.push( () -> null );
 		this.creationContext = creationContext;
 		this.jpaQueryComplianceEnabled = creationContext
 				.getSessionFactory()
@@ -2074,7 +2073,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			QuerySpec finalQuerySpec = sqlQuerySpec;
-			for ( QueryTransformer transformer : queryTransformers.getCurrent() ) {
+			for ( QueryTransformer transformer : (List<QueryTransformer>) queryTransformers.getCurrent() ) {
 				finalQuerySpec = transformer.transform(
 						cteContainer,
 						finalQuerySpec,

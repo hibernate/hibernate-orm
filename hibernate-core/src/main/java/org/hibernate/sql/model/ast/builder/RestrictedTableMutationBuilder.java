@@ -21,10 +21,11 @@ import org.hibernate.sql.model.ast.RestrictedTableMutation;
  * @author Steve Ebersole
  */
 public interface RestrictedTableMutationBuilder<O extends MutationOperation, M extends RestrictedTableMutation<O>> extends TableMutationBuilder<M> {
+
 	/**
 	 * Add a restriction as long as the selectable is not a formula and is not nullable
 	 */
-	default void addKeyRestriction(SelectableMapping selectableMapping) {
+	default void addKeyRestriction(SelectableMapping selectableMapping){
 		if ( selectableMapping.isNullable() ) {
 			return;
 		}
@@ -38,8 +39,20 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	 *
 	 * @param dummy Ignored; here simply to satisfy the {@link SelectableConsumer} signature
 	 */
-	default void addKeyRestriction(@SuppressWarnings("unused") int dummy, SelectableMapping selectableMapping) {
+	default void addKeyRestriction(@SuppressWarnings("unused") int dummy,SelectableMapping selectableMapping){
 		addKeyRestriction( selectableMapping );
+	}
+
+
+	/**
+	 * Convenience form of {@link #addKeyRestrictionLeniently(SelectableMapping)} matching the
+	 * signature of {@link SelectableConsumer} allowing it to be used as a method reference
+	 * in its place.
+	 *
+	 * @param dummy Ignored; here simply to satisfy the {@link SelectableConsumer} signature
+	 */
+	default void addKeyRestrictionLeniently(@SuppressWarnings("unused") int dummy, SelectableMapping selectableMapping) {
+		addKeyRestrictionLeniently( selectableMapping );
 	}
 
 	/**

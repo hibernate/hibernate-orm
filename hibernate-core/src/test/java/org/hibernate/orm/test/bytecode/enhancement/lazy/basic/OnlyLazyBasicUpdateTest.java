@@ -84,8 +84,9 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 			entity.setLazyProperty1( null );
 		} );
 
-		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		// When a lazy property is modified Hibernate does not perform any select
+		// but during flush an update is performed
+		statementInspector().assertUpdate();
 	}
 
 	@Test
@@ -154,8 +155,9 @@ public class OnlyLazyBasicUpdateTest extends BaseCoreFunctionalTestCase {
 			entity.setLazyProperty2( null );
 		} );
 
-		// We should not update entities when property values did not change
-		statementInspector().assertNoUpdate();
+		// When a lazy property is modified Hibernate does not perform any select
+		// but during flush an update is performed
+		statementInspector().assertUpdate();
 	}
 
 	@Test

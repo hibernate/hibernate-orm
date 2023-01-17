@@ -1828,7 +1828,7 @@ public abstract class AbstractEntityPersister
 		return fetches.build();
 	}
 
-	private boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
+	protected boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
 		if ( fetchParent instanceof EmbeddableResultGraphNode ) {
 			return true;
 		}
@@ -1836,9 +1836,24 @@ public abstract class AbstractEntityPersister
 			final AttributeMapping attributeMapping = fetchable.asAttributeMapping();
 			if ( attributeMapping != null ) {
 				final int propertyNumber = attributeMapping.getStateArrayPosition();
-//				final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-//				return !isSubclassTableSequentialSelect( tableNumber ) && propertySelectable[propertyNumber];
-				return propertySelectable[propertyNumber];
+				if ( propertyNumber < propertySelectable.length ) {
+					return propertySelectable[propertyNumber];
+				}
+				else {
+					final ManagedMappingType declaringType = attributeMapping.getDeclaringType();
+					// try to check select-ability from the declaring type
+					if ( declaringType != this ) {
+						assert declaringType instanceof AbstractEntityPersister;
+						final AbstractEntityPersister subPersister = (AbstractEntityPersister) declaringType;
+						return subPersister.propertySelectable[propertyNumber];
+					}
+					else {
+						throw new IllegalArgumentException(
+								"Unrecognized fetchable [" + fetchable.getFetchableName() + "] at index "
+										+ propertyNumber + " for entity [" + getEntityName() + "]"
+						);
+					}
+				}
 			}
 			else {
 				return true;

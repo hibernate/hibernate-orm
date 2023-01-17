@@ -454,17 +454,17 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		// WHERE
 
 		if ( attribute.getIdentifierDescriptor() != null ) {
-			attribute.getIdentifierDescriptor().forEachSelectable( updateBuilder::addKeyRestriction );
+			attribute.getIdentifierDescriptor().forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
 		}
 		else {
-			attribute.getKeyDescriptor().getKeyPart().forEachSelectable( updateBuilder::addKeyRestriction );
+			attribute.getKeyDescriptor().getKeyPart().forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
 
 			if ( attribute.getIndexDescriptor() != null && !indexContainsFormula ) {
-				attribute.getIndexDescriptor().forEachSelectable( updateBuilder::addKeyRestriction );
+				attribute.getIndexDescriptor().forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
 			}
 			else {
 				attribute.getElementDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
-					if ( selectableMapping.isFormula() || selectableMapping.isNullable() ) {
+					if ( selectableMapping.isFormula() ) {
 						return;
 					}
 					updateBuilder.addKeyRestriction( selectableMapping );
@@ -526,7 +526,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				getAttributeMapping().getElementDescriptor().decompose(
 						snapshotElement,
 						(jdbcValue, jdbcValueMapping) -> {
-							if ( jdbcValueMapping.isNullable() && jdbcValueMapping.isFormula() ) {
+							if ( jdbcValueMapping.isNullable() || jdbcValueMapping.isFormula() ) {
 								return;
 							}
 							restrictor.consume( jdbcValue, jdbcValueMapping );
@@ -597,24 +597,24 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final TableDeleteBuilderStandard deleteBuilder = new TableDeleteBuilderStandard( this, tableReference, getFactory() );
 
 		if ( pluralAttribute.getIdentifierDescriptor() != null ) {
-			deleteBuilder.addKeyRestriction( pluralAttribute.getIdentifierDescriptor() );
+			deleteBuilder.addKeyRestrictionLeniently( pluralAttribute.getIdentifierDescriptor() );
 		}
 		else {
 			pluralAttribute
 					.getKeyDescriptor()
 					.getKeyPart()
-					.forEachSelectable( (index, selectable) -> deleteBuilder.addKeyRestriction( selectable ) );
+					.forEachSelectable( deleteBuilder::addKeyRestrictionLeniently );
 
 			if ( hasIndex && !indexContainsFormula ) {
 				assert pluralAttribute.getIndexDescriptor() != null;
 				pluralAttribute
 						.getIndexDescriptor()
-						.forEachSelectable( (index, selectable) -> deleteBuilder.addKeyRestriction( selectable ) );
+						.forEachSelectable( deleteBuilder::addKeyRestrictionLeniently );
 			}
 			else {
 				pluralAttribute
 						.getElementDescriptor()
-						.forEachSelectable( (index, selectable) -> deleteBuilder.addKeyRestriction( selectable ) );
+						.forEachSelectable( deleteBuilder::addKeyRestriction );
 			}
 		}
 
@@ -645,7 +645,16 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				);
 			}
 			else {
-				attributeMapping.getElementDescriptor().decompose( rowValue, restrictor, session );
+				attributeMapping.getElementDescriptor().decompose(
+						rowValue,
+						(jdbcValue, jdbcValueMapping) -> {
+							if ( jdbcValueMapping.isNullable() || jdbcValueMapping.isFormula() ) {
+								return;
+							}
+							restrictor.consume( jdbcValue, jdbcValueMapping );
+						},
+						session
+				);
 			}
 		}
 	}

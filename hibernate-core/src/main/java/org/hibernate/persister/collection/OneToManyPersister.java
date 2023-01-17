@@ -578,7 +578,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			}
 
 			// restrict
-			updateBuilder.addKeyRestriction( selectable );
+			updateBuilder.addKeyRestrictionLeniently( selectable );
 		} );
 
 		// set the value for each index column to null
@@ -602,7 +602,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		// based on the element's id
 		final EntityCollectionPart entityPart = (EntityCollectionPart) getAttributeMapping().getElementDescriptor();
 		final EntityIdentifierMapping entityId = entityPart.getAssociatedEntityMappingType().getIdentifierMapping();
-		entityId.forEachSelectable( (index, selectable) -> updateBuilder.addKeyRestriction( selectable ) );
+		entityId.forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
 
 		//noinspection unchecked,rawtypes
 		return (RestrictedTableMutation) updateBuilder.buildMutation();
@@ -616,7 +616,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			SharedSessionContractImplementor session,
 			JdbcValueConsumer jdbcValueConsumer) {
 		final PluralAttributeMapping pluralAttribute = getAttributeMapping();
-//		pluralAttribute.getKeyDescriptor().decompose( keyValue, jdbcValueConsumer, session );
+		pluralAttribute.getKeyDescriptor().decompose( keyValue, jdbcValueConsumer, session );
 		pluralAttribute.getElementDescriptor().decompose( rowValue, jdbcValueConsumer, session );
 	}
 
@@ -642,7 +642,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final EntityMappingType elementType = elementDescriptor.getAssociatedEntityMappingType();
 		elementType.getIdentifierMapping().forEachSelectable( (position, mapping) -> {
 			assert tableReference.getTableName().equals( mapping.getContainingTableExpression() );
-			updateBuilder.addKeyRestriction( mapping );
+			updateBuilder.addKeyRestrictionLeniently( mapping );
 		} );
 
 		return (TableUpdate<JdbcMutationOperation>) updateBuilder.buildMutation();
@@ -731,13 +731,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		elementDescriptor
 				.getAssociatedEntityMappingType()
 				.getIdentifierMapping()
-				.forEachSelectable( updateBuilder::addKeyRestriction );
+				.forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
 
 		// if the collection has an identifier, add its column as well
 		if ( getAttributeMapping().getIdentifierDescriptor() != null ) {
 			getAttributeMapping()
 					.getIdentifierDescriptor()
-					.forEachSelectable( updateBuilder::addKeyRestriction );
+					.forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
 		}
 
 		// for each index column:

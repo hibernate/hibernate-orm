@@ -8,20 +8,20 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled("test produces broken SQL and issue needs to be fixed")
+//@Disabled("test produces broken SQL and issue needs to be fixed")
 @TestForIssue(jiraKey = "HHH-15933")
 @SessionFactory
-@DomainModel(annotatedClasses = {Split.class, Reference.class})
+@DomainModel(annotatedClasses = { Split.class, Reference.class })
 public class RefToSecondaryTableTest {
 	@Test
 	public void test(SessionFactoryScope scope) {
 		Split split = new Split();
-		split.setCode(123);
-		split.setDescription("blah");
-		split.setName("Split");
+		split.setCode( 123 );
+		split.setDescription( "blah" );
+		split.setName( "Split" );
 		Reference reference = new Reference();
-		reference.setSplit(split);
-		scope.inTransaction(session -> {
+		reference.setSplit( split );
+		scope.inTransaction( session -> {
 			session.persist( split );
 			session.persist( reference );
 		} );
@@ -31,7 +31,7 @@ public class RefToSecondaryTableTest {
 							.getSingleResult();
 			Assertions.assertEquals( split.getId(), ref.getSplit().getId() );
 		} );
-		scope.inSession(session -> {
+		scope.inSession( session -> {
 			Reference ref = session.find( Reference.class, reference.getId() );
 			Assertions.assertEquals( split.getId(), ref.getSplit().getId() );
 		} );

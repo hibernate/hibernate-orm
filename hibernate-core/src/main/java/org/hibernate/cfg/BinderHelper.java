@@ -23,8 +23,6 @@ import java.util.StringTokenizer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -50,11 +48,13 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
+import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -71,16 +71,17 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Index;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.UniqueConstraint;
 
 import static org.hibernate.cfg.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
-
 import static org.hibernate.cfg.AnnotatedJoinColumn.NON_PK_REFERENCE;
 import static org.hibernate.cfg.AnnotatedJoinColumn.checkReferencedColumnsType;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.interpret;
@@ -182,7 +183,7 @@ public class BinderHelper {
 			// figure out which table has the columns by looking
 			// for a PersistentClass or Join in the hierarchy of
 			// the target entity which has the first column
-			final Object columnOwner = findColumnOwner( ownerEntity, firstColumn.getReferencedColumn(), context );
+			final AttributeContainer columnOwner = findColumnOwner( ownerEntity, firstColumn.getReferencedColumn(), context );
 			for ( AnnotatedJoinColumn col: columns ) {
 				Object owner = findColumnOwner( ownerEntity, col.getReferencedColumn(), context );
 				if ( owner == null ) {
@@ -232,7 +233,7 @@ public class BinderHelper {
 			PersistentClass ownerEntity,
 			boolean inverse,
 			AnnotatedJoinColumn[] columns,
-			Object columnOwner,
+			AttributeContainer columnOwner,
 			List<Property> properties,
 			MetadataBuildingContext context) {
 		if ( properties.size() == 1
@@ -332,7 +333,7 @@ public class BinderHelper {
 
 	private static Property makeSyntheticComponentProperty(
 			PersistentClass ownerEntity,
-			Object persistentClassOrJoin,
+			AttributeContainer persistentClassOrJoin,
 			MetadataBuildingContext context,
 			String syntheticPropertyName,
 			List<Property> properties) {
@@ -343,7 +344,12 @@ public class BinderHelper {
 		embeddedComp.setEmbedded( true );
 		Property property = makeComponent( ownerEntity, context, syntheticPropertyName, embeddedComp, properties );
 		property.setPropertyAccessorName( "embedded" );
-		ownerEntity.addProperty( property );
+		if ( ownerEntity instanceof JoinedSubclass ) {
+			ownerEntity.addProperty( property );
+		}
+		else {
+			persistentClassOrJoin.addProperty( property );
+		}
 		embeddedComp.createUniqueKey(); //make it unique
 		return property;
 	}
@@ -682,7 +688,7 @@ public class BinderHelper {
 	 * Find the column owner (ie PersistentClass or Join) of columnName.
 	 * If columnName is null or empty, persistentClass is returned
 	 */
-	public static Object findColumnOwner(
+	public static AttributeContainer findColumnOwner(
 			PersistentClass persistentClass,
 			String columnName,
 			MetadataBuildingContext context) {

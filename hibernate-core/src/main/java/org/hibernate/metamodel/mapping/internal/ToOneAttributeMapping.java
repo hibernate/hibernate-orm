@@ -21,7 +21,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -1791,18 +1790,23 @@ public class ToOneAttributeMapping
 
 		lazyTableGroup.setTableGroupInitializerCallback(
 				tableGroup -> {
-					join.applyPredicate(
-							foreignKeyDescriptor.generateJoinPredicate(
-									sideNature == ForeignKeyDescriptor.Nature.TARGET ?
-											lhsTableReference :
-											tableGroup.getPrimaryTableReference(),
-									sideNature == ForeignKeyDescriptor.Nature.TARGET ?
-											tableGroup.getPrimaryTableReference() :
-											lhsTableReference,
-									sqlExpressionResolver,
-									creationContext
-							)
-					);
+					final TableReference targetTableReference;
+					final TableReference keyTableReference;
+					if ( sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
+						targetTableReference = lhsTableReference;
+						keyTableReference = tableGroup.resolveTableReference( foreignKeyDescriptor.getKeyTable() );
+					}
+					else {
+						targetTableReference = tableGroup.resolveTableReference( foreignKeyDescriptor.getTargetTable() );
+						keyTableReference = lhsTableReference;
+					}
+
+					join.applyPredicate( foreignKeyDescriptor.generateJoinPredicate(
+							targetTableReference,
+							keyTableReference,
+							sqlExpressionResolver,
+							creationContext
+					) );
 
 					if ( hasNotFoundAction() ) {
 						getAssociatedEntityMappingType().applyWhereRestrictions(

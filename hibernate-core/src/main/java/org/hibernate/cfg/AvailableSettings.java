@@ -1533,7 +1533,7 @@ public interface AvailableSettings {
 	String CHECK_NULLABILITY = "hibernate.check_nullability";
 
 	/**
-	 * Selects a bytecode enhancment library.
+	 * Selects a bytecode enhancement library.
 	 * <p>
 	 * At present only bytebuddy is supported, bytebuddy being the default since version 5.3.
 	 */

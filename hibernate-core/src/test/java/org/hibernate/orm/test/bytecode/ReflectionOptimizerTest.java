@@ -6,14 +6,17 @@
  */
 package org.hibernate.orm.test.bytecode;
 
+import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.cfg.Environment;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -21,9 +24,23 @@ import org.junit.Test;
  */
 public class ReflectionOptimizerTest extends BaseUnitTestCase {
 
+	private static BytecodeProvider provider;
+
+	@BeforeClass
+	public static void initBytecodeProvider() {
+		provider = buildDefaultBytecodeProvider();
+	}
+
+	@AfterClass
+	public static void clearBytecodeProvider() {
+		if ( provider != null ) {
+			provider.resetCaches();
+			provider = null;
+		}
+	}
+
 	@Test
 	public void testReflectionOptimization() {
-		BytecodeProvider provider = Environment.getBytecodeProvider();
 		ReflectionOptimizer optimizer = provider.getReflectionOptimizer(
 				Bean.class,
 		        BeanReflectionHelper.getGetterNames(),
@@ -47,18 +64,16 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12584")
 	public void testAbstractClass() {
-		BytecodeProvider provider = Environment.getBytecodeProvider();
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( AbstractClass.class, new String[]{ "getProperty" },
-				new String[]{ "setProperty" }, new Class[]{ String.class } );
+			new String[]{ "setProperty" }, new Class[]{ String.class } );
 		assertNotNull( reflectionOptimizer );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12584")
 	public void testInterface() {
-		BytecodeProvider provider = Environment.getBytecodeProvider();
 		ReflectionOptimizer reflectionOptimizer = provider.getReflectionOptimizer( Interface.class, new String[]{ "getProperty" },
-				new String[]{ "setProperty" }, new Class[]{ String.class } );
+			new String[]{ "setProperty" }, new Class[]{ String.class } );
 		assertNotNull( reflectionOptimizer );
 	}
 
@@ -88,4 +103,5 @@ public class ReflectionOptimizerTest extends BaseUnitTestCase {
 
 		void setProperty(String property);
 	}
+
 }

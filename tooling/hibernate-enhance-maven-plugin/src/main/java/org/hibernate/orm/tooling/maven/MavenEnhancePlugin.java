@@ -38,9 +38,11 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
-import org.hibernate.cfg.Environment;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 
 import org.sonatype.plexus.build.incremental.BuildContext;
+
+import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
 
 /**
  * This plugin will enhance Entity objects.
@@ -153,20 +155,27 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			log.warn( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk." );
 		}
 
-		final Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
+		//TODO allow the Maven plugin to configure the bytecode enhancer?
+		final BytecodeProvider bytecodeProvider = buildDefaultBytecodeProvider();
+		try {
+			final Enhancer enhancer = bytecodeProvider.getEnhancer( enhancementContext );
 
-		for ( File file : sourceSet ) {
+			for ( File file : sourceSet ) {
 
-			final byte[] enhancedBytecode = doEnhancement( file, enhancer );
+				final byte[] enhancedBytecode = doEnhancement( file, enhancer );
 
-			if ( enhancedBytecode == null ) {
-				continue;
+				if ( enhancedBytecode == null ) {
+					continue;
+				}
+
+				writeOutEnhancedClass( enhancedBytecode, file );
+				if ( log.isDebugEnabled() ) {
+					log.debug( "Successfully enhanced class [" + file + "]" );
+				}
 			}
-
-			writeOutEnhancedClass( enhancedBytecode, file );
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Successfully enhanced class [" + file + "]" );
-			}
+		}
+		finally {
+			bytecodeProvider.resetCaches();
 		}
 	}
 

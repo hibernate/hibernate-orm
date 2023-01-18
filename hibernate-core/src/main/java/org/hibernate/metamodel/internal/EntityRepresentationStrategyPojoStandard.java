@@ -20,7 +20,6 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -140,8 +139,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			identifierPropertyAccess = makePropertyAccess( identifierProperty );
 		}
 
-//		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getBytecodeProvider();
-		final BytecodeProvider bytecodeProvider = Environment.getBytecodeProvider();
+		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getServiceRegistry().getService( BytecodeProvider.class );
 
 		final EntityMetamodel entityMetamodel = runtimeDescriptor.getEntityMetamodel();
 		ProxyFactory proxyFactory = null;

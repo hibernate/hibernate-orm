@@ -32,6 +32,8 @@ import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
+import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
+
 /**
  * @author Luis Barreiro
  */
@@ -182,7 +184,7 @@ public class BytecodeEnhancerRunner extends Suite {
 			EnhancementContext enhancerContext,
 			List<EnhancementSelector> selectors) {
 		return new EnhancingClassLoader(
-				Environment.getBytecodeProvider().getEnhancer( enhancerContext ),
+				buildDefaultBytecodeProvider().getEnhancer( enhancerContext ),
 				selectors
 		);
 	}

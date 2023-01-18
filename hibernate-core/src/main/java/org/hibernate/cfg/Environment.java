@@ -13,6 +13,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Version;
+import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
@@ -35,8 +36,8 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * always determined by the {@code Environment} properties in {@link #getProperties()}.
  * </ul>
  * <p>
- * The only system-level properties are {@value #USE_REFLECTION_OPTIMIZER} and
- * {@value #BYTECODE_PROVIDER}.
+ * The only system-level property is {@value #USE_REFLECTION_OPTIMIZER},
+ * and it's deprecated.
  * <p>
  * {@code Environment} properties are populated by calling {@link System#getProperties()}
  * and then from a resource named {@code /hibernate.properties}, if it exists. System
@@ -141,7 +142,6 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 public final class Environment implements AvailableSettings {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Environment.class.getName());
 
-	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_REFLECTION_OPTIMIZER;
 
 	private static final Properties GLOBAL_PROPERTIES;
@@ -193,8 +193,6 @@ public final class Environment implements AvailableSettings {
 		else {
 			DEPRECATION_LOGGER.deprecatedSettingForRemoval( USE_REFLECTION_OPTIMIZER, "true" );
 		}
-
-		BYTECODE_PROVIDER_INSTANCE = buildBytecodeProvider( GLOBAL_PROPERTIES );
 	}
 
 	/**
@@ -203,12 +201,11 @@ public final class Environment implements AvailableSettings {
 	 * @return True if reflection optimization should be used; false otherwise.
 	 *
 	 * @see #USE_REFLECTION_OPTIMIZER
-	 * @see #getBytecodeProvider()
 	 * @see BytecodeProvider#getReflectionOptimizer
 	 *
 	 * @deprecated Deprecated to indicate that the method will be moved to
 	 * {@link org.hibernate.boot.spi.SessionFactoryOptions} /
-	 * {@link org.hibernate.boot.SessionFactoryBuilder} - probably in 6.0.
+	 * {@link org.hibernate.boot.SessionFactoryBuilder}.
 	 * See <a href="https://hibernate.atlassian.net/browse/HHH-12194">HHH-12194</a> and
 	 * <a href="https://hibernate.atlassian.net/browse/HHH-12193">HHH-12193</a> for details
 	 */
@@ -218,22 +215,10 @@ public final class Environment implements AvailableSettings {
 	}
 
 	/**
-	 * @deprecated Deprecated to indicate that the method will be moved to
-	 * {@link org.hibernate.boot.spi.SessionFactoryOptions} /
-	 * {@link org.hibernate.boot.SessionFactoryBuilder} - probably in 6.0.
-	 * See <a href="https://hibernate.atlassian.net/browse/HHH-12194">HHH-12194</a> and
-	 * <a href="https://hibernate.atlassian.net/browse/HHH-12193">HHH-12193</a> for details
-	 */
-	@Deprecated
-	public static BytecodeProvider getBytecodeProvider() {
-		return BYTECODE_PROVIDER_INSTANCE;
-	}
-
-	/**
 	 * Disallow instantiation
 	 */
 	private Environment() {
-		throw new UnsupportedOperationException();
+		//not to be constructed
 	}
 
 	/**
@@ -246,36 +231,36 @@ public final class Environment implements AvailableSettings {
 		return copy;
 	}
 
+	/**
+	 * @deprecated Replaced by {@code org.hibernate.bytecode.internal.BytecodeProviderInitiator#BYTECODE_PROVIDER_NAME_BYTEBUDDY},
+	 * however note that that's an internal contract: a different BytecodeProvider Initiator might ignore these constants
+	 * or interpret them differently.
+	 */
+	@Deprecated(forRemoval = true)
 	public static final String BYTECODE_PROVIDER_NAME_BYTEBUDDY = "bytebuddy";
-	public static final String BYTECODE_PROVIDER_NAME_NONE = "none";
-	public static final String BYTECODE_PROVIDER_NAME_DEFAULT = BYTECODE_PROVIDER_NAME_BYTEBUDDY;
 
+	/**
+	 * @deprecated Replaced by {@code org.hibernate.bytecode.internal.BytecodeProviderInitiator#BYTECODE_PROVIDER_NAME_NONE},
+	 * however note that that's an internal contract: a different BytecodeProvider Initiator might ignore these constants
+	 * or interpret them differently.
+	 */
+	@Deprecated(forRemoval = true)
+	public static final String BYTECODE_PROVIDER_NAME_NONE = "none";
+
+	/**
+	 * @deprecated Replaced by {@code org.hibernate.bytecode.internal.BytecodeProviderInitiator#BYTECODE_PROVIDER_NAME_DEFAULT}
+	 * however note that that's an internal contract: a different BytecodeProvider Initiator might apply a different default.
+	 */
+	@Deprecated(forRemoval = true)
+	public static final String BYTECODE_PROVIDER_NAME_DEFAULT = BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY;
+
+	/**
+	 * @deprecated this will be removed; retrieval of the BytecodeProvider should be performed via the {@link org.hibernate.service.ServiceRegistry}.
+	 */
+	@Deprecated(forRemoval = true)
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
 		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, BYTECODE_PROVIDER_NAME_DEFAULT );
-		return buildBytecodeProvider( provider );
+		return BytecodeProviderInitiator.buildBytecodeProvider( provider );
 	}
 
-	private static BytecodeProvider buildBytecodeProvider(String providerName) {
-		if ( BYTECODE_PROVIDER_NAME_NONE.equals( providerName ) ) {
-			return new org.hibernate.bytecode.internal.none.BytecodeProviderImpl();
-		}
-		if ( BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( providerName ) ) {
-			return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
-		}
-
-		LOG.bytecodeProvider( providerName );
-
-		// there is no need to support plugging in a custom BytecodeProvider via FQCN:
-		// - the static helper methods on this class are deprecated
-		// - it's possible to plug a custom BytecodeProvider directly into the ServiceRegistry
-		//
-		// This also allows integrators to inject a BytecodeProvider instance which has some
-		// state; particularly useful to inject proxy definitions which have been prepared in
-		// advance.
-		// See also https://hibernate.atlassian.net/browse/HHH-13804 and how this was solved in
-		// Quarkus.
-
-		LOG.unknownBytecodeProvider( providerName, BYTECODE_PROVIDER_NAME_DEFAULT );
-		return new org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl();
-	}
 }

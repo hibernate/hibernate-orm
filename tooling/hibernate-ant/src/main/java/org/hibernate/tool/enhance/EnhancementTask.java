@@ -14,6 +14,8 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cfg.Environment;
 
 import java.io.ByteArrayOutputStream;
@@ -29,6 +31,8 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
 
 /**
  * Ant task for performing build-time enhancement of entity objects.
@@ -162,16 +166,21 @@ public class EnhancementTask extends Task {
 			log( "Extended enhancement is enabled. Classes other than entities may be modified. You should consider access the entities using getter/setter methods and disable this property. Use at your own risk.", Project.MSG_WARN );
 		}
 
-		Enhancer enhancer = Environment.getBytecodeProvider().getEnhancer( enhancementContext );
+		final BytecodeProvider bytecodeProvider = buildDefaultBytecodeProvider();
+		try {
+			Enhancer enhancer = bytecodeProvider.getEnhancer( enhancementContext );
+			for ( File file : sourceSet ) {
+				byte[] enhancedBytecode = doEnhancement( file, enhancer );
+				if ( enhancedBytecode == null ) {
+					continue;
+				}
+				writeOutEnhancedClass( enhancedBytecode, file );
 
-		for ( File file : sourceSet ) {
-			byte[] enhancedBytecode = doEnhancement( file, enhancer );
-			if ( enhancedBytecode == null ) {
-				continue;
+				log( "Successfully enhanced class [" + file + "]", Project.MSG_INFO );
 			}
-			writeOutEnhancedClass( enhancedBytecode, file );
-
-			log( "Successfully enhanced class [" + file + "]", Project.MSG_INFO );
+		}
+		finally {
+			bytecodeProvider.resetCaches();
 		}
 	}
 

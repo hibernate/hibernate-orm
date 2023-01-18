@@ -1689,18 +1689,23 @@ public class ToOneAttributeMapping
 
 		lazyTableGroup.setTableGroupInitializerCallback(
 				tableGroup -> {
-					join.applyPredicate(
-							foreignKeyDescriptor.generateJoinPredicate(
-									sideNature == ForeignKeyDescriptor.Nature.TARGET ?
-											lhsTableReference :
-											tableGroup.getPrimaryTableReference(),
-									sideNature == ForeignKeyDescriptor.Nature.TARGET ?
-											tableGroup.getPrimaryTableReference() :
-											lhsTableReference,
-									sqlExpressionResolver,
-									creationContext
-							)
-					);
+					final TableReference targetTableReference;
+					final TableReference keyTableReference;
+					if ( sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
+						targetTableReference = lhsTableReference;
+						keyTableReference = tableGroup.resolveTableReference( foreignKeyDescriptor.getKeyTable() );
+					}
+					else {
+						targetTableReference = tableGroup.resolveTableReference( foreignKeyDescriptor.getTargetTable() );
+						keyTableReference = lhsTableReference;
+					}
+
+					join.applyPredicate( foreignKeyDescriptor.generateJoinPredicate(
+							targetTableReference,
+							keyTableReference,
+							sqlExpressionResolver,
+							creationContext
+					) );
 
 					if ( hasNotFoundAction() ) {
 						getAssociatedEntityMappingType().applyWhereRestrictions(

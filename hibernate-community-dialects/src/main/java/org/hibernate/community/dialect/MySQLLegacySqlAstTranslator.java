@@ -240,7 +240,7 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getDialect().getVersion().isBefore( 5, 7 ) ? getFromDual() : "";
+		return getDialect().getVersion().isSameOrAfter( 8 ) ? "" : getFromDual();
 	}
 
 	@Override

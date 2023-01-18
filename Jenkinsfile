@@ -44,8 +44,7 @@ stage('Configure') {
 				additionalOptions: '-DdbHost=localhost:4000',
 				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
 		new BuildEnvironment( testJdkVersion: '17' ),
-		new BuildEnvironment( testJdkVersion: '18' ),
-		// We want to enable preview features when testing early-access builds of OpenJDK:
+		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
 		new BuildEnvironment( testJdkVersion: '19', testJdkLauncherArgs: '--enable-preview' ),

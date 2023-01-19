@@ -7,16 +7,12 @@
 package org.hibernate.envers.boot.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.internal.MappingBinder;
+import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.cfg.AvailableSettings.XML_MAPPING_ENABLED;
@@ -34,7 +30,7 @@ public class AdditionalMappingContributorImpl implements AdditionalMappingContri
 	public void contribute(
 			AdditionalMappingContributions contributions,
 			InFlightMetadataCollector metadata,
-			MappingBinder jaxbBinder,
+			ResourceStreamLocator resourceStreamLocator,
 			MetadataBuildingContext buildingContext) {
 		final MetadataBuildingOptions metadataBuildingOptions = metadata.getMetadataBuildingOptions();
 		final ServiceRegistry serviceRegistry = metadataBuildingOptions.getServiceRegistry();
@@ -51,15 +47,6 @@ public class AdditionalMappingContributorImpl implements AdditionalMappingContri
 					+ "`; alternatively disable Hibernate Envers." );
 		}
 
-		final MappingCollector mappingCollector = new MappingCollector() {
-			private final Origin origin = new Origin( SourceType.OTHER, "envers" );
-
-			@Override
-			public void addDocument(JaxbHbmHibernateMapping mapping) {
-				contributions.contributeBinding( mapping, origin );
-			}
-		};
-
-		enversService.initialize( metadata, mappingCollector );
+		enversService.initialize( metadata, contributions::contributeBinding );
 	}
 }

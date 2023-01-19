@@ -6,30 +6,47 @@
  */
 package org.hibernate.boot.spi;
 
+import java.io.InputStream;
+
 import org.hibernate.Incubating;
-import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 
 /**
  * Collector for contributions from {@linkplain AdditionalMappingContributor contributors}
  *
  * @author Steve Ebersole
+ *
+ * @since 6.2
  */
 @Incubating
 public interface AdditionalMappingContributions {
 	/**
-	 * Contribute mappings in the form of {@code hbm.xml} JAXB bindings
+	 * Contribute a presumably annotated entity class.
 	 */
-	void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding, Origin origin);
+	void contributeEntity(Class<?> entityType);
 
 	/**
-	 * Contribute a materialized PersistentClass
+	 * Contribute mappings from the InputStream containing an XML mapping document.
 	 */
-	void contributeEntity(PersistentClass entity);
+	void contributeBinding(InputStream xmlStream);
+
+	/**
+	 * Contribute mappings in the form of {@code hbm.xml} JAXB bindings.
+	 *
+	 * @deprecated {@code hbm.xml} mapping file support is deprecated.  Use
+	 * {@linkplain #contributeBinding(JaxbEntityMappings) extended orm.xml}
+	 * bindings instead.
+	 */
+	void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding);
+
+	/**
+	 * Contribute mappings in the form of (extended) {@code orm.xml} JAXB bindings
+	 */
+	void contributeBinding(JaxbEntityMappings mappingJaxbBinding);
 
 	/**
 	 * Contribute a materialized Table

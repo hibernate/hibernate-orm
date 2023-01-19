@@ -9,7 +9,9 @@ package org.hibernate.boot.model.relational;
 import org.hibernate.mapping.Contributable;
 
 /**
- * Contributable specialization for Tables and Sequences
+ * Database objects (table, sequence, etc) which are associated with
+ * a {@linkplain #getContributor() contributor} (ORM, Envers, etc) and
+ * can be selectively exported per contributor
  */
 public interface ContributableDatabaseObject extends Contributable, Exportable {
 }

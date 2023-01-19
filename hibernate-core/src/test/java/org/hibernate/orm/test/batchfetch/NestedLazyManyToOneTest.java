@@ -44,11 +44,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		}
 )
 @SessionFactory(useCollectingStatementInspector = true)
-@ServiceRegistry(settings = {
-		@Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "5")
-})
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "5"))
 @JiraKey("HHH-16043")
 public class NestedLazyManyToOneTest {
+	private static final String QUESTION_MARK = "\\?";
+
 	@BeforeAll
 	public void prepareData(SessionFactoryScope scope) {
 		final Entity1 entity1 = new Entity1();
@@ -87,10 +87,9 @@ public class NestedLazyManyToOneTest {
 		scope.inTransaction( session -> {
 			Entity1 fromDb = session.find( Entity1.class, "0" );
 			Set<Entity2> children = fromDb.getChildren();
-
 			assertEquals( 8, children.size() );
-			statementInspector.assertExecutedCount( 2 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 1, "\\?", 1 );
+			statementInspector.assertExecutedCount( 2 ); // 1 for Entity1, 1 for Entity2
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 1, QUESTION_MARK, 1 );
 		} );
 	}
 
@@ -122,7 +121,8 @@ public class NestedLazyManyToOneTest {
 
 			assertEquals( 8, entity1.getChildren().size() );
 			statementInspector.assertExecutedCount( 3 ); // 1 for Entity1, 1 for Entity2, 1 for Entity3
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 2, "\\?", 5 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 1, QUESTION_MARK, 1 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 2, QUESTION_MARK, 5 );
 		} );
 	}
 
@@ -145,8 +145,9 @@ public class NestedLazyManyToOneTest {
 
 			assertEquals( 8, entity1.getChildren().size() );
 			statementInspector.assertExecutedCount( 4 ); // 1 for Entity1, 1 for Entity2, 2 for Entity3
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 2, "\\?", 5 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 3, "\\?", 3 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 1, QUESTION_MARK, 1 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 2, QUESTION_MARK, 5 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 3, QUESTION_MARK, 3 );
 		} );
 	}
 

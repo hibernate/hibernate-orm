@@ -14,8 +14,10 @@ import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
@@ -30,6 +32,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -97,7 +100,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 					null,
 					attributeMapping.getKeyDescriptor(),
 					null,
-					batchSize,
+					1,
 					session.getLoadQueryInfluencers(),
 					LockOptions.NONE,
 					jdbcParameters::add,
@@ -201,6 +204,11 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 					ListResultsConsumer.UniqueSemantic.FILTER
 			);
 
+			for ( int i = smallBatchStart; i < smallBatchStart + smallBatchLength; i++ ) {
+				// collections that were not initialized here should be empty
+				finishLoadingCollection( batchIds[i], session );
+			}
+
 			// prepare for the next round...
 			smallBatchStart += smallBatchLength;
 			if ( smallBatchStart >= numberOfIds ) {
@@ -211,4 +219,20 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 		}
 	}
 
+	private void finishLoadingCollection(Object key, SharedSessionContractImplementor session) {
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), key );
+		final PersistentCollection<?> collection = persistenceContext.getCollection( collectionKey );
+		if ( !collection.wasInitialized() ) {
+			final CollectionEntry entry = persistenceContext.getCollectionEntry( collection );
+			collection.initializeEmptyCollection( entry.getLoadedPersister() );
+			ResultsHelper.finalizeCollectionLoading(
+					persistenceContext,
+					entry.getLoadedPersister(),
+					collection,
+					collectionKey,
+					true
+			);
+		}
+	}
 }

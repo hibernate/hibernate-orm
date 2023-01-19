@@ -152,7 +152,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
+		final EmbeddableInitializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),
 				() -> new AggregateEmbeddableFetchInitializer(
@@ -161,7 +161,9 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 						creationState,
 						aggregateSelection
 				)
-		);
+		).asEmbeddableInitializer();
+
+		assert initializer != null;
 
 		return new EmbeddableAssembler( initializer );
 	}

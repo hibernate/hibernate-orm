@@ -258,7 +258,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
 					final QuerySpec idSelectFkSubQuery;
 					// todo (6.0): based on the location of the attribute mapping, we could prune the table group of the subquery
-					if ( fkDescriptor.getTargetPart() instanceof EntityIdentifierMapping ) {
+					if ( fkDescriptor.getTargetPart().isEntityIdentifierMapping() ) {
 						idSelectFkSubQuery = matchingIdSubQuerySpec;
 					}
 					else {
@@ -538,7 +538,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				(tableReference, attributeMapping) -> {
 					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
 					final QuerySpec idTableFkSubQuery;
-					if ( fkDescriptor.getTargetPart() instanceof EntityIdentifierMapping ) {
+					if ( fkDescriptor.getTargetPart().isEntityIdentifierMapping() ) {
 						idTableFkSubQuery = idTableIdentifierSubQuery;
 					}
 					else {

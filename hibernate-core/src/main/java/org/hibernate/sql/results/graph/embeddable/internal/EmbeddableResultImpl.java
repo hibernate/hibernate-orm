@@ -121,7 +121,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
+		final EmbeddableInitializer initializer = creationState.resolveInitializer(
 				initializerNavigablePath,
 				getReferencedModePart(),
 				() -> new EmbeddableResultInitializer(
@@ -129,7 +129,9 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 						parentAccess,
 						creationState
 				)
-		);
+		).asEmbeddableInitializer();
+
+		assert initializer != null;
 
 		//noinspection unchecked
 		return new EmbeddableAssembler( initializer );

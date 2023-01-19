@@ -206,7 +206,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
 							toOneAttributeMapping.getSideNature().inverse()
 					);
-					if ( targetPart instanceof EntityIdentifierMapping ) {
+					if ( targetPart.isEntityIdentifierMapping() ) {
 						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
 					}
 					else {

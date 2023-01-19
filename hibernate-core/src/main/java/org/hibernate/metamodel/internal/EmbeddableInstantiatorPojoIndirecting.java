@@ -10,12 +10,13 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 
 /**
  * Support for instantiating embeddables as POJO representation through a constructor
  */
-public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantiator implements StandardEmbeddableInstantiator {
+public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantiator implements EmbeddableInstantiator {
 	protected final Constructor<?> constructor;
 	protected final int[] index;
 

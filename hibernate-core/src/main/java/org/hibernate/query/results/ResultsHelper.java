@@ -113,7 +113,7 @@ public class ResultsHelper {
 	}
 
 	public static String attributeName(ModelPart identifierMapping) {
-		if ( identifierMapping instanceof EntityIdentifierMapping ) {
+		if ( identifierMapping.isEntityIdentifierMapping() ) {
 			return identifierMapping instanceof SingleAttributeIdentifierMapping
 					? ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName()
 					: null;

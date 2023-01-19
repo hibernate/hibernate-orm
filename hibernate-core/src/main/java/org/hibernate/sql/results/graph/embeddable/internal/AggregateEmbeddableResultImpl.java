@@ -151,7 +151,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
+		final EmbeddableInitializer initializer = creationState.resolveInitializer(
 				initializerNavigablePath,
 				getReferencedModePart(),
 				() -> new AggregateEmbeddableResultInitializer(
@@ -160,7 +160,9 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 						creationState,
 						aggregateSelection
 				)
-		);
+		).asEmbeddableInitializer();
+
+		assert initializer != null;
 
 		return new EmbeddableAssembler( initializer );
 	}

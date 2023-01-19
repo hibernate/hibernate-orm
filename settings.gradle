@@ -82,8 +82,8 @@ dependencyResolutionManagement {
             alias( "jandex" ).to("io.smallrye", "jandex" ).version( "3.0.5" )
             alias( "classmate" ).to( "com.fasterxml", "classmate" ).version( "1.5.1" )
 
-            alias( "jackson" ).to ( "com.fasterxml.jackson.core", "jackson-databind" ).version( "2.13.0" )
-            alias( "jacksonXml" ).to ( "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).version( "2.13.0" )
+            alias( "jackson" ).to ( "com.fasterxml.jackson.core", "jackson-databind" ).version( "2.14.1" )
+            alias( "jacksonXml" ).to ( "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).version( "2.14.1" )
             alias( "validator" ).to( "org.hibernate.validator", "hibernate-validator" ).version( "7.0.4.Final" )
 
             alias( "ant" ).to( "org.apache.ant", "ant" ).version( "1.8.2" )

@@ -106,7 +106,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 		return new CteUpdateHandler( idCteTable, sqmUpdate, domainParameterXref, this, sessionFactory ).execute( context );
 	}
 
-	private void checkMatch(SqmDeleteOrUpdateStatement<?> sqmStatement) {
+	protected void checkMatch(SqmDeleteOrUpdateStatement<?> sqmStatement) {
 		final String targetEntityName = sqmStatement.getTarget().getEntityName();
 		final EntityPersister targetEntityDescriptor = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
@@ -123,5 +123,17 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
+	}
+
+	protected EntityPersister getRootDescriptor() {
+		return rootDescriptor;
+	}
+
+	protected SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	protected CteTable getIdCteTable() {
+		return idCteTable;
 	}
 }

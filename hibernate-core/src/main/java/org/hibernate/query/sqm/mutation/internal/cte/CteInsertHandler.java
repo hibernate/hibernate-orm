@@ -152,6 +152,14 @@ public class CteInsertHandler implements InsertHandler {
 		return cteTable;
 	}
 
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	public DomainParameterXref getDomainParameterXref() {
+		return domainParameterXref;
+	}
+
 	@Override
 	public int execute(DomainQueryExecutionContext executionContext) {
 		final SqmInsertStatement<?> sqmInsertStatement = getSqmStatement();
@@ -665,7 +673,7 @@ public class CteInsertHandler implements InsertHandler {
 		return ( (Number) list.get( 0 ) ).intValue();
 	}
 
-	private Expression createCountStar(
+	protected Expression createCountStar(
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
@@ -1109,5 +1117,4 @@ public class CteInsertHandler implements InsertHandler {
 		}
 		return Identifier.toIdentifier( DML_RESULT_TABLE_NAME_PREFIX + subPrefix + tableExpression ).render( dialect );
 	}
-
 }

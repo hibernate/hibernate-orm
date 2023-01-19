@@ -219,6 +219,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			notifyResolutionListeners( compositeInstance );
 
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( compositeInstance );
+			// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
+			// and the compositeInstance == entity, so we have to inject the row state into the entity when it finishes resolution
 			if ( lazyInitializer != null ) {
 				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
 				if ( parentInitializer != this ) {

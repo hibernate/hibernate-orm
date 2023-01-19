@@ -9,7 +9,6 @@ package org.hibernate.sql.results.internal.domain;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
@@ -20,11 +19,8 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer;
-import org.hibernate.sql.results.graph.entity.internal.BatchEntitySelectFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
-import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchByUniqueKeyInitializer;
-import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
+import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -95,50 +91,21 @@ public class CircularFetchImpl implements BiDirectionalFetch {
 	public DomainResultAssembler<?> createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler<?> keyAssembler = keyResult.createResultAssembler( parentAccess, creationState );
 
 		final Initializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				referencedModelPart,
 				() -> {
 					if ( timing == FetchTiming.IMMEDIATE ) {
-						if ( selectByUniqueKey ) {
-							return new EntitySelectFetchByUniqueKeyInitializer(
-									parentAccess,
-									fetchable,
-									getNavigablePath(),
-									entityMappingType.getEntityPersister(),
-									keyAssembler
-							);
-						}
-						final EntityPersister entityPersister = entityMappingType.getEntityPersister();
-						if ( entityPersister.isBatchLoadable() ) {
-							if ( parentAccess.isEmbeddableInitializer() ) {
-								return new BatchEntityInsideEmbeddableSelectFetchInitializer(
-										parentAccess,
-										referencedModelPart,
-										getNavigablePath(),
-										entityPersister,
-										keyResult.createResultAssembler( parentAccess, creationState )
-								);
-							}
-							return new BatchEntitySelectFetchInitializer(
-									parentAccess,
-									referencedModelPart,
-									getReferencedPath(),
-									entityPersister,
-									keyAssembler
-							);
-						}
-						else {
-							return new EntitySelectFetchInitializer(
-									parentAccess,
-									(ToOneAttributeMapping) referencedModelPart,
-									getReferencedPath(),
-									entityPersister,
-									keyAssembler
-							);
-						}
+						return EntitySelectFetchInitializerBuilder.createInitializer(
+								parentAccess,
+								fetchable,
+								entityMappingType.getEntityPersister(),
+								keyResult,
+								getNavigablePath(),
+								selectByUniqueKey,
+								creationState
+						);
 					}
 					else {
 						return new EntityDelayedFetchInitializer(
@@ -146,7 +113,7 @@ public class CircularFetchImpl implements BiDirectionalFetch {
 								getReferencedPath(),
 								fetchable,
 								selectByUniqueKey,
-								keyAssembler
+								keyResult.createResultAssembler( parentAccess, creationState )
 						);
 					}
 				}
@@ -157,6 +124,8 @@ public class CircularFetchImpl implements BiDirectionalFetch {
 				fetchable.getJavaType()
 		);
 	}
+
+
 
 	@Override
 	public FetchTiming getTiming() {

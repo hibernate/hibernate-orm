@@ -141,4 +141,9 @@ public interface EntityIdentifierMapping extends ValuedModelPart {
 		 */
 		VIRTUAL
 	}
+
+	@Override
+	default boolean isEntityIdentifierMapping() {
+		return true;
+	}
 }

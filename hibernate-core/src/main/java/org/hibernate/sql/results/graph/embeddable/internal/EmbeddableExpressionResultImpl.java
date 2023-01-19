@@ -122,7 +122,7 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
+		final EmbeddableInitializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),
 				() -> new EmbeddableResultInitializer(
@@ -130,7 +130,9 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 						parentAccess,
 						creationState
 				)
-		);
+		).asEmbeddableInitializer();
+
+		assert initializer != null;
 
 		//noinspection unchecked
 		return new EmbeddableAssembler( initializer );

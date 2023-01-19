@@ -251,8 +251,8 @@ public class MatchingIdSelectionHelper {
 
 							if ( pluralAttribute.getSeparateCollectionTable() != null ) {
 								// Ensure that the FK target columns are available
-								final boolean useFkTarget = !( pluralAttribute.getKeyDescriptor()
-										.getTargetPart() instanceof EntityIdentifierMapping );
+								final boolean useFkTarget = !pluralAttribute.getKeyDescriptor()
+										.getTargetPart().isEntityIdentifierMapping();
 								if ( useFkTarget ) {
 									final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
 									pluralAttribute.getKeyDescriptor().getTargetPart().applySqlSelections(

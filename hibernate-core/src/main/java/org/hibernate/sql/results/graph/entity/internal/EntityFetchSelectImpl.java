@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -17,7 +16,6 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
  * An eager entity fetch performed as a subsequent (n+1) select
@@ -52,52 +50,22 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 	}
 
 	@Override
-	public DomainResultAssembler<?> createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public DomainResultAssembler<?> createAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		final Initializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				getFetchedMapping(),
-				() -> {
-
-					EntityPersister entityPersister = getReferencedMappingContainer().getEntityPersister();
-
-					final ToOneAttributeMapping fetchedAttribute = (ToOneAttributeMapping) getFetchedMapping();
-					if ( selectByUniqueKey ) {
-						return new EntitySelectFetchByUniqueKeyInitializer(
+				() ->
+						EntitySelectFetchInitializerBuilder.createInitializer(
 								parentAccess,
-								fetchedAttribute,
+								(ToOneAttributeMapping) getFetchedMapping(),
+								getReferencedMappingContainer().getEntityPersister(),
+								keyResult,
 								getNavigablePath(),
-								entityPersister,
-								keyResult.createResultAssembler( parentAccess, creationState )
-						);
-					}
-					if ( entityPersister.isBatchLoadable() && !creationState.isScrollResult() ) {
-						if ( parentAccess.isEmbeddableInitializer() ) {
-							return new BatchEntityInsideEmbeddableSelectFetchInitializer(
-									parentAccess,
-									fetchedAttribute,
-									getNavigablePath(),
-									entityPersister,
-									keyResult.createResultAssembler( parentAccess, creationState )
-							);
-						}
-						return new BatchEntitySelectFetchInitializer(
-								parentAccess,
-								fetchedAttribute,
-								getNavigablePath(),
-								entityPersister,
-								keyResult.createResultAssembler( parentAccess, creationState )
-						);
-					}
-					else {
-						return new EntitySelectFetchInitializer(
-								parentAccess,
-								fetchedAttribute,
-								getNavigablePath(),
-								entityPersister,
-								keyResult.createResultAssembler( parentAccess, creationState )
-						);
-					}
-				}
+								selectByUniqueKey,
+								creationState
+						)
 		);
 
 		return new EntityAssembler( getResultJavaType(), initializer.asEntityInitializer() );

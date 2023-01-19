@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -104,7 +105,21 @@ public interface Initializer {
 		return false;
 	}
 
+	/**
+	 * A utility method to avoid casting explicitly to EntityInitializer
+	 *
+	 * @return EntityInitializer if this is an instance of EntityInitializer otherwise {@code null}
+	 */
 	default EntityInitializer asEntityInitializer() {
+		return null;
+	}
+
+	/**
+	 * A utility method to avoid casting explicitly to EmbeddableInitializer
+	 *
+	 * @return EmbeddableInitializer if this is an instance of EmbeddableInitializer otherwise {@code null}
+	 */
+	default EmbeddableInitializer asEmbeddableInitializer() {
 		return null;
 	}
 

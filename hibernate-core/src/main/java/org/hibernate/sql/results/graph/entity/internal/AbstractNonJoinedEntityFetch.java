@@ -6,9 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;

@@ -27,8 +27,8 @@ public interface EmbeddableInitializer extends FetchParentAccess {
 	default RowProcessingState wrapProcessingState(RowProcessingState processingState) {
 		final FetchParentAccess fetchParentAccess = getFetchParentAccess();
 		if ( fetchParentAccess != null ) {
-			if ( fetchParentAccess instanceof EmbeddableInitializer ) {
-				return ( (EmbeddableInitializer) fetchParentAccess ).wrapProcessingState( processingState );
+			if ( fetchParentAccess.isEmbeddableInitializer() ) {
+				return ( fetchParentAccess.asEmbeddableInitializer() ).wrapProcessingState( processingState );
 			}
 		}
 		return processingState;
@@ -42,5 +42,10 @@ public interface EmbeddableInitializer extends FetchParentAccess {
 	@Override
 	default boolean isEmbeddableInitializer() {
 		return true;
+	}
+
+	@Override
+	default EmbeddableInitializer asEmbeddableInitializer() {
+		return this;
 	}
 }

@@ -770,7 +770,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public boolean isReferenceToPrimaryKey() {
-		return foreignKeyDescriptor.getSide( sideNature.inverse() ).getModelPart() instanceof EntityIdentifierMapping;
+		return foreignKeyDescriptor.getSide( sideNature.inverse() ).getModelPart().isEntityIdentifierMapping();
 	}
 
 	@Override

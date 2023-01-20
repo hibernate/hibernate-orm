@@ -16,9 +16,12 @@ import org.hibernate.boot.model.TypeContributor;
  * An implementation may be registered with the JPA provider using the property
  * {@value org.hibernate.jpa.boot.spi.JpaSettings#TYPE_CONTRIBUTORS}.
  *
+ * @deprecated Consider using {@linkplain java.util.ServiceLoader discovery} instead to
+ * dynamically locate {@linkplain TypeContributor contributors}.
+ *
  * @author Brett Meyer
  */
-// TODO: Not a fan of this name or entry point into EMFBuilderImpl
+@Deprecated(forRemoval = true)
 public interface TypeContributorList {
 	List<TypeContributor> getTypeContributors();
 }

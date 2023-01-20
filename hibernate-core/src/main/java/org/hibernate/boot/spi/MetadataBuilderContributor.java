@@ -7,24 +7,27 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.boot.model.TypeContributor;
 
 /**
  * A bootstrap process hook for contributing settings to {@link MetadataBuilder}.
- * <p>
- * In implementation may be registered with the JPA provider using the property
- * {@value org.hibernate.jpa.boot.spi.JpaSettings#METADATA_BUILDER_CONTRIBUTOR}.
- *
- * @apiNote Currently, this API is only supported in the JPA persistence provider.
- *          It's unfortunate that implementations are not discoverable like
- *          {@link org.hibernate.boot.model.TypeContributor} and
- *          {@link org.hibernate.boot.model.FunctionContributor}.
+ * <p/>
+ * Generally this is used from JPA bootstrapping where {@link MetadataBuilder} is not accessible.
+ * <p/>
+ * Implementations can be {@linkplain java.util.ServiceLoader discovered}. For historical reasons,
+ * an implementation can also be named using the
+ * {@value org.hibernate.jpa.boot.spi.JpaSettings#METADATA_BUILDER_CONTRIBUTOR} setting, though
+ * discovery should be preferred.
  *
  * @author Vlad Mihalcea
  *
  * @since 5.3
  *
- * @deprecated Use
+ * @deprecated Use settings, {@link TypeContributor}, {@link FunctionContributor} or
+ * {@link AdditionalMappingContributor} instead depending on need
  */
+@Deprecated(forRemoval = true)
 public interface MetadataBuilderContributor {
 	/**
 	 * Perform the process of contributing to the {@link MetadataBuilder}.

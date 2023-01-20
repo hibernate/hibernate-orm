@@ -22,6 +22,8 @@ import org.hibernate.boot.MetadataBuilder;
  * @author Vlad Mihalcea
  *
  * @since 5.3
+ *
+ * @deprecated Use
  */
 public interface MetadataBuilderContributor {
 	/**

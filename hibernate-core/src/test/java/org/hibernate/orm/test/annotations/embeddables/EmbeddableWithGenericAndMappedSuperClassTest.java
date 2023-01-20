@@ -2,6 +2,7 @@ package org.hibernate.orm.test.annotations.embeddables;
 
 import java.util.List;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -22,7 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel(
 		annotatedClasses = {
 				EmbeddableWithGenericAndMappedSuperClassTest.PopularBook.class,
-				EmbeddableWithGenericAndMappedSuperClassTest.RareBook.class
+				EmbeddableWithGenericAndMappedSuperClassTest.RareBook.class,
+				EmbeddableWithGenericAndMappedSuperClassTest.GenericExample.class
 		}
 )
 @SessionFactory
@@ -45,6 +48,8 @@ public class EmbeddableWithGenericAndMappedSuperClassTest {
 
 					session.persist( popularBook );
 					session.persist( rareBook );
+
+					session.persist( new GenericExample(1, new Range<>(2, 3)) );
 				}
 		);
 	}
@@ -106,6 +111,48 @@ public class EmbeddableWithGenericAndMappedSuperClassTest {
 					assertThat( code ).isEqualTo( POPULAR_BOOK_CODE );
 				}
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-4299")
+	public void testGenericEmbeddedAttribute(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					GenericExample ge = session.get( GenericExample.class, 1 );
+					assertThat( ge ).isNotNull();
+					assertThat( ge ).extracting( "bounds" ).isNotNull();
+				}
+		);
+	}
+
+	@Entity
+	public static class GenericExample {
+		@Id
+		private int id;
+		@Embedded
+		private Range<Integer> bounds;
+
+		public GenericExample() {
+		}
+
+		public GenericExample(int id, Range<Integer> bounds) {
+			this.id = id;
+			this.bounds = bounds;
+		}
+	}
+
+	public static class Range<T> {
+
+		private T min;
+		private T max;
+
+		public Range() {
+		}
+
+		public Range(T min, T max) {
+			this.min = min;
+			this.max = max;
+		}
 	}
 
 	@Embeddable

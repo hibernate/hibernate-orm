@@ -22,10 +22,31 @@ import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
+import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedListJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedMapJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedPluralPartJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSetJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmListJoin;
+import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedSimplePath;
+import org.hibernate.query.sqm.tree.expression.SqmAny;
+import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -54,7 +75,6 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -190,8 +210,8 @@ public class QuerySplitter {
 		private final SqmCreationContext creationContext;
 		private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>( SqmCreationProcessingState.class );
 
-		private Map<NavigablePath, SqmPath> sqmPathCopyMap = new HashMap<>();
-		private Map<SqmFrom, SqmFrom> sqmFromCopyMap = new HashMap<>();
+		private final Map<NavigablePath, SqmPath> sqmPathCopyMap = new HashMap<>();
+		private final Map<SqmFrom, SqmFrom> sqmFromCopyMap = new HashMap<>();
 
 		private UnmappedPolymorphismReplacer(
 				SqmRoot unmappedPolymorphicFromElement,
@@ -598,16 +618,28 @@ public class QuerySplitter {
 			if ( sqmFrom != null ) {
 				return (SqmCrossJoin<?>) sqmFrom;
 			}
-			final SqmRoot<?> sqmRoot = (SqmRoot<?>) sqmFromCopyMap.get( join.findRoot() );
 			final SqmCrossJoin copy = new SqmCrossJoin<>(
 					join.getReferencedPathSource(),
 					join.getExplicitAlias(),
-					sqmRoot
+					(SqmRoot<?>) sqmFromCopyMap.get( join.findRoot() )
 			);
-			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
-			sqmPathCopyMap.put( join.getNavigablePath(), copy );
-			sqmRoot.addSqmJoin( copy );
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmCorrelatedCrossJoin<?> visitCorrelatedCrossJoin(SqmCorrelatedCrossJoin<?> join) {
+			final SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			if ( sqmFrom != null ) {
+				return (SqmCorrelatedCrossJoin<?>) sqmFrom;
+			}
+
+			final SqmCorrelatedCrossJoin copy = new SqmCorrelatedCrossJoin<>(
+					findSqmFromCopy( join.getCorrelationParent() )
+			);
+
+			visitJoins( join, copy );
 			return copy;
 		}
 
@@ -617,18 +649,29 @@ public class QuerySplitter {
 			if ( sqmFrom != null ) {
 				return (SqmPluralPartJoin<?, ?>) sqmFrom;
 			}
-			final SqmFrom<?, ?> newLhs = (SqmFrom<?, ?>) sqmFromCopyMap.get( join.getLhs() );
 			final SqmPluralPartJoin copy = new SqmPluralPartJoin<>(
-					newLhs,
+					(SqmFrom<?, ?>) sqmFromCopyMap.get( join.getLhs() ),
 					join.getReferencedPathSource(),
 					join.getExplicitAlias(),
 					join.getSqmJoinType(),
 					join.nodeBuilder()
 			);
-			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
-			sqmPathCopyMap.put( join.getNavigablePath(), copy );
-			newLhs.addSqmJoin( copy );
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmCorrelatedPluralPartJoin<?,?> visitCorrelatedPluralPartJoin(SqmCorrelatedPluralPartJoin<?, ?> join) {
+			final SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			if ( sqmFrom != null ) {
+				return (SqmCorrelatedPluralPartJoin<?, ?>) sqmFrom;
+			}
+			final SqmCorrelatedPluralPartJoin copy = new SqmCorrelatedPluralPartJoin<>(
+					findSqmFromCopy( join.getCorrelationParent() )
+			);
+
+			visitJoins( join, copy );
 			return copy;
 		}
 
@@ -645,24 +688,235 @@ public class QuerySplitter {
 					join.getSqmJoinType(),
 					sqmRoot
 			);
-			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
-			sqmPathCopyMap.put( join.getNavigablePath(), copy );
-			sqmRoot.addSqmJoin( copy );
+
+			visitJoins( join, copy );
 			return copy;
 		}
 
 		@Override
-		public SqmAttributeJoin<?, ?> visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> join) {
-			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+		public SqmCorrelatedRootJoin<?> visitCorrelatedRootJoin(SqmCorrelatedRootJoin<?> correlatedRootJoin) {
+			final SqmCorrelatedRootJoin<?> sqmFrom = (SqmCorrelatedRootJoin<?>) sqmFromCopyMap.get( correlatedRootJoin );
 			if ( sqmFrom != null ) {
-				return (SqmAttributeJoin<?, ?>) sqmFrom;
+				return sqmFrom;
 			}
-			SqmAttributeJoin copy = join.makeCopy( getProcessingStateStack().getCurrent() );
-			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
-			sqmPathCopyMap.put( join.getNavigablePath(), copy );
-			( (SqmFrom<?, ?>) copy.getParent() ).addSqmJoin( copy );
+			SqmCorrelatedRootJoin<?> copy = new SqmCorrelatedRootJoin<>(
+					correlatedRootJoin.getNavigablePath(),
+					correlatedRootJoin.getReferencedPathSource(),
+					correlatedRootJoin.nodeBuilder()
+			);
+			correlatedRootJoin.visitReusablePaths( path -> path.accept( this ) );
+
+			sqmFromCopyMap.put( correlatedRootJoin, copy );
+			sqmPathCopyMap.put( correlatedRootJoin.getNavigablePath(), copy );
+			correlatedRootJoin.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
+
+			return copy;
+		}
+
+		@Override
+		public SqmCorrelatedRoot<?> visitCorrelatedRoot(SqmCorrelatedRoot<?> correlatedRoot) {
+			final SqmCorrelatedRoot<?> sqmFrom = (SqmCorrelatedRoot<?>) sqmFromCopyMap.get( correlatedRoot );
+			if ( sqmFrom != null ) {
+				return sqmFrom;
+			}
+			SqmCorrelatedRoot<?> copy = new SqmCorrelatedRoot<>(
+					findSqmFromCopy( correlatedRoot.getCorrelationParent() )
+			);
+
+			correlatedRoot.visitReusablePaths( path -> path.accept( this ) );
+
+			sqmFromCopyMap.put( correlatedRoot, copy );
+			sqmPathCopyMap.put( correlatedRoot.getNavigablePath(), copy );
+			correlatedRoot.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
+			return copy;
+		}
+
+		@Override
+		public SqmBagJoin<?, ?> visitBagJoin(SqmBagJoin<?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+			if ( existing != null ) {
+				return (SqmBagJoin<?, ?>) existing;
+			}
+
+			final SqmBagJoin copy = new SqmBagJoin<>(
+					findSqmFromCopy( join.getLhs() ),
+					join.getReferencedPathSource(),
+					join.getExplicitAlias(),
+					join.getSqmJoinType(),
+					join.isFetched(),
+					join.nodeBuilder()
+			);
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmCorrelatedBagJoin<?, ?> visitCorrelatedBagJoin(SqmCorrelatedBagJoin<?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+			if ( existing != null ) {
+				return (SqmCorrelatedBagJoin<?, ?>) existing;
+			}
+
+			final SqmCorrelatedBagJoin copy = new SqmCorrelatedBagJoin<>(
+					findSqmFromCopy( join.getCorrelationParent() )
+			);
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmCorrelatedListJoin<?, ?> visitCorrelatedListJoin(SqmCorrelatedListJoin<?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+
+			if ( existing != null ) {
+				return (SqmCorrelatedListJoin<?, ?>) existing;
+			}
+
+			final SqmCorrelatedListJoin copy = new SqmCorrelatedListJoin<>(
+					findSqmFromCopy( join.getCorrelationParent() )
+			);
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmCorrelatedMapJoin<?, ?, ?> visitCorrelatedMapJoin(SqmCorrelatedMapJoin<?, ?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+
+			if ( existing != null ) {
+				return (SqmCorrelatedMapJoin<?, ?, ?>) existing;
+			}
+
+			final SqmCorrelatedMapJoin copy = new SqmCorrelatedMapJoin<>(
+					findSqmFromCopy( join.getCorrelationParent() )
+			);
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmCorrelatedSetJoin<?, ?> visitCorrelatedSetJoin(SqmCorrelatedSetJoin<?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+
+			if ( existing != null ) {
+				return (SqmCorrelatedSetJoin<?, ?>) existing;
+			}
+
+			final SqmCorrelatedSetJoin copy = new SqmCorrelatedSetJoin<>(
+					findSqmFromCopy( join.getCorrelationParent() )
+			);
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmCorrelatedSingularJoin<?, ?> visitCorrelatedSingularJoin(SqmCorrelatedSingularJoin<?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+
+			if ( existing != null ) {
+				return (SqmCorrelatedSingularJoin<?, ?>) existing;
+			}
+
+			final SqmCorrelatedSingularJoin copy = new SqmCorrelatedSingularJoin<>(
+					findSqmFromCopy( join.getCorrelationParent() )
+			);
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmListJoin<?, ?> visitListJoin(SqmListJoin<?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+
+			if ( existing != null ) {
+				return (SqmListJoin<?, ?>) existing;
+			}
+
+			final SqmListJoin copy = new SqmListJoin<>(
+					findSqmFromCopy( join.getLhs() ),
+					join.getReferencedPathSource(),
+					join.getExplicitAlias(),
+					join.getSqmJoinType(),
+					join.isFetched(),
+					join.nodeBuilder()
+			);
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmMapJoin<?, ?, ?> visitMapJoin(SqmMapJoin<?, ?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+
+			if ( existing != null ) {
+				return (SqmMapJoin<?, ?, ?>) existing;
+			}
+
+			final SqmMapJoin copy = new SqmMapJoin<>(
+					findSqmFromCopy( join.getLhs() ),
+					join.getReferencedPathSource(),
+					join.getExplicitAlias(),
+					join.getSqmJoinType(),
+					join.isFetched(),
+					join.nodeBuilder()
+			);
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmSetJoin<?, ?> visitSetJoin(SqmSetJoin<?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+
+			if ( existing != null ) {
+				return (SqmSetJoin<?, ?>) existing;
+			}
+
+			final SqmSetJoin copy = new SqmSetJoin<>(
+					findSqmFromCopy( join.getLhs() ),
+					join.getReferencedPathSource(),
+					join.getExplicitAlias(),
+					join.getSqmJoinType(),
+					join.isFetched(),
+					join.nodeBuilder()
+			);
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmSingularJoin<?, ?> visitSingularJoin(SqmSingularJoin<?, ?> join) {
+			final SqmFrom<?, ?> existing = sqmFromCopyMap.get( join );
+
+			if ( existing != null ) {
+				return (SqmSingularJoin<?, ?>) existing;
+			}
+
+			final SqmSingularJoin copy = new SqmSingularJoin<>(
+					findSqmFromCopy( join.getLhs() ),
+					join.getReferencedPathSource(),
+					join.getExplicitAlias(),
+					join.getSqmJoinType(),
+					join.isFetched(),
+					join.nodeBuilder()
+			);
+
+			visitJoins( join, copy );
 			return copy;
 		}
 
@@ -680,10 +934,23 @@ public class QuerySplitter {
 					join.isLateral(),
 					sqmRoot
 			);
-			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
-			sqmPathCopyMap.put( join.getNavigablePath(), copy );
-			sqmRoot.addSqmJoin( copy );
+
+			visitJoins( join, copy );
+			return copy;
+		}
+
+		@Override
+		public SqmCorrelatedEntityJoin<?> visitCorrelatedEntityJoin(SqmCorrelatedEntityJoin<?> join) {
+			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			if ( sqmFrom != null ) {
+				return (SqmCorrelatedEntityJoin<?>) sqmFrom;
+			}
+
+			final SqmCorrelatedEntityJoin copy = new SqmCorrelatedEntityJoin(
+					findSqmFromCopy( join.getCorrelationParent() )
+			);
+
+			visitJoins( join, copy );
 			return copy;
 		}
 
@@ -700,10 +967,8 @@ public class QuerySplitter {
 					join.getSqmJoinType(),
 					sqmRoot
 			);
-			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
-			sqmPathCopyMap.put( join.getNavigablePath(), copy );
-			sqmRoot.addSqmJoin( copy );
+
+			visitJoins( join, copy );
 			return copy;
 		}
 
@@ -711,7 +976,7 @@ public class QuerySplitter {
 		public SqmBasicValuedSimplePath<?> visitBasicValuedPath(SqmBasicValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
 
-			final SqmPath<?> lhs = findLhs( path, pathRegistry );
+			final SqmPath<?> lhs = findLhs( path );
 
 			final SqmBasicValuedSimplePath<?> copy = new SqmBasicValuedSimplePath<>(
 					lhs.getNavigablePath().append( path.getNavigablePath().getLocalName() ),
@@ -728,7 +993,7 @@ public class QuerySplitter {
 		@Override
 		public SqmEmbeddedValuedSimplePath<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
-			final SqmPath<?> lhs = findLhs( path, pathRegistry );
+			final SqmPath<?> lhs = findLhs( path );
 			final SqmEmbeddedValuedSimplePath<?> copy = new SqmEmbeddedValuedSimplePath<>(
 					lhs.getNavigablePath().append( path.getNavigablePath().getLocalName() ),
 					path.getReferencedPathSource(),
@@ -743,7 +1008,7 @@ public class QuerySplitter {
 		@Override
 		public SqmEntityValuedSimplePath<?> visitEntityValuedPath(SqmEntityValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
-			final SqmPath<?> lhs = findLhs( path, pathRegistry );
+			final SqmPath<?> lhs = findLhs( path );
 			final SqmEntityValuedSimplePath<?> copy = new SqmEntityValuedSimplePath<>(
 					lhs.getNavigablePath().append( path.getNavigablePath().getLocalName() ),
 					path.getReferencedPathSource(),
@@ -758,7 +1023,7 @@ public class QuerySplitter {
 		@Override
 		public SqmPluralValuedSimplePath<?> visitPluralValuedPath(SqmPluralValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
-			SqmPath<?> lhs = findLhs( path, pathRegistry );
+			SqmPath<?> lhs = findLhs( path );
 
 			final SqmPluralValuedSimplePath<?> copy = new SqmPluralValuedSimplePath<>(
 					path.getNavigablePath(),
@@ -771,11 +1036,11 @@ public class QuerySplitter {
 			return copy;
 		}
 
-		private SqmPath<?> findLhs(SqmPath<?> path, SqmPathRegistry pathRegistry) {
+		private SqmPath<?> findLhs(SqmPath<?> path) {
 			final SqmPath<?> lhs = path.getLhs();
-			final SqmPath sqmFrom = sqmPathCopyMap.get( lhs.getNavigablePath() );
-			if ( sqmFrom != null ) {
-				return pathRegistry.findFromByPath( sqmFrom.getNavigablePath() );
+			final SqmPath lhsSqmPathCopy = sqmPathCopyMap.get( lhs.getNavigablePath() );
+			if ( lhsSqmPathCopy != null ) {
+				return lhsSqmPathCopy;
 			}
 			else {
 				return (SqmPath<?>) lhs.accept( this );
@@ -1023,6 +1288,28 @@ public class QuerySplitter {
 		}
 
 		@Override
+		public Object visitAny(SqmAny<?> sqmAny) {
+			return new SqmAny<>(
+					(SqmSubQuery<?>) sqmAny.getSubquery().accept( this ),
+					this.creationContext.getNodeBuilder()
+			);
+		}
+
+		@Override
+		public Object visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath) {
+			throw new UnsupportedOperationException("Polymorphic queries: treat operator is not supported");
+		}
+
+		@Override
+		public Object visitEvery(SqmEvery<?> sqmEvery) {
+			sqmEvery.getSubquery().accept( this );
+			return new SqmEvery<>(
+					(SqmSubQuery<?>) sqmEvery.getSubquery().accept( this ),
+					this.creationContext.getNodeBuilder()
+			);
+		}
+
+		@Override
 		public Stack<SqmCreationProcessingState> getProcessingStateStack() {
 			return processingStateStack;
 		}
@@ -1037,6 +1324,29 @@ public class QuerySplitter {
 			return () -> false;
 		}
 
+		public <X extends SqmFrom<?, ?>> X findSqmFromCopy(SqmFrom sqmFrom) {
+			SqmFrom copy = sqmFromCopyMap.get( sqmFrom );
+			if ( copy != null ) {
+				return (X) copy;
+			}
+			else {
+				return (X) sqmFrom.accept( this );
+			}
+		}
+
+		private void visitJoins(SqmFrom<?, ?> join, SqmJoin copy) {
+			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
+			sqmFromCopyMap.put( join, copy );
+			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			join.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
+			SqmFrom<?, ?> lhs = (SqmFrom<?, ?>) copy.getLhs();
+			if ( lhs != null ) {
+				lhs.addSqmJoin( copy );
+			}
+		}
 	}
 
 }

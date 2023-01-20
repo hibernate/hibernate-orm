@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
@@ -85,6 +86,11 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitListJoin( this );
+	}
+
+	@Override
 	public ListPersistentAttribute<O,E> getAttribute() {
 		//noinspection unchecked
 		return (ListPersistentAttribute<O, E>) super.getAttribute();
@@ -156,4 +162,5 @@ public class SqmListJoin<O,E>
 				nodeBuilder()
 		);
 	}
+
 }

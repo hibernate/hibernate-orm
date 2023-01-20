@@ -30,4 +30,9 @@ public interface EmbeddableInitializer extends FetchParentAccess {
 	default boolean isEmbeddableInitializer() {
 		return true;
 	}
+
+	@Override
+	default EmbeddableInitializer asEmbeddableInitializer() {
+		return this;
+	}
 }

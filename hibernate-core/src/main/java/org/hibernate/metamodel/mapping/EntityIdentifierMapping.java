@@ -28,6 +28,11 @@ public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 		return ROLE_LOCAL_NAME;
 	}
 
+	@Override
+	default boolean isEntityIdentifierMapping() {
+		return true;
+	}
+
 	/**
 	 * The strategy for distinguishing between detached and transient
 	 * state based on the identifier mapping

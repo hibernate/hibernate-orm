@@ -12,6 +12,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.Association;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -34,6 +35,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.BatchEntitySelectFetchInitializer;
@@ -128,8 +130,19 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 						}
 						final EntityPersister entityPersister = entityMappingType.getEntityPersister();
 						if ( entityPersister.isBatchLoadable() ) {
-							if ( parentAccess.isEmbeddableInitializer() ) {
-								return new BatchEntityInsideEmbeddableSelectFetchInitializer(
+								if ( parentAccess.isEmbeddableInitializer() ) {
+									final EmbeddableInitializer embeddableInitializer = parentAccess.asEmbeddableInitializer();
+									final EmbeddableValuedModelPart initializedPart = embeddableInitializer.getInitializedPart();
+									if ( initializedPart.isEntityIdentifierMapping() || initializedPart.isVirtual() ) {
+										return new EntitySelectFetchInitializer(
+												parentAccess,
+												referencedModelPart,
+												getReferencedPath(),
+												entityPersister,
+												keyAssembler
+										);
+									}
+									return new BatchEntityInsideEmbeddableSelectFetchInitializer(
 										parentAccess,
 										referencedModelPart,
 										getNavigablePath(),
@@ -148,7 +161,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 						else {
 							return new EntitySelectFetchInitializer(
 									parentAccess,
-									(ToOneAttributeMapping) referencedModelPart,
+									referencedModelPart,
 									getReferencedPath(),
 									entityPersister,
 									keyAssembler

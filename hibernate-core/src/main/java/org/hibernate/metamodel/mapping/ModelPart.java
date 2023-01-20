@@ -73,6 +73,19 @@ public interface ModelPart extends MappingModelExpressible {
 			DomainResultCreationState creationState);
 
 	/**
+	 * Whether this model part describes something that physically
+	 * exists in the domain model.
+	 * <p/>
+	 * For example, an entity's {@linkplain EntityDiscriminatorMapping discriminator}
+	 * is part of the model, but is not a physical part of the domain model - there
+	 * is no "discriminator attribute".
+	 * <p/>
+	 * Also indicates whether the part is castable to {@link VirtualModelPart}
+	 */
+	default boolean isVirtual() {
+		return false;
+	}
+	/**
 	 * Apply SQL selections for a specific reference to this ModelPart outside the domain query's root select clause.
 	 */
 	void applySqlSelections(
@@ -99,6 +112,10 @@ public interface ModelPart extends MappingModelExpressible {
 
 	default AttributeMapping asAttributeMapping() {
 		return null;
+	}
+
+	default boolean isEntityIdentifierMapping(){
+		return false;
 	}
 
 	@FunctionalInterface

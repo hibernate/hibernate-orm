@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -17,7 +18,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 
 /**
  * An eager entity fetch performed as a subsequent (n+1) select
@@ -72,6 +73,17 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 					}
 					if ( entityPersister.isBatchLoadable() && !creationState.isScrollResult() ) {
 						if ( parentAccess.isEmbeddableInitializer() ) {
+							final EmbeddableInitializer embeddableInitializer = parentAccess.asEmbeddableInitializer();
+							final EmbeddableValuedModelPart initializedPart = embeddableInitializer.getInitializedPart();
+							if ( initializedPart.isEntityIdentifierMapping() || initializedPart.isVirtual() ) {
+								return new EntitySelectFetchInitializer(
+										parentAccess,
+										fetchedAttribute,
+										getNavigablePath(),
+										entityPersister,
+										keyResult.createResultAssembler( parentAccess, creationState )
+								);
+							}
 							return new BatchEntityInsideEmbeddableSelectFetchInitializer(
 									parentAccess,
 									fetchedAttribute,

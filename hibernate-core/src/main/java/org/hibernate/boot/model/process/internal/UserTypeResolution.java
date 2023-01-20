@@ -10,14 +10,16 @@ import java.util.Properties;
 
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
+ * BasicValue.Resolution based on a UserType
+ *
  * @author Steve Ebersole
  */
 public class UserTypeResolution implements BasicValue.Resolution {

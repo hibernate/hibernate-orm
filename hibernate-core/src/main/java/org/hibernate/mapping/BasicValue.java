@@ -20,6 +20,7 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.model.process.internal.CdiUserTypeResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
@@ -40,7 +41,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
@@ -807,45 +807,48 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				else {
 					typeInstance = instanceProducer.produceBeanInstance( explicitCustomType );
 				}
+
+				//noinspection unchecked,rawtypes
+				prepareUserTypeInstance( (UserType) typeInstance, properties );
+
+				this.resolution = new UserTypeResolution(
+						new CustomType<>( (UserType<?>) typeInstance, getTypeConfiguration() ),
+						null,
+						properties
+				);
 			}
 			else {
-				final ManagedBean<T> typeBean;
-				if ( properties.isEmpty() ) {
-					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-							.getBean( explicitCustomType, instanceProducer );
-				}
-				else {
-					final String name = explicitCustomType.getName() + COUNTER++;
-					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-							.getBean( name, explicitCustomType, instanceProducer );
-				}
-
-				typeInstance = typeBean.getBeanInstance();
-
-				if ( typeInstance instanceof TypeConfigurationAware ) {
-					( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( getTypeConfiguration() );
-				}
-
-				if ( typeInstance instanceof DynamicParameterizedType ) {
-					if ( Boolean.parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
-						if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-							final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
-							properties.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
-						}
-					}
-				}
-
-				injectParameters( typeInstance, properties );
-				// envers - grr
-				setTypeParameters( properties );
+				//noinspection unchecked,rawtypes
+				this.resolution = new CdiUserTypeResolution<>(
+						(Class)explicitCustomType,
+						getBuildingContext().getBootstrapContext().getCustomTypeProducer(),
+						getServiceRegistry(),
+						getTypeConfiguration(),
+						this::prepareUserTypeInstance,
+						properties
+				);
 			}
-
-			this.resolution = new UserTypeResolution(
-					new CustomType<>( (UserType<?>) typeInstance, getTypeConfiguration() ),
-					null,
-					properties
-			);
 		}
+	}
+
+	private <J, T extends UserType<J>> void prepareUserTypeInstance(T typeInstance, Properties properties) {
+		if ( typeInstance instanceof TypeConfigurationAware ) {
+			( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( getTypeConfiguration() );
+		}
+
+		if ( typeInstance instanceof DynamicParameterizedType ) {
+			if ( Boolean.parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
+				if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+					final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
+					properties.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
+				}
+			}
+		}
+
+		injectParameters( typeInstance, properties );
+
+		// envers - grr
+		setTypeParameters( properties );
 	}
 
 	public void setTemporalPrecision(TemporalType temporalPrecision) {

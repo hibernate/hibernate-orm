@@ -41,6 +41,7 @@ public interface AdditionalMappingContributions {
 	 * {@linkplain #contributeBinding(JaxbEntityMappings) extended orm.xml}
 	 * bindings instead.
 	 */
+	@Deprecated
 	void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding);
 
 	/**

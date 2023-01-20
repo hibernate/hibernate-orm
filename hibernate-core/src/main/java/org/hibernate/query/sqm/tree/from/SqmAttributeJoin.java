@@ -6,13 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
-import org.hibernate.HibernateException;
+import org.hibernate.Remove;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaFetch;
 import org.hibernate.query.criteria.JpaJoin;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -44,15 +43,11 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	@Override
 	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatTarget);
 
-	SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState);
+	/*
+		@deprecated not used anymore
+	 */
+	@Deprecated
+	@Remove
+	SqmAttributeJoin makeCopy( SqmCreationProcessingState creationProcessingState );
 
-	class NotJoinableException extends HibernateException {
-		public NotJoinableException(String message) {
-			super( message );
-		}
-
-		public NotJoinableException(String message, Throwable cause) {
-			super( message, cause );
-		}
-	}
 }

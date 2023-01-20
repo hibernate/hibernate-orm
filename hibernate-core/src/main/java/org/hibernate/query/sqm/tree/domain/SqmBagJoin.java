@@ -10,6 +10,7 @@ import java.util.Collection;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaExpression;
@@ -82,6 +83,11 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitBagJoin( this );
+	}
+
+	@Override
 	public BagPersistentAttribute<O,E> getAttribute() {
 		//noinspection unchecked
 		return (BagPersistentAttribute<O, E>) super.getAttribute();
@@ -149,4 +155,5 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 				nodeBuilder()
 		);
 	}
+
 }

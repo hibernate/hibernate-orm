@@ -13,6 +13,7 @@ import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
@@ -81,6 +82,11 @@ public class SqmMapJoin<O, K, V>
 	@Override
 	public MapPersistentAttribute<O, K, V> getModel() {
 		return (MapPersistentAttribute<O, K, V>) super.getModel();
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitMapJoin( this );
 	}
 
 	@Override
@@ -170,4 +176,5 @@ public class SqmMapJoin<O, K, V>
 				nodeBuilder()
 		);
 	}
+
 }

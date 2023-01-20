@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -68,6 +69,11 @@ public class SqmCorrelatedEntityJoin<T> extends SqmEntityJoin<T> implements SqmC
 	}
 
 	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitCorrelatedEntityJoin(this);
+	}
+
+	@Override
 	public SqmEntityJoin<T> getCorrelationParent() {
 		return correlationParent;
 	}
@@ -99,4 +105,5 @@ public class SqmCorrelatedEntityJoin<T> extends SqmEntityJoin<T> implements SqmC
 				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
+
 }

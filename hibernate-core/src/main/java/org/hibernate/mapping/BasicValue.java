@@ -38,14 +38,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -54,15 +51,12 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
-
-import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
  * @author Steve Ebersole
@@ -774,16 +768,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		super.setTypeName( typeName );
 	}
 
-	private static int COUNTER;
-
 	public <T extends UserType<?>> void setExplicitCustomType(Class<T> explicitCustomType) {
 		if ( explicitCustomType != null ) {
 			if ( resolution != null ) {
-				throw new UnsupportedOperationException( "Unsupported attempt to set an explicit-custom-type when value is already resolved" );
+				throw new UnsupportedOperationException( "Unsupported attempt to set an explicit custom-type when value is already resolved" );
 			}
-
-			final BeanInstanceProducer instanceProducer =
-					getBuildingContext().getBootstrapContext().getCustomTypeProducer();
 
 			final Properties properties = new Properties();
 			if ( CollectionHelper.isNotEmpty( getTypeParameters() ) ) {
@@ -792,40 +781,15 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			if ( CollectionHelper.isNotEmpty( explicitLocalTypeParams ) ) {
 				properties.putAll( explicitLocalTypeParams );
 			}
-
-			final ManagedBean<T> typeBean;
-			if ( properties.isEmpty() ) {
-				typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-						.getBean( explicitCustomType, instanceProducer );
-			}
-			else {
-				final String name = explicitCustomType.getName() + COUNTER++;
-				typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-						.getBean( name, explicitCustomType, instanceProducer );
-			}
-
-			final T typeInstance = typeBean.getBeanInstance();
-
-			if ( typeInstance instanceof TypeConfigurationAware ) {
-				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( getTypeConfiguration() );
-			}
-
-			if ( typeInstance instanceof DynamicParameterizedType ) {
-				if ( Boolean.parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
-					if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-						final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
-						properties.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
-					}
-				}
-			}
-
-			injectParameters( typeInstance, properties );
 			// envers - grr
 			setTypeParameters( properties );
 
 			this.resolution = new UserTypeResolution(
-					new CustomType<>( (UserType<?>) typeInstance, getTypeConfiguration() ),
-					null,
+					explicitCustomType,
+					getBuildingContext().getBootstrapContext().getCustomTypeProducer(),
+					getServiceRegistry(),
+					getTypeConfiguration(),
+					this::makeParameterImpl,
 					properties
 			);
 		}

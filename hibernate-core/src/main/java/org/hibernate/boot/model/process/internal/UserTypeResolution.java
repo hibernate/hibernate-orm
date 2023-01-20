@@ -7,22 +7,39 @@
 package org.hibernate.boot.model.process.internal;
 
 import java.util.Properties;
+import java.util.function.Supplier;
 
+import org.hibernate.HibernateException;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.MappingHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.TypeConfigurationAware;
+import org.hibernate.usertype.DynamicParameterizedType;
+import org.hibernate.usertype.UserType;
 
 /**
  * @author Steve Ebersole
  */
-public class UserTypeResolution implements BasicValue.Resolution {
-	private final CustomType<?> userTypeAdapter;
-	private final MutabilityPlan<?> mutabilityPlan;
+public class UserTypeResolution<J, T extends UserType<J>> implements BasicValue.Resolution<J> {
+	private static int COUNTER;
+
+	private final Class<T> customTypeImplementor;
+
+	private final BeanInstanceProducer instanceProducer;
+	private final ServiceRegistry serviceRegistry;
+	private final TypeConfiguration typeConfiguration;
+	private final Supplier<DynamicParameterizedType.ParameterType> dynamicParameterizedTypeCreator;
 
 	/**
 	 * We need this for the way envers interprets the boot-model
@@ -30,57 +47,115 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	 */
 	private final Properties combinedTypeParameters;
 
+	private boolean resolved = false;
+	private CustomType<J> userTypeAdapter;
+	private MutabilityPlan<J> mutabilityPlan;
+
 	public UserTypeResolution(
-			CustomType<?> userTypeAdapter,
-			MutabilityPlan<?> explicitMutabilityPlan,
+			Class<T> customTypeImplementor,
+			BeanInstanceProducer instanceProducer,
+			ServiceRegistry serviceRegistry,
+			TypeConfiguration typeConfiguration,
+			Supplier<DynamicParameterizedType.ParameterType> dynamicParameterizedTypeCreator,
 			Properties combinedTypeParameters) {
-		this.userTypeAdapter = userTypeAdapter;
+		this.customTypeImplementor = customTypeImplementor;
+		this.instanceProducer = instanceProducer;
+		this.serviceRegistry = serviceRegistry;
+		this.typeConfiguration = typeConfiguration;
+		this.dynamicParameterizedTypeCreator = dynamicParameterizedTypeCreator;
 		this.combinedTypeParameters = combinedTypeParameters;
-		this.mutabilityPlan = explicitMutabilityPlan != null
-				? explicitMutabilityPlan
-				: new UserTypeMutabilityPlanAdapter<>( userTypeAdapter.getUserType() );
+	}
+
+	public boolean isResolved() {
+		return resolved;
+	}
+
+	private void resolve() {
+		if ( !resolved ) {
+			assert userTypeAdapter == null;
+			assert mutabilityPlan == null;
+
+			final ManagedBean<T> typeBean;
+			final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+			if ( combinedTypeParameters.isEmpty() ) {
+				typeBean = beanRegistry.getBean( customTypeImplementor, instanceProducer );
+			}
+			else {
+				final String name = customTypeImplementor.getName() + COUNTER++;
+				typeBean = beanRegistry.getBean( name, customTypeImplementor, instanceProducer );
+			}
+
+			final T typeInstance = typeBean.getBeanInstance();
+
+			if ( typeInstance instanceof TypeConfigurationAware ) {
+				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
+			}
+
+			if ( typeInstance instanceof DynamicParameterizedType ) {
+				if ( Boolean.parseBoolean( combinedTypeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
+					if ( combinedTypeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+						if ( dynamicParameterizedTypeCreator == null ) {
+							throw new HibernateException( "UserType implements DynamicParameterizedType, but cannot create the ParameterType" );
+						}
+						final DynamicParameterizedType.ParameterType parameterType = dynamicParameterizedTypeCreator.get();
+						combinedTypeParameters.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
+					}
+				}
+			}
+
+			MappingHelper.injectParameters( typeInstance, combinedTypeParameters );
+
+			userTypeAdapter = new CustomType<>( typeInstance, typeConfiguration );
+			mutabilityPlan = new UserTypeMutabilityPlanAdapter<>( typeInstance );
+
+			resolved = true;
+		}
 	}
 
 	@Override
-	public JavaType<?> getDomainJavaType() {
-		return userTypeAdapter.getJavaTypeDescriptor();
+	public BasicType<J> getLegacyResolvedBasicType() {
+		resolve();
+		return userTypeAdapter;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
+		resolve();
+		return userTypeAdapter.getJdbcMapping();
+	}
+
+	@Override
+	public JavaType<J> getDomainJavaType() {
+		resolve();
+		return userTypeAdapter.getMappedJavaType();
 	}
 
 	@Override
 	public JavaType<?> getRelationalJavaType() {
-		return userTypeAdapter.getJavaTypeDescriptor();
+		resolve();
+		return userTypeAdapter.getJdbcJavaType();
 	}
 
 	@Override
 	public JdbcType getJdbcType() {
+		resolve();
 		return userTypeAdapter.getJdbcType();
 	}
 
 	@Override
-	public BasicValueConverter getValueConverter() {
-		// Even though we could expose the value converter of the user type here,
-		// we can not do it, as the conversion is done behind the scenes in the binder/extractor,
-		// whereas the converter returned here would, AFAIU, be used to construct a converted attribute mapping
+	public BasicValueConverter<J,?> getValueConverter() {
+		// any conversion is inherent to the user-type
 		return null;
 	}
 
 	@Override
-	public MutabilityPlan getMutabilityPlan() {
+	public MutabilityPlan<J> getMutabilityPlan() {
+		resolve();
 		return mutabilityPlan;
-	}
-
-	@Override
-	public BasicType getLegacyResolvedBasicType() {
-		return userTypeAdapter;
 	}
 
 	@Override
 	public Properties getCombinedTypeParameters() {
 		return combinedTypeParameters;
-	}
-
-	@Override
-	public JdbcMapping getJdbcMapping() {
-		return userTypeAdapter;
 	}
 }

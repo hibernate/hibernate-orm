@@ -7,11 +7,6 @@
 package org.hibernate.resource.beans.container.internal;
 
 import java.util.Set;
-import jakarta.enterprise.context.spi.CreationalContext;
-import jakarta.enterprise.inject.spi.AnnotatedType;
-import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.BeanManager;
-import jakarta.enterprise.inject.spi.InjectionTarget;
 
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
@@ -19,6 +14,12 @@ import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.jboss.logging.Logger;
+
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.AnnotatedType;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.InjectionTarget;
 
 /**
  * A {@link BeanLifecycleStrategy} to use when JPA compliance is required
@@ -128,7 +129,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 			}
 
 			try {
-				this.injectionTarget = beanManager.getInjectionTargetFactory( annotatedType ).createInjectionTarget( (Bean) null );
+				this.injectionTarget = beanManager.getInjectionTargetFactory( annotatedType ).createInjectionTarget( null );
 				this.creationalContext = beanManager.createCreationalContext( null );
 
 				this.beanInstance = this.injectionTarget.produce( creationalContext );
@@ -223,6 +224,11 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				return;
 			}
 
+			if ( beanManager == null ) {
+				// CDI is not ready yet, use the fallback producer
+				this.beanInstance = fallbackProducer.produceBeanInstance( beanName, beanType );
+				return;
+			}
 
 			try {
 				this.creationalContext = beanManager.createCreationalContext( null );

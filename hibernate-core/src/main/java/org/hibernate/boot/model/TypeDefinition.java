@@ -23,15 +23,14 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -145,13 +144,6 @@ public class TypeDefinition implements Serializable {
 
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
-			final Object typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
-					name, typeImplementorClass, instanceProducer );
-
-			if ( typeInstance instanceof TypeConfigurationAware ) {
-				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
-			}
-
 			final Properties combinedTypeParameters = new Properties();
 			if ( parameters!=null ) {
 				combinedTypeParameters.putAll( parameters );
@@ -160,14 +152,29 @@ public class TypeDefinition implements Serializable {
 				combinedTypeParameters.putAll( usageSiteProperties );
 			}
 
-			injectParameters( typeInstance, combinedTypeParameters );
-
-			if ( typeInstance instanceof UserType ) {
-				final UserType<?> userType = (UserType<?>) typeInstance;
-				final CustomType<?> customType = new CustomType<>( userType, typeConfiguration );
-
-				return new UserTypeResolution( customType, null, combinedTypeParameters );
+			if ( UserType.class.isAssignableFrom( typeImplementorClass ) ) {
+				// UserTypeResolution allows delayed resolution of the user-type as a CDI bean
+				//noinspection unchecked
+				final Class<? extends UserType<?>> userTypeClass = (Class<? extends UserType<?>>) typeImplementorClass;
+				//noinspection unchecked,rawtypes
+				return new UserTypeResolution(
+						userTypeClass,
+						instanceProducer,
+						bootstrapContext.getServiceRegistry(),
+						bootstrapContext.getTypeConfiguration(),
+						null,
+						combinedTypeParameters
+				);
 			}
+
+			final Object typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
+					name, typeImplementorClass, instanceProducer );
+
+			if ( typeInstance instanceof TypeConfigurationAware ) {
+				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
+			}
+
+			injectParameters( typeInstance, combinedTypeParameters );
 
 			if ( typeInstance instanceof BasicType ) {
 				final BasicType<?> resolvedBasicType = (BasicType<?>) typeInstance;

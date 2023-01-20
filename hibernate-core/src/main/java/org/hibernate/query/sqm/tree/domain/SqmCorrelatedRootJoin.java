@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  */
 public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelation<T, T> {
 
-	SqmCorrelatedRootJoin(
+	public SqmCorrelatedRootJoin(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedNavigable,
 			NodeBuilder nodeBuilder) {
@@ -89,6 +89,7 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitCorrelation( this );
+		return walker.visitCorrelatedRootJoin( this );
 	}
+
 }

@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 /**
  * @author Steve Ebersole
  */
-public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T,T>, SqmCorrelation<T,T> {
+public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T, T>, SqmCorrelation<T, T> {
 
 	private final SqmRoot<T> correlationParent;
 
@@ -80,6 +80,6 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitCorrelation( this );
+		return walker.visitCorrelatedRoot( this );
 	}
 }

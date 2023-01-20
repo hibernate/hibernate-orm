@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -41,6 +42,11 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitSingularJoin(this);
 	}
 
 	protected SqmSingularJoin(

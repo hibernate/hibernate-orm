@@ -17,4 +17,5 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  */
 public interface SqmCorrelation<O, T> extends SqmFrom<O, T>, SqmPathWrapper<T, T> {
 	SqmRoot<O> getCorrelatedRoot();
+
 }

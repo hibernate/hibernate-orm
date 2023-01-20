@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -84,6 +85,11 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitSetJoin( this );
+	}
+
+	@Override
 	public SetPersistentAttribute<O,E> getAttribute() {
 		return getReferencedPathSource();
 	}
@@ -141,6 +147,7 @@ public class SqmSetJoin<O, E>
 	public <X, Y> SqmAttributeJoin<X, Y> fetch(String attributeName) {
 		return fetch( attributeName, JoinType.INNER);
 	}
+
 
 	@Override
 	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {

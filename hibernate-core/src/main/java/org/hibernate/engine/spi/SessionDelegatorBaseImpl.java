@@ -259,6 +259,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
+	public long getTransactionStartTimestamp() {
+		return delegate.getTransactionStartTimestamp();
+	}
+
+	@Override
 	public FlushModeType getFlushMode() {
 		return delegate.getFlushMode();
 	}

@@ -19,6 +19,11 @@ public class NoCachingTransactionSynchronizationImpl implements CacheTransaction
 	}
 
 	@Override
+	public long getCurrentTransactionStartTimestamp() {
+		return getCachingTimestamp();
+	}
+
+	@Override
 	public long getCachingTimestamp() {
 		throw new UnsupportedOperationException("Method not supported when 2LC is not enabled");
 	}

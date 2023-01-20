@@ -56,6 +56,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private final List<XClass> xClasses = new ArrayList<>();
 	private final ClassLoaderService classLoaderService;
 
+	/**
+	 * Normal constructor used while processing {@linkplain org.hibernate.boot.MetadataSources mapping sources}
+	 */
 	public AnnotationMetadataSourceProcessorImpl(
 			ManagedResources managedResources,
 			final MetadataBuildingContextRootImpl rootMetadataBuildingContext,
@@ -102,6 +105,54 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		for ( Class<?> annotatedClass : managedResources.getAnnotatedClassReferences() ) {
 			categorizeAnnotatedClass( annotatedClass, converterRegistry );
 		}
+	}
+
+	/**
+	 * Used as part of processing
+	 * {@linkplain org.hibernate.boot.spi.AdditionalMappingContributions#contributeEntity(Class)} "additional" mappings}
+	 */
+	public static void processAdditionalMappings(
+			List<Class<?>> additionalClasses,
+			List<JaxbEntityMappings> additionalJaxbMappings,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
+		final AnnotationMetadataSourceProcessorImpl processor = new AnnotationMetadataSourceProcessorImpl( rootMetadataBuildingContext );
+
+		if ( additionalJaxbMappings != null && rootMetadataBuildingContext.getBuildingOptions().isXmlMappingEnabled() ) {
+			final ConverterRegistry converterRegistry = rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();
+			final MetadataProviderInjector injector = (MetadataProviderInjector) processor.reflectionManager;
+			final JPAXMLOverriddenMetadataProvider metadataProvider = (JPAXMLOverriddenMetadataProvider) injector.getMetadataProvider();
+
+			for ( int i = 0; i < additionalJaxbMappings.size(); i++ ) {
+				final List<String> classNames = metadataProvider.getXMLContext().addDocument( additionalJaxbMappings.get( i ) );
+				for ( String className : classNames ) {
+					final XClass xClass = processor.toXClass( className, processor.reflectionManager, processor.classLoaderService );
+					processor.xClasses.add( xClass );
+				}
+			}
+			metadataProvider.getXMLContext().applyDiscoveredAttributeConverters( converterRegistry );
+		}
+
+		for ( int i = 0; i < additionalClasses.size(); i++ ) {
+			final XClass xClass = processor.reflectionManager.toXClass( additionalClasses.get( i ) );
+			if ( !xClass.isAnnotationPresent( Entity.class ) ) {
+				log.debugf( "@Entity not found on additional entity class - `%s`" );
+				continue;
+			}
+			processor.xClasses.add( xClass );
+		}
+
+		processor.processEntityHierarchies( new LinkedHashSet<>() );
+	}
+
+	/**
+	 * Form used from {@link #processAdditionalMappings}
+	 */
+	private AnnotationMetadataSourceProcessorImpl(MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
+		this.rootMetadataBuildingContext = rootMetadataBuildingContext;
+		this.jandexView = null;
+
+		this.reflectionManager = rootMetadataBuildingContext.getBootstrapContext().getReflectionManager();
+		this.classLoaderService = rootMetadataBuildingContext.getBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
 	}
 
 	private void categorizeAnnotatedClass(Class<?> annotatedClass, ConverterRegistry converterRegistry) {

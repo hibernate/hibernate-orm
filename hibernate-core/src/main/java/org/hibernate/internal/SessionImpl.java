@@ -151,8 +151,17 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.CacheMode.fromJpaModes;
-import static org.hibernate.cfg.AvailableSettings.*;
+import static org.hibernate.cfg.AvailableSettings.CRITERIA_COPY_TREE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
+import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
@@ -257,7 +266,7 @@ public class SessionImpl
 	private FlushMode getInitialFlushMode() {
 		return properties == null
 				? fastSessionServices.initialSessionFlushMode
-				: ConfigurationHelper.getFlushMode( getSessionProperty( FLUSH_MODE ), FlushMode.AUTO );
+				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
 	}
 
 	private void setUpMultitenancy(SessionFactoryImplementor factory) {
@@ -1607,7 +1616,7 @@ public class SessionImpl
 
 		try {
 			final LazyInitializer li = extractLazyInitializer( object );
-			if ( ! ( li != null ) && persistenceContext.getEntry( object ) == null ) {
+			if ( li == null && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
 					getFactory().getRuntimeMetamodels()
@@ -2057,7 +2066,6 @@ public class SessionImpl
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public SharedSessionBuilderImpl connection() {
 			this.shareTransactionContext = true;
 			return this;
@@ -2635,7 +2643,7 @@ public class SessionImpl
 
 	private void interpretProperty(String propertyName, Object value) {
 		switch ( propertyName ) {
-			case FLUSH_MODE:
+			case HINT_FLUSH_MODE:
 				setHibernateFlushMode( ConfigurationHelper.getFlushMode(value, FlushMode.AUTO) );
 				break;
 			case JPA_LOCK_SCOPE:
@@ -2682,7 +2690,7 @@ public class SessionImpl
 		final Map<String, Object> map = new HashMap<>( fastSessionServices.defaultSessionProperties );
 		//The FLUSH_MODE is always set at Session creation time,
 		//so it needs special treatment to not eagerly initialize this Map:
-		map.put( FLUSH_MODE, getHibernateFlushMode().name() );
+		map.put( HINT_FLUSH_MODE, getHibernateFlushMode().name() );
 		return map;
 	}
 

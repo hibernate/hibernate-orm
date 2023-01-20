@@ -513,6 +513,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return cacheTransactionSync;
 	}
 
+	/**
+	 * @deprecated This will be removed.
+	 */
+	@Override
+	@Deprecated(forRemoval = true)
+	public long getTransactionStartTimestamp() {
+		return getCacheTransactionSynchronization().getCachingTimestamp();
+	}
+
 	@Override
 	public Transaction beginTransaction() {
 		checkOpen();

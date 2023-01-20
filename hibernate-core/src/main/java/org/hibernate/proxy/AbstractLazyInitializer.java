@@ -265,15 +265,16 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	/**
 	 * Initialize internal state based on the currently attached session,
 	 * in order to be ready to load data even after the proxy is detached from the session.
-	 *
-	 * This method only has any effect if
-	 * {@link SessionFactoryOptions#isInitializeLazyStateOutsideTransactionsEnabled()} is {@code true}.
 	 */
 	protected void prepareForPossibleLoadingOutsideTransaction() {
 		if ( session != null ) {
 			allowLoadOutsideTransaction = session.getFactory().getSessionFactoryOptions().isInitializeLazyStateOutsideTransactionsEnabled();
 
-			if ( allowLoadOutsideTransaction && sessionFactoryUuid == null ) {
+			if ( sessionFactoryUuid == null ) {
+				//we're going to need the UUID even if we the SessionFactory configuration doesn't
+				// allow any operations on it, as we need it to match deserialized objects with
+				// the originating SessionFactory: at very least it's useful to actually get
+				// such configuration, so to know if such operation isn't allowed or configured otherwise.
 				sessionFactoryUuid = session.getFactory().getUuid();
 			}
 		}

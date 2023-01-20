@@ -25,6 +25,7 @@ import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.Environment;
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
 
+import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
 import static org.hibernate.orm.tooling.gradle.Helper.determineClassName;
 
 /**
@@ -130,8 +131,8 @@ public class EnhancementHelper {
 			}
 		};
 
-		//noinspection deprecation
-		return Environment.getBytecodeProvider().getEnhancer( enhancementContext );
+		//TODO allow the Gradle plugin to configure the bytecode enhancer?
+		return buildDefaultBytecodeProvider().getEnhancer( enhancementContext );
 	}
 
 	private static void writeOutEnhancedClass(byte[] enhancedBytecode, File file, Logger logger) {

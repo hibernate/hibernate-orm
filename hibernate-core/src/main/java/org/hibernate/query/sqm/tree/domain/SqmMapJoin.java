@@ -13,6 +13,8 @@ import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.query.hql.internal.QuerySplitter;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
@@ -163,6 +165,18 @@ public class SqmMapJoin<O, K, V>
 	public SqmMapJoin<O, K, V> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmMapJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				isFetched(),
+				nodeBuilder()
+		);
+	}
+
+	@Override
+	public SqmAttributeJoin<O, V> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmMapJoin<>(
+				fromCopyProvider.findSqmFromCopy( getLhs() ),
 				getReferencedPathSource(),
 				getExplicitAlias(),
 				getSqmJoinType(),

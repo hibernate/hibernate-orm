@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -14,7 +15,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 /**
  * @author Steve Ebersole
  */
-public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T,T>, SqmCorrelation<T,T> {
+public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T, T>, SqmCorrelation<T, T> {
 
 	private final SqmRoot<T> correlationParent;
 
@@ -76,6 +77,13 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 	@Override
 	public SqmRoot<T> getCorrelatedRoot() {
 		return this;
+	}
+
+	@Override
+	public SqmCorrelation<T, T> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmCorrelatedRoot<>(
+				fromCopyProvider.findSqmFromCopy( this.correlationParent )
+		);
 	}
 
 	@Override

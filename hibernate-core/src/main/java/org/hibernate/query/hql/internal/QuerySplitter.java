@@ -19,13 +19,18 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.expression.SqmAny;
+import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -183,6 +188,10 @@ public class QuerySplitter {
 		return null;
 	}
 
+	public interface FromCopyProvider {
+		<X extends SqmFrom<?, ?>> X findSqmFromCopy(SqmFrom sqmFrom);
+	}
+
 	@SuppressWarnings("unchecked")
 	private static class UnmappedPolymorphismReplacer<R> extends BaseSemanticQueryWalker implements SqmCreationState {
 		private final SqmRoot unmappedPolymorphicFromElement;
@@ -191,7 +200,7 @@ public class QuerySplitter {
 		private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
 		private Map<NavigablePath, SqmPath> sqmPathCopyMap = new HashMap<>();
-		private Map<SqmFrom, SqmFrom> sqmFromCopyMap = new HashMap<>();
+		private final FromCopyProviderImpl fromCopyProvider;
 
 		private UnmappedPolymorphismReplacer(
 				SqmRoot unmappedPolymorphicFromElement,
@@ -201,6 +210,7 @@ public class QuerySplitter {
 			this.unmappedPolymorphicFromElement = unmappedPolymorphicFromElement;
 			this.mappedDescriptor = mappedDescriptor;
 			this.creationContext = sessionFactory;
+			fromCopyProvider = new FromCopyProviderImpl( this );
 		}
 
 		@Override
@@ -362,7 +372,7 @@ public class QuerySplitter {
 					sqmRoot.isAllowJoins(),
 					sqmRoot.nodeBuilder()
 			);
-			sqmFromCopyMap.put( sqmRoot, copy );
+			fromCopyProvider.put( sqmRoot, copy );
 			sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
 			final SqmDeleteStatement<R> statementCopy = new SqmDeleteStatement<>(
 					copy,
@@ -528,7 +538,7 @@ public class QuerySplitter {
 
 		@Override
 		public SqmRoot<?> visitRootPath(SqmRoot<?> sqmRoot) {
-			final SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( sqmRoot );
+			final SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( sqmRoot );
 			if ( sqmFrom != null ) {
 				return (SqmRoot<?>) sqmFrom;
 			}
@@ -546,7 +556,7 @@ public class QuerySplitter {
 					sqmRoot.nodeBuilder()
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( sqmRoot, copy );
+			fromCopyProvider.put( sqmRoot, copy );
 			sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
 			if ( currentFromClauseCopy != null ) {
 				currentFromClauseCopy.addRoot( copy );
@@ -556,7 +566,7 @@ public class QuerySplitter {
 
 		@Override
 		public SqmDerivedRoot<?> visitRootDerived(SqmDerivedRoot<?> sqmRoot) {
-			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( sqmRoot );
+			SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( sqmRoot );
 			if ( sqmFrom != null ) {
 				return (SqmDerivedRoot<?>) sqmFrom;
 			}
@@ -565,7 +575,7 @@ public class QuerySplitter {
 					sqmRoot.getExplicitAlias()
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( sqmRoot, copy );
+			fromCopyProvider.put( sqmRoot, copy );
 			sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
 			if ( currentFromClauseCopy != null ) {
 				currentFromClauseCopy.addRoot( copy );
@@ -575,7 +585,7 @@ public class QuerySplitter {
 
 		@Override
 		public SqmCteRoot<?> visitRootCte(SqmCteRoot<?> sqmRoot) {
-			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( sqmRoot );
+			SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( sqmRoot );
 			if ( sqmFrom != null ) {
 				return (SqmCteRoot<?>) sqmFrom;
 			}
@@ -584,7 +594,7 @@ public class QuerySplitter {
 					sqmRoot.getExplicitAlias()
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( sqmRoot, copy );
+			fromCopyProvider.put( sqmRoot, copy );
 			sqmPathCopyMap.put( sqmRoot.getNavigablePath(), copy );
 			if ( currentFromClauseCopy != null ) {
 				currentFromClauseCopy.addRoot( copy );
@@ -594,30 +604,34 @@ public class QuerySplitter {
 
 		@Override
 		public SqmCrossJoin<?> visitCrossJoin(SqmCrossJoin<?> join) {
-			final SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			final SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( join );
 			if ( sqmFrom != null ) {
 				return (SqmCrossJoin<?>) sqmFrom;
 			}
-			final SqmRoot<?> sqmRoot = (SqmRoot<?>) sqmFromCopyMap.get( join.findRoot() );
+			final SqmRoot<?> sqmRoot = (SqmRoot<?>) fromCopyProvider.get( join.findRoot() );
 			final SqmCrossJoin copy = new SqmCrossJoin<>(
 					join.getReferencedPathSource(),
 					join.getExplicitAlias(),
 					sqmRoot
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
+			fromCopyProvider.put( join, copy );
 			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			join.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
 			sqmRoot.addSqmJoin( copy );
 			return copy;
 		}
 
 		@Override
 		public SqmPluralPartJoin<?, ?> visitPluralPartJoin(SqmPluralPartJoin<?, ?> join) {
-			final SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			final SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( join );
 			if ( sqmFrom != null ) {
 				return (SqmPluralPartJoin<?, ?>) sqmFrom;
 			}
-			final SqmFrom<?, ?> newLhs = (SqmFrom<?, ?>) sqmFromCopyMap.get( join.getLhs() );
+			final SqmFrom<?, ?> newLhs = (SqmFrom<?, ?>) sqmPathCopyMap.get( join.getLhs() );
 			final SqmPluralPartJoin copy = new SqmPluralPartJoin<>(
 					newLhs,
 					join.getReferencedPathSource(),
@@ -626,19 +640,23 @@ public class QuerySplitter {
 					join.nodeBuilder()
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
+			fromCopyProvider.put( join, copy );
 			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			join.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
 			newLhs.addSqmJoin( copy );
 			return copy;
 		}
 
 		@Override
 		public SqmEntityJoin<?> visitQualifiedEntityJoin(SqmEntityJoin<?> join) {
-			final SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			final SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( join );
 			if ( sqmFrom != null ) {
 				return (SqmEntityJoin<?>) sqmFrom;
 			}
-			final SqmRoot<?> sqmRoot = (SqmRoot<?>) sqmFromCopyMap.get( join.findRoot() );
+			final SqmRoot<?> sqmRoot = (SqmRoot<?>) fromCopyProvider.get( join.findRoot() );
 			final SqmEntityJoin copy = new SqmEntityJoin<>(
 					join.getReferencedPathSource(),
 					join.getExplicitAlias(),
@@ -646,33 +664,91 @@ public class QuerySplitter {
 					sqmRoot
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
+			fromCopyProvider.put( join, copy );
 			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			join.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
 			sqmRoot.addSqmJoin( copy );
+			return copy;
+		}
+
+
+		public class FromCopyProviderImpl implements FromCopyProvider{
+			SemanticQueryWalker walker;
+			private Map<SqmFrom, SqmFrom> sqmFromCopyMap = new HashMap<>();
+
+			public FromCopyProviderImpl(SemanticQueryWalker walker) {
+				this.walker = walker;
+			}
+
+			public void put(SqmFrom original, SqmFrom copy){
+				sqmFromCopyMap.put( original, copy );
+			}
+
+			public SqmFrom get(SqmFrom original) {
+				return sqmFromCopyMap.get( original );
+			}
+
+			public <X extends SqmFrom<?, ?>> X findSqmFromCopy(SqmFrom sqmFrom) {
+				SqmFrom copy = sqmFromCopyMap.get( sqmFrom );
+				if ( copy != null ) {
+					return (X) copy;
+				}
+				else {
+					return (X) sqmFrom.accept( walker );
+				}
+			}
+		}
+
+		@Override
+		public SqmCorrelation<?, ?> visitCorrelation(SqmCorrelation<?, ?> correlation) {
+			final SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( correlation );
+			if ( sqmFrom != null ) {
+				return (SqmCorrelation<?, ?>) sqmFrom;
+			}
+
+			final SqmCorrelation<?, ?> copy = correlation.makeCopy( fromCopyProvider );
+			correlation.visitReusablePaths( path -> path.accept( this ) );
+
+			fromCopyProvider.put( correlation, copy );
+			sqmPathCopyMap.put( correlation.getNavigablePath(), copy );
+			correlation.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
 			return copy;
 		}
 
 		@Override
 		public SqmAttributeJoin<?, ?> visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> join) {
-			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( join );
 			if ( sqmFrom != null ) {
 				return (SqmAttributeJoin<?, ?>) sqmFrom;
 			}
-			SqmAttributeJoin copy = join.makeCopy( getProcessingStateStack().getCurrent() );
+
+			final SqmAttributeJoin copy = join.makeCopy( fromCopyProvider );
+
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
+
+			fromCopyProvider.put( join, copy );
 			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			join.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
 			( (SqmFrom<?, ?>) copy.getParent() ).addSqmJoin( copy );
 			return copy;
 		}
 
 		@Override
 		public SqmDerivedJoin<?> visitQualifiedDerivedJoin(SqmDerivedJoin<?> join) {
-			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( join );
 			if ( sqmFrom != null ) {
 				return (SqmDerivedJoin<?>) sqmFrom;
 			}
-			final SqmRoot<?> sqmRoot = (SqmRoot<?>) sqmFromCopyMap.get( join.findRoot() );
+			final SqmRoot<?> sqmRoot = (SqmRoot<?>) fromCopyProvider.get( join.findRoot() );
 			final SqmDerivedJoin copy = new SqmDerivedJoin(
 					(SqmSubQuery<?>) join.getQueryPart().accept( this ),
 					join.getExplicitAlias(),
@@ -680,20 +756,25 @@ public class QuerySplitter {
 					join.isLateral(),
 					sqmRoot
 			);
+
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
+			fromCopyProvider.put( join, copy );
 			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			join.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
 			sqmRoot.addSqmJoin( copy );
 			return copy;
 		}
 
 		@Override
 		public SqmCteJoin<?> visitQualifiedCteJoin(SqmCteJoin<?> join) {
-			SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			SqmFrom<?, ?> sqmFrom = fromCopyProvider.get( join );
 			if ( sqmFrom != null ) {
 				return (SqmCteJoin<?>) sqmFrom;
 			}
-			final SqmRoot<?> sqmRoot = (SqmRoot<?>) sqmFromCopyMap.get( join.findRoot() );
+			final SqmRoot<?> sqmRoot = (SqmRoot<?>) fromCopyProvider.get( join.findRoot() );
 			final SqmCteJoin copy = new SqmCteJoin(
 					(SqmCteStatement<?>) join.getCte().accept( this ),
 					join.getExplicitAlias(),
@@ -701,8 +782,12 @@ public class QuerySplitter {
 					sqmRoot
 			);
 			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
-			sqmFromCopyMap.put( join, copy );
+			fromCopyProvider.put( join, copy );
 			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			join.visitSqmJoins(
+					sqmJoin ->
+							sqmJoin.accept( this )
+			);
 			sqmRoot.addSqmJoin( copy );
 			return copy;
 		}
@@ -711,7 +796,7 @@ public class QuerySplitter {
 		public SqmBasicValuedSimplePath<?> visitBasicValuedPath(SqmBasicValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
 
-			final SqmPath<?> lhs = findLhs( path, pathRegistry );
+			final SqmPath<?> lhs = findLhs( path );
 
 			final SqmBasicValuedSimplePath<?> copy = new SqmBasicValuedSimplePath<>(
 					lhs.getNavigablePath().append( path.getNavigablePath().getLocalName() ),
@@ -728,7 +813,7 @@ public class QuerySplitter {
 		@Override
 		public SqmEmbeddedValuedSimplePath<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
-			final SqmPath<?> lhs = findLhs( path, pathRegistry );
+			final SqmPath<?> lhs = findLhs( path );
 			final SqmEmbeddedValuedSimplePath<?> copy = new SqmEmbeddedValuedSimplePath<>(
 					lhs.getNavigablePath().append( path.getNavigablePath().getLocalName() ),
 					path.getReferencedPathSource(),
@@ -743,7 +828,7 @@ public class QuerySplitter {
 		@Override
 		public SqmEntityValuedSimplePath<?> visitEntityValuedPath(SqmEntityValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
-			final SqmPath<?> lhs = findLhs( path, pathRegistry );
+			final SqmPath<?> lhs = findLhs( path );
 			final SqmEntityValuedSimplePath<?> copy = new SqmEntityValuedSimplePath<>(
 					lhs.getNavigablePath().append( path.getNavigablePath().getLocalName() ),
 					path.getReferencedPathSource(),
@@ -758,7 +843,7 @@ public class QuerySplitter {
 		@Override
 		public SqmPluralValuedSimplePath<?> visitPluralValuedPath(SqmPluralValuedSimplePath<?> path) {
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
-			SqmPath<?> lhs = findLhs( path, pathRegistry );
+			SqmPath<?> lhs = findLhs( path );
 
 			final SqmPluralValuedSimplePath<?> copy = new SqmPluralValuedSimplePath<>(
 					path.getNavigablePath(),
@@ -771,11 +856,11 @@ public class QuerySplitter {
 			return copy;
 		}
 
-		private SqmPath<?> findLhs(SqmPath<?> path, SqmPathRegistry pathRegistry) {
+		private SqmPath<?> findLhs(SqmPath<?> path) {
 			final SqmPath<?> lhs = path.getLhs();
-			final SqmPath sqmFrom = sqmPathCopyMap.get( lhs.getNavigablePath() );
-			if ( sqmFrom != null ) {
-				return pathRegistry.findFromByPath( sqmFrom.getNavigablePath() );
+			final SqmPath lhsSqmPathCopy = sqmPathCopyMap.get( lhs.getNavigablePath() );
+			if ( lhsSqmPathCopy != null ) {
+				return lhsSqmPathCopy;
 			}
 			else {
 				return (SqmPath<?>) lhs.accept( this );
@@ -1019,6 +1104,23 @@ public class QuerySplitter {
 					visitQueryPart( expression.getQueryPart() ),
 					expression.getResultType(),
 					expression.nodeBuilder()
+			);
+		}
+
+		@Override
+		public Object visitAny(SqmAny<?> sqmAny) {
+			return new SqmAny<>(
+					(SqmSubQuery<?>) sqmAny.getSubquery().accept( this ),
+					this.creationContext.getNodeBuilder()
+			);
+		}
+
+		@Override
+		public Object visitEvery(SqmEvery<?> sqmEvery) {
+			sqmEvery.getSubquery().accept( this );
+			return new SqmEvery<>(
+					(SqmSubQuery<?>) sqmEvery.getSubquery().accept( this ),
+					this.creationContext.getNodeBuilder()
 			);
 		}
 

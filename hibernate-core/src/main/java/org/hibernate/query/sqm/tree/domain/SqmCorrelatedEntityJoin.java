@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -97,6 +98,13 @@ public class SqmCorrelatedEntityJoin<T> extends SqmEntityJoin<T> implements SqmC
 				pathRegistry.findFromByPath( getRoot().getNavigablePath() ),
 				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
 				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+		);
+	}
+
+	@Override
+	public SqmCorrelation<T, T> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmCorrelatedEntityJoin<>(
+				fromCopyProvider.findSqmFromCopy( this.correlationParent )
 		);
 	}
 }

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -106,6 +107,13 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 				nodeBuilder(),
 				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
 				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+		);
+	}
+
+	@Override
+	public SqmCorrelatedSingularJoin<O,T> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmCorrelatedSingularJoin<>(
+				fromCopyProvider.findSqmFromCopy( this.correlationParent )
 		);
 	}
 }

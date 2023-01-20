@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -47,6 +48,11 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 	}
 
 	@Override
+	public SqmFrom<?, T> getLhs() {
+		return (SqmFrom<?, T>) super.getLhs();
+	}
+
+	@Override
 	public SqmPluralPartJoin<O, T> getCorrelationParent() {
 		return correlationParent;
 	}
@@ -65,4 +71,12 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 	public SqmRoot<O> getCorrelatedRoot() {
 		return correlatedRootJoin;
 	}
+
+	@Override
+	public SqmCorrelatedPluralPartJoin<O, T> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmCorrelatedPluralPartJoin<>(
+				fromCopyProvider.findSqmFromCopy( this.correlationParent )
+		);
+	}
+
 }

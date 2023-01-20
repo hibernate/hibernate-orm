@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -106,6 +107,13 @@ public class SqmCorrelatedMapJoin<O, K, V> extends SqmMapJoin<O, K, V> implement
 				nodeBuilder(),
 				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
 				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+		);
+	}
+
+	@Override
+	public SqmCorrelatedMapJoin<O, K, V> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmCorrelatedMapJoin<>(
+				fromCopyProvider.findSqmFromCopy( this.correlationParent )
 		);
 	}
 }

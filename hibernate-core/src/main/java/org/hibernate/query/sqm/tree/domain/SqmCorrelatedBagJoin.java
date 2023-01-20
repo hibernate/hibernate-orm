@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -106,6 +107,13 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 				nodeBuilder(),
 				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
 				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+		);
+	}
+
+	@Override
+	public SqmCorrelatedBagJoin<O,T> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmCorrelatedBagJoin<>(
+				fromCopyProvider.findSqmFromCopy( this.correlationParent )
 		);
 	}
 }

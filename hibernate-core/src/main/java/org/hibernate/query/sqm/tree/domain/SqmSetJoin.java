@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -142,10 +143,23 @@ public class SqmSetJoin<O, E>
 		return fetch( attributeName, JoinType.INNER);
 	}
 
+
 	@Override
 	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmSetJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				isFetched(),
+				nodeBuilder()
+		);
+	}
+
+	@Override
+	public SqmAttributeJoin<O,E> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmSetJoin<>(
+				fromCopyProvider.findSqmFromCopy( getLhs() ),
 				getReferencedPathSource(),
 				getExplicitAlias(),
 				getSqmJoinType(),

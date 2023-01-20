@@ -10,6 +10,7 @@ import java.util.Collection;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaExpression;
@@ -142,6 +143,18 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmBagJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				isFetched(),
+				nodeBuilder()
+		);
+	}
+
+	@Override
+	public SqmAttributeJoin makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmBagJoin<>(
+				fromCopyProvider.findSqmFromCopy( getLhs() ),
 				getReferencedPathSource(),
 				getExplicitAlias(),
 				getSqmJoinType(),

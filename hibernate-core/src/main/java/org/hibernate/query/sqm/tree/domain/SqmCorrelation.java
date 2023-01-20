@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
@@ -17,4 +18,6 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  */
 public interface SqmCorrelation<O, T> extends SqmFrom<O, T>, SqmPathWrapper<T, T> {
 	SqmRoot<O> getCorrelatedRoot();
+
+	SqmCorrelation<O, T> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider);
 }

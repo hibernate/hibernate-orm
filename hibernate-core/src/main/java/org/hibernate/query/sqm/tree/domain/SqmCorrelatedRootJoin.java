@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -86,6 +87,17 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 	public SqmRoot<T> getCorrelatedRoot() {
 		return this;
 	}
+
+	@Override
+	public SqmCorrelation<T, T> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmCorrelatedRootJoin<>(
+				getNavigablePath(),
+				getReferencedPathSource(),
+				nodeBuilder()
+		);
+	}
+
+
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {

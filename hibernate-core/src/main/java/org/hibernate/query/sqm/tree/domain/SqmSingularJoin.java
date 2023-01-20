@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -135,6 +136,18 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 	public SqmAttributeJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmSingularJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
+				getReferencedPathSource(),
+				getExplicitAlias(),
+				getSqmJoinType(),
+				isFetched(),
+				nodeBuilder()
+		);
+	}
+
+	@Override
+	public SqmAttributeJoin<O,T> makeCopy(QuerySplitter.FromCopyProvider fromCopyProvider) {
+		return new SqmSingularJoin<>(
+				fromCopyProvider.findSqmFromCopy( getLhs() ),
 				getReferencedPathSource(),
 				getExplicitAlias(),
 				getSqmJoinType(),

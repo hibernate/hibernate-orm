@@ -38,7 +38,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -46,6 +46,7 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -782,9 +783,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				throw new UnsupportedOperationException( "Unsupported attempt to set an explicit-custom-type when value is already resolved" );
 			}
 
-			final BeanInstanceProducer instanceProducer =
-					getBuildingContext().getBootstrapContext().getCustomTypeProducer();
-
 			final Properties properties = new Properties();
 			if ( CollectionHelper.isNotEmpty( getTypeParameters() ) ) {
 				properties.putAll( getTypeParameters() );
@@ -793,35 +791,54 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				properties.putAll( explicitLocalTypeParams );
 			}
 
-			final ManagedBean<T> typeBean;
-			if ( properties.isEmpty() ) {
-				typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-						.getBean( explicitCustomType, instanceProducer );
-			}
-			else {
-				final String name = explicitCustomType.getName() + COUNTER++;
-				typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-						.getBean( name, explicitCustomType, instanceProducer );
-			}
+			final BeanInstanceProducer instanceProducer = getBuildingContext()
+					.getBootstrapContext()
+					.getCustomTypeProducer();
+			final StandardServiceRegistry serviceRegistry = getBuildingContext()
+					.getBootstrapContext()
+					.getServiceRegistry();
 
-			final T typeInstance = typeBean.getBeanInstance();
-
-			if ( typeInstance instanceof TypeConfigurationAware ) {
-				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( getTypeConfiguration() );
-			}
-
-			if ( typeInstance instanceof DynamicParameterizedType ) {
-				if ( Boolean.parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
-					if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-						final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
-						properties.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
-					}
+			final T typeInstance;
+			if ( Helper.shouldIgnoreBeanContainer( serviceRegistry ) ) {
+				if ( properties.isEmpty() ) {
+					final String name = explicitCustomType.getName() + COUNTER++;
+					typeInstance = instanceProducer.produceBeanInstance( name, explicitCustomType );
+				}
+				else {
+					typeInstance = instanceProducer.produceBeanInstance( explicitCustomType );
 				}
 			}
+			else {
+				final ManagedBean<T> typeBean;
+				if ( properties.isEmpty() ) {
+					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
+							.getBean( explicitCustomType, instanceProducer );
+				}
+				else {
+					final String name = explicitCustomType.getName() + COUNTER++;
+					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
+							.getBean( name, explicitCustomType, instanceProducer );
+				}
 
-			injectParameters( typeInstance, properties );
-			// envers - grr
-			setTypeParameters( properties );
+				typeInstance = typeBean.getBeanInstance();
+
+				if ( typeInstance instanceof TypeConfigurationAware ) {
+					( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( getTypeConfiguration() );
+				}
+
+				if ( typeInstance instanceof DynamicParameterizedType ) {
+					if ( Boolean.parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
+						if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+							final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
+							properties.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
+						}
+					}
+				}
+
+				injectParameters( typeInstance, properties );
+				// envers - grr
+				setTypeParameters( properties );
+			}
 
 			this.resolution = new UserTypeResolution(
 					new CustomType<>( (UserType<?>) typeInstance, getTypeConfiguration() ),

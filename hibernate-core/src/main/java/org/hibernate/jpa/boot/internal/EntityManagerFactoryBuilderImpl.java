@@ -32,6 +32,7 @@ import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
@@ -357,22 +358,23 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private void applyMetadataBuilderContributor() {
+		final Object metadataBuilderContributorSetting = configurationValues.get( METADATA_BUILDER_CONTRIBUTOR );
+		if ( metadataBuilderContributorSetting != null ) {
+			final MetadataBuilderContributor metadataBuilderContributor = loadSettingInstance(
+					METADATA_BUILDER_CONTRIBUTOR,
+					metadataBuilderContributorSetting,
+					MetadataBuilderContributor.class
+			);
 
-		Object metadataBuilderContributorSetting = configurationValues.get( METADATA_BUILDER_CONTRIBUTOR );
-
-		if ( metadataBuilderContributorSetting == null ) {
-			return;
+			if ( metadataBuilderContributor != null ) {
+				metadataBuilderContributor.contribute( metamodelBuilder );
+			}
 		}
 
-		MetadataBuilderContributor metadataBuilderContributor = loadSettingInstance(
-				METADATA_BUILDER_CONTRIBUTOR,
-				metadataBuilderContributorSetting,
-				MetadataBuilderContributor.class
-		);
-
-		if ( metadataBuilderContributor != null ) {
-			metadataBuilderContributor.contribute( metamodelBuilder );
-		}
+		final StandardServiceRegistry serviceRegistry = metamodelBuilder.getBootstrapContext().getServiceRegistry();
+		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+		final Collection<MetadataBuilderContributor> contributors = cls.loadJavaServices( MetadataBuilderContributor.class );
+		contributors.forEach( (contributor) -> contributor.contribute( metamodelBuilder ) );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1328,16 +1330,26 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			mergedSettings.cacheRegionDefinitions.forEach( metamodelBuilder::applyCacheRegionDefinition );
 		}
 
-		final TypeContributorList typeContributorList = (TypeContributorList) configurationValues.remove(
-				TYPE_CONTRIBUTORS
-		);
-		if ( typeContributorList != null ) {
-			typeContributorList.getTypeContributors().forEach( metamodelBuilder::applyTypes );
-		}
+		applyTypeContributors();
 
 		if ( converterDescriptors != null ) {
 			converterDescriptors.forEach( metamodelBuilder::applyAttributeConverter );
 		}
+	}
+
+	private void applyTypeContributors() {
+		final TypeContributorList typeContributorList = (TypeContributorList) configurationValues.remove(
+				TYPE_CONTRIBUTORS
+		);
+
+		if ( typeContributorList != null ) {
+			typeContributorList.getTypeContributors().forEach( metamodelBuilder::applyTypes );
+		}
+
+		final StandardServiceRegistry serviceRegistry = metamodelBuilder.getBootstrapContext().getServiceRegistry();
+		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+		final Collection<TypeContributor> typeContributors = cls.loadJavaServices( TypeContributor.class );
+		typeContributors.forEach( metamodelBuilder::applyTypes );
 	}
 
 

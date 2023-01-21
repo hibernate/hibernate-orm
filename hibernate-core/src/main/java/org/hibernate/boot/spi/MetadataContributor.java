@@ -17,7 +17,11 @@ import org.jboss.jandex.IndexView;
  * @author Steve Ebersole
  *
  * @since 5.0
+ *
+ * @deprecated Use {@link AdditionalMappingContributor} or {@link org.hibernate.boot.model.TypeContributor}
+ * instead depending on need
  */
+@Deprecated(forRemoval = true)
 public interface MetadataContributor {
 	/**
 	 * Perform the contributions.

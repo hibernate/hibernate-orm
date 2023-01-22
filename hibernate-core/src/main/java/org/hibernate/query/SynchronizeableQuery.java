@@ -50,26 +50,35 @@ import org.hibernate.MappingException;
  */
 public interface SynchronizeableQuery {
 	/**
-	 * Obtain the list of query spaces the query is synchronized on.
+	 * Obtain the list of query spaces this query is synchronized with.
 	 *
 	 * @return The list of query spaces upon which the query is synchronized.
 	 */
 	Collection<String> getSynchronizedQuerySpaces();
 
 	/**
-	 * Adds a query space.
+	 * Add a query space. The effect of this call is to:
+	 * <ul>
+	 * <li>force an auto-flush if any entity associated with the current session
+	 *     and mapped to the given query space has pending changes which have not
+	 *     yet been synchronized with the database, and
+	 * <li>if the result set of this query is cached, mark it for invalidation
+	 *     when any entity mapped to the given query space is synchronized with
+	 *     the database in any session.
+	 * </ul>
 	 *
-	 * @param querySpace The query space to be auto-flushed for this query.
+	 * @param querySpace The name of the query space, usually the name of a database table.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	SynchronizeableQuery addSynchronizedQuerySpace(String querySpace);
 
 	/**
-	 * Adds an entity name for (a) auto-flush checking and (b) query result cache invalidation checking.  Same as
-	 * {@link #addSynchronizedQuerySpace} for all tables associated with the given entity.
+	 * Add all query spaces associated with the entity with the given names.
+	 * <p>
+	 * Same as {@link #addSynchronizedQuerySpace} for all tables mapped by the given entity.
 	 *
-	 * @param entityName The name of the entity upon whose defined query spaces we should additionally synchronize.
+	 * @param entityName The name of an entity.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -78,10 +87,11 @@ public interface SynchronizeableQuery {
 	SynchronizeableQuery addSynchronizedEntityName(String entityName) throws MappingException;
 
 	/**
-	 * Adds an entity for (a) auto-flush checking and (b) query result cache invalidation checking.  Same as
-	 * {@link #addSynchronizedQuerySpace} for all tables associated with the given entity.
+	 * Add all query spaces associated with the entity with the given type.
+	 * <p>
+	 * Same as {@link #addSynchronizedQuerySpace} for all tables mapped by the given entity.
 	 *
-	 * @param entityClass The class of the entity upon whose defined query spaces we should additionally synchronize.
+	 * @param entityClass The class of the entity.
 	 *
 	 * @return {@code this}, for method chaining
 	 *

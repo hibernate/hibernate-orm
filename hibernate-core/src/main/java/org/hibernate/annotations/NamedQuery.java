@@ -86,7 +86,7 @@ public @interface NamedQuery {
 	 *
 	 * @see org.hibernate.query.CommonQueryContract#setTimeout(int)
 	 * @see org.hibernate.jpa.HibernateHints#HINT_TIMEOUT
-	 * @see import org.hibernate.jpa.SpecHints#HINT_SPEC_QUERY_TIMEOUT
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */
 	int timeout() default -1;
 

@@ -13,22 +13,47 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies the tables that hold state mapped by the annotated derived
- * entity, ensuring that auto-flush happens correctly and that queries
- * against the derived entity do not return stale data.
+ * Specifies the tables that hold state mapped by the annotated entity.
  * <p>
- * This annotation may be used in combination with {@link Subselect}, or
- * when an entity maps a database view.
- * 
+ * If Hibernate is not aware of that a certain table holds state mapped
+ * by an entity class, then {@linkplain org.hibernate.FlushMode#AUTO
+ * auto-flush} might not occur when it should, and queries against the
+ * entity might return stale data.
+ * <p>
+ * This annotation might be necessary if:
+ * <ul>
+ * <li>the entity maps a database view,
+ * <li>the entity is persisted using handwritten SQL, that is, using
+ *     {@link SQLSelect @SQLSelect} and friends.
+ * <li>the entity is mapped using {@link Subselect @Subselect}.
+ * </ul>
+ * <p>
+ * By default, the table names specified by this annotation are interpreted
+ * as {@linkplain org.hibernate.boot.model.naming.PhysicalNamingStrategy
+ * logical names}, and are processed by
+ * {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy#toPhysicalTableName}.
+ * But if {@link #logical logical=false}, the table names will be treated
+ * as physical names, and will not be processed by the naming strategy.
+ *
  * @author Sharath Reddy
+ *
+ * @see org.hibernate.query.SynchronizeableQuery
  */
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface Synchronize {
 	/**
-	 * Names of tables that hold state mapped by the derived entity.
+	 * Names of tables that hold state mapped by the annotated entity.
 	 * Updates to these tables must be flushed to the database before
-	 * the derived entity is queried.
+	 * execution of any query which refers to the annotated entity.
 	 */
 	String[] value();
+
+	/**
+	 * Specifies whether the table names given by {@link #value}
+	 * should be interpreted as logical or physical names.
+	 *
+	 * @return {@code true} if they are logical names
+	 */
+	boolean logical() default true;
 }

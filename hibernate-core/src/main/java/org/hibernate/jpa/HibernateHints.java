@@ -126,7 +126,7 @@ public interface HibernateHints {
 
 	/**
 	 * Hint for specifying the 
-	 * {@link org.hibernate.query.SynchronizeableQuery query spaces} 
+	 * {@linkplain org.hibernate.query.SynchronizeableQuery query spaces}
 	 * that affect the results of a native query.
 	 * <p>
 	 * Passed value can be any of:
@@ -135,8 +135,11 @@ public interface HibernateHints {
 	 *     <li>an array of the spaces, or
 	 *     <li>a string with a whitespace-separated list of the spaces.
 	 * </ul>
+	 * <p>
+	 * Typically, these are the names of tables which are referenced by
+	 * the query.
 	 *
-	 * @see org.hibernate.query.SynchronizeableQuery
+	 * @see org.hibernate.query.SynchronizeableQuery#addSynchronizedQuerySpace 
 	 * @see #HINT_FLUSH_MODE
 	 * @see org.hibernate.annotations.NamedNativeQuery#querySpaces
 	 */

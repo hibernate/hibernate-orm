@@ -15,7 +15,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 
 /**
- * Root MetadataBuildingContext
+ * Root {@link MetadataBuildingContext}.
  */
 public class MetadataBuildingContextRootImpl implements MetadataBuildingContext {
 	private final String contributor;

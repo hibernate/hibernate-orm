@@ -75,7 +75,7 @@
  *
  * <h3>Built-in converters for boolean mappings</h3>
  *
- * In older version of Hibernate there were dedicated {@code Type}s mapping Java
+ * In older versions of Hibernate there were dedicated {@code Type}s mapping Java
  * {@code boolean} to {@code char(1)} or {@code integer} database columns. These
  * have now been replaced by the converters:
  * <ul>

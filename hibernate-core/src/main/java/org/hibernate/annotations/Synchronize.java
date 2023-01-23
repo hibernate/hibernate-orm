@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <ul>
  * <li>the entity maps a database view,
  * <li>the entity is persisted using handwritten SQL, that is, using
- *     {@link SQLSelect @SQLSelect} and friends.
+ *     {@link SQLSelect @SQLSelect} and friends, or
  * <li>the entity is mapped using {@link Subselect @Subselect}.
  * </ul>
  * <p>

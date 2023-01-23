@@ -1194,26 +1194,16 @@ public class NativeQueryImpl<R>
 		if ( value instanceof String ) {
 			addSynchronizedQuerySpace( (String) value );
 		}
-		else if ( value instanceof String[] ) {
-			for (String string : (String[]) value) {
-				addSynchronizedQuerySpace( string );
-			}
-		}
 		else if ( value instanceof Class ) {
 			addSynchronizedEntityClass( (Class<?>) value );
 		}
-		else if ( value instanceof Class[] ) {
-			for (Class<?> aClass : (Class<?>[]) value) {
-				addSynchronizedEntityClass( aClass );
+		else if ( value instanceof Object[] ) {
+			for ( Object element : (Object[]) value ) {
+				applySynchronizeSpace( element );
 			}
 		}
-		else if ( value instanceof List ) {
-			final List<?> list = (List<?>) value;
-			list.forEach( this::applySynchronizeSpace );
-		}
-		else if ( value instanceof Collection ) {
-			final Collection<?> values = (Collection<?>) value;
-			for ( Object element : values ) {
+		else if ( value instanceof Iterable ) {
+			for ( Object element : (Iterable<?>) value ) {
 				applySynchronizeSpace( element );
 			}
 		}

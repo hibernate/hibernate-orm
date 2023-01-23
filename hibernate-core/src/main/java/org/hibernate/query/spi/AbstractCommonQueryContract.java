@@ -29,7 +29,6 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
-import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -87,6 +86,10 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getCacheMode;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
+import static org.hibernate.jpa.internal.util.LockModeTypeHelper.interpretLockMode;
 
 /**
  * @author Steve Ebersole
@@ -244,53 +247,40 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		getSession().checkOpen( true );
 
 		try {
-			if ( HINT_FLUSH_MODE.equals( hintName ) ) {
-				applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
-				return true;
-			}
-
-			if ( HINT_TIMEOUT.equals( hintName ) ) {
-				applyTimeoutHint( ConfigurationHelper.getInteger( value ) );
-				return true;
-			}
-
-			if ( HINT_SPEC_QUERY_TIMEOUT.equals( hintName )
-					|| HINT_JAVAEE_QUERY_TIMEOUT.equals( hintName ) ) {
-				if ( HINT_JAVAEE_QUERY_TIMEOUT.equals( hintName ) ) {
+			switch ( hintName ) {
+				case HINT_FLUSH_MODE:
+					applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
+					return true;
+				case HINT_TIMEOUT:
+					applyTimeoutHint( getInteger( value ) );
+					return true;
+				case HINT_JAVAEE_QUERY_TIMEOUT:
 					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_QUERY_TIMEOUT, HINT_SPEC_QUERY_TIMEOUT );
-				}
-				// convert milliseconds to seconds
-				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
-				applyTimeoutHint( timeout );
-				return true;
-			}
-
-			if ( HINT_COMMENT.equals( hintName ) ) {
-				applyCommentHint( (String) value );
-				return true;
-			}
-
-			if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
-				applySynchronizeSpacesHint( value );
-				return true;
-			}
-
-			final boolean selectionHintApplied = applySelectionHint( hintName, value );
-			if ( selectionHintApplied ) {
-				return true;
+					//fall through:
+				case HINT_SPEC_QUERY_TIMEOUT:
+					// convert milliseconds to seconds
+					int timeout = (int) Math.round( getInteger( value ).doubleValue() / 1000.0 );
+					applyTimeoutHint( timeout );
+					return true;
+				case HINT_COMMENT:
+					applyCommentHint( (String) value );
+					return true;
+				case HINT_NATIVE_SPACES:
+					applySynchronizeSpacesHint( value );
+					return true;
+				default:
+					if ( applySelectionHint( hintName, value ) || applyAdditionalPossibleHints( hintName, value ) ) {
+						return true;
+					}
+					else {
+						QueryLogging.QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
+						return false;
+					}
 			}
 		}
 		catch ( ClassCastException e ) {
-			throw new IllegalArgumentException( "Value for Query hint", e );
+			throw new IllegalArgumentException( "Incorrect value for query hint: " + hintName, e );
 		}
-
-		final boolean appliedAdditionalHint = applyAdditionalPossibleHints( hintName, value );
-		if ( appliedAdditionalHint ) {
-			return true;
-		}
-
-		QueryLogging.QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
-		return false;
 	}
 
 	protected void applySynchronizeSpacesHint(Object value) {
@@ -298,79 +288,55 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected final boolean applySelectionHint(String hintName, Object value) {
-		final boolean lockingHintApplied = applyLockingHint( hintName, value );
-		if ( lockingHintApplied ) {
+		if ( applyLockingHint( hintName, value ) ) {
 			return true;
 		}
-
-		if ( HINT_READONLY.equals( hintName ) ) {
-			applyReadOnlyHint( ConfigurationHelper.getBoolean( value ) );
-			return true;
-		}
-
-		if ( HINT_FETCH_SIZE.equals( hintName ) ) {
-			applyFetchSizeHint( ConfigurationHelper.getInteger( value ) );
-			return true;
-		}
-
-		if ( HINT_CACHEABLE.equals( hintName ) ) {
-			applyCacheableHint( ConfigurationHelper.getBoolean( value ) );
-			return true;
-		}
-
-		if ( HINT_CACHE_REGION.equals( hintName ) ) {
-			applyCacheRegionHint( (String) value );
-			return true;
-		}
-
-		if ( HINT_CACHE_MODE.equals( hintName ) ) {
-			applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
-			return true;
-		}
-
-		if ( HINT_SPEC_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-			final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-			applyJpaCacheRetrieveModeHint( retrieveMode );
-			return true;
-		}
-
-		if ( HINT_SPEC_CACHE_STORE_MODE.equals( hintName ) ) {
-			final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-			applyJpaCacheStoreModeHint( storeMode );
-			return true;
-		}
-
-		if ( HINT_JAVAEE_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-			DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_SPEC_CACHE_RETRIEVE_MODE );
-			final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-			applyJpaCacheRetrieveModeHint( retrieveMode );
-			return true;
-		}
-
-		if ( HINT_JAVAEE_CACHE_STORE_MODE.equals( hintName ) ) {
-			DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_STORE_MODE, HINT_SPEC_CACHE_STORE_MODE );
-			final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-			applyJpaCacheStoreModeHint( storeMode );
-			return true;
-		}
-
-		if ( HINT_SPEC_FETCH_GRAPH.equals( hintName ) || HINT_SPEC_LOAD_GRAPH.equals( hintName ) ) {
-			applyEntityGraphHint( hintName, value );
-			return true;
-		}
-
-		if ( HINT_JAVAEE_FETCH_GRAPH.equals( hintName ) || HINT_JAVAEE_LOAD_GRAPH.equals( hintName ) ) {
-			if ( HINT_JAVAEE_FETCH_GRAPH.equals( hintName ) ) {
-				DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
+		else {
+			switch ( hintName ) {
+				case HINT_READONLY:
+					applyReadOnlyHint( getBoolean( value ) );
+					return true;
+				case HINT_FETCH_SIZE:
+					applyFetchSizeHint( getInteger( value ) );
+					return true;
+				case HINT_CACHEABLE:
+					applyCacheableHint( getBoolean( value ) );
+					return true;
+				case HINT_CACHE_REGION:
+					applyCacheRegionHint( (String) value );
+					return true;
+				case HINT_CACHE_MODE:
+					applyCacheModeHint( getCacheMode( value ) );
+					return true;
+				case HINT_JAVAEE_CACHE_RETRIEVE_MODE:
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_SPEC_CACHE_RETRIEVE_MODE );
+					//fall through to:
+				case HINT_SPEC_CACHE_RETRIEVE_MODE:
+					applyJpaCacheRetrieveModeHint( value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null );
+					return true;
+				case HINT_JAVAEE_CACHE_STORE_MODE:
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_STORE_MODE, HINT_SPEC_CACHE_STORE_MODE );
+					//fall through to:
+				case HINT_SPEC_CACHE_STORE_MODE:
+					applyJpaCacheStoreModeHint( value != null ? CacheStoreMode.valueOf( value.toString() ) : null );
+					return true;
+				case HINT_JAVAEE_FETCH_GRAPH:
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
+					//fall through to:
+				case HINT_SPEC_FETCH_GRAPH:
+					applyEntityGraphHint( hintName, value );
+					return true;
+				case HINT_JAVAEE_LOAD_GRAPH:
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOAD_GRAPH, HINT_SPEC_LOAD_GRAPH );
+					//fall through to:
+				case HINT_SPEC_LOAD_GRAPH:
+					applyEntityGraphHint( hintName, value );
+					return true;
+				default:
+					// unrecognized hint
+					return false;
 			}
-			else {
-				DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOAD_GRAPH, HINT_SPEC_LOAD_GRAPH );
-			}
-			applyEntityGraphHint( hintName, value );
-			return true;
 		}
-
-		return false;
 	}
 
 	protected void applyFetchSizeHint(int fetchSize) {
@@ -394,7 +360,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void applyEntityGraphHint(String hintName, Object value) {
-		final GraphSemantic graphSemantic = GraphSemantic.fromJpaHintName( hintName );
+		final GraphSemantic graphSemantic = GraphSemantic.fromHintName( hintName );
 		if ( value instanceof RootGraphImplementor ) {
 			applyGraph( (RootGraphImplementor<?>) value, graphSemantic );
 		}
@@ -435,33 +401,33 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	private boolean applyLockingHint(String hintName, Object value) {
-		if ( HINT_SPEC_LOCK_TIMEOUT.equals( hintName ) && value != null ) {
-			applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
-			return true;
+		switch ( hintName ) {
+			case HINT_JAVAEE_LOCK_TIMEOUT:
+				DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
+				//fall through to:
+			case HINT_SPEC_LOCK_TIMEOUT:
+				if ( value != null ) {
+					applyLockTimeoutHint( getInteger( value ) );
+					return true;
+				}
+				else {
+					return false;
+				}
+			case HINT_FOLLOW_ON_LOCKING:
+				applyFollowOnLockingHint( getBoolean( value ) );
+				return true;
+			case HINT_NATIVE_LOCKMODE:
+				applyLockModeHint( value );
+				return true;
+			default:
+				if ( hintName.startsWith( HINT_NATIVE_LOCKMODE ) ) {
+					applyAliasSpecificLockModeHint( hintName, value );
+					return true;
+				}
+				else {
+					return false;
+				}
 		}
-
-		if ( HINT_JAVAEE_LOCK_TIMEOUT.equals( hintName ) && value != null ) {
-			DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
-			applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
-			return true;
-		}
-
-		if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
-			applyFollowOnLockingHint( ConfigurationHelper.getBoolean( value ) );
-			return true;
-		}
-
-		if ( HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
-			applyLockModeHint( value );
-			return true;
-		}
-
-		if ( hintName.startsWith( HINT_NATIVE_LOCKMODE ) ) {
-			applyAliasSpecificLockModeHint( hintName, value );
-			return true;
-		}
-
-		return false;
 	}
 
 	protected void applyLockTimeoutHint(Integer timeout) {
@@ -490,7 +456,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			applyLockModeType( (LockModeType) value );
 		}
 		else if ( value instanceof String ) {
-			applyHibernateLockMode( LockModeTypeHelper.interpretLockMode( value ) );
+			applyHibernateLockMode( interpretLockMode( value ) );
 		}
 		else {
 			throw new IllegalArgumentException(
@@ -510,8 +476,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final String alias = hintName.substring( HINT_NATIVE_LOCKMODE.length() + 1 );
 		// determine the LockMode
 		try {
-			final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
-			getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+			getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, interpretLockMode( value ) );
 		}
 		catch ( Exception e ) {
 			QueryLogging.QUERY_MESSAGE_LOGGER.unableToDetermineLockModeValue( hintName, value );
@@ -881,7 +846,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory()
+					.getTypeConfiguration()
+					.standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -965,7 +932,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory()
+					.getTypeConfiguration()
+					.standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1019,7 +988,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory()
+					.getTypeConfiguration()
+					.standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}

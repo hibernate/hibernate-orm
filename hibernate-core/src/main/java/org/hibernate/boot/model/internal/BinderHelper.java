@@ -336,11 +336,12 @@ public class BinderHelper {
 		result.setInsertable( false );
 		result.setValue( embeddedComponent );
 		result.setPropertyAccessorName( "embedded" );
-		if ( ownerEntity instanceof JoinedSubclass ) {
-			ownerEntity.addProperty( result );
+		if ( persistentClassOrJoin instanceof Join ) {
+			// the referenced column is in the joined table, add the synthetic property there
+			persistentClassOrJoin.addProperty( result );
 		}
 		else {
-			persistentClassOrJoin.addProperty( result );
+			ownerEntity.addProperty( result );
 		}
 		embeddedComponent.createUniqueKey(); //make it unique
 		return result;

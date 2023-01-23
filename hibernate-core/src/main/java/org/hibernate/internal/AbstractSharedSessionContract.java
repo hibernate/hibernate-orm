@@ -1147,11 +1147,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
 		checkOpen();
 		try {
-			return new QuerySqmImpl<>(
-					(SqmUpdateStatement<?>) updateQuery,
-					null,
-					this
-			);
+			return createCriteriaQuery( (SqmUpdateStatement<?>) updateQuery, null );
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
@@ -1162,7 +1158,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
 		checkOpen();
 		try {
-			return new QuerySqmImpl<>( (SqmDeleteStatement<?>) deleteQuery, null, this );
+			return createCriteriaQuery( (SqmDeleteStatement<?>) deleteQuery, null );
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
@@ -1173,7 +1169,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
 		checkOpen();
 		try {
-			return new QuerySqmImpl<>( (SqmInsertSelectStatement<?>) insertSelect, null, this );
+			return createCriteriaQuery( (SqmInsertSelectStatement<?>) insertSelect, null );
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
@@ -1299,7 +1295,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				}
 			}
 
-			return new QuerySqmImpl<>( selectStatement, criteriaQuery.getResultType(), this );
+			return createCriteriaQuery( selectStatement, criteriaQuery.getResultType() );
 		}
 		catch (RuntimeException e) {
 			if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
@@ -1313,11 +1309,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
 		checkOpen();
 		try {
-			return new QuerySqmImpl<>(
-					(SqmUpdateStatement<Void>) criteriaUpdate,
-					null,
-					this
-			);
+			return createCriteriaQuery( (SqmUpdateStatement<Void>) criteriaUpdate, null );
 		}
 		catch (RuntimeException e) {
 			if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
@@ -1331,11 +1323,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaDelete criteriaDelete) {
 		checkOpen();
 		try {
-			return new QuerySqmImpl<>(
-					(SqmDeleteStatement<Void>) criteriaDelete,
-					null,
-					this
-			);
+			return createCriteriaQuery( (SqmDeleteStatement<Void>) criteriaDelete, null );
 		}
 		catch (RuntimeException e) {
 			if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
@@ -1345,6 +1333,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	private <T> QueryImplementor<T> createCriteriaQuery(SqmStatement<T> criteria, Class<T> resultType) {
+		final QuerySqmImpl<T> query = new QuerySqmImpl<>( criteria, resultType, this );
+		applyQuerySettingsAndHints( query );
+		return query;
+	}
 
 	@SuppressWarnings("unused")
 	private void writeObject(ObjectOutputStream oos) throws IOException {

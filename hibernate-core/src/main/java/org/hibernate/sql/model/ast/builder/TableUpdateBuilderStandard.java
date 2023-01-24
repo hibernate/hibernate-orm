@@ -80,10 +80,4 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 				getOptimisticLockBindings()
 		);
 	}
-
-	@Override
-	protected void handleParameterCreation(ColumnValueParameter parameter) {
-		// nothing to do for updates... each TableUpdate impl collects
-		// the parameters from the bindings in a specific order
-	}
 }

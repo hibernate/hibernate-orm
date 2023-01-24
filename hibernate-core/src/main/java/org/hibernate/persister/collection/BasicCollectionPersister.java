@@ -454,21 +454,16 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		// WHERE
 
 		if ( attribute.getIdentifierDescriptor() != null ) {
-			attribute.getIdentifierDescriptor().forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
+			updateBuilder.addKeyRestrictionsLeniently( attribute.getIdentifierDescriptor() );
 		}
 		else {
-			attribute.getKeyDescriptor().getKeyPart().forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
+			updateBuilder.addKeyRestrictionsLeniently( attribute.getKeyDescriptor().getKeyPart() );
 
 			if ( attribute.getIndexDescriptor() != null && !indexContainsFormula ) {
-				attribute.getIndexDescriptor().forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
+				updateBuilder.addKeyRestrictionsLeniently( attribute.getIndexDescriptor() );
 			}
 			else {
-				attribute.getElementDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
-					if ( selectableMapping.isFormula() ) {
-						return;
-					}
-					updateBuilder.addKeyRestriction( selectableMapping );
-				} );
+				updateBuilder.addKeyRestrictions( attribute.getElementDescriptor() );
 			}
 		}
 
@@ -597,24 +592,17 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final TableDeleteBuilderStandard deleteBuilder = new TableDeleteBuilderStandard( this, tableReference, getFactory() );
 
 		if ( pluralAttribute.getIdentifierDescriptor() != null ) {
-			deleteBuilder.addKeyRestrictionLeniently( pluralAttribute.getIdentifierDescriptor() );
+			deleteBuilder.addKeyRestrictionsLeniently( pluralAttribute.getIdentifierDescriptor() );
 		}
 		else {
-			pluralAttribute
-					.getKeyDescriptor()
-					.getKeyPart()
-					.forEachSelectable( deleteBuilder::addKeyRestrictionLeniently );
+			deleteBuilder.addKeyRestrictionsLeniently( pluralAttribute.getKeyDescriptor().getKeyPart() );
 
 			if ( hasIndex && !indexContainsFormula ) {
 				assert pluralAttribute.getIndexDescriptor() != null;
-				pluralAttribute
-						.getIndexDescriptor()
-						.forEachSelectable( deleteBuilder::addKeyRestrictionLeniently );
+				deleteBuilder.addKeyRestrictionsLeniently( pluralAttribute.getIndexDescriptor() );
 			}
 			else {
-				pluralAttribute
-						.getElementDescriptor()
-						.forEachSelectable( deleteBuilder::addKeyRestriction );
+				deleteBuilder.addKeyRestrictions( pluralAttribute.getElementDescriptor() );
 			}
 		}
 

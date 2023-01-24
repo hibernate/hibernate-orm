@@ -9,7 +9,9 @@ package org.hibernate.sql.model.ast.builder;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.ast.ColumnValueBindingList;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 
 /**
@@ -25,33 +27,40 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	/**
 	 * Add a restriction as long as the selectable is not a formula and is not nullable
 	 */
+	default void addKeyRestrictions(SelectableMappings selectableMappings) {
+		final int jdbcTypeCount = selectableMappings.getJdbcTypeCount();
+		for ( int i = 0; i < jdbcTypeCount; i++ ) {
+			addKeyRestriction( selectableMappings.getSelectable( i ) );
+		}
+	}
+
+	/**
+	 * Add a restriction as long as the selectable is not a formula and is not nullable
+	 */
+	default void addKeyRestrictionsLeniently(SelectableMappings selectableMappings) {
+		final int jdbcTypeCount = selectableMappings.getJdbcTypeCount();
+		for ( int i = 0; i < jdbcTypeCount; i++ ) {
+			addKeyRestrictionLeniently( selectableMappings.getSelectable( i ) );
+		}
+	}
+
+	/**
+	 * Add restriction based on non-version optimistically-locked column
+	 */
+	default void addOptimisticLockRestrictions(SelectableMappings selectableMappings) {
+		final int jdbcTypeCount = selectableMappings.getJdbcTypeCount();
+		for ( int i = 0; i < jdbcTypeCount; i++ ) {
+			addOptimisticLockRestriction( selectableMappings.getSelectable( i ) );
+		}
+	}
+
+	/**
+	 * Add a restriction as long as the selectable is not a formula and is not nullable
+	 */
 	default void addKeyRestriction(SelectableMapping selectableMapping){
 		if ( selectableMapping.isNullable() ) {
 			return;
 		}
-		addKeyRestrictionLeniently( selectableMapping );
-	}
-
-	/**
-	 * Convenience form of {@link #addKeyRestriction(SelectableMapping)} matching the
-	 * signature of {@link SelectableConsumer} allowing it to be used as a method reference
-	 * in its place.
-	 *
-	 * @param dummy Ignored; here simply to satisfy the {@link SelectableConsumer} signature
-	 */
-	default void addKeyRestriction(@SuppressWarnings("unused") int dummy,SelectableMapping selectableMapping){
-		addKeyRestriction( selectableMapping );
-	}
-
-
-	/**
-	 * Convenience form of {@link #addKeyRestrictionLeniently(SelectableMapping)} matching the
-	 * signature of {@link SelectableConsumer} allowing it to be used as a method reference
-	 * in its place.
-	 *
-	 * @param dummy Ignored; here simply to satisfy the {@link SelectableConsumer} signature
-	 */
-	default void addKeyRestrictionLeniently(@SuppressWarnings("unused") int dummy, SelectableMapping selectableMapping) {
 		addKeyRestrictionLeniently( selectableMapping );
 	}
 
@@ -91,6 +100,10 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	 * Add restriction based on non-version optimistically-locked column
 	 */
 	void addOptimisticLockRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping);
+
+	ColumnValueBindingList getKeyRestrictionBindings();
+
+	ColumnValueBindingList getOptimisticLockBindings();
 
 	void setWhere(String fragment);
 

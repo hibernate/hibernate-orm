@@ -8,6 +8,7 @@ package org.hibernate.sql.model.ast.builder;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.sql.model.ast.ColumnValueBindingList;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -45,6 +46,16 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	@Override
 	public void addOptimisticLockRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
 		// nothing to do
+	}
+
+	@Override
+	public ColumnValueBindingList getKeyRestrictionBindings() {
+		return null;
+	}
+
+	@Override
+	public ColumnValueBindingList getOptimisticLockBindings() {
+		return null;
 	}
 
 	@Override

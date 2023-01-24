@@ -32,8 +32,6 @@ public class TableDeleteBuilderStandard
 		implements TableDeleteBuilder {
 	private final boolean isCustomSql;
 
-	private final List<ColumnValueParameter> parameters = new ArrayList<>();
-
 	private String sqlComment;
 
 	public TableDeleteBuilderStandard(
@@ -102,14 +100,5 @@ public class TableDeleteBuilderStandard
 				getOptimisticLockBindings(),
 				getParameters()
 		);
-	}
-
-	protected List<ColumnValueParameter> getParameters() {
-		return parameters;
-	}
-
-	@Override
-	protected void handleParameterCreation(ColumnValueParameter parameter) {
-		parameters.add( parameter );
 	}
 }

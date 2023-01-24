@@ -16,7 +16,9 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
@@ -209,7 +211,7 @@ public class EntityTableMapping implements TableMapping {
 		void consume(Object jdbcValue, KeyColumn columnMapping);
 	}
 
-	public static class KeyMapping implements KeyDetails {
+	public static class KeyMapping implements KeyDetails, SelectableMappings {
 		private final List<KeyColumn> keyColumns;
 
 		private final ModelPart identifierPart;
@@ -259,6 +261,25 @@ public class EntityTableMapping implements TableMapping {
 
 		public void forEachKeyColumn(Consumer<KeyColumn> keyColumnConsumer) {
 			keyColumns.forEach( keyColumnConsumer );
+		}
+
+		@Override
+		public int getJdbcTypeCount() {
+			return keyColumns.size();
+		}
+
+		@Override
+		public SelectableMapping getSelectable(int columnIndex) {
+			return keyColumns.get( columnIndex );
+		}
+
+		@Override
+		public int forEachSelectable(int offset, SelectableConsumer consumer) {
+			for ( int i = 0; i < keyColumns.size(); i++ ) {
+				consumer.accept( i, keyColumns.get( i ) );
+			}
+
+			return getJdbcTypeCount();
 		}
 	}
 

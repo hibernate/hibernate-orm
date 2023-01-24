@@ -143,7 +143,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
-		return fkTargetModelPart.getSelectable( columnIndex );
+		return foreignKey.getKeyPart().getSelectable( columnIndex );
 	}
 
 	@Override

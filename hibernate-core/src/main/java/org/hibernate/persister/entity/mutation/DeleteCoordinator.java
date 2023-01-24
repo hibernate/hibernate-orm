@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -28,6 +29,7 @@ import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
+import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 
@@ -157,11 +159,15 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		if ( loadedState != null ) {
-			final boolean[] versionability = entityPersister().getPropertyVersionability();
-			entityPersister().forEachAttributeMapping( (attributeIndex, attribute) -> {
-				if ( versionability[attributeIndex] && attribute instanceof SingularAttributeMapping ) {
+			final AbstractEntityPersister persister = entityPersister();
+			final boolean[] versionability = persister.getPropertyVersionability();
+			for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
+				final AttributeMapping attribute;
+				// only makes sense to lock on singular attributes which are not excluded from optimistic locking
+				if ( versionability[attributeIndex] && ( attribute = persister.getAttributeMapping( attributeIndex ) ) instanceof SingularAttributeMapping ) {
 					final Object loadedValue = loadedState[attributeIndex];
-					if (loadedValue != null) {
+					if ( loadedValue != null ) {
+						final String mutationTableName = persister.getAttributeMutationTableName( attributeIndex );
 						attribute.breakDownJdbcValues(
 								loadedValue,
 								(jdbcValue, jdbcValueMapping) -> {
@@ -172,7 +178,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 
 									jdbcValueBindings.bindValue(
 											jdbcValue,
-											entityPersister().getAttributeMutationTableName( attributeIndex ),
+											mutationTableName,
 											jdbcValueMapping.getSelectionExpression(),
 											ParameterUsage.RESTRICT,
 											session
@@ -182,7 +188,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 						);
 					}
 				}
-			} );
+			}
 		}
 	}
 
@@ -347,31 +353,28 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		if ( applyVersion ) {
 			// apply any optimistic locking
 			applyOptimisticLocking( deleteGroupBuilder, loadedState, session );
-			if ( entityPersister().hasPartitionedSelectionMapping() ) {
-				entityPersister().forEachSelectable(
-						(selectionIndex, selectableMapping) -> {
-							if ( selectableMapping.isPartitioned() ) {
-								final String tableNameForMutation =
-										entityPersister().physicalTableNameForMutation( selectableMapping );
-								final RestrictedTableMutationBuilder<?, ?> rootTableMutationBuilder =
-										deleteGroupBuilder.findTableDetailsBuilder( tableNameForMutation );
-								rootTableMutationBuilder.addKeyRestrictionLeniently( selectableMapping );
-							}
+			final AbstractEntityPersister persister = entityPersister();
+			if ( persister.hasPartitionedSelectionMapping() ) {
+				for ( AttributeMapping attributeMapping : persister.getAttributeMappings() ) {
+					final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
+					for ( int i = 0; i < jdbcTypeCount; i++ ) {
+						final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );
+						if ( selectableMapping.isPartitioned() ) {
+							final String tableNameForMutation =
+									persister.physicalTableNameForMutation( selectableMapping );
+							final RestrictedTableMutationBuilder<?, ?> rootTableMutationBuilder =
+									deleteGroupBuilder.findTableDetailsBuilder( tableNameForMutation );
+							rootTableMutationBuilder.addKeyRestrictionLeniently( selectableMapping );
 						}
-				);
+					}
+				}
 			}
 		}
 		// todo (6.2) : apply where + where-fragments
 	}
 
 	private static void applyKeyDetails(TableDeleteBuilder tableDeleteBuilder, EntityTableMapping tableMapping) {
-		tableMapping.getKeyMapping().forEachKeyColumn(
-				(columnMapping) -> tableDeleteBuilder.addKeyRestriction(
-						columnMapping.getColumnName(),
-						columnMapping.getWriteExpression(),
-						columnMapping.getJdbcMapping()
-				)
-		);
+		tableDeleteBuilder.addKeyRestrictions( tableMapping.getKeyMapping() );
 	}
 
 	protected void applyOptimisticLocking(
@@ -406,18 +409,20 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 			MutationGroupBuilder mutationGroupBuilder,
 			Object[] loadedState,
 			SharedSessionContractImplementor session) {
+		final AbstractEntityPersister persister = entityPersister();
 		assert loadedState != null;
 		assert lockStyle.isAllOrDirty();
-		assert entityPersister().optimisticLockStyle().isAllOrDirty();
+		assert persister.optimisticLockStyle().isAllOrDirty();
 		assert session != null;
 
-		final boolean[] versionability = entityPersister().getPropertyVersionability();
-		entityPersister().forEachAttributeMapping( (attributeIndex, attribute) -> {
+		final boolean[] versionability = persister.getPropertyVersionability();
+		for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
+			final AttributeMapping attribute;
 			// only makes sense to lock on singular attributes which are not excluded from optimistic locking
-			if ( versionability[attributeIndex] && attribute instanceof SingularAttributeMapping ) {
+			if ( versionability[attributeIndex] && ( attribute = persister.getAttributeMapping( attributeIndex ) ) instanceof SingularAttributeMapping ) {
 				breakDownJdbcValues( mutationGroupBuilder, session, attribute, loadedState[attributeIndex] );
 			}
-		} );
+		}
 	}
 
 	private void breakDownJdbcValues(
@@ -425,24 +430,16 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 			SharedSessionContractImplementor session,
 			AttributeMapping attribute,
 			Object loadedValue) {
-		attribute.breakDownJdbcValues(
-				loadedValue,
-				(jdbcValue, columnMapping) -> {
-					final String physicalTableName = entityPersister().physicalTableNameForMutation( columnMapping );
-					final RestrictedTableMutationBuilder<?, ?> tableMutationBuilder =
-							mutationGroupBuilder.findTableDetailsBuilder( physicalTableName );
-					if ( tableMutationBuilder != null ) {
-						if (jdbcValue == null) {
-							tableMutationBuilder.addNullOptimisticLockRestriction( columnMapping );
-						}
-						else {
-							tableMutationBuilder.addOptimisticLockRestriction( columnMapping );
-						}
-					}
-					// else there is no actual delete statement for that table,
-					// generally indicates we have an on-delete=cascade situation
-				},
-				session
-		);
+		final RestrictedTableMutationBuilder<?, ?> tableMutationBuilder =
+				mutationGroupBuilder.findTableDetailsBuilder( attribute.getContainingTableExpression() );
+		if ( tableMutationBuilder != null && tableMutationBuilder.getOptimisticLockBindings() != null ) {
+			attribute.breakDownJdbcValues(
+					loadedValue,
+					tableMutationBuilder.getOptimisticLockBindings(),
+					session
+			);
+		}
+		// else there is no actual delete statement for that table,
+		// generally indicates we have an on-delete=cascade situation
 	}
 }

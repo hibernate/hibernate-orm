@@ -6,19 +6,15 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.ColumnValueBindingList;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 
@@ -32,8 +28,8 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 		extends AbstractTableMutationBuilder<M>
 		implements RestrictedTableMutationBuilder<O, M> {
 
-	private final List<ColumnValueBinding> keyRestrictionBindings = new ArrayList<>();
-	private List<ColumnValueBinding> optimisticLockBindings;
+	private final ColumnValueBindingList keyRestrictionBindings;
+	private final ColumnValueBindingList optimisticLockBindings;
 
 	public AbstractRestrictedTableMutationBuilder(
 			MutationType mutationType,
@@ -41,6 +37,8 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationType, mutationTarget, table, sessionFactory );
+		this.keyRestrictionBindings = new ColumnValueBindingList( getMutatingTable(), getParameters(), ParameterUsage.RESTRICT );
+		this.optimisticLockBindings = new ColumnValueBindingList( getMutatingTable(), getParameters(), ParameterUsage.RESTRICT );
 	}
 
 	public AbstractRestrictedTableMutationBuilder(
@@ -49,47 +47,33 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationType, mutationTarget, tableReference, sessionFactory );
+		this.keyRestrictionBindings = new ColumnValueBindingList( getMutatingTable(), getParameters(), ParameterUsage.RESTRICT );
+		this.optimisticLockBindings = new ColumnValueBindingList( getMutatingTable(), getParameters(), ParameterUsage.RESTRICT );
 	}
 
-	public List<ColumnValueBinding> getKeyRestrictionBindings() {
+	@Override
+	public ColumnValueBindingList getKeyRestrictionBindings() {
 		return keyRestrictionBindings;
 	}
 
-	public List<ColumnValueBinding> getOptimisticLockBindings() {
+	@Override
+	public ColumnValueBindingList getOptimisticLockBindings() {
 		return optimisticLockBindings;
 	}
 
 	@Override
 	public void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
-		addColumn(
-				columnName,
-				columnWriteFragment,
-				jdbcMapping,
-				ParameterUsage.RESTRICT,
-				keyRestrictionBindings
-		);
+		keyRestrictionBindings.addRestriction( columnName, columnWriteFragment, jdbcMapping );
 	}
 
 	@Override
 	public void addNullOptimisticLockRestriction(SelectableMapping column) {
-		if ( optimisticLockBindings == null ) {
-			optimisticLockBindings = new ArrayList<>();
-		}
-		final ColumnReference columnReference = new ColumnReference(
-				getMutatingTable(),
-				column.getSelectionExpression(),
-				column.getJdbcMapping()
-		);
-		optimisticLockBindings.add( new ColumnValueBinding( columnReference, null ) );
+		optimisticLockBindings.addNullRestriction( column );
 	}
 
 	@Override
 	public void addOptimisticLockRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
-		if ( optimisticLockBindings == null ) {
-			optimisticLockBindings = new ArrayList<>();
-		}
-
-		addColumn( columnName, columnWriteFragment, jdbcMapping, ParameterUsage.RESTRICT, optimisticLockBindings );
+		optimisticLockBindings.addRestriction( columnName, columnWriteFragment, jdbcMapping );
 	}
 
 	@Override

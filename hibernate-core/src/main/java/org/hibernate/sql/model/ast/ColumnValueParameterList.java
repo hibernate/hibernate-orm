@@ -31,6 +31,11 @@ public class ColumnValueParameterList extends ArrayList<ColumnValueParameter> im
 	}
 
 	@Override
+	public Object clone() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void accept(int selectionIndex, SelectableMapping selectableMapping) {
 		add(
 				new ColumnValueParameter(

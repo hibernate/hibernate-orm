@@ -24,6 +24,7 @@ import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -428,6 +429,12 @@ public class MetadataContext {
 				//noinspection unchecked rawtypes
 				( ( AttributeContainer) identifiableType ).getInFlightAccess().applyIdAttribute( idAttribute );
 			}
+			else if ( persistentClass.getIdentifier() instanceof Component
+					&& persistentClass.getIdentifierProperty() != getSuperclassIdentifier( persistentClass ) ) {
+				// If the identifier is a generic component, we have to call buildIdAttribute anyway,
+				// as this will create and register the EmbeddableType for the subtype
+				attributeFactory.buildIdAttribute( identifiableType, persistentClass.getIdentifierProperty() );
+			}
 		}
 		else {
 			// we have a non-aggregated composite-id
@@ -474,6 +481,34 @@ public class MetadataContext {
 			//noinspection unchecked
 			container.getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes, idClassType );
 		}
+	}
+
+	private Property getSuperclassIdentifier(PersistentClass persistentClass) {
+		final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
+		if ( declaredIdentifierProperty != null ) {
+			return declaredIdentifierProperty;
+		}
+		if ( persistentClass.getSuperMappedSuperclass() != null ) {
+			return getSuperclassIdentifier( persistentClass.getSuperMappedSuperclass() );
+		}
+		else if ( persistentClass.getSuperclass() != null ) {
+			return getSuperclassIdentifier( persistentClass.getSuperclass() );
+		}
+		return null;
+	}
+
+	private Property getSuperclassIdentifier(MappedSuperclass persistentClass) {
+		final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
+		if ( declaredIdentifierProperty != null ) {
+			return declaredIdentifierProperty;
+		}
+		if ( persistentClass.getSuperMappedSuperclass() != null ) {
+			return getSuperclassIdentifier( persistentClass.getSuperMappedSuperclass() );
+		}
+		else if ( persistentClass.getSuperPersistentClass() != null ) {
+			return getSuperclassIdentifier( persistentClass.getSuperPersistentClass() );
+		}
+		return null;
 	}
 
 	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component idClassComponent) {

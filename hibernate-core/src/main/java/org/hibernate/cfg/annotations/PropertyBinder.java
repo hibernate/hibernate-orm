@@ -13,6 +13,7 @@ import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.PropertyNotFoundException;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Immutable;
@@ -25,13 +26,17 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.ClassPropertyHolder;
 import org.hibernate.cfg.InheritanceState;
+import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolder;
+import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -47,6 +52,7 @@ import org.hibernate.tuple.ValueGenerator;
 import org.jboss.logging.Logger;
 
 import java.lang.annotation.Annotation;
+import java.util.Iterator;
 import java.util.Map;
 
 import static org.hibernate.cfg.BinderHelper.getMappedSuperclassOrNull;
@@ -264,18 +270,12 @@ public class PropertyBinder {
 				}
 				else {
 					rootClass.setIdentifierProperty( prop );
-					final org.hibernate.mapping.MappedSuperclass superclass = getMappedSuperclassOrNull(
+					final MappedSuperclass superclass = getMappedSuperclassOrNull(
 							declaringClass,
 							inheritanceStatePerClass,
 							buildingContext
 					);
-					if (superclass != null) {
-						superclass.setDeclaredIdentifierProperty(prop);
-					}
-					else {
-						//we know the property is on the actual entity
-						rootClass.setDeclaredIdentifierProperty( prop );
-					}
+					setDeclaredIdentifier( rootClass, superclass, prop );
 				}
 			}
 		}
@@ -286,6 +286,65 @@ public class PropertyBinder {
 		callAttributeBinders( prop );
 
 		return prop;
+	}
+
+	private void setDeclaredIdentifier(RootClass rootClass, MappedSuperclass superclass, Property prop) {
+		if ( superclass == null ) {
+			rootClass.setDeclaredIdentifierProperty( prop );
+			return;
+		}
+		// If the type has type parameters, we have to set the declared identifier property on the rootClass
+		// to be able to retrieve it with the correct type based on type variable assignment in the subclass
+		final Class<?> type = buildingContext.getBootstrapContext().getReflectionManager().toClass( declaringClass );
+		if ( type.getTypeParameters().length == 0 ) {
+			superclass.setDeclaredIdentifierProperty( prop );
+		}
+		else {
+			// If the type has type parameters, we have to look up the XClass and actual property again
+			// because the given XClass has a TypeEnvironment based on the type variable assignments of a subclass
+			// and that might result in a wrong property type being used for a property which uses a type variable
+			final XClass actualDeclaringClass = buildingContext.getBootstrapContext().getReflectionManager().toXClass( type );
+			for ( XProperty declaredProperty : actualDeclaringClass.getDeclaredProperties( prop.getPropertyAccessorName() ) ) {
+				if ( prop.getName().equals( declaredProperty.getName() ) ) {
+					final PropertyData inferredData = new PropertyInferredData(
+							actualDeclaringClass,
+							declaredProperty,
+							null,
+							buildingContext.getBootstrapContext().getReflectionManager()
+					);
+					final Value originalValue = prop.getValue();
+					if ( originalValue instanceof SimpleValue ) {
+						// Avoid copying when the property doesn't depend on a type variable
+						if ( inferredData.getTypeName().equals( ClassPropertyHolder.getTypeName( originalValue ) ) ) {
+							superclass.setDeclaredIdentifierProperty( prop );
+							return;
+						}
+					}
+					// If the property depends on a type variable, we have to copy it and the Value
+					final Property actualProperty = prop.copy();
+					actualProperty.setReturnedClassName( inferredData.getTypeName() );
+					final Value value = actualProperty.getValue().copy();
+					assert !(value instanceof Collection);
+					ClassPropertyHolder.setTypeName( value, inferredData.getTypeName() );
+					if ( value instanceof Component ) {
+						Component component = ( (Component) value );
+						Iterator<Property> propertyIterator = component.getPropertyIterator();
+						while ( propertyIterator.hasNext() ) {
+							Property property = propertyIterator.next();
+							try {
+								property.getGetter( component.getComponentClass() );
+							}
+							catch (PropertyNotFoundException e) {
+								propertyIterator.remove();
+							}
+						}
+					}
+					actualProperty.setValue( value );
+					superclass.setDeclaredIdentifierProperty( actualProperty );
+					break;
+				}
+			}
+		}
 	}
 
 	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(XProperty property, XClass embeddableClass) {

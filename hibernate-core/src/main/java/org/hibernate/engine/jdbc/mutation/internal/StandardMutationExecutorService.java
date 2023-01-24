@@ -74,7 +74,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 		if ( numberOfOperations == 1 ) {
 			final MutationOperation singleOperation = operationGroup.getSingleOperation();
 			if ( singleOperation instanceof SelfExecutingUpdateOperation ) {
-				return new MutationExecutorSingleSelfExecuting( (SelfExecutingUpdateOperation) singleOperation );
+				return new MutationExecutorSingleSelfExecuting( (SelfExecutingUpdateOperation) singleOperation, session );
 			}
 
 			final PreparableMutationOperation jdbcOperation = (PreparableMutationOperation) singleOperation;

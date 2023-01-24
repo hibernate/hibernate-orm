@@ -90,7 +90,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 
 		// If we get here the statement is needed - make sure it is resolved
 		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
-		valueBindings.beforeStatement( statementDetails, session );
+		valueBindings.beforeStatement( statementDetails );
 
 		try {
 			final int affectedRowCount = session.getJdbcCoordinator()
@@ -118,7 +118,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 			if ( statementDetails.getStatement() != null ) {
 				statementDetails.releaseStatement( session );
 			}
-			valueBindings.afterStatement( tableDetails, session );
+			valueBindings.afterStatement( tableDetails );
 		}
 	}
 }

@@ -450,20 +450,20 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				version,
 				mutatingTableDetails.getTableName(),
 				versionMapping.getSelectionExpression(),
-				ParameterUsage.SET,
-				session
+				ParameterUsage.SET
 		);
 
 		// restrict the key
 		mutatingTableDetails.getKeyMapping().breakDownKeyJdbcValues(
 				id,
-				(jdbcValue, columnMapping) -> mutationExecutor.getJdbcValueBindings().bindValue(
-						jdbcValue,
-						mutatingTableDetails.getTableName(),
-						columnMapping.getSelectionExpression(),
-						ParameterUsage.RESTRICT,
-						session
-				),
+				(jdbcValue, columnMapping) -> {
+					mutationExecutor.getJdbcValueBindings().bindValue(
+							jdbcValue,
+							mutatingTableDetails.getTableName(),
+							columnMapping.getColumnName(),
+							ParameterUsage.RESTRICT
+					);
+				},
 				session
 		);
 
@@ -472,8 +472,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				oldVersion,
 				mutatingTableDetails.getTableName(),
 				versionMapping.getSelectionExpression(),
-				ParameterUsage.RESTRICT,
-				session
+				ParameterUsage.RESTRICT
 		);
 
 		try {
@@ -798,14 +797,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableMapping,
 			IncludedAttributeAnalysis attributeAnalysis) {
-		attributeAnalysis.columnLockingAnalyses.forEach( (columnLockingAnalysis) -> {
+		attributeAnalysis.columnLockingAnalyses.forEach( columnLockingAnalysis -> {
 			if ( columnLockingAnalysis.getLockValue() != null ) {
 				jdbcValueBindings.bindValue(
 						columnLockingAnalysis.getLockValue(),
 						tableMapping.getTableName(),
 						columnLockingAnalysis.getReadExpression(),
-						ParameterUsage.RESTRICT,
-						session
+						ParameterUsage.RESTRICT
 				);
 			}
 		} );
@@ -824,20 +822,20 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					rowId,
 					tableMapping.getTableName(),
 					entityPersister().getRowIdMapping().getRowIdName(),
-					ParameterUsage.RESTRICT,
-					session
+					ParameterUsage.RESTRICT
 			);
 		}
 		else {
 			tableMapping.getKeyMapping().breakDownKeyJdbcValues(
 					id,
-					(jdbcValue, columnMapping) -> jdbcValueBindings.bindValue(
-							jdbcValue,
-							tableMapping.getTableName(),
-							columnMapping.getColumnName(),
-							ParameterUsage.RESTRICT,
-							session
-					),
+					(jdbcValue, columnMapping) -> {
+						jdbcValueBindings.bindValue(
+								jdbcValue,
+								tableMapping.getTableName(),
+								columnMapping.getColumnName(),
+								ParameterUsage.RESTRICT
+						);
+					},
 					session
 			);
 		}
@@ -857,8 +855,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 								jdbcValue,
 								tableMapping.getTableName(),
 								jdbcMapping.getSelectionExpression(),
-								ParameterUsage.SET,
-								session
+								ParameterUsage.SET
 						);
 					}
 				},

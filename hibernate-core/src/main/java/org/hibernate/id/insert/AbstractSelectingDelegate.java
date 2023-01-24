@@ -70,7 +70,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 		final JdbcServices jdbcServices = session.getJdbcServices();
 
 		jdbcServices.getSqlStatementLogger().logStatement( insertStatementDetails.getSqlString() );
-		jdbcValueBindings.beforeStatement( insertStatementDetails, session );
+		jdbcValueBindings.beforeStatement( insertStatementDetails );
 
 		jdbcCoordinator.getResultSetReturn()
 				.executeUpdate( insertStatementDetails.resolveStatement(), insertStatementDetails.getSqlString() );

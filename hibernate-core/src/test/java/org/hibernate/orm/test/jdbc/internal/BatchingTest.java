@@ -76,8 +76,8 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		final JdbcValueBindingsImpl jdbcValueBindings = sandboxInsertValueBindings( sessionImpl );
 
 		// bind values for #1 - should do nothing at the JDBC level
-		jdbcValueBindings.bindValue( 1, SANDBOX_TBL, "ID", ParameterUsage.SET, sessionImpl );
-		jdbcValueBindings.bindValue( "name", SANDBOX_TBL, "NAME", ParameterUsage.SET, sessionImpl );
+		jdbcValueBindings.bindValue( 1, SANDBOX_TBL, "ID", ParameterUsage.SET );
+		jdbcValueBindings.bindValue( "name", SANDBOX_TBL, "NAME", ParameterUsage.SET );
 		assertThat( batchObserver.getExplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( batchObserver.getImplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isFalse();
@@ -89,8 +89,8 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
         assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isTrue();
 
 		// bind values for #2 - again, nothing at JDBC level (we have statement from earlier)
-		jdbcValueBindings.bindValue( 2, SANDBOX_TBL, "ID", ParameterUsage.SET, sessionImpl );
-		jdbcValueBindings.bindValue( "another name", SANDBOX_TBL, "NAME", ParameterUsage.SET, sessionImpl );
+		jdbcValueBindings.bindValue( 2, SANDBOX_TBL, "ID", ParameterUsage.SET );
+		jdbcValueBindings.bindValue( "another name", SANDBOX_TBL, "NAME", ParameterUsage.SET );
 		assertThat( batchObserver.getExplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( batchObserver.getImplicitExecutionCount() ).isEqualTo( 0 );
 
@@ -174,7 +174,8 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 					}
 
 					throw new IllegalArgumentException( "Unknown column : " + columnName );
-				}
+				},
+				session
 		);
 	}
 
@@ -205,8 +206,8 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		final JdbcValueBindingsImpl jdbcValueBindings = sandboxInsertValueBindings( sessionImpl );
 
 		// bind values for #1 - this does nothing at the JDBC level
-		jdbcValueBindings.bindValue( 1, SANDBOX_TBL, "ID", ParameterUsage.SET, sessionImpl );
-		jdbcValueBindings.bindValue( "name", SANDBOX_TBL, "NAME", ParameterUsage.SET, sessionImpl );
+		jdbcValueBindings.bindValue( 1, SANDBOX_TBL, "ID", ParameterUsage.SET );
+		jdbcValueBindings.bindValue( "name", SANDBOX_TBL, "NAME", ParameterUsage.SET );
 		assertThat( batchObserver.getExplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( batchObserver.getImplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isFalse();
@@ -218,8 +219,8 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isTrue();
 
 		// bind values for #2 - this does nothing at the JDBC level : we do still have the statement defining the batch
-		jdbcValueBindings.bindValue( 2, SANDBOX_TBL, "ID", ParameterUsage.SET, sessionImpl );
-		jdbcValueBindings.bindValue( "another name", SANDBOX_TBL, "NAME", ParameterUsage.SET, sessionImpl );
+		jdbcValueBindings.bindValue( 2, SANDBOX_TBL, "ID", ParameterUsage.SET );
+		jdbcValueBindings.bindValue( "another name", SANDBOX_TBL, "NAME", ParameterUsage.SET );
 		assertThat( batchObserver.getExplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( batchObserver.getImplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isTrue();
@@ -231,8 +232,8 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isTrue();
 
 		// bind values for #3 - this does nothing at the JDBC level : we do still have the statement defining the batch
-		jdbcValueBindings.bindValue( 3, SANDBOX_TBL, "ID", ParameterUsage.SET, sessionImpl );
-		jdbcValueBindings.bindValue( "yet another name", SANDBOX_TBL, "NAME", ParameterUsage.SET, sessionImpl );
+		jdbcValueBindings.bindValue( 3, SANDBOX_TBL, "ID", ParameterUsage.SET );
+		jdbcValueBindings.bindValue( "yet another name", SANDBOX_TBL, "NAME", ParameterUsage.SET );
 		assertThat( batchObserver.getExplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( batchObserver.getImplicitExecutionCount() ).isEqualTo( 0 );
 		assertThat( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isTrue();

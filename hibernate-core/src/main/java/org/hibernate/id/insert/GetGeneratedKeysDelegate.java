@@ -101,7 +101,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		jdbcServices.getSqlStatementLogger().logStatement( insertSql );
 
 		final PreparedStatement insertStatement = insertStatementDetails.resolveStatement();
-		jdbcValueBindings.beforeStatement( insertStatementDetails, session );
+		jdbcValueBindings.beforeStatement( insertStatementDetails );
 
 		try {
 			jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement, insertSql );

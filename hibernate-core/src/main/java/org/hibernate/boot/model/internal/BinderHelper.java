@@ -22,8 +22,6 @@ import java.util.StringTokenizer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.EmbeddedId;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -45,11 +43,13 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Any;
+import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -60,6 +60,8 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
@@ -145,7 +147,7 @@ public class BinderHelper {
 			// figure out which table has the columns by looking
 			// for a PersistentClass or Join in the hierarchy of
 			// the target entity which has the first column
-			final Object columnOwner = findReferencedColumnOwner( targetEntity, joinColumns.getJoinColumns().get(0), context );
+			final AttributeContainer columnOwner = findReferencedColumnOwner( targetEntity, joinColumns.getJoinColumns().get(0), context );
 			checkColumnInSameTable( joinColumns, targetEntity, associatedEntity, context, columnOwner );
 			// find all properties mapped to each column
 			final List<Property> properties = findPropertiesByColumns( columnOwner, joinColumns, associatedEntity, context );
@@ -224,7 +226,7 @@ public class BinderHelper {
 			PersistentClass associatedEntity,
 			String propertyName,
 			boolean inverse,
-			Object columnOwner,
+			AttributeContainer columnOwner,
 			List<Property> properties,
 			MetadataBuildingContext context) {
 		if ( properties.size() == 1
@@ -314,7 +316,7 @@ public class BinderHelper {
 	 */
 	private static Property makeSyntheticComponentProperty(
 			PersistentClass ownerEntity,
-			Object persistentClassOrJoin,
+			AttributeContainer persistentClassOrJoin,
 			MetadataBuildingContext context,
 			String syntheticPropertyName,
 			List<Property> properties) {
@@ -334,7 +336,13 @@ public class BinderHelper {
 		result.setInsertable( false );
 		result.setValue( embeddedComponent );
 		result.setPropertyAccessorName( "embedded" );
-		ownerEntity.addProperty( result );
+		if ( persistentClassOrJoin instanceof Join ) {
+			// the referenced column is in the joined table, add the synthetic property there
+			persistentClassOrJoin.addProperty( result );
+		}
+		else {
+			ownerEntity.addProperty( result );
+		}
 		embeddedComponent.createUniqueKey(); //make it unique
 		return result;
 	}
@@ -683,7 +691,7 @@ public class BinderHelper {
 		}
 	}
 
-	public static Object findReferencedColumnOwner(
+	public static AttributeContainer findReferencedColumnOwner(
 			PersistentClass persistentClass,
 			AnnotatedJoinColumn joinColumn,
 			MetadataBuildingContext context) {
@@ -696,7 +704,7 @@ public class BinderHelper {
 	 * Find the column owner (ie PersistentClass or Join) of columnName.
 	 * If columnName is null or empty, persistentClass is returned
 	 */
-	public static Object findColumnOwner(
+	public static AttributeContainer findColumnOwner(
 			PersistentClass persistentClass,
 			String columnName,
 			MetadataBuildingContext context) {

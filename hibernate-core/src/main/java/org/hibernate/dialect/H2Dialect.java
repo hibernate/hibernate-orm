@@ -43,6 +43,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
@@ -60,6 +61,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.TableUpsert;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -866,5 +869,14 @@ public class H2Dialect extends Dialect {
 	@Override
 	public int rowIdSqlType() {
 		return BIGINT;
+	}
+
+	@Override
+	public MutationOperation createUpsertOperation(
+			EntityMutationTarget mutationTarget,
+			TableUpsert tableUpsert,
+			SessionFactoryImplementor factory) {
+		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, tableUpsert );
+		return translator.visitUpsert( tableUpsert );
 	}
 }

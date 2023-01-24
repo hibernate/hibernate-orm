@@ -1080,7 +1080,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			EntityTableMapping tableMapping) {
 		if ( rowIdMapping != null && rowId != null && tableMapping.isIdentifierTable() ) {
-			tableUpdateBuilder.addKeyRestriction( rowIdMapping );
+			tableUpdateBuilder.addKeyRestrictionLeniently( rowIdMapping );
 		}
 		else {
 			tableMapping.getKeyMapping().forEachKeyColumn(
@@ -1562,7 +1562,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			updateBuilder.addValueColumn( versionMapping );
 
 			entityPersister().getIdentifierMapping().forEachSelectable(
-					(selectionIndex, selectableMapping) -> updateBuilder.addKeyRestriction( selectableMapping )
+					(selectionIndex, selectableMapping) -> updateBuilder.addKeyRestrictionLeniently( selectableMapping )
 			);
 
 			updateBuilder.addOptimisticLockRestriction( versionMapping );

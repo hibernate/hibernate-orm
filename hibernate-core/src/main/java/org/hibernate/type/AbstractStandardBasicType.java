@@ -26,6 +26,7 @@ import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
@@ -47,6 +48,7 @@ public abstract class AbstractStandardBasicType<T>
 	private final ValueBinder<T> jdbcValueBinder;
 	private final ValueExtractor<T> jdbcValueExtractor;
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
+	private final AbstractClassJavaType<T> javaTypeAsAbstractClassJavaType;
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
@@ -56,6 +58,13 @@ public abstract class AbstractStandardBasicType<T>
 		this.jdbcValueBinder = jdbcType.getBinder( javaType );
 		this.jdbcValueExtractor = jdbcType.getExtractor( javaType );
 		this.jdbcLiteralFormatter = jdbcType.getJdbcLiteralFormatter( javaType );
+		//This is a dispatch optimisation to avoid megamorphic invocations on the most common type:
+		if ( javaType instanceof AbstractClassJavaType ) {
+			this.javaTypeAsAbstractClassJavaType = (AbstractClassJavaType) javaType;
+		}
+		else {
+			this.javaTypeAsAbstractClassJavaType = null;
+		}
 	}
 
 	@Override
@@ -165,14 +174,35 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean isEqual(Object one, Object another) {
-		return ( one == another ) //optimisation to attempt avoid the need for the method on javaType:
-				|| javaType.areEqual( (T) one, (T) another );
+		if ( one == another ) {
+			return true;
+		}
+		else if ( one == null || another == null ) {
+			return false;
+		}
+		else {
+			final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
+			if ( type != null ) {
+				//Optimize for the most common case: avoid the megamorphic call
+				return type.areEqual( (T) one, (T) another );
+			}
+			else {
+				return javaType.areEqual( (T) one, (T) another );
+			}
+		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public int getHashCode(Object x) {
-		return javaType.extractHashCode( (T) x );
+		final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
+		if ( type != null ) {
+			//Optimize for the most common case: avoid the megamorphic call
+			return type.extractHashCode( (T) x );
+		}
+		else {
+			return javaType.extractHashCode( (T) x );
+		}
 	}
 
 	@Override

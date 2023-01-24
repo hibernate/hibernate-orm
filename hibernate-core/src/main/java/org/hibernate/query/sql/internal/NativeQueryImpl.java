@@ -856,7 +856,7 @@ public class NativeQueryImpl<R>
 	}
 
 	public void addResultTypeClass(Class<?> resultClass) {
-		assert CollectionHelper.isEmpty( resultSetMapping.getResultBuilders() );
+		assert resultSetMapping.getNumberOfResultBuilders() == 0;
 		registerBuilder( Builders.resultClassBuilder( resultClass, getSessionFactory() ) );
 	}
 

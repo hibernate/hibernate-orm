@@ -15,21 +15,13 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class AsciiDocWriter implements BiConsumer<Map<String, ConfigurationProperty>, Writer> {
 
-	private final Predicate<Map.Entry<String, ConfigurationProperty>> filter;
-
-	public AsciiDocWriter(Predicate<Map.Entry<String, ConfigurationProperty>> filter) {
-		this.filter = filter;
-	}
-
 	@Override
 	public void accept(Map<String, ConfigurationProperty> propertyMap, Writer writer) {
 		Map<String, Collection<ConfigurationProperty>> groups = propertyMap.entrySet().stream()
-				.filter( filter )
 				.map( Map.Entry::getValue )
 				.collect(
 						Collectors.groupingBy(

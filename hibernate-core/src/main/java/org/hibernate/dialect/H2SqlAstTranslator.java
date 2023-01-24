@@ -318,7 +318,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		// merge into [table] as t
 		// using values([bindings]) as s ([column-names])
 		// on t.[key] = s.[key]
-		//		and t.[key] = ?
 		// when not matched
 		// 		then insert ...
 		// when matched
@@ -357,36 +356,29 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
 		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
 
+		final StringBuilder columnList = new StringBuilder();
+
 		appendSql( "using values (" );
 
 		for ( int i = 0; i < keyBindings.size(); i++ ) {
 			final ColumnValueBinding keyBinding = keyBindings.get( i );
 			if ( i > 0 ) {
 				appendSql( ", " );
+				columnList.append( ", " );
 			}
-			keyBinding.getValueExpression().accept( this );
+			columnList.append( keyBinding.getColumnReference().getColumnExpression() );
+			renderCasted( keyBinding.getValueExpression() );
 		}
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
 			appendSql( ", " );
+			columnList.append( ", " );
 			final ColumnValueBinding valueBinding = valueBindings.get( i );
-			valueBinding.getValueExpression().accept( this );
+			columnList.append( valueBinding.getColumnReference().getColumnExpression() );
+			renderCasted( valueBinding.getValueExpression() );
 		}
 
 		appendSql( ") as s(" );
-
-		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			final ColumnValueBinding keyBinding = keyBindings.get( i );
-			if ( i > 0 ) {
-				appendSql( ", " );
-			}
-			appendSql( keyBinding.getColumnReference().getColumnExpression() );
-		}
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			appendSql( ", " );
-			final ColumnValueBinding valueBinding = valueBindings.get( i );
-			appendSql( valueBinding.getColumnReference().getColumnExpression() );
-		}
-
+		appendSql( columnList.toString() );
 		appendSql( ")" );
 	}
 
@@ -411,34 +403,28 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
 		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
 
+		final StringBuilder valuesList = new StringBuilder();
+
 		appendSql( "when not matched then insert (" );
 		for ( int i = 0; i < keyBindings.size(); i++ ) {
 			if ( i > 0 ) {
 				appendSql( ", " );
+				valuesList.append( ", " );
 			}
 			final ColumnValueBinding keyBinding = keyBindings.get( i );
 			appendSql( keyBinding.getColumnReference().getColumnExpression() );
+			keyBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
 		}
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
 			appendSql( ", " );
+			valuesList.append( ", " );
 			final ColumnValueBinding valueBinding = valueBindings.get( i );
 			appendSql( valueBinding.getColumnReference().getColumnExpression() );
+			valueBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
 		}
 
 		appendSql( ") values (" );
-		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			if ( i > 0 ) {
-				appendSql( ", " );
-			}
-			final ColumnValueBinding keyBinding = keyBindings.get( i );
-			keyBinding.getColumnReference().appendReadExpression( this, "s" );
-		}
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			appendSql( ", " );
-			final ColumnValueBinding valueBinding = valueBindings.get( i );
-			valueBinding.getColumnReference().appendReadExpression( this, "s" );
-		}
-
+		appendSql( valuesList.toString() );
 		appendSql( ")" );
 	}
 

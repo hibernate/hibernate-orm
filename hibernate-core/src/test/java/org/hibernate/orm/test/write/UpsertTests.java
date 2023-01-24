@@ -43,11 +43,17 @@ public class UpsertTests {
 		verifySecondaryRows( scope, 1 );
 	}
 
-	private void verifySecondaryRows(SessionFactoryScope scope, int expectedCount) {
-		scope.inTransaction( (session) -> {
-			final int count = session.createNativeQuery( "select count(1) from supplements", Integer.class ).getSingleResult();
+
+	private static void verifySecondaryRows(String table, int expectedCount, SessionFactoryScope sfScope) {
+		final String sql = "select count(1) from " + table;
+		sfScope.inTransaction( (session) -> {
+			final int count = session.createNativeQuery( sql, Integer.class ).getSingleResult();
 			assertThat( count ).isEqualTo( expectedCount );
 		} );
+	}
+
+	private static void verifySecondaryRows(SessionFactoryScope scope, int expectedCount) {
+		verifySecondaryRows( "supplements", expectedCount, scope );
 	}
 
 	@Test

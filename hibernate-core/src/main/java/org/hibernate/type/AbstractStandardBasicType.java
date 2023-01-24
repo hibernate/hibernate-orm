@@ -49,6 +49,7 @@ public abstract class AbstractStandardBasicType<T>
 	private final ValueExtractor<T> jdbcValueExtractor;
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
 	private final AbstractClassJavaType<T> javaTypeAsAbstractClassJavaType;
+	private final Class javaTypeClass;
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
@@ -58,6 +59,9 @@ public abstract class AbstractStandardBasicType<T>
 		this.jdbcValueBinder = jdbcType.getBinder( javaType );
 		this.jdbcValueExtractor = jdbcType.getExtractor( javaType );
 		this.jdbcLiteralFormatter = jdbcType.getJdbcLiteralFormatter( javaType );
+
+		//A very simple dispatch optimisation, make this a constant:
+		this.javaTypeClass = javaType.getJavaTypeClass();
 		//This is a dispatch optimisation to avoid megamorphic invocations on the most common type:
 		if ( javaType instanceof AbstractClassJavaType ) {
 			this.javaTypeAsAbstractClassJavaType = (AbstractClassJavaType) javaType;
@@ -123,7 +127,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public final Class getReturnedClass() {
-		return javaType.getJavaTypeClass();
+		return javaTypeClass;
 	}
 
 	@Override

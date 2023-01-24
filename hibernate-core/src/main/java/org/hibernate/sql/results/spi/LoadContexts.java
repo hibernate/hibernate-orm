@@ -31,7 +31,7 @@ public class LoadContexts {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( LoadContexts.class );
 
 	private final PersistenceContext persistenceContext;
-	private final StandardStack<JdbcValuesSourceProcessingState> jdbcValuesSourceProcessingStateStack = new StandardStack<>();
+	private final StandardStack<JdbcValuesSourceProcessingState> jdbcValuesSourceProcessingStateStack = new StandardStack<>( JdbcValuesSourceProcessingState.class );
 
 	public LoadContexts(PersistenceContext persistenceContext) {
 		this.persistenceContext = persistenceContext;

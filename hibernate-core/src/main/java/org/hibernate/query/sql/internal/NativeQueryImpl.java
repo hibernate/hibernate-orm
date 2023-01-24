@@ -61,6 +61,8 @@ import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
+import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
+import org.hibernate.query.results.implicit.ImplicitResultClassBuilder;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.MutableQueryOptions;
@@ -246,12 +248,6 @@ public class NativeQueryImpl<R>
 						return true;
 					}
 
-					if ( resultJavaType != null && resultJavaType != Tuple.class && !resultJavaType.isArray() ) {
-						// todo : allow the expected Java type imply a builder to use
-//						resultSetMapping.addResultBuilder( resultClassBuilder( resultJavaType, context ) );
-//						return true;
-					}
-
 					return false;
 				},
 				session
@@ -260,19 +256,21 @@ public class NativeQueryImpl<R>
 		if ( resultJavaType == Tuple.class ) {
 			setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
-		else if ( resultJavaType != null && resultJavaType != Object[].class ) {
+		else if ( resultJavaType != null && !resultJavaType.isArray() ) {
 			switch ( resultSetMapping.getNumberOfResultBuilders() ) {
-				case 0:
+				case 0: {
 					throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
-				case 1:
-					// would be nice to support types that are "wrappable", as in `JavaType#wrap`
+				}
+				case 1: {
 					final Class<?> actualResultJavaType = resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
 					if ( actualResultJavaType != null && !resultJavaType.isAssignableFrom( actualResultJavaType ) ) {
 						throw buildIncompatibleException( resultJavaType, actualResultJavaType );
 					}
 					break;
-				default:
+				}
+				default: {
 					throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+				}
 			}
 		}
 	}
@@ -449,7 +447,7 @@ public class NativeQueryImpl<R>
 				sqlString,
 				originalSqlString,
 				resultSetMapping.getMappingIdentifier(),
-				null,
+				extractResultClass( resultSetMapping ),
 				querySpaces,
 				isCacheable(),
 				getCacheRegion(),
@@ -463,6 +461,22 @@ public class NativeQueryImpl<R>
 				getMaxResults(),
 				getHints()
 		);
+	}
+
+	private Class<?> extractResultClass(ResultSetMappingImpl resultSetMapping) {
+		final List<ResultBuilder> resultBuilders = resultSetMapping.getResultBuilders();
+		if ( resultBuilders.size() == 1 ) {
+			final ResultBuilder resultBuilder = resultBuilders.get( 0 );
+			if ( resultBuilder instanceof ImplicitResultClassBuilder ) {
+				final ImplicitResultClassBuilder resultTypeBuilder = (ImplicitResultClassBuilder) resultBuilder;
+				return resultTypeBuilder.getJavaType();
+			}
+			else if ( resultBuilder instanceof ImplicitModelPartResultBuilderEntity ) {
+				final ImplicitModelPartResultBuilderEntity resultTypeBuilder = (ImplicitModelPartResultBuilderEntity) resultBuilder;
+				return resultTypeBuilder.getJavaType();
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -841,6 +855,11 @@ public class NativeQueryImpl<R>
 				: null;
 	}
 
+	public void addResultTypeClass(Class<?> resultClass) {
+		assert resultSetMapping.getNumberOfResultBuilders() == 0;
+		registerBuilder( Builders.resultClassBuilder( resultClass, getSessionFactory() ) );
+	}
+
 	@Override
 	public NativeQueryImplementor<R> addScalar(String columnAlias) {
 		return registerBuilder( Builders.scalar( columnAlias ) );
@@ -1194,26 +1213,16 @@ public class NativeQueryImpl<R>
 		if ( value instanceof String ) {
 			addSynchronizedQuerySpace( (String) value );
 		}
-		else if ( value instanceof String[] ) {
-			for (String string : (String[]) value) {
-				addSynchronizedQuerySpace( string );
-			}
-		}
 		else if ( value instanceof Class ) {
 			addSynchronizedEntityClass( (Class<?>) value );
 		}
-		else if ( value instanceof Class[] ) {
-			for (Class<?> aClass : (Class<?>[]) value) {
-				addSynchronizedEntityClass( aClass );
+		else if ( value instanceof Object[] ) {
+			for ( Object element : (Object[]) value ) {
+				applySynchronizeSpace( element );
 			}
 		}
-		else if ( value instanceof List ) {
-			final List<?> list = (List<?>) value;
-			list.forEach( this::applySynchronizeSpace );
-		}
-		else if ( value instanceof Collection ) {
-			final Collection<?> values = (Collection<?>) value;
-			for ( Object element : values ) {
+		else if ( value instanceof Iterable ) {
+			for ( Object element : (Iterable<?>) value ) {
 				applySynchronizeSpace( element );
 			}
 		}

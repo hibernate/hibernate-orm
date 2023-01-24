@@ -6,9 +6,9 @@
  */
 package org.hibernate.internal.util.collections;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Iterator;
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -20,120 +20,95 @@ import java.util.function.Function;
  *
  * @author Steve Ebersole
  * @author Sanne Grinovero
+ * @author Marco Belladelli
  */
 public final class StandardStack<T> implements Stack<T> {
+	private T[] elements;
+	private int top = 0;
 
-	private ArrayDeque<T> internalStack;
-	private static final Object NULL_TOKEN = new Object();
+	private Class<T> type;
 
-	public StandardStack() {
+	public StandardStack(Class<T> type) {
+		this.type = type;
 	}
 
-	public StandardStack(T initial) {
-		stackInstanceExpected().addFirst( initial );
+	public StandardStack(Class<T> type, T initial) {
+		this( type );
+		push( initial );
+	}
+
+	@SuppressWarnings("unchecked")
+	private void init() {
+		elements = (T[]) Array.newInstance( type, 8 );
+		type = null;
 	}
 
 	@Override
-	public void push(T newCurrent) {
-		T toStore = newCurrent;
-		if ( newCurrent == null ) {
-			toStore = (T) NULL_TOKEN;
+	public void push(T e) {
+		if ( elements == null ) {
+			init();
 		}
-		stackInstanceExpected().addFirst( toStore );
-	}
-
-	private Deque<T> stackInstanceExpected() {
-		if ( internalStack == null ) {
-			//"7" picked to use 8, but skipping the odd initialCapacity method
-			internalStack = new ArrayDeque<>( 7 );
+		if ( top == elements.length ) {
+			grow();
 		}
-		return internalStack;
+		elements[top++] = e;
 	}
 
 	@Override
 	public T pop() {
-		return convert( stackInstanceExpected().removeFirst() );
-	}
-
-	private T convert(final Object internalStoredObject) {
-		if ( internalStoredObject == NULL_TOKEN ) {
-			return null;
+		if ( isEmpty() ) {
+			throw new NoSuchElementException();
 		}
-		return (T) internalStoredObject;
+		T e = elements[--top];
+		elements[top] = null;
+		return e;
 	}
 
 	@Override
 	public T getCurrent() {
-		if ( internalStack == null ) {
+		if ( isEmpty() ) {
 			return null;
 		}
-		return convert( internalStack.peekFirst() );
+		return elements[top - 1];
 	}
 
 	@Override
 	public T getRoot() {
-		if ( internalStack == null ) {
+		if ( isEmpty() ) {
 			return null;
 		}
-		return convert( internalStack.peekLast() );
+		return elements[0];
 	}
 
 	@Override
 	public int depth() {
-		if ( internalStack == null ) {
-			return 0;
-		}
-		return internalStack.size();
+		return top;
 	}
 
 	@Override
 	public boolean isEmpty() {
-		if ( internalStack == null ) {
-			return true;
-		}
-		return internalStack.isEmpty();
+		return top == 0;
 	}
 
 	@Override
 	public void clear() {
-		if ( internalStack != null ) {
-			internalStack.clear();
+		for ( int i = 0; i < top; i++ ) {
+			elements[i] = null;
 		}
+		top = 0;
 	}
 
 	@Override
 	public void visitRootFirst(Consumer<T> action) {
-		if ( internalStack == null ) {
-			return;
-		}
-		final Iterator<T> iterator = internalStack.descendingIterator();
-		while ( iterator.hasNext() ) {
-			action.accept( iterator.next() );
+		for ( int i = 0; i < top; i++ ) {
+			action.accept( elements[i] );
 		}
 	}
 
 	@Override
 	public <X> X findCurrentFirst(Function<T, X> function) {
-		if ( internalStack == null ) {
-			return null;
-		}
-		for (T t : internalStack) {
-			final X result = function.apply(t);
-			if (result != null) {
-				return result;
-			}
-		}
-
-		return null;
-	}
-
-	@Override
-	public <X,Y> X findCurrentFirstWithParameter(Y parameter, BiFunction<T, Y, X> biFunction) {
-		if ( internalStack == null ) {
-			return null;
-		}
-		for ( T t : internalStack ) {
-			final X result = biFunction.apply( t, parameter );
+		for ( int i = top - 1; i >= 0; i-- ) {
+			final X result = function.apply( elements[i] );
 			if ( result != null ) {
 				return result;
 			}
@@ -141,4 +116,20 @@ public final class StandardStack<T> implements Stack<T> {
 		return null;
 	}
 
+	@Override
+	public <X, Y> X findCurrentFirstWithParameter(Y parameter, BiFunction<T, Y, X> biFunction) {
+		for ( int i = top - 1; i >= 0; i-- ) {
+			final X result = biFunction.apply( elements[i], parameter );
+			if ( result != null ) {
+				return result;
+			}
+		}
+		return null;
+	}
+
+	private void grow() {
+		final int oldCapacity = elements.length;
+		final int jump = ( oldCapacity < 64 ) ? ( oldCapacity + 2 ) : ( oldCapacity >> 1 );
+		elements = Arrays.copyOf( elements, oldCapacity + jump );
+	}
 }

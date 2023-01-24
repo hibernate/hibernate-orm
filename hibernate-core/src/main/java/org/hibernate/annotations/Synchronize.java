@@ -15,7 +15,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Specifies the tables that hold state mapped by the annotated entity.
  * <p>
- * If Hibernate is not aware of that a certain table holds state mapped
+ * If Hibernate is not aware that a certain table holds state mapped
  * by an entity class, then {@linkplain org.hibernate.FlushMode#AUTO
  * auto-flush} might not occur when it should, and queries against the
  * entity might return stale data.
@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <ul>
  * <li>the entity maps a database view,
  * <li>the entity is persisted using handwritten SQL, that is, using
- *     {@link SQLSelect @SQLSelect} and friends.
+ *     {@link SQLSelect @SQLSelect} and friends, or
  * <li>the entity is mapped using {@link Subselect @Subselect}.
  * </ul>
  * <p>

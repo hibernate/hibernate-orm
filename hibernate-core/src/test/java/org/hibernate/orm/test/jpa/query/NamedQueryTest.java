@@ -26,6 +26,7 @@ import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -192,6 +193,19 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					IllegalArgumentException.class,
 					() -> entityManager.createNamedQuery( "NamedNativeQuery", Game.class )
 			);
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11413")
+	public void testNamedQueryAddedFromTypedNativeQuery() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			final Query query = entityManager.createNativeQuery( "select g.title from Game g where title = ?", String.class );
+			entityManagerFactory().addNamedQuery( "the-query", query );
+
+			final TypedQuery<String> namedQuery = entityManager.createNamedQuery( "the-query", String.class );
+			namedQuery.setParameter( 1, "abc" );
+			namedQuery.getResultList();
 		} );
 	}
 

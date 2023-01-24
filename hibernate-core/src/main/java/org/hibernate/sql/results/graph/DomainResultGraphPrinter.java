@@ -50,7 +50,7 @@ public class DomainResultGraphPrinter {
 	}
 
 	private final StringBuilder buffer;
-	private final Stack<FetchParent> fetchParentStack = new StandardStack<>();
+	private final Stack<FetchParent> fetchParentStack = new StandardStack<>( FetchParent.class );
 
 	private DomainResultGraphPrinter(String header) {
 		buffer = new StringBuilder( header + ":" + System.lineSeparator() );

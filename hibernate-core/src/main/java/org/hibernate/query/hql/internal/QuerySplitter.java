@@ -188,7 +188,7 @@ public class QuerySplitter {
 		private final SqmRoot unmappedPolymorphicFromElement;
 		private final EntityDomainType<R> mappedDescriptor;
 		private final SqmCreationContext creationContext;
-		private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
+		private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>( SqmCreationProcessingState.class );
 
 		private Map<NavigablePath, SqmPath> sqmPathCopyMap = new HashMap<>();
 		private Map<SqmFrom, SqmFrom> sqmFromCopyMap = new HashMap<>();

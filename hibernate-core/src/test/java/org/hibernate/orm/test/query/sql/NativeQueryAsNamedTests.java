@@ -13,7 +13,6 @@ import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -67,7 +66,6 @@ public class NativeQueryAsNamedTests {
 	 * Seems like this should work, but currently does not
 	 */
 	@Test
-	@FailureExpected( reason = "Session#createNamedQuery for a native-query does not like passing the result-class" )
 	public void testResultClass(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final NativeQuery<String> nativeQuery = session.createNativeQuery( THE_SELECT, String.class );

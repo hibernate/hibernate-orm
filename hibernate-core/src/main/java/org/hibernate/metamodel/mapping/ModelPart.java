@@ -134,6 +134,7 @@ public interface ModelPart extends MappingModelExpressible {
 	@FunctionalInterface
 	interface JdbcValueConsumer {
 		void consume(Object value, SelectableMapping jdbcValueMapping);
+
 	}
 
 	void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session);

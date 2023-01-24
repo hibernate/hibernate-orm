@@ -14,7 +14,6 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.model.ModelMutationLogging;
@@ -124,8 +123,7 @@ public abstract class AbstractMutationCoordinator {
 											jdbcValueBindings.bindValue(
 													value,
 													jdbcValueMapping,
-													ParameterUsage.RESTRICT,
-													session
+													ParameterUsage.RESTRICT
 											);
 										}
 									},

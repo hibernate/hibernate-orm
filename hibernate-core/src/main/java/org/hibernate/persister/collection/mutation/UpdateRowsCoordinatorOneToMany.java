@@ -91,8 +91,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 						(jdbcValue, jdbcValueMapping) -> jdbcValueBindings.bindValue(
 								jdbcValue,
 								jdbcValueMapping,
-								ParameterUsage.RESTRICT,
-								session
+								ParameterUsage.RESTRICT
 						)
 				);
 
@@ -154,8 +153,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 						(jdbcValue, jdbcValueMapping, usage) -> jdbcValueBindings.bindValue(
 								jdbcValue,
 								jdbcValueMapping,
-								usage,
-								session
+								usage
 						)
 				);
 

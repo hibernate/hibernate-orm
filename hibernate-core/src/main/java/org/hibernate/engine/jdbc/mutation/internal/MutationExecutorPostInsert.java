@@ -66,7 +66,8 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 		this.valueBindings = new JdbcValueBindingsImpl(
 				MutationType.INSERT,
 				mutationTarget,
-				this::findJdbcValueDescriptor
+				this::findJdbcValueDescriptor,
+				session
 		);
 		this.mutationOperationGroup = mutationOperationGroup;
 
@@ -191,18 +192,19 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 
 		tableDetails.getKeyMapping().breakDownKeyJdbcValues(
 				id,
-				(jdbcValue, columnMapping) -> valueBindings.bindValue(
-						jdbcValue,
-						tableName,
-						columnMapping.getColumnName(),
-						ParameterUsage.SET,
-						session
-				),
+				(jdbcValue, columnMapping) -> {
+					valueBindings.bindValue(
+							jdbcValue,
+							tableName,
+							columnMapping.getColumnName(),
+							ParameterUsage.SET
+					);
+				},
 				session
 		);
 
 		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
-		valueBindings.beforeStatement( statementDetails, session );
+		valueBindings.beforeStatement( statementDetails );
 
 		try {
 			final int affectedRowCount = session.getJdbcCoordinator()

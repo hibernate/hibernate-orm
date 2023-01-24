@@ -245,8 +245,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							(jdbcValue, jdbcValueMapping, usage) -> jdbcValueBindings.bindValue(
 									jdbcValue,
 									jdbcValueMapping,
-									usage,
-									session
+									usage
 							)
 					);
 
@@ -259,8 +258,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							(jdbcValue, jdbcValueMapping) -> jdbcValueBindings.bindValue(
 									jdbcValue,
 									jdbcValueMapping,
-									ParameterUsage.RESTRICT,
-									session
+									ParameterUsage.RESTRICT
 							)
 					);
 

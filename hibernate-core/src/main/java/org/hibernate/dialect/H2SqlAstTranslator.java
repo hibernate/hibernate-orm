@@ -35,7 +35,11 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpsert;
+import org.hibernate.sql.model.jdbc.UpsertOperation;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -306,5 +310,163 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		// Introduction of TIES clause https://github.com/h2database/h2database/commit/876e9fbe7baf11d01675bfe871aac2cf1b6104ce
 		// Introduction of PERCENT support https://github.com/h2database/h2database/commit/f45913302e5f6ad149155a73763c0c59d8205849
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 198 );
+	}
+
+	public MutationOperation visitUpsert(TableUpsert tableUpsert) {
+		// template:
+		//
+		// merge into [table] as t
+		// using values([bindings]) as s ([column-names])
+		// on t.[key] = s.[key]
+		//		and t.[key] = ?
+		// when not matched
+		// 		then insert ...
+		// when matched
+		//		and s.[columns] is null
+		//		then delete
+		// when matched
+		//		then update set ...
+
+		renderMergeInto( tableUpsert );
+		appendSql( " " );
+		renderMergeUsing( tableUpsert );
+		appendSql( " " );
+		renderMergeOn( tableUpsert );
+		appendSql( " " );
+		renderMergeInsert( tableUpsert );
+		appendSql( " " );
+		renderMergeDelete( tableUpsert );
+		appendSql( " " );
+		renderMergeUpdate( tableUpsert );
+
+		return new UpsertOperation(
+				tableUpsert.getMutatingTable().getTableMapping(),
+				tableUpsert.getMutationTarget(),
+				getSql(),
+				getParameterBinders()
+		);
+	}
+
+	private void renderMergeInto(TableUpsert tableUpsert) {
+		appendSql( "merge into " );
+		appendSql( tableUpsert.getMutatingTable().getTableName() );
+		appendSql( " as t" );
+	}
+
+	private void renderMergeUsing(TableUpsert tableUpsert) {
+		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
+		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
+
+		appendSql( "using values (" );
+
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
+			keyBinding.getValueExpression().accept( this );
+		}
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			appendSql( ", " );
+			final ColumnValueBinding valueBinding = valueBindings.get( i );
+			valueBinding.getValueExpression().accept( this );
+		}
+
+		appendSql( ") as s(" );
+
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
+			appendSql( keyBinding.getColumnReference().getColumnExpression() );
+		}
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			appendSql( ", " );
+			final ColumnValueBinding valueBinding = valueBindings.get( i );
+			appendSql( valueBinding.getColumnReference().getColumnExpression() );
+		}
+
+		appendSql( ")" );
+	}
+
+	private void renderMergeOn(TableUpsert tableUpsert) {
+		appendSql( "on " );
+
+		// todo : optimistic locks?
+
+		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			if ( i > 0 ) {
+				appendSql( " and " );
+			}
+			keyBinding.getColumnReference().appendReadExpression( this, "t" );
+			appendSql( "=" );
+			keyBinding.getColumnReference().appendReadExpression( this, "s" );
+		}
+	}
+
+	private void renderMergeInsert(TableUpsert tableUpsert) {
+		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
+		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
+
+		appendSql( "when not matched then insert (" );
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			appendSql( keyBinding.getColumnReference().getColumnExpression() );
+		}
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			appendSql( ", " );
+			final ColumnValueBinding valueBinding = valueBindings.get( i );
+			appendSql( valueBinding.getColumnReference().getColumnExpression() );
+		}
+
+		appendSql( ") values (" );
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			keyBinding.getColumnReference().appendReadExpression( this, "s" );
+		}
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			appendSql( ", " );
+			final ColumnValueBinding valueBinding = valueBindings.get( i );
+			valueBinding.getColumnReference().appendReadExpression( this, "s" );
+		}
+
+		appendSql( ")" );
+	}
+
+	private void renderMergeDelete(TableUpsert tableUpsert) {
+		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
+
+		appendSql( " when matched " );
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			final ColumnValueBinding binding = valueBindings.get( i );
+			appendSql( " and " );
+			binding.getColumnReference().appendReadExpression( this, "s" );
+			appendSql( " is null" );
+		}
+		appendSql( " then delete" );
+	}
+
+	private void renderMergeUpdate(TableUpsert tableUpsert) {
+		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
+
+		appendSql( " when matched then update set " );
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			final ColumnValueBinding binding = valueBindings.get( i );
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
+			binding.getColumnReference().appendColumnForWrite( this, "t" );
+			appendSql( "=" );
+			binding.getColumnReference().appendColumnForWrite( this, "s" );
+		}
 	}
 }

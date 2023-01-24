@@ -11,13 +11,11 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.hibernate.orm.properties.processor.AsciiDocWriter;
 import org.hibernate.orm.properties.processor.ConfigPropertyHolder;
 import org.hibernate.orm.properties.processor.ConfigurationProperty;
-import org.hibernate.orm.properties.processor.HibernateOrmConfiguration;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -27,11 +25,6 @@ import org.gradle.api.tasks.TaskAction;
  * Task that writes two asciidoc files from the collected config properties. One is for public configurations, another - for SPI.
  */
 public class ConfigPropertyWriterTask extends DefaultTask {
-
-	private static final Predicate<Map.Entry<String, ConfigurationProperty>> API_FILTER = entry -> HibernateOrmConfiguration.Type.API.equals(
-			entry.getValue().type() );
-	private static final Predicate<Map.Entry<String, ConfigurationProperty>> SPI_FILTER = entry -> HibernateOrmConfiguration.Type.SPI.equals(
-			entry.getValue().type() );
 
 	private final Project project;
 	private final ConfigPropertyHolder properties;
@@ -46,22 +39,10 @@ public class ConfigPropertyWriterTask extends DefaultTask {
 	@TaskAction
 	public void writeProperties() {
 		if ( properties.hasProperties() ) {
-			if ( properties.hasProperties( API_FILTER ) ) {
-				writeProperties(
-						fileName + ".asciidoc",
-						new AsciiDocWriter(
-								API_FILTER
-						)
-				);
-			}
-			if ( properties.hasProperties( SPI_FILTER ) ) {
-				writeProperties(
-						fileName + "-spi.asciidoc",
-						new AsciiDocWriter(
-								SPI_FILTER
-						)
-				);
-			}
+			writeProperties(
+					fileName + ".asciidoc",
+					new AsciiDocWriter()
+			);
 		}
 	}
 

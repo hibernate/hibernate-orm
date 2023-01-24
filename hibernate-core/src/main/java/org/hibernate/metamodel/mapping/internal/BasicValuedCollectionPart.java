@@ -255,11 +255,13 @@ public class BasicValuedCollectionPart
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		ResultsLogger.RESULTS_LOGGER.debugf(
-				"Generating Fetch for collection-part : `%s` -> `%s`",
-				collectionDescriptor.getRole(),
-				nature.getName()
-		);
+		if ( ResultsLogger.DEBUG_ENABLED ) {
+			ResultsLogger.RESULTS_LOGGER.debugf(
+					"Generating Fetch for collection-part : `%s` -> `%s`",
+					collectionDescriptor.getRole(),
+					nature.getName()
+			);
+		}
 
 		NavigablePath parentNavigablePath = fetchablePath.getParent();
 		if ( parentNavigablePath instanceof EntityIdentifierNavigablePath ) {

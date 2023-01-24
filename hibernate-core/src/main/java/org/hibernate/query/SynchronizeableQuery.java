@@ -16,9 +16,9 @@ import org.hibernate.MappingException;
  * in a given set of named <em>query spaces</em>. A query space is usually, but not always,
  * a relational database table, in which case the name of the space is simply the table name.
  * <p>
- * Each {@linkplain jakarta.persistence.Entity entity type} is understood to store its state
- * in one or more query spaces. Usually, the query spaces are automatically determined by
- * the mapping, but sometimes they must be specified explicitly using
+ * Each {@linkplain jakarta.persistence.Entity entity type} or collection is understood to
+ * store its state in one or more query spaces. Usually, the query spaces are automatically
+ * determined by the mapping, but sometimes they must be specified explicitly using
  * {@link org.hibernate.annotations.Synchronize @Synchronize}.
  * <p>
  * Query spaces mediate the interaction between query execution and synchronization of

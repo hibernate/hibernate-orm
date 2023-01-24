@@ -631,9 +631,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 
 		if ( inclusionChecker.include( attributeIndex, attributeMapping ) ) {
-			attributeMapping.forEachSelectable( (selectableIndex, selectable) -> {
-				processSet( analysis, selectable );
-			} );
+			final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
+			for ( int i = 0; i < jdbcTypeCount; i++ ) {
+				processSet( analysis, attributeMapping.getSelectable( i ) );
+			}
 		}
 
 		if ( lockingChecker.include( attributeIndex, attributeMapping ) ) {
@@ -1064,14 +1065,17 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private void applyPartictionKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder) {
-		if ( entityPersister().hasPartitionedSelectionMapping() ) {
-			entityPersister().forEachSelectable(
-					(selectionIndex, selectableMapping) -> {
-						if ( selectableMapping.isPartitioned() ) {
-							tableUpdateBuilder.addKeyRestrictionLeniently( selectableMapping );
-						}
+		final AbstractEntityPersister persister = entityPersister();
+		if ( persister.hasPartitionedSelectionMapping() ) {
+			for ( AttributeMapping attributeMapping : persister.getAttributeMappings() ) {
+				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
+				for ( int i = 0; i < jdbcTypeCount; i++ ) {
+					final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );
+					if ( selectableMapping.isPartitioned() ) {
+						tableUpdateBuilder.addKeyRestrictionLeniently( selectableMapping );
 					}
-			);
+				}
+			}
 		}
 	}
 
@@ -1084,13 +1088,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			tableUpdateBuilder.addKeyRestrictionLeniently( rowIdMapping );
 		}
 		else {
-			tableMapping.getKeyMapping().forEachKeyColumn(
-					keyColumn -> tableUpdateBuilder.addKeyRestriction(
-							keyColumn.getColumnName(),
-							"?",
-							keyColumn.getJdbcMapping()
-					)
-			);
+			tableUpdateBuilder.addKeyRestrictions( tableMapping.getKeyMapping() );
 		}
 	}
 
@@ -1101,21 +1099,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			AttributeMapping attributeMapping,
 			TableUpdateBuilder<?> tableUpdateBuilder) {
 		if ( oldValues == null ) {
-			attributeMapping.forEachSelectable(
-					(index, selectableMapping) -> tableUpdateBuilder.addOptimisticLockRestriction( selectableMapping )
-			);
+			tableUpdateBuilder.addOptimisticLockRestrictions( attributeMapping );
 		}
-		else {
+		else if ( tableUpdateBuilder.getOptimisticLockBindings() != null ) {
 			attributeMapping.decompose(
 					oldValues[attributeIndex],
-					(jdbcValue, jdbcMapping) -> {
-						if ( jdbcValue == null ) {
-							tableUpdateBuilder.addNullOptimisticLockRestriction( jdbcMapping );
-						}
-						else {
-							tableUpdateBuilder.addOptimisticLockRestriction( jdbcMapping );
-						}
-					},
+					tableUpdateBuilder.getOptimisticLockBindings(),
 					session
 			);
 		}
@@ -1562,9 +1551,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			updateBuilder.addValueColumn( versionMapping );
 
-			entityPersister().getIdentifierMapping().forEachSelectable(
-					(selectionIndex, selectableMapping) -> updateBuilder.addKeyRestrictionLeniently( selectableMapping )
-			);
+			updateBuilder.addKeyRestrictionsLeniently( entityPersister().getIdentifierMapping() );
 
 			updateBuilder.addOptimisticLockRestriction( versionMapping );
 			addPartitionRestriction( updateBuilder );
@@ -1583,14 +1570,17 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private void addPartitionRestriction(TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder) {
-		if ( entityPersister().hasPartitionedSelectionMapping() ) {
-			entityPersister().forEachSelectable(
-					(selectionIndex, selectableMapping) -> {
-						if ( selectableMapping.isPartitioned() ) {
-							updateBuilder.addKeyRestrictionLeniently( selectableMapping );
-						}
+		final AbstractEntityPersister persister = entityPersister();
+		if ( persister.hasPartitionedSelectionMapping() ) {
+			for ( AttributeMapping attributeMapping : persister.getAttributeMappings() ) {
+				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
+				for ( int i = 0; i < jdbcTypeCount; i++ ) {
+					final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );
+					if ( selectableMapping.isPartitioned() ) {
+						updateBuilder.addKeyRestrictionLeniently( selectableMapping );
 					}
-			);
+				}
+			}
 		}
 	}
 

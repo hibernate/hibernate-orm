@@ -31,8 +31,6 @@ public abstract class AbstractTableInsertBuilder
 	private final List<ColumnValueBinding> valueBindingList = new ArrayList<>();
 	private List<ColumnValueBinding> lobValueBindingList;
 
-	private final List<ColumnValueParameter> parameters = new ArrayList<>();
-
 	private String sqlComment;
 
 	public AbstractTableInsertBuilder(
@@ -71,10 +69,6 @@ public abstract class AbstractTableInsertBuilder
 		return lobValueBindingList;
 	}
 
-	protected List<ColumnValueParameter> getParameters() {
-		return parameters;
-	}
-
 	@Override
 	public void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
 		final ColumnValueBinding valueBinding = createValueBinding( columnName, columnWriteFragment, jdbcMapping );
@@ -93,10 +87,5 @@ public abstract class AbstractTableInsertBuilder
 	@Override
 	public void addKeyColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
 		addColumn( columnName, columnWriteFragment, jdbcMapping, keyBindingList );
-	}
-
-	@Override
-	protected void handleParameterCreation(ColumnValueParameter parameter) {
-		parameters.add( parameter );
 	}
 }

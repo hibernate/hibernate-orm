@@ -50,6 +50,7 @@ public abstract class AbstractStandardBasicType<T>
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
 	private final AbstractClassJavaType<T> javaTypeAsAbstractClassJavaType;
 	private final Class javaTypeClass;
+	private final MutabilityPlan<T> mutabilityPlan;
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
@@ -60,8 +61,9 @@ public abstract class AbstractStandardBasicType<T>
 		this.jdbcValueExtractor = jdbcType.getExtractor( javaType );
 		this.jdbcLiteralFormatter = jdbcType.getJdbcLiteralFormatter( javaType );
 
-		//A very simple dispatch optimisation, make this a constant:
+		//A very simple dispatch optimisation, make these a constant:
 		this.javaTypeClass = javaType.getJavaTypeClass();
+		this.mutabilityPlan = javaType.getMutabilityPlan();
 		//This is a dispatch optimisation to avoid megamorphic invocations on the most common type:
 		if ( javaType instanceof AbstractClassJavaType ) {
 			this.javaTypeAsAbstractClassJavaType = (AbstractClassJavaType) javaType;
@@ -96,7 +98,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {
-		return javaType.getMutabilityPlan();
+		return this.mutabilityPlan;
 	}
 
 	@Override

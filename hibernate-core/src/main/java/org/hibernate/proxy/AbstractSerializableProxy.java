@@ -17,7 +17,7 @@ public abstract class AbstractSerializableProxy implements Serializable {
 	private final String entityName;
 	private final Object id;
 	private final Boolean readOnly;
-	private final String sessionFactoryUuid;
+	protected final String sessionFactoryUuid;
 	private final boolean allowLoadOutsideTransaction;
 
 	protected AbstractSerializableProxy(

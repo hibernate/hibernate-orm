@@ -91,6 +91,9 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	public List<ResultBuilder> getResultBuilders() {
+		if ( resultBuilders == null ) {
+			return Collections.emptyList();
+		}
 		return Collections.unmodifiableList( resultBuilders );
 	}
 

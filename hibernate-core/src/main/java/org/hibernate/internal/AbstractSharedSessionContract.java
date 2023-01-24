@@ -513,6 +513,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return cacheTransactionSync;
 	}
 
+	/**
+	 * @deprecated This will be removed.
+	 */
+	@Override
+	@Deprecated(forRemoval = true)
+	public long getTransactionStartTimestamp() {
+		return getCacheTransactionSynchronization().getCachingTimestamp();
+	}
+
 	@Override
 	public Transaction beginTransaction() {
 		checkOpen();
@@ -849,7 +858,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 		}
 		else if ( resultClass != Object.class && resultClass != Object[].class ) {
-			query.addScalar( 1, resultClass );
+			query.addResultTypeClass( resultClass );
 		}
 		return query;
 	}

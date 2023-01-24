@@ -1533,7 +1533,7 @@ public interface AvailableSettings {
 	String CHECK_NULLABILITY = "hibernate.check_nullability";
 
 	/**
-	 * Selects a bytecode enhancment library.
+	 * Selects a bytecode enhancement library.
 	 * <p>
 	 * At present only bytebuddy is supported, bytebuddy being the default since version 5.3.
 	 */
@@ -3082,8 +3082,13 @@ public interface AvailableSettings {
 	/**
 	 * Used to determine flush mode.
 	 *
+	 * @deprecated There are much better ways to control the flush mode of a session,
+	 *             for example, {@link org.hibernate.SessionBuilder#flushMode} or
+	 *             {@link org.hibernate.Session#setHibernateFlushMode}.
+	 *
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
 	 */
+	@Deprecated(since = "6.2", forRemoval = true)
 	String FLUSH_MODE = "org.hibernate.flushMode";
 
 	String CFG_XML_FILE = "hibernate.cfg_xml_file";

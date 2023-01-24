@@ -13,13 +13,12 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexBackref;
@@ -33,6 +32,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRef
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
@@ -187,8 +187,9 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 			propertyAccessMap.put( property.getName(), getPropertyAccesses()[i] );
 			i++;
 		}
+		final BytecodeProvider bytecodeProvider = creationContext.getServiceRegistry().getService( BytecodeProvider.class );
 
-		return Environment.getBytecodeProvider().getReflectionOptimizer(
+		return bytecodeProvider.getReflectionOptimizer(
 				bootDescriptor.getComponentClass(),
 				propertyAccessMap
 		);

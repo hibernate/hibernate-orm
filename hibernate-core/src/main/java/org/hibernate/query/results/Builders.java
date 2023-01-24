@@ -246,8 +246,13 @@ public class Builders {
 	public static ResultBuilder resultClassBuilder(
 			Class<?> resultMappingClass,
 			ResultSetMappingResolutionContext resolutionContext) {
-		final MappingMetamodelImplementor mappingMetamodel = resolutionContext
-				.getSessionFactory()
+		return resultClassBuilder( resultMappingClass, resolutionContext.getSessionFactory() );
+	}
+
+	public static ResultBuilder resultClassBuilder(
+			Class<?> resultMappingClass,
+			SessionFactoryImplementor sessionFactory) {
+		final MappingMetamodelImplementor mappingMetamodel = sessionFactory
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		final EntityMappingType entityMappingType = mappingMetamodel.findEntityDescriptor( resultMappingClass );

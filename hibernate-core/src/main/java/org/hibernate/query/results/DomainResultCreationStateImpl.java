@@ -77,8 +77,8 @@ public class DomainResultCreationStateImpl
 	private final LegacyFetchResolverImpl legacyFetchResolver;
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Stack<Function<String, FetchBuilder>> fetchBuilderResolverStack = new StandardStack<>( fetchableName -> null );
-	private final Stack<Map.Entry<String, NavigablePath>> relativePathStack = new StandardStack<>();
+	private final Stack<Function> fetchBuilderResolverStack = new StandardStack<>( Function.class, fetchableName -> null );
+	private final Stack<Map.Entry> relativePathStack = new StandardStack<>( Map.Entry.class );
 	private Map<String, LockMode> registeredLockModes;
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
@@ -356,7 +356,7 @@ public class DomainResultCreationStateImpl
 		}
 
 		final Fetchable fetchable = (Fetchable) identifierMapping;
-		final FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
+		final FetchBuilder explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
 				.getCurrent()
 				.apply( fullPath );
 		DynamicFetchBuilderLegacy fetchBuilderLegacy;
@@ -444,7 +444,7 @@ public class DomainResultCreationStateImpl
 			}
 			// todo (6.0): figure out if we can somehow create the navigable paths in a better way
 			final String fullPath = currentEntry.getKey();
-			FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
+			FetchBuilder explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
 					.getCurrent()
 					.apply( fullPath );
 			DynamicFetchBuilderLegacy fetchBuilderLegacy;
@@ -473,7 +473,7 @@ public class DomainResultCreationStateImpl
 							currentEntry.getKey() + "." + partName,
 							currentEntry.getValue().append( partName )
 					);
-					explicitFetchBuilder = fetchBuilderResolverStack
+					explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
 							.getCurrent()
 							.apply( currentEntry.getKey() );
 					if ( explicitFetchBuilder == null ) {

@@ -144,20 +144,19 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		//		these should be set during the StandardServiceRegistryBuilder.configure call
 		applyCfgXmlValues( serviceRegistry.getService( CfgXmlAccessService.class ) );
 
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		for ( MetadataBuilderInitializer contributor : classLoaderService.loadJavaServices( MetadataBuilderInitializer.class ) ) {
+		for ( MetadataBuilderInitializer contributor :
+				serviceRegistry.getService( ClassLoaderService.class )
+						.loadJavaServices( MetadataBuilderInitializer.class ) ) {
 			contributor.contribute( this, serviceRegistry );
 		}
 	}
 
 	private void applyCfgXmlValues(CfgXmlAccessService service) {
 		final LoadedConfig aggregatedConfig = service.getAggregatedConfig();
-		if ( aggregatedConfig == null ) {
-			return;
-		}
-
-		for ( CacheRegionDefinition cacheRegionDefinition : aggregatedConfig.getCacheRegionDefinitions() ) {
-			applyCacheRegionDefinition( cacheRegionDefinition );
+		if ( aggregatedConfig != null ) {
+			for ( CacheRegionDefinition cacheRegionDefinition : aggregatedConfig.getCacheRegionDefinitions() ) {
+				applyCacheRegionDefinition( cacheRegionDefinition );
+			}
 		}
 	}
 

@@ -156,10 +156,14 @@ public @interface NamedNativeQuery {
 	boolean readOnly() default false;
 
 	/**
-	 * The query spaces involved in this query.
+	 * The {@linkplain org.hibernate.query.SynchronizeableQuery query spaces}
+	 * involved in this query.
+	 * <p>
+	 * Typically, the names of tables which are referenced by the query.
 	 *
-	 * @see org.hibernate.query.SynchronizeableQuery
+	 * @see org.hibernate.query.SynchronizeableQuery#addSynchronizedQuerySpace
 	 * @see org.hibernate.jpa.HibernateHints#HINT_NATIVE_SPACES
+	 * @see Synchronize
 	 */
 	String[] querySpaces() default {};
 

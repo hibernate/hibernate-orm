@@ -125,8 +125,8 @@ public class BinderHelper {
 	 * property of an {@code @Embeddable}, then every column of that
 	 * embeddable must occur in the list of referenced columns, and the
 	 * order of the columns must line up! Some of these limitations
-	 * could be relaxed using by writing a better algorithm for building
-	 * the synthetic {@link Component}.
+	 * could be relaxed by writing a better algorithm for building the
+	 * synthetic {@link Component}.
 	 */
 	public static void createSyntheticPropertyReference(
 			AnnotatedJoinColumns joinColumns,

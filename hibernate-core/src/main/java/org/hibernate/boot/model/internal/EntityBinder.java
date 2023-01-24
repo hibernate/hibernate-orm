@@ -1336,15 +1336,21 @@ public class EntityBinder {
 	private void bindSynchronize() {
 		if ( annotatedClass.isAnnotationPresent( Synchronize.class ) ) {
 			final JdbcEnvironment jdbcEnvironment = context.getMetadataCollector().getDatabase().getJdbcEnvironment();
-			for ( String table : annotatedClass.getAnnotation(Synchronize.class).value() ) {
-				persistentClass.addSynchronizedTable(
-						context.getBuildingOptions().getPhysicalNamingStrategy().toPhysicalTableName(
-								jdbcEnvironment.getIdentifierHelper().toIdentifier( table ),
-								jdbcEnvironment
-						).render( jdbcEnvironment.getDialect() )
-				);
+			final Synchronize synchronize = annotatedClass.getAnnotation(Synchronize.class);
+			for ( String table : synchronize.value() ) {
+				String physicalName = synchronize.logical() ? toPhysicalName( jdbcEnvironment, table ) : table;
+				persistentClass.addSynchronizedTable( physicalName );
 			}
 		}
+	}
+
+	private String toPhysicalName(JdbcEnvironment jdbcEnvironment, String logicalName) {
+		return context.getBuildingOptions().getPhysicalNamingStrategy()
+				.toPhysicalTableName(
+						jdbcEnvironment.getIdentifierHelper().toIdentifier( logicalName ),
+						jdbcEnvironment
+				)
+				.render( jdbcEnvironment.getDialect() );
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})

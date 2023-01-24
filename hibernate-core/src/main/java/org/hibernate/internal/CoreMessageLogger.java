@@ -1290,7 +1290,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unexpectedRowCounts();
 
 	@LogMessage(level = WARN)
-	@Message(value = "unrecognized bytecode provider [%s], using [%s] by default", id = 382)
+	@Message(value = "Unrecognized bytecode provider [%s]; using the default implementation [%s]", id = 382)
 	void unknownBytecodeProvider(String providerName, String defaultProvider);
 
 	@LogMessage(level = WARN)

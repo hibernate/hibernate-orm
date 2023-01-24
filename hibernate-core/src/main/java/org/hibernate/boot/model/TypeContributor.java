@@ -21,6 +21,8 @@ import org.hibernate.service.ServiceRegistry;
  *     {@link org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)}
  *     or even {@link org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)}.
  * <li>
+ *     When bootstrapping Hibernate via JPA or {@link org.hibernate.cfg.Configuration},
+ *
  *     Finally, in the JPA boostrap process, {@code TypeContributor}s may be
  *     listed via {@link org.hibernate.jpa.boot.spi.JpaSettings#TYPE_CONTRIBUTORS}.
  * </ul>

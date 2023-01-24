@@ -283,6 +283,15 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	boolean hasSubselectLoadableCollections();
 
 	/**
+	 * Determine whether this entity contains references to persistent collections
+	 * not referencing the primary key.
+	 *
+	 * @return True if the entity contains a collection not referencing the primary key; false otherwise.
+	 * @since 6.2
+	 */
+	boolean hasCollectionNotReferencingPK();
+
+	/**
 	 * Determine whether this entity has any
 	 * (non-{@linkplain org.hibernate.engine.spi.CascadeStyles#NONE none}) cascading.
 	 *

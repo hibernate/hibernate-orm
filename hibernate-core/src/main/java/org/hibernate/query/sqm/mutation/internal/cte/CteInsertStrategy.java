@@ -154,4 +154,16 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 			DomainQueryExecutionContext context) {
 		return new CteInsertHandler( entityCteTable, sqmInsertStatement, domainParameterXref, sessionFactory ).execute( context );
 	}
+
+	protected EntityPersister getRootDescriptor() {
+		return rootDescriptor;
+	}
+
+	protected SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
+
+	protected CteTable getEntityCteTable() {
+		return entityCteTable;
+	}
 }

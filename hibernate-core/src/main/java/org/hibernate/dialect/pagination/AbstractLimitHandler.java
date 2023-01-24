@@ -194,7 +194,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 
 		if ( bindOffset ) {
 			statement.setInt(
-					index + ( reverse || !bindLimit ? 1 : 0 ),
+					index + ( reverse && bindLimit ? 1 : 0 ),
 					getFirstRow( limit )
 			);
 		}

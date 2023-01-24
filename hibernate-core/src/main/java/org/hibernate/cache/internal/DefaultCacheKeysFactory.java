@@ -6,11 +6,14 @@
  */
 package org.hibernate.cache.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.Type;
 
 /**
  * Second level cache providers now have the option to use custom key implementations.
@@ -43,11 +46,27 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	public static final DefaultCacheKeysFactory INSTANCE = new DefaultCacheKeysFactory();
 
 	public static Object staticCreateCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new CacheKeyImplementation( id, persister.getKeyType(), persister.getRole(), tenantIdentifier, factory );
+		final Type keyType = persister.getKeyType();
+		final Serializable disassembledKey = keyType.disassemble( id, factory );
+		final boolean idIsArray = disassembledKey.getClass().isArray();
+		if ( tenantIdentifier == null && ! idIsArray ) {
+			return new BasicCacheKeyImplementation( id, disassembledKey, keyType, persister.getRole() );
+		}
+		else {
+			return new CacheKeyImplementation( id, disassembledKey, keyType, persister.getRole(), tenantIdentifier );
+		}
 	}
 
 	public static Object staticCreateEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return new CacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), tenantIdentifier, factory );
+		final Type keyType = persister.getIdentifierType();
+		final Serializable disassembledKey = keyType.disassemble( id, factory );
+		final boolean idIsArray = disassembledKey.getClass().isArray();
+		if ( tenantIdentifier == null && ! idIsArray ) {
+			return new BasicCacheKeyImplementation( id, disassembledKey, keyType, persister.getRootEntityName() );
+		}
+		else {
+			return new CacheKeyImplementation( id, disassembledKey, keyType, persister.getRootEntityName(), tenantIdentifier );
+		}
 	}
 
 	public static Object staticCreateNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
@@ -55,44 +74,49 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	}
 
 	public static Object staticGetEntityId(Object cacheKey) {
-		return ((CacheKeyImplementation) cacheKey).getId();
+		if ( cacheKey.getClass() == BasicCacheKeyImplementation.class ) {
+			return ( (BasicCacheKeyImplementation) cacheKey ).id;
+		}
+		else {
+			return ( (CacheKeyImplementation) cacheKey ).getId();
+		}
 	}
 
 	public static Object staticGetCollectionId(Object cacheKey) {
-		return ((CacheKeyImplementation) cacheKey).getId();
+		return staticGetEntityId( cacheKey );
 	}
 
 	public static Object staticGetNaturalIdValues(Object cacheKey) {
-		return ((NaturalIdCacheKey) cacheKey).getNaturalIdValues();
+		return ( (NaturalIdCacheKey) cacheKey ).getNaturalIdValues();
 	}
 
 	@Override
 	public Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return staticCreateCollectionKey(id, persister, factory, tenantIdentifier);
+		return staticCreateCollectionKey( id, persister, factory, tenantIdentifier );
 	}
 
 	@Override
 	public Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
-		return staticCreateEntityKey(id, persister, factory, tenantIdentifier);
+		return staticCreateEntityKey( id, persister, factory, tenantIdentifier );
 	}
 
 	@Override
 	public Object createNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
-		return staticCreateNaturalIdKey(naturalIdValues, persister, session);
+		return staticCreateNaturalIdKey( naturalIdValues, persister, session );
 	}
 
 	@Override
 	public Object getEntityId(Object cacheKey) {
-		return staticGetEntityId(cacheKey);
+		return staticGetEntityId( cacheKey );
 	}
 
 	@Override
 	public Object getCollectionId(Object cacheKey) {
-		return staticGetCollectionId(cacheKey);
+		return staticGetCollectionId( cacheKey );
 	}
 
 	@Override
 	public Object getNaturalIdValues(Object cacheKey) {
-		return staticGetNaturalIdValues(cacheKey);
+		return staticGetNaturalIdValues( cacheKey );
 	}
 }

@@ -32,6 +32,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart.JdbcValueConsumer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -563,9 +564,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		// for each key column -
 		// 		1) set the value to null
 		// 		2) restrict based on key value
-		getAttributeMapping().getKeyDescriptor().forEachSelectable( (index, selectable) -> {
+		final ForeignKeyDescriptor keyDescriptor = getAttributeMapping().getKeyDescriptor();
+		final int keyTypeCount = keyDescriptor.getJdbcTypeCount();
+		for ( int i = 0; i < keyTypeCount; i++ ) {
+			final SelectableMapping selectable = keyDescriptor.getSelectable( i );
 			if ( selectable.isFormula() ) {
-				return;
+				continue;
 			}
 
 			if ( selectable.isUpdateable() ) {
@@ -579,15 +583,18 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 			// restrict
 			updateBuilder.addKeyRestrictionLeniently( selectable );
-		} );
+		}
 
 		// set the value for each index column to null
 		if ( hasIndex && !indexContainsFormula ) {
-			assert getAttributeMapping().getIndexDescriptor() != null;
+			final CollectionPart indexDescriptor = getAttributeMapping().getIndexDescriptor();
+			assert indexDescriptor != null;
 
-			getAttributeMapping().getIndexDescriptor().forEachSelectable( (index, selectable) -> {
+			final int indexTypeCount = indexDescriptor.getJdbcTypeCount();
+			for ( int i = 0; i < indexTypeCount; i++ ) {
+				final SelectableMapping selectable = indexDescriptor.getSelectable( i );
 				if ( !selectable.isUpdateable() ) {
-					return;
+					continue;
 				}
 
 				updateBuilder.addValueColumn(
@@ -595,14 +602,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 						NULL,
 						selectable.getJdbcMapping()
 				);
-			} );
+			}
 		}
 
 		// for one-to-many, we know the element is an entity and need to restrict the update
 		// based on the element's id
 		final EntityCollectionPart entityPart = (EntityCollectionPart) getAttributeMapping().getElementDescriptor();
 		final EntityIdentifierMapping entityId = entityPart.getAssociatedEntityMappingType().getIdentifierMapping();
-		entityId.forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
+		updateBuilder.addKeyRestrictionsLeniently( entityId );
 
 		//noinspection unchecked,rawtypes
 		return (RestrictedTableMutation) updateBuilder.buildMutation();
@@ -640,11 +647,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		final EntityCollectionPart elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
 		final EntityMappingType elementType = elementDescriptor.getAssociatedEntityMappingType();
-		elementType.getIdentifierMapping().forEachSelectable( (position, mapping) -> {
-			assert tableReference.getTableName().equals( mapping.getContainingTableExpression() );
-			updateBuilder.addKeyRestrictionLeniently( mapping );
-		} );
-
+		assert tableReference.getTableName().equals( elementType.getIdentifierMapping().getContainingTableExpression() );
+		updateBuilder.addKeyRestrictionsLeniently( elementType.getIdentifierMapping() );
 		return (TableUpdate<JdbcMutationOperation>) updateBuilder.buildMutation();
 	}
 
@@ -728,16 +732,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
 
 		final OneToManyCollectionPart elementDescriptor = (OneToManyCollectionPart) getAttributeMapping().getElementDescriptor();
-		elementDescriptor
-				.getAssociatedEntityMappingType()
-				.getIdentifierMapping()
-				.forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
+		updateBuilder.addKeyRestrictionsLeniently( elementDescriptor.getAssociatedEntityMappingType().getIdentifierMapping() );
 
 		// if the collection has an identifier, add its column as well
 		if ( getAttributeMapping().getIdentifierDescriptor() != null ) {
-			getAttributeMapping()
-					.getIdentifierDescriptor()
-					.forEachSelectable( updateBuilder::addKeyRestrictionLeniently );
+			updateBuilder.addKeyRestrictionsLeniently( getAttributeMapping().getIdentifierDescriptor() );
 		}
 
 		// for each index column:

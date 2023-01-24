@@ -130,6 +130,7 @@ public class ConfigPropertyCollectorTask extends DefaultTask {
 		}
 
 		List<String> options = new ArrayList<>();
+		options.add( "-proc:only" );
 		options.add(
 				String.format(
 						Locale.ROOT,

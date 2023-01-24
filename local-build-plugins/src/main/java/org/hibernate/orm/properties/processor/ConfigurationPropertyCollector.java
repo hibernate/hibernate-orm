@@ -100,10 +100,6 @@ public class ConfigurationPropertyCollector {
 				annotation.flatMap( a -> a.multiAttribute( "prefix", String.class ) )
 		);
 		if ( !key.matches( ignoreKeys ) ) {
-			// Try to find a default value. Assumption is that the settings class has an inner class called "Defaults" and
-			// the key for the default value is exactly the same as the config constant name:
-			Object value = findDefault( constant );
-
 			properties.put(
 					constant.getEnclosingElement().toString() + "#" + constant.getSimpleName().toString(),
 					new ConfigurationProperty()
@@ -111,7 +107,6 @@ public class ConfigurationPropertyCollector {
 							.key( key )
 							.sourceClass( constant.getEnclosingElement().toString() )
 							.type( extractType( constant ) )
-							.defaultValue( value )
 							.withModuleName( title.orElse( classTitle.orElse( this.title ) ) )
 							.withAnchorPrefix( anchorPrefix.orElse( classAnchorPrefix.orElse( this.anchor ) ) )
 			);
@@ -193,25 +188,6 @@ public class ConfigurationPropertyCollector {
 			messager.printMessage( Diagnostic.Kind.NOTE, "Wasn't able to find rendered javadocs for " + constant + ". Trying to read plain javadoc comment." );
 			return elementUtils.getDocComment( constant );
 		}
-	}
-
-	/**
-	 * This really works only for string/primitive constants ... other types would just get null returned.
-	 */
-	private Object findDefault(VariableElement constant) {
-		if ( constant.getEnclosingElement() instanceof TypeElement ) {
-			for ( Element element : elementUtils.getAllMembers( (TypeElement) constant.getEnclosingElement() ) ) {
-				if ( ElementKind.CLASS.equals( element.getKind() )
-						&& element.getSimpleName().contentEquals( "Defaults" ) ) {
-					for ( Element enclosedElement : element.getEnclosedElements() ) {
-						if ( enclosedElement.getSimpleName().equals( constant.getSimpleName() ) ) {
-							return ( (VariableElement) enclosedElement ).getConstantValue();
-						}
-					}
-				}
-			}
-		}
-		return null;
 	}
 
 	private PackageElement packageElement(Element element) {

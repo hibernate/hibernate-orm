@@ -38,7 +38,7 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 			Object entity,
 			SharedSessionContractImplementor session) {
 		session.getJdbcServices().getSqlStatementLogger().logStatement( insertStatementDetails.getSqlString() );
-		valueBindings.beforeStatement( insertStatementDetails, session );
+		valueBindings.beforeStatement( insertStatementDetails );
 		return executeAndExtract( insertStatementDetails.getSqlString(), insertStatementDetails.getStatement(), session );
 	}
 

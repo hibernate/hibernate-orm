@@ -27,7 +27,7 @@ public class MutationExecutorSingleBatched extends AbstractSingleMutationExecuto
 			BatchKey batchKey,
 			int batchSize,
 			SharedSessionContractImplementor session) {
-		super( mutationOperation );
+		super( mutationOperation, session );
 
 		this.batchSize = batchSize;
 		this.session = session;

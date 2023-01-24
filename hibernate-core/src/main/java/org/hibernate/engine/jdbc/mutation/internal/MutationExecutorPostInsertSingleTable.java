@@ -66,7 +66,8 @@ public class MutationExecutorPostInsertSingleTable implements MutationExecutor {
 				(tableName, columnName, usage) -> {
 					assert identityInsertStatementDetails.getMutatingTableDetails().getTableName().equals( tableName );
 					return operation.findValueDescriptor( columnName, usage );
-				}
+				},
+				session
 		);
 	}
 

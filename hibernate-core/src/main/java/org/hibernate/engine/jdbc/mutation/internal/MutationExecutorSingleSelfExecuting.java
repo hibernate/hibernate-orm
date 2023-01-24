@@ -22,13 +22,16 @@ public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecuto
 	private final SelfExecutingUpdateOperation operation;
 	private final JdbcValueBindingsImpl valueBindings;
 
-	public MutationExecutorSingleSelfExecuting(SelfExecutingUpdateOperation operation) {
+	public MutationExecutorSingleSelfExecuting(
+			SelfExecutingUpdateOperation operation,
+			SharedSessionContractImplementor session) {
 		this.operation = operation;
 
 		this.valueBindings = new JdbcValueBindingsImpl(
 				operation.getMutationType(),
 				operation.getMutationTarget(),
-				this::findJdbcValueDescriptor
+				this::findJdbcValueDescriptor,
+				session
 		);
 	}
 

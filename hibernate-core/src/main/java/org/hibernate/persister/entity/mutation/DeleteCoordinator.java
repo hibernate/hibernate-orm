@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -29,7 +30,6 @@ import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 
@@ -175,13 +175,11 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 										// presumably the SQL was generated with `is null`
 										return;
 									}
-
 									jdbcValueBindings.bindValue(
 											jdbcValue,
 											mutationTableName,
 											jdbcValueMapping.getSelectionExpression(),
-											ParameterUsage.RESTRICT,
-											session
+											ParameterUsage.RESTRICT
 									);
 								},
 								session
@@ -196,13 +194,14 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 			Object version,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
-		if ( version != null && entityPersister().getVersionMapping() != null ) {
+		final AbstractEntityPersister persister = entityPersister();
+		final EntityVersionMapping versionMapping = persister.getVersionMapping();
+		if ( version != null && versionMapping != null ) {
 			jdbcValueBindings.bindValue(
 					version,
-					entityPersister().getIdentifierTableMapping().getTableName(),
-					entityPersister().getVersionMapping().getSelectionExpression(),
-					ParameterUsage.RESTRICT,
-					session
+					persister.physicalTableNameForMutation( versionMapping ),
+					versionMapping.getSelectionExpression(),
+					ParameterUsage.RESTRICT
 			);
 		}
 	}
@@ -240,20 +239,20 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 					rowId,
 					tableDetails.getTableName(),
 					rowIdMapping.getRowIdName(),
-					ParameterUsage.RESTRICT,
-					session
+					ParameterUsage.RESTRICT
 			);
 		}
 		else {
 			tableDetails.getKeyMapping().breakDownKeyJdbcValues(
 					id,
-					(jdbcValue, columnMapping) -> jdbcValueBindings.bindValue(
-							jdbcValue,
-							tableDetails.getTableName(),
-							columnMapping.getColumnName(),
-							ParameterUsage.RESTRICT,
-							session
-					),
+					(jdbcValue, columnMapping) -> {
+						jdbcValueBindings.bindValue(
+								jdbcValue,
+								tableDetails.getTableName(),
+								columnMapping.getColumnName(),
+								ParameterUsage.RESTRICT
+						);
+					},
 					session
 			);
 		}

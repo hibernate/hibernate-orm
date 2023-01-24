@@ -13,8 +13,8 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -193,25 +193,29 @@ public class ColumnReference implements Expression, Assignable {
 		appendReadExpression( appender, qualifier );
 	}
 
-	public void appendReadExpression(SqlAppender appender, String qualifier) {
+	public void appendReadExpression(String qualifier, Consumer<String> appender) {
 		if ( isFormula ) {
-			appender.append( columnExpression );
+			appender.accept( columnExpression );
 		}
 		else if ( readExpression != null ) {
 			if ( qualifier == null ) {
-				appender.append( replace( readExpression, TEMPLATE + ".", "" ) );
+				appender.accept( replace( readExpression, TEMPLATE + ".", "" ) );
 			}
 			else {
-				appender.append( replace( readExpression, TEMPLATE, qualifier ) );
+				appender.accept( replace( readExpression, TEMPLATE, qualifier ) );
 			}
 		}
 		else {
 			if ( qualifier != null ) {
-				appender.append( qualifier );
-				appender.append( '.' );
+				appender.accept( qualifier );
+				appender.accept( "." );
 			}
-			appender.append( columnExpression );
+			appender.accept( columnExpression );
 		}
+	}
+
+	public void appendReadExpression(SqlAppender appender, String qualifier) {
+		appendReadExpression( qualifier, appender::appendSql );
 	}
 
 	public void appendColumnForWrite(SqlAppender appender) {

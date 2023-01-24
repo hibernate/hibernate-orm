@@ -12,7 +12,6 @@ import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
@@ -128,7 +127,7 @@ public class NamedNativeQueryMementoImpl extends AbstractNamedQueryMemento imple
 				originalSqlString,
 				resultSetMappingName,
 				resultSetMappingClass,
-				CollectionHelper.makeCopy( querySpaces ),
+				querySpaces,
 				getCacheable(),
 				getCacheRegion(),
 				getCacheMode(),

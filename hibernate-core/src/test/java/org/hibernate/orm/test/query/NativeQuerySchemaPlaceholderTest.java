@@ -71,7 +71,8 @@ public class NativeQuerySchemaPlaceholderTest {
 		scope.inTransaction(
 				session -> {
 					NativeQueryImplementor<Long> nativeQuery = session.createNativeQuery(
-							"select id from {h-schema}TestEntity", Long.class
+							"select id from {h-schema}TestEntity",
+							Long.class
 					);
 					List<Long> results = nativeQuery.list();
 					assertThat( results.get( 0 ), is( 1l ) );

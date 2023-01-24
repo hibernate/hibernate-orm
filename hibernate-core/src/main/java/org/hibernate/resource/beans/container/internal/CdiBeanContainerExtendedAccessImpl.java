@@ -6,8 +6,6 @@
  */
 package org.hibernate.resource.beans.container.internal;
 
-import jakarta.enterprise.inject.spi.BeanManager;
-
 import org.hibernate.Internal;
 import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
@@ -17,6 +15,8 @@ import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.jboss.logging.Logger;
+
+import jakarta.enterprise.inject.spi.BeanManager;
 
 /**
  * @author Steve Ebersole
@@ -41,8 +41,12 @@ public class CdiBeanContainerExtendedAccessImpl
 	protected <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
-			BeanInstanceProducer fallbackProducer) {
-		if ( usableBeanManager == null ) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
+		if ( !cdiRequiredIfAvailable ) {
+			return new LocalContainedBean<>( fallbackProducer.produceBeanInstance( beanType ) );
+		}
+		else if ( usableBeanManager == null ) {
 			return new BeanImpl<>( beanType, lifecycleStrategy, fallbackProducer );
 		}
 		else {
@@ -55,7 +59,12 @@ public class CdiBeanContainerExtendedAccessImpl
 			String name,
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
-			BeanInstanceProducer fallbackProducer) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
+		if ( !cdiRequiredIfAvailable ) {
+			return new LocalContainedBean<>( fallbackProducer.produceBeanInstance( name, beanType ) );
+		}
+
 		if ( usableBeanManager == null ) {
 			return new NamedBeanImpl<>(
 					name,
@@ -64,9 +73,8 @@ public class CdiBeanContainerExtendedAccessImpl
 					fallbackProducer
 			);
 		}
-		else {
-			return lifecycleStrategy.createBean( name, beanType, fallbackProducer, this );
-		}
+
+		return lifecycleStrategy.createBean( name, beanType, fallbackProducer, this );
 	}
 
 	@Override

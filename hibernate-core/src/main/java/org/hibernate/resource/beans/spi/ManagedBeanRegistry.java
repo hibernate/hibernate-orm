@@ -24,14 +24,47 @@ public interface ManagedBeanRegistry extends Service {
 	<T> ManagedBean<T> getBean(Class<T> beanClass);
 
 	/**
-	 * Get a bean reference by name and contract.
+	 * Form of {@link #getBean(Class)} allowing to indicate whether
+	 * it is required to use CDI if it is available
+	 *
+	 * @implNote Defaulted for backwards compatibility
 	 */
-	<T> ManagedBean<T> getBean(String beanName, Class<T> beanContract);
+	default <T> ManagedBean<T> getBean(Class<T> beanClass, boolean cdiRequiredIfAvailable) {
+		return getBean( beanClass );
+	}
 
 	/**
 	 * Get a bean reference by class with an explicit fallback bean instance producer.
 	 */
 	<T> ManagedBean<T> getBean(Class<T> beanContract, BeanInstanceProducer fallbackBeanInstanceProducer);
+
+	/**
+	 * Form of {@link #getBean(Class, BeanInstanceProducer)} allowing to indicate whether
+	 * it is required to use CDI if it is available
+	 *
+	 * @implNote Defaulted for backwards compatibility
+	 */
+	default <T> ManagedBean<T> getBean(
+			Class<T> beanContract,
+			BeanInstanceProducer fallbackBeanInstanceProducer,
+			boolean cdiRequiredIfAvailable) {
+		return getBean( beanContract, fallbackBeanInstanceProducer );
+	}
+
+	/**
+	 * Get a bean reference by name and contract.
+	 */
+	<T> ManagedBean<T> getBean(String beanName, Class<T> beanContract);
+
+	/**
+	 * Form of {@link #getBean(String,Class)} allowing to indicate whether
+	 * it is required to use CDI if it is available
+	 *
+	 * @implNote Defaulted for backwards compatibility
+	 */
+	default <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract, boolean cdiRequiredIfAvailable) {
+		return getBean( beanName, beanContract );
+	}
 
 	/**
 	 * Get a bean reference by name and contract with an explicit fallback bean instance producer.
@@ -40,6 +73,20 @@ public interface ManagedBeanRegistry extends Service {
 			String beanName,
 			Class<T> beanContract,
 			BeanInstanceProducer fallbackBeanInstanceProducer);
+
+	/**
+	 * Form of {@link #getBean(String, Class, BeanInstanceProducer)} allowing to indicate whether
+	 * it is required to use CDI if it is available
+	 *
+	 * @implNote Defaulted for backwards compatibility
+	 */
+	default <T> ManagedBean<T> getBean(
+			String beanName,
+			Class<T> beanContract,
+			BeanInstanceProducer fallbackBeanInstanceProducer,
+			boolean cdiRequiredIfAvailable) {
+		return getBean( beanName, beanContract, fallbackBeanInstanceProducer );
+	}
 
 	/**
 	 * Get a reference to the underlying BeanContainer.  May return {@code null}

@@ -13,9 +13,9 @@ import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescript
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorStandardImpl;
 import org.hibernate.boot.model.convert.internal.ConverterHelper;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -154,7 +154,7 @@ public class RegisteredConversion {
 		public JpaAttributeConverter<?, ?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
 			final ManagedBean<? extends AttributeConverter<?, ?>> converterBean = context
 					.getManagedBeanRegistry()
-					.getBean( converterType );
+					.getBean( converterType, true );
 
 			final TypeConfiguration typeConfiguration = context.getTypeConfiguration();
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();

@@ -69,68 +69,80 @@ public class NonRegistryManagedBeanConsumingIntegrator implements Integrator, Be
 		applicationScopedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheApplicationScopedBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		applicationScopedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheApplicationScopedBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		dependentBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheDependentBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		dependentBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheDependentBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		reflectionInstantiatedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheReflectionInstantiatedBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		reflectionInstantiatedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheReflectionInstantiatedBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		namedApplicationScopedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedApplicationScopedBeanImpl.NAME,
 				TheNamedApplicationScopedBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		namedApplicationScopedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedApplicationScopedBeanImpl.NAME,
 				TheNamedApplicationScopedBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		namedDependentBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedDependentBeanImpl.NAME,
 				TheNamedDependentBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		namedDependentBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheMainNamedDependentBeanImpl.NAME,
 				TheNamedDependentBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		namedReflectionInstantiatedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheReflectionInstantiatedBean.class.getName(),
 				TheReflectionInstantiatedBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 		namedReflectionInstantiatedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
 				TheReflectionInstantiatedBean.class.getName(),
 				TheReflectionInstantiatedBean.class,
 				this,
-				fallbackBeanInstanceProducer
+				fallbackBeanInstanceProducer,
+				true
 		);
 	}
 

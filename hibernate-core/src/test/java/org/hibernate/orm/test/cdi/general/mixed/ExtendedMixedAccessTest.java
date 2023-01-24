@@ -6,12 +6,10 @@
  */
 package org.hibernate.orm.test.cdi.general.mixed;
 
-import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.spi.BeanManager;
-
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.cdi.testsupport.TestingExtendedBeanManager;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerExtendedAccessImpl;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
@@ -19,8 +17,10 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.Action;
 
-import org.hibernate.orm.test.cdi.testsupport.TestingExtendedBeanManager;
 import org.junit.Test;
+
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -57,7 +57,8 @@ public class ExtendedMixedAccessTest implements BeanContainer.LifecycleOptions {
 				final ContainedBean<HostedBean> hostedBean = beanContainer.getBean(
 						HostedBean.class,
 						this,
-						FallbackBeanInstanceProducer.INSTANCE
+						FallbackBeanInstanceProducer.INSTANCE,
+						true
 				);
 
 				assertThat( hostedBean, notNullValue() );

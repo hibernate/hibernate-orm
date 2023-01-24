@@ -27,9 +27,38 @@ public interface BeanContainer extends Stoppable {
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer);
 
+	/**
+	 * Form of {@link #getBean(Class, LifecycleOptions, BeanInstanceProducer)}
+	 * allowing to indicate whether it is required to use CDI if it is available
+	 *
+	 * @implNote Defaulted for backwards compatibility
+	 */
+	default <B> ContainedBean<B> getBean(
+			Class<B> beanType,
+			LifecycleOptions lifecycleOptions,
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
+		return getBean( beanType, lifecycleOptions, fallbackProducer );
+	}
+
 	<B> ContainedBean<B> getBean(
 			String name,
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer);
+
+	/**
+	 * Form of {@link #getBean(String, Class, LifecycleOptions, BeanInstanceProducer)}
+	 * allowing to indicate whether it is required to use CDI if it is available
+	 *
+	 * @implNote Defaulted for backwards compatibility
+	 */
+	default <B> ContainedBean<B> getBean(
+			String name,
+			Class<B> beanType,
+			LifecycleOptions lifecycleOptions,
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
+		return getBean( name, beanType, lifecycleOptions, fallbackProducer );
+	}
 }

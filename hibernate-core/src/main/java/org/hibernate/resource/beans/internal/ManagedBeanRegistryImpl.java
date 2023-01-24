@@ -48,11 +48,24 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 
 	@Override
 	public <T> ManagedBean<T> getBean(Class<T> beanClass) {
-		return getBean( beanClass, FallbackBeanInstanceProducer.INSTANCE );
+		return getBean( beanClass, false );
+	}
+
+	@Override
+	public <T> ManagedBean<T> getBean(Class<T> beanClass, boolean cdiRequiredIfAvailable) {
+		return getBean( beanClass, FallbackBeanInstanceProducer.INSTANCE, cdiRequiredIfAvailable );
 	}
 
 	@Override
 	public <T> ManagedBean<T> getBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
+		return getBean( beanClass, fallbackBeanInstanceProducer, false );
+	}
+
+	@Override
+	public <T> ManagedBean<T> getBean(
+			Class<T> beanClass,
+			BeanInstanceProducer fallbackBeanInstanceProducer,
+			boolean cdiRequiredIfAvailable) {
 		final ManagedBean<?> existing = registrations.get( beanClass.getName() );
 		if ( existing != null ) {
 			//noinspection unchecked
@@ -67,7 +80,8 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 			final ContainedBean<T> containedBean = beanContainer.getBean(
 					beanClass,
 					this,
-					fallbackBeanInstanceProducer
+					fallbackBeanInstanceProducer,
+					cdiRequiredIfAvailable
 			);
 
 			if ( containedBean instanceof ManagedBean ) {
@@ -86,7 +100,12 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 
 	@Override
 	public <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract) {
-		return getBean( beanName, beanContract, FallbackBeanInstanceProducer.INSTANCE );
+		return getBean( beanName, beanContract, false );
+	}
+
+	@Override
+	public <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract, boolean cdiRequiredIfAvailable) {
+		return getBean( beanName, beanContract, FallbackBeanInstanceProducer.INSTANCE, cdiRequiredIfAvailable );
 	}
 
 	@Override
@@ -94,6 +113,15 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 			String beanName,
 			Class<T> beanContract,
 			BeanInstanceProducer fallbackBeanInstanceProducer) {
+		return getBean( beanName, beanContract, fallbackBeanInstanceProducer, false );
+	}
+
+	@Override
+	public <T> ManagedBean<T> getBean(
+			String beanName,
+			Class<T> beanContract,
+			BeanInstanceProducer fallbackBeanInstanceProducer,
+			boolean cdiRequiredIfAvailable) {
 		final String key = beanContract.getName() + ':' + beanName;
 
 		final ManagedBean<?> existing = registrations.get( key );
@@ -111,7 +139,8 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 					beanName,
 					beanContract,
 					this,
-					fallbackBeanInstanceProducer
+					fallbackBeanInstanceProducer,
+					cdiRequiredIfAvailable
 			);
 
 			if ( containedBean instanceof ManagedBean ) {

@@ -23,19 +23,31 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
  * @author Steve Ebersole
  */
 public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer {
-	private Map<String,ContainedBeanImplementor<?>> beanCache = new HashMap<>();
-	private List<ContainedBeanImplementor<?>> registeredBeans = new ArrayList<>();
+	private final Map<String,ContainedBeanImplementor<?>> beanCache = new HashMap<>();
+	private final List<ContainedBeanImplementor<?>> registeredBeans = new ArrayList<>();
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// un-named bean support
 
 	@Override
-	public <B> ContainedBean<B> getBean(
+	public final <B> ContainedBean<B> getBean(
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer) {
+		return getBean( beanType, lifecycleOptions, fallbackProducer, false );
+	}
+
+	@Override
+	public final <B> ContainedBean<B> getBean(
+			Class<B> beanType,
+			LifecycleOptions lifecycleOptions,
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
 		if ( lifecycleOptions.canUseCachedReferences() ) {
-			return getCacheableBean( beanType, lifecycleOptions, fallbackProducer );
+			return getCacheableBean( beanType, lifecycleOptions, fallbackProducer, cdiRequiredIfAvailable );
 		}
 		else {
-			return createBean( beanType, lifecycleOptions, fallbackProducer );
+			return createBean( beanType, lifecycleOptions, fallbackProducer, cdiRequiredIfAvailable );
 		}
 	}
 
@@ -43,15 +55,18 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 	private <B> ContainedBean<B> getCacheableBean(
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
-			BeanInstanceProducer fallbackProducer) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
 		final String beanCacheKey = Helper.determineBeanCacheKey( beanType );
 
+		//noinspection rawtypes
 		final ContainedBeanImplementor existing = beanCache.get( beanCacheKey );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final ContainedBeanImplementor bean = createBean( beanType, lifecycleOptions, fallbackProducer );
+		//noinspection rawtypes
+		final ContainedBeanImplementor bean = createBean( beanType, lifecycleOptions, fallbackProducer, cdiRequiredIfAvailable );
 		beanCache.put( beanCacheKey, bean );
 		return bean;
 	}
@@ -60,13 +75,16 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 	private <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
-			BeanInstanceProducer fallbackProducer) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
+		//noinspection rawtypes
 		final ContainedBeanImplementor bean = createBean(
 				beanType,
 				lifecycleOptions.useJpaCompliantCreation()
 						? JpaCompliantLifecycleStrategy.INSTANCE
 						: ContainerManagedLifecycleStrategy.INSTANCE,
-				fallbackProducer
+				fallbackProducer,
+				cdiRequiredIfAvailable
 		);
 		registeredBeans.add( bean );
 		return bean;
@@ -75,19 +93,34 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 	protected abstract <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
-			BeanInstanceProducer fallbackProducer);
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// named bean support
 
 	@Override
-	public <B> ContainedBean<B> getBean(
+	public final <B> ContainedBean<B> getBean(
 			String beanName,
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer) {
+		return getBean( beanName, beanType, lifecycleOptions, fallbackProducer, false );
+	}
+
+	@Override
+	public final <B> ContainedBean<B> getBean(
+			String beanName,
+			Class<B> beanType,
+			LifecycleOptions lifecycleOptions,
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
 		if ( lifecycleOptions.canUseCachedReferences() ) {
-			return getCacheableBean( beanName, beanType, lifecycleOptions, fallbackProducer );
+			return getCacheableBean( beanName, beanType, lifecycleOptions, fallbackProducer, cdiRequiredIfAvailable );
 		}
 		else {
-			return createBean( beanName, beanType, lifecycleOptions, fallbackProducer );
+			return createBean( beanName, beanType, lifecycleOptions, fallbackProducer, cdiRequiredIfAvailable );
 		}
 	}
 
@@ -96,15 +129,18 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 			String beanName,
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
-			BeanInstanceProducer fallbackProducer) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
 		final String beanCacheKey = Helper.determineBeanCacheKey( beanName, beanType );
 
+		//noinspection rawtypes
 		final ContainedBeanImplementor existing = beanCache.get( beanCacheKey );
 		if ( existing != null ) {
 			return existing;
 		}
 
-		final ContainedBeanImplementor bean = createBean( beanName, beanType, lifecycleOptions, fallbackProducer );
+		//noinspection rawtypes
+		final ContainedBeanImplementor bean = createBean( beanName, beanType, lifecycleOptions, fallbackProducer, cdiRequiredIfAvailable );
 		beanCache.put( beanCacheKey, bean );
 		return bean;
 	}
@@ -114,14 +150,17 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 			String beanName,
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
-			BeanInstanceProducer fallbackProducer) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
+		//noinspection rawtypes
 		final ContainedBeanImplementor bean = createBean(
 				beanName,
 				beanType,
 				lifecycleOptions.useJpaCompliantCreation()
 						? JpaCompliantLifecycleStrategy.INSTANCE
 						: ContainerManagedLifecycleStrategy.INSTANCE,
-				fallbackProducer
+				fallbackProducer,
+				cdiRequiredIfAvailable
 		);
 		registeredBeans.add( bean );
 		return bean;
@@ -131,7 +170,8 @@ public abstract class AbstractCdiBeanContainer implements CdiBasedBeanContainer 
 			String name,
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
-			BeanInstanceProducer fallbackProducer);
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable);
 
 
 	protected final void forEachBean(Consumer<ContainedBeanImplementor<?>> consumer) {

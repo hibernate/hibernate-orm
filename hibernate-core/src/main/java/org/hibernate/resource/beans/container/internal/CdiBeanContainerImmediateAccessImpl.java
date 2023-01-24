@@ -6,14 +6,14 @@
  */
 package org.hibernate.resource.beans.container.internal;
 
-import jakarta.enterprise.inject.spi.BeanManager;
-
 import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.jboss.logging.Logger;
+
+import jakarta.enterprise.inject.spi.BeanManager;
 
 /**
  * @author Steve Ebersole
@@ -38,7 +38,8 @@ public class CdiBeanContainerImmediateAccessImpl extends AbstractCdiBeanContaine
 	protected <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
-			BeanInstanceProducer fallbackProducer) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
 		final ContainedBeanImplementor<B> bean = lifecycleStrategy.createBean( beanType, fallbackProducer, this );
 		bean.initialize();
 		return bean;
@@ -49,7 +50,8 @@ public class CdiBeanContainerImmediateAccessImpl extends AbstractCdiBeanContaine
 			String name,
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
-			BeanInstanceProducer fallbackProducer) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
 		final ContainedBeanImplementor<B> bean = lifecycleStrategy.createBean(
 				name,
 				beanType,

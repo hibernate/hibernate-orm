@@ -36,7 +36,7 @@ class ListenerCallback extends AbstractCallback {
 
 		@Override
 		public Callback createCallback(ManagedBeanRegistry beanRegistry) {
-			return new ListenerCallback( beanRegistry.getBean( listenerClass ), callbackMethod, callbackType );
+			return new ListenerCallback( beanRegistry.getBean( listenerClass, true ), callbackMethod, callbackType );
 		}
 	}
 

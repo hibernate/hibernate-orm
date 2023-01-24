@@ -34,6 +34,6 @@ public class ClassBasedConverterDescriptor extends AbstractConverterDescriptor {
 
 	@Override
 	protected ManagedBean<? extends AttributeConverter<?, ?>> createManagedBean(JpaAttributeConverterCreationContext context) {
-		return context.getManagedBeanRegistry().getBean( getAttributeConverterClass() );
+		return context.getManagedBeanRegistry().getBean( getAttributeConverterClass(), true );
 	}
 }

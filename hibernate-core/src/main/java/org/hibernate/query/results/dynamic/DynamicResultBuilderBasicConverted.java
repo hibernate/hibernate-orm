@@ -9,14 +9,10 @@ package org.hibernate.query.results.dynamic;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
-import jakarta.persistence.AttributeConverter;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
+import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
@@ -26,9 +22,13 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * A ResultBuilder for explicitly converted scalar results
@@ -69,7 +69,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converterJavaType );
-		final ManagedBean<? extends AttributeConverter<O, R>> bean = beans.getBean( converterJavaType );
+		final ManagedBean<? extends AttributeConverter<O, R>> bean = beans.getBean( converterJavaType, true );
 
 		this.columnAlias = columnAlias;
 		this.basicValueConverter = new JpaAttributeConverterImpl<>(

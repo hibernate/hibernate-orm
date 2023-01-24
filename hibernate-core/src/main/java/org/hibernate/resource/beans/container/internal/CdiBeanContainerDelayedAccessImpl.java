@@ -6,12 +6,12 @@
  */
 package org.hibernate.resource.beans.container.internal;
 
-import jakarta.enterprise.inject.spi.BeanManager;
-
 import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+
+import jakarta.enterprise.inject.spi.BeanManager;
 
 /**
  * @author Steve Ebersole
@@ -33,7 +33,11 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 	protected <B> ContainedBeanImplementor<B> createBean(
 			Class<B> beanType, 
 			BeanLifecycleStrategy lifecycleStrategy, 
-			BeanInstanceProducer fallbackProducer) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
+		if ( !cdiRequiredIfAvailable ) {
+			return new LocalContainedBean<>( fallbackProducer.produceBeanInstance( beanType ) );
+		}
 		return new BeanImpl<>( beanType, lifecycleStrategy, fallbackProducer );
 	}
 
@@ -42,7 +46,11 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 			String name,
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
-			BeanInstanceProducer fallbackProducer) {
+			BeanInstanceProducer fallbackProducer,
+			boolean cdiRequiredIfAvailable) {
+		if ( !cdiRequiredIfAvailable ) {
+			return new LocalContainedBean<>( fallbackProducer.produceBeanInstance( name, beanType ) );
+		}
 		return new NamedBeanImpl<>( name, beanType, lifecycleStrategy, fallbackProducer );
 	}
 

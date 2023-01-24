@@ -81,7 +81,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 				final ManagedBeanRegistry managedBeanRegistry = sessionFactory
 						.getServiceRegistry()
 						.getService( ManagedBeanRegistry.class );
-				final ManagedBean<BlowsUpConverter> converterBean = managedBeanRegistry.getBean( BlowsUpConverter.class );
+				final ManagedBean<BlowsUpConverter> converterBean = managedBeanRegistry.getBean( BlowsUpConverter.class, true );
 				converterBean.getBeanInstance();
 				fail( "expecting an exception" );
 			}

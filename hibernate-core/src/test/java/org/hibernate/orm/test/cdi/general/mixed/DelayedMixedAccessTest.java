@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.cdi.general.mixed;
 
-import jakarta.enterprise.inject.se.SeContainer;
-
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -21,6 +19,8 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.tool.schema.Action;
 
 import org.junit.Test;
+
+import jakarta.enterprise.inject.se.SeContainer;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -60,7 +60,8 @@ public class DelayedMixedAccessTest implements BeanContainer.LifecycleOptions {
 			final ContainedBean<HostedBean> hostedBean = beanContainer.getBean(
 					HostedBean.class,
 					this,
-					FallbackBeanInstanceProducer.INSTANCE
+					FallbackBeanInstanceProducer.INSTANCE,
+					true
 			);
 
 			assertThat( hostedBean, notNullValue() );

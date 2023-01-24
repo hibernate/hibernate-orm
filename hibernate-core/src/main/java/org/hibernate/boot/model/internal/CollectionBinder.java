@@ -68,6 +68,7 @@ import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
+import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -83,6 +84,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -1642,6 +1644,7 @@ public abstract class CollectionBinder {
 			LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );
 		}
 
+		bindSynchronize();
 		bindFilters( false );
 		handleWhere( false );
 
@@ -1679,6 +1682,26 @@ public abstract class CollectionBinder {
 				collection.setOrderBy( orderByFragment );
 			}
 		}
+	}
+
+	private void bindSynchronize() {
+		if ( property.isAnnotationPresent( Synchronize.class ) ) {
+			final JdbcEnvironment jdbcEnvironment = buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment();
+			final Synchronize synchronize = property.getAnnotation(Synchronize.class);
+			for ( String table : synchronize.value() ) {
+				String physicalName = synchronize.logical() ? toPhysicalName( jdbcEnvironment, table ) : table;
+				collection.addSynchronizedTable( physicalName );
+			}
+		}
+	}
+
+	private String toPhysicalName(JdbcEnvironment jdbcEnvironment, String logicalName) {
+		return buildingContext.getBuildingOptions().getPhysicalNamingStrategy()
+				.toPhysicalTableName(
+						jdbcEnvironment.getIdentifierHelper().toIdentifier( logicalName ),
+						jdbcEnvironment
+				)
+				.render( jdbcEnvironment.getDialect() );
 	}
 
 	private void bindFilters(boolean hasAssociationTable) {
@@ -2084,6 +2107,8 @@ public abstract class CollectionBinder {
 		else {
 			handleOwnedManyToMany( targetEntity, isCollectionOfEntities );
 		}
+
+		bindSynchronize();
 		bindFilters( isCollectionOfEntities );
 		handleWhere( isCollectionOfEntities );
 

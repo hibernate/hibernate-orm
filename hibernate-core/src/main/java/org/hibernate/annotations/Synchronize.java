@@ -9,23 +9,28 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies the tables that hold state mapped by the annotated entity.
+ * Specifies a table or tables that hold state mapped by the annotated
+ * entity or collection.
  * <p>
  * If Hibernate is not aware that a certain table holds state mapped
- * by an entity class, then {@linkplain org.hibernate.FlushMode#AUTO
- * auto-flush} might not occur when it should, and queries against the
- * entity might return stale data.
+ * by an entity class or collection, then modifications might not be
+ * {@linkplain org.hibernate.FlushMode#AUTO automatically synchronized}
+ * with the database before a query is executed against that table, and
+ * the query might return stale data.
  * <p>
- * This annotation might be necessary if:
+ * Ordinarily, Hibernate knows the tables containing the state of an
+ * entity or collection. This annotation might be necessary if:
  * <ul>
- * <li>the entity maps a database view,
- * <li>the entity is persisted using handwritten SQL, that is, using
- *     {@link SQLSelect @SQLSelect} and friends, or
- * <li>the entity is mapped using {@link Subselect @Subselect}.
+ * <li>an entity or collection maps a database view,
+ * <li>an entity or collection is persisted using handwritten SQL,
+ *     that is, using {@link SQLSelect @SQLSelect} and friends, or
+ * <li>an entity is mapped using {@link Subselect @Subselect}.
  * </ul>
  * <p>
  * By default, the table names specified by this annotation are interpreted
@@ -39,7 +44,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see org.hibernate.query.SynchronizeableQuery
  */
-@Target(TYPE)
+@Target({TYPE, FIELD, METHOD})
 @Retention(RUNTIME)
 public @interface Synchronize {
 	/**

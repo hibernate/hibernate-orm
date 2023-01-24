@@ -1,11 +1,14 @@
 package org.hibernate.orm.test.secondarytable;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.dialect.H2Dialect;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -15,7 +18,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 public class SecondaryRowTest {
 	@Test
+	@SkipForDialect(
+			dialectClass = H2Dialect.class,
+			reason = "This test relies on SQL execution counts which is based on the legacy multi-statement solution.  " +
+					"HHH-16084 adds support for H2 MERGE which handles those cases in one statement, so the counts are off.  " +
+					"Need to change this test to physically check the number of rows.  " +
+					"See e.g. org.hibernate.orm.test.write.UpsertTests"
+	)
 	public void testSecondaryRow(SessionFactoryScope scope) {
+		// we need to check the actual number of rows.
+		// because we now support merge/upsert SQL statements, the
+		// because HHH-16084 implements support for  usage
 		int seq = scope.getSessionFactory().getJdbcServices().getDialect().getSequenceSupport().supportsSequences()
 				? 1 : 0;
 

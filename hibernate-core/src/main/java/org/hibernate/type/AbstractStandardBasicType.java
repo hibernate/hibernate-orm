@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.ZonedDateTime;
+import java.util.Comparator;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
@@ -51,6 +52,7 @@ public abstract class AbstractStandardBasicType<T>
 	private final AbstractClassJavaType<T> javaTypeAsAbstractClassJavaType;
 	private final Class javaTypeClass;
 	private final MutabilityPlan<T> mutabilityPlan;
+	private final Comparator<T> javatypeComparator;
 
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
@@ -64,6 +66,7 @@ public abstract class AbstractStandardBasicType<T>
 		//A very simple dispatch optimisation, make these a constant:
 		this.javaTypeClass = javaType.getJavaTypeClass();
 		this.mutabilityPlan = javaType.getMutabilityPlan();
+		this.javatypeComparator = javaType.getComparator();
 		//This is a dispatch optimisation to avoid megamorphic invocations on the most common type:
 		if ( javaType instanceof AbstractClassJavaType ) {
 			this.javaTypeAsAbstractClassJavaType = (AbstractClassJavaType) javaType;
@@ -94,7 +97,13 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public T fromString(CharSequence string) {
-		return javaType.fromString( string );
+		final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
+		if ( type != null ) {
+			return type.fromString( string );
+		}
+		else {
+			return javaType.fromString( string );
+		}
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {
@@ -219,7 +228,7 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	public final int compare(Object x, Object y) {
-		return javaType.getComparator().compare( (T) x, (T) y );
+		return this.javatypeComparator.compare( (T) x, (T) y );
 	}
 
 	@Override

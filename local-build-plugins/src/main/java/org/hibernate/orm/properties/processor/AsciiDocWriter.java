@@ -12,7 +12,6 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -68,14 +67,6 @@ public class AsciiDocWriter implements BiConsumer<Map<String, ConfigurationPrope
 					writer.write( "+++ " );
 					writer.write( el.javadoc() );
 					writer.write( " +++ " );
-
-					String defaultValue = Objects.toString( el.defaultValue(), "" );
-					if ( !defaultValue.trim().isEmpty() ) {
-						writer.write( "\n+\n" );
-						writer.write( "Default value: `" );
-						writer.write( defaultValue );
-						writer.write( '`' );
-					}
 
 					writer.write( '\n' );
 

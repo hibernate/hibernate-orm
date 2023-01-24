@@ -24,8 +24,6 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 
 	private HibernateOrmConfiguration.Type type;
 
-	private Object defaultValue;
-
 	private String anchorPrefix;
 	private String moduleName;
 
@@ -65,15 +63,6 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 		return this;
 	}
 
-	public Object defaultValue() {
-		return defaultValue;
-	}
-
-	public ConfigurationProperty defaultValue(Object defaultValue) {
-		this.defaultValue = defaultValue == null ? "" : defaultValue;
-		return this;
-	}
-
 	public String anchorPrefix() {
 		return anchorPrefix;
 	}
@@ -99,7 +88,6 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 				", javadoc='" + javadoc + '\'' +
 				", sourceClass='" + sourceClass + '\'' +
 				", type='" + type + '\'' +
-				", default='" + defaultValue + '\'' +
 				", anchorPrefix='" + anchorPrefix + '\'' +
 				", moduleName='" + moduleName + '\'' +
 				'}';
@@ -123,14 +111,13 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 				Objects.equals( javadoc, that.javadoc ) &&
 				Objects.equals( sourceClass, that.sourceClass ) &&
 				type == that.type &&
-				Objects.equals( defaultValue, that.defaultValue ) &&
 				Objects.equals( anchorPrefix, that.anchorPrefix ) &&
 				Objects.equals( moduleName, that.moduleName );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( key, javadoc, sourceClass, type, defaultValue, anchorPrefix, moduleName );
+		return Objects.hash( key, javadoc, sourceClass, type, anchorPrefix, moduleName );
 	}
 
 	public static class Key {

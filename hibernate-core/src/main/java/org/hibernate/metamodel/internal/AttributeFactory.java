@@ -583,9 +583,22 @@ public class AttributeFactory {
 
 		final CompositeTypeImplementor ownerComponentType = (CompositeTypeImplementor) ownerBootDescriptor.getType();
 		final EmbeddableValuedModelPart ownerMappingModelDescriptor = ownerComponentType.getMappingModelPart();
-		final EmbeddableRepresentationStrategy ownerRepStrategy = ownerMappingModelDescriptor
-				.getEmbeddableTypeDescriptor()
-				.getRepresentationStrategy();
+		final EmbeddableRepresentationStrategy ownerRepStrategy;
+
+		if ( ownerMappingModelDescriptor == null ) {
+			// When an entity uses a type variable, bound by a mapped superclass, for an embedded id,
+			// we will not create a model part for the component, but we still need the representation strategy here,
+			// in order to discover the property members to expose on the JPA metamodel
+			ownerRepStrategy = ownerBootDescriptor.getBuildingContext()
+							.getBootstrapContext()
+							.getRepresentationStrategySelector()
+							.resolveStrategy( ownerBootDescriptor, null, metadataContext.getRuntimeModelCreationContext() );
+		}
+		else {
+			ownerRepStrategy = ownerMappingModelDescriptor
+					.getEmbeddableTypeDescriptor()
+					.getRepresentationStrategy();
+		}
 
 		if ( ownerRepStrategy.getMode() == RepresentationMode.MAP ) {
 			return new MapMember(

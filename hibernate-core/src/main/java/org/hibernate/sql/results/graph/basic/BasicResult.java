@@ -45,6 +45,22 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 			int jdbcValuesArrayPosition,
 			String resultVariable,
 			JdbcMapping jdbcMapping,
+			boolean coerceResultType) {
+		//noinspection unchecked
+		this(
+				jdbcValuesArrayPosition,
+				resultVariable,
+				jdbcMapping.getJavaTypeDescriptor(),
+				jdbcMapping.getValueConverter(),
+				null,
+				coerceResultType
+		);
+	}
+
+	public BasicResult(
+			int jdbcValuesArrayPosition,
+			String resultVariable,
+			JdbcMapping jdbcMapping,
 			NavigablePath navigablePath) {
 		//noinspection unchecked
 		this(
@@ -85,11 +101,26 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 			JavaType<T> javaType,
 			BasicValueConverter<T,?> valueConverter,
 			NavigablePath navigablePath) {
+		this( valuesArrayPosition, resultVariable, javaType, valueConverter, navigablePath, false );
+	}
+
+	public BasicResult(
+			int valuesArrayPosition,
+			String resultVariable,
+			JavaType<T> javaType,
+			BasicValueConverter<T,?> valueConverter,
+			NavigablePath navigablePath,
+			boolean coerceResultType) {
 		this.resultVariable = resultVariable;
 		this.javaType = javaType;
 		this.navigablePath = navigablePath;
 
-		this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter );
+		if ( coerceResultType ) {
+			this.assembler = new CoercingResultAssembler<>( valuesArrayPosition, javaType, valueConverter );
+		}
+		else {
+			this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter );
+		}
 	}
 
 	@Override

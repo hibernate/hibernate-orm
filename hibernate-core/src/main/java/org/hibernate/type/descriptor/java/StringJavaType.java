@@ -90,6 +90,9 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		if (value instanceof String) {
 			return (String) value;
 		}
+		if (value instanceof char[]) {
+			return new String( (char[]) value );
+		}
 		if (value instanceof Reader) {
 			return DataHelper.extractString( (Reader) value );
 		}
@@ -113,4 +116,8 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		}
 	}
 
+	@Override
+	public <X> String coerce(X value, CoercionContext coercionContext) {
+		return wrap( value, null );
+	}
 }

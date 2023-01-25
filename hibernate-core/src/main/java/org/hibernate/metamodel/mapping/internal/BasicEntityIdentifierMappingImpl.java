@@ -23,6 +23,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -374,13 +375,16 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		assert tableGroup != null;
 
 		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, false, fetchParent, creationState );
+		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
 				fetchablePath,
 				this,
 				FetchTiming.IMMEDIATE,
-				creationState
+				creationState,
+				// if the expression type is different that the expected type coerce the value
+				selectionType != null && selectionType.getJdbcMappings().get( 0 ).getJdbcJavaType() != getJdbcMapping().getJdbcJavaType()
 		);
 	}
 

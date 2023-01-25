@@ -43,6 +43,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Marco Belladelli
@@ -66,7 +67,7 @@ public class TreatPathTest {
 			term.setLength( 4 );
 			term.setLanguage( language );
 			term.setAnyProperty( stringProperty );
-			term.setSynonyms( new ArrayList<>( List.of( "ciao" ) ) );
+			term.setSynonyms( new ArrayList<>() );
 			term.setEmbeddableProperty( new EmbeddableType( "ciao" ) );
 			Linkage linkage = new Linkage();
 			linkage.setTerm( term );
@@ -102,14 +103,7 @@ public class TreatPathTest {
 
 	@Test
 	public void testTreatPluralValue(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			try {
-				testCriteriaTreat( entityManager, "synonyms", List.of( "ciao" ) );
-			}
-			catch (Exception e) {
-				assertEquals( NotYetImplementedFor6Exception.class, e.getClass() );
-			}
-		} );
+		scope.inTransaction( entityManager -> testCriteriaTreat( entityManager, "synonyms", null, true ) );
 	}
 
 	@Test
@@ -130,13 +124,17 @@ public class TreatPathTest {
 	}
 
 	private void testCriteriaTreat(EntityManager entityManager, String property, Object value) {
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Linkage> criteria = cb.createQuery( Linkage.class );
-		Root<Linkage> root = criteria.from( Linkage.class );
-		Path<LocalTerm> asLocalTerm = cb.treat( root.get( "term" ), LocalTerm.class );
-		Predicate predicate;
-		if ( value instanceof Collection<?> ) {
-			predicate = asLocalTerm.get( property ).in( value );
+		testCriteriaTreat( entityManager, property, value, false );
+	}
+
+	private void testCriteriaTreat(EntityManager entityManager, String property, Object value, boolean plural) {
+		final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		final CriteriaQuery<Linkage> criteria = cb.createQuery( Linkage.class );
+		final Root<Linkage> root = criteria.from( Linkage.class );
+		final Path<LocalTerm> asLocalTerm = cb.treat( root.get( "term" ), LocalTerm.class );
+		final Predicate predicate;
+		if ( plural ) {
+			predicate = cb.isEmpty( asLocalTerm.get( property ) );
 		}
 		else {
 			predicate = cb.equal( asLocalTerm.get( property ), value );

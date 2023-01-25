@@ -40,7 +40,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import jakarta.persistence.GenerationType;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.Length;
@@ -147,7 +146,7 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.internal.TableUpsert;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -192,6 +191,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
@@ -4709,9 +4709,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public MutationOperation createUpsertOperation(
 			EntityMutationTarget mutationTarget,
-			TableUpsert tableUpsert,
+			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		return new OptionalTableUpdateOperation( mutationTarget, tableUpsert, factory );
+		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
 	/**

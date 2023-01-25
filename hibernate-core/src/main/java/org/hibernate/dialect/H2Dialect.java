@@ -62,7 +62,7 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.internal.TableUpsert;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -874,9 +874,9 @@ public class H2Dialect extends Dialect {
 	@Override
 	public MutationOperation createUpsertOperation(
 			EntityMutationTarget mutationTarget,
-			TableUpsert tableUpsert,
+			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, tableUpsert );
-		return translator.visitUpsert( tableUpsert );
+		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, optionalTableUpdate );
+		return translator.visitUpsert( optionalTableUpdate );
 	}
 }

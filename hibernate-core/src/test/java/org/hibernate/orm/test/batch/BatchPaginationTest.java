@@ -2,6 +2,7 @@ package org.hibernate.orm.test.batch;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.annotations.BatchSize;
 
@@ -18,7 +19,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -64,12 +65,12 @@ public class BatchPaginationTest {
 		scope.inTransaction(
 				entityManager -> {
 					statementInspector.clear();
-					Query query = entityManager.createQuery( "select a from Article a" );
+					TypedQuery<Article> query = entityManager.createQuery( "select a from Article a", Article.class );
 					List<Article> tech = query.setMaxResults( 20 ).getResultList();
 
 					tech.stream()
 							.map( ArticleResponseDto::new )
-							.toList();
+							.collect( Collectors.toList() );
 					assertThat( statementInspector.getSqlQueries().size() ).isEqualTo( 2 );
 				}
 		);
@@ -84,7 +85,7 @@ public class BatchPaginationTest {
 			this.id = article.getId();
 			this.tags = article.getTags().stream()
 					.map( TagDto::new )
-					.toList();
+					.collect( Collectors.toList());
 		}
 	}
 

@@ -23,7 +23,7 @@ import org.hibernate.Incubating;
  * On the other hand, when a logical name <em>is</em> explicitly specified, for example,
  * using {@link jakarta.persistence.Table#name() @Table} to specify the table name,
  * or {@link jakarta.persistence.Column#name() @Column} to specify a column name, the
- * {@code PhysicalNamingStrategy} is not called and has no opportunity to intervene in
+ * {@code ImplicitNamingStrategy} is not called and has no opportunity to intervene in
  * the determination of the logical name.
  * <p>
  * However, a further level of processing is applied to the resulting logical names by

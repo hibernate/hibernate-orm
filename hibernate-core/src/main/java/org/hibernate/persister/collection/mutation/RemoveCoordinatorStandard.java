@@ -100,13 +100,13 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 			final ForeignKeyDescriptor fkDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
 			fkDescriptor.getKeyPart().decompose(
 					key,
-					(jdbcValue, jdbcValueMapping) -> jdbcValueBindings.bindValue(
-							jdbcValue,
-							mutationTarget.getIdentifierTableMapping().getTableName(),
-							jdbcValueMapping.getSelectionExpression(),
-							ParameterUsage.RESTRICT,
-							session
-					),
+					(jdbcValue, jdbcValueMapping) -> {
+						jdbcValueBindings.bindValue(
+								jdbcValue,
+								jdbcValueMapping,
+								ParameterUsage.RESTRICT
+						);
+					},
 					session
 			);
 

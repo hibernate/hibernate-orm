@@ -25,7 +25,6 @@ import org.hibernate.engine.jdbc.mutation.spi.Binding;
 import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
-import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -164,7 +163,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			}
 		}
 		finally {
-			jdbcValueBindings.afterStatement( tableMapping, session );
+			jdbcValueBindings.afterStatement( tableMapping );
 		}
 
 	}
@@ -347,7 +346,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 			session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
 
-			jdbcValueBindings.beforeStatement( statementDetails, session );
+			jdbcValueBindings.beforeStatement( statementDetails );
 
 			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
 					.executeUpdate( updateStatement, statementDetails.getSqlString() );

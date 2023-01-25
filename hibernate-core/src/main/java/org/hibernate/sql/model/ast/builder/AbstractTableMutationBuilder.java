@@ -39,6 +39,7 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 	private final MutationTarget<?> mutationTarget;
 
 	private final MutatingTableReference mutatingTable;
+	private final ColumnValueParameterList parameters;
 
 	public AbstractTableMutationBuilder(
 			MutationType mutationType,
@@ -58,6 +59,7 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 		this.sessionFactory = sessionFactory;
 
 		this.mutatingTable = mutatingTable;
+		this.parameters = new ColumnValueParameterList( mutatingTable, null, 0 );
 	}
 
 	protected MutationTarget<?> getMutationTarget() {
@@ -67,6 +69,10 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 	@Override
 	public MutatingTableReference getMutatingTable() {
 		return mutatingTable;
+	}
+
+	protected ColumnValueParameterList getParameters() {
+		return parameters;
 	}
 
 	protected SessionFactoryImplementor getSessionFactory() {
@@ -122,9 +128,7 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 						aggregateMappingType.getJdbcTypeCount()
 				);
 				aggregateMappingType.forEachSelectable( parameters );
-				for ( int i = 0; i < parameters.size(); i++ ) {
-					handleParameterCreation( parameters.get( i ) );
-				}
+				this.parameters.addAll( parameters );
 
 				columnWriteFragment = new ColumnWriteFragment(
 						customWriteExpression,
@@ -134,7 +138,7 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 			}
 			else {
 				final ColumnValueParameter parameter = new ColumnValueParameter( columnReference, parameterUsage );
-				handleParameterCreation( parameter );
+				parameters.add( parameter );
 				columnWriteFragment = new ColumnWriteFragment( customWriteExpression, parameter, jdbcMapping );
 			}
 		}
@@ -143,8 +147,6 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 		}
 		return new ColumnValueBinding( columnReference, columnWriteFragment ) ;
 	}
-
-	protected abstract void handleParameterCreation(ColumnValueParameter parameter);
 
 	@SafeVarargs
 	protected final <T> List<T> combine(List<T> list1, List<T>... additionalLists) {

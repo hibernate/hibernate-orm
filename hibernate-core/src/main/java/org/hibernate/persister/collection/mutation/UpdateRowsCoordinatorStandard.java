@@ -129,8 +129,7 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 				(jdbcValue, jdbcValueMapping, usage) -> mutationExecutor.getJdbcValueBindings().bindValue(
 						jdbcValue,
 						jdbcValueMapping,
-						usage,
-						session
+						usage
 				)
 		);
 
@@ -143,8 +142,7 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 				(jdbcValue, jdbcValueMapping) -> mutationExecutor.getJdbcValueBindings().bindValue(
 						jdbcValue,
 						jdbcValueMapping,
-						ParameterUsage.RESTRICT,
-						session
+						ParameterUsage.RESTRICT
 				)
 		);
 

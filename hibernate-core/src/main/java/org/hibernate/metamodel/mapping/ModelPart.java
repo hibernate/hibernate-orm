@@ -91,6 +91,10 @@ public interface ModelPart extends MappingModelExpressible {
 		return false;
 	}
 
+	default boolean isEntityIdentifierMapping() {
+		return false;
+	}
+
 	boolean hasPartitionedSelectionMapping();
 
 	/**
@@ -134,6 +138,7 @@ public interface ModelPart extends MappingModelExpressible {
 	@FunctionalInterface
 	interface JdbcValueConsumer {
 		void consume(Object value, SelectableMapping jdbcValueMapping);
+
 	}
 
 	void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session);

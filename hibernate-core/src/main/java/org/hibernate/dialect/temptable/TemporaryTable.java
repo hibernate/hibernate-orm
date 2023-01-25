@@ -31,7 +31,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -216,7 +215,7 @@ public class TemporaryTable implements Exportable, Contributable {
 											throw new IllegalStateException( "Not yet ready: " + pluralAttribute );
 										}
 										final ModelPart fkTarget = keyDescriptor.getTargetPart();
-										if ( !( fkTarget instanceof EntityIdentifierMapping ) ) {
+										if ( !fkTarget.isEntityIdentifierMapping() ) {
 											final Value value = entityBinding.getSubclassProperty( pluralAttribute.getAttributeName() )
 													.getValue();
 											final Iterator<Selectable> columnIterator =

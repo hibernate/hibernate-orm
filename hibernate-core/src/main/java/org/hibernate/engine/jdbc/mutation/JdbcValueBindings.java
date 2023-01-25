@@ -9,7 +9,6 @@ package org.hibernate.engine.jdbc.mutation;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.TableMapping;
 
@@ -28,31 +27,22 @@ public interface JdbcValueBindings {
 	/**
 	 * Binds a value for a specific column+usage
 	 */
-	void bindValue(
-			Object value,
-			String tableName,
-			String columnName,
-			ParameterUsage usage,
-			SharedSessionContractImplementor session);
+	void bindValue(Object value, String tableName, String columnName, ParameterUsage usage);
 
 	/**
 	 * Binds a value for a specific column+usage
 	 */
-	default void bindValue(
-			Object value,
-			SelectableMapping selectableMapping,
-			ParameterUsage usage,
-			SharedSessionContractImplementor session) {
-		bindValue( value, selectableMapping.getContainingTableExpression(), selectableMapping.getSelectionExpression(), usage, session );
+	default void bindValue(Object value, SelectableMapping selectableMapping, ParameterUsage usage) {
+		bindValue( value, selectableMapping.getContainingTableExpression(), selectableMapping.getSelectionExpression(), usage );
 	}
 
 	/**
 	 * Called before the execution of the operation for the specified table
 	 */
-	void beforeStatement(PreparedStatementDetails statementDetails, SharedSessionContractImplementor session);
+	void beforeStatement(PreparedStatementDetails statementDetails);
 
 	/**
 	 * Called after the execution of the operation for the specified table
 	 */
-	void afterStatement(TableMapping mutatingTable, SharedSessionContractImplementor session);
+	void afterStatement(TableMapping mutatingTable);
 }

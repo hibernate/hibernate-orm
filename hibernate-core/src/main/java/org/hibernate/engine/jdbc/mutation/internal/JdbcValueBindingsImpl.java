@@ -29,16 +29,19 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 	private final MutationType mutationType;
 	private final MutationTarget<?> mutationTarget;
 	private final JdbcValueDescriptorAccess jdbcValueDescriptorAccess;
+	private final SharedSessionContractImplementor session;
 
 	private final Map<String, BindingGroup> bindingGroupMap = new HashMap<>();
 
 	public JdbcValueBindingsImpl(
 			MutationType mutationType,
 			MutationTarget<?> mutationTarget,
-			JdbcValueDescriptorAccess jdbcValueDescriptorAccess) {
+			JdbcValueDescriptorAccess jdbcValueDescriptorAccess,
+			SharedSessionContractImplementor session) {
 		this.mutationType = mutationType;
 		this.mutationTarget = mutationTarget;
 		this.jdbcValueDescriptorAccess = jdbcValueDescriptorAccess;
+		this.session = session;
 	}
 
 	@Override
@@ -51,8 +54,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 			Object value,
 			String tableName,
 			String columnName,
-			ParameterUsage usage,
-			SharedSessionContractImplementor session) {
+			ParameterUsage usage) {
 		final JdbcValueDescriptor jdbcValueDescriptor = jdbcValueDescriptorAccess.resolveValueDescriptor( tableName, columnName, usage );
 		if ( jdbcValueDescriptor == null ) {
 			throw new UnknownParameterException( mutationType, mutationTarget, tableName, columnName, usage );
@@ -74,9 +76,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 	}
 
 	@Override
-	public void beforeStatement(
-			PreparedStatementDetails statementDetails,
-			SharedSessionContractImplementor session) {
+	public void beforeStatement(PreparedStatementDetails statementDetails) {
 		final BindingGroup bindingGroup = bindingGroupMap.get( statementDetails.getMutatingTableDetails().getTableName() );
 		if ( bindingGroup == null ) {
 			statementDetails.resolveStatement();
@@ -107,9 +107,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 	}
 
 	@Override
-	public void afterStatement(
-			TableMapping mutatingTable,
-			SharedSessionContractImplementor session) {
+	public void afterStatement(TableMapping mutatingTable) {
 		final BindingGroup bindingGroup = bindingGroupMap.remove( mutatingTable.getTableName() );
 		if ( bindingGroup == null ) {
 			return;

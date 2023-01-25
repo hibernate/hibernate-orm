@@ -360,6 +360,7 @@ public class BasicAttributeMapping
 		// Lazy property. A valuesArrayPosition of -1 will lead to
 		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
+		boolean coerceResultType = false;
 		if ( fetchTiming == FetchTiming.DELAYED
 				&& !( fetchParent instanceof EmbeddableResultGraphNode )
 				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
@@ -375,6 +376,10 @@ public class BasicAttributeMapping
 
 			final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, true, fetchParent, creationState );
 			valuesArrayPosition = sqlSelection.getValuesArrayPosition();
+			if ( sqlSelection.getExpressionType() != null) {
+				// if the expression type is different that the expected type coerce the value
+				coerceResultType = sqlSelection.getExpressionType().getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType();
+			}
 		}
 
 		return new BasicFetch<>(
@@ -383,7 +388,8 @@ public class BasicAttributeMapping
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				coerceResultType
 		);
 	}
 

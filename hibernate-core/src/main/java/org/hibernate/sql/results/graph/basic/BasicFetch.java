@@ -60,6 +60,28 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			BasicValuedModelPart valuedMapping,
+			FetchTiming fetchTiming,
+			DomainResultCreationState creationState,
+			boolean coerceResultType) {
+		//noinspection unchecked
+		this(
+				valuesArrayPosition,
+				fetchParent,
+				fetchablePath,
+				valuedMapping,
+				(BasicValueConverter<T, ?>) valuedMapping.getJdbcMapping().getValueConverter(),
+				fetchTiming,
+				true,
+				creationState,
+				coerceResultType
+		);
+	}
+
+	public BasicFetch(
+			int valuesArrayPosition,
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			BasicValuedModelPart valuedMapping,
 			BasicValueConverter<T, ?> valueConverter,
 			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
@@ -84,6 +106,29 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			FetchTiming fetchTiming,
 			boolean canBasicPartFetchBeDelayed,
 			DomainResultCreationState creationState) {
+		this(
+				valuesArrayPosition,
+				fetchParent,
+				fetchablePath,
+				valuedMapping,
+				valueConverter,
+				fetchTiming,
+				canBasicPartFetchBeDelayed,
+				creationState,
+				false
+		);
+	}
+
+	public BasicFetch(
+			int valuesArrayPosition,
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			BasicValuedModelPart valuedMapping,
+			BasicValueConverter<T, ?> valueConverter,
+			FetchTiming fetchTiming,
+			boolean canBasicPartFetchBeDelayed,
+			DomainResultCreationState creationState,
+			boolean coerceResultType) {
 		this.navigablePath = fetchablePath;
 
 		this.fetchParent = fetchParent;
@@ -100,11 +145,12 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			}
 		}
 		else {
-			this.assembler = new BasicResultAssembler<>(
-					valuesArrayPosition,
-					javaType,
-					valueConverter
-			);
+			if (coerceResultType) {
+				this.assembler = new CoercingResultAssembler<>( valuesArrayPosition, javaType, valueConverter );
+			}
+			else {
+				this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter );
+			}
 		}
 	}
 

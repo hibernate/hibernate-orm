@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.mapping.joincolumn.embedded;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -25,6 +26,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -45,10 +47,10 @@ public class StringToCharArrayInEmbeddedJoinColumnTest {
 			vehicle.setId( 1L );
 			vehicle.setCharArrayProp( "2020".toCharArray() );
 			session.persist( vehicle );
-
 			VehicleInvoice invoice = new VehicleInvoice();
 			invoice.setId( new VehicleInvoiceId( "2020", 2020 ) );
 			invoice.setVehicle( vehicle );
+			vehicle.getInvoices().add( invoice );
 			session.persist( invoice );
 		} );
 	}
@@ -64,13 +66,24 @@ public class StringToCharArrayInEmbeddedJoinColumnTest {
 	@Test
 	public void testAssociation(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			List<VehicleInvoice> resultList = session.createQuery(
+			final VehicleInvoice vehicleInvoice = session.createQuery(
 					"from VehicleInvoice",
 					VehicleInvoice.class
-			).getResultList();
-			assertEquals( 1, resultList.size() );
-			assertEquals( 1L, resultList.get( 0 ).getVehicle().getId() );
-			assertEquals( "2020", new String( resultList.get( 0 ).getVehicle().getCharArrayProp() ) );
+			).getSingleResult();
+			assertEquals( 1L, vehicleInvoice.getVehicle().getId() );
+			assertEquals( "2020", new String( vehicleInvoice.getVehicle().getCharArrayProp() ) );
+		} );
+	}
+
+	@Test
+	public void testInverse(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Vehicle vehicle = session.createQuery(
+					"from Vehicle",
+					Vehicle.class
+			).getSingleResult();
+			assertEquals( 1, vehicle.getInvoices().size() );
+			assertEquals( "2020", vehicle.getInvoices().get( 0 ).getId().getStringProp() );
 		} );
 	}
 
@@ -141,6 +154,13 @@ public class StringToCharArrayInEmbeddedJoinColumnTest {
 		@Column(name = "char_array_col", nullable = false)
 		private char[] charArrayProp;
 
+		@OneToMany(mappedBy = "vehicle")
+		private List<VehicleInvoice> invoices;
+
+		public Vehicle() {
+			this.invoices = new ArrayList<>();
+		}
+
 		public Long getId() {
 			return id;
 		}
@@ -155,6 +175,14 @@ public class StringToCharArrayInEmbeddedJoinColumnTest {
 
 		public void setCharArrayProp(char[] charArrayProp) {
 			this.charArrayProp = charArrayProp;
+		}
+
+		public List<VehicleInvoice> getInvoices() {
+			return invoices;
+		}
+
+		public void setInvoices(List<VehicleInvoice> invoices) {
+			this.invoices = invoices;
 		}
 	}
 }

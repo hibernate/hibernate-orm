@@ -37,7 +37,7 @@ public interface AttributeAnalysis {
 	/**
 	 * Whether the attribute is considered dirty
 	 */
-	boolean isDirty();
+	DIRTYNESS_STATUS isDirty();
 
 	/**
 	 * Whether the attribute be skipped completely.
@@ -48,4 +48,23 @@ public interface AttributeAnalysis {
 	default boolean isSkipped() {
 		return !includeInSet() && !includeInLocking();
 	}
-}
+
+	enum DIRTYNESS_STATUS {
+		DIRTY,
+		NOT_DIRTY {
+			@Override
+			boolean treatAsDirty() {
+				return false;
+			}
+		},
+		LIKELY_DIRTY;
+
+		boolean treatAsDirty() {
+			return true;
+		}
+	};
+
+		static boolean treatAsDirty() {
+			return true;
+		}
+	}

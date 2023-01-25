@@ -596,10 +596,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			try {
 				if ( attributeMapping.getJdbcTypeCount() > 0
 						&& attributeMapping instanceof SingularAttributeMapping ) {
+					SingularAttributeMapping asSingularAttributeMapping = (SingularAttributeMapping) attributeMapping;
 					processAttribute(
 							analysis,
 							attributeIndex,
-							(SingularAttributeMapping) attributeMapping,
+							asSingularAttributeMapping,
 							oldVersion,
 							oldValues,
 							inclusionChecker,
@@ -607,9 +608,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 							session
 					);
 
-					if ( analysis.currentAttributeAnalysis.isDirty() ) {
-						if ( !propertyUpdateability[attributeIndex] ) {
-							LOG.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
+					if ( analysis.currentAttributeAnalysis.isDirty() == AttributeAnalysis.DIRTYNESS_STATUS.DIRTY ) {
+						if ( !propertyUpdateability[attributeIndex] && dirtinessChecker.include( attributeIndex, asSingularAttributeMapping ) ) {
+//							LOG.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
+							throw new AssertionFailure( "check!" );
 						}
 					}
 				}
@@ -702,7 +704,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				mutationExecutor,
 				staticUpdateGroup,
 //				(position, attribute) -> valuesAnalysis.getAttributeAnalyses().get( position ).isDirty(),
-				(position, attribute) -> true,
+				(position, attribute) -> AttributeAnalysis.DIRTYNESS_STATUS.LIKELY_DIRTY,
 				session
 		);
 		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
@@ -880,7 +882,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return true;
 		}
 		else if ( entityPersister().getEntityMetamodel().isDynamicUpdate() && dirtinessChecker != null ) {
-			return attributeAnalysis.includeInSet() && dirtinessChecker.isDirty( attributeIndex, attributeMapping );
+			return attributeAnalysis.includeInSet() && dirtinessChecker.isDirty( attributeIndex, attributeMapping ).treatAsDirty();
 		}
 		else {
 			return true;
@@ -916,7 +918,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				valuesAnalysis,
 				mutationExecutor,
 				dynamicUpdateGroup,
-				(attributeIndex, attribute) -> dirtinessChecker.include( attributeIndex, (SingularAttributeMapping) attribute ),
+				(attributeIndex, attribute) -> dirtinessChecker.include( attributeIndex, (SingularAttributeMapping) attribute ) ? AttributeAnalysis.DIRTYNESS_STATUS.LIKELY_DIRTY : AttributeAnalysis.DIRTYNESS_STATUS.NOT_DIRTY,
 				session
 		);
 		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
@@ -1134,7 +1136,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			else {
 				return versionability[attributeIndex]
 					&& attributeAnalysis.includeInLocking()
-					&& dirtinessChecker.isDirty(attributeIndex, attributeMapping);
+					&& dirtinessChecker.isDirty(attributeIndex, attributeMapping).treatAsDirty();
 			}
 		}
 		else {
@@ -1160,7 +1162,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		else {
 			final boolean includeInSet = !entityPersister().getEntityMetamodel().isDynamicUpdate()
 					|| dirtinessChecker == null
-					|| dirtinessChecker.isDirty( attributeIndex, attributeMapping );
+					|| dirtinessChecker.isDirty( attributeIndex, attributeMapping ).treatAsDirty();
 			if ( includeInSet ) {
 				attributeMapping.forEachUpdatable( tableUpdateBuilder );
 			}
@@ -1289,7 +1291,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				currentAttributeAnalysis = new IncludedAttributeAnalysis( (SingularAttributeMapping) attribute );
 				if ( dirtyAttributeIndexes == null
 						|| contains( dirtyAttributeIndexes, attribute.getStateArrayPosition() ) ) {
-					currentAttributeAnalysis.markDirty();
+					currentAttributeAnalysis.markDirty( dirtyAttributeIndexes != null );
 				}
 			}
 
@@ -1343,7 +1345,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	 * Local extension to AttributeAnalysis
 	 */
 	private interface AttributeAnalysisImplementor extends AttributeAnalysis {
-		void markDirty();
+		void markDirty(boolean asCertain);
 	}
 
 	/**
@@ -1376,12 +1378,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		@Override
-		public boolean isDirty() {
-			return false;
+		public DIRTYNESS_STATUS isDirty() {
+			return DIRTYNESS_STATUS.NOT_DIRTY;
 		}
 
 		@Override
-		public void markDirty() {
+		public void markDirty(boolean certainty) {
 		}
 
 		@Override
@@ -1403,7 +1405,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		private final List<ColumnSetAnalysis> columnValueAnalyses;
 		private final List<ColumnLockingAnalysis> columnLockingAnalyses;
 
-		private boolean dirty;
+		private DIRTYNESS_STATUS dirty = DIRTYNESS_STATUS.NOT_DIRTY;
 
 		public IncludedAttributeAnalysis(SingularAttributeMapping attribute) {
 			this.attribute = attribute;
@@ -1428,14 +1430,19 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		@Override
-		public boolean isDirty() {
+		public DIRTYNESS_STATUS isDirty() {
 			return dirty;
 		}
 
 		@Internal
 		@Override
-		public void markDirty() {
-			this.dirty = true;
+		public void markDirty(boolean certain) {
+			if ( certain ) {
+				this.dirty = DIRTYNESS_STATUS.DIRTY;
+			}
+			else if ( this.dirty == DIRTYNESS_STATUS.NOT_DIRTY ) {
+				this.dirty = DIRTYNESS_STATUS.LIKELY_DIRTY;
+			}
 		}
 
 		@Override
@@ -1591,7 +1598,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	@FunctionalInterface
 	protected interface DirtinessChecker {
-		boolean isDirty(int position, AttributeMapping attribute);
+		AttributeAnalysis.DIRTYNESS_STATUS isDirty(int position, AttributeMapping attribute);
 	}
 
 	@Override

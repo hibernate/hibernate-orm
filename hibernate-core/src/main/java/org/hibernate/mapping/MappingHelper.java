@@ -11,12 +11,17 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.hibernate.Internal;
+import org.hibernate.boot.BootLogging;
+import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
@@ -46,23 +51,55 @@ public final class MappingHelper {
 			String propertyRef,
 			MetadataImplementor metadata) {
 		final ClassLoaderService cls = metadata.getMetadataBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
-		final Class<? extends UserCollectionType> typeImpl = cls.classForName( typeName );
+		final Class<? extends UserCollectionType> userCollectionTypeClass = cls.classForName( typeName );
 
-		final ManagedBeanRegistry beanRegistry = metadata
-				.getMetadataBuildingOptions()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
+		final boolean hasParameters = CollectionHelper.isNotEmpty( typeParameters );
+		final ManagedBean<? extends UserCollectionType> userTypeBean;
 
-		final ManagedBean<? extends UserCollectionType> customTypeBean;
-		if ( typeParameters == null ) {
-			customTypeBean = beanRegistry.getBean( typeImpl );
+		if ( metadata.getMetadataBuildingOptions().disallowExtensionsInCdi() ) {
+			//noinspection unchecked,rawtypes
+			userTypeBean = createLocalUserCollectionTypeBean(
+					role,
+					userCollectionTypeClass,
+					hasParameters,
+					(Map) typeParameters
+			);
 		}
 		else {
-			customTypeBean = beanRegistry.getBean( role, typeImpl );
-			injectParameters( customTypeBean.getBeanInstance(), typeParameters );
+			final ManagedBeanRegistry beanRegistry = metadata
+					.getMetadataBuildingOptions()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class );
+			final ManagedBean<? extends UserCollectionType> userCollectionTypeBean = beanRegistry.getBean( userCollectionTypeClass );
+
+			if ( hasParameters ) {
+				if ( ParameterizedType.class.isAssignableFrom( userCollectionTypeBean.getBeanClass() ) ) {
+					// create a copy of the parameters and create a bean wrapper to delay injecting
+					// the parameters, thereby delaying the need to resolve the instance from the
+					// wrapped bean
+					final Properties copy = new Properties();
+					copy.putAll( typeParameters );
+					userTypeBean = new DelayedParameterizedTypeBean<>( userCollectionTypeBean, copy );
+				}
+				else {
+					// there were parameters, but the custom-type does not implement the interface
+					// used to inject them - log a "warning"
+					BootLogging.BOOT_LOGGER.debugf(
+							"`@CollectionType` (%s) specified parameters, but the" +
+									" implementation does not implement `%s` which is used to inject them - `%s`",
+							role,
+							ParameterizedType.class.getName(),
+							userCollectionTypeClass.getName()
+					);
+					userTypeBean = userCollectionTypeBean;
+				}
+			}
+			else {
+				userTypeBean = userCollectionTypeBean;
+			}
 		}
 
-		return new CustomCollectionType( customTypeBean, role, propertyRef );
+		return new CustomCollectionType( userTypeBean, role, propertyRef );
 	}
 
 	public static void injectParameters(Object type, Properties parameters) {
@@ -165,5 +202,37 @@ public final class MappingHelper {
 				owningEntityPropertyName,
 				constrained
 		);
+	}
+
+	public static ManagedBean<UserCollectionType> createLocalUserCollectionTypeBean(
+			String role,
+			Class<? extends UserCollectionType> implementation,
+			boolean hasParameters,
+			Map<String, String> parameters) {
+		final UserCollectionType userCollectionType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( implementation );
+
+		if ( hasParameters ) {
+			// `@CollectionType` declared parameters - inject them
+			if ( userCollectionType instanceof ParameterizedType ) {
+				final Properties properties = new Properties();
+				properties.putAll( parameters );
+				( (ParameterizedType) userCollectionType ).setParameterValues( properties );
+			}
+			else {
+				// there were parameters, but the custom-type does not implement the interface
+				// used to inject them - log a "warning"
+				BootLogging.BOOT_LOGGER.debugf(
+						"`@CollectionType` (%s) specified parameters, but the" +
+								" implementation does not implement `%s` which is used to inject them - `%s`",
+						role,
+						ParameterizedType.class.getName(),
+						implementation.getName()
+				);
+
+				// use the un-configured instance
+			}
+		}
+
+		return new ProvidedInstanceManagedBeanImpl<>( userCollectionType );
 	}
 }

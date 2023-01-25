@@ -36,6 +36,7 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
@@ -96,11 +97,17 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			final ManagedBeanRegistry beanRegistry = buildingContext.getBootstrapContext()
 					.getServiceRegistry()
 					.getService( ManagedBeanRegistry.class );
-			final Class<Object> customTypeClass = buildingContext.getBootstrapContext()
+			final Class<CompositeUserType<?>> customTypeClass = buildingContext.getBootstrapContext()
 					.getClassLoaderAccess()
 					.classForName( component.getTypeName() );
-			//noinspection unchecked
-			this.compositeUserType = (CompositeUserType<Object>) beanRegistry.getBean( customTypeClass ).getBeanInstance();
+			if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+				//noinspection unchecked,rawtypes
+				this.compositeUserType = (CompositeUserType) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customTypeClass );
+			}
+			else {
+				//noinspection unchecked,rawtypes
+				this.compositeUserType = (CompositeUserType) beanRegistry.getBean( customTypeClass ).getBeanInstance();
+			}
 		}
 		else {
 			this.compositeUserType = null;

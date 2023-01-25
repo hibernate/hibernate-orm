@@ -6,22 +6,8 @@
  */
 package org.hibernate.orm.test.idgen.userdefined;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
-
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.Metadata;
@@ -39,12 +25,25 @@ import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanContainer.LifecycleOptions;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
-
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.mockito.Mockito;
+
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 /**
  * @author Yanming Zhou
@@ -65,7 +64,8 @@ public class UserDefinedGeneratorsTests {
 		} );
 		
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
-		ssrb.applySetting( AvailableSettings.BEAN_CONTAINER, beanContainer );
+		ssrb.applySetting( AvailableSettings.BEAN_CONTAINER, beanContainer )
+				.applySetting( AvailableSettings.ALLOW_EXTENSIONS_IN_CDI, "true" );
 
 		try (final StandardServiceRegistry ssr = ssrb.build()) {
 			final Metadata metadata = new MetadataSources( ssr )

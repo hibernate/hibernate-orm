@@ -6,17 +6,14 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
@@ -36,28 +33,33 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 
-import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
-import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotations;
-import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
-import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
-import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
-import static org.hibernate.boot.model.internal.GeneratorBinder.generatorType;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
+import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
+import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
+import static org.hibernate.boot.model.internal.GeneratorBinder.generatorType;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
+import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotations;
+import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
+import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
@@ -400,7 +402,12 @@ public class EmbeddableBinder {
 	private static CompositeUserType<?> compositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			MetadataBuildingContext context) {
-		return context.getBootstrapContext().getServiceRegistry()
+		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+			FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
+		}
+
+		return context.getBootstrapContext()
+				.getServiceRegistry()
 				.getService( ManagedBeanRegistry.class )
 				.getBean( compositeUserTypeClass )
 				.getBeanInstance();

@@ -15,8 +15,11 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -107,6 +110,11 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 			Class<? extends RevisionListener> listenerClass,
 			ServiceRegistry serviceRegistry) {
 		if ( !listenerClass.equals( RevisionListener.class ) ) {
+			if ( Helper.allowExtensionsInCdi( serviceRegistry ) ) {
+				return new ProvidedInstanceManagedBeanImpl<>(
+						FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( listenerClass )
+				);
+			}
 			return serviceRegistry.getService( ManagedBeanRegistry.class ).getBean( listenerClass );
 		}
 		return null;

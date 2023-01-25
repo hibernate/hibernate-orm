@@ -16,7 +16,8 @@ package org.hibernate;
  *     {@link Session}.
  * <li>The <em>second-level cache</em> is shared between all sessions belonging to
  *     a given {@link SessionFactory}. It stores the state of an entity instance
- *     in a destructured format, as a tuple of persistent attribute values.
+ *     in a destructured format, as a tuple of persistent attribute values. The
+ *     second-level cache is also used to store cached query result sets.
  * </ul>
  * <p>
  * By nature, a second-level cache tends to undermine the ACID properties of
@@ -81,6 +82,19 @@ package org.hibernate;
  * It's important to always explicitly specify an appropriate policy, taking into
  * account the expected patterns of data access, most importantly, the frequency
  * of updates.
+ * <p>
+ * Query result sets may also be stored in the second-level cache. A query is made
+ * eligible for caching by calling
+ * {@link org.hibernate.query.SelectionQuery#setCacheable(boolean)}, and may be
+ * assigned to a region of the second-level cache by calling
+ * {@link org.hibernate.query.SelectionQuery#setCacheRegion(String)}. It's very
+ * important to understand that any entity instance in a query result set is cached
+ * by its id. If the entity itself is not {@linkplain org.hibernate.annotations.Cache
+ * cacheable}, or if the instance is not available in the second-level cache at the
+ * time a result set is retrieved from the cache, then the state of the entity must
+ * be read from the database. <em>This negates the benefits of caching the result
+ * set.</em> It's therefore very important to carefully "match" the caching policies
+ * of a query and the entities it returns.
  * <p>
  * Hibernate does not itself contain a high-quality implementation of a second-level
  * cache backend with expiry, persistence, and replication, and depends on a plug-in

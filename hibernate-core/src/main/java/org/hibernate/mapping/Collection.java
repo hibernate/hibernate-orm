@@ -727,6 +727,10 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return synchronizedTables;
 	}
 
+	public void addSynchronizedTable(String table) {
+		synchronizedTables.add( table );
+	}
+
 	public String getLoaderName() {
 		return loaderName;
 	}

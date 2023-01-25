@@ -655,7 +655,7 @@ sinks:
     redact: false
     exit-on-error: true
 "
-  $CONTAINER_CLI run -d --name=cockroach -m 3g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v22.2.2 start-single-node \
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v22.2.2 start-single-node \
     --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
@@ -695,7 +695,7 @@ sinks:
     redact: false
     exit-on-error: true
 "
-  $CONTAINER_CLI run -d --name=cockroach -m 3g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v22.1.13 start-single-node \
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v22.1.13 start-single-node \
     --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
@@ -735,7 +735,7 @@ sinks:
     redact: false
     exit-on-error: true
 "
-  $CONTAINER_CLI run -d --name=cockroach -m 3g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v21.2.16 start-single-node \
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 docker.io/cockroachdb/cockroach:v21.2.16 start-single-node \
     --insecure --store=type=mem,size=640MiB --advertise-addr=localhost --log="$LOG_CONFIG"
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do

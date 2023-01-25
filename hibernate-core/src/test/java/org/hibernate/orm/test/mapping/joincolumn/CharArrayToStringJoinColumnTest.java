@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.mapping.joincolumn;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -23,6 +24,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -43,10 +45,10 @@ public class CharArrayToStringJoinColumnTest {
 			vehicle.setId( 1L );
 			vehicle.setStringProp( "2020" );
 			session.persist( vehicle );
-
 			VehicleInvoice invoice = new VehicleInvoice();
 			invoice.setId( "2020".toCharArray() );
 			invoice.setVehicle( vehicle );
+			vehicle.getInvoices().add( invoice );
 			session.persist( invoice );
 		} );
 	}
@@ -62,13 +64,24 @@ public class CharArrayToStringJoinColumnTest {
 	@Test
 	public void testAssociation(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			List<VehicleInvoice> resultList = session.createQuery(
+			final VehicleInvoice vehicleInvoice = session.createQuery(
 					"from VehicleInvoice",
 					VehicleInvoice.class
-			).getResultList();
-			assertEquals( 1, resultList.size() );
-			assertEquals( 1L, resultList.get( 0 ).getVehicle().getId() );
-			assertEquals( "2020", resultList.get( 0 ).getVehicle().getStringProp() );
+			).getSingleResult();
+			assertEquals( 1L, vehicleInvoice.getVehicle().getId() );
+			assertEquals( "2020", vehicleInvoice.getVehicle().getStringProp() );
+		} );
+	}
+
+	@Test
+	public void testInverse(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Vehicle vehicle = session.createQuery(
+					"from Vehicle",
+					Vehicle.class
+			).getSingleResult();
+			assertEquals( 1, vehicle.getInvoices().size() );
+			assertEquals( "2020", new String( vehicle.getInvoices().get( 0 ).getId() ) );
 		} );
 	}
 
@@ -107,6 +120,13 @@ public class CharArrayToStringJoinColumnTest {
 		@Column(name = "string_col", nullable = false)
 		private String stringProp;
 
+		@OneToMany(mappedBy = "vehicle")
+		private List<VehicleInvoice> invoices;
+
+		public Vehicle() {
+			this.invoices = new ArrayList<>();
+		}
+
 		public Long getId() {
 			return id;
 		}
@@ -121,6 +141,14 @@ public class CharArrayToStringJoinColumnTest {
 
 		public void setStringProp(String stringProp) {
 			this.stringProp = stringProp;
+		}
+
+		public List<VehicleInvoice> getInvoices() {
+			return invoices;
+		}
+
+		public void setInvoices(List<VehicleInvoice> invoices) {
+			this.invoices = invoices;
 		}
 	}
 }

@@ -988,7 +988,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@Override
 	public EntityPersister getConcreteDescriptor() {
-		return concreteDescriptor;
+		return concreteDescriptor == null ? entityDescriptor : concreteDescriptor;
 	}
 
 	@Override

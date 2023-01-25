@@ -714,7 +714,7 @@ but now this will return a list of `Organization` with an initialized `employmen
 
 The following features have been removed
 
-== hbm.xml multiple <column/> now disallowed
+=== hbm.xml multiple <column/> now disallowed
 
 In 6.0 the support for basic property mappings with multiple columns was removed. The only use case for that was when a
 `CompositeUserType` was in use, which was reworked to now work on top of components.

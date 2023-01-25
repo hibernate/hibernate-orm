@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -261,6 +262,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			);
 		}
 
+		final JavaType<?> javaType = selectableMapping.getJdbcMapping().getJdbcJavaType();
 		final String identificationVariable = tableReference.getIdentificationVariable();
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
@@ -281,10 +283,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 
+		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				selectableMapping.getJdbcMapping()
+				selectableMapping.getJdbcMapping(),
+				// if the expression type is different that the expected type coerce the value
+				selectionType != null && selectionType.getJdbcMappings().get( 0 ).getJdbcJavaType() != javaType
 		);
 	}
 

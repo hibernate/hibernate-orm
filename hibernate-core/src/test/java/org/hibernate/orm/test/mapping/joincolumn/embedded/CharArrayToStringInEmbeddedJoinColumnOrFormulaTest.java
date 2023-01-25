@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.mapping.joincolumn;
+package org.hibernate.orm.test.mapping.joincolumn.embedded;
 
 import java.io.Serializable;
 
@@ -101,7 +101,7 @@ public class CharArrayToStringInEmbeddedJoinColumnOrFormulaTest {
 
 		@ManyToOne(fetch = FetchType.EAGER)
 		@JoinColumnsOrFormulas({
-				@JoinColumnOrFormula(formula = @JoinFormula(value = "trim(char_array_col_1)", referencedColumnName = "string_col_1")),
+				@JoinColumnOrFormula(formula = @JoinFormula(value = "char_array_col_1", referencedColumnName = "string_col_1")),
 				@JoinColumnOrFormula(column = @JoinColumn(name = "char_array_col_2", referencedColumnName = "string_col_2", insertable = false, updatable = false))
 		})
 		private Vehicle vehicle;

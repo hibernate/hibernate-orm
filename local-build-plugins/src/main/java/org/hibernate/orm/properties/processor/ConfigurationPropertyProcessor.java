@@ -7,8 +7,6 @@
 package org.hibernate.orm.properties.processor;
 
 
-import static org.hibernate.orm.properties.processor.AnnotationUtils.isIgnored;
-
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
@@ -83,19 +81,6 @@ public class ConfigurationPropertyProcessor extends AbstractProcessor {
 			}
 		}
 
-		// means we might have some inner classes that we also wanted to consider for config property processing
-		// so let's see if we need to process any:
-		for ( TypeElement annotation : annotations ) {
-			if ( annotation.getQualifiedName().contentEquals( HibernateOrmConfiguration.class.getName() ) ) {
-				Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith( annotation );
-				for ( Element element : elements ) {
-					if ( isTypeElement( element ) ) {
-						process( propertyCollector, element );
-					}
-				}
-			}
-		}
-
 		if ( roundEnv.processingOver() ) {
 			beforeExit();
 		}
@@ -108,8 +93,7 @@ public class ConfigurationPropertyProcessor extends AbstractProcessor {
 	}
 
 	private void process(ConfigurationPropertyCollector propertyCollector, Element element) {
-		if ( !isIgnored( element ) && !ignore.map( p -> p.matcher( element.toString() ).matches() ).orElse(
-				Boolean.FALSE ) ) {
+		if ( !ignore.map( p -> p.matcher( element.toString() ).matches() ).orElse( Boolean.FALSE ) ) {
 			propertyCollector.visitType( (TypeElement) element );
 		}
 	}
@@ -118,9 +102,4 @@ public class ConfigurationPropertyProcessor extends AbstractProcessor {
 		return ( element.getKind().equals( ElementKind.CLASS ) || element.getKind().equals( ElementKind.INTERFACE ) ) &&
 				element.getSimpleName().toString().endsWith( "Settings" );
 	}
-
-	private boolean isTypeElement(Element element) {
-		return element instanceof TypeElement;
-	}
-
 }

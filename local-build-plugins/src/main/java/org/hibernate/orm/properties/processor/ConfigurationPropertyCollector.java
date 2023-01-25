@@ -6,16 +6,11 @@
  */
 package org.hibernate.orm.properties.processor;
 
-import static org.hibernate.orm.properties.processor.AnnotationUtils.findAnnotation;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.processing.Messager;
@@ -63,38 +58,16 @@ public class ConfigurationPropertyCollector {
 		if ( !processedTypes.contains( qualifiedName ) ) {
 			processedTypes.add( qualifiedName );
 
-			Optional<AnnotationUtils.AnnotationAttributeHolder> annotation = findAnnotation(
-					element, HibernateOrmConfiguration.class );
-			Optional<List<String>> classPrefix = annotation
-					.flatMap( a -> a.multiAttribute( "prefix", String.class ) );
-			Optional<String> title = annotation.flatMap( a -> a.attribute( "title", String.class ) );
-			Optional<String> anchorPrefix = annotation.flatMap( a -> a.attribute( "anchorPrefix", String.class ) );
-
 			for ( Element inner : elementUtils.getAllMembers( element ) ) {
 				if ( inner.getKind().equals( ElementKind.FIELD ) && inner instanceof VariableElement ) {
-					processConstant( ( (VariableElement) inner ), classPrefix, title, anchorPrefix );
+					processConstant( ( (VariableElement) inner ) );
 				}
 			}
 		}
 	}
 
-	private void processConstant(VariableElement constant, Optional<List<String>> classPrefix,
-			Optional<String> classTitle,
-			Optional<String> classAnchorPrefix) {
-		Optional<AnnotationUtils.AnnotationAttributeHolder> annotation = findAnnotation(
-				constant, HibernateOrmConfiguration.class );
-		if ( annotation.flatMap( a -> a.attribute( "ignore", Boolean.class ) ).orElse( false ) ) {
-			return;
-		}
-
-		Optional<String> title = annotation.flatMap( a -> a.attribute( "title", String.class ) );
-		Optional<String> anchorPrefix = annotation.flatMap( a -> a.attribute( "anchorPrefix", String.class ) );
-
-		ConfigurationProperty.Key key = extractKey(
-				constant,
-				classPrefix,
-				annotation.flatMap( a -> a.multiAttribute( "prefix", String.class ) )
-		);
+	private void processConstant(VariableElement constant) {
+		ConfigurationProperty.Key key = extractKey( constant );
 		if ( !key.matches( ignoreKeys ) ) {
 			properties.put(
 					constant.getEnclosingElement().toString() + "#" + constant.getSimpleName().toString(),
@@ -102,28 +75,15 @@ public class ConfigurationPropertyCollector {
 							.javadoc( extractJavadoc( constant ) )
 							.key( key )
 							.sourceClass( constant.getEnclosingElement().toString() )
-							.withModuleName( title.orElse( classTitle.orElse( this.title ) ) )
-							.withAnchorPrefix( anchorPrefix.orElse( classAnchorPrefix.orElse( this.anchor ) ) )
+							.withModuleName( this.title )
+							.withAnchorPrefix( this.anchor )
 			);
 		}
 	}
 
 
-	private ConfigurationProperty.Key extractKey(VariableElement constant, Optional<List<String>> classPrefix,
-			Optional<List<String>> constantPrefix) {
-		List<String> prefix;
-		if ( constantPrefix.isPresent() ) {
-			prefix = constantPrefix.get();
-		}
-		else if ( classPrefix.isPresent() ) {
-			prefix = classPrefix.get();
-		}
-		else {
-			prefix = Collections.emptyList();
-		}
-
+	private ConfigurationProperty.Key extractKey(VariableElement constant) {
 		return new ConfigurationProperty.Key(
-				prefix,
 				Objects.toString( constant.getConstantValue(), "NOT_FOUND#" + constant.getSimpleName() )
 		);
 	}
@@ -135,11 +95,13 @@ public class ConfigurationPropertyCollector {
 					enclosingClass.toString().replace( ".", File.separator ) + ".html"
 			);
 
-			String packagePath = packageElement( enclosingClass ).getQualifiedName().toString().replace( ".", File.separator );
+			String packagePath = packageElement( enclosingClass ).getQualifiedName().toString().replace(
+					".", File.separator );
 
 			Document javadoc = Jsoup.parse( docs.toFile() );
 
-			org.jsoup.nodes.Element block = javadoc.selectFirst( "#" + constant.getSimpleName() + " + ul li.blockList");
+			org.jsoup.nodes.Element block = javadoc.selectFirst(
+					"#" + constant.getSimpleName() + " + ul li.blockList" );
 			if ( block != null ) {
 				for ( org.jsoup.nodes.Element link : block.getElementsByTag( "a" ) ) {
 					String href = link.attr( "href" );
@@ -173,7 +135,10 @@ public class ConfigurationPropertyCollector {
 			}
 		}
 		catch (IOException e) {
-			messager.printMessage( Diagnostic.Kind.NOTE, "Wasn't able to find rendered javadocs for " + constant + ". Trying to read plain javadoc comment." );
+			messager.printMessage(
+					Diagnostic.Kind.NOTE,
+					"Wasn't able to find rendered javadocs for " + constant + ". Trying to read plain javadoc comment."
+			);
 			return elementUtils.getDocComment( constant );
 		}
 	}

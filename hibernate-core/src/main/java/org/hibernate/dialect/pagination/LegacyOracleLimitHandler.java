@@ -62,6 +62,16 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
+	public boolean supportsOffset() {
+		return true;
+	}
+
+	@Override
+	public boolean forceLimitUsage() {
+		return true;
+	}
+
+	@Override
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
 	}

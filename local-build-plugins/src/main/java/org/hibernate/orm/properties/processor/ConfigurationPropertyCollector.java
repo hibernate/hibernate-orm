@@ -34,10 +34,6 @@ import org.jsoup.nodes.Document;
 
 public class ConfigurationPropertyCollector {
 
-	// assume that spi/impl/internal packages are not for public use and consider all of them as SPI:
-	private static final Pattern SPI_PATTERN = Pattern.compile(
-			"(.*\\.spi$)|(.*\\.spi\\..*)|(.*\\.impl$)|(.*\\.impl\\..*)|(.*\\.internal$)|(.*\\.internal\\..*)" );
-
 	private final Set<Name> processedTypes = new HashSet<>();
 	private final ConfigPropertyHolder properties;
 	private final Elements elementUtils;
@@ -106,7 +102,6 @@ public class ConfigurationPropertyCollector {
 							.javadoc( extractJavadoc( constant ) )
 							.key( key )
 							.sourceClass( constant.getEnclosingElement().toString() )
-							.type( extractType( constant ) )
 							.withModuleName( title.orElse( classTitle.orElse( this.title ) ) )
 							.withAnchorPrefix( anchorPrefix.orElse( classAnchorPrefix.orElse( this.anchor ) ) )
 			);
@@ -131,13 +126,6 @@ public class ConfigurationPropertyCollector {
 				prefix,
 				Objects.toString( constant.getConstantValue(), "NOT_FOUND#" + constant.getSimpleName() )
 		);
-	}
-
-	private HibernateOrmConfiguration.Type extractType(VariableElement constant) {
-		String packageName = packageElement( constant ).getQualifiedName().toString();
-		return SPI_PATTERN.matcher( packageName ).matches() ?
-				HibernateOrmConfiguration.Type.SPI :
-				HibernateOrmConfiguration.Type.API;
 	}
 
 	private String extractJavadoc(VariableElement constant) {

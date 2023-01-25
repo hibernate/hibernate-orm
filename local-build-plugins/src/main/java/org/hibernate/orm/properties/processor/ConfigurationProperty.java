@@ -21,9 +21,6 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 	private Key key;
 	private String javadoc;
 	private String sourceClass;
-
-	private HibernateOrmConfiguration.Type type;
-
 	private String anchorPrefix;
 	private String moduleName;
 
@@ -54,15 +51,6 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 		return this;
 	}
 
-	public HibernateOrmConfiguration.Type type() {
-		return type;
-	}
-
-	public ConfigurationProperty type(HibernateOrmConfiguration.Type type) {
-		this.type = type;
-		return this;
-	}
-
 	public String anchorPrefix() {
 		return anchorPrefix;
 	}
@@ -87,7 +75,6 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 				"key='" + key + '\'' +
 				", javadoc='" + javadoc + '\'' +
 				", sourceClass='" + sourceClass + '\'' +
-				", type='" + type + '\'' +
 				", anchorPrefix='" + anchorPrefix + '\'' +
 				", moduleName='" + moduleName + '\'' +
 				'}';
@@ -110,14 +97,13 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 		return Objects.equals( key, that.key ) &&
 				Objects.equals( javadoc, that.javadoc ) &&
 				Objects.equals( sourceClass, that.sourceClass ) &&
-				type == that.type &&
 				Objects.equals( anchorPrefix, that.anchorPrefix ) &&
 				Objects.equals( moduleName, that.moduleName );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( key, javadoc, sourceClass, type, anchorPrefix, moduleName );
+		return Objects.hash( key, javadoc, sourceClass, anchorPrefix, moduleName );
 	}
 
 	public static class Key {

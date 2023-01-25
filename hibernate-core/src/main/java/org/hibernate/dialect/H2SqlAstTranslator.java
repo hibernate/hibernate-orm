@@ -37,8 +37,8 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableInsertStandard;
-import org.hibernate.sql.model.internal.TableUpsert;
 import org.hibernate.sql.model.jdbc.UpsertOperation;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
@@ -312,7 +312,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 198 );
 	}
 
-	public MutationOperation visitUpsert(TableUpsert tableUpsert) {
+	public MutationOperation visitUpsert(OptionalTableUpdate optionalTableUpdate) {
 		// template:
 		//
 		// merge into [table] as t
@@ -326,35 +326,35 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		// when matched
 		//		then update set ...
 
-		renderMergeInto( tableUpsert );
+		renderMergeInto( optionalTableUpdate );
 		appendSql( " " );
-		renderMergeUsing( tableUpsert );
+		renderMergeUsing( optionalTableUpdate );
 		appendSql( " " );
-		renderMergeOn( tableUpsert );
+		renderMergeOn( optionalTableUpdate );
 		appendSql( " " );
-		renderMergeInsert( tableUpsert );
+		renderMergeInsert( optionalTableUpdate );
 		appendSql( " " );
-		renderMergeDelete( tableUpsert );
+		renderMergeDelete( optionalTableUpdate );
 		appendSql( " " );
-		renderMergeUpdate( tableUpsert );
+		renderMergeUpdate( optionalTableUpdate );
 
 		return new UpsertOperation(
-				tableUpsert.getMutatingTable().getTableMapping(),
-				tableUpsert.getMutationTarget(),
+				optionalTableUpdate.getMutatingTable().getTableMapping(),
+				optionalTableUpdate.getMutationTarget(),
 				getSql(),
 				getParameterBinders()
 		);
 	}
 
-	private void renderMergeInto(TableUpsert tableUpsert) {
+	private void renderMergeInto(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( "merge into " );
-		appendSql( tableUpsert.getMutatingTable().getTableName() );
+		appendSql( optionalTableUpdate.getMutatingTable().getTableName() );
 		appendSql( " as t" );
 	}
 
-	private void renderMergeUsing(TableUpsert tableUpsert) {
-		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
-		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
+	private void renderMergeUsing(OptionalTableUpdate optionalTableUpdate) {
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
 
 		final StringBuilder columnList = new StringBuilder();
 
@@ -382,12 +382,12 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		appendSql( ")" );
 	}
 
-	private void renderMergeOn(TableUpsert tableUpsert) {
+	private void renderMergeOn(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( "on " );
 
 		// todo : optimistic locks?
 
-		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
+		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
 		for ( int i = 0; i < keyBindings.size(); i++ ) {
 			final ColumnValueBinding keyBinding = keyBindings.get( i );
 			if ( i > 0 ) {
@@ -399,9 +399,9 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		}
 	}
 
-	private void renderMergeInsert(TableUpsert tableUpsert) {
-		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
-		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
+	private void renderMergeInsert(OptionalTableUpdate optionalTableUpdate) {
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
 
 		final StringBuilder valuesList = new StringBuilder();
 
@@ -428,8 +428,8 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		appendSql( ")" );
 	}
 
-	private void renderMergeDelete(TableUpsert tableUpsert) {
-		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
+	private void renderMergeDelete(OptionalTableUpdate optionalTableUpdate) {
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 
 		appendSql( " when matched " );
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
@@ -441,8 +441,8 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		appendSql( " then delete" );
 	}
 
-	private void renderMergeUpdate(TableUpsert tableUpsert) {
-		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
+	private void renderMergeUpdate(OptionalTableUpdate optionalTableUpdate) {
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 
 		appendSql( " when matched then update set " );
 		for ( int i = 0; i < valueBindings.size(); i++ ) {

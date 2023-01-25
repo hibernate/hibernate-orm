@@ -21,6 +21,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.internal.EmbeddableCompositeUserTypeInstantiator;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoIndirecting;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -52,23 +53,33 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 		final Component propComponent = (Component) value;
 		final EmbeddableInstantiator instantiator;
 		if ( propComponent.getCustomInstantiator() != null ) {
-			instantiator = getMetadataBuildingContext().getBootstrapContext()
+			if ( getMetadataBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
+				instantiator = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( propComponent.getCustomInstantiator() );
+			}
+			else
+				instantiator = getMetadataBuildingContext().getBootstrapContext()
 					.getServiceRegistry()
 					.getService( ManagedBeanRegistry.class )
 					.getBean( propComponent.getCustomInstantiator() )
 					.getBeanInstance();
 		}
 		else if ( propComponent.getTypeName() != null ) {
-			final CompositeUserType<Object> compositeUserType = (CompositeUserType<Object>) getMetadataBuildingContext().getBootstrapContext()
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class )
-					.getBean(
-							getMetadataBuildingContext().getBootstrapContext()
-									.getClassLoaderAccess()
-									.classForName( propComponent.getTypeName() )
-					)
-					.getBeanInstance();
-			instantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
+			final Class<CompositeUserType<?>> userTypeClass = getMetadataBuildingContext().getBootstrapContext()
+					.getClassLoaderAccess()
+					.classForName( propComponent.getTypeName() );
+			if ( getMetadataBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
+				final CompositeUserType<?> compositeUserType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
+				//noinspection rawtypes
+				instantiator = new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
+			}
+			else {
+				final CompositeUserType<Object> compositeUserType = (CompositeUserType<Object>) getMetadataBuildingContext().getBootstrapContext()
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( userTypeClass )
+						.getBeanInstance();
+				instantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
+			}
 		}
 		else if ( propComponent.getInstantiator() != null ) {
 			instantiator = EmbeddableInstantiatorPojoIndirecting.of(

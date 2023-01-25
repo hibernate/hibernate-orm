@@ -23,7 +23,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -32,6 +31,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -137,6 +137,9 @@ public class TypeDefinition implements Serializable {
 			Map<?,?> usageSiteProperties,
 			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
+		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+
+		}
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final BeanInstanceProducer instanceProducer = bootstrapContext.getCustomTypeProducer();
@@ -282,13 +285,13 @@ public class TypeDefinition implements Serializable {
 	private static Object instantiateType(StandardServiceRegistry serviceRegistry,
 			String name, Class<?> typeImplementorClass,
 			BeanInstanceProducer instanceProducer) {
-		if ( Helper.shouldIgnoreBeanContainer( serviceRegistry ) ) {
+		if ( !Helper.allowExtensionsInCdi( serviceRegistry ) ) {
 			return name != null
 					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
 					: instanceProducer.produceBeanInstance( typeImplementorClass );
 		}
 		else {
-			ManagedBeanRegistry beanRegistry = serviceRegistry.getService(ManagedBeanRegistry.class);
+			final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
 			final ManagedBean<?> typeBean = name != null
 					? beanRegistry.getBean( name, typeImplementorClass, instanceProducer )
 					: beanRegistry.getBean( typeImplementorClass, instanceProducer );

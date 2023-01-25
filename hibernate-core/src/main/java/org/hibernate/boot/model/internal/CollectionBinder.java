@@ -98,6 +98,7 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -152,7 +153,6 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFrom
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
-import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
@@ -163,6 +163,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
+import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.cfg.AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
@@ -845,37 +846,41 @@ public abstract class CollectionBinder {
 			Class<? extends UserCollectionType> implementation,
 			Map<String,String> parameters,
 			MetadataBuildingContext buildingContext) {
+		final boolean hasParameters = CollectionHelper.isNotEmpty( parameters );
+		if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+			// if deferred container access is enabled, we locally create the user-type
+			return MappingHelper.createLocalUserCollectionTypeBean( role, implementation, hasParameters, parameters );
+		}
+
 		final ManagedBeanRegistry beanRegistry = buildingContext.getBuildingOptions()
 				.getServiceRegistry()
 				.getService( ManagedBeanRegistry.class );
-		if ( CollectionHelper.isNotEmpty( parameters ) ) {
-			return beanRegistry.getBean( implementation );
-		}
-		else {
-			// defined parameters...
-			if ( ParameterizedType.class.isAssignableFrom( implementation ) ) {
-				// because there are config parameters and the type is configurable,
-				// we need a separate bean instance which means uniquely naming it
-				final ManagedBean<? extends UserCollectionType> typeBean = beanRegistry.getBean( role, implementation );
-				final UserCollectionType type = typeBean.getBeanInstance();
-				final Properties properties = new Properties();
-				properties.putAll( parameters );
-				( (ParameterizedType) type ).setParameterValues( properties );
-				return typeBean;
-			}
-			else {
-				// log a "warning"
-				BootLogging.BOOT_LOGGER.debugf(
-						"Custom collection-type (`%s`) assigned to attribute (`%s`) does not implement `%s`, but its `@CollectionType` defined parameters",
-						implementation.getName(),
-						role,
-						ParameterizedType.class.getName()
-				);
+		final ManagedBean<? extends UserCollectionType> managedBean = beanRegistry.getBean( implementation );
 
-				// but still return the bean - we can again use the no-config bean instance
-				return beanRegistry.getBean( implementation );
+		if ( hasParameters ) {
+			if ( ParameterizedType.class.isAssignableFrom( managedBean.getBeanClass() ) ) {
+				// create a copy of the parameters and create a bean wrapper to delay injecting
+				// the parameters, thereby delaying the need to resolve the instance from the
+				// wrapped bean
+				final Properties copy = new Properties();
+				copy.putAll( parameters );
+				return new DelayedParameterizedTypeBean<>( managedBean, copy );
 			}
+
+			// there were parameters, but the custom-type does not implement the interface
+			// used to inject them - log a "warning"
+			BootLogging.BOOT_LOGGER.debugf(
+					"`@CollectionType` (%s) specified parameters, but the" +
+							" implementation does not implement `%s` which is used to inject them - `%s`",
+					role,
+					ParameterizedType.class.getName(),
+					implementation.getName()
+			);
+
+			// fall through to returning `managedBean`
 		}
+
+		return managedBean;
 	}
 
 	private static CollectionBinder createBinderFromProperty(XProperty property, MetadataBuildingContext context) {
@@ -902,37 +907,15 @@ public abstract class CollectionBinder {
 			XProperty property,
 			CollectionType typeAnnotation,
 			MetadataBuildingContext context) {
-		final ManagedBeanRegistry beanRegistry = context.getBootstrapContext()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
-		final Class<? extends UserCollectionType> typeImpl = typeAnnotation.type();
-		if ( typeAnnotation.parameters().length == 0 ) {
-			// no parameters - we can reuse a no-config bean instance
-			return beanRegistry.getBean( typeImpl );
-		}
-		else {
-			// defined parameters...
-			final String attributeKey = property.getDeclaringClass().getName() + "#" + property.getName();
-			if ( ParameterizedType.class.isAssignableFrom( typeImpl ) ) {
-				// because there are config parameters and the type is configurable, we need
-				// a separate bean instance which means uniquely naming it
-				final ManagedBean<? extends UserCollectionType> typeBean = beanRegistry.getBean( attributeKey, typeImpl );
-				final UserCollectionType type = typeBean.getBeanInstance();
-				( (ParameterizedType) type ).setParameterValues( extractParameters( typeAnnotation ) );
-				return typeBean;
-			}
-			else {
-				// log a "warning"
-				BootLogging.BOOT_LOGGER.debugf(
-						"Custom collection-type (`%s`) assigned to attribute (`%s`) does not implement `%s`, but its `@CollectionType` defined parameters",
-						typeImpl.getName(),
-						attributeKey,
-						ParameterizedType.class.getName()
-				);
-				// but still return the bean - we can again use the no-config bean instance
-				return beanRegistry.getBean( typeImpl );
-			}
-		}
+		final Properties parameters = extractParameters( typeAnnotation );
+
+		//noinspection unchecked,rawtypes
+		return createCustomType(
+				property.getDeclaringClass().getName() + "." + property.getName(),
+				typeAnnotation.type(),
+				(Map) parameters,
+				context
+		);
 	}
 
 	private static Properties extractParameters(CollectionType typeAnnotation) {

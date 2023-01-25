@@ -38,7 +38,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -46,6 +46,7 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -793,18 +794,25 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				properties.putAll( explicitLocalTypeParams );
 			}
 
-			final ManagedBean<T> typeBean;
-			if ( properties.isEmpty() ) {
-				typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-						.getBean( explicitCustomType, instanceProducer );
+			final T typeInstance;
+			if ( getBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
+				typeInstance = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType );
 			}
 			else {
-				final String name = explicitCustomType.getName() + COUNTER++;
-				typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-						.getBean( name, explicitCustomType, instanceProducer );
-			}
+				final boolean hasParameters = CollectionHelper.isNotEmpty( properties );
 
-			final T typeInstance = typeBean.getBeanInstance();
+				final ManagedBean<T> typeBean;
+				if ( hasParameters ) {
+					final String name = explicitCustomType.getName() + COUNTER++;
+					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
+							.getBean( name, explicitCustomType, instanceProducer );
+				}
+				else {
+					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
+							.getBean( explicitCustomType, instanceProducer );
+				}
+				typeInstance = typeBean.getBeanInstance();
+			}
 
 			if ( typeInstance instanceof TypeConfigurationAware ) {
 				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( getTypeConfiguration() );

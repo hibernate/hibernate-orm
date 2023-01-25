@@ -607,6 +607,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
+		private final boolean allowExtensionsInCdi;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -762,6 +763,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					AvailableSettings.HBM2DDL_CHARSET_NAME,
 					String.class,
 					null
+			);
+
+			allowExtensionsInCdi = configService.getSetting(
+					AvailableSettings.ALLOW_EXTENSIONS_IN_CDI,
+					StandardConverters.BOOLEAN,
+					false
 			);
 		}
 
@@ -949,6 +956,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean isXmlMappingEnabled() {
 			return xmlMappingEnabled;
+		}
+
+		@Override
+		public boolean disallowExtensionsInCdi() {
+			return allowExtensionsInCdi;
 		}
 
 		/**

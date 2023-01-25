@@ -6,8 +6,10 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -77,7 +79,10 @@ public class EntitySelectFetchInitializerBuilder {
 		throw new IllegalStateException( "Should be unreachable" );
 	}
 
-	private static BatchMode determineBatchMode(EntityPersister entityPersister, FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	private static BatchMode determineBatchMode(
+			EntityPersister entityPersister,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		if ( !entityPersister.isBatchLoadable() || creationState.isScrollResult() ) {
 			return BatchMode.NONE;
 		}
@@ -97,6 +102,16 @@ public class EntitySelectFetchInitializerBuilder {
 			parentAccess = parentAccess.getFetchParentAccess();
 			if ( parentAccess == null ) {
 				break;
+			}
+		}
+		if ( parentAccess != null ) {
+			assert parentAccess.getInitializedPart() instanceof EntityValuedModelPart;
+			final EntityPersister parentPersister = parentAccess.asEntityInitializer().getEntityDescriptor();
+			final EntityDataAccess cacheAccess = parentPersister.getCacheAccessStrategy();
+			if ( cacheAccess != null ) {
+				// Do batch initialization instead of batch loading if the parent entity is cacheable
+				// to avoid putting entity state into the cache at a point when the association is not yet set
+				return BatchMode.BATCH_INITIALIZE;
 			}
 		}
 		return BatchMode.BATCH_LOAD;

@@ -570,7 +570,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			InclusionChecker dirtinessChecker,
 			boolean forceDynamicUpdate,
 			SharedSessionContractImplementor session) {
-		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
+		final AbstractEntityPersister persister = entityPersister();
+		final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
 
 		// NOTE:
 		// 		* `dirtyAttributeIndexes == null` means we had no snapshot and couldn't
@@ -585,6 +586,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				dirtinessChecker,
 				forceDynamicUpdate
 		);
+
+		final boolean[] propertyUpdateability = persister.getPropertyUpdateability();
 
 		for ( int attributeIndex = 0; attributeIndex < attributeMappings.size(); attributeIndex++ ) {
 			final AttributeMapping attributeMapping = attributeMappings.get( attributeIndex );
@@ -605,8 +608,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					);
 
 					if ( analysis.currentAttributeAnalysis.isDirty() ) {
-						if ( !entityPersister().getPropertyUpdateability()[attributeIndex] ) {
-							LOG.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), entityPersister().getEntityName() );
+						if ( !propertyUpdateability[attributeIndex] ) {
+							LOG.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), persister.getEntityName() );
 						}
 					}
 				}

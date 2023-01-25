@@ -106,19 +106,14 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 
 				if ( entryChecker == null || entryChecker.include( entry, entryCount, collection, pluralAttribute ) ) {
 					// if the entry is included, perform the "insert"
-					insertRowValues.applyValues( collection, id, entry, entryCount, session, (value, jdbcValueMapping, usage) -> {
-//						if ( !jdbcValueMapping.isInsertable() ) {
-//							return;
-//						}
-						jdbcValueBindings.bindValue(
-								value,
-								jdbcValueMapping.getContainingTableExpression(),
-								jdbcValueMapping.getSelectionExpression(),
-								usage,
-								session
-						);
-					} );
-
+					insertRowValues.applyValues(
+							collection,
+							id,
+							entry,
+							entryCount,
+							session,
+							jdbcValueBindings::bindValue
+					);
 					mutationExecutor.execute( entry, null, null, null, session );
 				}
 

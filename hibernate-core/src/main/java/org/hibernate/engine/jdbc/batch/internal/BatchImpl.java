@@ -126,7 +126,7 @@ public class BatchImpl implements Batch {
 				//noinspection resource
 				final PreparedStatement statement = statementDetails.resolveStatement();
 				sqlStatementLogger.logStatement( statementDetails.getSqlString() );
-				jdbcValueBindings.beforeStatement( statementDetails, session );
+				jdbcValueBindings.beforeStatement( statementDetails );
 
 				try {
 					statement.addBatch();
@@ -140,7 +140,7 @@ public class BatchImpl implements Batch {
 					);
 				}
 				finally {
-					jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails(), session );
+					jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
 				}
 			} );
 		}

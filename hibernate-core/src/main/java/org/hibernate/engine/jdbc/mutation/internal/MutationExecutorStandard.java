@@ -152,7 +152,8 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 		this.valueBindings = new JdbcValueBindingsImpl(
 				mutationOperationGroup.getMutationType(),
 				mutationOperationGroup.getMutationTarget(),
-				this::findJdbcValueDescriptor
+				this::findJdbcValueDescriptor,
+				session
 		);
 	}
 

@@ -223,13 +223,14 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		final String tableName = tableDetails.getTableName();
 		tableDetails.getKeyMapping().breakDownKeyJdbcValues(
 				id,
-				(jdbcValue, columnMapping) -> jdbcValueBindings.bindValue(
-						jdbcValue,
-						tableName,
-						columnMapping.getColumnName(),
-						ParameterUsage.SET,
-						session
-				),
+				(jdbcValue, columnMapping) -> {
+					jdbcValueBindings.bindValue(
+							jdbcValue,
+							tableName,
+							columnMapping.getColumnName(),
+							ParameterUsage.SET
+					);
+				},
 				session
 		);
 	}
@@ -248,8 +249,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 									jdbcValue,
 									entityPersister().physicalTableNameForMutation( selectableMapping ),
 									selectableMapping.getSelectionExpression(),
-									ParameterUsage.SET,
-									session
+									ParameterUsage.SET
 							);
 						}
 					},

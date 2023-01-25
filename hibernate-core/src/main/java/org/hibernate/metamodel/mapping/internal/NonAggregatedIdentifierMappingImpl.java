@@ -230,7 +230,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
 							toOneAttributeMapping.getSideNature().inverse()
 					);
-					if ( targetPart instanceof EntityIdentifierMapping ) {
+					if ( targetPart.isEntityIdentifierMapping() ) {
 						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
 					}
 					else {

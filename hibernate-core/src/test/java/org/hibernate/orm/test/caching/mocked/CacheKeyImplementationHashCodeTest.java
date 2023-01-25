@@ -17,6 +17,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.internal.CacheKeyImplementation;
+import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -66,7 +67,7 @@ public class CacheKeyImplementationHashCodeTest {
 			int id,
 			EntityPersister persister,
 			SessionFactoryImplementor sfi) {
-		return new CacheKeyImplementation( id, persister.getIdentifierType(), persister.getRootEntityName(), null, sfi );
+		return (CacheKeyImplementation) DefaultCacheKeysFactory.staticCreateEntityKey( id, persister, sfi, "tenant" );
 	}
 
 	@Entity(name = "AnEntity")

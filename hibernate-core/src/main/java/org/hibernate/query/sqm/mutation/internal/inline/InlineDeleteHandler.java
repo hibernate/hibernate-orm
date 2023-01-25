@@ -103,7 +103,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 						// collection table
 						final ModelPart fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
 						final int valueIndex;
-						if ( fkTargetPart instanceof EntityIdentifierMapping ) {
+						if ( fkTargetPart.isEntityIdentifierMapping() ) {
 							valueIndex = 0;
 						}
 						else {

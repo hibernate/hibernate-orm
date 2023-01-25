@@ -193,7 +193,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 
 	@Override
 	public boolean isReferenceToPrimaryKey() {
-		return getForeignKeyDescriptor().getTargetPart() instanceof EntityIdentifierMapping;
+		return getForeignKeyDescriptor().getTargetPart().isEntityIdentifierMapping();
 	}
 
 	@Override

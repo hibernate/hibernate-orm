@@ -129,7 +129,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
+		final EmbeddableInitializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),
 				() -> new EmbeddableFetchInitializer(
@@ -137,7 +137,9 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 						this,
 						creationState
 				)
-		);
+		).asEmbeddableInitializer();
+
+		assert initializer != null;
 
 		return new EmbeddableAssembler( initializer );
 	}

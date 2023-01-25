@@ -442,7 +442,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			}
 		}
 		final ModelPart modelPart = side.getModelPart();
-		if ( modelPart instanceof EntityIdentifierMapping ) {
+		if ( modelPart.isEntityIdentifierMapping() ) {
 			return ( (EntityIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 		return ( (PropertyBasedMapping) modelPart ).getPropertyAccess().getGetter().get( targetObject );

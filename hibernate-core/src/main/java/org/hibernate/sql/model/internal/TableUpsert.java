@@ -25,6 +25,7 @@ import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 
 import static org.hibernate.sql.model.ast.AbstractTableUpdate.collectParameters;
 
@@ -123,9 +124,13 @@ public class TableUpsert
 		throw new UnsupportedOperationException();
 	}
 
-	public MutationOperation createMutationOperation(
-			ValuesAnalysis valuesAnalysis,
-			SessionFactoryImplementor factory) {
+	@Override
+	public MutationOperation createMutationOperation(ValuesAnalysis valuesAnalysis, SessionFactoryImplementor factory) {
+		if ( getMutatingTable().getTableMapping().getInsertDetails().getCustomSql() != null
+				|| getMutatingTable().getTableMapping().getDeleteDetails().getCustomSql() != null ) {
+			// Fallback to the optional table mutation operation because we have to execute user specified SQL
+			return new OptionalTableUpdateOperation( getMutationTarget(), this, factory );
+		}
 		return factory.getJdbcServices().getDialect().createUpsertOperation(
 				getMutationTarget(),
 				this,

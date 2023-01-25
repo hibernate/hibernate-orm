@@ -5564,7 +5564,7 @@ public abstract class AbstractEntityPersister
 			final ModelPart superDefinedAttribute = superMappingType.findSubPart( name, superMappingType );
 			if ( superDefinedAttribute != null ) {
 				// Prefer the identifier mapping of the concrete class
-				if ( superDefinedAttribute instanceof EntityIdentifierMapping ) {
+				if ( superDefinedAttribute.isEntityIdentifierMapping() ) {
 					final ModelPart identifierModelPart = getIdentifierModelPart( name, treatTargetType );
 					if ( identifierModelPart != null ) {
 						return identifierModelPart;

@@ -949,4 +949,57 @@ There are also some property prefixes where the deprecated variant was finally r
 
 We decided this is the right time since 6.0 is a major release.
 
+== Dialects
+
+[[community-dialects]]
+=== "Community" dialects moved to a separate module
+
+As of Hibernate 6.0, some dialect classes that are maintained by vendors or individuals, as opposed to the Hibernate team.
+have moved to a separate Maven artifact: `org.hibernate.orm:hibernate-community-dialects`.
+
+For more information, see https://github.com/hibernate/hibernate-orm/blob/6.0/dialects.adoc#community-dialects.
+
+=== Version-specific and spaical-specific dialects are deprecated
+
+As of Hibernate 6.0, dialects can detect and adapt to the version of the database in use and its spatial capabilities.
+
+As a result, version-specific dialects (e.g. `org.hibernate.dialect.PostgreSQL91Dialect`)
+or spatial-specific dialects (e.g. `org.hibernate.spatial.dialect.postgis.PostgisPG94Dialect`) should no longer be used.
+Use these dialects instead, and ignore their deprecated subclasses:
+
+* `org.hibernate.dialect.CockroachDialect`
+* `org.hibernate.dialect.DB2Dialect`
+* `org.hibernate.dialect.DB2iDialect`
+* `org.hibernate.dialect.DB2zDialect`
+* `org.hibernate.dialect.DerbyDialect`
+* `org.hibernate.dialect.H2Dialect`
+* `org.hibernate.dialect.HANAColumnStoreDialect`
+* `org.hibernate.dialect.HANARowStoreDialect`
+* `org.hibernate.dialect.HSQLDialect`
+* `org.hibernate.dialect.MariaDBDialect`
+* `org.hibernate.dialect.MySQLDialect`
+* `org.hibernate.dialect.OracleDialect`
+* `org.hibernate.dialect.PostgreSQLDialect`
+* `org.hibernate.dialect.PostgresPlusDialect`
+* `org.hibernate.dialect.SpannerDialect`
+* `org.hibernate.dialect.SQLServerDialect`
+* `org.hibernate.dialect.SQLServerDialect`
+* `org.hibernate.dialect.SybaseAnywhereDialect`
+* `org.hibernate.dialect.SybaseASEDialect`
+
+The same recommendation applies for <<community-dialects,community-supported dialects>>;
+use these and not their deprecated subclasses:
+
+* `org.hibernate.community.dialect.CacheDialect`
+* `org.hibernate.community.dialect.CUBRIDDialect`
+* `org.hibernate.community.dialect.FirebirdDialect`
+* `org.hibernate.community.dialect.IngresDialect`
+* `org.hibernate.community.dialect.InformixDialect`
+* `org.hibernate.community.dialect.MaxDBDialect`
+* `org.hibernate.community.dialect.MimerSQLDialect`
+* `org.hibernate.community.dialect.RDMSOS2200Dialect`
+* `org.hibernate.community.dialect.SQLiteDialect`
+* `org.hibernate.community.dialect.TeradataDialect`
+* `org.hibernate.community.dialect.TimesTenDialect`
+
 // todo (6.0) - surely there are more than this...

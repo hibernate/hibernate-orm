@@ -27,6 +27,9 @@ import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -49,9 +52,6 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.hibernate.engine.OptimisticLockStyle.DIRTY;
@@ -594,10 +594,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			try {
 				if ( attributeMapping.getJdbcTypeCount() > 0
 						&& attributeMapping instanceof SingularAttributeMapping ) {
-					if ( !entityPersister().getPropertyUpdateability()[attributeIndex] ) {
-						LOG.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), entityPersister().getEntityName() );
-					}
-
 					processAttribute(
 							analysis,
 							attributeIndex,
@@ -608,8 +604,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 							lockingChecker,
 							session
 					);
-				}
 
+					if ( analysis.currentAttributeAnalysis.isDirty() ) {
+						if ( !entityPersister().getPropertyUpdateability()[attributeIndex] ) {
+							LOG.ignoreImmutablePropertyModification( attributeMapping.getAttributeName(), entityPersister().getEntityName() );
+						}
+					}
+				}
 			}
 			finally {
 				analysis.finishedAttribute( attributeMapping );

@@ -19,18 +19,6 @@ import java.lang.annotation.Target;
 public @interface HibernateOrmConfiguration {
 
 	/**
-	 * Describes to which type the configuration property belongs to - API/SPI.
-	 */
-	enum Type {
-		/**
-		 * Configuration property type API/SPI will be determined by inspecting the package in which a class is located.
-		 * In case package contains {@code spi} package at any upper levels the type will be {@code SPI}, otherwise - {@code API}
-		 */
-		API,
-		SPI
-	}
-
-	/**
 	 * Set to {@code true} in case we have a {@code *Settings} class that we want to ignore in config processing.
 	 * Also works on a field leve. Setting it to {@code true} on field level will not include that particular constant.
 	 * Can be useful to skip prefix definitions etc.

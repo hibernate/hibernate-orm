@@ -872,11 +872,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public MutationOperation createUpsertOperation(
+	public MutationOperation createOptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
 		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, optionalTableUpdate );
-		return translator.visitUpsert( optionalTableUpdate );
+		return translator.createMergeOperation( optionalTableUpdate );
 	}
 }

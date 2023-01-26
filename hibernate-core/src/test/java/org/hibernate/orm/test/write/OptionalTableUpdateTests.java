@@ -24,9 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(annotatedClasses = UpsertTests.TheEntity.class)
+@DomainModel(annotatedClasses = OptionalTableUpdateTests.TheEntity.class)
 @SessionFactory
-public class UpsertTests {
+public class OptionalTableUpdateTests {
 	@Test
 	void testUpsertInsert(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {

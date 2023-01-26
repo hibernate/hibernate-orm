@@ -662,7 +662,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private void processSet(UpdateValuesAnalysisImpl analysis, SelectableMapping selectable) {
-		if ( !selectable.isFormula() && selectable.isUpdateable() ) {
+		if ( selectable != null && !selectable.isFormula() && selectable.isUpdateable() ) {
 			final EntityTableMapping tableMapping = entityPersister().getPhysicalTableMappingForMutation( selectable );
 			analysis.registerColumnSet( tableMapping, selectable.getSelectionExpression(), selectable.getWriteExpression() );
 		}

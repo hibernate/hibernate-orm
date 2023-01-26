@@ -161,7 +161,7 @@ false:: (the default) indicates to not use the CDI `BeanManager` to resolve thes
 The previous behavior was to always load the extensions from CDI if it was available.  However,
 this can sometimes lead to timing issues with the `BeanManager` not being ready for use when we need
 those extension beans.  Starting with 6.2, these extensions will only be resolved from the CDI
-`BeanManager` is `hibernate.cdi.extensions` is set to true.
+`BeanManager` if `hibernate.cdi.extensions` is set to true.
 
 
 [[enhancement]]

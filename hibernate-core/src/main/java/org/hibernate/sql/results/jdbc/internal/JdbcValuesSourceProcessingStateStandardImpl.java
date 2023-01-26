@@ -163,13 +163,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	@Override
 	public void finishUp() {
-		// for arrays, we should end the collection load beforeQuery resolving the entities, since the
-		// actual array instances are not instantiated during loading
-		finishLoadingArrays();
-
-		// now finish loading the entities (2-phase load)
-		performTwoPhaseLoad();
-
 		// now we can finalize loading collections
 		finishLoadingCollections();
 
@@ -205,22 +198,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 				}
 		);
 		loadingEntityMap = null;
-	}
-
-	private void finishLoadingArrays() {
-		if ( arrayInitializers != null ) {
-			for ( CollectionInitializer collectionInitializer : arrayInitializers ) {
-				collectionInitializer.endLoading( executionContext );
-			}
-		}
-	}
-
-
-	private void performTwoPhaseLoad() {
-		if ( loadingEntityMap == null ) {
-			return;
-		}
-		log.tracev( "Total objects hydrated: {0}", loadingEntityMap.size() );
 	}
 
 	@SuppressWarnings("SimplifiableIfStatement")

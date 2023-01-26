@@ -4,26 +4,26 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.cdi.general.nonregistrymanaged;
+package org.hibernate.orm.test.cdi.general.hibernatesearch;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Named;
 
 /**
  * @author Yoann Rodiere
  */
-@ApplicationScoped
-@Named(TheMainNamedApplicationScopedBeanImpl.NAME)
-public class TheMainNamedApplicationScopedBeanImpl implements TheNamedApplicationScopedBean {
-	public static final String NAME = "TheMainNamedApplicationScopedBeanImpl_name";
+@Dependent
+@Named(TheAlternativeNamedDependentBeanImpl.NAME)
+public class TheAlternativeNamedDependentBeanImpl implements TheNamedDependentBean {
+	public static final String NAME = "TheAlternativeNamedDependentBeanImpl_name";
 
 	@jakarta.inject.Inject
 	private TheNestedDependentBean nestedDependentBean;
 
-	public TheMainNamedApplicationScopedBeanImpl() {
-		Monitor.theMainNamedApplicationScopedBean().instantiated();
+	public TheAlternativeNamedDependentBeanImpl() {
+		Monitor.theAlternativeNamedDependentBean().instantiated();
 	}
 
 	@Override
@@ -33,11 +33,11 @@ public class TheMainNamedApplicationScopedBeanImpl implements TheNamedApplicatio
 
 	@PostConstruct
 	public void postConstruct() {
-		Monitor.theMainNamedApplicationScopedBean().postConstructCalled();
+		Monitor.theAlternativeNamedDependentBean().postConstructCalled();
 	}
 
 	@PreDestroy
 	public void preDestroy() {
-		Monitor.theMainNamedApplicationScopedBean().preDestroyCalled();
+		Monitor.theAlternativeNamedDependentBean().preDestroyCalled();
 	}
 }

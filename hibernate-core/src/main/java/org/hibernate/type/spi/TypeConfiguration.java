@@ -52,11 +52,12 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -401,6 +402,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private transient MetadataBuildingContext metadataBuildingContext;
 		private transient SessionFactoryImplementor sessionFactory;
 
+		private boolean allowExtensionsInCdi;
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
 
@@ -491,6 +493,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		private void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
 			this.metadataBuildingContext = metadataBuildingContext;
+			if ( metadataBuildingContext != null ) {
+				this.allowExtensionsInCdi = metadataBuildingContext.getBuildingOptions().disallowExtensionsInCdi();
+			}
 		}
 
 		private SessionFactoryImplementor getSessionFactory() {
@@ -805,8 +810,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	@Internal @SuppressWarnings("unchecked")
 	public <J> MutabilityPlan<J> createMutabilityPlan(Class<? extends MutabilityPlan<?>> planClass) {
-		final ManagedBean<? extends MutabilityPlan<?>> planBean =
-				scope.getServiceRegistry()
+		if ( scope.allowExtensionsInCdi ) {
+			//noinspection rawtypes
+			return (MutabilityPlan) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( planClass );
+		}
+
+		final ManagedBean<? extends MutabilityPlan<?>> planBean = scope.getServiceRegistry()
 						.getService( ManagedBeanRegistry.class )
 						.getBean( planClass );
 		return (MutabilityPlan<J>) planBean.getBeanInstance();

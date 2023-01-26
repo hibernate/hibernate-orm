@@ -46,13 +46,13 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableDelete;
 import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.TableUpdate;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
 import org.hibernate.sql.model.internal.TableInsertCustomSql;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.model.internal.TableUpsert;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -76,7 +76,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 	public OptionalTableUpdateOperation(
 			MutationTarget<?> mutationTarget,
-			TableUpsert upsert,
+			OptionalTableUpdate upsert,
 			@SuppressWarnings("unused") SessionFactoryImplementor factory) {
 		this.mutationTarget = (EntityMutationTarget) mutationTarget;
 		this.tableMapping = (EntityTableMapping) upsert.getMutatingTable().getTableMapping();

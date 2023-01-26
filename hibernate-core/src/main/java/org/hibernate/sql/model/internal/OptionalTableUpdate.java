@@ -34,12 +34,12 @@ import static org.hibernate.sql.model.ast.AbstractTableUpdate.collectParameters;
  *
  * @author Steve Ebersole
  */
-public class TableUpsert
+public class OptionalTableUpdate
 		extends AbstractRestrictedTableMutation<MutationOperation>
 		implements RestrictedTableMutation<MutationOperation> {
 	private final List<ColumnValueBinding> valueBindings;
 
-	public TableUpsert(
+	public OptionalTableUpdate(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
 			List<ColumnValueBinding> valueBindings,
@@ -55,7 +55,7 @@ public class TableUpsert
 		);
 	}
 
-	public TableUpsert(
+	public OptionalTableUpdate(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
 			String comment,
@@ -75,7 +75,7 @@ public class TableUpsert
 
 	@Override
 	protected String getLoggableName() {
-		return "TableUpsert";
+		return "OptionalTableUpdate";
 	}
 
 	@Override
@@ -131,7 +131,7 @@ public class TableUpsert
 			// Fallback to the optional table mutation operation because we have to execute user specified SQL
 			return new OptionalTableUpdateOperation( getMutationTarget(), this, factory );
 		}
-		return factory.getJdbcServices().getDialect().createUpsertOperation(
+		return factory.getJdbcServices().getDialect().createOptionalTableUpdateOperation(
 				getMutationTarget(),
 				this,
 				factory

@@ -42,5 +42,6 @@ include::appendices/Legacy_DomainModel.adoc[]
 include::appendices/LegacyBasicTypeResolution.adoc[]
 include::appendices/Legacy_Native_Queries.adoc[]
 
+include::ConfigPropertyList.adoc[]
 include::Bibliography.adoc[]
 

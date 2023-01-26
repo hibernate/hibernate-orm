@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
@@ -35,11 +34,7 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.internal.TableInsertStandard;
-import org.hibernate.sql.model.internal.TableUpsert;
-import org.hibernate.sql.model.jdbc.UpsertOperation;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -48,7 +43,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  *
  * @author Christian Beikov
  */
-public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
 	private boolean renderAsArray;
 
@@ -310,149 +305,5 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		// Introduction of TIES clause https://github.com/h2database/h2database/commit/876e9fbe7baf11d01675bfe871aac2cf1b6104ce
 		// Introduction of PERCENT support https://github.com/h2database/h2database/commit/f45913302e5f6ad149155a73763c0c59d8205849
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 198 );
-	}
-
-	public MutationOperation visitUpsert(TableUpsert tableUpsert) {
-		// template:
-		//
-		// merge into [table] as t
-		// using values([bindings]) as s ([column-names])
-		// on t.[key] = s.[key]
-		// when not matched
-		// 		then insert ...
-		// when matched
-		//		and s.[columns] is null
-		//		then delete
-		// when matched
-		//		then update set ...
-
-		renderMergeInto( tableUpsert );
-		appendSql( " " );
-		renderMergeUsing( tableUpsert );
-		appendSql( " " );
-		renderMergeOn( tableUpsert );
-		appendSql( " " );
-		renderMergeInsert( tableUpsert );
-		appendSql( " " );
-		renderMergeDelete( tableUpsert );
-		appendSql( " " );
-		renderMergeUpdate( tableUpsert );
-
-		return new UpsertOperation(
-				tableUpsert.getMutatingTable().getTableMapping(),
-				tableUpsert.getMutationTarget(),
-				getSql(),
-				getParameterBinders()
-		);
-	}
-
-	private void renderMergeInto(TableUpsert tableUpsert) {
-		appendSql( "merge into " );
-		appendSql( tableUpsert.getMutatingTable().getTableName() );
-		appendSql( " as t" );
-	}
-
-	private void renderMergeUsing(TableUpsert tableUpsert) {
-		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
-		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
-
-		final StringBuilder columnList = new StringBuilder();
-
-		appendSql( "using values (" );
-
-		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			final ColumnValueBinding keyBinding = keyBindings.get( i );
-			if ( i > 0 ) {
-				appendSql( ", " );
-				columnList.append( ", " );
-			}
-			columnList.append( keyBinding.getColumnReference().getColumnExpression() );
-			renderCasted( keyBinding.getValueExpression() );
-		}
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			appendSql( ", " );
-			columnList.append( ", " );
-			final ColumnValueBinding valueBinding = valueBindings.get( i );
-			columnList.append( valueBinding.getColumnReference().getColumnExpression() );
-			renderCasted( valueBinding.getValueExpression() );
-		}
-
-		appendSql( ") as s(" );
-		appendSql( columnList.toString() );
-		appendSql( ")" );
-	}
-
-	private void renderMergeOn(TableUpsert tableUpsert) {
-		appendSql( "on " );
-
-		// todo : optimistic locks?
-
-		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
-		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			final ColumnValueBinding keyBinding = keyBindings.get( i );
-			if ( i > 0 ) {
-				appendSql( " and " );
-			}
-			keyBinding.getColumnReference().appendReadExpression( this, "t" );
-			appendSql( "=" );
-			keyBinding.getColumnReference().appendReadExpression( this, "s" );
-		}
-	}
-
-	private void renderMergeInsert(TableUpsert tableUpsert) {
-		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
-		final List<ColumnValueBinding> keyBindings = tableUpsert.getKeyBindings();
-
-		final StringBuilder valuesList = new StringBuilder();
-
-		appendSql( "when not matched then insert (" );
-		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			if ( i > 0 ) {
-				appendSql( ", " );
-				valuesList.append( ", " );
-			}
-			final ColumnValueBinding keyBinding = keyBindings.get( i );
-			appendSql( keyBinding.getColumnReference().getColumnExpression() );
-			keyBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
-		}
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			appendSql( ", " );
-			valuesList.append( ", " );
-			final ColumnValueBinding valueBinding = valueBindings.get( i );
-			appendSql( valueBinding.getColumnReference().getColumnExpression() );
-			valueBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
-		}
-
-		appendSql( ") values (" );
-		appendSql( valuesList.toString() );
-		appendSql( ")" );
-	}
-
-	private void renderMergeDelete(TableUpsert tableUpsert) {
-		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
-
-		appendSql( " when matched " );
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			final ColumnValueBinding binding = valueBindings.get( i );
-			appendSql( " and " );
-			binding.getColumnReference().appendReadExpression( this, "s" );
-			appendSql( " is null" );
-		}
-		appendSql( " then delete" );
-	}
-
-	private void renderMergeUpdate(TableUpsert tableUpsert) {
-		final List<ColumnValueBinding> valueBindings = tableUpsert.getValueBindings();
-
-		appendSql( " when matched then update set " );
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			final ColumnValueBinding binding = valueBindings.get( i );
-			if ( i > 0 ) {
-				appendSql( ", " );
-			}
-			binding.getColumnReference().appendColumnForWrite( this, "t" );
-			appendSql( "=" );
-			binding.getColumnReference().appendColumnForWrite( this, "s" );
-		}
 	}
 }

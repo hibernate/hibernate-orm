@@ -146,6 +146,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.spi.NavigablePath;
@@ -2362,13 +2363,18 @@ public class ModelBinder {
 
 		try {
 			final Class<?> typeJavaType = classLoaderService.classForName( typeName );
-			final String beanName = typeName + ":" + TypeDefinition.NAME_COUNTER.getAndIncrement();
-
-			final ManagedBeanRegistry beanRegistry = bootstrapContext
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class );
-			final ManagedBean<?> bean = beanRegistry.getBean( beanName, typeJavaType );
-			final Object typeInstance = bean.getBeanInstance();
+			final Object typeInstance;
+			if ( metadataBuildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+				typeInstance = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( typeJavaType );
+			}
+			else {
+				final ManagedBeanRegistry beanRegistry = bootstrapContext
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class );
+				final String beanName = typeName + ":" + TypeDefinition.NAME_COUNTER.getAndIncrement();
+				final ManagedBean<?> bean = beanRegistry.getBean( beanName, typeJavaType );
+				typeInstance = bean.getBeanInstance();
+			}
 
 			if ( typeInstance instanceof ParameterizedType ) {
 				if ( parameters != null ) {
@@ -2596,15 +2602,22 @@ public class ModelBinder {
 			log.debugf( "Binding component [%s]", role );
 			if ( StringHelper.isNotEmpty( explicitComponentClassName ) ) {
 				try {
-					final Class<Object> componentClass = sourceDocument.getBootstrapContext().getClassLoaderAccess()
+					final Class<Object> componentClass = sourceDocument.getBootstrapContext()
+							.getClassLoaderAccess()
 							.classForName( explicitComponentClassName );
 					if ( CompositeUserType.class.isAssignableFrom( componentClass ) ) {
 						componentBinding.setTypeName( explicitComponentClassName );
-						CompositeUserType<?> compositeUserType = (CompositeUserType<?>) sourceDocument.getBootstrapContext()
-								.getServiceRegistry()
-								.getService( ManagedBeanRegistry.class )
-								.getBean( componentClass )
-								.getBeanInstance();
+						CompositeUserType<?> compositeUserType;
+						if ( sourceDocument.getBuildingOptions().disallowExtensionsInCdi() ) {
+							compositeUserType = (CompositeUserType<?>) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( componentClass );
+						}
+						else {
+							compositeUserType = (CompositeUserType<?>) sourceDocument.getBootstrapContext()
+									.getServiceRegistry()
+									.getService( ManagedBeanRegistry.class )
+									.getBean( componentClass )
+									.getBeanInstance();
+						}
 						explicitComponentClassName = compositeUserType.embeddable().getName();
 					}
 				}

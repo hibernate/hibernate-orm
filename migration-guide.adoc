@@ -144,6 +144,26 @@ The minimum supported dialect versions are as follows:
 |2.6.1
 |===
 
+
+[[cdi]]
+== Changes to CDI handling
+
+When CDI is available and configured, Hibernate can use the CDI `BeanManager` to resolve various
+bean references.  JPA explicitly defines support for this for both attribute-converters and
+entity-listeners.
+
+Hibernate also has the ability to resolve some of its extension points using the CDI `BeanManager`.
+Version 6.2 adds a new boolean `hibernate.cdi.extensions` setting to control this:
+
+true:: indicates to use the CDI `BeanManager` to resolve these extensions
+false:: (the default) indicates to not use the CDI `BeanManager` to resolve these extensions
+
+The previous behavior was to always load the extensions from CDI if it was available.  However,
+this can sometimes lead to timing issues with the `BeanManager` not being ready for use when we need
+those extension beans.  Starting with 6.2, these extensions will only be resolved from the CDI
+`BeanManager` if `hibernate.cdi.extensions` is set to true.
+
+
 [[enhancement]]
 == Change enhancement defaults and deprecation
 

@@ -15,12 +15,12 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 
 /**
- * JdbcMutation implementation for MERGE/UPSERT handling
+ * JdbcMutation implementation for MERGE handling
  *
  * @author Steve Ebersole
  */
-public class UpsertOperation extends AbstractJdbcMutation {
-	public UpsertOperation(
+public class MergeOperation extends AbstractJdbcMutation {
+	public MergeOperation(
 			TableMapping tableDetails,
 			MutationTarget<?> mutationTarget,
 			String sql,

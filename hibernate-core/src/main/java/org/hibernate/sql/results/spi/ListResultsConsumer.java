@@ -201,6 +201,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 
 			try {
+				rowReader.finishUp( jdbcValuesSourceProcessingState );
 				jdbcValuesSourceProcessingState.finishUp();
 			}
 			finally {
@@ -220,7 +221,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		}
 		finally {
 			try {
-				rowReader.finishUp( jdbcValuesSourceProcessingState );
+
 				jdbcValues.finishUp( session );
 				persistenceContext.initializeNonLazyCollections();
 			}

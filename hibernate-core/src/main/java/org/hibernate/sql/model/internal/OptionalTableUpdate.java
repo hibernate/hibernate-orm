@@ -131,7 +131,7 @@ public class OptionalTableUpdate
 			// Fallback to the optional table mutation operation because we have to execute user specified SQL
 			return new OptionalTableUpdateOperation( getMutationTarget(), this, factory );
 		}
-		return factory.getJdbcServices().getDialect().createUpsertOperation(
+		return factory.getJdbcServices().getDialect().createOptionalTableUpdateOperation(
 				getMutationTarget(),
 				this,
 				factory

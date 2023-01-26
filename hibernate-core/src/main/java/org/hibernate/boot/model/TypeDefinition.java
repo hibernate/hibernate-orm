@@ -20,10 +20,10 @@ import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -137,9 +137,6 @@ public class TypeDefinition implements Serializable {
 			Map<?,?> usageSiteProperties,
 			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
-
-		}
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final BeanInstanceProducer instanceProducer = bootstrapContext.getCustomTypeProducer();
@@ -149,7 +146,7 @@ public class TypeDefinition implements Serializable {
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
 			final Object typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
-					name, typeImplementorClass, instanceProducer );
+					context.getBuildingOptions(), name, typeImplementorClass, instanceProducer );
 
 			if ( typeInstance instanceof TypeConfigurationAware ) {
 				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
@@ -282,10 +279,13 @@ public class TypeDefinition implements Serializable {
 		);
 	}
 
-	private static Object instantiateType(StandardServiceRegistry serviceRegistry,
-			String name, Class<?> typeImplementorClass,
+	private static Object instantiateType(
+			StandardServiceRegistry serviceRegistry,
+			MetadataBuildingOptions buildingOptions,
+			String name,
+			Class<?> typeImplementorClass,
 			BeanInstanceProducer instanceProducer) {
-		if ( !Helper.allowExtensionsInCdi( serviceRegistry ) ) {
+		if ( buildingOptions.disallowExtensionsInCdi() ) {
 			return name != null
 					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
 					: instanceProducer.produceBeanInstance( typeImplementorClass );

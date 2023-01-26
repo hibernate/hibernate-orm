@@ -4705,9 +4705,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Create a {@link MutationOperation} for an "upsert".
+	 * Create a {@link MutationOperation} for a updating an optional table
 	 */
-	public MutationOperation createUpsertOperation(
+	public MutationOperation createOptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {

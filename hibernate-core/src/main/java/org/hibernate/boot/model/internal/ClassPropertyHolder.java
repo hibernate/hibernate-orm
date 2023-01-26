@@ -329,7 +329,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	private String getTypeName(Value value) {
+	static String getTypeName(Value value) {
 		if ( value instanceof Component ) {
 			final Component component = (Component) value;
 			final String typeName = component.getTypeName();
@@ -341,7 +341,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return ( (SimpleValue) value ).getTypeName();
 	}
 
-	private void setTypeName(Value value, String typeName) {
+	static void setTypeName(Value value, String typeName) {
 		if ( value instanceof ToOne ) {
 			final ToOne toOne = (ToOne) value;
 			toOne.setReferencedEntityName( typeName );

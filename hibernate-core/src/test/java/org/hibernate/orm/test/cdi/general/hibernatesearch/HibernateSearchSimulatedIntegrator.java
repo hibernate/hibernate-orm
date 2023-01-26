@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.cdi.general.nonregistrymanaged;
+package org.hibernate.orm.test.cdi.general.hibernatesearch;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,12 +21,13 @@ import org.hamcrest.CoreMatchers;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * Simulates a Hibernate ORM integrator consuming beans whose lifecycle is not managed by the registry,
+ * Simulates Hibernate Search's implementation of {@link Integrator},
+ * consuming beans whose lifecycle is not managed by the registry,
  * but by the CDI engine only.
  *
  * @author Yoann Rodiere
  */
-public class NonRegistryManagedBeanConsumingIntegrator implements Integrator, BeanContainer.LifecycleOptions {
+public class HibernateSearchSimulatedIntegrator implements Integrator, BeanContainer.LifecycleOptions {
 	
 	private final BeanInstanceProducer fallbackBeanInstanceProducer;
 
@@ -43,7 +44,7 @@ public class NonRegistryManagedBeanConsumingIntegrator implements Integrator, Be
 	private ContainedBeanImplementor<TheReflectionInstantiatedBean> namedReflectionInstantiatedBean1;
 	private ContainedBeanImplementor<TheReflectionInstantiatedBean> namedReflectionInstantiatedBean2;
 
-	public NonRegistryManagedBeanConsumingIntegrator(BeanInstanceProducer fallbackBeanInstanceProducer) {
+	public HibernateSearchSimulatedIntegrator(BeanInstanceProducer fallbackBeanInstanceProducer) {
 		this.fallbackBeanInstanceProducer = fallbackBeanInstanceProducer;
 	}
 

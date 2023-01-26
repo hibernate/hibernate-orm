@@ -4,36 +4,35 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.cdi.general.nonregistrymanaged;
+package org.hibernate.orm.test.cdi.general.hibernatesearch;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
 
 /**
- * A dependent bean required by other beans, but never requested directly
- * to the {@link org.hibernate.resource.beans.spi.ManagedBeanRegistry}.
- *
  * @author Yoann Rodiere
  */
 @Dependent
-public class TheNestedDependentBean {
+public class TheDependentBean {
+	@jakarta.inject.Inject
+	private TheNestedDependentBean dependentBean;
 
-	public TheNestedDependentBean() {
-		Monitor.theNestedDependentBean().instantiated();
+	public TheDependentBean() {
+		Monitor.theDependentBean().instantiated();
 	}
 
 	public void ensureInitialized() {
-		// Nothing to do: if this method is called, all surrounding proxies have been initialized
+		dependentBean.ensureInitialized();
 	}
 
 	@PostConstruct
 	public void postConstruct() {
-		Monitor.theNestedDependentBean().postConstructCalled();
+		Monitor.theDependentBean().postConstructCalled();
 	}
 
 	@PreDestroy
 	public void preDestroy() {
-		Monitor.theNestedDependentBean().preDestroyCalled();
+		Monitor.theDependentBean().preDestroyCalled();
 	}
 }

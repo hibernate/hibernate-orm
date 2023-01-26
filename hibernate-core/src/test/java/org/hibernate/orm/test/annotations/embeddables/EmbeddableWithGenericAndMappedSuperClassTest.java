@@ -2,15 +2,18 @@ package org.hibernate.orm.test.annotations.embeddables;
 
 import java.util.List;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -22,7 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel(
 		annotatedClasses = {
 				EmbeddableWithGenericAndMappedSuperClassTest.PopularBook.class,
-				EmbeddableWithGenericAndMappedSuperClassTest.RareBook.class
+				EmbeddableWithGenericAndMappedSuperClassTest.RareBook.class,
+				EmbeddableWithGenericAndMappedSuperClassTest.GenericExample.class
 		}
 )
 @SessionFactory
@@ -33,7 +37,7 @@ public class EmbeddableWithGenericAndMappedSuperClassTest {
 	private final static long RARE_BOOK_ID = 2l;
 	private final static Integer RARE_BOOK_CODE = 123;
 
-	@BeforeEach
+	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -45,6 +49,19 @@ public class EmbeddableWithGenericAndMappedSuperClassTest {
 
 					session.persist( popularBook );
 					session.persist( rareBook );
+
+					session.persist( new GenericExample(1, new Range<>(2, 3)) );
+				}
+		);
+	}
+
+	@AfterAll
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "delete from PopularBook" ).executeUpdate();
+					session.createMutationQuery( "delete from RareBook" ).executeUpdate();
+					session.createMutationQuery( "delete from GenericExample" ).executeUpdate();
 				}
 		);
 	}
@@ -106,6 +123,48 @@ public class EmbeddableWithGenericAndMappedSuperClassTest {
 					assertThat( code ).isEqualTo( POPULAR_BOOK_CODE );
 				}
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-4299")
+	public void testGenericEmbeddedAttribute(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					GenericExample ge = session.get( GenericExample.class, 1 );
+					assertThat( ge ).isNotNull();
+					assertThat( ge ).extracting( "bounds" ).isNotNull();
+				}
+		);
+	}
+
+	@Entity(name = "GenericExample")
+	public static class GenericExample {
+		@Id
+		private int id;
+		@Embedded
+		private Range<Integer> bounds;
+
+		public GenericExample() {
+		}
+
+		public GenericExample(int id, Range<Integer> bounds) {
+			this.id = id;
+			this.bounds = bounds;
+		}
+	}
+
+	public static class Range<T> {
+
+		private T minimum;
+		private T maximum;
+
+		public Range() {
+		}
+
+		public Range(T minimum, T maximum) {
+			this.minimum = minimum;
+			this.maximum = maximum;
+		}
 	}
 
 	@Embeddable

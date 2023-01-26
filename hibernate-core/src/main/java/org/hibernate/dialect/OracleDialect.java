@@ -50,6 +50,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
@@ -70,6 +71,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
@@ -79,9 +82,9 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -1440,5 +1443,14 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String rowId(String rowId) {
 		return "rowid";
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		final OracleSqlAstTranslator<?> translator = new OracleSqlAstTranslator<>( factory, optionalTableUpdate );
+		return translator.createMergeOperation( optionalTableUpdate );
 	}
 }

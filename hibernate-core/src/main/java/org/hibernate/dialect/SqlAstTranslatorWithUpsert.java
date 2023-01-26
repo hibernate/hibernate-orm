@@ -9,39 +9,48 @@ package org.hibernate.dialect;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.sql.model.jdbc.MergeOperation;
+import org.hibernate.sql.model.jdbc.DeleteOrUpsertOperation;
+import org.hibernate.sql.model.jdbc.UpsertOperation;
 
 /**
- * Base for translators which support a full insert-or-update-or-delete (MERGE) command
+ * Base SqlAstTranslator for translators which support an insert-or-update (UPSERT) command
  *
  * @author Steve Ebersole
  */
-public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
-	public SqlAstTranslatorWithMerge(SessionFactoryImplementor sessionFactory, Statement statement) {
+public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+	protected SqlAstTranslatorWithUpsert(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
 	/**
-	 * Create the MutationOperation for performing a MERGE
+	 * Create the MutationOperation for performing the DELETE or UPSERT
 	 */
 	public MutationOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate) {
-		renderMergeStatement( optionalTableUpdate );
+		renderUpsertStatement( optionalTableUpdate );
 
-		return new MergeOperation(
+		final UpsertOperation upsertOperation = new UpsertOperation(
 				optionalTableUpdate.getMutatingTable().getTableMapping(),
 				optionalTableUpdate.getMutationTarget(),
 				getSql(),
 				getParameterBinders()
 		);
+
+		return new DeleteOrUpsertOperation(
+				optionalTableUpdate.getMutationTarget(),
+				(EntityTableMapping) optionalTableUpdate.getMutatingTable().getTableMapping(),
+				upsertOperation,
+				optionalTableUpdate
+		);
 	}
 
-	protected void renderMergeStatement(OptionalTableUpdate optionalTableUpdate) {
+	private void renderUpsertStatement(OptionalTableUpdate optionalTableUpdate) {
 		// template:
 		//
 		// merge into [table] as t
@@ -49,9 +58,6 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		// on t.[key] = s.[key]
 		// when not matched
 		// 		then insert ...
-		// when matched
-		//		and s.[columns] is null
-		//		then delete
 		// when matched
 		//		then update ...
 
@@ -62,8 +68,6 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		renderMergeOn( optionalTableUpdate );
 		appendSql( " " );
 		renderMergeInsert( optionalTableUpdate );
-		appendSql( " " );
-		renderMergeDelete( optionalTableUpdate );
 		appendSql( " " );
 		renderMergeUpdate( optionalTableUpdate );
 	}
@@ -88,7 +92,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		return true;
 	}
 
-	private void renderMergeSource(OptionalTableUpdate optionalTableUpdate) {
+	protected void renderMergeSource(OptionalTableUpdate optionalTableUpdate) {
 		if ( wrapMergeSourceExpression() ) {
 			appendSql( " (" );
 		}
@@ -179,19 +183,6 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		appendSql( ") values (" );
 		appendSql( valuesList.toString() );
 		appendSql( ")" );
-	}
-
-	protected void renderMergeDelete(OptionalTableUpdate optionalTableUpdate) {
-		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
-
-		appendSql( " when matched " );
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			final ColumnValueBinding binding = valueBindings.get( i );
-			appendSql( " and " );
-			binding.getColumnReference().appendReadExpression( this, "s" );
-			appendSql( " is null" );
-		}
-		appendSql( " then delete" );
 	}
 
 	protected void renderMergeUpdate(OptionalTableUpdate optionalTableUpdate) {

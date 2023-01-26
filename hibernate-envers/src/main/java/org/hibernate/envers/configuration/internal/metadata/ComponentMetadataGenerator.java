@@ -56,12 +56,13 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 			if ( getMetadataBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
 				instantiator = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( propComponent.getCustomInstantiator() );
 			}
-			else
+			else {
 				instantiator = getMetadataBuildingContext().getBootstrapContext()
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class )
-					.getBean( propComponent.getCustomInstantiator() )
-					.getBeanInstance();
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( propComponent.getCustomInstantiator() )
+						.getBeanInstance();
+			}
 		}
 		else if ( propComponent.getTypeName() != null ) {
 			final Class<CompositeUserType<?>> userTypeClass = getMetadataBuildingContext().getBootstrapContext()

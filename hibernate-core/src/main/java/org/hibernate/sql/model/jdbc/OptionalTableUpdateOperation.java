@@ -72,7 +72,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private final List<ColumnValueBinding> optimisticLockBindings;
 	private final List<ColumnValueParameter> parameters;
 
-	private final List<JdbcValueDescriptorImpl> jdbcValueDescriptors;
+	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
 
 	public OptionalTableUpdateOperation(
 			MutationTarget<?> mutationTarget,
@@ -205,7 +205,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 		bindings: for ( Binding binding : bindings ) {
 			// binding-position here is 1-based (JDBC)
-			final JdbcValueDescriptorImpl valueDescriptor = jdbcValueDescriptors.get( binding.getPosition() - 1 );
+			final JdbcValueDescriptor valueDescriptor = jdbcValueDescriptors.get( binding.getPosition() - 1 );
 
 			// key bindings would have a usage of RESTRICT relative to the UPDATE
 			if ( valueDescriptor.getUsage() != ParameterUsage.RESTRICT ) {
@@ -224,6 +224,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 							valueDescriptor,
 							statement,
 							jdbcDelete.getSqlString(),
+							tableMapping,
 							session
 					);
 					break;
@@ -238,12 +239,13 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private void bindKeyValue(
+	private static void bindKeyValue(
 			int jdbcPosition,
 			Binding binding,
-			JdbcValueDescriptorImpl valueDescriptor,
+			JdbcValueDescriptor valueDescriptor,
 			PreparedStatement statement,
 			String sql,
+			EntityTableMapping tableMapping,
 			SharedSessionContractImplementor session) {
 		try {
 			binding.getValueBinder().bind( statement, binding.getValue(), jdbcPosition, session );

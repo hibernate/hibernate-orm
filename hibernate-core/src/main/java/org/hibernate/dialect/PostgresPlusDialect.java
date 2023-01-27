@@ -121,6 +121,8 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
+		// Postgres Plus does not support full merge semantics -
+		// https://www.enterprisedb.com/docs/migrating/oracle/oracle_epas_comparison/notable_differences/
 		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 }

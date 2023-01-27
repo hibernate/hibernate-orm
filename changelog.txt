@@ -3,6 +3,64 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.0.CR2 (January 27, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32128
+
+** Bug
+    * [HHH-16108] - NullPointerException when flushing a (simple) entity update for models with bytecode enhancement and multiple one-to-one associations (some lazy)
+    * [HHH-16106] - Using BatchEntitySelectFetchInitializer causes PostLoad to be called before references are initialized
+    * [HHH-16099] - Log about immutable properties only if dirty on update
+    * [HHH-16096] - Passing an ExtendedBeanManager which is notified too late leads to initialization error
+    * [HHH-16077] - Added named native queries cannot specify result-class
+    * [HHH-16070] - Exception when find by association id that is a generic @EmbeddedId with @MappedSuperclass
+    * [HHH-16069] - Skip CDI for Hibernate extensions by default
+    * [HHH-16062] - jakarta.persistence.query.timeout not working on Hibernate 6.1.6 for Criteria Queries
+    * [HHH-16061] - SqmDynamicInstantiation warns about dynamic Map instantiation when using an entity
+    * [HHH-16049] - Setting a property to its current value with bytecode enhancement enabled results in unnecessary SQL Update in some (many) cases
+    * [HHH-16045] - ambiguity in grammar of HQL datetime literals
+    * [HHH-16043] - Hibernate 6.x breaks collection batch fetching
+    * [HHH-16039] - Stream fails to fetch object during processing where BatchEntitySelectFetchInitializer gets used
+    * [HHH-16036] - Fix Oracle CI parameter STATISTICS_LEVEL
+    * [HHH-16035] - Duration literals and 'by' are almost completely broken
+    * [HHH-16033] - Many-to-Many inverse mapping referencing the same class uses pk instead of fk field for removal
+    * [HHH-16031] - @ManyToMany with @JoinTable(inverseColumn = ...) and SortedSet may results in data loss
+    * [HHH-16025] - Using BatchEntitySelectFetchInitializer with caching leads to caching wrong values
+    * [HHH-16023] - ArrayIndexOutOfBoundsException: Index 1 out of bounds for length 1 for NamedNativeQuery with generics
+    * [HHH-16020] - Hibernate doesn't set the correct bind parameter for the offset when using NativeQuery.setFirstResult() on Postgresql
+    * [HHH-16014] - Querying property from treated path causes IllegalArgumentException: Already registered a copy
+    * [HHH-16010] - DefaultEvictEventListener calls handleEviction with swapped parameters
+    * [HHH-16007] - PropertyAccessException when deleting entities with Embeddables with child collections
+    * [HHH-16005] -  @BatchSize with @ManyToMany does not work as expected when migrating 5 -> 6
+    * [HHH-16004] - Downcasting with CriteriaBuilder.treat causes ClassCastException
+    * [HHH-15986] - Eager Bidirectional association, initializing an HibernateProxy should associate to the circular association the HibernateProxy  itself
+    * [HHH-15982] - Bidirectional one-to-one associations produce child entities with null parent entity references
+    * [HHH-15967] - @OneToOne(mappedBy = ..., fetch = LAZY) in embedded referencing an association within another embedded 
+    * [HHH-15966] - ElementCollection with nested Embeddables fails with ArrayIndexOutOfBoundsException
+    * [HHH-15950] - AssertionError with bidirectional OneToOne relation using AttributeConverter for the FK
+    * [HHH-15934] - @Basic(optional=false) has no effect
+    * [HHH-15933] - broken SQL generated for @ManyToOne with @JoinColumn which references a column of a @SecondaryTable
+    * [HHH-15928] -  Distinct with maxResults fails under SQLServer
+    * [HHH-15921] - @BatchSize and @IdClass on join column throws exception
+    * [HHH-15902] - @OneToMany relationship with @Where on child table generates wrong sql
+    * [HHH-15890] -  springboot 3.0.0 + hibernate 6.1.5.Final + IBM DB2 error after migrating from springboot 2.7.0 + hibernate 5.6.9.Final
+    * [HHH-15888] - review exception reporting in Column.getSqlType()/getSqlTypeName()
+    * [HHH-15866] - Hibernate validation fails when OneToMany refers to fereign key in embeddable object and is marked as nullable false
+    * [HHH-15865] - OneToMany foreign key relation throws when id is inside nested embeddables
+    * [HHH-15864] - OrphanRemoval does not work with embeddables when deleting entity
+    * [HHH-15854] - Improve CollectionInitializer and EntityDelayedFetchInitializer resolveInstance methods performance when the parent entity is initialized
+    * [HHH-15851] - Mixup of entities in refresh with BatchSize
+    * [HHH-15839] - CriteriaBuilder treat method on Path causes ClassCastException
+    * [HHH-15822] - Unexpected org.hibernate.UnknownEntityTypeException: Unable to locate persister
+    * [HHH-15794] - NullPointerException when constructing mapping model for nested embeddables with not optional ManyToOne
+    * [HHH-15617] - Fix Documentation for direct fetching with Filter
+    * [HHH-15604] - Identically-named association in entity root and elementcollection of embeddables leads to assertion error
+    * [HHH-15372] - Static metamodel generator references version 2.1
+    * [HHH-14526] - Problem with InheritanceType.JOINED without own subtable
+    * [HHH-14338] - HSQLDialect relies on "MODULE"-Prefix for local temporary table creation but MODULE-Prefix has been dropped in HSQLDB Version 2.5.1
+
+
 Changes in 6.2.0.CR1 (December 22, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

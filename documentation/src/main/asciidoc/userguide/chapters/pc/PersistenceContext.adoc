@@ -1,7 +1,9 @@
 [[pc]]
 == Persistence Context
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
-:sourcedir-caching: ../../../../../test/java/org/hibernate/userguide/caching
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-pc: {documentation-project-dir}/src/test/java/org/hibernate/userguide/pc
+:example-dir-caching: {documentation-project-dir}/src/test/java/org/hibernate/userguide/caching
 :extrasdir: extras
 
 Both the `org.hibernate.Session` API and `jakarta.persistence.EntityManager` API represent a context for dealing with persistent data.
@@ -27,7 +29,7 @@ Jakarta Persistence defines an incredibly useful method to allow applications ac
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-unwrap-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-unwrap-example]
 ----
 ====
 
@@ -44,7 +46,7 @@ You can make it persistent by associating it to either an `org.hibernate.Session
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-persist-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-persist-jpa-example]
 ----
 ====
 
@@ -53,7 +55,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-persist-jpa-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-persist-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-persist-native-example]
 ----
 ====
 
@@ -73,7 +75,7 @@ Entities can also be deleted.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-remove-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-remove-jpa-example]
 ----
 ====
 
@@ -82,7 +84,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-remove-jpa-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-remove-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-remove-native-example]
 ----
 ====
 
@@ -106,7 +108,7 @@ The most common case being the need to create an association between an entity a
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-get-reference-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-reference-jpa-example]
 ----
 ====
 
@@ -115,7 +117,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-get-reference-jpa-examp
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-get-reference-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-get-reference-native-example]
 ----
 ====
 
@@ -137,7 +139,7 @@ It is also quite common to want to obtain an entity along with its data (e.g. li
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-jpa-example]
 ----
 ====
 
@@ -147,7 +149,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-jpa-example]
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-native-example]
 ----
 ====
 
@@ -157,7 +159,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-native-example]
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-id-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-by-id-native-example]
 ----
 ====
 
@@ -171,7 +173,7 @@ It's possible to return a Java 8 `Optional` as well:
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-optional-by-id-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-optional-by-id-native-example]
 ----
 ====
 
@@ -241,7 +243,7 @@ as illustrated by the following example:
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/MultiLoadIdTest.java[tags=pc-by-multiple-ids-example]
+include::{example-dir-pc}/MultiLoadIdTest.java[tags=pc-by-multiple-ids-example]
 ----
 
 [source, SQL, indent=0]
@@ -262,7 +264,7 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/MultiLoadIdTest.java[tags=pc-by-multiple-ids-second-level-cache-example]
+include::{example-dir-pc}/MultiLoadIdTest.java[tags=pc-by-multiple-ids-second-level-cache-example]
 ----
 ====
 
@@ -289,7 +291,7 @@ In addition to allowing to load the entity by its identifier, Hibernate allows a
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-natural-id-entity-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-by-natural-id-entity-example]
 ----
 ====
 
@@ -300,7 +302,7 @@ We can also opt to fetch the entity or just retrieve a reference to it when usin
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-simple-natural-id-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-by-simple-natural-id-example]
 ----
 ====
 
@@ -309,7 +311,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-simple-natural-
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-by-natural-id-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-by-natural-id-example]
 ----
 ====
 
@@ -320,7 +322,7 @@ We can also use a Java 8 `Optional` to load an entity by its natural id:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-optional-by-simple-natural-id-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-find-optional-by-simple-natural-id-example]
 ----
 ====
 
@@ -357,7 +359,7 @@ This can be achieved using the `@Where` annotation, which can be applied to enti
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/WhereTest.java[tags=pc-where-example]
+include::{example-dir-pc}/WhereTest.java[tags=pc-where-example]
 ----
 ====
 
@@ -368,7 +370,7 @@ If the database contains the following entities:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/WhereTest.java[tags=pc-where-persistence-example]
+include::{example-dir-pc}/WhereTest.java[tags=pc-where-persistence-example]
 ----
 
 [source, SQL, indent=0]
@@ -384,7 +386,7 @@ When executing an `Account` entity query, Hibernate is going to filter out all r
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/WhereTest.java[tags=pc-where-entity-query-example]
+include::{example-dir-pc}/WhereTest.java[tags=pc-where-entity-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -400,7 +402,7 @@ When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/WhereTest.java[tags=pc-where-collection-query-example]
+include::{example-dir-pc}/WhereTest.java[tags=pc-where-collection-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -419,7 +421,7 @@ Just like `@Where` annotation, `@WhereJoinTable` is used to filter out collectio
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/WhereJoinTableTest.java[tags=pc-where-join-table-example]
+include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-example]
 ----
 
 [source, SQL, indent=0]
@@ -438,7 +440,7 @@ Considering that the following two `Book_Reader` entries are added into our syst
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/WhereJoinTableTest.java[tags=pc-where-join-table-persist-example]
+include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-persist-example]
 ----
 ====
 
@@ -449,7 +451,7 @@ When fetching the `currentWeekReaders` collection, Hibernate is going to find on
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/WhereJoinTableTest.java[tags=pc-where-join-table-fetch-example]
+include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-fetch-example]
 ----
 ====
 
@@ -466,7 +468,7 @@ Now, considering we have the following `Account` entity:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterTest.java[tags=pc-filter-Account-example]
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-Account-example]
 ----
 ====
 
@@ -484,7 +486,7 @@ As already explained, we can also apply the `@Filter` annotation for collections
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterTest.java[tags=pc-filter-Client-example]
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-Client-example]
 ----
 ====
 
@@ -496,7 +498,7 @@ Hibernate will execute the following SQL statements:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterTest.java[tags=pc-filter-persistence-example]
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-persistence-example]
 ----
 
 [source, SQL, indent=0]
@@ -512,7 +514,7 @@ By default, without explicitly enabling the filter, Hibernate is going to fetch 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterTest.java[tags=pc-no-filter-entity-query-example]
+include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-entity-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -529,7 +531,7 @@ then Hibernate is going to apply the filtering criteria to the associated `Accou
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterTest.java[tags=pc-filter-entity-query-example]
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -548,7 +550,7 @@ Therefore, even in the following example, the filter is taken into consideration
 .Fetching entities mapped with `@Filter`
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterTest.java[tags=pc-filter-entity-example]
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-example]
 ----
 
 [source, SQL, indent=0]
@@ -566,7 +568,7 @@ Just like with entity queries, collections can be filtered as well, but only if 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterTest.java[tags=pc-no-filter-collection-query-example]
+include::{example-dir-pc}/FilterTest.java[tags=pc-no-filter-collection-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -582,7 +584,7 @@ When activating the `@Filter` and fetching the `accounts` collections, Hibernate
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterTest.java[tags=pc-filter-collection-query-example]
+include::{example-dir-pc}/FilterTest.java[tags=pc-filter-collection-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -620,7 +622,7 @@ if the `@Filter` defines a condition that uses predicates across multiple tables
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-example]
+include::{example-dir-pc}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-example]
 ----
 ====
 
@@ -632,7 +634,7 @@ Hibernate is going to apply the right table aliases to the filter predicates:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-query-example]
+include::{example-dir-pc}/FilterSqlFragementAliasTest.java[tags=pc-filter-sql-fragment-alias-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -654,7 +656,7 @@ The `@FilterJoinTable` annotation can be, therefore, applied to a unidirectional
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterJoinTableTest.java[tags=pc-filter-join-table-example]
+include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-example]
 ----
 ====
 
@@ -669,7 +671,7 @@ Let's assume our database contains the following entities:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterJoinTableTest.java[tags=pc-filter-join-table-persistence-example]
+include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-persistence-example]
 ----
 
 [source, SQL, indent=0]
@@ -685,7 +687,7 @@ The collections can be filtered only if the associated filter is enabled on the 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterJoinTableTest.java[tags=pc-no-filter-join-table-collection-query-example]
+include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-no-filter-join-table-collection-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -702,7 +704,7 @@ If we enable the filter and set the `maxOrderId` to `1` when fetching the `accou
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FilterJoinTableTest.java[tags=pc-filter-join-table-collection-query-example]
+include::{example-dir-pc}/FilterJoinTableTest.java[tags=pc-filter-join-table-collection-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -722,7 +724,7 @@ There is no need to call a particular method to make your modifications persiste
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-managed-state-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-managed-state-jpa-example]
 ----
 ====
 
@@ -731,7 +733,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-managed-state-jpa-examp
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-managed-state-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-managed-state-native-example]
 ----
 ====
 
@@ -744,7 +746,7 @@ Therefore, considering you have the following `Product` entity mapping:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-mapping-example]
+include::{example-dir-pc}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-mapping-example]
 ----
 ====
 
@@ -755,7 +757,7 @@ If you persist the following `Product` entity:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-persist-example]
+include::{example-dir-pc}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-persist-example]
 ----
 ====
 
@@ -766,7 +768,7 @@ When you modify the `Product` entity, Hibernate generates the following SQL UPDA
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-example]
+include::{example-dir-pc}/NoDynamicUpdateTest.java[tags=pc-managed-state-update-example]
 ----
 
 [source, SQL, indent=0]
@@ -795,7 +797,7 @@ To enable dynamic updates, you need to annotate the entity with the `@DynamicUpd
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DynamicUpdateTest.java[tags=pc-managed-state-dynamic-update-mapping-example]
+include::{example-dir-pc}/DynamicUpdateTest.java[tags=pc-managed-state-dynamic-update-mapping-example]
 ----
 ====
 
@@ -822,7 +824,7 @@ You can reload an entity instance and its collections at any time.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-refresh-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-refresh-jpa-example]
 ----
 ====
 
@@ -831,7 +833,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-refresh-jpa-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-refresh-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-refresh-native-example]
 ----
 ====
 
@@ -876,7 +878,7 @@ For instance, consider the following example:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-refresh-child-entity-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-refresh-child-entity-jpa-example]
 ----
 ====
 
@@ -912,7 +914,7 @@ Jakarta Persistence does not support reattaching detached data. This is only ava
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-detach-reattach-lock-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-detach-reattach-lock-example]
 ----
 ====
 
@@ -921,7 +923,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-detach-reattach-lock-ex
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-detach-reattach-saveOrUpdate-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-detach-reattach-saveOrUpdate-example]
 ----
 ====
 
@@ -947,7 +949,7 @@ Although not exactly per se, the following example is a good visualization of th
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-visualize-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-merge-visualize-example]
 ----
 ====
 
@@ -956,7 +958,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-visualize-example
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-merge-jpa-example]
 ----
 ====
 
@@ -965,7 +967,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-jpa-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-merge-native-example]
 ----
 ====
 
@@ -1038,7 +1040,7 @@ An application can verify the state of entities and collections in relation to t
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-contains-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-contains-jpa-example]
 ----
 ====
 
@@ -1047,7 +1049,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-contains-jpa-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-contains-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-contains-native-example]
 ----
 ====
 
@@ -1056,7 +1058,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-contains-native-example
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-example]
 ----
 ====
 
@@ -1065,7 +1067,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-example
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-verify-lazy-native-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-native-example]
 ----
 ====
 
@@ -1076,7 +1078,7 @@ In Jakarta Persistence there is an alternative means to check laziness using the
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-alternative-example]
+include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-verify-lazy-jpa-alternative-example]
 ----
 ====
 
@@ -1091,7 +1093,7 @@ the `evict()` method can be used to remove the object and its collections from t
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-jpa-detach-example]
+include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-jpa-detach-example]
 ----
 ====
 
@@ -1100,7 +1102,7 @@ include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-jp
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-native-evict-example]
+include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-native-evict-example]
 ----
 ====
 
@@ -1111,7 +1113,7 @@ To detach all entities from the current persistence context, both the `EntityMan
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-clear-example]
+include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-clear-example]
 ----
 ====
 
@@ -1122,7 +1124,7 @@ To verify if an entity instance is currently attached to the running persistence
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-contains-example]
+include::{example-dir-caching}/FirstLevelCacheTest.java[tags=caching-management-contains-example]
 ----
 ====
 
@@ -1149,9 +1151,9 @@ The following examples will explain some of the aforementioned cascade operation
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/Person.java[tags=pc-cascade-domain-model-example]
+include::{example-dir-pc}/Person.java[tags=pc-cascade-domain-model-example]
 
-include::{sourcedir}/Phone.java[tags=pc-cascade-domain-model-example]
+include::{example-dir-pc}/Phone.java[tags=pc-cascade-domain-model-example]
 ----
 
 [[pc-cascade-persist]]
@@ -1164,7 +1166,7 @@ The `CascadeType.PERSIST` allows us to persist a child entity along with the par
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadePersistTest.java[tags=pc-cascade-persist-example]
+include::{example-dir-pc}/CascadePersistTest.java[tags=pc-cascade-persist-example]
 ----
 
 [source, SQL, indent=0]
@@ -1185,7 +1187,7 @@ The `CascadeType.MERGE` allows us to merge a child entity along with the parent 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeMergeTest.java[tags=pc-cascade-merge-example]
+include::{example-dir-pc}/CascadeMergeTest.java[tags=pc-cascade-merge-example]
 ----
 
 [source, SQL, indent=0]
@@ -1209,7 +1211,7 @@ However, `CascadeType.REMOVE` and `org.hibernate.annotations.CascadeType.DELETE`
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeRemoveTest.java[tags=pc-cascade-remove-example]
+include::{example-dir-pc}/CascadeRemoveTest.java[tags=pc-cascade-remove-example]
 ----
 
 [source, SQL, indent=0]
@@ -1228,7 +1230,7 @@ include::{extrasdir}/pc-cascade-remove-example.sql[]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
+include::{example-dir-pc}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
 ----
 ====
 
@@ -1245,7 +1247,7 @@ However, `CascadeType.LOCK` allows us to reattach a parent entity along with its
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeLockTest.java[tags=pc-cascade-lock-example]
+include::{example-dir-pc}/CascadeLockTest.java[tags=pc-cascade-lock-example]
 ----
 ====
 
@@ -1260,7 +1262,7 @@ The refresh operation will discard the current entity state, and it will overrid
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeRefreshTest.java[tags=pc-cascade-refresh-example]
+include::{example-dir-pc}/CascadeRefreshTest.java[tags=pc-cascade-refresh-example]
 ----
 
 [source, SQL, indent=0]
@@ -1282,7 +1284,7 @@ The replicate operation allows you to synchronize entities coming from different
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeReplicateTest.java[tags=pc-cascade-replicate-example]
+include::{example-dir-pc}/CascadeReplicateTest.java[tags=pc-cascade-replicate-example]
 ----
 
 [source, SQL, indent=0]
@@ -1308,12 +1310,12 @@ as illustrated by the following example.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Person-example]
+include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Person-example]
 ----
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Phone-example]
+include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-mapping-Phone-example]
 ----
 
 [source, SQL, indent=0]
@@ -1329,7 +1331,7 @@ Now, you can just remove the `Person` entity, and the associated `Phone` entitie
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-example]
+include::{example-dir-pc}/CascadeOnDeleteTest.java[tags=pc-cascade-on-delete-example]
 ----
 
 [source, SQL, indent=0]
@@ -1346,12 +1348,12 @@ illustrated in the following example.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Person-example]
+include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Person-example]
 ----
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Phone-example]
+include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-mapping-Phone-example]
 ----
 ====
 
@@ -1362,7 +1364,7 @@ Now, when removing the `Person` entity, all the associated `Phone` child entitie
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-example]
+include::{example-dir-pc}/CascadeOnDeleteCollectionTest.java[tags=pc-cascade-on-delete-collection-example]
 ----
 
 [source, SQL, indent=0]

@@ -1,12 +1,6 @@
 [[beans]]
 == Managed Beans
-:rootProjectDir: ../../../../../../..
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/beans
-:coreProjectDir: {rootProjectDir}/hibernate-core
-:coreTestSrcDir: {rootProjectDir}/hibernate-core/src/test/java
-:instantiatorTestDir: {coreTestSrcDir}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
 :extrasdir: extras
-:fn-cdi-availability: footnote:disclaimer[With delayed or extended CDI availability, IdentifierGenerators cannot be resolved from CDI due to timing.  See <<beans-cdi>>]
 
 Hibernate supports consuming many of its extension points as "managed beans".  A bean being
 managed simply means that its creation and lifecycle are managed by a container of some sort.
@@ -25,10 +19,11 @@ the SessionFactory.  It supports a number of ways to influence how this process 
 [[beans-manageable]]
 === Manageable Beans
 
-Hibernate supports using the following integrations as managed beans:
+Jakarta Persistence defines support for resolving `AttributeConverter` and
+"entity listener" classes as managed beans.
 
-* `jakarta.persistence.AttributeConverter`
-* Jakarta Persistence "entity listener" classes
+Additionally, Hibernate supports resolving the following integrations as managed beans:
+
 * `org.hibernate.type.descriptor.jdbc.JdbcType`
 * `org.hibernate.type.descriptor.java.BasicJavaType`
 * `org.hibernate.type.descriptor.java.MutabilityPlan`
@@ -36,7 +31,10 @@ Hibernate supports using the following integrations as managed beans:
 * `org.hibernate.usertype.UserCollectionType`
 * `org.hibernate.metamodel.EmbeddableInstantiator`
 * `org.hibernate.envers.RevisionListener`
-* `org.hibernate.id.IdentifierGenerator`{fn-cdi-availability}
+* `org.hibernate.id.IdentifierGenerator`
+
+NOTE: At the moment, when using either <<beans-cdi-delayed,delayed>> or <<beans-cdi-extended,extended>>
+CDI access, resolving these Hibernate integrations as managed beans is disabled.
 
 
 [[beans-cdi]]

@@ -1,8 +1,10 @@
 [[schema-generation]]
 == Schema generation
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/schema
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-schemagen: {documentation-project-dir}/src/test/java/org/hibernate/userguide/schema
+:example-dir-schemagen-resources: {documentation-project-dir}/src/test/resources
 :extrasdir: extras
-:resourcesdir: ../../../../../test/resources
 
 Hibernate allows you to generate the database from the entity mappings.
 
@@ -22,7 +24,7 @@ Considering the following Domain Model:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BaseSchemaGeneratorTest.java[tags=schema-generation-domain-model-example]
+include::{example-dir-schemagen}/BaseSchemaGeneratorTest.java[tags=schema-generation-domain-model-example]
 ----
 ====
 
@@ -49,7 +51,7 @@ For instance, considering the following `schema-generation.sql` import file:
 ====
 [source, JAVA, indent=0]
 ----
-include::{resourcesdir}/schema-generation.sql[]
+include::{example-dir-schemagen-resources}/schema-generation.sql[]
 ----
 ====
 
@@ -80,7 +82,7 @@ Considering the following HBM mapping:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SchemaGenerationTest.hbm.xml[]
+include::{example-dir-schemagen}/SchemaGenerationTest.hbm.xml[]
 ----
 ====
 
@@ -96,7 +98,7 @@ Hibernate offers the `@Check` annotation so that you can specify an arbitrary SQ
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CheckTest.java[tag=schema-generation-database-checks-example]
+include::{example-dir-schemagen}/CheckTest.java[tag=schema-generation-database-checks-example]
 ----
 ====
 
@@ -108,7 +110,7 @@ a `ConstraintViolationException` is going to be thrown.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CheckTest.java[tag=schema-generation-database-checks-persist-example]
+include::{example-dir-schemagen}/CheckTest.java[tag=schema-generation-database-checks-persist-example]
 ----
 
 [source, SQL, indent=0]
@@ -127,7 +129,7 @@ With Hibernate, you can specify a default value for a given database column usin
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-mapping-example]
+include::{example-dir-schemagen}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-mapping-example]
 ----
 
 [source, SQL, indent=0]
@@ -150,7 +152,7 @@ This way, when the `name` and or `clientId` attribute is null, the database will
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-persist-example]
+include::{example-dir-schemagen}/ColumnDefaultTest.java[tag=schema-generation-column-default-value-persist-example]
 ----
 
 [source, SQL, indent=0]
@@ -176,7 +178,7 @@ Considering the following entity mapping, Hibernate generates the unique constra
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-mapping-example]
+include::{example-dir-schemagen}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-mapping-example]
 ----
 
 [source, SQL, indent=0]
@@ -193,7 +195,7 @@ it's no longer possible to add two books with the same title and for the same au
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-persist-example]
+include::{example-dir-schemagen}/UniqueConstraintTest.java[tag=schema-generation-columns-unique-constraint-persist-example]
 ----
 
 [source, SQL, indent=0]
@@ -216,7 +218,7 @@ Considering the following entity mapping. Hibernate generates the index when cre
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/IndexTest.java[tag=schema-generation-columns-index-mapping-example]
+include::{example-dir-schemagen}/IndexTest.java[tag=schema-generation-columns-index-mapping-example]
 ----
 
 [source, SQL, indent=0]

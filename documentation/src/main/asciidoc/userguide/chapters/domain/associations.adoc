@@ -1,6 +1,8 @@
 [[associations]]
 === Associations
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/associations
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-association: {documentation-project-dir}/src/test/java/org/hibernate/userguide/associations
 :extrasdir: extras/associations
 
 Associations describe how two or more entities form a relationship based on a database joining semantics.
@@ -16,7 +18,7 @@ and so it establishes a relationship between a child entity and a parent.
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToOneTest.java[tags=associations-many-to-one-example,indent=0]
+include::{example-dir-association}/ManyToOneTest.java[tags=associations-many-to-one-example,indent=0]
 ----
 
 [source,sql]
@@ -32,7 +34,7 @@ Each entity has a lifecycle of its own. Once the `@ManyToOne` association is set
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToOneTest.java[tags=associations-many-to-one-lifecycle-example,indent=0]
+include::{example-dir-association}/ManyToOneTest.java[tags=associations-many-to-one-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -58,7 +60,7 @@ When using a unidirectional `@OneToMany` association, Hibernate resorts to using
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-example,indent=0]
+include::{example-dir-association}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -78,7 +80,7 @@ Only the parent side of an association makes sense to cascade its entity state t
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/OneToManyUnidirectionalTest.java[tags=associations-one-to-many-unidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -111,7 +113,7 @@ Every bidirectional association must have one owning side only (the child side),
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-example,indent=0]
+include::{example-dir-association}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -135,7 +137,7 @@ the `equals()` and the `hashCode()` can make use of this property, and so the `r
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/OneToManyBidirectionalTest.java[tags=associations-one-to-many-bidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -164,7 +166,7 @@ A bidirectional association features a `mappedBy` `@OneToOne` parent side too.
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneUnidirectionalTest.java[tags=associations-one-to-one-unidirectional-example,indent=0]
+include::{example-dir-association}/OneToOneUnidirectionalTest.java[tags=associations-one-to-one-unidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -188,7 +190,7 @@ This mapping requires a bidirectional `@OneToOne` association as you can see in 
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-example,indent=0]
+include::{example-dir-association}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -204,7 +206,7 @@ This time, the `PhoneDetails` owns the association, and, like any bidirectional 
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -222,7 +224,7 @@ Continuing the previous example, when adding another `PhoneDetails`, Hibernate v
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-constraint-example,indent=0]
+include::{example-dir-association}/OneToOneBidirectionalTest.java[tags=associations-one-to-one-bidirectional-constraint-example,indent=0]
 ----
 ====
 
@@ -243,7 +245,7 @@ then you need to enable lazy state initialization bytecode enhancement.
 ====
 [source,java]
 ----
-include::{sourcedir}/OneToOneBidirectionalLazyTest.java[tags=associations-one-to-one-bidirectional-lazy-example,indent=0]
+include::{example-dir-association}/OneToOneBidirectionalLazyTest.java[tags=associations-one-to-one-bidirectional-lazy-example,indent=0]
 ----
 ====
 
@@ -264,7 +266,7 @@ Like the `@OneToMany` association, `@ManyToMany` can be either unidirectional or
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-example,indent=0]
+include::{example-dir-association}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -283,7 +285,7 @@ Unfortunately, this operation requires removing all entries associated with a gi
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -318,7 +320,7 @@ By simply removing the parent-side, Hibernate can safely remove the associated l
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-remove-example,indent=0]
+include::{example-dir-association}/ManyToManyUnidirectionalTest.java[tags=associations-many-to-many-unidirectional-remove-example,indent=0]
 ----
 
 [source,sql]
@@ -338,7 +340,7 @@ To preserve synchronicity between both sides, it's good practice to provide help
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-example,indent=0]
+include::{example-dir-association}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -354,7 +356,7 @@ With the helper methods in place, the synchronicity management can be simplified
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-lifecycle-example,indent=0]
+include::{example-dir-association}/ManyToManyBidirectionalTest.java[tags=associations-many-to-many-bidirectional-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -378,7 +380,7 @@ and the link table has an associated entity which controls the relationship for 
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-example,indent=0]
+include::{example-dir-association}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-example,indent=0]
 ----
 
 [source,sql]
@@ -404,7 +406,7 @@ The entity state transitions are better managed than in the previous bidirection
 ====
 [source,java]
 ----
-include::{sourcedir}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-lifecycle-example,indent=0]
+include::{example-dir-association}/ManyToManyBidirectionalWithLinkEntityTest.java[tags=associations-many-to-many-bidirectional-with-link-entity-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -456,7 +458,7 @@ Considering the following `City` and `Person` entity mappings:
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-domain-model-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-domain-model-example,indent=0]
 ----
 ====
 
@@ -467,7 +469,7 @@ If we have the following entities in our database:
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-persist-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-persist-example,indent=0]
 ----
 ====
 
@@ -478,7 +480,7 @@ When loading the `Person` entity, Hibernate is able to locate the associated `Ci
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-find-baseline,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-find-baseline,indent=0]
 ----
 ====
 
@@ -489,7 +491,7 @@ However, if we break the foreign-key:
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-break-fk,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-break-fk,indent=0]
 ----
 ====
 
@@ -500,7 +502,7 @@ Hibernate is not going to throw any exception, and it will assign a value of `nu
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-non-existing-find-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-non-existing-find-example,indent=0]
 ----
 ====
 
@@ -529,7 +531,7 @@ resolve the `city.id` value.
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-implicit-join-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-implicit-join-example,indent=0]
 ----
 ====
 
@@ -543,7 +545,7 @@ using the special `fk(..)` function.  E.g.
 ====
 [source,java]
 ----
-include::{sourcedir}/NotFoundTest.java[tags=associations-not-found-fk-function-example,indent=0]
+include::{example-dir-association}/NotFoundTest.java[tags=associations-not-found-fk-function-example,indent=0]
 ----
 ====
 
@@ -615,11 +617,11 @@ For this example, consider the following `Property` class hierarchy:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/any/Property.java[tags=associations-any-property-example]
+include::{example-dir-association}/any/Property.java[tags=associations-any-property-example]
 
-include::{sourcedir}/any/IntegerProperty.java[tags=associations-any-property-example]
+include::{example-dir-association}/any/IntegerProperty.java[tags=associations-any-property-example]
 
-include::{sourcedir}/any/StringProperty.java[tags=associations-any-property-example]
+include::{example-dir-association}/any/StringProperty.java[tags=associations-any-property-example]
 ----
 ====
 
@@ -630,7 +632,7 @@ A `PropertyHolder` entity defines an attribute of type `Property`:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/any/PropertyHolder.java[tags=associations-any-example]
+include::{example-dir-association}/any/PropertyHolder.java[tags=associations-any-example]
 ----
 
 [source, SQL, indent=0]
@@ -657,7 +659,7 @@ Hibernate will generate the following SQL queries:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/any/AnyTest.java[tags=associations-any-persist-example]
+include::{example-dir-association}/any/AnyTest.java[tags=associations-any-persist-example]
 ----
 
 [source, SQL, indent=0]
@@ -674,7 +676,7 @@ Hibernate will fetch the associated `StringProperty` entity like this:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/any/AnyTest.java[tags=associations-any-query-example]
+include::{example-dir-association}/any/AnyTest.java[tags=associations-any-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -700,7 +702,7 @@ into a single annotation that we can apply in each usage.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/any/PropertyHolder2.java[tags=associations-any-def-example]
+include::{example-dir-association}/any/PropertyHolder2.java[tags=associations-any-def-example]
 ----
 ====
 
@@ -731,7 +733,7 @@ The `repository_properties` link table holds the associations between `PropertyR
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/any/PropertyRepository.java[tags=associations-many-to-any-example]
+include::{example-dir-association}/any/PropertyRepository.java[tags=associations-many-to-any-example]
 ----
 
 [source, SQL, indent=0]
@@ -751,7 +753,7 @@ Hibernate will generate the following SQL queries:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/any/ManyToAnyTest.java[tags=associations-many-to-any-persist-example]
+include::{example-dir-association}/any/ManyToAnyTest.java[tags=associations-many-to-any-persist-example]
 ----
 
 [source, SQL, indent=0]
@@ -768,7 +770,7 @@ Hibernate will fetch the associated `IntegerProperty` and `StringProperty` entit
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/any/ManyToAnyTest.java[tags=associations-many-to-any-query-example]
+include::{example-dir-association}/any/ManyToAnyTest.java[tags=associations-many-to-any-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -789,7 +791,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/JoinFormulaTest.java[tags=associations-JoinFormula-example]
+include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-example]
 ----
 
 [source, SQL, indent=0]
@@ -807,7 +809,7 @@ Considering we have the following entities:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/JoinFormulaTest.java[tags=associations-JoinFormula-persistence-example]
+include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-persistence-example]
 ----
 ====
 
@@ -818,7 +820,7 @@ When fetching the `User` entities, the `country` property is mapped by the `@Joi
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/JoinFormulaTest.java[tags=associations-JoinFormula-fetching-example]
+include::{example-dir-association}/JoinFormulaTest.java[tags=associations-JoinFormula-fetching-example]
 ----
 
 [source, SQL, indent=0]
@@ -839,7 +841,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-example]
+include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-example]
 ----
 
 [source, SQL, indent=0]
@@ -857,7 +859,7 @@ Considering we have the following entities:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-persistence-example]
+include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-persistence-example]
 ----
 ====
 
@@ -868,7 +870,7 @@ When fetching the `User` entities, the `country` property is mapped by the `@Joi
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-fetching-example]
+include::{example-dir-association}/JoinColumnOrFormulaTest.java[tags=associations-JoinColumnOrFormula-fetching-example]
 ----
 
 [source, SQL, indent=0]

@@ -1,7 +1,10 @@
 [[bootstrap]]
 == Bootstrap
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/bootstrap
-:boot-spi-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/orm/test/bootstrap/spi
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-boot: {documentation-project-dir}/src/test/java/org/hibernate/userguide/bootstrap
+:example-dir-boot-spi: {core-project-dir}/src/test/java/org/hibernate/orm/test/bootstrap/spi
 :extrasdir: extras
 
 The term bootstrapping refers to initializing and starting a software component.
@@ -48,7 +51,7 @@ If you wish to alter how the `BootstrapServiceRegistry` is built, that is contro
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-bootstrap-native-registry-BootstrapServiceRegistry-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-bootstrap-native-registry-BootstrapServiceRegistry-example]
 ----
 ====
 
@@ -65,7 +68,7 @@ You will almost always need to configure the `StandardServiceRegistry`, which is
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example]
 ----
 ====
 
@@ -79,7 +82,7 @@ Some specific methods of interest:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-bootstrap-native-registry-MetadataSources-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-bootstrap-native-registry-MetadataSources-example]
 ----
 ====
 
@@ -93,7 +96,7 @@ The main use cases for an `org.hibernate.integrator.spi.Integrator` right now ar
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-event-listener-registration-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-event-listener-registration-example]
 ----
 ====
 
@@ -112,7 +115,7 @@ Also, all methods on `MetadataSources` offer fluent-style call chaining::
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-metadata-source-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-native-metadata-source-example]
 ----
 ====
 
@@ -136,7 +139,7 @@ See its https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-metadata-builder-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-native-metadata-builder-example]
 ----
 ====
 
@@ -153,7 +156,7 @@ However, if you would like to adjust that building process, you will need to use
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-SessionFactory-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-native-SessionFactory-example]
 ----
 ====
 
@@ -168,7 +171,7 @@ The bootstrapping API is quite flexible, but in most cases it makes the most sen
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-native-SessionFactoryBuilder-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-native-SessionFactoryBuilder-example]
 ----
 ====
 
@@ -196,7 +199,7 @@ and make that available to the application for injection via the `jakarta.persis
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-example]
 ----
 ====
 
@@ -208,7 +211,7 @@ you can inject a specific `EntityManagerFactory` by Unit name:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-configurable-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceUnit-configurable-example]
 ----
 ====
 
@@ -231,7 +234,7 @@ The application creates an `EntityManagerFactory` by calling the `createEntityMa
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManagerFactory-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManagerFactory-example]
 ----
 ====
 
@@ -249,7 +252,7 @@ To inject the default Persistence Context, you can use the {jpaJavadocUrlPrefix}
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceContext-example, indent=0]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceContext-example, indent=0]
 ----
 ====
 
@@ -264,7 +267,7 @@ and you can even pass `EntityManager`-specific properties using the
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceContext-configurable-example, indent=0]
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-PersistenceContext-configurable-example, indent=0]
 ----
 ====
 
@@ -324,7 +327,7 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 ====
 [source, JAVA, indent=0]
 ----
-include::{boot-spi-sourcedir}/metadatabuildercontributor/SqlFunctionMetadataBuilderContributor.java[tags=bootstrap-jpa-compliant-MetadataBuilderContributor-example]
+include::{example-dir-boot-spi}/metadatabuildercontributor/SqlFunctionMetadataBuilderContributor.java[tags=bootstrap-jpa-compliant-MetadataBuilderContributor-example]
 ----
 ====
 org.hibernate.orm.test.bootstrap.spi.metadatabuildercontributor

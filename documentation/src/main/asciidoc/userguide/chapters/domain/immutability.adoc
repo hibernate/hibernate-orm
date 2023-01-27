@@ -1,6 +1,8 @@
 [[entity-immutability]]
 === Immutability
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/immutability
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-immutability: {documentation-project-dir}/src/test/java/org/hibernate/userguide/immutability
 :extrasdir: extras/immutability
 
 Immutability can be specified for both entities and collections.
@@ -13,7 +15,7 @@ If a specific entity is immutable, it is good practice to mark it with the `@Imm
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityImmutabilityTest.java[tags=entity-immutability-example]
+include::{example-dir-immutability}/EntityImmutabilityTest.java[tags=entity-immutability-example]
 ----
 ====
 
@@ -28,7 +30,7 @@ Considering the following entity is persisted in the database:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityImmutabilityTest.java[tags=entity-immutability-persist-example]
+include::{example-dir-immutability}/EntityImmutabilityTest.java[tags=entity-immutability-persist-example]
 ----
 ====
 
@@ -39,7 +41,7 @@ Hibernate will skip any modification, therefore no SQL `UPDATE` statement is exe
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityImmutabilityTest.java[tags=entity-immutability-update-example]
+include::{example-dir-immutability}/EntityImmutabilityTest.java[tags=entity-immutability-update-example]
 ----
 
 [source, SQL, indent=0]
@@ -58,7 +60,7 @@ Considering the following entity mappings:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CollectionImmutabilityTest.java[tags=collection-immutability-example]
+include::{example-dir-immutability}/CollectionImmutabilityTest.java[tags=collection-immutability-example]
 ----
 ====
 
@@ -69,7 +71,7 @@ Once the immutable collection is created, it can never be modified.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CollectionImmutabilityTest.java[tags=collection-immutability-persist-example]
+include::{example-dir-immutability}/CollectionImmutabilityTest.java[tags=collection-immutability-persist-example]
 ----
 ====
 
@@ -81,7 +83,7 @@ For instance, we can still modify the entity name:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CollectionImmutabilityTest.java[tags=collection-entity-update-example]
+include::{example-dir-immutability}/CollectionImmutabilityTest.java[tags=collection-entity-update-example]
 ----
 
 [source, SQL, indent=0]
@@ -96,7 +98,7 @@ However, when trying to modify the `events` collection:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CollectionImmutabilityTest.java[tags=collection-immutability-update-example]
+include::{example-dir-immutability}/CollectionImmutabilityTest.java[tags=collection-immutability-update-example]
 ----
 
 [source, bash, indent=0]

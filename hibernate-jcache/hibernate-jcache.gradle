@@ -1,7 +1,7 @@
 description = 'Integration for javax.cache into Hibernate as a second-level caching service'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-
+apply plugin: 'org.hibernate.orm.build.properties'
 
 dependencies {
     api project( ':hibernate-core' )
@@ -14,4 +14,12 @@ dependencies {
             requireCapability 'org.ehcache.modules:ehcache-xml-jakarta'
         }
     }
+}
+
+task collectConfigProperties { task ->
+    description 'Collect config properties'
+
+    tasks.generateConfigsProperties.javadocsBaseLink = 'https://docs.jboss.org/hibernate/orm/' + rootProject.ormVersion.family + '/javadocs/'
+
+    dependsOn tasks.generateConfigsProperties
 }

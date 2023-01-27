@@ -17,7 +17,6 @@ apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 apply plugin: 'org.hibernate.matrix-test'
 apply plugin: 'org.hibernate.orm.build.reports'
-apply plugin: 'org.hibernate.orm.build.properties'
 
 tasks.build.dependsOn 'buildDocs'
 defaultTasks 'buildDocs'
@@ -106,24 +105,6 @@ asciidoctorj {
 	options logDocuments: true
 }
 
-// Collect config properties ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-task collectConfigProperties { task ->
-	group 'Documentation'
-	description 'Collect config properties'
-
-	// make sure that the javadocs are generated prior to collecting properties.
-	dependsOn ':hibernate-core:javadoc'
-	dependsOn ':hibernate-envers:javadoc'
-	dependsOn ':hibernate-jcache:javadoc'
-
-	dependsOn tasks.generateConfigPropertiesMap
-	dependsOn tasks.writeConfigPropertiesMap
-
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-
-}
-
 // Topical Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {task->
@@ -178,7 +159,9 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {task->
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task
 
-	dependsOn tasks.collectConfigProperties
+	dependsOn ':hibernate-core:collectConfigProperties'
+	dependsOn ':hibernate-envers:collectConfigProperties'
+	dependsOn ':hibernate-jcache:collectConfigProperties'
 
     sourceDir = file( 'src/main/asciidoc/userguide' )
     sources {

@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.properties;
 
-import org.hibernate.orm.properties.processor.ConfigPropertyHolder;
-
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -20,20 +18,15 @@ public class ConfigPropertyCollectorPlugin implements Plugin<Project> {
 		final Task groupingTask = project.getTasks().maybeCreate( "generateHibernateConfigProperties" );
 		groupingTask.setGroup( TASK_GROUP_NAME );
 
-		ConfigPropertyHolder propertyHolder = new ConfigPropertyHolder();
-		final ConfigPropertyCollectorTask configPropertyCollectorTask = project.getTasks().create(
-				"generateConfigPropertiesMap",
-				ConfigPropertyCollectorTask.class,
-				propertyHolder
-		);
-		groupingTask.dependsOn( configPropertyCollectorTask );
+		Task javadoc = project.getTasks().maybeCreate( "javadoc" );
+		groupingTask.dependsOn( javadoc );
 
-		final ConfigPropertyWriterTask configPropertyWriterTask = project.getTasks().create(
-				"writeConfigPropertiesMap",
-				ConfigPropertyWriterTask.class,
-				propertyHolder
+
+		final ConfigPropertyCollectorTask configPropertyCollectorTask = project.getTasks().create(
+				"generateConfigsProperties",
+				ConfigPropertyCollectorTask.class
 		);
-		groupingTask.dependsOn( configPropertyWriterTask );
-		configPropertyWriterTask.dependsOn( configPropertyCollectorTask );
+		configPropertyCollectorTask.dependsOn( javadoc );
+		groupingTask.dependsOn( configPropertyCollectorTask );
 	}
 }

@@ -24,7 +24,6 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.type.SqlTypes;
 
@@ -279,10 +278,5 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
 		arithmeticExpression.getRightHandOperand().accept( this );
 		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	protected void renderMergeUsing(OptionalTableUpdate optionalTableUpdate) {
-		renderMergeUsingQuery( optionalTableUpdate );
 	}
 }

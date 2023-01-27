@@ -34,7 +34,6 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
@@ -298,6 +297,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		return " from dual";
 	}
 
+
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}
@@ -306,10 +306,5 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		// Introduction of TIES clause https://github.com/h2database/h2database/commit/876e9fbe7baf11d01675bfe871aac2cf1b6104ce
 		// Introduction of PERCENT support https://github.com/h2database/h2database/commit/f45913302e5f6ad149155a73763c0c59d8205849
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 198 );
-	}
-
-	@Override
-	protected void renderMergeUsing(OptionalTableUpdate optionalTableUpdate) {
-		renderMergeUsingValues( optionalTableUpdate );
 	}
 }

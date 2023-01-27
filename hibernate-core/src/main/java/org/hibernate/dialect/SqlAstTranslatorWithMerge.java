@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -70,35 +71,72 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 
 	protected void renderMergeInto(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( "merge into " );
+		renderMergeTarget( optionalTableUpdate );
+	}
+
+	private void renderMergeTarget(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( optionalTableUpdate.getMutatingTable().getTableName() );
+		appendSql( " " );
 		renderMergeTargetAlias();
 	}
 
 	protected void renderMergeTargetAlias() {
-		appendSql( " as t" );
+		appendSql( "as t" );
 	}
 
-	protected void renderMergeUsing(OptionalTableUpdate optionalTableUpdate) {
-		appendSql( "using " );
+	/**
+	 * @see #renderMergeUsingQuery
+	 * @see #renderMergeUsingValues
+	 */
+	protected abstract void renderMergeUsing(OptionalTableUpdate optionalTableUpdate);
 
-		renderMergeSource( optionalTableUpdate );
+	protected void renderMergeUsingQuery(OptionalTableUpdate optionalTableUpdate) {
+		appendSql( "using (" );
+		renderMergeUsingQuerySelection( optionalTableUpdate );
+		appendSql( ") " );
+
+		renderMergeSourceAlias();
 	}
 
-	protected boolean wrapMergeSourceExpression() {
-		return true;
-	}
+	private void renderMergeUsingQuerySelection(OptionalTableUpdate optionalTableUpdate) {
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
 
-	private void renderMergeSource(OptionalTableUpdate optionalTableUpdate) {
-		if ( wrapMergeSourceExpression() ) {
-			appendSql( " (" );
+		appendSql( "select " );
+
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
+			renderCasted( keyBinding.getValueExpression() );
+			appendSql( " " );
+			appendSql( keyBinding.getColumnReference().getColumnExpression() );
 		}
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			appendSql( ", " );
+			final ColumnValueBinding valueBinding = valueBindings.get( i );
+			renderCasted( valueBinding.getValueExpression() );
+			appendSql( " " );
+			appendSql( valueBinding.getColumnReference().getColumnExpression() );
+		}
+
+		final String selectionTable = StringHelper.nullIfEmpty( getFromDualForSelectOnly() );
+		if ( selectionTable != null ) {
+			appendSql( " " );
+			appendSql( selectionTable );
+		}
+	}
+
+	protected void renderMergeUsingValues(OptionalTableUpdate optionalTableUpdate) {
+		// using ( values( cast(? as VARCHAR), .. ) ) as s (col_1, ..) )
 
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
 
 		final StringBuilder columnList = new StringBuilder();
 
-		appendSql( " values (" );
+		appendSql( "using ( values (" );
 
 		for ( int i = 0; i < keyBindings.size(); i++ ) {
 			final ColumnValueBinding keyBinding = keyBindings.get( i );
@@ -118,20 +156,14 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		}
 
 		appendSql( ") " );
-
-		if ( wrapMergeSourceExpression() ) {
-			appendSql( ") " );
-		}
-
 		renderMergeSourceAlias();
-
-		appendSql( "(" );
+		appendSql( " (" );
 		appendSql( columnList.toString() );
 		appendSql( ")" );
 	}
 
 	protected void renderMergeSourceAlias() {
-		appendSql( " as s" );
+		appendSql( "as s" );
 	}
 
 	protected void renderMergeOn(OptionalTableUpdate optionalTableUpdate) {
@@ -203,7 +235,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 			if ( i > 0 ) {
 				appendSql( ", " );
 			}
-			binding.getColumnReference().appendColumnForWrite( this, "t" );
+			binding.getColumnReference().appendColumnForWrite( this, null );
 			appendSql( "=" );
 			binding.getColumnReference().appendColumnForWrite( this, "s" );
 		}

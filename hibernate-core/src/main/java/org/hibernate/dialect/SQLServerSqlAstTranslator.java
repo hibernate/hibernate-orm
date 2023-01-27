@@ -445,4 +445,9 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 		super.renderMergeStatement( optionalTableUpdate );
 		appendSql( ";" );
 	}
+
+	@Override
+	protected void renderMergeUsing(OptionalTableUpdate optionalTableUpdate) {
+		renderMergeUsingValues( optionalTableUpdate );
+	}
 }

@@ -74,6 +74,10 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 
 	protected void renderMergeInto(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( "merge into " );
+		renderMergeTarget( optionalTableUpdate );
+	}
+
+	private void renderMergeTarget(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( optionalTableUpdate.getMutatingTable().getTableName() );
 		renderMergeTargetAlias();
 	}

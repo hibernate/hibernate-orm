@@ -9,93 +9,66 @@ package org.hibernate.dialect;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.sql.model.jdbc.MergeOperation;
+import org.hibernate.sql.model.jdbc.DeleteOrUpsertOperation;
+import org.hibernate.sql.model.jdbc.UpsertOperation;
 
 /**
- * Base for translators which support a full insert-or-update-or-delete (MERGE) command.
- * <p/>
- * Use {@link #createMergeOperation(OptionalTableUpdate)} to translate an
- * {@linkplain OptionalTableUpdate} into an executable {@linkplain MergeOperation}
- * operation.
- * <p/>
- *
+ * Base SqlAstTranslator for translators which support an insert-or-update (UPSERT) command
  *
  * @author Steve Ebersole
  */
-public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
-	public SqlAstTranslatorWithMerge(SessionFactoryImplementor sessionFactory, Statement statement) {
+public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+	protected SqlAstTranslatorWithUpsert(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
 	/**
-	 * Create the MutationOperation for performing a MERGE.
-	 *
-	 * The OptionalTableUpdate is {@linkplain #renderMergeStatement translated}
-	 * and wrapped as a MutationOperation
+	 * Create the MutationOperation for performing the DELETE or UPSERT
 	 */
-	public MergeOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate) {
-		renderMergeStatement( optionalTableUpdate );
+	public MutationOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate) {
+		renderUpsertStatement( optionalTableUpdate );
 
-		return new MergeOperation(
+		final UpsertOperation upsertOperation = new UpsertOperation(
 				optionalTableUpdate.getMutatingTable().getTableMapping(),
 				optionalTableUpdate.getMutationTarget(),
 				getSql(),
 				getParameterBinders()
 		);
+
+		return new DeleteOrUpsertOperation(
+				optionalTableUpdate.getMutationTarget(),
+				(EntityTableMapping) optionalTableUpdate.getMutatingTable().getTableMapping(),
+				upsertOperation,
+				optionalTableUpdate
+		);
 	}
 
-	/**
-	 * Renders the OptionalTableUpdate as a MERGE query.
-	 *
-	 */
-	protected void renderMergeStatement(OptionalTableUpdate optionalTableUpdate) {
+	private void renderUpsertStatement(OptionalTableUpdate optionalTableUpdate) {
+		// template:
 		//
-		// merge into <target-table> as t
-		// using (select col_1, col_2, ... from dual) as s
-		// on (t.key = s.key)
+		// merge into [table] as t
+		// using values([bindings]) as s ([column-names])
+		// on t.[key] = s.[key]
 		// when not matched
-		//	 then insert ...
+		// 		then insert ...
 		// when matched
-		//      and s.col_1 is null
-		//	    and s.col_2 is null
-		//		and ...
-		//   then delete
-		// when matched
-		//   then update ...
+		//		then update ...
 
-		// `merge into <target-table> [as] t`
 		renderMergeInto( optionalTableUpdate );
 		appendSql( " " );
-
-		// using (select col_1, col_2, ... from dual) as s
 		renderMergeUsing( optionalTableUpdate );
 		appendSql( " " );
-
-		// on (t.key = s.key)
 		renderMergeOn( optionalTableUpdate );
 		appendSql( " " );
-
-		// when not matched
-		//	 then insert ...
 		renderMergeInsert( optionalTableUpdate );
 		appendSql( " " );
-
-		// when matched
-		//      and s.col_1 is null
-		//	    and s.col_2 is null
-		//		and ...
-		//   then delete
-		renderMergeDelete( optionalTableUpdate );
-		appendSql( " " );
-
-		// when matched
-		//   then update ...
 		renderMergeUpdate( optionalTableUpdate );
 	}
 
@@ -106,54 +79,67 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 
 	private void renderMergeTarget(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( optionalTableUpdate.getMutatingTable().getTableName() );
-		appendSql( " " );
 		renderMergeTargetAlias();
 	}
 
 	protected void renderMergeTargetAlias() {
-		appendSql( "as t" );
+		appendSql( " as t" );
 	}
 
 	protected void renderMergeUsing(OptionalTableUpdate optionalTableUpdate) {
-		appendSql( "using (" );
-		renderMergeUsingQuery( optionalTableUpdate );
-		appendSql( ") " );
+		appendSql( "using " );
 
-		renderMergeSourceAlias();
+		renderMergeSource( optionalTableUpdate );
 	}
 
-	protected void renderMergeSourceAlias() {
-		appendSql( "as s" );
+	protected boolean wrapMergeSourceExpression() {
+		return true;
 	}
 
-	private void renderMergeUsingQuery(OptionalTableUpdate optionalTableUpdate) {
+	protected void renderMergeSource(OptionalTableUpdate optionalTableUpdate) {
+		if ( wrapMergeSourceExpression() ) {
+			appendSql( " (" );
+		}
+
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
 
-		appendSql( "select " );
+		final StringBuilder columnList = new StringBuilder();
+
+		appendSql( " values (" );
 
 		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
 			if ( i > 0 ) {
 				appendSql( ", " );
+				columnList.append( ", " );
 			}
-			renderMergeUsingQuerySelection( keyBindings.get( i ) );
+			columnList.append( keyBinding.getColumnReference().getColumnExpression() );
+			renderCasted( keyBinding.getValueExpression() );
 		}
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
 			appendSql( ", " );
-			renderMergeUsingQuerySelection( valueBindings.get( i ) );
+			columnList.append( ", " );
+			final ColumnValueBinding valueBinding = valueBindings.get( i );
+			columnList.append( valueBinding.getColumnReference().getColumnExpression() );
+			renderCasted( valueBinding.getValueExpression() );
 		}
 
-		final String selectionTable = StringHelper.nullIfEmpty( getFromDualForSelectOnly() );
-		if ( selectionTable != null ) {
-			appendSql( " " );
-			appendSql( selectionTable );
+		appendSql( ") " );
+
+		if ( wrapMergeSourceExpression() ) {
+			appendSql( ") " );
 		}
+
+		renderMergeSourceAlias();
+
+		appendSql( "(" );
+		appendSql( columnList.toString() );
+		appendSql( ")" );
 	}
 
-	protected void renderMergeUsingQuerySelection(ColumnValueBinding selectionBinding) {
-		renderCasted( selectionBinding.getValueExpression() );
-		appendSql( " " );
-		appendSql( selectionBinding.getColumnReference().getColumnExpression() );
+	protected void renderMergeSourceAlias() {
+		appendSql( " as s" );
 	}
 
 	protected void renderMergeOn(OptionalTableUpdate optionalTableUpdate) {
@@ -203,19 +189,6 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		appendSql( ")" );
 	}
 
-	protected void renderMergeDelete(OptionalTableUpdate optionalTableUpdate) {
-		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
-
-		appendSql( " when matched " );
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			final ColumnValueBinding binding = valueBindings.get( i );
-			appendSql( " and " );
-			binding.getColumnReference().appendReadExpression( this, "s" );
-			appendSql( " is null" );
-		}
-		appendSql( " then delete" );
-	}
-
 	protected void renderMergeUpdate(OptionalTableUpdate optionalTableUpdate) {
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 
@@ -225,7 +198,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 			if ( i > 0 ) {
 				appendSql( ", " );
 			}
-			binding.getColumnReference().appendColumnForWrite( this, null );
+			binding.getColumnReference().appendColumnForWrite( this, "t" );
 			appendSql( "=" );
 			binding.getColumnReference().appendColumnForWrite( this, "s" );
 		}

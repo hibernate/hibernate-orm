@@ -1,6 +1,8 @@
 [[multitenacy]]
 == Multitenancy
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/multitenancy
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-multitenancy: {documentation-project-dir}/src/test/java/org/hibernate/userguide/multitenancy
 :extrasdir: extras
 
 [[multitenacy-intro]]
@@ -69,7 +71,7 @@ The API is really just defined by passing the tenant identifier as part of openi
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-session-example]
+include::{example-dir-multitenancy}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-session-example]
 ----
 ====
 
@@ -128,7 +130,7 @@ The following example portrays a `MultiTenantConnectionProvider` implementation 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ConfigurableMultiTenantConnectionProvider.java[tags=multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example]
+include::{example-dir-multitenancy}/ConfigurableMultiTenantConnectionProvider.java[tags=multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example]
 ----
 ====
 
@@ -139,7 +141,7 @@ The `ConfigurableMultiTenantConnectionProvider` can be set up as follows:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-MultiTenantConnectionProvider-example]
+include::{example-dir-multitenancy}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-MultiTenantConnectionProvider-example]
 ----
 ====
 
@@ -150,7 +152,7 @@ When using multitenancy, it's possible to save an entity with the same identifie
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-multitenacy-hibernate-same-entity-example]
+include::{example-dir-multitenancy}/AbstractMultiTenancyTest.java[tags=multitenacy-multitenacy-hibernate-same-entity-example]
 ----
 ====
 
@@ -196,7 +198,7 @@ For instance, each tenant could specify a different time zone configuration.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example]
 ----
 ====
 
@@ -207,7 +209,7 @@ The `registerConnectionProvider` method is used to define the tenant-specific co
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example]
 ----
 ====
 
@@ -215,7 +217,7 @@ For our example, the tenant-specific context is held in the `connectionProviderM
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-context-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-context-example]
 ----
 
 Now, when building the Hibernate `Session`, aside from passing the tenant identifier,
@@ -226,7 +228,7 @@ we could also configure the `Session` to use the tenant-specific time zone.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-session-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-timezone-configuration-session-example]
 ----
 ====
 
@@ -239,7 +241,7 @@ even if the currently running JVM uses a different time zone.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-applying-timezone-configuration-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-applying-timezone-configuration-example]
 ----
 ====
 
@@ -252,7 +254,7 @@ test output.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-not-applying-timezone-configuration-example]
+include::{example-dir-multitenancy}/DatabaseTimeZoneMultiTenancyTest.java[tags=multitenacy-hibernate-not-applying-timezone-configuration-example]
 ----
 
 [source, SQL,indent=0]

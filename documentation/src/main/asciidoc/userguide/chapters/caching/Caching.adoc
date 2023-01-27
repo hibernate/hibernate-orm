@@ -1,6 +1,8 @@
 [[caching]]
 == Caching
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/caching
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-caching: {documentation-project-dir}/src/test/java/org/hibernate/userguide/caching
 
 At runtime, Hibernate handles moving data into and out of the second-level cache in response to the operations performed by the `Session`, which acts as a transaction-level cache of persistent data.
 Once an entity becomes managed, that object is added to the internal cache of the current persistence context (`EntityManager` or `Session`).
@@ -167,7 +169,7 @@ Nevertheless, the reasons why we advise you to have all entities belonging to an
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/NonStrictReadWriteCacheTest.java[tags=caching-entity-mapping-example]
+include::{example-dir-caching}/NonStrictReadWriteCacheTest.java[tags=caching-entity-mapping-example]
 ----
 ====
 
@@ -182,7 +184,7 @@ Once an entity is stored in the second-level cache, you can avoid a database hit
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-jpa-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-entity-jpa-example]
 ----
 ====
 
@@ -191,7 +193,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-jpa-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-native-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-entity-native-example]
 ----
 ====
 
@@ -202,7 +204,7 @@ The Hibernate second-level cache can also load entities by their <<chapters/doma
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-natural-id-mapping-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-entity-natural-id-mapping-example]
 ----
 ====
 
@@ -211,7 +213,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-natural-id-ma
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-entity-natural-id-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-entity-natural-id-example]
 ----
 ====
 
@@ -230,7 +232,7 @@ the collection cache entry will store the entity identifiers only.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/NonStrictReadWriteCacheTest.java[tags=caching-collection-mapping-example]
+include::{example-dir-caching}/NonStrictReadWriteCacheTest.java[tags=caching-collection-mapping-example]
 ----
 ====
 
@@ -241,7 +243,7 @@ Collections are read-through, meaning they are cached upon being accessed for th
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/NonStrictReadWriteCacheTest.java[tags=caching-collection-example]
+include::{example-dir-caching}/NonStrictReadWriteCacheTest.java[tags=caching-collection-example]
 ----
 ====
 
@@ -292,7 +294,7 @@ This way, the query looks for existing cache results or adds the query results t
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-jpa-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-jpa-example]
 ----
 ====
 
@@ -301,7 +303,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-jpa-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-native-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-native-example]
 ----
 ====
 
@@ -345,7 +347,7 @@ you can specify a named cache region for a particular query.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-jpa-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-region-jpa-example]
 ----
 ====
 
@@ -354,7 +356,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-jpa-exa
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-native-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-region-native-example]
 ----
 ====
 
@@ -366,7 +368,7 @@ you can use custom cache modes.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-store-mode-jpa-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-region-store-mode-jpa-example]
 ----
 ====
 
@@ -375,7 +377,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-store-m
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-store-mode-native-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-region-store-mode-native-example]
 ----
 ====
 
@@ -389,7 +391,7 @@ and is a far more efficient alternative to the bulk eviction of the region via `
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-native-evict-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-region-native-evict-example]
 ----
 ====
 
@@ -421,7 +423,7 @@ Setting the cache mode can be done either when loading entities directly or when
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-entity-jpa-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-entity-jpa-example]
 ----
 ====
 
@@ -430,7 +432,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mod
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-entity-native-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-entity-native-example]
 ----
 ====
 
@@ -441,7 +443,7 @@ The custom cache modes can be set for queries as well:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-query-jpa-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-query-jpa-example]
 ----
 ====
 
@@ -450,7 +452,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mod
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-query-native-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-management-cache-mode-query-native-example]
 ----
 ====
 
@@ -467,7 +469,7 @@ Jakarta Persistence only supports entity eviction through the {jpaJavadocUrlPref
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-evict-jpa-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-management-evict-jpa-example]
 ----
 ====
 
@@ -484,7 +486,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-evict-native-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-management-evict-native-example]
 ----
 ====
 
@@ -503,7 +505,7 @@ second-level cache metrics.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-statistics-example]
+include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-statistics-example]
 ----
 ====
 

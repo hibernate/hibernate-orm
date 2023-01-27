@@ -1,6 +1,8 @@
 [[transactions]]
 == Transactions and concurrency control
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/transactions
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-transaction: {documentation-project-dir}/src/test/java/org/hibernate/userguide/transactions
 
 It is important to understand that the term transaction has many different yet related meanings in regards to persistence and Object/Relational Mapping.
 In most use-cases these definitions align, but that is not always the case.
@@ -116,7 +118,7 @@ Let's take a look at using the Transaction API in the various environments.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/TransactionsTest.java[tags=transactions-api-jdbc-example]
+include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-jdbc-example]
 ----
 ====
 
@@ -125,7 +127,7 @@ include::{sourcedir}/TransactionsTest.java[tags=transactions-api-jdbc-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/TransactionsTest.java[tags=transactions-api-cmt-example]
+include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-cmt-example]
 ----
 ====
 
@@ -134,7 +136,7 @@ include::{sourcedir}/TransactionsTest.java[tags=transactions-api-cmt-example]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/TransactionsTest.java[tags=transactions-api-bmt-example]
+include::{example-dir-transaction}/TransactionsTest.java[tags=transactions-api-bmt-example]
 ----
 ====
 

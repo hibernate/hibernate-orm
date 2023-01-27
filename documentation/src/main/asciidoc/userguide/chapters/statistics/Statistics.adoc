@@ -1,6 +1,5 @@
 [[statistics]]
 == Statistics
-:stat-sourcedir: ../../../../../../../hibernate-core/src/main/java/org/hibernate/stat
 
 Hibernate can gather all sorts of statistics which can help you get a better insight into what Hibernate does behind the scenes.
 

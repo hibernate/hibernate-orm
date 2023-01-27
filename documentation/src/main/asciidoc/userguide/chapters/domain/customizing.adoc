@@ -1,8 +1,8 @@
 [[domain-customizing]]
 === Customizing the domain model
-:rootProjectDir: ../../../../../../..
-:coreProjectDir: {rootProjectDir}/hibernate-core
-:attributeBinderTestDir: {coreProjectDir}/src/test/java/org/hibernate/orm/test/mapping/attributebinder
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-attributebinder: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/attributebinder
 :extrasdir: extras
 
 For cases where Hibernate does not provide a built-in way to configure the domain
@@ -18,9 +18,9 @@ An example:
 ====
 [source,java]
 ----
-include::{attributeBinderTestDir}/YesNo.java[tag=attribute-binder-example, indent=0]
+include::{example-dir-attributebinder}/YesNo.java[tag=attribute-binder-example, indent=0]
 
-include::{attributeBinderTestDir}/YesNoBinder.java[tag=attribute-binder-example, indent=0]
+include::{example-dir-attributebinder}/YesNoBinder.java[tag=attribute-binder-example, indent=0]
 ----
 ====
 

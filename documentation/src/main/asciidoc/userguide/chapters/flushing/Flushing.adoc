@@ -1,6 +1,8 @@
 [[flushing]]
 == Flushing
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/flush
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-flushing: {documentation-project-dir}/src/test/java/org/hibernate/userguide/flush
 :extrasdir: extras
 
 Flushing is the process of synchronizing the state of the persistence context with the underlying database.
@@ -43,7 +45,7 @@ In the following example, an entity is persisted, and then the transaction is co
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-commit-example]
+include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-commit-example]
 ----
 
 [source, SQL, indent=0]
@@ -70,7 +72,7 @@ A flush may also be triggered when executing an entity query.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-example]
+include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-example]
 ----
 
 [source, SQL, indent=0]
@@ -86,7 +88,7 @@ The reason why the `Advertisement` entity query didn't trigger a flush is that t
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-entity-example]
+include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-entity-example]
 ----
 ====
 
@@ -97,7 +99,7 @@ When querying for a `Person` entity, the flush is triggered prior to executing t
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-overlap-example]
+include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-overlap-example]
 ----
 
 [source, SQL, indent=0]
@@ -117,7 +119,7 @@ When executing a native SQL query, a flush is always triggered when using the `E
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-sql-example]
+include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-sql-example]
 ----
 ====
 
@@ -129,7 +131,7 @@ the `Session` API will trigger a flush automatically when executing a native que
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/HibernateAutoFlushTest.java[tags=flushing-auto-flush-sql-native-example]
+include::{example-dir-flushing}/HibernateAutoFlushTest.java[tags=flushing-auto-flush-sql-native-example]
 ----
 ====
 
@@ -140,7 +142,7 @@ To flush the `Session`, the query must use a synchronization:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-sql-synchronization-example]
+include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-sql-synchronization-example]
 ----
 ====
 
@@ -161,7 +163,7 @@ When executing a JPQL query, the persistence context is only flushed when the cu
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CommitFlushTest.java[tags=flushing-commit-flush-jpql-example]
+include::{example-dir-flushing}/CommitFlushTest.java[tags=flushing-commit-flush-jpql-example]
 ----
 
 [source, SQL, indent=0]
@@ -177,7 +179,7 @@ Because the Jakarta Persistence doesn't impose a strict rule on delaying flushin
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CommitFlushTest.java[tags=flushing-commit-flush-sql-example]
+include::{example-dir-flushing}/CommitFlushTest.java[tags=flushing-commit-flush-sql-example]
 ----
 
 [source, SQL, indent=0]
@@ -201,7 +203,7 @@ The `ALWAYS` flush mode triggers a persistence context flush even when executing
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/AlwaysFlushTest.java[tags=flushing-always-flush-sql-example]
+include::{example-dir-flushing}/AlwaysFlushTest.java[tags=flushing-always-flush-sql-example]
 ----
 
 [source, SQL, indent=0]
@@ -221,7 +223,7 @@ Hibernate also provides a `MANUAL` flush mode so the persistence context can onl
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ManualFlushTest.java[tags=flushing-manual-flush-example]
+include::{example-dir-flushing}/ManualFlushTest.java[tags=flushing-manual-flush-example]
 ----
 
 [source, SQL, indent=0]
@@ -256,7 +258,7 @@ To visualize how this works, consider the following example:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FlushOrderTest.java[tags=flushing-order-example]
+include::{example-dir-flushing}/FlushOrderTest.java[tags=flushing-order-example]
 ----
 
 [source, SQL, indent=0]

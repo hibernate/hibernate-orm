@@ -1,6 +1,8 @@
 [[criteria]]
 == Criteria
-:sourcedir: ../../../../../../test/java/org/hibernate/userguide/criteria
+:root-project-dir: ../../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-criteria: {documentation-project-dir}/src/test/java/org/hibernate/userguide/criteria
 
 Criteria queries offer a type-safe alternative to HQL, JPQL and native SQL queries.
 
@@ -49,7 +51,7 @@ The application wants to select entity instances.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-typedquery-entity-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-typedquery-entity-example]
 ----
 ====
 
@@ -77,7 +79,7 @@ But this expression might also represent an aggregation, a mathematical operatio
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-typedquery-expression-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-typedquery-expression-example]
 ----
 ====
 
@@ -97,7 +99,7 @@ or consider a wrapper query, see <<criteria-typedquery-wrapper>> for details.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-typedquery-multiselect-array-explicit-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-typedquery-multiselect-array-explicit-example]
 ----
 ====
 
@@ -111,7 +113,7 @@ The example then uses the array method of `jakarta.persistence.criteria.Criteria
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-typedquery-multiselect-array-implicit-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-typedquery-multiselect-array-implicit-example]
 ----
 ====
 
@@ -131,9 +133,9 @@ Going back to the example query there, rather than returning an array of _[Perso
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PersonWrapper.java[tags=criteria-typedquery-wrapper-example, indent=0]
+include::{example-dir-criteria}/PersonWrapper.java[tags=criteria-typedquery-wrapper-example, indent=0]
 
-include::{sourcedir}/CriteriaTest.java[tags=criteria-typedquery-wrapper-example, indent=0]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-typedquery-wrapper-example, indent=0]
 ----
 ====
 
@@ -155,7 +157,7 @@ A better approach to <<criteria-typedquery-multiselect>> is to use either a wrap
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-tuple-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-tuple-example]
 ----
 ====
 
@@ -218,7 +220,7 @@ A root is always an entity type. Roots are defined and added to the criteria by 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-from-root-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-from-root-example]
 ----
 ====
 
@@ -230,7 +232,7 @@ Here is an example defining a Cartesian Product between `Person` and `Partner` e
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-from-multiple-root-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-from-multiple-root-example]
 ----
 ====
 
@@ -245,7 +247,7 @@ Joins are created by the numerous overloaded __join__ methods of the `jakarta.pe
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-from-join-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-from-join-example]
 ----
 ====
 
@@ -260,7 +262,7 @@ Fetches are created by the numerous overloaded __fetch__ methods of the `jakarta
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-from-fetch-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-from-fetch-example]
 ----
 ====
 
@@ -286,7 +288,7 @@ Roots, joins and fetches are themselves path expressions as well.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-param-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-param-example]
 ----
 ====
 
@@ -301,6 +303,6 @@ Then use the parameter reference to bind the parameter value to the `jakarta.per
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CriteriaTest.java[tags=criteria-group-by-example]
+include::{example-dir-criteria}/CriteriaTest.java[tags=criteria-group-by-example]
 ----
 ====

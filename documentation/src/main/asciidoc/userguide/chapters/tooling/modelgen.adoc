@@ -1,10 +1,10 @@
 [[tooling-modelgen]]
 === Static Metamodel Generator
-:rootProjectDir: ../../../../../../..
-:documentationProjectDir: {rootProjectDir}/documentation
-:documentationModel: {documentationProjectDir}/src/main/java/org/hibernate/userguide/model
-:documentationMetamodel: {documentationProjectDir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/userguide/model
-:toolingTestsDir: {documentationProjectDir}/src/test/java/org/hibernate/userguide/tooling
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-model: {documentation-project-dir}/src/main/java/org/hibernate/userguide/model
+:example-dir-metamodelgen-generated: {documentation-project-dir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/userguide/model
+:toolingTestsDir: {documentation-project-dir}/src/test/java/org/hibernate/userguide/tooling
 
 Jakarta Persistence defines a typesafe Criteria API which allows `Criteria` queries to be constructed in a
 strongly-typed manner, utilizing so-called static metamodel classes.  For developers, it is important that
@@ -78,9 +78,9 @@ As an example, consider the following domain model -
 ====
 [source, JAVA, indent=0]
 ----
-include::{documentationModel}/tooling/Customer.java[tags=tooling-modelgen-model]
-include::{documentationModel}/tooling/Order.java[tags=tooling-modelgen-model]
-include::{documentationModel}/tooling/Item.java[tags=tooling-modelgen-model]
+include::{example-dir-model}/tooling/Customer.java[tags=tooling-modelgen-model]
+include::{example-dir-model}/tooling/Order.java[tags=tooling-modelgen-model]
+include::{example-dir-model}/tooling/Item.java[tags=tooling-modelgen-model]
 ----
 ====
 
@@ -91,7 +91,7 @@ Given this model, the generator will produce classes named `Customer_`, `Order_`
 ====
 [source, JAVA, indent=0]
 ----
-include::{documentationMetamodel}/tooling/Order_.java[]
+include::{example-dir-metamodelgen-generated}/tooling/Order_.java[]
 ----
 ====
 

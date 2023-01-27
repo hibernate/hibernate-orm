@@ -5,7 +5,7 @@ It also provides an implementation of the JPA specification, which is the standa
 
 This is the repository of its source code; see https://hibernate.org/orm/[Hibernate.org] for additional information.
 
-image:https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/]
+image:https://ci.hibernate.org/job/hibernate-orm-pipeline/job/6.2/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-pipeline/job/6.2/]
 image:https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A[link=https://ge.hibernate.org/scans]
 
 == Continuous Integration

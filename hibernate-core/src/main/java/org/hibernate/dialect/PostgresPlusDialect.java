@@ -11,14 +11,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 
@@ -112,4 +116,11 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		return "select uuid_generate_v1";
 	}
 
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+	}
 }

@@ -4,29 +4,26 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.properties.processor;
+package org.hibernate.orm.properties;
 
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 public class ConfigurationProperty implements Comparable<ConfigurationProperty> {
 
 	private static final Comparator<ConfigurationProperty> CONFIGURATION_PROPERTY_COMPARATOR = Comparator.comparing(
-			c -> c.key().key );
-	private Key key;
+			ConfigurationProperty::key );
+	private String key;
 	private String javadoc;
 	private String sourceClass;
 	private String anchorPrefix;
 	private String moduleName;
 
-	public Key key() {
+	public String key() {
 		return key;
 	}
 
-	public ConfigurationProperty key(Key key) {
+	public ConfigurationProperty key(String key) {
 		this.key = key;
 		return this;
 	}
@@ -53,7 +50,7 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 		return anchorPrefix;
 	}
 
-	public ConfigurationProperty withAnchorPrefix(String anchorPrefix) {
+	public ConfigurationProperty anchorPrefix(String anchorPrefix) {
 		this.anchorPrefix = anchorPrefix.replaceAll( "[^\\w-.]", "_" );
 		return this;
 	}
@@ -62,7 +59,7 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 		return moduleName;
 	}
 
-	public ConfigurationProperty withModuleName(String moduleName) {
+	public ConfigurationProperty moduleName(String moduleName) {
 		this.moduleName = moduleName;
 		return this;
 	}
@@ -102,26 +99,5 @@ public class ConfigurationProperty implements Comparable<ConfigurationProperty> 
 	@Override
 	public int hashCode() {
 		return Objects.hash( key, javadoc, sourceClass, anchorPrefix, moduleName );
-	}
-
-	public static class Key {
-		private final String key;
-
-		public Key(String key) {
-			this.key = key;
-		}
-
-		public boolean matches(Pattern pattern) {
-			return pattern.matcher( key ).matches();
-		}
-
-		public List<String> resolvedKeys() {
-			return Collections.singletonList( key );
-		}
-
-		@Override
-		public String toString() {
-			return key;
-		}
 	}
 }

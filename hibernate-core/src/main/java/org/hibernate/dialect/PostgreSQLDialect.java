@@ -28,8 +28,8 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -51,6 +51,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
@@ -68,6 +69,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
@@ -1366,23 +1369,12 @@ public class PostgreSQLDialect extends Dialect {
 		return OTHER;
 	}
 
-	//	@Override
-//	public String getDisableConstraintsStatement() {
-//		return "set constraints all deferred";
-//	}
-//
-//	@Override
-//	public String getEnableConstraintsStatement() {
-//		return "set constraints all immediate";
-//	}
-//
-//	@Override
-//	public String getDisableConstraintStatement(String tableName, String name) {
-//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
-//	}
-//
-//	@Override
-//	public String getEnableConstraintStatement(String tableName, String name) {
-//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
-//	}
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		final PostgreSQLSqlAstTranslator<?> translator = new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate );
+		return translator.createMergeOperation( optionalTableUpdate );
+	}
 }

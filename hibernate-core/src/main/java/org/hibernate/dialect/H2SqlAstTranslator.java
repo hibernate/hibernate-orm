@@ -297,6 +297,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		return " from dual";
 	}
 
+
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}

@@ -6,11 +6,10 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
@@ -33,7 +32,7 @@ import org.hibernate.type.SqlTypes;
  *
  * @author Christian Beikov
  */
-public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
 	public PostgreSQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
@@ -280,5 +279,4 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		arithmeticExpression.getRightHandOperand().accept( this );
 		appendSql( CLOSE_PARENTHESIS );
 	}
-
 }

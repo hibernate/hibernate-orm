@@ -56,7 +56,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType implements AggregateJdbcType {
 
-	public static final PostgreSQLStructJdbcType INSTANCE = new PostgreSQLStructJdbcType();
+	public static final PostgreSQLStructJdbcType INSTANCE = new PostgreSQLStructJdbcType( null, null, null );
 
 	private static final DateTimeFormatter LOCAL_DATE_TIME;
 	static {
@@ -88,11 +88,6 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 	private final int[] inverseOrderMapping;
 	private final EmbeddableMappingType embeddableMappingType;
 	private final ValueExtractor<Object[]> objectArrayExtractor;
-
-	private PostgreSQLStructJdbcType() {
-		// The default instance is for reading only and will return an Object[]
-		this( null, null, null );
-	}
 
 	public PostgreSQLStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
 		super( typeName, SqlTypes.STRUCT );

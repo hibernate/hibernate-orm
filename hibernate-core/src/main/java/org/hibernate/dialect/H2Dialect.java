@@ -63,6 +63,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -119,6 +120,8 @@ public class H2Dialect extends Dialect {
 	private final String querySequenceString;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
+	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
+
 	public H2Dialect(DialectResolutionInfo info) {
 		this( parseVersion( info ) );
 		registerKeywords( info );
@@ -146,6 +149,10 @@ public class H2Dialect extends Dialect {
 				? SequenceInformationExtractorLegacyImpl.INSTANCE
 				: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 		this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+
+		this.optionalTableUpdateStrategy = version.isSameOrAfter( 1, 4, 200 )
+				? H2Dialect::usingMerge
+				: H2Dialect::withoutMerge;
 	}
 
 	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
@@ -871,12 +878,34 @@ public class H2Dialect extends Dialect {
 		return BIGINT;
 	}
 
+	@FunctionalInterface
+	private interface OptionalTableUpdateStrategy {
+		MutationOperation buildMutationOperation(
+				EntityMutationTarget mutationTarget,
+				OptionalTableUpdate optionalTableUpdate,
+				SessionFactoryImplementor factory);
+	}
+
 	@Override
 	public MutationOperation createOptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
+		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	private static MutationOperation usingMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
 		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, optionalTableUpdate );
 		return translator.createMergeOperation( optionalTableUpdate );
+	}
+
+	private static MutationOperation withoutMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 }

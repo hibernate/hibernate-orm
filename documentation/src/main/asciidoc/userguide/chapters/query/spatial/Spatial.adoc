@@ -1,6 +1,8 @@
 [[spatial]]
 == Spatial
-:sourcedir: ../../../../../../test/java/org/hibernate/userguide/spatial
+:root-project-dir: ../../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-spatial: {documentation-project-dir}/src/test/java/org/hibernate/userguide/spatial
 :extrasdir: extras
 
 [[spatial-overview]]
@@ -213,7 +215,7 @@ Here is an example using JTS:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SpatialTest.java[tags=spatial-types-mapping-example, indent=0]
+include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-mapping-example, indent=0]
 ----
 ====
 
@@ -224,7 +226,7 @@ We can now treat spatial geometries like any other type.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/SpatialTest.java[tags=spatial-types-point-creation-example]
+include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-point-creation-example]
 ----
 ====
 
@@ -236,7 +238,7 @@ could use the `within` function to find all objects within a given spatial exten
 ====
 [source, SQL, indent=0]
 ----
-include::{sourcedir}/SpatialTest.java[tags=spatial-types-query-example]
+include::{example-dir-spatial}/SpatialTest.java[tags=spatial-types-query-example]
 ----
 ====
 

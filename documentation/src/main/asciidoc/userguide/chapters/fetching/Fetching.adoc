@@ -1,6 +1,8 @@
 [[fetching]]
 == Fetching
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/fetching
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-fetching: {documentation-project-dir}/src/test/java/org/hibernate/userguide/fetching
 :extrasdir: extras
 
 Fetching, essentially, is the process of grabbing data from the database and making it available to the application.
@@ -61,7 +63,7 @@ To see the difference between direct fetching and entity queries in regard to ea
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-domain-model-example]
+include::{example-dir-fetching}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-domain-model-example]
 ----
 ====
 
@@ -74,7 +76,7 @@ When issuing a direct entity fetch, Hibernate executed the following SQL query:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-direct-fetching-example]
+include::{example-dir-fetching}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-direct-fetching-example]
 ----
 
 [source, SQL, indent=0]
@@ -92,7 +94,7 @@ On the other hand, if you are using an entity query that does not contain a `JOI
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-entity-query-example]
+include::{example-dir-fetching}/DirectVsQueryFetchingTest.java[tags=fetching-direct-vs-query-entity-query-example]
 ----
 
 [source, SQL, indent=0]
@@ -122,7 +124,7 @@ Let's consider these topics as it relates to a sample domain model and a few use
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-domain-model-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-domain-model-example]
 ----
 ====
 
@@ -146,7 +148,7 @@ Let's assume that login only requires access to the `Employee` information, not 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-no-fetching-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-no-fetching-example]
 ----
 ====
 
@@ -160,7 +162,7 @@ If the login process does not need access to the `Employee` information specific
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-no-fetching-scalar-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-no-fetching-scalar-example]
 ----
 ====
 
@@ -175,7 +177,7 @@ Certainly access to the `Employee` is needed, as is the collection of `Projects`
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-jpql-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-jpql-example]
 ----
 ====
 
@@ -184,7 +186,7 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-criteria-example]
+include::{example-dir-fetching}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching-criteria-example]
 ----
 ====
 
@@ -208,12 +210,12 @@ Below is a `fetch graph` dynamic fetching example:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-mapping-example]
+include::{example-dir-fetching}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-mapping-example]
 ----
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-example]
+include::{example-dir-fetching}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-example]
 ----
 ====
 
@@ -242,7 +244,7 @@ and we'd like to fetch the `department` for the `Employee` child association.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-subgraph-mapping-example]
+include::{example-dir-fetching}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-subgraph-mapping-example]
 ----
 ====
 
@@ -253,7 +255,7 @@ When fetching this entity graph, Hibernate generates the following SQL query:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-subgraph-example]
+include::{example-dir-fetching}/GraphFetchingTest.java[tags=fetching-strategies-dynamic-fetching-entity-subgraph-example]
 ----
 
 [source, SQL, indent=0]
@@ -302,7 +304,7 @@ the Jakarta Persistence specification proper.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-example-1]
+include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-example-1]
 ----
 ====
 
@@ -317,7 +319,7 @@ to the end of the attribute name.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-1]
+include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-1]
 ----
 ====
 
@@ -325,7 +327,7 @@ include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetc
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-2]
+include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-2]
 ----
 ====
 
@@ -376,7 +378,7 @@ the previous example can also be built by combining separate aspect graphs into 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-merging-example]
+include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-merging-example]
 ----
 ====
 
@@ -393,12 +395,12 @@ So we would leverage a fetch profile.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-mapping-example]
+include::{example-dir-fetching}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-mapping-example]
 ----
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-example]
+include::{example-dir-fetching}/ProfileFetchingTest.java[tags=fetching-strategies-dynamic-fetching-profile-example]
 ----
 ====
 
@@ -419,7 +421,7 @@ Considering the following entity mapping:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BatchFetchingTest.java[tags=fetching-batch-mapping-example]
+include::{example-dir-fetching}/BatchFetchingTest.java[tags=fetching-batch-mapping-example]
 ----
 ====
 
@@ -432,7 +434,7 @@ the `@BatchSize` annotations allows us to load multiple `Employee` entities in a
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BatchFetchingTest.java[tags=fetching-batch-fetching-example]
+include::{example-dir-fetching}/BatchFetchingTest.java[tags=fetching-batch-fetching-example]
 ----
 
 [source, SQL, indent=0]
@@ -480,7 +482,7 @@ To demonstrate how `FetchMode.SELECT` works, consider the following entity mappi
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-mapping-example]
+include::{example-dir-fetching}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-mapping-example]
 ----
 ====
 
@@ -493,7 +495,7 @@ collection using a secondary `SELECT` statement upon accessing the child collect
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-example]
+include::{example-dir-fetching}/FetchModeSelectTest.java[tags=fetching-strategies-fetch-mode-select-example]
 ----
 
 [source, SQL, indent=0]
@@ -516,7 +518,7 @@ To demonstrate how `FetchMode.SUBSELECT` works, we are going to modify the <<fet
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-mapping-example]
+include::{example-dir-fetching}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-mapping-example]
 ----
 ====
 
@@ -532,7 +534,7 @@ Instead of passing all entity identifiers, Hibernate simply reruns the previous 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-example]
+include::{example-dir-fetching}/FetchModeSubselectTest.java[tags=fetching-strategies-fetch-mode-subselect-example]
 ----
 
 [source, SQL, indent=0]
@@ -552,7 +554,7 @@ To demonstrate how `FetchMode.JOIN` works, we are going to modify the <<fetching
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-mapping-example]
+include::{example-dir-fetching}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-mapping-example]
 ----
 ====
 
@@ -578,7 +580,7 @@ Hibernate is going to avoid the secondary query by issuing an OUTER JOIN for the
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-example]
+include::{example-dir-fetching}/FetchModeJoinTest.java[tags=fetching-strategies-fetch-mode-join-example]
 ----
 
 [source, SQL, indent=0]
@@ -609,7 +611,7 @@ Each element is fetched individually using a secondary query.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-domain-model-example]
+include::{example-dir-fetching}/LazyCollectionTest.java[tags=fetching-LazyCollection-domain-model-example]
 ----
 ====
 
@@ -630,7 +632,7 @@ Now, considering we have the following entities:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-persist-example]
+include::{example-dir-fetching}/LazyCollectionTest.java[tags=fetching-LazyCollection-persist-example]
 ----
 ====
 
@@ -642,7 +644,7 @@ Hibernate generates the following SQL statements:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/LazyCollectionTest.java[tags=fetching-LazyCollection-select-example]
+include::{example-dir-fetching}/LazyCollectionTest.java[tags=fetching-LazyCollection-select-example]
 ----
 
 [source, SQL, indent=0]

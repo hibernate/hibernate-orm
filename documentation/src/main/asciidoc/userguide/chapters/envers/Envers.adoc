@@ -1,6 +1,8 @@
 [[envers]]
 == Envers
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/envers
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-envers: {documentation-project-dir}/src/test/java/org/hibernate/userguide/envers
 :extrasdir: extras
 
 [[envers-basics]]
@@ -44,7 +46,7 @@ Hibernate is going to generate the following tables using the `hibernate.hbm2ddl
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-mapping-example]
+include::{example-dir-envers}/DefaultAuditTest.java[tags=envers-audited-mapping-example]
 ----
 
 [source, SQL, indent=0]
@@ -64,7 +66,7 @@ let's see how Envers auditing works when inserting, updating, and deleting the e
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-insert-example]
+include::{example-dir-envers}/DefaultAuditTest.java[tags=envers-audited-insert-example]
 ----
 
 [source, SQL, indent=0]
@@ -78,7 +80,7 @@ include::{extrasdir}/envers-audited-insert-example.sql[]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-update-example]
+include::{example-dir-envers}/DefaultAuditTest.java[tags=envers-audited-update-example]
 ----
 
 [source, SQL, indent=0]
@@ -92,7 +94,7 @@ include::{extrasdir}/envers-audited-update-example.sql[]
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-delete-example]
+include::{example-dir-envers}/DefaultAuditTest.java[tags=envers-audited-delete-example]
 ----
 
 [source, SQL, indent=0]
@@ -120,7 +122,7 @@ The audit (history) of an entity can be accessed using the `AuditReader` interfa
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-revisions-example]
+include::{example-dir-envers}/DefaultAuditTest.java[tags=envers-audited-revisions-example]
 ----
 
 [source, SQL, indent=0]
@@ -136,7 +138,7 @@ Using the previously fetched revisions, we can now inspect the state of the `Cus
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-rev1-example]
+include::{example-dir-envers}/DefaultAuditTest.java[tags=envers-audited-rev1-example]
 ----
 
 [source, SQL, indent=0]
@@ -159,7 +161,7 @@ The same goes for the second revision associated with the `UPDATE` statement.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-rev2-example]
+include::{example-dir-envers}/DefaultAuditTest.java[tags=envers-audited-rev2-example]
 ----
 ====
 
@@ -170,7 +172,7 @@ For the deleted entity revision, Envers throws a `NoResultException` since the e
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-rev3-example]
+include::{example-dir-envers}/DefaultAuditTest.java[tags=envers-audited-rev3-example]
 ----
 ====
 
@@ -184,7 +186,7 @@ all attributes, except for the entity identifier, are going to be `null`.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/DefaultAuditTest.java[tags=envers-audited-rev4-example]
+include::{example-dir-envers}/DefaultAuditTest.java[tags=envers-audited-rev4-example]
 ----
 ====
 
@@ -412,7 +414,7 @@ First, you need to configure the `ValidityAuditStrategy`:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ValidityStrategyAuditTest.java[tags=envers-audited-validity-configuration-example]
+include::{example-dir-envers}/ValidityStrategyAuditTest.java[tags=envers-audited-validity-configuration-example]
 ----
 ====
 
@@ -513,7 +515,7 @@ Considering we have a `CurrentUser` utility which stores the currently logged us
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CustomRevisionEntityTest.java[tags=envers-revisionlog-CurrentUser-example]
+include::{example-dir-envers}/CustomRevisionEntityTest.java[tags=envers-revisionlog-CurrentUser-example]
 ----
 ====
 
@@ -524,7 +526,7 @@ Now, we need to provide a custom `@RevisionEntity` to store the currently logged
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CustomRevisionEntityTest.java[tags=envers-revisionlog-RevisionEntity-example]
+include::{example-dir-envers}/CustomRevisionEntityTest.java[tags=envers-revisionlog-RevisionEntity-example]
 ----
 ====
 
@@ -537,7 +539,7 @@ of `RevisionEntity` instances.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CustomRevisionEntityTest.java[tags=envers-revisionlog-RevisionListener-example]
+include::{example-dir-envers}/CustomRevisionEntityTest.java[tags=envers-revisionlog-RevisionListener-example]
 ----
 ====
 
@@ -561,7 +563,7 @@ Now, when inserting a `Customer` entity, Envers generates the following statemen
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/CustomRevisionEntityTest.java[tags=envers-revisionlog-RevisionEntity-persist-example]
+include::{example-dir-envers}/CustomRevisionEntityTest.java[tags=envers-revisionlog-RevisionEntity-persist-example]
 ----
 
 [source, SQL, indent=0]
@@ -612,7 +614,7 @@ Tracking of modified entity names can be enabled in three different ways:
 +
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditDefaultTrackingTest.java[tags=envers-tracking-modified-entities-revchanges-example]
+include::{example-dir-envers}/EntityTypeChangeAuditDefaultTrackingTest.java[tags=envers-tracking-modified-entities-revchanges-example]
 ----
 +
 . Mark an appropriate field of a custom revision entity with `@org.hibernate.envers.ModifiedEntityNames` annotation.
@@ -620,7 +622,7 @@ include::{sourcedir}/EntityTypeChangeAuditDefaultTrackingTest.java[tags=envers-t
 +
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-example]
+include::{example-dir-envers}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-example]
 ----
 
 Considering we have a `Customer` entity illustrated by the following example:
@@ -630,7 +632,7 @@ Considering we have a `Customer` entity illustrated by the following example:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-before-rename-example]
+include::{example-dir-envers}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-before-rename-example]
 ----
 ====
 
@@ -642,7 +644,7 @@ Envers is going to insert a new record in the `REVCHANGES` table with the previo
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-after-rename-example]
+include::{example-dir-envers}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-revchanges-after-rename-example]
 ----
 
 [source, SQL, indent=0]
@@ -666,7 +668,7 @@ added, modified or removed within current revision boundaries.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-EntityTrackingRevisionListener-example]
+include::{example-dir-envers}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-EntityTrackingRevisionListener-example]
 ----
 ====
 
@@ -677,7 +679,7 @@ The `CustomTrackingRevisionListener` adds the fully-qualified class name to the 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-RevisionEntity-example]
+include::{example-dir-envers}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-RevisionEntity-example]
 ----
 ====
 
@@ -688,7 +690,7 @@ The `CustomTrackingRevisionEntity` contains a `@OneToMany` list of `ModifiedType
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-EntityType-example]
+include::{example-dir-envers}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-EntityType-example]
 ----
 ====
 
@@ -699,7 +701,7 @@ Now, when fetching the `CustomTrackingRevisionEntity`, you can get access to the
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-query-example]
+include::{example-dir-envers}/EntityTypeChangeAuditTrackingRevisionListenerTest.java[tags=envers-tracking-modified-entities-revchanges-query-example]
 ----
 ====
 
@@ -732,7 +734,7 @@ Because of costs mentioned, it is recommended to enable the feature selectively,
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ModifiedFlagsAuditTest.java[tags=envers-tracking-properties-changes-mapping-example]
+include::{example-dir-envers}/ModifiedFlagsAuditTest.java[tags=envers-tracking-properties-changes-mapping-example]
 ----
 
 [source, SQL, indent=0]
@@ -748,7 +750,7 @@ As you can see, every property features a `_MOD` column (e.g. `createdOn_MOD`) i
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ModifiedFlagsAuditTest.java[tags=envers-tracking-properties-changes-example]
+include::{example-dir-envers}/ModifiedFlagsAuditTest.java[tags=envers-tracking-properties-changes-example]
 ----
 
 [source, SQL, indent=0]
@@ -863,7 +865,7 @@ The entry point for this type of queries is:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=entities-at-revision-example]
+include::{example-dir-envers}/QueryAuditTest.java[tags=entities-at-revision-example]
 ----
 ====
 
@@ -880,7 +882,7 @@ For example, to select only entities where the `firstName` property is equal to 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=entities-filtering-example]
+include::{example-dir-envers}/QueryAuditTest.java[tags=entities-filtering-example]
 ----
 ====
 
@@ -892,7 +894,7 @@ you can use either the target entity or its identifier.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=entities-filtering-by-entity-example]
+include::{example-dir-envers}/QueryAuditTest.java[tags=entities-filtering-by-entity-example]
 ----
 
 [source, SQL, indent=0]
@@ -908,7 +910,7 @@ The same SQL is generated even if we provide the identifier instead of the targe
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=entities-filtering-by-entity-identifier-example]
+include::{example-dir-envers}/QueryAuditTest.java[tags=entities-filtering-by-entity-identifier-example]
 ----
 ====
 
@@ -919,7 +921,7 @@ Apart from strict equality matching, you can also use an `IN` clause to provide 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=entities-in-clause-filtering-by-entity-identifier-example]
+include::{example-dir-envers}/QueryAuditTest.java[tags=entities-in-clause-filtering-by-entity-identifier-example]
 ----
 
 [source, SQL, indent=0]
@@ -938,7 +940,7 @@ A full query, can look for example like this:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=entities-filtering-and-pagination]
+include::{example-dir-envers}/QueryAuditTest.java[tags=entities-filtering-and-pagination]
 ----
 
 [source, SQL, indent=0]
@@ -955,7 +957,7 @@ The entry point for this type of queries is:
 [[revisions-of-entity-query-example]]
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=revisions-of-entity-query-example]
+include::{example-dir-envers}/QueryAuditTest.java[tags=revisions-of-entity-query-example]
 ----
 
 You can add constraints to this query in the same way as to the previous one.
@@ -975,7 +977,7 @@ For example, the following query will select the smallest revision number, at wh
 [[revisions-of-entity-query-by-revision-number-example]]
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=revisions-of-entity-query-by-revision-number-example]
+include::{example-dir-envers}/QueryAuditTest.java[tags=revisions-of-entity-query-by-revision-number-example]
 ----
 
 The second additional feature you can use in queries for revisions is the ability to _maximize_/_minimize_ a property.
@@ -987,7 +989,7 @@ you can run the following query:
 [[revisions-of-entity-query-minimize-example]]
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=revisions-of-entity-query-minimize-example]
+include::{example-dir-envers}/QueryAuditTest.java[tags=revisions-of-entity-query-minimize-example]
 ----
 
 The `minimize()` and `maximize()` methods return a criterion, to which you can add constraints,
@@ -1018,7 +1020,7 @@ maximum revision number, you would use the following query:
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=aggregate-max-revision-with-entity-example]
+include::{example-dir-envers}/QueryAuditTest.java[tags=aggregate-max-revision-with-entity-example]
 ----
 
 In other words, the result set would contain a list of `Customer` instances, one per primary key.  Each instance would
@@ -1039,7 +1041,7 @@ First, you must make sure that your entity can track _modification flags_:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditWithModifiedFlagTest.java[tags=envers-tracking-properties-changes-queries-entity-example]
+include::{example-dir-envers}/QueryAuditWithModifiedFlagTest.java[tags=envers-tracking-properties-changes-queries-entity-example]
 ----
 ====
 
@@ -1051,7 +1053,7 @@ for which the `lastName` property has changed.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditWithModifiedFlagTest.java[tags=envers-tracking-properties-changes-queries-hasChanged-example]
+include::{example-dir-envers}/QueryAuditWithModifiedFlagTest.java[tags=envers-tracking-properties-changes-queries-hasChanged-example]
 ----
 
 [source, SQL, indent=0]
@@ -1071,7 +1073,7 @@ Of course, nothing prevents users from combining `hasChanged` condition with som
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditWithModifiedFlagTest.java[tags=envers-tracking-properties-changes-queries-hasChanged-and-hasNotChanged-example]
+include::{example-dir-envers}/QueryAuditWithModifiedFlagTest.java[tags=envers-tracking-properties-changes-queries-hasChanged-and-hasNotChanged-example]
 ----
 
 [source, SQL, indent=0]
@@ -1088,7 +1090,7 @@ we have to use the `forEntitiesModifiedAtRevision` query:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditWithModifiedFlagTest.java[tags=envers-tracking-properties-changes-queries-at-revision-example]
+include::{example-dir-envers}/QueryAuditWithModifiedFlagTest.java[tags=envers-tracking-properties-changes-queries-at-revision-example]
 ----
 
 [source, SQL, indent=0]
@@ -1146,12 +1148,12 @@ This basic query allows retrieving entity names and corresponding Java classes c
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-queries-example1]
+include::{example-dir-envers}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-queries-example1]
 ----
 
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-queries-example2]
+include::{example-dir-envers}/EntityTypeChangeAuditTest.java[tags=envers-tracking-modified-entities-queries-example2]
 ----
 ====
 
@@ -1192,7 +1194,7 @@ The basis for creating an entity relation join query is as follows:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=envers-querying-entity-relation-inner-join]
+include::{example-dir-envers}/QueryAuditTest.java[tags=envers-querying-entity-relation-inner-join]
 ----
 ====
 
@@ -1201,7 +1203,7 @@ include::{sourcedir}/QueryAuditTest.java[tags=envers-querying-entity-relation-in
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=envers-querying-entity-relation-left-join]
+include::{example-dir-envers}/QueryAuditTest.java[tags=envers-querying-entity-relation-left-join]
 ----
 ====
 
@@ -1215,7 +1217,7 @@ you can use the following query:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditTest.java[tags=envers-querying-entity-relation-join-restriction]
+include::{example-dir-envers}/QueryAuditTest.java[tags=envers-querying-entity-relation-join-restriction]
 ----
 
 [source, SQL, indent=0]
@@ -1234,7 +1236,7 @@ with the country attribute of the address property being `România`:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-restriction]
+include::{example-dir-envers}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-restriction]
 ----
 
 [source, SQL, indent=0]
@@ -1253,7 +1255,7 @@ having the `address` in `Cluj-Napoca` or the `address` does _not_ have any count
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-join-multiple-restrictions]
+include::{example-dir-envers}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-join-multiple-restrictions]
 ----
 
 [source, SQL, indent=0]
@@ -1277,7 +1279,7 @@ where the country name is `România` or that the `Customer` lives in `Cluj-Napoc
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-multiple-restrictions]
+include::{example-dir-envers}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-multiple-restrictions]
 ----
 
 [source, SQL, indent=0]
@@ -1295,7 +1297,7 @@ Assuming the `Customer` and the `Address` were previously changed as follows:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-multiple-restrictions-combined-entities]
+include::{example-dir-envers}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-multiple-restrictions-combined-entities]
 ----
 ====
 
@@ -1307,7 +1309,7 @@ where the `city` property of the `address` attribute equals the `name` of the as
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-multiple-restrictions-combined]
+include::{example-dir-envers}/QueryAuditAdressCountryTest.java[tags=envers-querying-entity-relation-nested-join-multiple-restrictions-combined]
 ----
 
 [source, SQL, indent=0]
@@ -1431,7 +1433,7 @@ For the following entities, Hibernate is going to generate the following databas
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/QueryAuditAdressCountryTest.java[tags=envers-generateschema-example]
+include::{example-dir-envers}/QueryAuditAdressCountryTest.java[tags=envers-generateschema-example]
 ----
 
 [source, SQL, indent=0]

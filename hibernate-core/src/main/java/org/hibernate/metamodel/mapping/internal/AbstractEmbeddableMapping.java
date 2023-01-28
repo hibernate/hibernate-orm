@@ -306,7 +306,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
-						selectable.getCustomWriteExpression(),
+						selectable.getWriteExpr( ( (BasicType<?>) subtype ).getJdbcMapping(), dialect ),
 						columnDefinition,
 						length,
 						precision,

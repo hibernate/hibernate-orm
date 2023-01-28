@@ -189,7 +189,6 @@ public class TableBasedInsertHandler implements InsertHandler {
 									rowNumberColumn.getColumnName(),
 									false,
 									null,
-									null,
 									rowNumberColumn.getJdbcMapping()
 							);
 							insertStatement.getTargetColumns().set(
@@ -214,7 +213,6 @@ public class TableBasedInsertHandler implements InsertHandler {
 										rowNumberColumn.getColumnName(),
 										false,
 										null,
-										null,
 										rowNumberColumn.getJdbcMapping()
 								);
 								insertStatement.getTargetColumns().add( columnReference );
@@ -236,7 +234,6 @@ public class TableBasedInsertHandler implements InsertHandler {
 									(String) null,
 									sessionUidColumn.getColumnName(),
 									false,
-									null,
 									null,
 									sessionUidColumn.getJdbcMapping()
 							);
@@ -267,7 +264,6 @@ public class TableBasedInsertHandler implements InsertHandler {
 							rowNumberColumn.getColumnName(),
 							false,
 							null,
-							null,
 							rowNumberColumn.getJdbcMapping()
 					);
 					insertStatement.getTargetColumns().add( columnReference );
@@ -285,7 +281,6 @@ public class TableBasedInsertHandler implements InsertHandler {
 						(String) null,
 						sessionUidColumn.getColumnName(),
 						false,
-						null,
 						null,
 						sessionUidColumn.getJdbcMapping()
 				);

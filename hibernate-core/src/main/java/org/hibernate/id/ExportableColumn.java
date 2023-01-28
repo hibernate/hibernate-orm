@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
@@ -185,6 +186,11 @@ public class ExportableColumn extends Column {
 		@Override
 		public boolean isColumnUpdateable(int index) {
 			return true;
+		}
+
+		@Override
+		public MetadataBuildingContext getBuildingContext() {
+			return table.getIdentifierValue().getBuildingContext();
 		}
 	}
 

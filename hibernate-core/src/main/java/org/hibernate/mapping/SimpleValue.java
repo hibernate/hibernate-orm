@@ -142,6 +142,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.generator = original.generator;
 	}
 
+	@Override
 	public MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}

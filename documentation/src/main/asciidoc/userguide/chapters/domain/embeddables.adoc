@@ -1,11 +1,13 @@
 [[embeddables]]
 === Embeddable values
-:rootProjectDir: ../../../../../../..
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/embeddable
-:coreProjectDir: {rootProjectDir}/hibernate-core
-:coreTestSrcDir: {rootProjectDir}/hibernate-core/src/test/java
-:instantiatorTestDir: {coreTestSrcDir}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
-:usertypeTestDir: {coreTestSrcDir}/org/hibernate/orm/test/mapping/embeddable/strategy/usertype
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:documentation-example-base: {documentation-project-dir}/src/test/java
+:example-dir-emeddable: {documentation-example-base}/org/hibernate/userguide/mapping/embeddable
+:core-project-dir: {root-project-dir}/hibernate-core
+:core-test-base: {root-project-dir}/hibernate-core/src/test/java
+:example-dir-embeddableinstantiator: {core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
+:example-dir-compositeusertype: {core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/usertype
 :extrasdir: extras
 
 Historically Hibernate called these components.
@@ -28,7 +30,7 @@ Throughout this chapter and thereafter, for brevity sake, embeddable types may a
 ====
 [source,java]
 ----
-include::{sourcedir}/NestedEmbeddableTest.java[tag=embeddable-type-mapping-example, indent=0]
+include::{example-dir-emeddable}/NestedEmbeddableTest.java[tag=embeddable-type-mapping-example, indent=0]
 ----
 ====
 
@@ -45,7 +47,7 @@ Most often, embeddable types are used to group multiple basic type mappings and 
 ====
 [source,java]
 ----
-include::{sourcedir}/SimpleEmbeddableTest.java[tag=embeddable-type-mapping-example, indent=0]
+include::{example-dir-emeddable}/SimpleEmbeddableTest.java[tag=embeddable-type-mapping-example, indent=0]
 ----
 
 [source,sql]
@@ -75,7 +77,7 @@ In fact, that table could also be mapped by the following entity type instead.
 ====
 [source,java]
 ----
-include::{sourcedir}/SimpleEmbeddableEquivalentTest.java[tag=embeddable-type-mapping-example, indent=0]
+include::{example-dir-emeddable}/SimpleEmbeddableEquivalentTest.java[tag=embeddable-type-mapping-example, indent=0]
 ----
 ====
 
@@ -106,7 +108,7 @@ which defines a `@ManyToOne` association with the `Country` entity:
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableOverrideTest.java[tag=embeddable-type-association-mapping-example, indent=0]
+include::{example-dir-emeddable}/EmbeddableOverrideTest.java[tag=embeddable-type-association-mapping-example, indent=0]
 ----
 
 [source,sql]
@@ -125,7 +127,7 @@ Therefore, the `Book` entity needs to override the embeddable type mappings for 
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableOverrideTest.java[tag=embeddable-type-override-mapping-example, indent=0]
+include::{example-dir-emeddable}/EmbeddableOverrideTest.java[tag=embeddable-type-override-mapping-example, indent=0]
 ----
 
 [source,sql]
@@ -178,7 +180,7 @@ However, for simple embeddable types, there is no such construct and so you need
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/TargetTest.java[tags=embeddable-Target-example]
+include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-example]
 ----
 ====
 
@@ -193,7 +195,7 @@ Assuming we have persisted the following `City` entity:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/TargetTest.java[tags=embeddable-Target-persist-example]
+include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-persist-example]
 ----
 ====
 
@@ -204,7 +206,7 @@ When fetching the `City` entity, the `coordinates` property is mapped by the `@T
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/TargetTest.java[tags=embeddable-Target-fetching-example]
+include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-fetching-example]
 ----
 
 [source, SQL, indent=0]
@@ -225,7 +227,7 @@ The Hibernate-specific `@Parent` annotation allows you to reference the owner en
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-example]
+include::{example-dir-emeddable}/ParentTest.java[tags=embeddable-Parent-example]
 ----
 ====
 
@@ -236,7 +238,7 @@ Assuming we have persisted the following `City` entity:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-persist-example]
+include::{example-dir-emeddable}/ParentTest.java[tags=embeddable-Parent-persist-example]
 ----
 ====
 
@@ -247,7 +249,7 @@ When fetching the `City` entity, the `city` property of the embeddable type acts
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-fetching-example]
+include::{example-dir-emeddable}/ParentTest.java[tags=embeddable-Parent-fetching-example]
 ----
 ====
 
@@ -270,7 +272,7 @@ embeddable:
 ====
 [source, JAVA, indent=0]
 ----
-include::{instantiatorTestDir}/embedded/Name.java[tags=embeddable-instantiator-embeddable]
+include::{example-dir-embeddableinstantiator}/embedded/Name.java[tags=embeddable-instantiator-embeddable]
 ----
 ====
 
@@ -282,7 +284,7 @@ conventions, in terms of constructor, a custom strategy for instantiation is nee
 ====
 [source, JAVA, indent=0]
 ----
-include::{instantiatorTestDir}/embedded/NameInstantiator.java[tags=embeddable-instantiator-impl]
+include::{example-dir-embeddableinstantiator}/embedded/NameInstantiator.java[tags=embeddable-instantiator-impl]
 ----
 ====
 
@@ -294,7 +296,7 @@ annotation can be used on the embedded attribute:
 ====
 [source, JAVA, indent=0]
 ----
-include::{instantiatorTestDir}/embedded/Person.java[tags=embeddable-instantiator-property]
+include::{example-dir-embeddableinstantiator}/embedded/Person.java[tags=embeddable-instantiator-property]
 ----
 ====
 
@@ -305,9 +307,9 @@ include::{instantiatorTestDir}/embedded/Person.java[tags=embeddable-instantiator
 ====
 [source, JAVA, indent=0]
 ----
-include::{instantiatorTestDir}/embeddable/Name.java[tags=embeddable-instantiator-class]
+include::{example-dir-embeddableinstantiator}/embeddable/Name.java[tags=embeddable-instantiator-class]
 
-include::{instantiatorTestDir}/embeddable/Person.java[tags=embeddable-instantiator-class]
+include::{example-dir-embeddableinstantiator}/embeddable/Person.java[tags=embeddable-instantiator-class]
 ----
 ====
 
@@ -321,7 +323,7 @@ on the <<embeddable-instantiator-class-ex,embeddable>>.
 ====
 [source, JAVA, indent=0]
 ----
-include::{instantiatorTestDir}/registered/Person.java[tags=embeddable-instantiator-registration]
+include::{example-dir-embeddableinstantiator}/registered/Person.java[tags=embeddable-instantiator-registration]
 ----
 ====
 
@@ -346,7 +348,7 @@ For example, consider the following custom type:
 ====
 [source, JAVA, indent=0]
 ----
-include::{usertypeTestDir}/embedded/Name.java[tags=embeddable-usertype-domain]
+include::{example-dir-compositeusertype}/embedded/Name.java[tags=embeddable-usertype-domain]
 ----
 ====
 
@@ -358,7 +360,7 @@ conventions, a custom user type for instantiation and state access is needed.
 ====
 [source, JAVA, indent=0]
 ----
-include::{usertypeTestDir}/embedded/NameCompositeUserType.java[tags=embeddable-usertype-impl]
+include::{example-dir-compositeusertype}/embedded/NameCompositeUserType.java[tags=embeddable-usertype-impl]
 ----
 ====
 
@@ -381,7 +383,7 @@ annotation can be used on the embedded and element collection attributes:
 ====
 [source, JAVA, indent=0]
 ----
-include::{usertypeTestDir}/embedded/Person.java[tags=embeddable-usertype-property]
+include::{example-dir-compositeusertype}/embedded/Person.java[tags=embeddable-usertype-property]
 ----
 ====
 
@@ -393,7 +395,7 @@ when the application developer wants to apply the composite user type for all do
 ====
 [source, JAVA, indent=0]
 ----
-include::{usertypeTestDir}/registered/Person.java[tags=embeddable-usertype-registration]
+include::{example-dir-compositeusertype}/registered/Person.java[tags=embeddable-usertype-registration]
 ----
 ====
 
@@ -417,7 +419,7 @@ However, for the purposes of this discussion, Hibernate has the capability to in
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-namingstrategy-entity-mapping, indent=0]
+include::{example-dir-emeddable}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-namingstrategy-entity-mapping, indent=0]
 ----
 ====
 
@@ -428,7 +430,7 @@ To make it work, you need to use the `ImplicitNamingStrategyComponentPathImpl` n
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-ImplicitNamingStrategyComponentPathImpl, indent=0]
+include::{example-dir-emeddable}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-ImplicitNamingStrategyComponentPathImpl, indent=0]
 ----
 ====
 

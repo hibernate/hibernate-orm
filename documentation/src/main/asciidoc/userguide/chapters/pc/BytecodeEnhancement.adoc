@@ -1,6 +1,8 @@
 [[BytecodeEnhancement]]
 === Bytecode Enhancement
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/pc
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-enhancement: {documentation-project-dir}/src/test/java/org/hibernate/userguide/pc
 
 Hibernate "grew up" not supporting bytecode enhancement at all.
 At that time, Hibernate only supported proxy-based alternative for lazy loading and always used diff-based dirty calculation.
@@ -29,7 +31,7 @@ This behavior is explicitly controllable through the `@org.hibernate.annotations
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-lazy-loading-example]
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-lazy-loading-example]
 ----
 ====
 
@@ -67,7 +69,7 @@ Consider a domain model with a normal `Person`/`Book` bidirectional association:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-example]
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-example]
 ----
 ====
 
@@ -76,7 +78,7 @@ include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example]
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example]
 ----
 ====
 
@@ -87,7 +89,7 @@ This blows up in normal Java usage. The correct normal Java usage is:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example]
+include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example]
 ----
 ====
 

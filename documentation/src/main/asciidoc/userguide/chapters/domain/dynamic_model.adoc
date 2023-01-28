@@ -1,7 +1,9 @@
 [[dynamic-model]]
 === Dynamic Model
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/dynamic
-:mappingdir: ../../../../../test/resources/org/hibernate/userguide/mapping/dynamic
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-dynamic: {documentation-project-dir}/src/test/java/org/hibernate/userguide/mapping/dynamic
+:example-dir-resources: {documentation-project-dir}/src/test/resources/org/hibernate/userguide/mapping/dynamic
 :extrasdir: extras
 
 [IMPORTANT]
@@ -26,7 +28,7 @@ Entity modes can now be mixed within a domain model; a dynamic entity might refe
 ====
 [source,xml]
 ----
-include::{mappingdir}/Book.hbm.xml[tag=mapping-model-dynamic-example, indent=0]
+include::{example-dir-resources}/Book.hbm.xml[tag=mapping-model-dynamic-example, indent=0]
 ----
 ====
 
@@ -37,7 +39,7 @@ After you defined your entity mapping, you need to instruct Hibernate to use the
 ====
 [source,java]
 ----
-include::{sourcedir}/DynamicEntityTest.java[tag=mapping-model-dynamic-setting-example, indent=0]
+include::{example-dir-dynamic}/DynamicEntityTest.java[tag=mapping-model-dynamic-setting-example, indent=0]
 ----
 ====
 
@@ -49,7 +51,7 @@ Hibernate is going to generate the following SQL statement:
 ====
 [source,java]
 ----
-include::{sourcedir}/DynamicEntityTest.java[tag=mapping-model-dynamic-example, indent=0]
+include::{example-dir-dynamic}/DynamicEntityTest.java[tag=mapping-model-dynamic-example, indent=0]
 ----
 
 [source,sql]

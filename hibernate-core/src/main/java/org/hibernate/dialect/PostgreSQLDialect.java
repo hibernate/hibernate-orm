@@ -71,6 +71,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
@@ -136,10 +137,12 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class PostgreSQLDialect extends Dialect {
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
+
 	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	private final PostgreSQLDriverKind driverKind;
-	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
 
 	public PostgreSQLDialect() {
 		this( MINIMUM_VERSION );
@@ -148,16 +151,25 @@ public class PostgreSQLDialect extends Dialect {
 	public PostgreSQLDialect(DialectResolutionInfo info) {
 		super(info);
 		driverKind = PostgreSQLDriverKind.determineKind( info );
+		optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( info );
+	}
+
+	private static OptionalTableUpdateStrategy determineOptionalTableUpdateStrategy(DatabaseVersion version) {
+		return version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) )
+				? PostgreSQLDialect::usingMerge
+				: PostgreSQLDialect::withoutMerge;
 	}
 
 	public PostgreSQLDialect(DatabaseVersion version) {
 		super(version);
 		driverKind = PostgreSQLDriverKind.PG_JDBC;
+		optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
 	}
 
 	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super(version);
 		this.driverKind = driverKind;
+		optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
 	}
 
 	@Override
@@ -1376,12 +1388,35 @@ public class PostgreSQLDialect extends Dialect {
 		return OTHER;
 	}
 
+
+	@FunctionalInterface
+	private interface OptionalTableUpdateStrategy {
+		MutationOperation buildMutationOperation(
+				EntityMutationTarget mutationTarget,
+				OptionalTableUpdate optionalTableUpdate,
+				SessionFactoryImplementor factory);
+	}
+
 	@Override
 	public MutationOperation createOptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
+		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	private static MutationOperation usingMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
 		final PostgreSQLSqlAstTranslator<?> translator = new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate );
 		return translator.createMergeOperation( optionalTableUpdate );
+	}
+
+	private static MutationOperation withoutMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 }

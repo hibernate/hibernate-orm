@@ -34,7 +34,7 @@ import org.hibernate.generator.GeneratorCreationContext;
  *
  * @deprecated Replaced by {@link AnnotationBasedGenerator}
  */
-@Deprecated(since = "6", forRemoval = true)
+@Deprecated(since = "6.2", forRemoval = true)
 public interface AnnotationValueGeneration<A extends Annotation>
 		extends ValueGeneration, AnnotationBasedGenerator<A> {
 	/**

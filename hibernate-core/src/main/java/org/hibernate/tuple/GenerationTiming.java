@@ -24,7 +24,7 @@ import org.hibernate.generator.EventType;
  * redefined using the new broader {@linkplain org.hibernate.generator generation}
  * approach.
  */
-@Deprecated(since = "6", forRemoval = true)
+@Deprecated(since = "6.2", forRemoval = true)
 public enum GenerationTiming {
 	/**
 	 * Value generation that never occurs.

@@ -28,7 +28,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
  *
  * @deprecated Replaced by {@link Generator}
  */
-@Deprecated(since = "6", forRemoval = true)
+@Deprecated(since = "6.2", forRemoval = true)
 public interface ValueGeneration extends BeforeExecutionGenerator, OnExecutionGenerator {
 	/**
 	 * Specifies that the property value is generated:

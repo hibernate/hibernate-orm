@@ -48,6 +48,11 @@ public class MappedByTableGroup extends DelegatingTableGroup implements VirtualT
 	}
 
 	@Override
+	public TableGroup getUnderlyingTableGroup() {
+		return underlyingTableGroup;
+	}
+
+	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}

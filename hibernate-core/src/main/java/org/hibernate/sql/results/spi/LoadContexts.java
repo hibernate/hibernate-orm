@@ -10,7 +10,6 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -46,6 +45,10 @@ public class LoadContexts {
 		if ( previous != state ) {
 			throw new IllegalStateException( "Illegal pop() with non-matching JdbcValuesSourceProcessingState" );
 		}
+	}
+
+	public boolean isLoadingFinished() {
+		return jdbcValuesSourceProcessingStateStack.getRoot() == null;
 	}
 
 	public LoadingEntityEntry findLoadingEntityEntry(final EntityKey entityKey) {

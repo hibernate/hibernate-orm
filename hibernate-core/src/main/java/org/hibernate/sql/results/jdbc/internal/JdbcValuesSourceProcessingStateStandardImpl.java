@@ -39,7 +39,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSourceProcessingState {
-	private static final Logger log = Logger.getLogger( JdbcValuesSourceProcessingStateStandardImpl.class );
 
 	private final ExecutionContext executionContext;
 	private final JdbcValuesSourceProcessingOptions processingOptions;

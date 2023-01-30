@@ -1,8 +1,8 @@
 [[partitioning]]
 === Partitioning
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-partition-key: {documentation-project-dir}/src/test/java/org/hibernate/userguide/mapping/identifier
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-partition-key: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/identifier
 :extrasdir: extras
 
 In data management, it is sometimes necessary to split data of a table into various (physical) partitions,

@@ -1,8 +1,8 @@
 [[events]]
 == Interceptors and events
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-event: {documentation-project-dir}/src/test/java/org/hibernate/userguide/events
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-event: {core-project-dir}/src/test/java/org/hibernate/orm/test/events
 :extrasdir: extras
 
 It is useful for the application to react to certain events that occur inside Hibernate.

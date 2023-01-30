@@ -1,8 +1,10 @@
 [[naturalid]]
 === Natural Ids
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-naturalid: {documentation-project-dir}/src/test/java/org/hibernate/userguide/mapping/identifier
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-naturalid: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/identifier
+:jcache-project-dir: {root-project-dir}/hibernate-jcache
+:example-dir-caching: {jcache-project-dir}/src/test/java/org/hibernate/orm/test/caching
 :extrasdir: extras
 
 Natural ids represent domain model unique identifiers that have a meaning in the real world too.
@@ -157,6 +159,6 @@ Not only can this NaturalId-to-PK resolution be cached in the Session, but we ca
 ====
 [source,java]
 ----
-include::{example-dir-naturalid}/CacheableNaturalIdTest.java[tags=naturalid-cacheable-mapping-example,indent=0]
+include::{example-dir-caching}/CacheableNaturalIdTest.java[tags=naturalid-cacheable-mapping-example,indent=0]
 ----
 ====

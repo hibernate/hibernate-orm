@@ -1,8 +1,8 @@
 [[envers]]
 == Envers
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-envers: {documentation-project-dir}/src/test/java/org/hibernate/userguide/envers
+:envers-project-dir: {root-project-dir}/hibernate-envers
+:example-dir-envers: {envers-project-dir}/src/test/java/org/hibernate/orm/test/envers
 :extrasdir: extras
 
 [[envers-basics]]

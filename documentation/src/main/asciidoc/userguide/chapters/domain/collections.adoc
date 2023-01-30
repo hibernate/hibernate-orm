@@ -2,8 +2,6 @@
 === Collections
 :majorMinorVersion: 6.2
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-collection-doc: {documentation-project-dir}/src/test/java/org/hibernate/userguide/collections
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java
 :example-dir-collection: {core-test-base}/org/hibernate/orm/test/mapping/collections
@@ -484,7 +482,7 @@ Behind the scenes, Hibernate requires an association table to manage the parent-
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/UnidirectionalBagTest.java[tags=collections-unidirectional-bag-example,indent=0]
+include::{example-dir-collection}/UnidirectionalBagTest.java[tags=collections-unidirectional-bag-example,indent=0]
 ----
 
 [source,sql]
@@ -507,7 +505,7 @@ By marking the parent side with the `CascadeType.ALL` attribute, the unidirectio
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/UnidirectionalBagTest.java[tags=collections-unidirectional-bag-lifecycle-example,indent=0]
+include::{example-dir-collection}/UnidirectionalBagTest.java[tags=collections-unidirectional-bag-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -536,7 +534,7 @@ The `@ManyToOne` side is the owning side of the bidirectional bag association, w
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/BidirectionalBagTest.java[tags=collections-bidirectional-bag-example,indent=0]
+include::{example-dir-collection}/BidirectionalBagTest.java[tags=collections-bidirectional-bag-example,indent=0]
 ----
 
 [source,sql]
@@ -550,7 +548,7 @@ include::{extrasdir}/collections-bidirectional-bag-example.sql[]
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/BidirectionalBagTest.java[tags=collections-bidirectional-bag-lifecycle-example,indent=0]
+include::{example-dir-collection}/BidirectionalBagTest.java[tags=collections-bidirectional-bag-lifecycle-example,indent=0]
 ----
 
 [source,sql]
@@ -564,7 +562,7 @@ include::{extrasdir}/collections-bidirectional-bag-lifecycle-example.sql[]
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/BidirectionalBagOrphanRemovalTest.java[tags=collections-bidirectional-bag-orphan-removal-example,indent=0]
+include::{example-dir-collection}/BidirectionalBagOrphanRemovalTest.java[tags=collections-bidirectional-bag-orphan-removal-example,indent=0]
 ----
 
 [source,sql]
@@ -594,7 +592,7 @@ When using the `@OrderBy` annotation, the mapping looks as follows:
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/UnidirectionalOrderedByListTest.java[tags=collections-unidirectional-ordered-list-order-by-example,indent=0]
+include::{example-dir-collection}/UnidirectionalOrderedByListTest.java[tags=collections-unidirectional-ordered-list-order-by-example,indent=0]
 ----
 ====
 
@@ -626,7 +624,7 @@ Another ordering option is to use the `@OrderColumn` annotation:
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/UnidirectionalOrderColumnListTest.java[tags=collections-unidirectional-ordered-list-order-column-example,indent=0]
+include::{example-dir-collection}/UnidirectionalOrderColumnListTest.java[tags=collections-unidirectional-ordered-list-order-column-example,indent=0]
 ----
 
 [source,sql]
@@ -659,7 +657,7 @@ The mapping is similar with the <<collections-bidirectional-bag>> example, just 
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/BidirectionalOrderByListTest.java[tags=collections-bidirectional-ordered-list-order-by-example,indent=0]
+include::{example-dir-collection}/BidirectionalOrderByListTest.java[tags=collections-bidirectional-ordered-list-order-by-example,indent=0]
 ----
 ====
 
@@ -672,7 +670,7 @@ When using the `@OrderColumn` annotation, the `order_id` column is going to be e
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/BidirectionalOrderColumnListTest.java[tags=collections-bidirectional-ordered-list-order-column-example,indent=0]
+include::{example-dir-collection}/BidirectionalOrderColumnListTest.java[tags=collections-bidirectional-ordered-list-order-column-example,indent=0]
 ----
 
 [source,sql]
@@ -693,7 +691,7 @@ You can customize the ordinal of the underlying ordered list by using the https:
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-mapping-example,indent=0]
+include::{example-dir-collection}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-mapping-example,indent=0]
 ----
 ====
 
@@ -704,7 +702,7 @@ When inserting two `Phone` records, Hibernate is going to start the List index f
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-persist-example,indent=0]
+include::{example-dir-collection}/OrderColumnListIndexBaseTest.java[tags=collections-customizing-ordered-list-ordinal-persist-example,indent=0]
 ----
 
 [source,sql]
@@ -729,7 +727,7 @@ by the number of characters of the `name` attribute.
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-mapping-example,indent=0]
+include::{example-dir-collection}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-mapping-example,indent=0]
 ----
 ====
 
@@ -740,7 +738,7 @@ When fetching the `articles` collection, Hibernate uses the ORDER BY SQL clause 
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-fetching-example,indent=0]
+include::{example-dir-collection}/OrderedBySQLTest.java[tags=collections-customizing-ordered-by-sql-clause-fetching-example,indent=0]
 ----
 
 [source,sql]
@@ -764,7 +762,7 @@ The unidirectional set uses a link table to hold the parent-child associations a
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/UnidirectionalSetTest.java[tags=collections-unidirectional-set-example,indent=0]
+include::{example-dir-collection}/UnidirectionalSetTest.java[tags=collections-unidirectional-set-example,indent=0]
 ----
 ====
 
@@ -789,7 +787,7 @@ The lifecycle is just like with bidirectional bags except for the duplicates whi
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/BidirectionalSetTest.java[tags=collections-bidirectional-set-example,indent=0]
+include::{example-dir-collection}/BidirectionalSetTest.java[tags=collections-bidirectional-set-example,indent=0]
 ----
 ====
 
@@ -809,7 +807,7 @@ A `SortedSet` that relies on the natural sorting order given by the child elemen
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/UnidirectionalSortedSetTest.java[tags=collections-unidirectional-sorted-set-natural-comparator-example,indent=0]
+include::{example-dir-collection}/UnidirectionalSortedSetTest.java[tags=collections-unidirectional-sorted-set-natural-comparator-example,indent=0]
 ----
 ====
 
@@ -822,7 +820,7 @@ To provide a custom sorting logic, Hibernate also provides a `@SortComparator` a
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/UnidirectionalComparatorSortedSetTest.java[tags=collections-unidirectional-sorted-set-custom-comparator-example,indent=0]
+include::{example-dir-collection}/UnidirectionalComparatorSortedSetTest.java[tags=collections-unidirectional-sorted-set-custom-comparator-example,indent=0]
 ----
 ====
 
@@ -836,9 +834,9 @@ The `@SortNatural` and `@SortComparator` work the same for bidirectional sorted 
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/BidirectionalSortedSetTest.java[tags=collections-bidirectional-sorted-set-example,indent=0]
+include::{example-dir-collection}/BidirectionalSortedSetTest.java[tags=collections-bidirectional-sorted-set-example,indent=0]
 
-include::{example-dir-collection-doc}/UnidirectionalComparatorSortedSetTest.java[lines=75..77,indent=0]
+include::{example-dir-collection}/UnidirectionalComparatorSortedSetTest.java[lines=75..77,indent=0]
 ----
 ====
 
@@ -871,7 +869,7 @@ A map of value type must use the `@ElementCollection` annotation, just like valu
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/ElementCollectionMapTest.java[tags=collections-map-value-type-entity-key-example,indent=0]
+include::{example-dir-collection}/ElementCollectionMapTest.java[tags=collections-map-value-type-entity-key-example,indent=0]
 ----
 
 [source,sql]
@@ -887,7 +885,7 @@ Adding entries to the map generates the following SQL statements:
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/ElementCollectionMapTest.java[tags=collections-map-value-type-entity-key-add-example,indent=0]
+include::{example-dir-collection}/ElementCollectionMapTest.java[tags=collections-map-value-type-entity-key-add-example,indent=0]
 ----
 
 [source,sql]
@@ -925,7 +923,7 @@ Since we want to map all the calls by their associated `java.util.Date`, not by 
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/MapKeyTypeTest.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
+include::{example-dir-collection}/MapKeyTypeTest.java[tags=collections-map-custom-key-type-mapping-example,indent=0]
 ----
 ====
 
@@ -940,7 +938,7 @@ Considering you have the following `PhoneNumber` interface with an implementatio
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/MapKeyClassTest.java[tags=collections-map-key-class-type-mapping-example,indent=0]
+include::{example-dir-collection}/MapKeyClassTest.java[tags=collections-map-key-class-type-mapping-example,indent=0]
 ----
 ====
 
@@ -952,7 +950,7 @@ If you want to use the `PhoneNumber` interface as a `java.util.Map` key, then yo
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/MapKeyClassTest.java[tags=collections-map-key-class-mapping-example,indent=0]
+include::{example-dir-collection}/MapKeyClassTest.java[tags=collections-map-key-class-mapping-example,indent=0]
 ----
 
 [source,sql]
@@ -969,7 +967,7 @@ Hibernate generates the following SQL statements:
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/MapKeyClassTest.java[tags=collections-map-key-class-persist-example,indent=0]
+include::{example-dir-collection}/MapKeyClassTest.java[tags=collections-map-key-class-persist-example,indent=0]
 ----
 
 [source,sql]
@@ -986,7 +984,7 @@ Hibernate generates the following SQL statements:
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/MapKeyClassTest.java[tags=collections-map-key-class-fetch-example,indent=0]
+include::{example-dir-collection}/MapKeyClassTest.java[tags=collections-map-key-class-fetch-example,indent=0]
 ----
 
 [source,sql]
@@ -1013,7 +1011,7 @@ The `@MapKey` annotation is used to define the entity attribute used as a key of
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/UnidirectionalMapTest.java[tags=collections-map-unidirectional-example,indent=0]
+include::{example-dir-collection}/UnidirectionalMapTest.java[tags=collections-map-unidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -1034,7 +1032,7 @@ In the following example, you can see that `@MapKeyEnumerated` was used so that 
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/BidirectionalMapTest.java[tags=collections-map-bidirectional-example,indent=0]
+include::{example-dir-collection}/BidirectionalMapTest.java[tags=collections-map-bidirectional-example,indent=0]
 ----
 
 [source,sql]
@@ -1068,7 +1066,7 @@ but now, Hibernate will leverage the native array data types if possible.
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/ArrayTest.java[tags=collections-array-as-basic-example,indent=0]
+include::{example-dir-collection}/ArrayTest.java[tags=collections-array-as-basic-example,indent=0]
 ----
 
 [source,sql]
@@ -1091,7 +1089,7 @@ default mapped like basic arrays as depicted in the <<collections-array-as-basic
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/CollectionTest.java[tags=collections-as-basic-example,indent=0]
+include::{example-dir-collection}/CollectionTest.java[tags=collections-as-basic-example,indent=0]
 ----
 
 [source,sql]

@@ -1,8 +1,8 @@
 [[BytecodeEnhancement]]
 === Bytecode Enhancement
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-enhancement: {documentation-project-dir}/src/test/java/org/hibernate/userguide/pc
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-enhancement: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
 
 Hibernate "grew up" not supporting bytecode enhancement at all.
 At that time, Hibernate only supported proxy-based alternative for lazy loading and always used diff-based dirty calculation.

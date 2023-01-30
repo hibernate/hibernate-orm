@@ -11,6 +11,7 @@ import org.hibernate.testing.orm.domain.contacts.ContactsDomainModel;
 import org.hibernate.testing.orm.domain.gambit.GambitDomainModel;
 import org.hibernate.testing.orm.domain.helpdesk.HelpDeskDomainModel;
 import org.hibernate.testing.orm.domain.retail.RetailDomainModel;
+import org.hibernate.testing.orm.domain.userguide.UserguideDomainModel;
 
 /**
  * @author Steve Ebersole
@@ -20,7 +21,8 @@ public enum StandardDomainModel {
 	ANIMAL( AnimalDomainModel.INSTANCE ),
 	GAMBIT( GambitDomainModel.INSTANCE ),
 	HELPDESK( HelpDeskDomainModel.INSTANCE ),
-	RETAIL( RetailDomainModel.INSTANCE );
+	RETAIL( RetailDomainModel.INSTANCE ),
+	USERGUIDE( UserguideDomainModel.INSTANCE );
 
 	private final DomainModelDescriptor domainModel;
 

@@ -558,15 +558,9 @@ As back-ground, Hibernate does understand whether a fetch is actually, truly cir
 understands that while walking a fetch-graph it encounters the same table/column(s) making up a particular
 foreign-key.  In this case, it simply stops walking the graph any deeper.
 
-This
-
 Previous versions of Hibernate determined fetches using a depth-first approach, which occasionally led
 to odd "circularity" determination.  Starting with 6.0, we now perform fetch determination using a width
 first approach.
-
-As back-ground, Hibernate does not always know that a fetch is truly
-circular.  So it uses the approach that seeing the same table and column(s) as keys might be a circularity
-and stops processing fetches using that table/column(s) combination.
 
 Given a model such as
 

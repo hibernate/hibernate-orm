@@ -41,6 +41,15 @@ public interface FromClauseAccess {
 	TableGroup findTableGroup(NavigablePath navigablePath);
 
 	/**
+	 * Find the TableGroup by the NavigablePath for the purpose of creating a
+	 * new TableGroup if none can be found. Returns {@code null} if no TableGroup
+	 * or parent table group is registered under that NavigablePath
+	 */
+	default TableGroup findTableGroupForGetOrCreate(NavigablePath navigablePath) {
+		return findTableGroup( navigablePath );
+	}
+
+	/**
 	 * Get a  TableGroup by the NavigablePath it is registered under.  If there is
 	 * no registration, an exception is thrown.
 	 */
@@ -69,7 +78,7 @@ public interface FromClauseAccess {
 	 * @see #registerTableGroup
 	 */
 	default TableGroup resolveTableGroup(NavigablePath navigablePath, Function<NavigablePath, TableGroup> creator) {
-		TableGroup tableGroup = findTableGroup( navigablePath );
+		TableGroup tableGroup = findTableGroupForGetOrCreate( navigablePath );
 		if ( tableGroup == null ) {
 			tableGroup = creator.apply( navigablePath );
 			registerTableGroup( navigablePath, tableGroup );

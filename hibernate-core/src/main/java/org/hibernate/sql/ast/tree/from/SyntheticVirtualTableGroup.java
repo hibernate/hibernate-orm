@@ -47,6 +47,11 @@ public class SyntheticVirtualTableGroup extends AbstractTableGroup implements Vi
 	}
 
 	@Override
+	public TableGroup getUnderlyingTableGroup() {
+		return underlyingTableGroup;
+	}
+
+	@Override
 	public boolean isFetched() {
 		return false;
 	}

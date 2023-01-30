@@ -3351,7 +3351,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmPath instanceof SqmEntityValuedSimplePath<?>
 				|| sqmPath instanceof SqmEmbeddedValuedSimplePath<?>
 				|| sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
-			final TableGroup existingTableGroup = fromClauseIndex.findTableGroup( sqmPath.getNavigablePath() );
+			final TableGroup existingTableGroup = fromClauseIndex.findTableGroupForGetOrCreate( sqmPath.getNavigablePath() );
 			if ( existingTableGroup == null ) {
 				final TableGroup createdTableGroup = createTableGroup(
 						fromClauseIndex.getTableGroup( sqmPath.getLhs().getNavigablePath() ),
@@ -3387,7 +3387,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( parentPath == null ) {
 			return null;
 		}
-		final TableGroup tableGroup = fromClauseIndex.findTableGroup( parentPath.getNavigablePath() );
+		final TableGroup tableGroup = fromClauseIndex.findTableGroupForGetOrCreate( parentPath.getNavigablePath() );
 		if ( tableGroup == null ) {
 			final TableGroup parentTableGroup = prepareReusablePath(
 					fromClauseIndex,
@@ -3454,7 +3454,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			path = selectionPath;
 		}
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
-		final TableGroup tableGroup = fromClauseIndex.findTableGroup( path.getNavigablePath() );
+		final TableGroup tableGroup = fromClauseIndex.findTableGroupForGetOrCreate( path.getNavigablePath() );
 		if ( tableGroup == null ) {
 			prepareReusablePath( path, () -> null );
 

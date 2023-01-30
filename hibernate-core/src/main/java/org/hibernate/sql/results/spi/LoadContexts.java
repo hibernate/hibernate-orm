@@ -48,6 +48,10 @@ public class LoadContexts {
 		}
 	}
 
+	public boolean isLoadingFinished() {
+		return jdbcValuesSourceProcessingStateStack.depth() == 0;
+	}
+
 	public LoadingEntityEntry findLoadingEntityEntry(EntityKey entityKey) {
 		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
 				state -> state.findLoadingEntityLocally( entityKey )

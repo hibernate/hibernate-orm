@@ -201,6 +201,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return loadContexts;
 	}
 
+	@Override
+	public boolean hasLoadContext() {
+		return loadContexts != null;
+	}
+
 //	@Override
 //	public void addUnownedCollection(CollectionKey key, PersistentCollection collection) {
 //		if ( unownedCollections == null ) {

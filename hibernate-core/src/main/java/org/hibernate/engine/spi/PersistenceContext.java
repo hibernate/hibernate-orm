@@ -58,6 +58,11 @@ public interface PersistenceContext {
 	 */
 	LoadContexts getLoadContexts();
 
+	default boolean hasLoadContext() {
+		getLoadContexts();
+		return true;
+	}
+
 //	/**
 //	 * Add a collection which has no owner loaded
 //	 *

@@ -1,11 +1,9 @@
 [[embeddables]]
 === Embeddable values
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:documentation-example-base: {documentation-project-dir}/src/test/java
-:example-dir-emeddable: {documentation-example-base}/org/hibernate/userguide/mapping/embeddable
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {root-project-dir}/hibernate-core/src/test/java
+:example-dir-emeddable: {core-test-base}/org/hibernate/orm/test/mapping/embeddable
 :example-dir-embeddableinstantiator: {core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
 :example-dir-compositeusertype: {core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/usertype
 :extrasdir: extras

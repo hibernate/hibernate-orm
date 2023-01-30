@@ -1,13 +1,12 @@
 [[basic]]
 === Basic values
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:documentation-example-base: {documentation-project-dir}/src/test/
-:example-dir-model: {documentation-project-dir}/src/main/java/org/hibernate/userguide/model
-:example-dir-basic-mapping: {documentation-example-base}/java/org/hibernate/userguide/mapping
-:example-dir-resources: {documentation-example-base}/resources/org/hibernate/userguide/
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test
+:example-dir-basic-mapping: {core-test-base}/java/org/hibernate/orm/test/mapping
+:example-dir-resources: {core-test-base}/resources/org/hibernate/orm/test/
 :example-dir-generated: {core-test-base}/java/org/hibernate/orm/test/mapping/generated
 :example-dir-converter: {core-test-base}/java/org/hibernate/orm/test/mapping/converted/converter
 :extrasdir: extras

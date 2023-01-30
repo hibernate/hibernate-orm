@@ -1,10 +1,10 @@
 [[identifiers]]
 === Identifiers
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-identifier: {documentation-project-dir}/src/test/java/org/hibernate/userguide/mapping/identifier
-:example-dir-associations: {documentation-project-dir}/src/test/java/org/hibernate/userguide/associations
-:core-test-base: {root-project-dir}/hibernate-core/src/test/java
+:core-project-dir: {root-project-dir}/hibernate-core
+:core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:example-dir-identifier: {core-test-base}/mapping/identifier
+:example-dir-associations: {core-test-base}/associations
 :jpaJavadocUrl: https://javadoc.io/doc/jakarta.persistence/jakarta.persistence-api/latest/jakarta.persistence
 :extrasdir: extras
 
@@ -578,9 +578,9 @@ and type-safe definition and configuration of custom `org.hibernate.id.Identifie
 ====
 [source,java]
 ----
-include::{core-test-base}/org/hibernate/orm/test/id/custom/CustomSequenceGenerator.java[tag=identifiers-IdGeneratorType-example, indent=0]
+include::{core-test-base}/id/custom/CustomSequenceGenerator.java[tag=identifiers-IdGeneratorType-example, indent=0]
 
-include::{core-test-base}/org/hibernate/orm/test/id/custom/Sequence.java[tag=identifiers-IdGeneratorType-example, indent=0]
+include::{core-test-base}/id/custom/Sequence.java[tag=identifiers-IdGeneratorType-example, indent=0]
 ----
 ====
 

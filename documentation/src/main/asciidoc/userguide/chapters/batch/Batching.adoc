@@ -1,9 +1,8 @@
 [[batch]]
 == Batching
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
 :core-project-dir: {root-project-dir}/hibernate-core
-:example-dir-doc-batch: {documentation-project-dir}/src/test/java/org/hibernate/userguide/batch
+:example-dir-doc-batch: {core-project-dir}/src/test/java/org/hibernate/orm/test/batch
 :example-dir-bulkid: {core-project-dir}/src/test/java/org/hibernate/orm/test/bulkid
 :extrasdir: extras
 
@@ -49,7 +48,7 @@ Since version 5.2, Hibernate allows overriding the global JDBC batch size given 
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-session-jdbc-batch-size-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-jdbc-batch-size-example]
 ----
 ====
 
@@ -63,7 +62,7 @@ The following example shows an anti-pattern for batch inserts.
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-session-batch-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-example]
 ----
 ====
 
@@ -91,7 +90,7 @@ When you make new objects persistent, employ methods `flush()` and `clear()` to 
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-session-batch-insert-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-insert-example]
 ----
 ====
 
@@ -106,7 +105,7 @@ In addition, use method `scroll()` to take advantage of server-side cursors for 
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-session-scroll-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-scroll-example]
 ----
 ====
 
@@ -152,7 +151,7 @@ IMPORTANT: Due to the lack of a first-level cache, stateless sessions are vulner
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-stateless-session-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-stateless-session-example]
 ----
 ====
 
@@ -208,7 +207,7 @@ You can use sub-queries in the `WHERE` clause, and the sub-queries themselves ca
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-bulk-jpql-update-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-update-example]
 ----
 ====
 
@@ -217,7 +216,7 @@ include::{example-dir-doc-batch}/BatchTest.java[tags=batch-bulk-jpql-update-exam
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-bulk-hql-update-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-example]
 ----
 ====
 
@@ -229,7 +228,7 @@ You can use a versioned update to force Hibernate to reset the version or timest
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-bulk-hql-update-version-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-version-example]
 ----
 ====
 
@@ -245,7 +244,7 @@ This feature is only available in HQL since it's not standardized by Jakarta Per
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-bulk-jpql-delete-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-delete-example]
 ----
 ====
 
@@ -254,7 +253,7 @@ include::{example-dir-doc-batch}/BatchTest.java[tags=batch-bulk-jpql-delete-exam
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-bulk-hql-delete-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-delete-example]
 ----
 ====
 
@@ -312,7 +311,7 @@ in which case the seed value defined by the `org.hibernate.type.descriptor.java.
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-doc-batch}/BatchTest.java[tags=batch-bulk-hql-insert-example]
+include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-insert-example]
 ----
 ====
 

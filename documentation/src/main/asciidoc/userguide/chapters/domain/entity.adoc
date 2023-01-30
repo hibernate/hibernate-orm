@@ -1,11 +1,11 @@
 ﻿[[entity]]
 === Entity types
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-locking: {documentation-project-dir}/src/test/java/org/hibernate/userguide/locking
-:example-dir-mapping: {documentation-project-dir}/src/test/java/org/hibernate/userguide/mapping
-:example-dir-proxy: {documentation-project-dir}/src/test/java/org/hibernate/userguide/proxy
-:example-dir-persister: {documentation-project-dir}/src/test/java/org/hibernate/userguide/persister
+:core-project-dir: {root-project-dir}/hibernate-core
+:core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:example-dir-mapping: {core-test-base}/mapping
+:example-dir-proxy: {core-test-base}/proxy
+:example-dir-persister: {core-test-base}/persister
 :extrasdir: extras
 
 .Usage of the word _entity_

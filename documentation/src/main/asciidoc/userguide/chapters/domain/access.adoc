@@ -1,8 +1,8 @@
 [[access]]
 === Access strategies
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-access: {documentation-project-dir}/src/test/java/org/hibernate/userguide/mapping/access
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-access: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/access
 :extrasdir: extras
 
 As a Jakarta Persistence provider, Hibernate can introspect both the entity attributes (instance fields) or the accessors (instance properties).

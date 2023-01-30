@@ -1,9 +1,10 @@
 [[query-language]]
 == Hibernate Query Language
 :root-project-dir: ../../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-model: {documentation-project-dir}/src/main/java/org/hibernate/userguide/model
-:example-dir-hql: ../../../../../../test/java/org/hibernate/userguide/hql
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :extrasdir: extras
 
 This chapter describes Hibernate Query Language (HQL) and Jakarta Persistence Query Language (JPQL).
@@ -196,9 +197,9 @@ A single HQL `update` statement might result in multiple SQL update statements e
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-hql}/../batch/BatchTest.java[tags=batch-bulk-jpql-update-example]
+include::{example-dir-hql}/../batch/BatchTests.java[tags=batch-bulk-jpql-update-example]
 
-include::{example-dir-hql}/../batch/BatchTest.java[tags=batch-bulk-hql-update-example]
+include::{example-dir-hql}/../batch/BatchTests.java[tags=batch-bulk-hql-update-example]
 ----
 ====
 
@@ -224,7 +225,7 @@ Adding the keyword `versioned`&mdash;writing `update versioned`&mdash;specifies 
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-hql}/../batch/BatchTest.java[tags=batch-bulk-hql-update-version-example]
+include::{example-dir-hql}/../batch/BatchTests.java[tags=batch-bulk-hql-update-version-example]
 ----
 ====
 
@@ -295,7 +296,7 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-insert-example]
 
 [source, SQL, indent=0]
 ----
-include::{example-dir-hql}/../batch/BatchTest.java[tags=batch-bulk-hql-insert-example]
+include::{example-dir-hql}/../batch/BatchTests.java[tags=batch-bulk-hql-insert-example]
 ----
 ====
 
@@ -864,7 +865,7 @@ This function truncates a date, time, or datetime to the temporal unit specified
 The syntax is `truncate(datetime, field)`. Supported temporal units are: `year`, `month`, `day`, `hour`, `minute` or `second`.
 
 Truncating a date, time or datetime value translates to obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
-For hours, minutes and second this means setting them to `00`. For months and days, this means setting them to `01'.
+For hours, minutes and second this means setting them to `00`. For months and days, this means setting them to `01`.
 
 [[hql-string-functions]]
 ==== Functions for working with strings

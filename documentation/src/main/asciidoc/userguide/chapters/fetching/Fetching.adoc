@@ -1,8 +1,8 @@
 [[fetching]]
 == Fetching
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-fetching: {documentation-project-dir}/src/test/java/org/hibernate/userguide/fetching
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-fetching: {core-project-dir}/src/test/java/org/hibernate/orm/test/fetching
 :extrasdir: extras
 
 Fetching, essentially, is the process of grabbing data from the database and making it available to the application.

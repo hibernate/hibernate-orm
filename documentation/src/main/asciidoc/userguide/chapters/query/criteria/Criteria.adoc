@@ -1,8 +1,8 @@
 [[criteria]]
 == Criteria
 :root-project-dir: ../../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-criteria: {documentation-project-dir}/src/test/java/org/hibernate/userguide/criteria
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-criteria: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
 
 Criteria queries offer a type-safe alternative to HQL, JPQL and native SQL queries.
 

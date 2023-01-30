@@ -2214,7 +2214,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return true;
 		}
 		for ( SqmSelection<?> selection : selections ) {
-			if ( selection.getSelectableNode() == from ) {
+			if ( selectableNodeContains( selection.getSelectableNode(), from ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean selectableNodeContains(SqmSelectableNode<?> selectableNode, SqmFrom<?, ?> from) {
+		if ( selectableNode == from ) {
+			return true;
+		}
+		else if ( selectableNode instanceof SqmDynamicInstantiation ) {
+			for ( SqmDynamicInstantiationArgument<?> argument : ( (SqmDynamicInstantiation<?>) selectableNode ).getArguments() ) {
+				if ( selectableNodeContains( argument.getSelectableNode(), from ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean groupByClauseContains(SqmFrom<?, ?> from) {
+		final SqmQuerySpec<?> sqmQuerySpec = (SqmQuerySpec<?>) currentSqmQueryPart;
+		for ( SqmExpression<?> expression : sqmQuerySpec.getGroupByClauseExpressions() ) {
+			if ( expression == from ) {
 				return true;
 			}
 		}
@@ -3594,6 +3618,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// but also when the from clause is part of the select clause
 				// we need to expand to all columns, as we also expand this to all columns in the select clause
 				expandToAllColumns = tableGroup.isFetched() || selectClauseContains( path );
+			}
+			else if ( currentClauseStack.getCurrent() == Clause.ORDER ) {
+				// We must ensure that the order by expression be expanded if the group by
+				// contained the same expression, and that was expanded as well
+				expandToAllColumns = groupByClauseContains( path ) && ( tableGroup.isFetched() || selectClauseContains( path ) );
 			}
 			else {
 				expandToAllColumns = false;

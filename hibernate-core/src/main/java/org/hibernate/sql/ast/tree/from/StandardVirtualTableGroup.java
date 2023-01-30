@@ -42,6 +42,11 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 	}
 
 	@Override
+	public TableGroup getUnderlyingTableGroup() {
+		return underlyingTableGroup;
+	}
+
+	@Override
 	public boolean isFetched() {
 		return fetched;
 	}

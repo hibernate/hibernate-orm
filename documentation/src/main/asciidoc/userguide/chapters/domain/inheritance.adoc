@@ -1,8 +1,8 @@
 [[entity-inheritance]]
 === Inheritance
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-inheritance: {documentation-project-dir}/src/test/java/org/hibernate/userguide/inheritance
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-inheritance: {core-project-dir}/src/test/java/org/hibernate/orm/test/inheritance
 :extrasdir: extras/inheritance
 
 Although relational database systems don't provide support for inheritance, Hibernate provides several strategies to leverage this object-oriented trait onto domain model entities:

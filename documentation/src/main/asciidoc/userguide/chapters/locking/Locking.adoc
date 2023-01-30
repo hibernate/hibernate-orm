@@ -1,8 +1,8 @@
 [[locking]]
 == Locking
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-locking: {documentation-project-dir}/src/test/java/org/hibernate/userguide/locking
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-locking: {core-project-dir}/src/test/java/org/hibernate/orm/test/locking
 :extrasdir: extras
 
 In a relational database, locking refers to actions taken to prevent data from changing between the time it is read and the time is used.

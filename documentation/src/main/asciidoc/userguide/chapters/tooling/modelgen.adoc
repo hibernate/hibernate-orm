@@ -1,10 +1,11 @@
 [[tooling-modelgen]]
 === Static Metamodel Generator
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-model: {documentation-project-dir}/src/main/java/org/hibernate/userguide/model
-:example-dir-metamodelgen-generated: {documentation-project-dir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/userguide/model
-:toolingTestsDir: {documentation-project-dir}/src/test/java/org/hibernate/userguide/tooling
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:example-dir-metamodelgen-generated: {testing-project-dir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/testing/orm/domain/userguide
+:core-project-dir: {root-project-dir}/hibernate-core
+:toolingTestsDir: {core-project-dir}/src/test/java/org/hibernate/orm/test/tooling
 
 Jakarta Persistence defines a typesafe Criteria API which allows `Criteria` queries to be constructed in a
 strongly-typed manner, utilizing so-called static metamodel classes.  For developers, it is important that

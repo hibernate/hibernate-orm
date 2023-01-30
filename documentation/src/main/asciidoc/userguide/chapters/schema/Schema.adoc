@@ -1,9 +1,9 @@
 [[schema-generation]]
 == Schema generation
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-schemagen: {documentation-project-dir}/src/test/java/org/hibernate/userguide/schema
-:example-dir-schemagen-resources: {documentation-project-dir}/src/test/resources
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-schemagen: {core-project-dir}/src/test/java/org/hibernate/orm/test/schema
+:example-dir-schemagen-resources: {core-project-dir}/src/test/resources
 :extrasdir: extras
 
 Hibernate allows you to generate the database from the entity mappings.

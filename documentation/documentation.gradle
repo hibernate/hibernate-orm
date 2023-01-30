@@ -12,10 +12,9 @@ plugins {
  */
 
 
-apply from: rootProject.file( 'gradle/java-module.gradle' )
+apply from: rootProject.file( 'gradle/module.gradle' )
 apply from: rootProject.file( 'gradle/releasable.gradle' )
 
-apply plugin: 'org.hibernate.matrix-test'
 apply plugin: 'org.hibernate.orm.build.reports'
 
 tasks.build.dependsOn 'buildDocs'
@@ -38,46 +37,16 @@ dependencies {
 	reportAggregation project(':hibernate-ant')
 	reportAggregation project(':hibernate-enhance-maven-plugin')
 	reportAggregation project(':hibernate-jpamodelgen')
-
-	implementation project( ':hibernate-core' )
-
-	annotationProcessor project( ':hibernate-jpamodelgen' )
-
-	testImplementation project(':hibernate-testing')
-	testImplementation project(':hibernate-envers')
-	testImplementation project(':hibernate-spatial')
-	testImplementation project(':hibernate-jcache')
-	testImplementation project( path: ':hibernate-core', configuration: 'tests' )
-
-	testImplementation 'org.apache.commons:commons-lang3:3.4'
-	testImplementation 'org.osgi:org.osgi.core:4.3.1'
-
-	testImplementation testLibs.mockito
-	testImplementation testLibs.mockitoInline
-
-	testImplementation jakartaLibs.jaxbApi
-	testImplementation jakartaLibs.jaxb
-	testImplementation jakartaLibs.jsonb
-	testImplementation libs.jacksonXml
-
-	testRuntimeOnly testLibs.wildFlyTxnClient
-	testRuntimeOnly(libs.ehcache3) {
-		capabilities {
-			requireCapability 'org.ehcache.modules:ehcache-xml-jakarta'
-		}
-	}
-	// Needed for JSON tests
-	testRuntimeOnly libs.jackson
 }
 
 
 if ( project.ormVersion.isSnapshot ) {
 	// only run the ci build tasks for SNAPSHOT versions
-	task ciBuild( dependsOn: [clean, test] )
+	task ciBuild( dependsOn: [clean] )
 	tasks.release.enabled false
 }
 else {
-	tasks.release.dependsOn clean, test
+	tasks.release.dependsOn clean
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -303,12 +272,3 @@ tasks.withType(AsciidoctorTask).all {
 		backends 'html5'
 	}
 }
-
-// resources inherently exclude sources
-sourceSets.test.resources {
-	setSrcDirs( ['src/test/java','src/test/resources'] )
-}
-
-
-checkstyleMain.exclude '**/org/hibernate/userguide/model/*'
-

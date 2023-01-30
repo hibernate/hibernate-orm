@@ -1,9 +1,10 @@
 [[sql]]
 == Native SQL Queries
 :root-project-dir: ../../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-model: {documentation-project-dir}/src/main/java/org/hibernate/userguide/model
-:doc-emeddable-example-dir: ../../../../../../test/java/org/hibernate/userguide/sql
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:core-project-dir: {root-project-dir}/hibernate-core
+:doc-emeddable-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
 :extrasdir: extras
 
 You may also express queries in the native SQL dialect of your database.

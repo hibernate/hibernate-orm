@@ -1,8 +1,8 @@
 [[transactions]]
 == Transactions and concurrency control
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-transaction: {documentation-project-dir}/src/test/java/org/hibernate/userguide/transactions
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-transaction: {core-project-dir}/src/test/java/org/hibernate/orm/test/transactions
 
 It is important to understand that the term transaction has many different yet related meanings in regards to persistence and Object/Relational Mapping.
 In most use-cases these definitions align, but that is not always the case.

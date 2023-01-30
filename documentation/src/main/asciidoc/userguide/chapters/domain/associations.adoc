@@ -1,8 +1,8 @@
 [[associations]]
 === Associations
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-association: {documentation-project-dir}/src/test/java/org/hibernate/userguide/associations
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-association: {core-project-dir}/src/test/java/org/hibernate/orm/test/associations
 :extrasdir: extras/associations
 
 Associations describe how two or more entities form a relationship based on a database joining semantics.

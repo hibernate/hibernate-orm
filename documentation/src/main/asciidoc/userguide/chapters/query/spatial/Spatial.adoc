@@ -1,8 +1,8 @@
 [[spatial]]
 == Spatial
 :root-project-dir: ../../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-spatial: {documentation-project-dir}/src/test/java/org/hibernate/userguide/spatial
+:spatial-project-dir: {root-project-dir}/hibernate-spatial
+:example-dir-spatial: {spatial-project-dir}/src/test/java/org/hibernate/spatial/testing
 :extrasdir: extras
 
 [[spatial-overview]]

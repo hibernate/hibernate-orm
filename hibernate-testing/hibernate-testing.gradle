@@ -43,6 +43,8 @@ dependencies {
     implementation libs.hcann
     implementation libs.jandex
     implementation testLibs.wildFlyTxnClient
+
+    annotationProcessor project( ':hibernate-jpamodelgen' )
 }
 
 tasks.checkstyleMain {

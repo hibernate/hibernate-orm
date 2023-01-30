@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false" package="org.hibernate.orm.test.collection.list">
+    <class name="Parent" table="custom_field">
+        <id name="id"/>
+        <property name="name" column="name"/>
+        <list name="children" inverse="true" cascade="all-delete-orphan">
+            <key column="custom_field_id"/>
+            <index column="seq_num"/>
+            <one-to-many class="Child"/>
+        </list>
+    </class>
+    <class name="Child" table="custom_field_option">
+        <id name="id"/>
+        <many-to-one name="parent" not-null="true" column="custom_field_id"/>
+    </class>
+</hibernate-mapping>

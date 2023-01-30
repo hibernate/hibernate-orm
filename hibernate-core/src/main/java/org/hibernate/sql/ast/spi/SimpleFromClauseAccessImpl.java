@@ -9,9 +9,12 @@ package org.hibernate.sql.ast.spi;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 
 import org.jboss.logging.Logger;
 
@@ -45,6 +48,39 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 			return tableGroup;
 		}
 		return parent.findTableGroup( navigablePath );
+	}
+
+	@Override
+	public TableGroup findTableGroupForGetOrCreate(NavigablePath navigablePath) {
+		final TableGroup tableGroup = findTableGroup( navigablePath );
+		if ( parent != null && tableGroup instanceof VirtualTableGroup && tableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
+			final NavigableRole navigableRole = tableGroup.getModelPart().getNavigableRole();
+			if ( navigableRole != null ) {
+				// Traverse up the navigable path to the point where resolving the path leads us to a regular TableGroup
+				NavigableRole parentRole = navigableRole.getParent();
+				NavigablePath parentPath = navigablePath.getParent();
+				while ( parentRole.getParent() != null ) {
+					parentRole = parentRole.getParent();
+					parentPath = parentPath.getParent();
+				}
+				// Only return the TableGroup if its regular parent TableGroup corresponds to the underlying one
+				if ( findTableGroup( parentPath ) == getUnderlyingTableGroup( (VirtualTableGroup) tableGroup ) ) {
+					return tableGroup;
+				}
+				else {
+					return null;
+				}
+			}
+		}
+		return tableGroup;
+	}
+
+	private TableGroup getUnderlyingTableGroup(VirtualTableGroup virtualTableGroup) {
+		final TableGroup tableGroup = virtualTableGroup.getUnderlyingTableGroup();
+		if ( tableGroup instanceof VirtualTableGroup ) {
+			return getUnderlyingTableGroup( (VirtualTableGroup) tableGroup );
+		}
+		return tableGroup;
 	}
 
 	@Override

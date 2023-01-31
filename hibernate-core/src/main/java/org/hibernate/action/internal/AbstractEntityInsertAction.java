@@ -18,10 +18,13 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.engine.internal.Versioning.getVersion;
@@ -148,20 +151,69 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 
 	protected void addCollectionsByKeyToPersistenceContext(PersistenceContext persistenceContext, Object[] objects) {
 		for ( int i = 0; i < objects.length; i++ ) {
-			if ( objects[i] instanceof PersistentCollection<?> ) {
-				final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) objects[i];
-				final CollectionPersister collectionPersister = ( (PluralAttributeMapping) getPersister().getAttributeMapping( i ) ).getCollectionDescriptor();
-				final CollectionKey collectionKey = new CollectionKey(
-						collectionPersister,
-						( (AbstractEntityPersister) getPersister() ).getCollectionKey(
-								collectionPersister,
-								getInstance(),
-								persistenceContext.getEntry( getInstance() ),
-								getSession()
-						)
+			final AttributeMapping attributeMapping = getPersister().getAttributeMapping( i );
+			if ( attributeMapping.isEmbeddedAttributeMapping() ) {
+				visitEmbeddedAttributeMapping(
+						attributeMapping.asEmbeddedAttributeMapping(),
+						objects[i],
+						persistenceContext
 				);
-				persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 			}
+			else if ( attributeMapping.isPluralAttributeMapping() ) {
+				addCollectionKey(
+						attributeMapping.asPluralAttributeMapping(),
+						objects[i],
+						persistenceContext
+				);
+			}
+		}
+	}
+
+	private void visitEmbeddedAttributeMapping(
+			EmbeddedAttributeMapping attributeMapping,
+			Object object,
+			PersistenceContext persistenceContext) {
+		if ( object != null ) {
+			final AttributeMappingsList attributeMappings = attributeMapping.getEmbeddableTypeDescriptor().getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attribute = attributeMappings.get( i );
+				if ( attribute.isPluralAttributeMapping() ) {
+					addCollectionKey(
+							attribute.asPluralAttributeMapping(),
+							attribute.getPropertyAccess().getGetter().get( object ),
+							persistenceContext
+					);
+				}
+				else if ( attribute.isEmbeddedAttributeMapping() ) {
+					visitEmbeddedAttributeMapping(
+							attribute.asEmbeddedAttributeMapping(),
+							attribute.getPropertyAccess().getGetter().get( object ),
+							persistenceContext
+					);
+				}
+			}
+		}
+	}
+
+	private void addCollectionKey(
+			PluralAttributeMapping pluralAttributeMapping,
+			Object o,
+			PersistenceContext persistenceContext) {
+		if ( o instanceof PersistentCollection ) {
+			final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
+			final CollectionKey collectionKey = new CollectionKey(
+					collectionPersister,
+					( (AbstractEntityPersister) getPersister() ).getCollectionKey(
+							collectionPersister,
+							getInstance(),
+							persistenceContext.getEntry( getInstance() ),
+							getSession()
+					)
+			);
+			persistenceContext.addCollectionByKey(
+					collectionKey,
+					(PersistentCollection<?>) o
+			);
 		}
 	}
 

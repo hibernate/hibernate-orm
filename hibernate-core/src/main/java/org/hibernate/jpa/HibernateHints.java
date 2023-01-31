@@ -13,6 +13,11 @@ package org.hibernate.jpa;
  * Some hints are only effective in certain scenarios, which is noted 
  * on each constant's documentation.
  *
+ * @apiNote The stringly-typed hints defined here correspond to
+ *          typesafe operations of Hibernate's native APIs, and
+ *          should not be used unless portability between JPA
+ *          implementations is of very great importance.
+ *
  * @author Steve Ebersole
  */
 public interface HibernateHints {

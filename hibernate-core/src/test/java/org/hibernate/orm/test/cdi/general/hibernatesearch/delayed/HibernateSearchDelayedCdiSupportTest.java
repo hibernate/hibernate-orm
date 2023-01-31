@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.cdi.general.nonregistrymanaged.delayed;
+package org.hibernate.orm.test.cdi.general.hibernatesearch.delayed;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.se.SeContainer;
@@ -17,47 +17,55 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.Monitor;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.NonRegistryManagedBeanConsumingIntegrator;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheAlternativeNamedApplicationScopedBeanImpl;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheAlternativeNamedDependentBeanImpl;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheApplicationScopedBean;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheDependentBean;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheEntity;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheFallbackBeanInstanceProducer;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheMainNamedApplicationScopedBeanImpl;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheMainNamedDependentBeanImpl;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheNamedApplicationScopedBean;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheNamedDependentBean;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheNestedDependentBean;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheNonHibernateBeanConsumer;
-import org.hibernate.orm.test.cdi.general.nonregistrymanaged.TheSharedApplicationScopedBean;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.Monitor;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.HibernateSearchSimulatedIntegrator;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheAlternativeNamedApplicationScopedBeanImpl;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheAlternativeNamedDependentBeanImpl;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheApplicationScopedBean;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheDependentBean;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheEntity;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheFallbackBeanInstanceProducer;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheMainNamedApplicationScopedBeanImpl;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheMainNamedDependentBeanImpl;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNamedApplicationScopedBean;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNamedDependentBean;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNestedDependentBean;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNonHibernateBeanConsumer;
+import org.hibernate.orm.test.cdi.general.hibernatesearch.TheSharedApplicationScopedBean;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests support for requesting CDI beans from the {@link ManagedBeanRegistry}
- * when the CDI BeanManager access is delayed (not available during bootstrap),
- * and when the registry should not manage the lifecycle of beans, but leave it up to CDI.
+ * Tests support for requesting CDI beans in Hibernate Search
+ * when the CDI BeanManager access is <strong>delayed</strong> (not available during bootstrap)
+ *
+ * In Hibernate Search,
+ * beans are retrieved directly from the {@link org.hibernate.resource.beans.container.spi.BeanContainer}
+ * because Hibernate Search is not bound by the JPA spec
+ * and wants to leave the lifecycle of beans up to CDI instead
+ * of controlling it in {@link org.hibernate.resource.beans.spi.ManagedBeanRegistry}.
+ * This involves using {@code canUseCachedReferences = false} and {@code useJpaCompliantCreation = false}
+ * in {@link org.hibernate.resource.beans.container.spi.BeanContainer.LifecycleOptions}).
  *
  * @author Steve Ebersole
  * @author Yoann Rodiere
+ *
+ * @see HibernateSearchSimulatedIntegrator
  */
-public class NonRegistryManagedDelayedCdiSupportTest extends BaseUnitTestCase {
+public class HibernateSearchDelayedCdiSupportTest extends BaseUnitTestCase {
 	@Test
 	public void testIt() {
 		Monitor.reset();
 
 		final TheFallbackBeanInstanceProducer fallbackBeanInstanceProducer =
 				new TheFallbackBeanInstanceProducer();
-		final NonRegistryManagedBeanConsumingIntegrator beanConsumingIntegrator =
-				new NonRegistryManagedBeanConsumingIntegrator( fallbackBeanInstanceProducer );
+		final HibernateSearchSimulatedIntegrator beanConsumingIntegrator =
+				new HibernateSearchSimulatedIntegrator( fallbackBeanInstanceProducer );
 
 		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
 				.disableDiscovery()
@@ -91,8 +99,8 @@ public class NonRegistryManagedDelayedCdiSupportTest extends BaseUnitTestCase {
 			assertEquals( 1, Monitor.theNestedDependentBean().currentInstantiationCount() );
 
 			try (SessionFactoryImplementor sessionFactory = buildSessionFactory( cdiContainer, beanConsumingIntegrator )) {
-				// Here, the NonRegistryManagedBeanConsumingIntegrator has just been integrated and has requested beans
-				// See NonRegistryManagedBeanConsumingIntegrator for a detailed list of requested beans
+				// Here, the HibernateSearchSimulatedIntegrator has just been integrated and has requested beans
+				// See HibernateSearchSimulatedIntegrator for a detailed list of requested beans
 
 				beanConsumingIntegrator.ensureInstancesInitialized();
 
@@ -167,7 +175,7 @@ public class NonRegistryManagedDelayedCdiSupportTest extends BaseUnitTestCase {
 	}
 
 	private SessionFactoryImplementor buildSessionFactory(SeContainer cdiContainer,
-			NonRegistryManagedBeanConsumingIntegrator beanConsumingIntegrator) {
+			HibernateSearchSimulatedIntegrator beanConsumingIntegrator) {
 		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder()
 				.applyIntegrator( beanConsumingIntegrator )
 				.build();

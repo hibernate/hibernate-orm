@@ -16,7 +16,7 @@ import org.hibernate.generator.Generator;
  *
  * @author Steve Ebersole
  */
-@Deprecated(since = "6", forRemoval = true)
+@Deprecated(since = "6.2", forRemoval = true)
 public interface ValueGenerator<T> {
 	/**
 	 * Generate the value.

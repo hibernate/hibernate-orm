@@ -43,6 +43,7 @@ import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -107,8 +108,20 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 					assertEmptyJoinedGroup( sqlAst );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, Cat.class, "owner", Person.class,
-										entityFetch -> assertThat( entityFetch, instanceOf( EntityDelayedFetchImpl.class ) )
+					assertDomainResult(sqlAst, Cat.class,
+							fetch -> {
+								if (graphSemantic == GraphSemantic.LOAD) {
+									assertThat(fetch, instanceOf(BiDirectionalFetch.class));
+								} else {
+									assertThat(fetch, instanceOf(EntityFetch.class));
+
+									final EntityFetch entityFetch = (EntityFetch) fetch;
+									assertThat(entityFetch.getFetchedMapping().getFetchableName(), is("owner"));
+									assertThat(entityFetch.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo(Person.class));
+
+									assertThat(entityFetch, instanceOf(EntityDelayedFetchImpl.class));
+								}
+							}
 					);
 				}
 		);
@@ -128,12 +141,18 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 					assertEntityValuedJoinedGroup( sqlAst, "owner", Person.class, this::assertPersonHomeAddressJoinedGroup );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {
+					assertDomainResult( sqlAst, Cat.class, fetch -> {
+						assertThat( fetch, instanceOf( EntityFetch.class ) );
+
+						final EntityFetch entityFetch = (EntityFetch) fetch;
+						assertThat( entityFetch.getFetchedMapping().getFetchableName(), is( "owner" ) );
+						assertThat( entityFetch.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( Person.class ) );
+
 						if ( graphSemantic == GraphSemantic.LOAD ) {
 							assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
 							final EntityResult entityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
 							final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = entityResult.getFetches().stream().collect( Collectors.toMap(
-									fetch -> fetch.getFetchedMapping().getPartName(),
+									aFetch -> aFetch.getFetchedMapping().getPartName(),
 									Fetch::getClass
 							) );
 							final Map<String, Class<? extends Fetch>> expectedFetchClassByAttributeName = new HashMap<>();
@@ -172,12 +191,18 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 					} );
 
 					// Check the domain-result graph
-					assertDomainResult( sqlAst, Cat.class, "owner", Person.class, entityFetch -> {
+					assertDomainResult( sqlAst, Cat.class, fetch -> {
+						assertThat( fetch, instanceOf( EntityFetch.class ) );
+
+						final EntityFetch entityFetch = (EntityFetch) fetch;
+						assertThat( entityFetch.getFetchedMapping().getFetchableName(), is( "owner" ) );
+						assertThat( entityFetch.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( Person.class ) );
+
 						assertThat( entityFetch, instanceOf( EntityFetchJoinedImpl.class ) );
 						final EntityResult ownerEntityResult = ( (EntityFetchJoinedImpl) entityFetch ).getEntityResult();
 						final Map<String, Class<? extends Fetch>> fetchClassByAttributeName = ownerEntityResult.getFetches()
 								.stream().collect( Collectors.toMap(
-										fetch -> fetch.getFetchedMapping().getPartName(),
+										aFetch -> aFetch.getFetchedMapping().getPartName(),
 										Fetch::getClass
 								) );
 						final Map<String, Class<? extends Fetch>> expectedFetchClassByAttributeName = new HashMap<>();
@@ -258,17 +283,8 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 									.next()
 									.getJoinedGroup();
 							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
-							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( compositeTableGroup.getTableGroupJoins(), isEmpty( ) );
 							assertThat( compositeTableGroup.getNestedTableGroupJoins(), isEmpty() );
-
-							final TableGroup countryTableGroup = compositeTableGroup.getTableGroupJoins()
-									.iterator()
-									.next()
-									.getJoinedGroup();
-							assertThat( countryTableGroup.getModelPart().getPartName(), is( "country" ) );
-
-							assertThat( countryTableGroup.getTableGroupJoins(), isEmpty() );
-							assertThat( countryTableGroup.getNestedTableGroupJoins(), isEmpty() );
 						}
 						else {
 							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
@@ -335,9 +351,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 	private void assertDomainResult(SelectStatement sqlAst,
 									Class<?> expectedEntityJpaClass,
-									String expectedAttributeName,
-									Class<?> expectedAttributeEntityJpaClass,
-									Consumer<EntityFetch> entityFetchConsumer) {
+									Consumer<Fetch> fetchConsumer) {
 		assertThat( sqlAst.getDomainResultDescriptors(), hasSize( 1 ) );
 
 		final DomainResult domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
@@ -348,13 +362,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 		assertThat( entityResult.getFetches().size(), is( 1 ) );
 
 		final Fetch fetch = entityResult.getFetches().iterator().next();
-		assertThat( fetch, instanceOf( EntityFetch.class ) );
-
-		final EntityFetch entityFetch = (EntityFetch) fetch;
-		assertThat( entityFetch.getFetchedMapping().getFetchableName(), is( expectedAttributeName ) );
-		assertThat( entityFetch.getReferencedModePart().getJavaType().getJavaTypeClass(), assignableTo( expectedAttributeEntityJpaClass ) );
-
-		entityFetchConsumer.accept( entityFetch );
+		fetchConsumer.accept(fetch);
 	}
 
 	private <T> SelectStatement buildSqlSelectAst(

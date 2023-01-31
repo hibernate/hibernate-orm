@@ -59,6 +59,16 @@
     For example, <code>SessionFactory</code> extends <code>EntityManagerFactory</code>, and
     <code>Session</code> extends <code>EntityManager</code>.
 </p>
+<p>
+    It's always possible to fall back from JPA interfaces to native APIs, by calling
+    {@link jakarta.persistence.EntityManager#unwrap entityManager.unwrap(Session.class)},
+    {@link jakarta.persistence.EntityManagerFactory#unwrap entityManagerFactory.unwrap(SessionFactory.class)},
+    or {@link jakarta.persistence.Query#unwrap query.unwrap(Query.class)}. In certain cases
+    it's also possible to access native functionality by passing a
+    {@linkplain org.hibernate.jpa.SpecHints JPA-defined} or
+    {@linkplain org.hibernate.jpa.HibernateHints Hibernate-defined} hint, at the cost of a
+    loss of type-safety.
+</p>
 
 <h3>Mapping annotations</h3>
 

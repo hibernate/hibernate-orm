@@ -101,7 +101,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( !veto ) {
 			
 			persister.insert( id, getState(), instance, session );
-			PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final EntityEntry entry = persistenceContext.getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non-threadsafe access to session" );

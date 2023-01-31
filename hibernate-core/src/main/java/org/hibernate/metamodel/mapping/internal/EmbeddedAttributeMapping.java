@@ -379,4 +379,14 @@ public class EmbeddedAttributeMapping
 		}
 		return parentInjectionAttributePropertyAccess;
 	}
+
+	@Override
+	public EmbeddedAttributeMapping asEmbeddedAttributeMapping() {
+		return this;
+	}
+
+	@Override
+	public boolean isEmbeddedAttributeMapping() {
+		return true;
+	}
 }

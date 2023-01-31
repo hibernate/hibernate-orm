@@ -38,24 +38,6 @@ package org.hibernate.cache.spi;
  * @author Radim Vansa
  */
 public interface CacheTransactionSynchronization {
-
-	/**
-	 * What is the start time of this context object?
-	 *
-	 * @apiNote If not currently joined to a transaction, the timestamp from
-	 * the last transaction is safe to use.  If not ever/yet joined to a
-	 * transaction, a timestamp at the time the Session/CacheTransactionSynchronization
-	 * were created should be returned.
-	 *
-	 * @implSpec This "timestamp" need not be related to timestamp in the Java
-	 * Date/millisecond sense.  It just needs to be an incrementing value.
-	 *
-	 * @deprecated Use {@link CacheTransactionSynchronization#getCachingTimestamp()} instead.
-	 * Please do implement also getCachingTimestamp, as its default implementation will be removed.
-	 */
-	@Deprecated(forRemoval = true)
-	long getCurrentTransactionStartTimestamp();
-
 	/**
 	 * What is the start time of this context object?
 	 *
@@ -69,9 +51,7 @@ public interface CacheTransactionSynchronization {
 	 *
 	 * An UnsupportedOperationException is thrown if 2LC has not enabled
 	 */
-	default long getCachingTimestamp() {
-		return getCurrentTransactionStartTimestamp();
-	}
+	long getCachingTimestamp();
 
 	/**
 	 * Callback that owning Session has become joined to a resource transaction.

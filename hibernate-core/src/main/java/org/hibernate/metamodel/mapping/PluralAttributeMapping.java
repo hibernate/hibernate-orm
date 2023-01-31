@@ -170,4 +170,14 @@ public interface PluralAttributeMapping
 			SqlAstCreationState creationState) {
 		getCollectionDescriptor().applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
 	}
+
+	@Override
+	default PluralAttributeMapping asPluralAttributeMapping() {
+		return this;
+	}
+
+	@Override
+	default boolean isPluralAttributeMapping() {
+		return true;
+	}
 }

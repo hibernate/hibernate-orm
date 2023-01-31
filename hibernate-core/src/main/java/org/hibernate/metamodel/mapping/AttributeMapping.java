@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.DatabaseSnapshotContributor;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -84,6 +85,32 @@ public interface AttributeMapping
 	@Override //Overrides multiple interfaces!
 	default AttributeMapping asAttributeMapping() {
 		return this;
+	}
+
+	/**
+	 * A utility method to avoid casting explicitly to PluralAttributeMapping
+	 *
+	 * @return PluralAttributeMapping if this is an instance of PluralAttributeMapping otherwise {@code null}
+	 */
+	default PluralAttributeMapping asPluralAttributeMapping() {
+		return null;
+	}
+
+	default boolean isPluralAttributeMapping() {
+		return false;
+	}
+
+	/**
+	 * A utility method to avoid casting explicitly to EmbeddedAttributeMapping
+	 *
+	 * @return EmbeddedAttributeMapping if this is an instance of EmbeddedAttributeMapping otherwise {@code null}
+	 */
+	default EmbeddedAttributeMapping asEmbeddedAttributeMapping(){
+		return null;
+	}
+
+	default boolean isEmbeddedAttributeMapping(){
+		return false;
 	}
 
 }

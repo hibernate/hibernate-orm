@@ -259,11 +259,10 @@ public class ResultsHelper {
 					}
 				}
 				if ( collectionOwner == null ) {
-					throw new HibernateException(
-							"Unable to resolve owner of loading collection [" +
-									MessageHelper.collectionInfoString( collectionDescriptor, collectionInstance, key, session ) +
-									"] for second level caching"
-					);
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debugf( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
+					}
+					return;
 				}
 			}
 			version = persistenceContext.getEntry( collectionOwner ).getVersion();

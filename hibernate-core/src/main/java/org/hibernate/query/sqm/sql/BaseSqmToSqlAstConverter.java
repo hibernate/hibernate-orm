@@ -7214,10 +7214,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							isKeyFetchable
 					);
 
-					fetchTiming = traversalResult.getFetchTiming();
-					joined = traversalResult.isJoined();
-					if ( shouldExplicitFetch( maxDepth, fetchable ) ) {
-						explicitFetch = true;
+					EntityGraphTraversalState.FetchStrategy fetchStrategy = traversalResult.getFetchStrategy();
+					if ( fetchStrategy != null ) {
+						fetchTiming = fetchStrategy.getFetchTiming();
+						joined = fetchStrategy.isJoined();
+
+						if ( shouldExplicitFetch( maxDepth, fetchable ) ) {
+							explicitFetch = true;
+						}
 					}
 				}
 				else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {

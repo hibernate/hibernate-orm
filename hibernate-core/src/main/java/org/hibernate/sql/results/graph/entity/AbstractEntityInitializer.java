@@ -26,7 +26,6 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
@@ -51,6 +50,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
@@ -379,6 +379,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
 		if ( !missing && !isInitialized ) {
+			if ( shouldSkipResolveInstance( rowProcessingState ) ) {
+				missing = true;
+				return;
+			}
 			// Special case map proxy to avoid stack overflows
 			// We know that a map proxy will always be of "the right type" so just use that object
 			final LoadingEntityEntry existingLoadingEntry =
@@ -393,6 +397,62 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				isInitialized = true;
 			}
 		}
+	}
+
+	private boolean shouldSkipResolveInstance(RowProcessingState rowProcessingState) {
+		final NavigablePath parent = navigablePath.getParent();
+		if ( parent != null ) {
+			final Initializer parentInitializer = rowProcessingState.resolveInitializer( parent );
+			if ( parentInitializer != null && parentInitializer.isEntityInitializer() ) {
+				if ( isReferencedModelPartAssignableToConcreteParent( parentInitializer ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean isReferencedModelPartAssignableToConcreteParent(Initializer parentInitializer) {
+		final EntityPersister parentConcreteDescriptor = parentInitializer.asEntityInitializer()
+				.getConcreteDescriptor();
+		if ( parentConcreteDescriptor != null && parentConcreteDescriptor.getEntityMetamodel().isPolymorphic()) {
+			final ModelPart concreteModelPart = parentConcreteDescriptor.findByPath( navigablePath.getLocalName() );
+			if ( concreteModelPart == null
+					|| !referencedModelPart.getJavaType().getJavaTypeClass()
+					.isAssignableFrom( concreteModelPart.getJavaType().getJavaTypeClass() ) ) {
+		/*
+			Given:
+
+			class Message{
+
+				@ManyToOne
+				Address address;
+			}
+
+			@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+			class Address{
+			}
+
+			class AddressA extends Address {
+				@OneToOne(mappedBy = "addressA")
+				UserA userA;
+			}
+
+			class AddressB extends Address{
+			@OneToOne(mappedBy = "addressB")
+				UserB userB;
+			}
+
+			when we try to initialize the messages of Message.address,
+			there will be one EntityJoinedFetchInitializer for UserA and one for UserB so
+			when resolving AddressA we have to skip resolving the EntityJoinedFetchInitializer of UserB
+			and for AddressB skip resolving the EntityJoinedFetchInitializer of UserA
+
+		 */
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void resolveEntityInstance(

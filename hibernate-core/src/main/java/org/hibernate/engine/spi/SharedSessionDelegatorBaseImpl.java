@@ -365,11 +365,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public long getTransactionStartTimestamp() {
-		return delegate.getTransactionStartTimestamp();
-	}
-
-	@Override
 	public CacheTransactionSynchronization getCacheTransactionSynchronization() {
 		return delegate.getCacheTransactionSynchronization();
 	}

@@ -8,6 +8,7 @@ package org.hibernate.sql.model.internal;
 
 import java.util.List;
 
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.AbstractTableUpdate;
@@ -22,6 +23,8 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperation> {
 	private final String whereFragment;
 
+	private final Expectation expectation;
+
 	public TableUpdateStandard(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
@@ -31,6 +34,7 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 			List<ColumnValueBinding> optLockRestrictionBindings) {
 		super( mutatingTable, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
 		this.whereFragment = null;
+		this.expectation = null;
 	}
 
 	public TableUpdateStandard(
@@ -41,7 +45,7 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
-		this( tableReference, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters, null );
+		this( tableReference, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters, null, null );
 	}
 
 	public TableUpdateStandard(
@@ -52,9 +56,11 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters,
-			String whereFragment) {
+			String whereFragment,
+			Expectation expectation) {
 		super( tableReference, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters );
 		this.whereFragment = whereFragment;
+		this.expectation = expectation;
 	}
 
 	@Override
@@ -74,5 +80,13 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitStandardTableUpdate( this );
+	}
+
+	@Override
+	public Expectation getExpectation() {
+		if ( expectation != null ) {
+			return expectation;
+		}
+		return super.getExpectation();
 	}
 }

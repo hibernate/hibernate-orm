@@ -10,14 +10,12 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
-
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TiDBDialect;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -28,10 +26,10 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -51,6 +49,7 @@ import org.hamcrest.Matchers;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -58,7 +57,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * @author Gavin King
  */
-@ServiceRegistry
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
 public class FunctionTests {
@@ -1314,20 +1312,44 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = TiDBDialect.class, reason = "Bug in the TiDB timestampadd function (https://github.com/pingcap/tidb/issues/41052)")
 	public void testDurationArithmetic(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					assertEquals( LocalDate.now().minus(2, ChronoUnit.DAYS),
-							session.createQuery("select local date - 2 day")
+							session.createQuery("select local date - 2 day", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.now().plus(1, ChronoUnit.MONTHS),
-							session.createQuery("select local date + 1 month")
-									.getSingleResult() );
-					session.createQuery("select e.theTimestamp - 21 second from EntityOfBasics e")
+								  session.createQuery("select local date + 1 month", LocalDate.class)
+										  .getSingleResult() );
+					assertEquals( LocalDate.now().plus(1, ChronoUnit.YEARS),
+								  session.createQuery("select local date + 1 year", LocalDate.class)
+										  .getSingleResult() );
+					assertEquals( LocalDate.now().plus(3, ChronoUnit.MONTHS),
+								  session.createQuery("select local date + 1 quarter", LocalDate.class)
+										  .getSingleResult() );
+					// Some explicit 'special' cases:
+					assertEquals( LocalDate.of(2024, 02, 29),
+								  session.createQuery("select {2024-01-31} + 1 month", LocalDate.class)
+										  .getSingleResult() );
+					assertEquals( LocalDate.of(2025, 02, 28),
+								  session.createQuery("select {2024-02-29} + 1 year", LocalDate.class)
+										  .getSingleResult() );
+					assertEquals( LocalDate.of(2028, 02, 29),
+								  session.createQuery("select {2024-02-29} + 4 year", LocalDate.class)
+										  .getSingleResult() );
+					assertEquals( LocalDate.of(2025, 03, 29),
+								  session.createQuery("select {2024-02-29} + 13 month", LocalDate.class)
+										  .getSingleResult() );
+					assertEquals( LocalDate.of(2024, 02, 29),
+								  session.createQuery("select {2023-11-30} + 1 quarter", LocalDate.class)
+										  .getSingleResult() );
+
+					session.createQuery("select e.theTimestamp - 21 second from EntityOfBasics e", java.util.Date.class)
 							.getSingleResult();
-					session.createQuery("select e.theTimestamp + 2 day from EntityOfBasics e")
+					session.createQuery("select e.theTimestamp + 2 day from EntityOfBasics e", java.util.Date.class)
 							.getSingleResult();
-					session.createQuery("select e.theTimestamp - 21 second + 2 day from EntityOfBasics e")
+					session.createQuery("select e.theTimestamp - 21 second + 2 day from EntityOfBasics e", java.util.Date.class)
 							.getSingleResult();
 					//TODO: FIX!!
 //					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")

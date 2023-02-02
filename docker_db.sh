@@ -769,6 +769,33 @@ EOF
 
 }
 
+tidb() {
+  tidb_5_1
+}
+
+tidb_5_1() {
+    $CONTAINER_CLI rm -f tidb || true
+    $CONTAINER_CLI run --name tidb -p4000:4000 -d docker.io/pingcap/tidb:v5.1.4
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        OUTPUT=$($CONTAINER_CLI logs tidb 2>&1)
+        if [[ $OUTPUT == *"server is running"* ]]; then
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for TiDB to start..."
+        sleep 3
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "TiDB failed to start and configure after 15 seconds"
+    else
+      echo "TiDB successfully started"
+    fi
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
@@ -804,6 +831,8 @@ if [ -z ${1} ]; then
     echo -e "\tpostgresql_10"
     echo -e "\tpostgresql_9_5"
     echo -e "\tsybase"
+    echo -e "\ttidb"
+    echo -e "\ttidb_5_1"
 else
     ${1}
 fi

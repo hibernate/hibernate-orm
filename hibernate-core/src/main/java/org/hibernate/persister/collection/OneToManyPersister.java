@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -390,7 +391,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				keyRestrictionBindings,
 				null,
 				parameterBinders,
-				sqlWhereString
+				sqlWhereString,
+				Expectations.NONE
 		);
 	}
 

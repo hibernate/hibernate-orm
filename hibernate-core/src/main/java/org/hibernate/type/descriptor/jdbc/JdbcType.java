@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -18,7 +17,6 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -57,11 +55,10 @@ public interface JdbcType extends Serializable {
 	int getJdbcTypeCode();
 
 	/**
-	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type to
-	 * be used for schema generation.
+	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type.
 	 * <p>
-	 * This value is passed to {@link DdlTypeRegistry#getTypeName(int, Size)}
-	 * to obtain the SQL column type.
+	 * This value might be different from {@link #getDdlTypeCode()} if the actual type
+	 * e.g. JSON is emulated through a type like CLOB.
 	 *
 	 * @return a JDBC type code
 	 */

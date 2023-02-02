@@ -1110,6 +1110,12 @@ public abstract class AbstractHANADialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch (unit) {
 			case NANOSECOND:
+				if ( temporalType == TemporalType.TIME ) {
+					return "cast(add_nano100('1970-01-01 '||(?3),?2/100) as time)";
+				}
+				else {
+					return "add_nano100(?3,?2/100)";
+				}
 			case NATIVE:
 				if ( temporalType == TemporalType.TIME ) {
 					return "cast(add_nano100('1970-01-01 '||(?3),?2) as time)";
@@ -1134,6 +1140,12 @@ public abstract class AbstractHANADialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NANOSECOND:
+//				if ( temporalType == TemporalType.TIME ) {
+//					return "nano100_between(cast(?3 as timestamp), cast(?2 as timestamp))*100";
+//				}
+//				else {
+				return "nano100_between(?2,?3)*100";
+//				}
 			case NATIVE:
 //				if ( temporalType == TemporalType.TIME ) {
 //					return "nano100_between(cast(?3 as timestamp), cast(?2 as timestamp))";

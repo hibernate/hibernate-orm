@@ -13,6 +13,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.SqlTypes;
@@ -214,6 +215,7 @@ public class VarbinaryArrayTest {
 
 	@ParameterizedTest
 	@MethodSource("perTypeArguments")
+	@SkipForDialect( dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	<T> void queryByData(String propertyName, long id, T value, Function<EntityWithArrays, T> getter,
 			SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

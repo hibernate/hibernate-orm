@@ -20,6 +20,8 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 			final Metadata metadata = new MetadataSources( ssr )
 					.addAnnotatedClass( Customer.class )
 					.buildMetadata();
+			final TypeConfiguration typeConfiguration = metadata.getDatabase().getTypeConfiguration();
 
 			PersistentClass classMetadata = metadata.getEntityBinding( Customer.class.getName() );
 			Property investmentsProperty = classMetadata.getProperty( "investments" );
@@ -54,7 +57,10 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 			CustomType<Object> currencyType = (CustomType<Object>) currencyMetadata.getType();
 			int[] currencySqlTypes = currencyType.getSqlTypeCodes( metadata );
 			assertEquals( 1, currencySqlTypes.length );
-			assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
+			assertJdbcTypeCode(
+					typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARCHAR ).getJdbcTypeCode(),
+					currencySqlTypes[0]
+			);
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

@@ -9,10 +9,13 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Locale;
+import java.util.Objects;
 
-import org.hibernate.HibernateException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TruthValue;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
@@ -27,15 +30,15 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
 
 /**
- * A column of a relational database table
+ * A mapping model object representing a {@linkplain jakarta.persistence.Column column}
+ * of a relational database {@linkplain Table table}.
  *
  * @author Gavin King
  */
@@ -49,7 +52,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String name;
 	private boolean nullable = true;
 	private boolean unique;
-	private String sqlType;
+	private String sqlTypeName;
 	private Integer sqlTypeCode;
 	private boolean quoted;
 	int uniqueInteger;
@@ -203,105 +206,117 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	public int getSqlTypeCode(Mapping mapping) throws MappingException {
-		Type type = getValue().getType();
-		try {
-			int sqlTypeCode = type.getSqlTypeCodes( mapping )[getTypeIndex()];
-			if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {
-				throw new MappingException( "SQLType code's does not match. mapped as " + sqlTypeCode + " but is " + getSqlTypeCode() );
-			}
-			return sqlTypeCode;
-		}
-		catch (Exception e) {
-			throw new MappingException(
-					"Could not determine type for column " +
-							name +
-							" of type " +
-							type.getClass().getName() +
-							": " +
-							e.getClass().getName(),
-					e
-			);
-		}
-	}
-
-	private String getSqlTypeName(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) {
-		final Type type = getValue().getType();
-		if ( type instanceof BasicPluralType<?, ?> && ( (BasicType<?>) type ).getJdbcType() instanceof ArrayJdbcType ) {
-			final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) type;
-			final BasicType<?> elementType = containerType.getElementType();
-			final int sqlTypeCode;
+		if ( sqlTypeCode == null ) {
+			final Type type = getValue().getType();
+			int[] sqlTypeCodes;
 			try {
-				sqlTypeCode = elementType.getJdbcType().getDefaultSqlTypeCode();
+				sqlTypeCodes = type.getSqlTypeCodes( mapping );
 			}
-			catch (Exception e) {
+			catch ( Exception cause ) {
 				throw new MappingException(
-						"Could not determine type for column " +
-								name +
-								" of type " +
-								type.getClass().getName() +
-								": " +
-								e.getClass().getName(),
-						e
+						String.format(
+								Locale.ROOT,
+								"Unable to resolve JDBC type code for column '%s' of table '%s'",
+								getName(),
+								getValue().getTable().getName()
+						),
+						cause
 				);
 			}
+			final int index = getTypeIndex();
+			if ( index >= sqlTypeCodes.length ) {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Unable to resolve JDBC type code for column '%s' of table '%s'",
+								getName(),
+								getValue().getTable().getName()
+						)
+				);
+			}
+			sqlTypeCode = sqlTypeCodes[index];
+		}
+		return sqlTypeCode;
+	}
 
-			final String elementTypeName = typeConfiguration.getDdlTypeRegistry().getTypeName(
-					sqlTypeCode,
-					dialect.getSizeStrategy().resolveSize(
-							elementType.getJdbcMapping().getJdbcType(),
-							elementType.getJavaTypeDescriptor(),
-							precision,
-							scale,
-							length
-					)
-			);
-			return dialect.getArrayTypeName( elementTypeName );
+	private String getSqlTypeName(DdlTypeRegistry ddlTypeRegistry, Dialect dialect, Mapping mapping) {
+		if ( sqlTypeName == null ) {
+			try {
+				final Type type = getValue().getType();
+				sqlTypeName = isArray( type )
+						? dialect.getArrayTypeName( getArrayElementTypeName( dialect, ddlTypeRegistry, getArrayElementType( type ) ) )
+						: ddlTypeRegistry.getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
+			}
+			catch ( Exception cause ) {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Unable to determine SQL type name for column '%s' of table '%s'",
+								getName(),
+								getValue().getTable().getName()
+						),
+						cause
+				);
+			}
 		}
-		else {
-			return typeConfiguration.getDdlTypeRegistry().getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
-		}
+		return sqlTypeName;
+	}
+
+	private String getArrayElementTypeName(Dialect dialect, DdlTypeRegistry ddlTypeRegistry, BasicType<?> elementType) {
+		return ddlTypeRegistry.getTypeName(
+				elementType.getJdbcType().getDefaultSqlTypeCode(),
+				dialect.getSizeStrategy().resolveSize(
+						elementType.getJdbcMapping().getJdbcType(),
+						elementType.getJavaTypeDescriptor(),
+						precision,
+						scale,
+						length
+				)
+		);
+	}
+
+	private static BasicType<?> getArrayElementType(Type arrayType) {
+		final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) arrayType;
+		return containerType.getElementType();
+	}
+
+	private static boolean isArray(Type type) {
+		return type instanceof BasicPluralType<?,?>
+			&& ((BasicType<?>) type).getJdbcType() instanceof ArrayJdbcType;
 	}
 
 	/**
-	 * Returns the underlying columns SqlTypeCode.
-	 * If null, it is because the SqlTypeCode is unknown.
-	 * <p/>
-	 * Use #getSqlTypeCode(Mapping) to retrieve the SqlTypeCode used
-	 * for the columns associated Value/Type.
+	 * Returns {@linkplain org.hibernate.type.SqlTypes SQL type code}
+	 * for this column, or {@code null} if the type code is unknown.
+	 * <p>
+	 * Use {@link #getSqlTypeCode(Mapping)} to retrieve the type code
+	 * using {@link Value} associated with the column.
 	 *
-	 * @return sqlTypeCode if it is set, otherwise null.
+	 * @return the type code, if it is set, otherwise null.
 	 */
 	public Integer getSqlTypeCode() {
 		return sqlTypeCode;
 	}
 
 	public void setSqlTypeCode(Integer typeCode) {
+		if ( sqlTypeCode != null && !Objects.equals( sqlTypeCode, typeCode ) ) {
+			throw new AssertionFailure( "conflicting type codes" );
+		}
 		sqlTypeCode = typeCode;
 	}
 
-	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) throws HibernateException {
-		if ( sqlType == null ) {
-			try {
-				sqlType = getSqlTypeName( typeConfiguration, dialect, mapping );
-			}
-			catch (HibernateException cause) {
-				throw new HibernateException(
-						String.format(
-								Locale.ROOT,
-								"Unable to resolve JDBC type code for column `%s.%s`",
-								getValue().getTable().getName(),
-								getName()
-						),
-						cause
-				);
-			}
-		}
-		return sqlType;
+	public String getSqlType(Metadata mapping) {
+		final Database database = mapping.getDatabase();
+		return getSqlTypeName( database.getTypeConfiguration().getDdlTypeRegistry(), database.getDialect(), mapping );
+	}
+
+	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) {
+		return getSqlTypeName( typeConfiguration.getDdlTypeRegistry(), dialect, mapping );
 	}
 
 	@Override
 	public String getTypeName() {
-		return sqlType;
+		return sqlTypeName;
 	}
 
 	@Override
@@ -328,44 +343,41 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	public Size getColumnSize(Dialect dialect, Mapping mapping) {
-		if ( columnSize != null ) {
-			return columnSize;
+		if ( columnSize == null ) {
+			Type type = getValue().getType();
+			if ( type instanceof EntityType ) {
+				type = getTypeForEntityValue( mapping, type, getTypeIndex() );
+			}
+			if ( type instanceof ComponentType ) {
+				type = getTypeForComponentValue( mapping, type, getTypeIndex() );
+			}
+			if ( type == null ) {
+				throw new AssertionFailure( "no typing information available to determine column size" );
+			}
+			final JdbcMapping jdbcMapping = (JdbcMapping) type;
+			columnSize = dialect.getSizeStrategy().resolveSize(
+					jdbcMapping.getJdbcType(),
+					jdbcMapping.getJdbcJavaType(),
+					precision,
+					scale,
+					length
+			);
 		}
-
-		Type type = getValue().getType();
-		if ( type instanceof EntityType ) {
-			type = getTypeForEntityValue( mapping, type, getTypeIndex() );
-		}
-		if ( type instanceof ComponentType ) {
-			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
-		}
-		final JdbcMapping jdbcMapping = (JdbcMapping) type;
-		final JdbcType jdbcType = jdbcMapping.getJdbcType();
-		final JavaType<?> javaType = jdbcMapping.getJdbcJavaType();
-		columnSize = dialect.getSizeStrategy().resolveSize(
-				jdbcType,
-				javaType,
-				precision,
-				scale,
-				length
-		);
-
 		return columnSize;
 	}
 
 	private Type getTypeForComponentValue(Mapping mapping, Type type, int typeIndex) {
 		final Type[] subtypes = ( (ComponentType) type ).getSubtypes();
 		int typeStartIndex = 0;
-		for ( int i = 0; i <= subtypes.length; i++ ) {
-			Type subtype = subtypes[i];
-			int columnSpan = subtype.getColumnSpan( mapping );
+		for ( Type subtype : subtypes ) {
+			final int columnSpan = subtype.getColumnSpan(mapping);
 			if ( typeStartIndex + columnSpan > typeIndex ) {
-				int subtypeIndex = typeIndex - typeStartIndex;
+				final int subtypeIndex = typeIndex - typeStartIndex;
 				if ( subtype instanceof EntityType ) {
-					return getTypeForEntityValue( mapping, subtype, subtypeIndex );
+					return getTypeForEntityValue(mapping, subtype, subtypeIndex);
 				}
 				if ( subtype instanceof ComponentType ) {
-					return getTypeForComponentValue( mapping, subtype, subtypeIndex );
+					return getTypeForComponentValue(mapping, subtype, subtypeIndex);
 				}
 				if ( subtypeIndex == 0 ) {
 					return subtype;
@@ -375,12 +387,12 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			typeStartIndex += columnSpan;
 		}
 
-		throw new HibernateException(
+		throw new MappingException(
 				String.format(
 						Locale.ROOT,
-						"Unable to resolve org.hibernate.type.Type for column `%s.%s`",
-						getValue().getTable().getName(),
-						getName()
+						"Unable to resolve Hibernate type for column '%s' of table '%s'",
+						getName(),
+						getValue().getTable().getName()
 				)
 		);
 	}
@@ -388,12 +400,12 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private Type getTypeForEntityValue(Mapping mapping, Type type, int typeIndex) {
 		int index = 0;
 		if ( type instanceof EntityType ) {
-			EntityType entityType = (EntityType) type;
+			final EntityType entityType = (EntityType) type;
 			return getTypeForEntityValue( mapping, entityType.getIdentifierOrUniqueKeyType( mapping ), typeIndex );
 		}
 		else if ( type instanceof ComponentType ) {
-			for (Type subtype : ((ComponentType) type).getSubtypes() ) {
-				Type result = getTypeForEntityValue( mapping, subtype, typeIndex - index );
+			for ( Type subtype : ((ComponentType) type).getSubtypes() ) {
+				final Type result = getTypeForEntityValue( mapping, subtype, typeIndex - index );
 				if ( result != null ) {
 					return result;
 				}
@@ -410,11 +422,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	public String getSqlType() {
-		return sqlType;
+		return sqlTypeName;
 	}
 
-	public void setSqlType(String sqlType) {
-		this.sqlType = sqlType;
+	public void setSqlType(String typeName) {
+		if ( sqlTypeName != null && !Objects.equals( sqlTypeName, typeName ) ) {
+			throw new AssertionFailure( "conflicting type names" );
+		}
+		sqlTypeName = typeName;
 	}
 
 	public void setUnique(boolean unique) {
@@ -579,7 +594,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.setNullable( nullable );
 		copy.setPrecision( precision );
 		copy.setUnique( unique );
-		copy.setSqlType( sqlType );
+		copy.setSqlType( sqlTypeName );
 		copy.setSqlTypeCode( sqlTypeCode );
 		copy.uniqueInteger = uniqueInteger; //usually useless
 		copy.setCheckConstraint( checkConstraint );

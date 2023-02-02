@@ -6,18 +6,21 @@
  */
 package org.hibernate.boot.model.process.internal;
 
+import java.util.Map;
 import java.util.function.Function;
 
+import org.hibernate.annotations.Immutable;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.internal.AttributeConverterMutabilityPlanImpl;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -112,23 +115,14 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				? explicitJdbcType
 				: relationalJtd.getRecommendedJdbcType( sqlTypeIndicators );
 
-		final MutabilityPlan<T> explicitMutabilityPlan = explicitMutabilityPlanAccess != null
-				? explicitMutabilityPlanAccess.apply( typeConfiguration )
-				: null;
+		final MutabilityPlan<T> mutabilityPlan = determineMutabilityPlan(
+				explicitMutabilityPlanAccess,
+				typeConfiguration,
+				converter,
+				domainJtd
+		);
 
-
-		final MutabilityPlan<T> mutabilityPlan;
-		if ( explicitMutabilityPlan != null ) {
-			mutabilityPlan = explicitMutabilityPlan;
-		}
-		else if ( ! domainJtd.getMutabilityPlan().isMutable() ) {
-			mutabilityPlan = ImmutableMutabilityPlan.instance();
-		}
-		else {
-			mutabilityPlan = new AttributeConverterMutabilityPlanImpl<>( converter, true );
-		}
-
-		return new NamedConverterResolution<T>(
+		return new NamedConverterResolution<>(
 				domainJtd,
 				relationalJtd,
 				jdbcType,
@@ -136,6 +130,36 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				mutabilityPlan,
 				context.getBootstrapContext().getTypeConfiguration()
 		);
+	}
+
+	private static <T> MutabilityPlan<T> determineMutabilityPlan(
+			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
+			TypeConfiguration typeConfiguration,
+			JpaAttributeConverter<T, ?> converter,
+			JavaType<T> domainJtd) {
+		//noinspection unchecked
+		final MutabilityPlan<T> explicitMutabilityPlan = explicitMutabilityPlanAccess != null
+				? explicitMutabilityPlanAccess.apply( typeConfiguration )
+				: null;
+		if ( explicitMutabilityPlan != null ) {
+			return explicitMutabilityPlan;
+		}
+
+		if ( converter.getConverterJavaType().getJavaTypeClass().isAnnotationPresent( Immutable.class ) ) {
+			return ImmutableMutabilityPlan.instance();
+		}
+
+		if ( !domainJtd.getMutabilityPlan().isMutable()
+				&& !isCollection( domainJtd.getJavaTypeClass() ) ) {
+			return ImmutableMutabilityPlan.instance();
+		}
+
+		return new AttributeConverterMutabilityPlanImpl<>( converter, true );
+	}
+
+	private static boolean isCollection(Class<?> javaType) {
+		return Collection.class.isAssignableFrom( javaType )
+				|| Map.class.isAssignableFrom( javaType );
 	}
 
 

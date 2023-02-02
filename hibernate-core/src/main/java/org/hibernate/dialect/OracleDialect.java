@@ -150,6 +150,14 @@ public class OracleDialect extends Dialect {
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
+	private static final String yqmSelect =
+		"( SELECT b_.bd + ( LEAST( EXTRACT( DAY FROM b_.od ), EXTRACT( DAY FROM LAST_DAY( b_.bd ) ) ) - 1 )\n" +
+		"FROM (SELECT a_.od, TRUNC(a_.od, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') bd FROM ( SELECT %2$s od FROM dual ) a_) b_ ) ";
+
+	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
+	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
+	private static final String ADD_MONTH_EXPRESSION = String.format( yqmSelect, "?2", "?3" );
+
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 2 );
 
 	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
@@ -480,63 +488,36 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+
 		StringBuilder pattern = new StringBuilder();
-		pattern.append("(?3+");
 		switch ( unit ) {
 			case YEAR:
+				pattern.append( ADD_YEAR_EXPRESSION );
+				break;
 			case QUARTER:
+				pattern.append( ADD_QUARTER_EXPRESSION );
+				break;
 			case MONTH:
-				pattern.append("numtoyminterval");
+				pattern.append( ADD_MONTH_EXPRESSION );
 				break;
 			case WEEK:
+				pattern.append("(?3+numtodsinterval((?2)*7,'day'))");
+				break;
 			case DAY:
 			case HOUR:
 			case MINUTE:
 			case SECOND:
+				pattern.append("(?3+numtodsinterval(?2,'?1'))");
+				break;
 			case NANOSECOND:
+				pattern.append("(?3+numtodsinterval((?2)/1e9,'second'))");
+				break;
 			case NATIVE:
-				pattern.append("numtodsinterval");
+				pattern.append("(?3+numtodsinterval(?2,'second'))");
 				break;
 			default:
 				throw new SemanticException(unit + " is not a legal field");
 		}
-		pattern.append("(");
-		switch ( unit ) {
-			case NANOSECOND:
-			case QUARTER:
-			case WEEK:
-				pattern.append("(");
-				break;
-		}
-		pattern.append("?2");
-		switch ( unit ) {
-			case QUARTER:
-				pattern.append(")*3");
-				break;
-			case WEEK:
-				pattern.append(")*7");
-				break;
-			case NANOSECOND:
-				pattern.append(")/1e9");
-				break;
-		}
-		pattern.append(",'");
-		switch ( unit ) {
-			case QUARTER:
-				pattern.append("month");
-				break;
-			case WEEK:
-				pattern.append("day");
-				break;
-			case NANOSECOND:
-			case NATIVE:
-				pattern.append("second");
-				break;
-			default:
-				pattern.append("?1");
-		}
-		pattern.append("')");
-		pattern.append(")");
 		return pattern.toString();
 	}
 

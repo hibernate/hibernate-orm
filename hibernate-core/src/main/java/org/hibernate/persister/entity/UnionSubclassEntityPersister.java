@@ -528,19 +528,19 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		// Collect all selectables of every entity subtype and group by selection expression as well as table name
 		final LinkedHashMap<String, Map<String, SelectableMapping>> selectables = new LinkedHashMap<>();
-		final SelectableConsumer selectableConsumer = (i, selectable) ->
-			selectables.computeIfAbsent( selectable.getSelectionExpression(), k -> new HashMap<>() )
-					.put( selectable.getContainingTableExpression(), selectable );
-		// Collect the concrete subclass table names for the treated entity names
-		final Set<String> treatedTableNames = new HashSet<>( treated.size() );
+		// Collect the concrete subclass table names mapped by the treated entity names
+		final Map<String, String> treatedTables = new HashMap<>( treated.size() );
 		for ( String subclassName : treated ) {
 			final UnionSubclassEntityPersister subPersister =
 					(UnionSubclassEntityPersister) metamodel.getEntityDescriptor( subclassName );
 			for ( String subclassTableName : subPersister.getSubclassTableNames() ) {
 				if ( ArrayHelper.indexOf( subclassSpaces, subclassTableName ) != -1 ) {
-					treatedTableNames.add( subclassTableName );
+					treatedTables.put( subclassName, subPersister.getTableName() );
 				}
 			}
+			final SelectableConsumer selectableConsumer = (i, selectable) ->
+					selectables.computeIfAbsent( selectable.getSelectionExpression(), k -> new HashMap<>() )
+							.put( subclassName, selectable );
 			subPersister.getIdentifierMapping().forEachSelectable( selectableConsumer );
 			if ( subPersister.getVersionMapping() != null ) {
 				subPersister.getVersionMapping().forEachSelectable( selectableConsumer );
@@ -551,23 +551,27 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		// Create a union sub-query for the table names, like generateSubquery(PersistentClass model, Mapping mapping)
-		final StringBuilder buf = new StringBuilder( subquery.length() )
-				.append( "( " );
+		final StringBuilder buf = new StringBuilder( subquery.length() ).append( "( " );
 		final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender( buf );
 
-		for ( String name : getSubclassEntityNames() ) {
-			final AbstractEntityPersister persister = (AbstractEntityPersister) metamodel.findEntityDescriptor( name );
-			final String subclassTableName = persister.getTableName();
-			if ( treatedTableNames.contains( subclassTableName ) ) {
-				if ( buf.length() > 2 ) {
-					buf.append(" union ");
-					if ( dialect.supportsUnionAll() ) {
-						buf.append("all ");
-					}
+		for ( Map.Entry<String, String> entry : treatedTables.entrySet() ) {
+			final String subclassTableName = entry.getValue();
+			if ( buf.length() > 2 ) {
+				buf.append( " union " );
+				if ( dialect.supportsUnionAll() ) {
+					buf.append( "all " );
 				}
+			}
+			if ( subclassTableName.contains( " union " ) ) {
+				// If the subclassTableName is already a union sub-query, append it as-is trimming parentheses
+				buf.append( subclassTableName, 2, subclassTableName.length() - 2 );
+			}
+			else {
+				final String entityName = entry.getKey();
+				final AbstractEntityPersister persister = (AbstractEntityPersister) metamodel.findEntityDescriptor( entityName );
 				buf.append( "select " );
 				for ( Map<String, SelectableMapping> selectableMappings : selectables.values() ) {
-					SelectableMapping selectableMapping = selectableMappings.get( subclassTableName );
+					SelectableMapping selectableMapping = selectableMappings.get( entityName );
 					if ( selectableMapping == null ) {
 						// If there is no selectable mapping for a table name, we render a null expression
 						selectableMapping = selectableMappings.values().iterator().next();
@@ -601,6 +605,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			throw new AssertionFailure( "only one table" );
 		}
 		return tableName;
+	}
+
+	protected String getSubquery() {
+		return subquery;
 	}
 
 	@Override

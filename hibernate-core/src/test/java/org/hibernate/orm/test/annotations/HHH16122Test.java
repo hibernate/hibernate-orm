@@ -21,7 +21,12 @@ public class HHH16122Test extends BaseEntityManagerFunctionalTestCase {
         // The test is successful if the entity manager factory can be built.
     }
 
-    public record ConvertedValue(long value) {}
+    public static class ConvertedValue {
+        public final long value;
+        public ConvertedValue(long value) {
+            this.value = value;
+        }
+    }
 
     @Converter(autoApply = true)
     public static class ValueConverter implements AttributeConverter<ConvertedValue, Long> {

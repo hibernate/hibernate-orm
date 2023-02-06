@@ -87,7 +87,7 @@ public class IdClassAndAssociationsTest {
 	@Table(name = "course_enrollment")
 	public static class CourseEnrollment {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Long id;
 
 		@Column(name = "course")

@@ -59,7 +59,7 @@ class EmbeddablePersistAndQueryInSameTransactionTest {
 	public static class Child {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Long id;
 
 		@Basic
@@ -86,7 +86,7 @@ class EmbeddablePersistAndQueryInSameTransactionTest {
 	public static class Dog {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Long id;
 
 		@Basic

@@ -18,7 +18,7 @@ public class HHH16122Test extends BaseEntityManagerFunctionalTestCase {
 
     @Test
     public void testGenericSuperClassWithConverter() {
-        // The test is successful if the entity manager can be built.
+        // The test is successful if the entity manager factory can be built.
     }
 
     public record ConvertedValue(long value) {}

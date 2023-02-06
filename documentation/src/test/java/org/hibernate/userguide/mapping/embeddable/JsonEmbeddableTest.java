@@ -302,8 +302,8 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		@JdbcTypeCode(SqlTypes.JSON)
 		private EmbeddableAggregate aggregate;
 
+		//end::embeddable-json-type-mapping-example[]
 		//Getters and setters are omitted for brevity
-	//end::embeddable-json-type-mapping-example[]
 
 		public JsonHolder() {
 		}

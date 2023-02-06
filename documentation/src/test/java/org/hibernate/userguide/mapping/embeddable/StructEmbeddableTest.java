@@ -555,13 +555,11 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 		@Id
 		private Long id;
-		//end::embeddable-struct-type-mapping-example[]
 		@Struct(name = "structType")
-		//tag::embeddable-struct-type-mapping-example[]
 		private EmbeddableAggregate aggregate;
 
+		//end::embeddable-struct-type-mapping-example[]
 		//Getters and setters are omitted for brevity
-	//end::embeddable-struct-type-mapping-example[]
 
 		public StructHolder() {
 		}
@@ -587,5 +585,7 @@ public class StructEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 			this.aggregate = aggregate;
 		}
 
+		//tag::embeddable-struct-type-mapping-example[]
 	}
+	//end::embeddable-struct-type-mapping-example[]
 }

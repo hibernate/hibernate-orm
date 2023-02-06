@@ -3,6 +3,25 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.15.Final (February 06, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32121
+
+** Bug
+    * [HHH-16049] - Setting a property to its current value with bytecode enhancement enabled results in unnecessary SQL Update in some (many) cases
+    * [HHH-15665] - Mariadb is missing identifier quote on SEQUENCE QUERY
+    * [HHH-15618] - Procedure should accept TypedParameterValue as parameter
+
+** Improvement
+    * [HHH-15693] - Introduce a fast-path access for ClassLoaderService being retrieved from ServiceRegistry
+    * [HHH-15690] - HQLQueryPlan to have a direct reference to QueryTranslatorFactory
+    * [HHH-15685] - Improve efficiency of Dialect lookup in Loader and HqlSqlWalker
+
+** Patch
+    * [HHH-15792] - Explicitly add JavaDoc to make @deprecated hint for createSQLQuery visible in Eclipse
+
+
 Changes in 5.6.14.Final (November 04, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

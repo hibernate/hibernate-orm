@@ -26,7 +26,7 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 		super.configure( props );
 		DataSource ds = unwrap( DataSource.class );
 		DataSource dataSource = Mockito.mock(
-				DataSource.class,
+				ds.getClass(),
 				Mockito.withSettings().defaultAnswer( Answers.CALLS_REAL_METHODS ).spiedInstance( ds )
 		);
 
@@ -34,7 +34,7 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 			Mockito.doAnswer( invocation -> {
 				Connection connection = (Connection) invocation.callRealMethod();
 				Connection connectionSpy = Mockito.mock(
-						Connection.class,
+						connection.getClass(),
 						Mockito.withSettings().defaultAnswer( Answers.CALLS_REAL_METHODS ).spiedInstance( connection )
 				);
 				connectionSpyMap.put( connectionSpy, connection );

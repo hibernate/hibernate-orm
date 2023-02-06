@@ -6,13 +6,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.query.criteria.internal.hhh14197.AbstractPersistent;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 @TestForIssue( jiraKey = "HHH-16122" )
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class HHH16122Test extends BaseEntityManagerFunctionalTestCase {
     @Override
     protected Class<?>[] getAnnotatedClasses() {

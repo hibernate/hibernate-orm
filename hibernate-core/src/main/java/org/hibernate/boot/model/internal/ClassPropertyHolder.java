@@ -6,9 +6,9 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converts;
+import jakarta.persistence.JoinTable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -17,22 +17,10 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.ToOne;
-import org.hibernate.mapping.Value;
+import org.hibernate.mapping.*;
 
-import jakarta.persistence.Convert;
-import jakarta.persistence.Converts;
-import jakarta.persistence.JoinTable;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
@@ -269,7 +257,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					final Value originalValue = prop.getValue();
 					if ( originalValue instanceof SimpleValue ) {
 						// Avoid copying when the property doesn't depend on a type variable
-						if ( inferredData.getTypeName().equals( getTypeName( originalValue ) ) ) {
+						final String originalTypeName = getTypeName( originalValue );
+						if ( originalTypeName == null || inferredData.getTypeName().equals( originalTypeName ) ) {
 							superclass.addDeclaredProperty( prop );
 							return;
 						}

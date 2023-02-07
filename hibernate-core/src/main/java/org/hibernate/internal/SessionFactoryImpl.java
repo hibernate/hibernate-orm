@@ -457,7 +457,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
 			integrator.disintegrate( this, serviceRegistry );
 			integratorObserver.integrators.remove( integrator );
-			serviceRegistry.close();
 		}
 	}
 

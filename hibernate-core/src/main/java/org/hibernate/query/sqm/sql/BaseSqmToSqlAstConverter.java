@@ -5210,7 +5210,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				for ( List<JdbcParameter> parameters : jdbcParamsForSqmParameter ) {
 					assert parameters.size() == 1;
 					final JdbcParameter jdbcParameter = parameters.get( 0 );
-					if ( ( (SqlExpressible) jdbcParameter ).getJdbcMapping() != valueMapping ) {
+					if ( ( (SqlExpressible) jdbcParameter ).getJdbcMapping() != jdbcMapping ) {
 						final JdbcParameter newJdbcParameter = new JdbcParameterImpl( jdbcMapping );
 						parameters.set( 0, newJdbcParameter );
 						jdbcParameters.getJdbcParameters().remove( jdbcParameter );

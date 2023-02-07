@@ -3,6 +3,64 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.1.7.Final (February 07, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32126
+
+** Bug
+    * [HHH-16120] - Error advancing (next) ResultSet position with Hibernate v6
+    * [HHH-16117] - Querying entity with collection in Embeddable causes 'A collection with cascade="all-delete-orphan" was no longer referenced by the owning entity instance'
+    * [HHH-16075] - NPE Caused by "Cannot invoke "org.hibernate.engine.spi.EntityKey.getIdentifier()" because "this.entityKey" is null" @ AbstractEntityInitializer:445
+    * [HHH-16070] - Exception when find by association id that is a generic @EmbeddedId with @MappedSuperclass
+    * [HHH-16062] - jakarta.persistence.query.timeout not working on Hibernate 6.1.6 for Criteria Queries
+    * [HHH-16061] - SqmDynamicInstantiation warns about dynamic Map instantiation when using an entity
+    * [HHH-16049] - Setting a property to its current value with bytecode enhancement enabled results in unnecessary SQL Update in some (many) cases
+    * [HHH-16043] - Hibernate 6.x breaks collection batch fetching
+    * [HHH-16040] - AssertionError for @JoinColumn with char[] property referencing a String property
+    * [HHH-16023] - ArrayIndexOutOfBoundsException: Index 1 out of bounds for length 1 for NamedNativeQuery with generics
+    * [HHH-16020] - Hibernate doesn't set the correct bind parameter for the offset when using NativeQuery.setFirstResult() on Postgresql
+    * [HHH-16014] - Querying property from treated path causes IllegalArgumentException: Already registered a copy
+    * [HHH-16007] - PropertyAccessException when deleting entities with Embeddables with child collections
+    * [HHH-16005] -  @BatchSize with @ManyToMany does not work as expected when migrating 5 -> 6
+    * [HHH-16004] - Downcasting with CriteriaBuilder.treat causes ClassCastException
+    * [HHH-16003] - Wrong alias used in subquery generated from JPQL
+    * [HHH-15998] - Incomplete group by expression when with "NEW" operator
+    * [HHH-15991] - Hibernate fails when grouping by a related many-to-one entity
+    * [HHH-15986] - Eager Bidirectional association, initializing an HibernateProxy should associate to the circular association the HibernateProxy  itself
+    * [HHH-15982] - Bidirectional one-to-one associations produce child entities with null parent entity references
+    * [HHH-15970] - Issue when combining Postgres driver, @MappedSuperclass, generics and enums
+    * [HHH-15969] - Inheritance: org.hibernate.PropertyAccessException Exception
+    * [HHH-15967] - @OneToOne(mappedBy = ..., fetch = LAZY) in embedded referencing an association within another embedded 
+    * [HHH-15957] - Hibernate 6.1.6 Infinite Recursion/StackOverflow Using DB2 Custom Dialect
+    * [HHH-15950] - AssertionError with bidirectional OneToOne relation using AttributeConverter for the FK
+    * [HHH-15944] - Joins on non-managed-type polymorphisms don't work
+    * [HHH-15933] - broken SQL generated for @ManyToOne with @JoinColumn which references a column of a @SecondaryTable
+    * [HHH-15928] -  Distinct with maxResults fails under SQLServer
+    * [HHH-15916] -  Regressions when using JoinColumnOrFormula on char[] and String 
+    * [HHH-15914] - Deprecated method QueryProducer.createNativeQuery alternative does not work for Example 556 and 557
+    * [HHH-15902] - @OneToMany relationship with @Where on child table generates wrong sql
+    * [HHH-15901] - Criteria Query throws a NullPointerException when I use an empty predicates list
+    * [HHH-15890] -  springboot 3.0.0 + hibernate 6.1.5.Final + IBM DB2 error after migrating from springboot 2.7.0 + hibernate 5.6.9.Final
+    * [HHH-15866] - Hibernate validation fails when OneToMany refers to fereign key in embeddable object and is marked as nullable false
+    * [HHH-15865] - OneToMany foreign key relation throws when id is inside nested embeddables
+    * [HHH-15864] - OrphanRemoval does not work with embeddables when deleting entity
+    * [HHH-15859] - Fetching an entity with entity graph for an attribute of type Map fails with an assertion error
+    * [HHH-15854] - Improve CollectionInitializer and EntityDelayedFetchInitializer resolveInstance methods performance when the parent entity is initialized
+    * [HHH-15851] - Mixup of entities in refresh with BatchSize
+    * [HHH-15850] - NullPointerException when parsing HQL query with like statement and interface is used
+    * [HHH-15842] - Can't convert an enum that is inside an entity within an entity
+    * [HHH-15840] - HibernateException: Found shared references to a collection when loading a collection from the cache
+    * [HHH-15839] - CriteriaBuilder treat method on Path causes ClassCastException
+    * [HHH-15823] - Unexpected java.lang.AssertionError when use AttributeConverter
+    * [HHH-15822] - Unexpected org.hibernate.UnknownEntityTypeException: Unable to locate persister
+    * [HHH-15805] - Subquery with where condition on a column with columnDefinition results in wrong SQL grammar
+    * [HHH-15794] - NullPointerException when constructing mapping model for nested embeddables with not optional ManyToOne
+    * [HHH-15784] - Primitive array as Natural ID causes ClassCastException
+    * [HHH-15778] - Fetching an Entity with a lazily loaded Embeddable with more fields than the parent results in an ArrayIndexOutOfBoundsException
+    * [HHH-15768] - incorrect deprecation warning being logged: HHH90000021: Encountered deprecated setting [javax.persistence.sharedCache.mode], use [jakarta.persistence.sharedCache.mode] instead 
+
+
 Changes in 6.1.6.Final (December 07, 2022)
 ------------------------------------------------------------------------------------------------------------------------
 

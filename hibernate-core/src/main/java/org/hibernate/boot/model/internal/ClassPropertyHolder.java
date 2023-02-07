@@ -269,7 +269,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					final Value originalValue = prop.getValue();
 					if ( originalValue instanceof SimpleValue ) {
 						// Avoid copying when the property doesn't depend on a type variable
-						if ( inferredData.getTypeName().equals( getTypeName( originalValue ) ) ) {
+						if ( inferredData.getTypeName().equals( getTypeName( prop ) ) ) {
 							superclass.addDeclaredProperty( prop );
 							return;
 						}
@@ -327,6 +327,11 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
+	}
+
+	static String getTypeName(Property property) {
+		final String typeName = getTypeName( property.getValue() );
+		return typeName != null ? typeName : property.getReturnedClassName();
 	}
 
 	static String getTypeName(Value value) {

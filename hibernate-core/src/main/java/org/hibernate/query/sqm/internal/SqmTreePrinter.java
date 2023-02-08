@@ -958,7 +958,9 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 				() -> {
 					predicate.getPattern().accept( this );
 					predicate.getMatchExpression().accept( this );
-					predicate.getEscapeCharacter().accept( this );
+					if ( predicate.getEscapeCharacter() != null ) {
+						predicate.getEscapeCharacter().accept( this );
+					}
 				}
 		);
 		return null;

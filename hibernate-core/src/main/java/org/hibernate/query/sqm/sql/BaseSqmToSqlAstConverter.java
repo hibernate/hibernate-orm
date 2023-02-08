@@ -89,6 +89,9 @@ import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
+import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -389,8 +392,6 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
@@ -7283,7 +7284,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					fetchable,
 					fetchTiming,
 					joined,
-					explicitFetch,
 					alias
 			);
 
@@ -7335,6 +7335,55 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
+		if ( fetchParent instanceof EagerCollectionFetch ) {
+			final EagerCollectionFetch collectionFetch = (EagerCollectionFetch) fetchParent;
+			final PluralAttributeMapping pluralAttributeMapping = collectionFetch.getFetchedMapping();
+			final NavigablePath fetchablePath = collectionFetch.getNavigablePath();
+
+			final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
+
+			// Base restrictions have already been applied if this is an explicit fetch
+			if ( getFromClauseIndex().findFetchedJoinByPath( fetchablePath ) == null ) {
+				final Restrictable restrictable = pluralAttributeMapping
+						.getCollectionDescriptor()
+						.getCollectionType()
+						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
+				restrictable.applyBaseRestrictions(
+						(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
+						tableGroup,
+						true,
+						getLoadQueryInfluencers().getEnabledFilters(),
+						null,
+						this
+				);
+			}
+
+			pluralAttributeMapping.applyBaseManyToManyRestrictions(
+					(predicate) -> {
+						final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( collectionFetch.getFetchParent().getNavigablePath() );
+						TableGroupJoin pluralTableGroupJoin = null;
+						for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+							if ( nestedTableGroupJoin.getNavigablePath() == fetchablePath ) {
+								pluralTableGroupJoin = nestedTableGroupJoin;
+								break;
+							}
+						}
+
+						assert pluralTableGroupJoin != null;
+						pluralTableGroupJoin.applyPredicate( predicate );
+					},
+					tableGroup,
+					true,
+					getLoadQueryInfluencers().getEnabledFilters(),
+					null,
+					this
+			);
+
+			if ( currentQuerySpec().isRoot() ) {
+				assert tableGroup.getModelPart() == pluralAttributeMapping;
+				applyOrdering( tableGroup, pluralAttributeMapping );
+			}
+		}
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		final int keySize = referencedMappingContainer.getNumberOfKeyFetchables();
 		final int size = referencedMappingContainer.getNumberOfFetchables();
@@ -7381,7 +7430,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			Fetchable fetchable,
 			FetchTiming fetchTiming,
 			boolean joined,
-			boolean explicitFetch,
 			String alias) {
 		// fetch has access to its parent in addition to the parent having its fetches.
 		//
@@ -7390,7 +7438,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// "initializing" state as part of AfterLoadAction
 
 		try {
-			final Fetch fetch = fetchParent.generateFetchableFetch(
+			return fetchParent.generateFetchableFetch(
 					fetchable,
 					fetchablePath,
 					fetchTiming,
@@ -7398,57 +7446,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					alias,
 					this
 			);
-
-			if ( fetchable instanceof PluralAttributeMapping
-					&& fetch.getTiming() == FetchTiming.IMMEDIATE
-					&& joined ) {
-				final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
-				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-
-				// Base restrictions have already been applied if this is an explicit fetch
-				if ( !explicitFetch ) {
-					final Restrictable restrictable = pluralAttributeMapping
-							.getCollectionDescriptor()
-							.getCollectionType()
-							.getAssociatedJoinable( getCreationContext().getSessionFactory() );
-					restrictable.applyBaseRestrictions(
-							(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
-							tableGroup,
-							true,
-							getLoadQueryInfluencers().getEnabledFilters(),
-							null,
-							this
-					);
-				}
-
-				pluralAttributeMapping.applyBaseManyToManyRestrictions(
-						(predicate) -> {
-							final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
-							TableGroupJoin pluralTableGroupJoin = null;
-							for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-								if ( nestedTableGroupJoin.getNavigablePath() == fetchablePath ) {
-									pluralTableGroupJoin = nestedTableGroupJoin;
-									break;
-								}
-							}
-
-							assert pluralTableGroupJoin != null;
-							pluralTableGroupJoin.applyPredicate( predicate );
-						},
-						tableGroup,
-						true,
-						getLoadQueryInfluencers().getEnabledFilters(),
-						null,
-						this
-				);
-
-				if ( currentQuerySpec().isRoot() ) {
-					assert tableGroup.getModelPart() == pluralAttributeMapping;
-					applyOrdering( tableGroup, pluralAttributeMapping );
-				}
-			}
-
-			return fetch;
 		}
 		catch (RuntimeException e) {
 			throw new HibernateException(

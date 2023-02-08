@@ -71,8 +71,8 @@ public class MixingEagerAndLazyOnTheSameEntityDifferentParentsEntitiesTest exten
             return orderLocal;
         });
         assertEquals(1, order.orderItems.size());
-        assertEquals("User 1", order.user.id);
-        assertEquals("User 1 name", order.user.name);
+        assertEquals("User 1", order.getUser().getId());
+        assertEquals("User 1 name", order.getUser().getName());
     }
 
     @Test
@@ -82,8 +82,8 @@ public class MixingEagerAndLazyOnTheSameEntityDifferentParentsEntitiesTest exten
             return orderLocal;
         });
         assertEquals(1, order.orderItems.size());
-        assertEquals("User 1", order.user.id);
-        assertEquals("User 1 name", order.user.name);
+        assertEquals("User 1", order.getUser().getId());
+        assertEquals("User 1 name", order.getUser().getName());
     }
 
 

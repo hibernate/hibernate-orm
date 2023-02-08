@@ -9,7 +9,6 @@ package org.hibernate.query.spi;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
@@ -21,20 +20,16 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
@@ -147,69 +142,6 @@ public class QueryEngine {
 				sessionFactoryOptions.getCriteriaValueHandlingMode(),
 				sessionFactory.getServiceRegistry(),
 				() -> sessionFactory
-		);
-	}
-
-	/**
-	 * Simplified constructor mainly meant for Quarkus use
-	 */
-	public QueryEngine(
-			String uuid,
-			String name,
-			JpaMetamodelImplementor jpaMetamodel,
-			ValueHandlingMode criteriaValueHandlingMode,
-			int preferredSqlTypeCodeForBoolean,
-			boolean useStrictJpaCompliance,
-			NamedObjectRepository namedObjectRepository,
-			NativeQueryInterpreter nativeQueryInterpreter,
-			Dialect dialect,
-			ServiceRegistry serviceRegistry) {
-		this.namedObjectRepository = Objects.requireNonNull( namedObjectRepository );
-		this.sqmTranslatorFactory = null;
-		this.nativeQueryInterpreter = Objects.requireNonNull( nativeQueryInterpreter );
-		this.sqmFunctionRegistry = new SqmFunctionRegistry();
-		this.typeConfiguration = jpaMetamodel.getTypeConfiguration();
-
-		dialect.contributeFunctions( new FunctionContributionsImpl( serviceRegistry, typeConfiguration, sqmFunctionRegistry ) );
-
-		this.interpretationCache = buildInterpretationCache(
-				() -> serviceRegistry.getService( StatisticsImplementor.class ),
-				serviceRegistry.getService( ConfigurationService.class ).getSettings()
-		);
-
-		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
-				uuid,
-				name,
-				this,
-				useStrictJpaCompliance,
-				criteriaValueHandlingMode,
-				serviceRegistry,
-				typeConfiguration::getSessionFactory
-		);
-
-		this.hqlTranslator = new StandardHqlTranslator(
-				new SqmCreationContext() {
-					@Override
-					public JpaMetamodelImplementor getJpaMetamodel() {
-						return jpaMetamodel;
-					}
-
-					@Override
-					public ServiceRegistry getServiceRegistry() {
-						return serviceRegistry;
-					}
-
-					@Override
-					public QueryEngine getQueryEngine() {
-						return QueryEngine.this;
-					}
-
-					@Override
-					public NodeBuilder getNodeBuilder() {
-						return criteriaBuilder;
-					}
-				},
-				() -> useStrictJpaCompliance
 		);
 	}
 

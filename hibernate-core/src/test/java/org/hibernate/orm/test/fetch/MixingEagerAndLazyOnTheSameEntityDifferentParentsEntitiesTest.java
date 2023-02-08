@@ -10,15 +10,17 @@ import jakarta.persistence.*;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.*;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
-//@RunWith(BytecodeEnhancerRunner.class)
+@RunWith(BytecodeEnhancerRunner.class)
 @TestForIssue(jiraKey = "HHH-16136")
 public class MixingEagerAndLazyOnTheSameEntityDifferentParentsEntitiesTest extends BaseEntityManagerFunctionalTestCase {
 

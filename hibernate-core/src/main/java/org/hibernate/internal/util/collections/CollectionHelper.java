@@ -426,6 +426,16 @@ public final class CollectionHelper {
 		}
 	}
 
+	public static String[] asPairs(Map<String,String> map) {
+		final String[] pairs = new String[ map.size() * 2 ];
+		int i = 0;
+		for ( Map.Entry<String,String> entry : map.entrySet() ) {
+			pairs[i++] = entry.getKey();
+			pairs[i++] = entry.getValue();
+		}
+		return pairs;
+	}
+
 	public static Properties toProperties(Object... pairs) {
 		final Properties properties = new Properties();
 		if ( pairs.length > 0 ) {

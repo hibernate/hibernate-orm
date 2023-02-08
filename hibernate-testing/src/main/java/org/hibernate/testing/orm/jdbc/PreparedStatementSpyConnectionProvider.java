@@ -36,11 +36,6 @@ import org.mockito.internal.util.MockUtil;
  */
 public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDelegate {
 
-	private static final MockSettings MOCK_SETTINGS = Mockito.withSettings()
-			.stubOnly() //important optimisation: uses far less memory, at tradeoff of mocked methods no longer being verifiable but we often don't need that.
-			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
-	private static final MockSettings VERIFIABLE_MOCK_SETTINGS = Mockito.withSettings()
-			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
 	// We must keep around the mocked connections, otherwise they are garbage collected and trigger finalizers
 	// Since we use CALLS_REAL_METHODS this might close underlying IO resources which makes other objects unusable
 	private static final Queue<Object> MOCKS = new LinkedBlockingQueue<>();
@@ -76,8 +71,22 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 
 	public PreparedStatementSpyConnectionProvider(boolean allowMockVerificationOnStatements, boolean allowMockVerificationOnConnections, boolean forceSupportsAggressiveRelease) {
 		super(forceSupportsAggressiveRelease);
-		this.settingsForStatements = allowMockVerificationOnStatements ? VERIFIABLE_MOCK_SETTINGS : MOCK_SETTINGS;
-		this.settingsForConnections = allowMockVerificationOnConnections ? VERIFIABLE_MOCK_SETTINGS : MOCK_SETTINGS;
+		this.settingsForStatements = allowMockVerificationOnStatements ?
+				getVerifiableMockSettings() :
+				getMockSettings();
+		this.settingsForConnections = allowMockVerificationOnConnections ?
+				getVerifiableMockSettings() :
+				getMockSettings();
+	}
+
+	private static MockSettings getMockSettings() {
+		return Mockito.withSettings()
+				.stubOnly() //important optimisation: uses far less memory, at tradeoff of mocked methods no longer being verifiable but we often don't need that.
+				.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
+	}
+
+	private static MockSettings getVerifiableMockSettings() {
+		return Mockito.withSettings().defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
 	}
 
 	protected Connection actualConnection() throws SQLException {

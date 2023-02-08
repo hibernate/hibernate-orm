@@ -10,8 +10,10 @@ import java.util.function.Consumer;
 
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -31,6 +33,8 @@ import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
@@ -134,6 +138,12 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		entityInstance = persistenceContext.getEntity( entityKey );
 		if ( entityInstance != null ) {
+			if ( isPersistentAttributeInterceptable( entityInstance ) ) {
+				final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entityInstance ).$$_hibernate_getInterceptor();
+				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+					( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( entityInstance, null );
+				}
+			}
 			isInitialized = true;
 			return;
 		}

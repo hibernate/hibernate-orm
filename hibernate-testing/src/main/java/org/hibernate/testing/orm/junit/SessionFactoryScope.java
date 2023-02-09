@@ -27,6 +27,10 @@ public interface SessionFactoryScope {
 	<T extends StatementInspector> T getStatementInspector(Class<T> type);
 	SQLStatementInspector getCollectingStatementInspector();
 
+	default void withSessionFactory(Consumer<SessionFactoryImplementor> action) {
+		action.accept( getSessionFactory() );
+	}
+
 	void inSession(Consumer<SessionImplementor> action);
 	void inTransaction(Consumer<SessionImplementor> action);
 	void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action);

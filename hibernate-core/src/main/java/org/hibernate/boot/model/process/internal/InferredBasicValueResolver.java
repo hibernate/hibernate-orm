@@ -8,10 +8,8 @@ package org.hibernate.boot.model.process.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
+import java.util.function.Function;
 import java.util.function.Supplier;
-
-import jakarta.persistence.EnumType;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
@@ -19,24 +17,28 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
-import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
-import org.hibernate.type.descriptor.java.BasicPluralJavaType;
+import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
+import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.EnumType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TINYINT;
@@ -52,6 +54,7 @@ public class InferredBasicValueResolver {
 			JdbcType explicitJdbcType,
 			Type resolvedJavaType,
 			Supplier<JavaType<T>> reflectedJtdResolver,
+			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators stdIndicators,
 			Table table,
 			Selectable selectable,
@@ -84,6 +87,7 @@ public class InferredBasicValueResolver {
 						null,
 						explicitJdbcType,
 						resolvedJavaType,
+						explicitMutabilityPlanAccess,
 						stdIndicators,
 						typeConfiguration
 				);
@@ -135,6 +139,7 @@ public class InferredBasicValueResolver {
 						null,
 						explicitJdbcType,
 						resolvedJavaType,
+						explicitMutabilityPlanAccess,
 						stdIndicators,
 						typeConfiguration
 				);
@@ -171,6 +176,7 @@ public class InferredBasicValueResolver {
 								null,
 								null,
 								resolvedJavaType,
+								explicitMutabilityPlanAccess,
 								stdIndicators,
 								typeConfiguration
 						);
@@ -296,7 +302,7 @@ public class InferredBasicValueResolver {
 				jdbcMapping.getJavaTypeDescriptor(),
 				jdbcMapping.getJdbcType(),
 				jdbcMapping,
-				null
+				determineMutabilityPlan( explicitMutabilityPlanAccess, jdbcMapping.getJavaTypeDescriptor(), typeConfiguration )
 		);
 	}
 
@@ -477,6 +483,7 @@ public class InferredBasicValueResolver {
 			BasicJavaType<?> explicitJavaType,
 			JdbcType explicitJdbcType,
 			Type resolvedJavaType,
+			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators stdIndicators,
 			TypeConfiguration typeConfiguration) {
 		final TemporalType requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
@@ -509,13 +516,14 @@ public class InferredBasicValueResolver {
 
 			final BasicType<T> jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( explicitTemporalJtd, jdbcType );
 
+			final MutabilityPlan<T> mutabilityPlan = determineMutabilityPlan( explicitMutabilityPlanAccess, explicitTemporalJtd, typeConfiguration );
 			return new InferredBasicValueResolution<>(
 					jdbcMapping,
 					explicitTemporalJtd,
 					explicitTemporalJtd,
 					jdbcType,
 					jdbcMapping,
-					explicitTemporalJtd.getMutabilityPlan()
+					mutabilityPlan
 			);
 		}
 
@@ -575,8 +583,22 @@ public class InferredBasicValueResolver {
 				basicType.getJavaTypeDescriptor(),
 				basicType.getJdbcType(),
 				basicType,
-				reflectedJtd.getMutabilityPlan()
+				determineMutabilityPlan( explicitMutabilityPlanAccess, reflectedJtd, typeConfiguration )
 		);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static <T> MutabilityPlan<T> determineMutabilityPlan(
+			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
+			JavaType<T> jtd,
+			TypeConfiguration typeConfiguration) {
+		if ( explicitMutabilityPlanAccess != null ) {
+			final MutabilityPlan<T> mutabilityPlan = explicitMutabilityPlanAccess.apply( typeConfiguration );
+			if ( mutabilityPlan != null ) {
+				return mutabilityPlan;
+			}
+		}
+		return jtd.getMutabilityPlan();
 	}
 
 }

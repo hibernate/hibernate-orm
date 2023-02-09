@@ -199,7 +199,7 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		final SimpleValue value = (SimpleValue) bootProperty.getValue();
 		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
-		SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
+		final SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
 
 		final FetchTiming fetchTiming;
 		final FetchStyle fetchStyle;

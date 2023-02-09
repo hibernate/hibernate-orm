@@ -479,6 +479,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					jdbcType,
 					resolvedJavaType,
 					this::determineReflectedJavaType,
+					explicitMutabilityPlanAccess,
 					this,
 					getTable(),
 					column,

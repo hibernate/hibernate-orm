@@ -2,42 +2,43 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.userguide.immutability;
+package org.hibernate.orm.test.mapping.mutability.attribute;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.hibernate.annotations.Immutable;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import org.jboss.logging.Logger;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.Immutable;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-
 /**
  * @author Vlad Mihalcea
  */
-public class CollectionImmutabilityTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Batch.class,
-			Event.class
-		};
-	}
+@DomainModel( annotatedClasses = {
+		PluralAttributeMutabilityTest.Batch.class,
+		PluralAttributeMutabilityTest.Event.class
+} )
+@SessionFactory
+public class PluralAttributeMutabilityTest {
+	private static final Logger log = Logger.getLogger( PluralAttributeMutabilityTest.class );
 
 	@Test
-	public void test() {
-		//tag::collection-immutability-persist-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( (entityManager) -> {
+			//tag::collection-immutability-persist-example[]
 			Batch batch = new Batch();
 			batch.setId(1L);
 			batch.setName("Change request");
@@ -56,21 +57,27 @@ public class CollectionImmutabilityTest extends BaseEntityManagerFunctionalTestC
 			batch.getEvents().add(event2);
 
 			entityManager.persist(batch);
-		});
-		//end::collection-immutability-persist-example[]
-		//tag::collection-entity-update-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
+			//end::collection-immutability-persist-example[]
+		} );
+
+		scope.inTransaction( (entityManager) -> {
+			//tag::collection-entity-update-example[]
 			Batch batch = entityManager.find(Batch.class, 1L);
 			log.info("Change batch name");
 			batch.setName("Proposed change request");
-		});
-		//end::collection-entity-update-example[]
+			//end::collection-entity-update-example[]
+		} );
+
 		//tag::collection-immutability-update-example[]
 		try {
-			doInJPA(this::entityManagerFactory, entityManager -> {
-				Batch batch = entityManager.find(Batch.class, 1L);
+			//end::collection-immutability-update-example[]
+			scope.inTransaction( (entityManager) -> {
+				//tag::collection-immutability-update-example[]
+				Batch batch = entityManager.find( Batch.class, 1L );
 				batch.getEvents().clear();
-			});
+				//end::collection-immutability-update-example[]
+			} );
+		//tag::collection-immutability-update-example[]
 		}
 		catch (Exception e) {
 			log.error("Immutable collections cannot be modified");

@@ -50,6 +50,11 @@ public interface DomainModelScope {
 		action.accept( entityBinding.getRootClass() );
 	}
 
+	default PersistentClass getEntityBinding(Class<?> theEntityClass) {
+		assert theEntityClass != null;
+		return getDomainModel().getEntityBinding( theEntityClass.getName() );
+	}
+
 
 	// ...
 }

@@ -20,7 +20,20 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies a {@link MutabilityPlan} for a some sort of basic value mapping.
+ * Specifies a {@link MutabilityPlan} for a basic value mapping.
+ *
+ * Mutability refers to whether the internal state of a value can change.
+ * For example, {@linkplain java.util.Date Date} is considered mutable because its
+ * internal state can be changed using {@link java.util.Date#setTime} whereas
+ * {@linkplain java.lang.String String} is considered immutable because its internal
+ * state cannot be changed.  Hibernate uses this distinction when it can for internal
+ * optimizations.
+ *
+ * Hibernate understands the inherent mutability of a large number of Java types -
+ * {@linkplain java.util.Date Date}, {@linkplain java.lang.String String}, etc.
+ * {@linkplain Mutability} and friends allow plugging in specific strategies.
+ *
+ *
  *
  * <h3>Mutability for basic-typed attributes</h3>
  * <p>

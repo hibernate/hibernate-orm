@@ -28,12 +28,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Marco Belladelli
@@ -42,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses = {
 		TreatAbstractSuperclassTest.LongBook.class,
 		TreatAbstractSuperclassTest.ShortBook.class,
+		TreatAbstractSuperclassTest.Article.class,
 		TreatAbstractSuperclassTest.Author.class,
 		TreatAbstractSuperclassTest.AuthorParticipation.class,
 })
@@ -86,6 +89,25 @@ public class TreatAbstractSuperclassTest {
 	}
 
 	@Test
+	public void testTreatMultiple(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final CriteriaBuilder cb = session.getCriteriaBuilder();
+			final CriteriaQuery<Tuple> criteria = cb.createTupleQuery();
+			final Root<Publication> publicationRoot = criteria.from( Publication.class );
+			// Treat as nested abstract superclass
+			final Root<Book> bookRoot = cb.treat( publicationRoot, Book.class );
+			final Root<Article> articleRoot = cb.treat( publicationRoot, Article.class );
+			criteria.multiselect(
+					bookRoot.get( "title" ),
+					articleRoot.get( "reference" )
+			);
+			final Tuple tuple = session.createQuery( criteria ).getSingleResult();
+			assertEquals( "Dune", tuple.get( 0 ) );
+			assertNull( tuple.get( 1 ) );
+		} );
+	}
+
+	@Test
 	public void testSubclassJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -122,8 +144,29 @@ public class TreatAbstractSuperclassTest {
 		}
 	}
 
+	@Entity(name = "Article")
+	public static class Article extends Publication {
+		private String reference;
+
+		public Article() {
+		}
+
+		public Article(String title) {
+			super( title );
+		}
+
+		public String getReference() {
+			return reference;
+		}
+
+		public void setReference(String reference) {
+			this.reference = reference;
+		}
+	}
+
 	@Entity(name = "Book")
 	public static abstract class Book extends Publication {
+		private String isbn;
 		@OneToMany(mappedBy = "book", cascade = CascadeType.REMOVE)
 		private List<AuthorParticipation> participations = new ArrayList<>();
 
@@ -141,6 +184,7 @@ public class TreatAbstractSuperclassTest {
 
 	@Entity(name = "LongBook")
 	public static class LongBook extends Book {
+		private int pageCount;
 		public LongBook() {
 		}
 
@@ -151,6 +195,7 @@ public class TreatAbstractSuperclassTest {
 
 	@Entity(name = "ShortBook")
 	public static class ShortBook extends Book {
+		private int readTime;
 		public ShortBook() {
 		}
 

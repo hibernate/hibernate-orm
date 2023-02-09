@@ -3084,18 +3084,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
 
 			pluralAttributeMapping.applyBaseRestrictions(
-					(predicate) -> {
-						final PredicateCollector existing = collectionFilterPredicates.get( joinedTableGroup.getNavigablePath() );
-						final PredicateCollector collector;
-						if ( existing == null ) {
-							collector = new PredicateCollector( predicate );
-							collectionFilterPredicates.put( joinedTableGroup.getNavigablePath(), collector );
-						}
-						else {
-							collector = existing;
-							collector.applyPredicate( predicate );
-						}
-					},
+					(predicate) -> addCollectionFilterPredicate( joinedTableGroup.getNavigablePath(), predicate ),
 					joinedTableGroup,
 					true,
 					getLoadQueryInfluencers().getEnabledFilters(),
@@ -7328,6 +7317,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					fetchable,
 					fetchTiming,
 					joined,
+					explicitFetch,
 					alias
 			);
 
@@ -7425,6 +7415,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			Fetchable fetchable,
 			FetchTiming fetchTiming,
 			boolean joined,
+			boolean explicitFetch,
 			String alias) {
 		// fetch has access to its parent in addition to the parent having its fetches.
 		//
@@ -7448,18 +7439,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
 				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 
-				final Joinable joinable = pluralAttributeMapping
-						.getCollectionDescriptor()
-						.getCollectionType()
-						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
-				joinable.applyBaseRestrictions(
-						(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
-						tableGroup,
-						true,
-						getLoadQueryInfluencers().getEnabledFilters(),
-						null,
-						this
-				);
+				// Base restrictions have already been applied if this is an explicit fetch
+				if ( !explicitFetch ) {
+					final Joinable joinable = pluralAttributeMapping
+							.getCollectionDescriptor()
+							.getCollectionType()
+							.getAssociatedJoinable( getCreationContext().getSessionFactory() );
+					joinable.applyBaseRestrictions(
+							(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
+							tableGroup,
+							true,
+							getLoadQueryInfluencers().getEnabledFilters(),
+							null,
+							this
+					);
+				}
 
 				pluralAttributeMapping.applyBaseManyToManyRestrictions(
 						(predicate) -> {

@@ -68,6 +68,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.Immutability;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -479,20 +480,21 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		explicitMutabilityAccess = (typeConfiguration) -> {
 			final CollectionIdMutability mutabilityAnn = findAnnotation( modelXProperty, CollectionIdMutability.class );
 			if ( mutabilityAnn != null ) {
-				final Class<? extends MutabilityPlan<?>> mutabilityClass = normalizeMutability( mutabilityAnn.value() );
+				final Class<? extends MutabilityPlan<?>> mutabilityClass = mutabilityAnn.value();
 				if ( mutabilityClass != null ) {
-					if ( useDeferredBeanContainerAccess ) {
-						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( mutabilityClass );
-					}
-					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = beanRegistry.getBean( mutabilityClass );
-					return jtdBean.getBeanInstance();
+					return resolveMutability( mutabilityClass );
 				}
 			}
 
-			// see if the value's type Class is annotated `@Immutable`
+			// see if the value's type Class is annotated with mutability-related annotations
 			if ( implicitJavaTypeAccess != null ) {
 				final Class<?> attributeType = ReflectHelper.getClass( implicitJavaTypeAccess.apply( typeConfiguration ) );
 				if ( attributeType != null ) {
+					final Mutability attributeTypeMutabilityAnn = attributeType.getAnnotation( Mutability.class );
+					if ( attributeTypeMutabilityAnn != null ) {
+						return resolveMutability( attributeTypeMutabilityAnn.value() );
+					}
+
 					if ( attributeType.isAnnotationPresent( Immutable.class ) ) {
 						return ImmutableMutabilityPlan.instance();
 					}
@@ -503,11 +505,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			if ( converterDescriptor != null ) {
 				final Mutability converterMutabilityAnn = converterDescriptor.getAttributeConverterClass().getAnnotation( Mutability.class );
 				if ( converterMutabilityAnn != null ) {
-					if ( useDeferredBeanContainerAccess ) {
-						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( converterMutabilityAnn.value() );
-					}
-					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = beanRegistry.getBean( converterMutabilityAnn.value() );
-					return jtdBean.getBeanInstance();
+					return resolveMutability( converterMutabilityAnn.value() );
 				}
 
 				if ( converterDescriptor.getAttributeConverterClass().isAnnotationPresent( Immutable.class ) ) {
@@ -515,17 +513,22 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
+			// if there is a UserType, see if its Class is annotated with mutability-related annotations
 			final Class<? extends UserType<?>> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( modelXProperty );
-			if ( customTypeImpl.isAnnotationPresent( Immutable.class ) ) {
-				return ImmutableMutabilityPlan.instance();
+			if ( customTypeImpl != null ) {
+				final Mutability customTypeMutabilityAnn = customTypeImpl.getAnnotation( Mutability.class );
+				if ( customTypeMutabilityAnn != null ) {
+					return resolveMutability( customTypeMutabilityAnn.value() );
+				}
+
+				if ( customTypeImpl.isAnnotationPresent( Immutable.class ) ) {
+					return ImmutableMutabilityPlan.instance();
+				}
 			}
 
 			// generally, this will trigger usage of the `JavaType#getMutabilityPlan`
 			return null;
 		};
-
-		// todo (6.0) - handle generator
-//		final String generator = collectionIdAnn.generator();
 	}
 
 	private ManagedBeanRegistry getManagedBeanRegistry() {
@@ -600,35 +603,32 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		explicitMutabilityAccess = typeConfiguration -> {
 			final MapKeyMutability mutabilityAnn = findAnnotation( mapAttribute, MapKeyMutability.class );
 			if ( mutabilityAnn != null ) {
-				final Class<? extends MutabilityPlan<?>> mutabilityClass = normalizeMutability( mutabilityAnn.value() );
+				final Class<? extends MutabilityPlan<?>> mutabilityClass = mutabilityAnn.value();
 				if ( mutabilityClass != null ) {
-					if ( useDeferredBeanContainerAccess ) {
-						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( mutabilityClass );
-					}
-					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = getManagedBeanRegistry().getBean( mutabilityClass );
-					return jtdBean.getBeanInstance();
+					return resolveMutability( mutabilityClass );
 				}
 			}
 
-			// see if the value's type Class is annotated `@Immutable`
+			// see if the value's Java Class is annotated with mutability-related annotations
 			if ( implicitJavaTypeAccess != null ) {
 				final Class<?> attributeType = ReflectHelper.getClass( implicitJavaTypeAccess.apply( typeConfiguration ) );
 				if ( attributeType != null ) {
+					final Mutability attributeTypeMutabilityAnn = attributeType.getAnnotation( Mutability.class );
+					if ( attributeTypeMutabilityAnn != null ) {
+						return resolveMutability( attributeTypeMutabilityAnn.value() );
+					}
+
 					if ( attributeType.isAnnotationPresent( Immutable.class ) ) {
 						return ImmutableMutabilityPlan.instance();
 					}
 				}
 			}
 
-			// if the value is converted, see if the converter Class is annotated `@Immutable`
+			// if the value is converted, see if converter Class is annotated with mutability-related annotations
 			if ( converterDescriptor != null ) {
 				final Mutability converterMutabilityAnn = converterDescriptor.getAttributeConverterClass().getAnnotation( Mutability.class );
 				if ( converterMutabilityAnn != null ) {
-					if ( useDeferredBeanContainerAccess ) {
-						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( converterMutabilityAnn.value() );
-					}
-					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = getManagedBeanRegistry().getBean( converterMutabilityAnn.value() );
-					return jtdBean.getBeanInstance();
+					return resolveMutability( converterMutabilityAnn.value() );
 				}
 
 				if ( converterDescriptor.getAttributeConverterClass().isAnnotationPresent( Immutable.class ) ) {
@@ -636,8 +636,14 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
+			// if there is a UserType, see if its Class is annotated with mutability-related annotations
 			final Class<? extends UserType<?>> customTypeImpl = Kind.MAP_KEY.mappingAccess.customType( mapAttribute );
 			if ( customTypeImpl != null ) {
+				final Mutability customTypeMutabilityAnn = customTypeImpl.getAnnotation( Mutability.class );
+				if ( customTypeMutabilityAnn != null ) {
+					return resolveMutability( customTypeMutabilityAnn.value() );
+				}
+
 				if ( customTypeImpl.isAnnotationPresent( Immutable.class ) ) {
 					return ImmutableMutabilityPlan.instance();
 				}
@@ -943,53 +949,80 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	private void normalMutabilityDetails(XProperty attributeXProperty) {
-
 		explicitMutabilityAccess = typeConfiguration -> {
+			// Look for `@Mutability` on the attribute
 			final Mutability mutabilityAnn = findAnnotation( attributeXProperty, Mutability.class );
 			if ( mutabilityAnn != null ) {
-				final Class<? extends MutabilityPlan<?>> mutability = normalizeMutability( mutabilityAnn.value() );
+				final Class<? extends MutabilityPlan<?>> mutability = mutabilityAnn.value();
 				if ( mutability != null ) {
-					if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
-						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( mutability );
-					}
-					return getManagedBeanRegistry().getBean( mutability ).getBeanInstance();
+					return resolveMutability( mutability );
 				}
 			}
 
+			// Look for `@Immutable` on the attribute
 			final Immutable immutableAnn = attributeXProperty.getAnnotation( Immutable.class );
 			if ( immutableAnn != null ) {
 				return ImmutableMutabilityPlan.instance();
 			}
 
-			// see if the value's type Class is annotated `@Immutable`
-			if ( implicitJavaTypeAccess != null ) {
-				final Class<?> attributeType = ReflectHelper.getClass( implicitJavaTypeAccess.apply( typeConfiguration ) );
+			// Look for `@Mutability` on the attribute's type
+			if ( explicitJavaTypeAccess != null || implicitJavaTypeAccess != null ) {
+				Class<?> attributeType = null;
+				if ( explicitJavaTypeAccess != null ) {
+					final BasicJavaType<?> jtd = explicitJavaTypeAccess.apply( typeConfiguration );
+					if ( jtd != null ) {
+						attributeType = jtd.getJavaTypeClass();
+					}
+				}
+				if ( attributeType == null ) {
+					final java.lang.reflect.Type javaType = implicitJavaTypeAccess.apply( typeConfiguration );
+					if ( javaType != null ) {
+						attributeType = ReflectHelper.getClass( javaType );
+					}
+				}
+
 				if ( attributeType != null ) {
-					if ( attributeType.isAnnotationPresent( Immutable.class ) ) {
+					final Mutability classMutability = attributeType.getAnnotation( Mutability.class );
+
+					if ( classMutability != null ) {
+						final Class<? extends MutabilityPlan<?>> mutability = classMutability.value();
+						if ( mutability != null ) {
+							return resolveMutability( mutability );
+						}
+					}
+
+					final Immutable classImmutable = attributeType.getAnnotation( Immutable.class );
+					if ( classImmutable != null ) {
 						return ImmutableMutabilityPlan.instance();
 					}
 				}
 			}
 
-			// if the value is converted, see if the converter Class is annotated `@Immutable`
+			// if the value is converted, see if the converter Class is annotated `@Mutability`
 			if ( converterDescriptor != null ) {
 				final Mutability converterMutabilityAnn = converterDescriptor.getAttributeConverterClass().getAnnotation( Mutability.class );
 				if ( converterMutabilityAnn != null ) {
-					if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
-						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( converterMutabilityAnn.value() );
-					}
-					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = getManagedBeanRegistry().getBean( converterMutabilityAnn.value() );
-					return jtdBean.getBeanInstance();
+					final Class<? extends MutabilityPlan<?>> mutability = converterMutabilityAnn.value();
+					return resolveMutability( mutability );
 				}
 
-				if ( converterDescriptor.getAttributeConverterClass().isAnnotationPresent( Immutable.class ) ) {
+				final Immutable converterImmutableAnn = converterDescriptor.getAttributeConverterClass().getAnnotation( Immutable.class );
+				if ( converterImmutableAnn != null ) {
 					return ImmutableMutabilityPlan.instance();
 				}
 			}
 
+			// if a custom UserType is specified, see if the UserType Class is annotated `@Mutability`
 			final Class<? extends UserType<?>> customTypeImpl = Kind.ATTRIBUTE.mappingAccess.customType( attributeXProperty );
 			if ( customTypeImpl != null ) {
-				if ( customTypeImpl.isAnnotationPresent( Immutable.class ) ) {
+				final Mutability customTypeMutabilityAnn = customTypeImpl.getAnnotation( Mutability.class );
+				if ( customTypeMutabilityAnn != null ) {
+					final Class<? extends MutabilityPlan<?>> mutability = customTypeMutabilityAnn.value();
+					return resolveMutability( mutability );
+				}
+
+				final Immutable customTypeImmutableAnn = customTypeImpl.getAnnotation( Immutable.class );
+				if ( customTypeImmutableAnn != null ) {
 					return ImmutableMutabilityPlan.instance();
 				}
 			}
@@ -997,6 +1030,23 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			// generally, this will trigger usage of the `JavaType#getMutabilityPlan`
 			return null;
 		};
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private <T> MutabilityPlan<T> resolveMutability(Class<? extends MutabilityPlan> mutability) {
+		if ( mutability.equals( Immutability.class ) ) {
+			return Immutability.instance();
+		}
+
+		if ( mutability.equals( ImmutableMutabilityPlan.class ) ) {
+			return ImmutableMutabilityPlan.instance();
+		}
+
+		if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( mutability );
+		}
+
+		return getManagedBeanRegistry().getBean( mutability ).getBeanInstance();
 	}
 
 	private void normalSupplementalDetails(XProperty attributeXProperty) {
@@ -1065,10 +1115,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	private static Class<? extends BasicJavaType<?>> normalizeJavaType(Class<? extends BasicJavaType<?>> javaType) {
 		return javaType;
-	}
-
-	private Class<? extends MutabilityPlan<?>> normalizeMutability(Class<? extends MutabilityPlan<?>> mutability) {
-		return mutability;
 	}
 
 	private java.lang.reflect.Type resolveJavaType(XClass returnedClassOrElement) {

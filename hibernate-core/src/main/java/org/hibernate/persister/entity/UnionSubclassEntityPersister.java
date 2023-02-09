@@ -8,6 +8,7 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,6 +40,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
@@ -528,26 +530,16 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		// Collect all selectables of every entity subtype and group by selection expression as well as table name
 		final LinkedHashMap<String, Map<String, SelectableMapping>> selectables = new LinkedHashMap<>();
-		final SelectableConsumer selectableConsumer = (i, selectable) ->
-			selectables.computeIfAbsent( selectable.getSelectionExpression(), k -> new HashMap<>() )
-					.put( selectable.getContainingTableExpression(), selectable );
 		// Collect the concrete subclass table names for the treated entity names
 		final Set<String> treatedTableNames = new HashSet<>( treated.size() );
 		for ( String subclassName : treated ) {
 			final UnionSubclassEntityPersister subPersister =
 					(UnionSubclassEntityPersister) metamodel.getEntityDescriptor( subclassName );
-			for ( String subclassTableName : subPersister.getSubclassTableNames() ) {
-				if ( ArrayHelper.indexOf( subclassSpaces, subclassTableName ) != -1 ) {
-					treatedTableNames.add( subclassTableName );
-				}
-			}
-			subPersister.getIdentifierMapping().forEachSelectable( selectableConsumer );
-			if ( subPersister.getVersionMapping() != null ) {
-				subPersister.getVersionMapping().forEachSelectable( selectableConsumer );
-			}
-			subPersister.visitSubTypeAttributeMappings(
-					attributeMapping -> attributeMapping.forEachSelectable( selectableConsumer )
-			);
+			// Collect all the real (non-abstract) table names
+			treatedTableNames.addAll( Arrays.asList( subPersister.getConstraintOrderedTableNameClosure() ) );
+			// Collect selectables grouped by the table names in which they appear
+			// TODO: we could cache this
+			subPersister.collectSelectableOwners( selectables );
 		}
 
 		// Create a union sub-query for the table names, like generateSubquery(PersistentClass model, Mapping mapping)
@@ -555,8 +547,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				.append( "( " );
 		final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender( buf );
 
-		for ( String name : getSubclassEntityNames() ) {
-			final AbstractEntityPersister persister = (AbstractEntityPersister) metamodel.findEntityDescriptor( name );
+		for ( EntityMappingType mappingType : getSubMappingTypes() ) {
+			final AbstractEntityPersister persister = (AbstractEntityPersister) mappingType;
 			final String subclassTableName = persister.getTableName();
 			if ( treatedTableNames.contains( subclassTableName ) ) {
 				if ( buf.length() > 2 ) {
@@ -585,6 +577,34 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 		return buf.append( " )" ).toString();
+	}
+
+	private void collectSelectableOwners(LinkedHashMap<String, Map<String, SelectableMapping>> selectables) {
+		if ( isAbstract() ) {
+			for ( EntityMappingType subMappingType : getSubMappingTypes() ) {
+				if ( !subMappingType.isAbstract() ) {
+					( (UnionSubclassEntityPersister) subMappingType ).collectSelectableOwners( selectables );
+				}
+			}
+		}
+		else {
+			final SelectableConsumer selectableConsumer = (i, selectable) -> {
+				Map<String, SelectableMapping> selectableMapping = selectables.computeIfAbsent(
+						selectable.getSelectionExpression(),
+						k -> new HashMap<>()
+				);
+				selectableMapping.put( getTableName(), selectable );
+			};
+			getIdentifierMapping().forEachSelectable( selectableConsumer );
+			if ( getVersionMapping() != null ) {
+				getVersionMapping().forEachSelectable( selectableConsumer );
+			}
+			final AttributeMappingsList attributeMappings = getAttributeMappings();
+			final int size = attributeMappings.size();
+			for ( int i = 0; i < size; i++ ) {
+				attributeMappings.get( i ).forEachSelectable( selectableConsumer );
+			}
+		}
 	}
 
 	@Override

@@ -60,6 +60,8 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 
 		private final Object[] tuple;
 
+		private final int size;
+
 		private final Map<String, Object> aliasToValue = new LinkedHashMap<>();
 		private final Map<String, String> aliasReferences = new LinkedHashMap<>();
 
@@ -75,9 +77,13 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 			}
 			this.tuple = tuple;
 			for ( int i = 0; i < tuple.length; i++ ) {
-				aliasToValue.put( aliases[i], tuple[i] );
-				aliasReferences.put( aliases[i].toLowerCase(), aliases[i] );
+				final String alias = aliases[i];
+				if ( alias != null ) {
+					aliasToValue.put( alias, tuple[i] );
+					aliasReferences.put( alias.toLowerCase(), alias );
+				}
 			}
+			size = tuple.length;
 		}
 
 		@Override
@@ -108,7 +114,7 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 			if ( i < 0 ) {
 				throw new IllegalArgumentException( "requested tuple index must be greater than zero" );
 			}
-			if ( i >= aliasToValue.size() ) {
+			if ( i >= size ) {
 				throw new IllegalArgumentException( "requested tuple index exceeds actual tuple size" );
 			}
 			return tuple[i];
@@ -122,7 +128,7 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 
 		@Override
 		public List<TupleElement<?>> getElements() {
-			List<TupleElement<?>> elements = new ArrayList<>( aliasToValue.size() );
+			List<TupleElement<?>> elements = new ArrayList<>( size );
 
 			for ( Map.Entry<String, Object> entry : aliasToValue.entrySet() ) {
 				elements.add( new NativeTupleElementImpl<>( getValueClass( entry.getValue() ), entry.getKey() ) );

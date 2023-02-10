@@ -814,7 +814,7 @@ There are two very important function for working with dates and times.
 
 The special function `extract()` obtains a single field of a date, time, or datetime.
 
-Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time` and more.
+Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time`, `epoch` and more.
 For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
 
 ====

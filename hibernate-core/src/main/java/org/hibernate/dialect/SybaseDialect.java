@@ -300,8 +300,13 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		//TODO!!
-		return "datepart(?1,?2)";
+		if ( unit == TemporalUnit.EPOCH ) {
+			return "datediff(second, '1970-01-01 00:00:00', ?2)";
+		}
+		else {
+			//TODO!!
+			return "datepart(?1,?2)";
+		}
 	}
 
 	@Override

@@ -58,5 +58,12 @@ public @interface OrderBy {
 	/**
 	 * The native SQL expression used to sort the collection elements.
 	 */
-	String clause();
+	String value() default "";
+	/**
+	 * The native SQL expression used to sort the collection elements.
+	 *
+	 * @deprecated this member will be removed, use {@link #value()} instead
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
+	String clause() default "";
 }

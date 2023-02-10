@@ -1370,7 +1370,15 @@ public abstract class CollectionBinder {
 		if ( ordered ) {
 			// we can only apply the sql-based order by up front.  The jpa order by has to wait for second pass
 			if ( sqlOrderBy != null ) {
-				collection.setOrderBy( sqlOrderBy.clause() );
+				if ( !sqlOrderBy.value().isEmpty() ) {
+					collection.setOrderBy( sqlOrderBy.value() );
+				}
+				else if ( !sqlOrderBy.clause().isEmpty() ) {
+					collection.setOrderBy( sqlOrderBy.clause() );
+				}
+				else {
+					throw new AnnotationException("'@OrderBy' annotation must specify a 'value' to order by");
+				}
 			}
 		}
 

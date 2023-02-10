@@ -30,7 +30,7 @@ public class Troop implements Serializable {
 	private Set<Soldier> soldiers;
 
 	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
-	@OrderBy(clause = "name desc")
+	@OrderBy("name desc")
 	@org.hibernate.annotations.Cascade({org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	public Set<Soldier> getSoldiers() {
 		return soldiers;

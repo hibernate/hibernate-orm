@@ -367,7 +367,7 @@ public class EntityOfMaps {
 
 	@ElementCollection
 	@MapKeyColumn( name = "ordered_component_key")
-	@OrderBy( clause = "ordered_component_key, ordered_component_key" )
+	@OrderBy( "ordered_component_key, ordered_component_key" )
 	@CollectionTable(name = "EntityOfMaps_comp_basic2")
 	public Map<String, SimpleComponent> getComponentByBasicOrdered() {
 		return componentByBasicOrdered;

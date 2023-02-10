@@ -69,7 +69,7 @@ public class Zoo {
 
 	@OneToMany
 	@JoinColumn
-	@org.hibernate.annotations.OrderBy( clause = "weight" )
+	@org.hibernate.annotations.OrderBy( "weight" )
 	public Set<Lion> getLions() {
 		return lions;
 	}

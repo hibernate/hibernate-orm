@@ -4199,6 +4199,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						resolveExpressibleTypeBasic( Integer.class ),
 						nodeBuilder
 				);
+			case HqlParser.EPOCH:
+				return new SqmExtractUnit<>(
+						TemporalUnit.EPOCH,
+						resolveExpressibleTypeBasic( Long.class ),
+						nodeBuilder
+				);
 		}
 		throw new ParsingException( "Unsupported datetime field [" + ctx.getText() + "]" );
 	}

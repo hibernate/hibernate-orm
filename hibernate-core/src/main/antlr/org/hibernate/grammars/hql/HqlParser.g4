@@ -1473,6 +1473,7 @@ datetimeField
 	| MINUTE
 	| SECOND
 	| NANOSECOND
+	| EPOCH
 	;
 
 dayField
@@ -1577,6 +1578,7 @@ rollup
 	| EMPTY
 	| END
 	| ENTRY
+	| EPOCH
 	| ERROR
 	| ESCAPE
 	| EVERY

@@ -12,6 +12,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -112,7 +113,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 							entry,
 							entryCount,
 							session,
-							jdbcValueBindings::bindValue
+							jdbcValueBindings
 					);
 					mutationExecutor.execute( entry, null, null, null, session );
 				}

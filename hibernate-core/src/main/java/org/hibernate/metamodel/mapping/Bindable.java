@@ -218,14 +218,14 @@ public interface Bindable extends JdbcMappingContainer {
 	@FunctionalInterface
 	interface JdbcValuesConsumer extends JdbcValuesBiConsumer<Object, Object> {
 		@Override
-		default void consume(int selectionIndex, Object o, Object o2, Object jdbcValue, JdbcMapping jdbcMapping) {
-			consume( selectionIndex, jdbcValue, jdbcMapping );
+		default void consume(int valueIndex, Object o, Object o2, Object jdbcValue, JdbcMapping jdbcMapping) {
+			consume( valueIndex, jdbcValue, jdbcMapping );
 		}
 
 		/**
 		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
 		 */
-		void consume(int selectionIndex, Object jdbcValue, JdbcMapping jdbcMapping);
+		void consume(int valueIndex, Object jdbcValue, JdbcMapping jdbcMapping);
 	}
 
 	/**
@@ -236,6 +236,6 @@ public interface Bindable extends JdbcMappingContainer {
 		/**
 		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
 		 */
-		void consume(int selectionIndex, X x, Y y, Object jdbcValue, JdbcMapping jdbcMapping);
+		void consume(int valueIndex, X x, Y y, Object jdbcValue, JdbcMapping jdbcMapping);
 	}
 }

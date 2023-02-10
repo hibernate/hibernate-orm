@@ -490,21 +490,36 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	}
 
 	@Override
-	default void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+	default <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		int span = 0;
 		if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
 				final AttributeMapping attributeMapping = getAttributeMapping( i );
-				attributeMapping.breakDownJdbcValues( values[ i ], valueConsumer, session );
+				span += attributeMapping.breakDownJdbcValues( values[ i ], offset + span, x, y, valueConsumer, session );
 			}
 		}
 		else {
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
 				final AttributeMapping attributeMapping = getAttributeMapping( i );
 				final Object attributeValue = attributeMapping.getPropertyAccess().getGetter().get( domainValue );
-				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
+				span += attributeMapping.breakDownJdbcValues(
+						attributeValue,
+						offset + span,
+						x,
+						y,
+						valueConsumer,
+						session
+				);
 			}
 		}
+		return span;
 	}
 
 	/**

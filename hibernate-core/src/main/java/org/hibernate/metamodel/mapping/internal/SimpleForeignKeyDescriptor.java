@@ -462,12 +462,19 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
-		return 1;
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( disassemble( domainValue, session ), keySide.getModelPart() );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), keySide.getModelPart() );
+		return getJdbcTypeCount();
 	}
 
 	@Override

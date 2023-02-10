@@ -532,23 +532,39 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
-			keySelectableMappings.forEachSelectable( (index, selectable) -> {
-				valueConsumer.consume( null, selectable );
-			} );
+			final int jdbcTypeCount = keySelectableMappings.getJdbcTypeCount();
+			for ( int i = 0; i < jdbcTypeCount; i++ ) {
+				valueConsumer.consume( offset + i, x, y, null, keySelectableMappings.getSelectable( i ) );
+			}
+			return jdbcTypeCount;
 		}
 		else if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
-			keySelectableMappings.forEachSelectable( (index, selectable) -> {
-				valueConsumer.consume( values[ index ], selectable );
-			} );
+			final int jdbcTypeCount = keySelectableMappings.getJdbcTypeCount();
+			for ( int i = 0; i < jdbcTypeCount; i++ ) {
+				valueConsumer.consume( offset + i, x, y, values[i], keySelectableMappings.getSelectable( i ) );
+			}
+			return jdbcTypeCount;
 		}
 		else {
 			final MutableInteger columnPosition = new MutableInteger();
-			keySide.getModelPart().breakDownJdbcValues(
+			return keySide.getModelPart().breakDownJdbcValues(
 					domainValue,
-					(jdbcValue, jdbcValueMapping) -> valueConsumer.consume(
+					offset,
+					x,
+					y,
+					(valueIndex, arg1, arg2, jdbcValue, jdbcValueMapping) -> valueConsumer.consume(
+							offset,
+							arg1,
+							arg2,
 							jdbcValue,
 							keySelectableMappings.getSelectable( columnPosition.getAndIncrement() )
 					),

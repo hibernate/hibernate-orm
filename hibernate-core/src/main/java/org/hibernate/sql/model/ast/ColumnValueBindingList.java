@@ -40,7 +40,7 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 	}
 
 	@Override
-	public void consume(Object value, SelectableMapping jdbcValueMapping) {
+	public void consume(int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
 		final ColumnValueBinding columnValueBinding = createValueBinding(
 				jdbcValueMapping.getSelectionExpression(),
 				value == null ? null : jdbcValueMapping.getWriteExpression(),

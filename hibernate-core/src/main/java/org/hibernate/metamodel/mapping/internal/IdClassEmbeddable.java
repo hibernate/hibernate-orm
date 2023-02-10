@@ -367,11 +367,20 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		attributeMappings.forEach( (attribute) -> {
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		int span = 0;
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attribute = attributeMappings.get( i );
 			final Object attributeValue = attribute.getValue( domainValue );
-			attribute.breakDownJdbcValues( attributeValue, valueConsumer, session );
-		} );
+			span +=  attribute.breakDownJdbcValues( attributeValue, offset + span, x, y, valueConsumer, session );
+		}
+		return span;
 	}
 
 	@Override

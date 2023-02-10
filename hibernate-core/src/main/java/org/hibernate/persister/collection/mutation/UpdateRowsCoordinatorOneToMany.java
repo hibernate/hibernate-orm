@@ -88,11 +88,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 						entry,
 						entryPosition,
 						session,
-						(jdbcValue, jdbcValueMapping) -> jdbcValueBindings.bindValue(
-								jdbcValue,
-								jdbcValueMapping,
-								ParameterUsage.RESTRICT
-						)
+						jdbcValueBindings
 				);
 
 				mutationExecutor.execute( entry, null, null, null, session );
@@ -150,11 +146,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 						entry,
 						entryPosition,
 						session,
-						(jdbcValue, jdbcValueMapping, usage) -> jdbcValueBindings.bindValue(
-								jdbcValue,
-								jdbcValueMapping,
-								usage
-						)
+						jdbcValueBindings
 				);
 
 				mutationExecutor.execute( entry, null, null, null, session );

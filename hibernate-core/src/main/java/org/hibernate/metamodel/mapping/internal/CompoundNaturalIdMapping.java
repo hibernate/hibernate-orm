@@ -313,12 +313,19 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		int span = 0;
 		if ( domainValue == null ) {
-			attributes.forEach(
-					attributeMapping -> attributeMapping.breakDownJdbcValues( null, valueConsumer, session )
-			);
-			return;
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				span += attributes.get( i ).breakDownJdbcValues( null, offset + span, x, y, valueConsumer, session );
+			}
+			return span;
 		}
 
 		assert domainValue instanceof Object[];
@@ -327,8 +334,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		assert values.length == attributes.size();
 
 		for ( int i = 0; i < attributes.size(); i++ ) {
-			attributes.get( i ).breakDownJdbcValues( values[ i ], valueConsumer, session );
+			span += attributes.get( i ).breakDownJdbcValues( values[ i ], offset + span, x, y, valueConsumer, session );
 		}
+		return span;
 	}
 
 	@Override

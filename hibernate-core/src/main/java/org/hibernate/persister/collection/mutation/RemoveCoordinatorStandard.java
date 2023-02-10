@@ -9,7 +9,6 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -100,13 +99,10 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 			final ForeignKeyDescriptor fkDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
 			fkDescriptor.getKeyPart().decompose(
 					key,
-					(jdbcValue, jdbcValueMapping) -> {
-						jdbcValueBindings.bindValue(
-								jdbcValue,
-								jdbcValueMapping,
-								ParameterUsage.RESTRICT
-						);
-					},
+					0,
+					jdbcValueBindings,
+					null,
+					RowMutationOperations.DEFAULT_RESTRICTOR,
 					session
 			);
 

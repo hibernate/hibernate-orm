@@ -243,9 +243,12 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		if ( !(mapping instanceof PluralAttributeMapping) ) {
 			mapping.decompose(
 					value,
-					(jdbcValue, selectableMapping) -> {
+					0,
+					jdbcValueBindings,
+					null,
+					(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
 						if ( selectableMapping.isInsertable() ) {
-							jdbcValueBindings.bindValue(
+							bindings.bindValue(
 									jdbcValue,
 									entityPersister().physicalTableNameForMutation( selectableMapping ),
 									selectableMapping.getSelectionExpression(),

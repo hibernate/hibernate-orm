@@ -675,10 +675,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object attributeLockValue) {
 		attributeMapping.decompose(
 				attributeLockValue,
-				(jdbcValue, columnMapping) -> {
+				0,
+				analysis,
+				null,
+				(valueIndex, updateAnalysis, noop, jdbcValue, columnMapping) -> {
 					if ( !columnMapping.isFormula() ) {
 						final EntityTableMapping tableMapping = entityPersister().getPhysicalTableMappingForMutation( columnMapping );
-						analysis.registerColumnOptLock( tableMapping, columnMapping.getSelectionExpression(), jdbcValue );
+						updateAnalysis.registerColumnOptLock( tableMapping, columnMapping.getSelectionExpression(), jdbcValue );
 					}
 				},
 				session
@@ -854,11 +857,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object values) {
 		attributeMapping.decompose(
 				values,
-				(jdbcValue, jdbcMapping) -> {
+				0,
+				jdbcValueBindings,
+				tableMapping,
+				(valueIndex, bindings, table, jdbcValue, jdbcMapping) -> {
 					if ( !jdbcMapping.isFormula() && jdbcMapping.isUpdateable() ) {
-						jdbcValueBindings.bindValue(
+						bindings.bindValue(
 								jdbcValue,
-								tableMapping.getTableName(),
+								table.getTableName(),
 								jdbcMapping.getSelectionExpression(),
 								ParameterUsage.SET
 						);

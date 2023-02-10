@@ -319,29 +319,47 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		attributeMappings.forEach( (attribute) -> {
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+		int span = 0;
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attribute = attributeMappings.get( i );
 			final Object attributeValue = attribute.getValue( domainValue );
-			attribute.breakDownJdbcValues( attributeValue, valueConsumer, session );
-		} );
+			span += attribute.breakDownJdbcValues( attributeValue, offset + span, x, y, valueConsumer, session );
+		}
+		return span;
 	}
 
 	@Override
-	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+	public <X, Y> int decompose(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
 		if ( idMapping.getIdClassEmbeddable() != null ) {
 			// during decompose, if there is an IdClass for the entity the
 			// incoming `domainValue` should be an instance of that IdClass
-			idMapping.getIdClassEmbeddable().decompose( domainValue, valueConsumer, session );
+			return idMapping.getIdClassEmbeddable().decompose( domainValue, offset, x, y, valueConsumer, session );
 		}
 		else {
+			int span = 0;
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				attributeMapping.decompose(
+				span += attributeMapping.decompose(
 						attributeMapping.getValue( domainValue ),
+						offset + span,
+						x,
+						y,
 						valueConsumer,
 						session
 				);
 			}
+			return span;
 		}
 	}
 

@@ -71,7 +71,7 @@ public class CompoundNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 
 		naturalIdMapping().breakDownJdbcValues(
 				bindValue,
-				(jdbcValue, jdbcValueMapping) -> {
+				(valueIndex, jdbcValue, jdbcValueMapping) -> {
 					final Expression columnReference = resolveColumnReference(
 							rootTableGroup,
 							jdbcValueMapping,

@@ -7,11 +7,11 @@
 package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.metamodel.mapping.ModelPart.JdbcValueConsumer;
-import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -25,6 +25,12 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
  * @author Steve Ebersole
  */
 public class RowMutationOperations {
+	public static final ModelPart.JdbcValueBiConsumer<JdbcValueBindings, Object> DEFAULT_RESTRICTOR = (valueIndex, jdbcValueBindings, o, value, jdbcValueMapping) -> {
+		jdbcValueBindings.bindValue( value, jdbcValueMapping, ParameterUsage.RESTRICT );
+	};
+	public static final ModelPart.JdbcValueBiConsumer<JdbcValueBindings, Object> DEFAULT_VALUE_SETTER = (valueIndex, jdbcValueBindings, o, value, jdbcValueMapping) -> {
+		jdbcValueBindings.bindValue( value, jdbcValueMapping, ParameterUsage.SET );
+	};
 	private final CollectionMutationTarget target;
 
 	private final OperationProducer insertRowOperationProducer;
@@ -163,7 +169,7 @@ public class RowMutationOperations {
 				Object rowValue,
 				int rowPosition,
 				SharedSessionContractImplementor session,
-				JdbcValueConsumer restrictor);
+				JdbcValueBindings jdbcValueBindings);
 	}
 
 	@FunctionalInterface
@@ -174,23 +180,7 @@ public class RowMutationOperations {
 				Object rowValue,
 				int rowPosition,
 				SharedSessionContractImplementor session,
-				ValuesBindingConsumer valuesBindingConsumer);
+				JdbcValueBindings jdbcValueBindings);
 	}
 
-	/**
-	 * Consumer for insert-value bindings
-	 *
-	 * Unfortunate we need `usage` here, but it is needed to account for
-	 * update-as-insert handling of one-to-many handling
-	 */
-	@FunctionalInterface
-	public interface ValuesBindingConsumer extends JdbcValueConsumer {
-		void consumeJdbcValueBinding(Object value, SelectableMapping jdbcValueMapping, ParameterUsage usage);
-
-		@Override
-		default void consume(Object value, SelectableMapping jdbcValueMapping) {
-			// insert values will be SET most of the time
-			consumeJdbcValueBinding( value, jdbcValueMapping, ParameterUsage.SET );
-		}
-	}
 }

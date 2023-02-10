@@ -206,43 +206,55 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return null;
 	}
 
-	public void breakDownJdbcValues(Object domainValue, ModelPart.JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		if ( domainValue == null ) {
-			valueConsumer.consume( null, getDiscriminatorPart() );
-			valueConsumer.consume( null, getKeyPart() );
-			return;
-		}
-
-		final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
-
-		final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
-		final Object disassembledDiscriminator = getDiscriminatorPart().disassemble( discriminator, session );
-		valueConsumer.consume( disassembledDiscriminator, getDiscriminatorPart() );
-
-		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
-		final Object identifier = identifierMapping.getIdentifier( domainValue );
-		final Object disassembledKey = getKeyPart().disassemble( identifier, session );
-		valueConsumer.consume( disassembledKey, getKeyPart() );
-	}
-
-	public void decompose(
+	public <X, Y> int breakDownJdbcValues(
+			int offset,
+			X x,
+			Y y,
 			Object domainValue,
-			ModelPart.JdbcValueConsumer valueConsumer,
+			ModelPart.JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
-			valueConsumer.consume( null, getDiscriminatorPart() );
-			valueConsumer.consume( null, getKeyPart() );
-			return;
+			valueConsumer.consume( offset, x, y, null, getDiscriminatorPart() );
+			valueConsumer.consume( offset + 1, x, y, null, getKeyPart() );
+			return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 		}
+		else {
+			final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
 
-		final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
+			final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
+			final Object disassembledDiscriminator = getDiscriminatorPart().disassemble( discriminator, session );
+			valueConsumer.consume( offset, x, y, disassembledDiscriminator, getDiscriminatorPart() );
 
-		final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
-		getDiscriminatorPart().decompose( discriminator, valueConsumer, session );
+			final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+			final Object identifier = identifierMapping.getIdentifier( domainValue );
+			final Object disassembledKey = getKeyPart().disassemble( identifier, session );
+			valueConsumer.consume( offset + 1, x, y, disassembledKey, getKeyPart() );
+		}
+		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+	}
 
-		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
-		final Object identifier = identifierMapping.getIdentifier( domainValue );
-		getKeyPart().decompose( identifier, valueConsumer, session );
+	public <X, Y> int decompose(
+			int offset,
+			X x,
+			Y y,
+			Object domainValue,
+			ModelPart.JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		if ( domainValue == null ) {
+			valueConsumer.consume( offset, x, y, null, getDiscriminatorPart() );
+			valueConsumer.consume( offset + 1, x, y, null, getKeyPart() );
+		}
+		else {
+			final EntityMappingType concreteMappingType = determineConcreteType( domainValue, session );
+
+			final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
+			getDiscriminatorPart().decompose( discriminator, offset, x, y, valueConsumer, session );
+
+			final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+			final Object identifier = identifierMapping.getIdentifier( domainValue );
+			getKeyPart().decompose( identifier, offset + 1, x, y, valueConsumer, session );
+		}
+		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 	}
 
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {

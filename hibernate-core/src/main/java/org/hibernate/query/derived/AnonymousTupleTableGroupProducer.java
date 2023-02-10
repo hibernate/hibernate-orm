@@ -374,9 +374,12 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}

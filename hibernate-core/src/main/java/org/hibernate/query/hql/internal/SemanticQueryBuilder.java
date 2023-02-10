@@ -573,10 +573,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				if ( subCtx instanceof HqlParser.AssignmentContext ) {
 					final HqlParser.AssignmentContext assignmentContext = (HqlParser.AssignmentContext) subCtx;
 					//noinspection unchecked
-					updateStatement.applyAssignment(
-							(SqmPath<Object>) consumeDomainPath( (HqlParser.SimplePathContext) assignmentContext.getChild( 0 ) ),
-							(SqmExpression<?>) assignmentContext.getChild( 2 ).accept( this )
-					);
+					final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( (HqlParser.SimplePathContext) assignmentContext.getChild( 0 ) );
+					final Class<?> targetPathJavaType = targetPath.getJavaType();
+					final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
+					final ParseTree rightSide = assignmentContext.getChild( 2 );
+					final HqlParser.ExpressionContext expressionContext;
+					final Map<Class<?>, Enum<?>> possibleEnumValues;
+					final SqmExpression<?> value;
+					if ( isEnum && rightSide.getChild( 0 ) instanceof HqlParser.ExpressionContext
+							&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) rightSide.getChild( 0 ) ) ) != null ) {
+						value = resolveEnumShorthandLiteral(
+								expressionContext,
+								possibleEnumValues,
+								targetPathJavaType
+						);
+					}
+					else {
+						value = (SqmExpression<?>) rightSide.accept( this );
+					}
+					updateStatement.applyAssignment( targetPath, value );
 				}
 			}
 

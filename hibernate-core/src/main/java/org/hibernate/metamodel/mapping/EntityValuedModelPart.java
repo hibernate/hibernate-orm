@@ -101,20 +101,24 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	}
 
 	@Override
-	default int forEachDisassembledJdbcValue(
+	default <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return getEntityMappingType().forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+		return getEntityMappingType().forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
-	default int forEachJdbcValue(
+	default <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
 			SharedSessionContractImplementor session) {
-		return getEntityMappingType().forEachJdbcValue( value, offset, consumer, session );
+		return getEntityMappingType().forEachJdbcValue( value, offset, x, y, consumer, session );
 	}
 }

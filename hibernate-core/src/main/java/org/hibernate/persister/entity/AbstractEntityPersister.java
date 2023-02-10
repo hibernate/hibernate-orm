@@ -5840,25 +5840,29 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return getIdentifierMapping()
-				.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+				.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
 			SharedSessionContractImplementor session) {
 		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
 		final Object identifier = value == null ? null
 				: identifierMapping.disassemble( identifierMapping.getIdentifier( value ), session );
-		return identifierMapping.forEachDisassembledJdbcValue( identifier, offset, consumer, session );
+		return identifierMapping.forEachDisassembledJdbcValue( identifier, offset, x, y, consumer, session );
 	}
 
 	@Override

@@ -563,21 +563,25 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return delegate.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+		return delegate.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
 			SharedSessionContractImplementor session) {
-		return delegate.forEachJdbcValue( value, offset, consumer, session );
+		return delegate.forEachJdbcValue( value, offset, x, y, consumer, session );
 	}
 
 	@Override

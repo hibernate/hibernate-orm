@@ -88,14 +88,16 @@ public interface JdbcParameterBindings {
 		return bindable.forEachJdbcValue(
 				value,
 				offset,
-				(selectionIndex, jdbcValue, type) -> {
+				jdbcParameters,
+				session.getFactory().getTypeConfiguration(),
+				(selectionIndex, params, typeConfiguration, jdbcValue, type) -> {
 					addBinding(
-						jdbcParameters.get( selectionIndex ),
+						params.get( selectionIndex ),
 						new JdbcParameterBindingImpl(
 								BindingTypeHelper.INSTANCE.resolveBindType(
 										jdbcValue,
 										type,
-										session.getFactory().getTypeConfiguration()
+										typeConfiguration
 								),
 								jdbcValue
 						)

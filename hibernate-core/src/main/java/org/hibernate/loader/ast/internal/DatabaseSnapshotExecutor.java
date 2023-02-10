@@ -17,11 +17,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.sql.FromClauseIndex;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -165,7 +163,6 @@ class DatabaseSnapshotExecutor {
 
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				id,
-				Clause.WHERE,
 				entityDescriptor.getIdentifierMapping(),
 				jdbcParameters,
 				session

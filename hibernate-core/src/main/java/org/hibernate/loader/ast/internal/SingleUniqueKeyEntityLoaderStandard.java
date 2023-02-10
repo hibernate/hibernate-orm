@@ -23,7 +23,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -88,7 +87,6 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				ukValue,
-				Clause.WHERE,
 				uniqueKeyAttribute,
 				jdbcParameters,
 				session
@@ -145,7 +143,6 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				ukValue,
-				Clause.WHERE,
 				uniqueKeyAttribute,
 				jdbcParameters,
 				session

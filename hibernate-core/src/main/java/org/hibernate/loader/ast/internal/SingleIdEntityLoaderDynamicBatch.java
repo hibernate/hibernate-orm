@@ -21,8 +21,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -120,7 +118,6 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		for ( int i = 0; i < numberOfIds; i++ ) {
 			offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 					idsToLoad[i],
-					Clause.WHERE,
 					offset,
 					getLoadable().getIdentifierMapping(),
 					jdbcParameters,

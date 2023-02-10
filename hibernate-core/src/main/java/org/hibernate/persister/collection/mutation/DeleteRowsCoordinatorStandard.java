@@ -101,9 +101,6 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 						deletionCount,
 						session,
 						(jdbcValue, jdbcValueMapping) -> {
-							if ( jdbcValueMapping.isFormula() ) {
-								return;
-							}
 							jdbcValueBindings.bindValue(
 									jdbcValue,
 									jdbcValueMapping,

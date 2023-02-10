@@ -221,12 +221,14 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, jdbcMapping );
+		valuesConsumer.consume( offset, x, y, value, jdbcMapping );
 		return getJdbcTypeCount();
 	}
 

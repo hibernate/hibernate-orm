@@ -280,12 +280,14 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
@@ -306,12 +308,14 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 

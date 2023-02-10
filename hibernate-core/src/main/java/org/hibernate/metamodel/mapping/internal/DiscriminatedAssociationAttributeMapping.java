@@ -266,21 +266,27 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		if ( value != null ) {
 			if ( value.getClass().isArray() ) {
 				final Object[] values = (Object[]) value;
 				valuesConsumer.consume(
 						offset,
+						x,
+						y,
 						values[0],
 						discriminatorMapping.getDiscriminatorPart().getJdbcMapping()
 				);
 				valuesConsumer.consume(
 						offset + 1,
+						x,
+						y,
 						values[1],
 						discriminatorMapping.getKeyPart().getJdbcMapping()
 				);
@@ -294,6 +300,8 @@ public class DiscriminatedAssociationAttributeMapping
 				final Object disassembledDiscriminator = discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session );
 				valuesConsumer.consume(
 						offset,
+						x,
+						y,
 						disassembledDiscriminator,
 						discriminatorMapping.getDiscriminatorPart().getJdbcMapping()
 				);
@@ -303,6 +311,8 @@ public class DiscriminatedAssociationAttributeMapping
 				final Object disassembledKey = discriminatorMapping.getKeyPart().disassemble( identifier, session );
 				valuesConsumer.consume(
 						offset + 1,
+						x,
+						y,
 						disassembledKey,
 						discriminatorMapping.getKeyPart().getJdbcMapping()
 				);

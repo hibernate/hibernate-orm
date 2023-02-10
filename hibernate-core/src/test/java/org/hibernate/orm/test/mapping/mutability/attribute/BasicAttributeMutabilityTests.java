@@ -46,7 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = BasicAttributeMutabilityTests.TheEntity.class )
 @SessionFactory
 public class BasicAttributeMutabilityTests {
-	private static final Instant START = Instant.now();
+	private static final Instant START = Instant.ofEpochMilli( 1676049527493L );
 
 	@Test
 	public void verifyDomainModel(DomainModelScope domainModelScope, SessionFactoryScope sfSessionFactoryScope) {

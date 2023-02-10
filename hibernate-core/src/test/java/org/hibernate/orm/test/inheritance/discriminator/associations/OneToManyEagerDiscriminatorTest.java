@@ -112,7 +112,7 @@ public class OneToManyEagerDiscriminatorTest {
 	@DiscriminatorColumn(name = "target_type", discriminatorType = DiscriminatorType.INTEGER)
 	public abstract static class ValueBase implements Serializable {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		private Long id;
 
 		public Long getId() {

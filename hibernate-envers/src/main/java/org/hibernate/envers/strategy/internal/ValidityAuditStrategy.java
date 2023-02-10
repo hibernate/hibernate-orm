@@ -33,7 +33,6 @@ import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentDat
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
-import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
@@ -714,34 +713,45 @@ public class ValidityAuditStrategy implements AuditStrategy {
 				int index,
 				PreparedStatement statement,
 				SessionImplementor session) {
-			final MutableInteger position = new MutableInteger( index );
-			modelPart.breakDownJdbcValues(
-					value,
-					(jdbcValue, jdbcValueMapping) -> {
-						try {
-							//noinspection unchecked
-							jdbcValueMapping.getJdbcMapping().getJdbcValueBinder().bind(
-									statement,
-									jdbcValue,
-									position.getAndIncrease(),
-									session
-							);
-						}
-						catch (SQLException e) {
-							throw session.getJdbcServices().getSqlExceptionHelper().convert(
-									e,
-									String.format(
-											Locale.ROOT,
-											"Error binding JDBC value relative to `%s`",
-											modelPart.getNavigableRole().getFullPath()
-									)
-							);
-						}
-					},
-					session
-			);
+			try {
+				return modelPart.breakDownJdbcValues(
+						value,
+						index,
+						statement,
+						session,
+						(valueIndex, preparedStatement, sessionImplementor, jdbcValue, jdbcValueMapping) -> {
+							try {
+								//noinspection unchecked
+								jdbcValueMapping.getJdbcMapping().getJdbcValueBinder().bind(
+										preparedStatement,
+										jdbcValue,
+										valueIndex,
+										sessionImplementor
+								);
+							}
+							catch (SQLException e) {
+								throw new NestedRuntimeException( e );
+							}
+						},
+						session
+				);
+			}
+			catch (NestedRuntimeException e) {
+				throw session.getJdbcServices().getSqlExceptionHelper().convert(
+						(SQLException) e.getCause(),
+						String.format(
+								Locale.ROOT,
+								"Error binding JDBC value relative to `%s`",
+								modelPart.getNavigableRole().getFullPath()
+						)
+				);
+			}
+		}
 
-			return modelPart.getJdbcTypeCount();
+		static class NestedRuntimeException extends RuntimeException {
+			public NestedRuntimeException(SQLException cause) {
+				super( cause );
+			}
 		}
 	}
 }

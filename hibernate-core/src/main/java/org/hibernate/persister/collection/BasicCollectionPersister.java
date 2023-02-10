@@ -11,6 +11,7 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -22,7 +23,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.CollectionTableMapping;
@@ -331,7 +331,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			Object rowValue,
 			int rowPosition,
 			SharedSessionContractImplementor session,
-			RowMutationOperations.ValuesBindingConsumer jdbcValueConsumer) {
+			JdbcValueBindings jdbcValueBindings) {
 		final PluralAttributeMapping attributeMapping = getAttributeMapping();
 
 		if ( key == null ) {
@@ -339,14 +339,24 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 
 		final ForeignKeyDescriptor foreignKey = attributeMapping.getKeyDescriptor();
-		foreignKey.getKeyPart().decompose( key, jdbcValueConsumer, session );
+		foreignKey.getKeyPart().decompose(
+				key,
+				0,
+				jdbcValueBindings,
+				null,
+				RowMutationOperations.DEFAULT_VALUE_SETTER,
+				session
+		);
 
 		final MutableInteger columnPositionCount = new MutableInteger();
 
 		if ( attributeMapping.getIdentifierDescriptor() != null ) {
 			getAttributeMapping().getIdentifierDescriptor().decompose(
 					collection.getIdentifier( rowValue, rowPosition ),
-					jdbcValueConsumer,
+					0,
+					jdbcValueBindings,
+					null,
+					RowMutationOperations.DEFAULT_VALUE_SETTER,
 					session
 			);
 		}
@@ -361,15 +371,17 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 			getAttributeMapping().getIndexDescriptor().decompose(
 					incrementIndexByBase( collection.getIndex( rowValue, rowPosition, this ) ),
-					(jdbcValue, jdbcValueMapping) -> {
+					0,
+					indexColumnIsSettable,
+					jdbcValueBindings,
+					(valueIndex, settable, bindings, jdbcValue, jdbcValueMapping) -> {
 						if ( !jdbcValueMapping.getContainingTableExpression().equals( getTableName() ) ) {
 							// indicates a many-to-many mapping and the index is contained on the
 							// associated entity table - we skip it here
 							return;
 						}
-						final int columnPosition = columnPositionCount.getAndIncrement();
-						if ( indexColumnIsSettable[columnPosition] ) {
-							jdbcValueConsumer.consume( jdbcValue, jdbcValueMapping );
+						if ( settable[valueIndex] ) {
+							bindings.bindValue( jdbcValue, jdbcValueMapping, ParameterUsage.SET );
 						}
 					},
 					session
@@ -380,10 +392,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 		attributeMapping.getElementDescriptor().decompose(
 				collection.getElement( rowValue ),
-				(jdbcValue, jdbcValueMapping) -> {
-					final int columnPosition = columnPositionCount.getAndIncrement();
-					if ( elementColumnIsSettable[columnPosition] ) {
-						jdbcValueConsumer.consume( jdbcValue, jdbcValueMapping );
+				0,
+				elementColumnIsSettable,
+				jdbcValueBindings,
+				(valueIndex, settable, bindings, jdbcValue, jdbcValueMapping) -> {
+					if ( settable[valueIndex] ) {
+						bindings.bindValue( jdbcValue, jdbcValueMapping, ParameterUsage.SET );
 					}
 				},
 				session
@@ -477,16 +491,19 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			Object entry,
 			int entryPosition,
 			SharedSessionContractImplementor session,
-			RowMutationOperations.ValuesBindingConsumer jdbcValueConsumer) {
+			JdbcValueBindings jdbcValueBindings) {
 		final Object element = collection.getElement( entry );
 		final CollectionPart elementDescriptor = getAttributeMapping().getElementDescriptor();
 		elementDescriptor.decompose(
 				element,
-				(jdbcValue, jdbcValueMapping) -> {
+				0,
+				jdbcValueBindings,
+				null,
+				(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
 					if ( !jdbcValueMapping.isUpdateable() || jdbcValueMapping.isFormula() ) {
 						return;
 					}
-					jdbcValueConsumer.consumeJdbcValueBinding(
+					bindings.bindValue(
 							jdbcValue,
 							jdbcValueMapping,
 							ParameterUsage.SET
@@ -502,29 +519,53 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			Object entry,
 			int entryPosition,
 			SharedSessionContractImplementor session,
-			ModelPart.JdbcValueConsumer restrictor) {
+			JdbcValueBindings jdbcValueBindings) {
 		if ( getAttributeMapping().getIdentifierDescriptor() != null ) {
 			final CollectionIdentifierDescriptor identifierDescriptor = getAttributeMapping().getIdentifierDescriptor();
 			final Object identifier = collection.getIdentifier( entry, entryPosition );
-			identifierDescriptor.decompose( identifier, restrictor, session );
+			identifierDescriptor.decompose(
+					identifier,
+					0,
+					jdbcValueBindings,
+					null,
+					RowMutationOperations.DEFAULT_RESTRICTOR,
+					session
+			);
 		}
 		else {
-			getAttributeMapping().getKeyDescriptor().getKeyPart().decompose( key, restrictor, session );
+			getAttributeMapping().getKeyDescriptor().getKeyPart().decompose(
+					key,
+					0,
+					jdbcValueBindings,
+					null,
+					RowMutationOperations.DEFAULT_RESTRICTOR,
+					session
+			);
 
 			if ( getAttributeMapping().getIndexDescriptor() != null && !indexContainsFormula ) {
 				final Object index = collection.getIndex( entry, entryPosition, getAttributeMapping().getCollectionDescriptor() );
 				final Object adjustedIndex = incrementIndexByBase( index );
-				getAttributeMapping().getIndexDescriptor().decompose( adjustedIndex, restrictor, session );
+				getAttributeMapping().getIndexDescriptor().decompose(
+						adjustedIndex,
+						0,
+						jdbcValueBindings,
+						null,
+						RowMutationOperations.DEFAULT_RESTRICTOR,
+						session
+				);
 			}
 			else {
 				final Object snapshotElement = collection.getSnapshotElement( entry, entryPosition );
 				getAttributeMapping().getElementDescriptor().decompose(
 						snapshotElement,
-						(jdbcValue, jdbcValueMapping) -> {
+						0,
+						jdbcValueBindings,
+						null,
+						(valueIndex, bindings, noop, jdbcValue, jdbcValueMapping) -> {
 							if ( jdbcValueMapping.isNullable() || jdbcValueMapping.isFormula() ) {
 								return;
 							}
-							restrictor.consume( jdbcValue, jdbcValueMapping );
+							bindings.bindValue( jdbcValue, jdbcValueMapping, ParameterUsage.RESTRICT );
 						},
 						session
 				);
@@ -616,30 +657,50 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			Object rowValue,
 			int rowPosition,
 			SharedSessionContractImplementor session,
-			ModelPart.JdbcValueConsumer restrictor) {
+			JdbcValueBindings jdbcValueBindings) {
 		final PluralAttributeMapping attributeMapping = getAttributeMapping();
 
 		if ( attributeMapping.getIdentifierDescriptor() != null ) {
-			attributeMapping.getIdentifierDescriptor().decompose( rowValue, restrictor, session );
+			attributeMapping.getIdentifierDescriptor().decompose(
+					rowValue,
+					0,
+					jdbcValueBindings,
+					null,
+					RowMutationOperations.DEFAULT_RESTRICTOR,
+					session
+			);
 		}
 		else {
-			getAttributeMapping().getKeyDescriptor().getKeyPart().decompose( keyValue, restrictor, session );
+			getAttributeMapping().getKeyDescriptor().getKeyPart().decompose(
+					keyValue,
+					0,
+					jdbcValueBindings,
+					null,
+					RowMutationOperations.DEFAULT_RESTRICTOR,
+					session
+			);
 
 			if ( hasPhysicalIndexColumn() ) {
 				attributeMapping.getIndexDescriptor().decompose(
 						incrementIndexByBase( rowValue ),
-						restrictor,
+						0,
+						jdbcValueBindings,
+						null,
+						RowMutationOperations.DEFAULT_RESTRICTOR,
 						session
 				);
 			}
 			else {
 				attributeMapping.getElementDescriptor().decompose(
 						rowValue,
-						(jdbcValue, jdbcValueMapping) -> {
+						0,
+						jdbcValueBindings,
+						null,
+						(valueIndex, bindings, noop, jdbcValue, jdbcValueMapping) -> {
 							if ( jdbcValueMapping.isNullable() || jdbcValueMapping.isFormula() ) {
 								return;
 							}
-							restrictor.consume( jdbcValue, jdbcValueMapping );
+							bindings.bindValue( jdbcValue, jdbcValueMapping, ParameterUsage.RESTRICT );
 						},
 						session
 				);

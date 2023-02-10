@@ -2022,16 +2022,19 @@ public class ToOneAttributeMapping
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		if ( cardinality == Cardinality.ONE_TO_ONE && sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
-			return;
+			return 0;
 		}
 
 		final Object value = extractValue( domainValue, session );
-		foreignKeyDescriptor.breakDownJdbcValues( value, valueConsumer, session );
+		return foreignKeyDescriptor.breakDownJdbcValues( value, offset, x, y, valueConsumer, session );
 	}
 
 	private Object extractValue(Object domainValue, SharedSessionContractImplementor session) {

@@ -137,8 +137,13 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		fkTargetModelPart.breakDownJdbcValues( domainValue, valueConsumer, session );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+		return fkTargetModelPart.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
@@ -158,9 +163,18 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	}
 
 	@Override
-	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		foreignKey.getKeyPart().decompose(
+	public <X, Y> int decompose(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		return foreignKey.getKeyPart().decompose(
 				foreignKey.getAssociationKeyFromSide( domainValue, foreignKey.getTargetSide(), session ),
+				offset,
+				x,
+				y,
 				valueConsumer,
 				session
 		);

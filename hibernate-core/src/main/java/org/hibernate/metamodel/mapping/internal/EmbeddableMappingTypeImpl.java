@@ -695,8 +695,15 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
 		final int size = attributeMappings.size();
+		int span = 0;
 		if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
 			assert values.length == size;
@@ -704,7 +711,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				final Object attributeValue = values[ i ];
-				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
+				span += attributeMapping.breakDownJdbcValues(
+						attributeValue,
+						offset + span,
+						x,
+						y,
+						valueConsumer,
+						session
+				);
 			}
 		}
 		else {
@@ -713,38 +727,54 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final Object attributeValue = domainValue == null
 						? null
 						: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
-				attributeMapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
+				span += attributeMapping.breakDownJdbcValues(
+						attributeValue,
+						offset + span,
+						x,
+						y,
+						valueConsumer,
+						session
+				);
 			}
 		}
+		return span;
 	}
 
 	@Override
-	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+	public <X, Y> int decompose(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
 		if ( shouldBindAggregateMapping() ) {
-			valueConsumer.consume( domainValue, aggregateMapping );
+			valueConsumer.consume( offset, x, y, domainValue, aggregateMapping );
+			return 1;
 		}
-		else if ( domainValue instanceof Object[] ) {
+		int span = 0;
+		if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
 			assert values.length == attributeMappings.size();
 
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				final Object attributeValue = values[ i ];
-				attributeMapping.decompose( attributeValue, valueConsumer, session );
+				span += attributeMapping.decompose( attributeValue, offset + span, x, y, valueConsumer, session );
 			}
 		}
 		else {
-			attributeMappings.forEach( (attributeMapping) -> {
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					return;
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				if ( !(attributeMapping instanceof PluralAttributeMapping )) {
+					final Object attributeValue = domainValue == null
+							? null
+							: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+					span += attributeMapping.decompose( attributeValue, offset + span, x, y, valueConsumer, session );
 				}
-
-				final Object attributeValue = domainValue == null
-						? null
-						: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
-				attributeMapping.decompose( attributeValue, valueConsumer, session );
-			} );
+			}
 		}
+		return span;
 	}
 
 	@Override

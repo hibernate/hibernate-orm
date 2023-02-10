@@ -42,24 +42,28 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		final Object[] values = (Object[]) value;
 		int span = 0;
 		for ( int i = 0; i < components.length; i++ ) {
-			span += components[i].forEachDisassembledJdbcValue( values[i], span + offset, valuesConsumer, session );
+			span += components[i].forEachDisassembledJdbcValue( values[i], span + offset, x, y, valuesConsumer, session );
 		}
 		return span;
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		final Object[] values = (Object[]) value;
 		int span = 0;
@@ -67,7 +71,7 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 			span += components[i].forEachDisassembledJdbcValue(
 					components[i].disassemble( values[i], session ),
 					span + offset,
-					valuesConsumer,
+					x, y, valuesConsumer,
 					session
 			);
 		}

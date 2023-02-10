@@ -386,10 +386,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		assert value instanceof Object[];
 
@@ -398,16 +400,18 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		int span = 0;
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attribute = attributes.get( i );
-			span += attribute.forEachDisassembledJdbcValue( incoming[ i ], span + offset, valuesConsumer, session );
+			span += attribute.forEachDisassembledJdbcValue( incoming[ i ], span + offset, x, y, valuesConsumer, session );
 		}
 		return span;
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		assert value instanceof Object[];
 
@@ -417,7 +421,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		int span = 0;
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final SingularAttributeMapping attribute = attributes.get( i );
-			span += attribute.forEachJdbcValue( incoming[ i ], span + offset, valuesConsumer, session );
+			span += attribute.forEachJdbcValue( incoming[ i ], span + offset, x, y, valuesConsumer, session );
 		}
 		return span;
 	}

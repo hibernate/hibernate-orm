@@ -272,7 +272,6 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -5063,8 +5062,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final List<Expression> list = new ArrayList<>( embeddableValuedModelPart.getJdbcTypeCount() );
 			embeddableValuedModelPart.forEachJdbcValue(
 					literal.getLiteralValue(),
-					(selectionIndex, value, jdbcMapping)
-							-> list.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
+					list,
+					null,
+					(selectionIndex, expressions, noop, value, jdbcMapping)
+							-> expressions.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
 					null
 			);
 			return new SqlTuple( list, expressible );
@@ -5107,8 +5108,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final List<Expression> list = new ArrayList<>( associationKeyPart.getJdbcTypeCount() );
 				associationKeyPart.forEachJdbcValue(
 						associationKey,
-						(selectionIndex, value, jdbcMapping)
-								-> list.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
+						list,
+						null,
+						(selectionIndex, expressions, noop, value, jdbcMapping)
+								-> expressions.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
 						null
 				);
 				return new SqlTuple( list, associationKeyPart );

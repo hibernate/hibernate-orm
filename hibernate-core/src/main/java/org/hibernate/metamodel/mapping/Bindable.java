@@ -113,6 +113,23 @@ public interface Bindable extends JdbcMappingContainer {
 	 *
 	 * Think of it as breaking the multi-dimensional array into a visitable flat array
 	 */
+	default <X, Y> int forEachDisassembledJdbcValue(
+			Object value,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return forEachDisassembledJdbcValue( value, 0, x, y, valuesConsumer, session );
+	}
+
+	<X, Y> int forEachDisassembledJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session);
+
 	default int forEachDisassembledJdbcValue(
 			Object value,
 			JdbcValuesConsumer valuesConsumer,
@@ -120,11 +137,13 @@ public interface Bindable extends JdbcMappingContainer {
 		return forEachDisassembledJdbcValue( value, 0, valuesConsumer, session );
 	}
 
-	int forEachDisassembledJdbcValue(
+	default int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session);
+			SharedSessionContractImplementor session) {
+		return forEachDisassembledJdbcValue( value, offset, null, null, valuesConsumer, session );
+	}
 
 	/**
 	 * Visit each constituent JDBC value extracted from the entity instance itself.
@@ -132,6 +151,25 @@ public interface Bindable extends JdbcMappingContainer {
 	 * Short-hand form of calling {@link #disassemble} and piping its result to
 	 * {@link #forEachDisassembledJdbcValue}
 	 */
+	default <X, Y> int forEachJdbcValue(
+			Object value,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return forEachJdbcValue( value, 0, x, y, valuesConsumer, session );
+	}
+
+	default <X, Y> int forEachJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return forEachDisassembledJdbcValue( disassemble( value, session ), offset, x, y, valuesConsumer, session );
+	}
+
 	default int forEachJdbcValue(
 			Object value,
 			JdbcValuesConsumer valuesConsumer,
@@ -144,18 +182,30 @@ public interface Bindable extends JdbcMappingContainer {
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return forEachDisassembledJdbcValue( disassemble( value, session ), offset, valuesConsumer, session );
+		return forEachJdbcValue( value, offset, null, null, valuesConsumer, session );
 	}
 
+	@FunctionalInterface
+	interface JdbcValuesConsumer extends JdbcValuesBiConsumer<Object, Object> {
+		@Override
+		default void consume(int selectionIndex, Object o, Object o2, Object jdbcValue, JdbcMapping jdbcMapping) {
+			consume( selectionIndex, jdbcValue, jdbcMapping );
+		}
+
+		/**
+		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
+		 */
+		void consume(int selectionIndex, Object jdbcValue, JdbcMapping jdbcMapping);
+	}
 
 	/**
 	 * Functional interface for consuming the JDBC values.  Essentially a {@link java.util.function.BiConsumer}
 	 */
 	@FunctionalInterface
-	interface JdbcValuesConsumer {
+	interface JdbcValuesBiConsumer<X, Y> {
 		/**
 		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
 		 */
-		void consume(int selectionIndex, Object jdbcValue, JdbcMapping jdbcMapping);
+		void consume(int selectionIndex, X x, Y y, Object jdbcValue, JdbcMapping jdbcMapping);
 	}
 }

@@ -187,10 +187,12 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
 		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
@@ -209,12 +211,12 @@ public abstract class AbstractCompositeIdentifierMapping
 				span += fkDescriptor.forEachJdbcValue(
 						identifier,
 						span + offset,
-						valuesConsumer,
+						x, y, valuesConsumer,
 						session
 				);
 			}
 			else {
-				span += attributeMapping.forEachJdbcValue( o, span + offset, valuesConsumer, session );
+				span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
 			}
 		}
 		return span;

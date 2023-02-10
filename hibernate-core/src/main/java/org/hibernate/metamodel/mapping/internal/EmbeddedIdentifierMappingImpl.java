@@ -136,15 +136,17 @@ public class EmbeddedIdentifierMappingImpl
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().forEachDisassembledJdbcValue(
 				value,
 				offset,
-				valuesConsumer,
+				x, y, valuesConsumer,
 				session
 		);
 	}

@@ -30,11 +30,11 @@ public @interface UuidGenerator {
 
 	enum Style {
 		/**
-		 * Defaults to {@link #RANDOM}
+		 * Defaults to {@link #RANDOM}.
 		 */
 		AUTO,
 		/**
-		 * Uses {@link UUID#randomUUID()} to generate values
+		 * Uses {@link UUID#randomUUID()} to generate values.
 		 */
 		RANDOM,
 		/**
@@ -48,7 +48,7 @@ public @interface UuidGenerator {
 	}
 
 	/**
-	 * Which style of generation should be used
+	 * Specifies which {@linkplain Style style} of UUID generation should be used.
 	 */
 	Style style() default Style.AUTO;
 }

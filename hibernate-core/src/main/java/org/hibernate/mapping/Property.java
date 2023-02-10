@@ -35,8 +35,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
- * A mapping model object representing a property or field of an {@link PersistentClass entity}
- * or {@link Component embeddable class}.
+ * A mapping model object representing a property or field of an {@linkplain PersistentClass entity}
+ * or {@linkplain Component embeddable class}.
  *
  * @author Gavin King
  */

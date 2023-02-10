@@ -22,7 +22,6 @@ import org.hibernate.loader.ast.internal.NoCallbackExecutionContext;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -124,7 +123,6 @@ public class GeneratedValuesProcessor {
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
-				Clause.WHERE,
 				entityDescriptor.getIdentifierMapping(),
 				jdbcParameters,
 				session

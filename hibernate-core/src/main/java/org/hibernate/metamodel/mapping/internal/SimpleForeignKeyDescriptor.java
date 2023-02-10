@@ -454,12 +454,14 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return 1;
 	}
 
@@ -519,12 +521,14 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, disassemble( value, session ), targetSide.getModelPart().getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, disassemble( value, session ), targetSide.getModelPart().getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 

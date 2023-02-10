@@ -229,9 +229,11 @@ public class EntityTableMapping implements TableMapping {
 				SharedSessionContractImplementor session) {
 			identifierPart.forEachJdbcValue(
 					domainValue,
-					(selectionIndex, jdbcValue, jdbcMapping) -> valueConsumer.consume(
+					keyColumns,
+					valueConsumer,
+					(selectionIndex, keys, consumer, jdbcValue, jdbcMapping) -> consumer.consume(
 							jdbcValue,
-							keyColumns.get( selectionIndex )
+							keys.get( selectionIndex )
 					),
 					session
 			);

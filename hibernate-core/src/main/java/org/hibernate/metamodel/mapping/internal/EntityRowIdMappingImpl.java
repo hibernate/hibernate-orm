@@ -124,12 +124,14 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return rowIdType.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+		return rowIdType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override

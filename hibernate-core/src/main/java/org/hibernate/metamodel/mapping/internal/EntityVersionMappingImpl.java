@@ -328,12 +328,14 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return versionBasicType.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+		return versionBasicType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override

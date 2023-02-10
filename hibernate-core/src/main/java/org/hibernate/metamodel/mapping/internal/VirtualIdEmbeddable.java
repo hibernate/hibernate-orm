@@ -298,10 +298,12 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
 
@@ -311,7 +313,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 				continue;
 			}
 			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			span += attributeMapping.forEachJdbcValue( o, span + offset, valuesConsumer, session );
+			span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
 		}
 		return span;
 	}
@@ -356,16 +358,18 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		final Object[] values = (Object[]) value;
 		int span = 0;
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping mapping = attributeMappings.get( i );
-			span += mapping.forEachDisassembledJdbcValue( values[i], span + offset, valuesConsumer, session );
+			span += mapping.forEachDisassembledJdbcValue( values[i], span + offset, x, y, valuesConsumer, session );
 		}
 		return span;
 	}

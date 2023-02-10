@@ -80,21 +80,25 @@ public class EntityTypeLiteral
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return discriminatorType.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+		return discriminatorType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return discriminatorType.forEachJdbcValue( value, offset, valuesConsumer, session );
+		return discriminatorType.forEachJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 

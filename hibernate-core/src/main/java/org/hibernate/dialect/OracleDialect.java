@@ -151,8 +151,7 @@ public class OracleDialect extends Dialect {
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private static final String yqmSelect =
-		"( SELECT b_.bd + ( LEAST( EXTRACT( DAY FROM b_.od ), EXTRACT( DAY FROM LAST_DAY( b_.bd ) ) ) - 1 )\n" +
-		"FROM (SELECT a_.od, TRUNC(a_.od, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') bd FROM ( SELECT %2$s od FROM dual ) a_) b_ ) ";
+		"( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') + ( LEAST( EXTRACT( DAY FROM %2$s ), EXTRACT( DAY FROM LAST_DAY( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') ) ) ) - 1 ) )";
 
 	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );

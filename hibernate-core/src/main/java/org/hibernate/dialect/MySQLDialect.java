@@ -745,6 +745,8 @@ public class MySQLDialect extends Dialect {
 			case DAY_OF_YEAR:
 				return "dayofyear(?2)";
 			//TODO: case WEEK_YEAR: yearweek(?2, 3)/100
+			case EPOCH:
+				return "unix_timestamp(?2)";
 			default:
 				return "?1(?2)";
 		}

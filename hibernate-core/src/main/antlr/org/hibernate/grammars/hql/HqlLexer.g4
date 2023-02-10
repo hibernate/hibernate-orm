@@ -181,6 +181,7 @@ ELSE				: [eE] [lL] [sS] [eE];
 EMPTY				: [eE] [mM] [pP] [tT] [yY];
 END					: [eE] [nN] [dD];
 ENTRY				: [eE] [nN] [tT] [rR] [yY];
+EPOCH				: [eE] [pP] [oO] [cC] [hH];
 ERROR				: [eE] [rR] [rR] [oO] [rR];
 ESCAPE				: [eE] [sS] [cC] [aA] [pP] [eE];
 EVERY				: [eE] [vV] [eE] [rR] [yY];

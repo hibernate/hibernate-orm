@@ -753,6 +753,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			case SECOND:
 				//this should evaluate to a floating point type
 				return "(datepart(second,?2)+datepart(nanosecond,?2)/1e9)";
+			case EPOCH:
+				return "datediff_big(second, '1970-01-01', ?2)";
 			default:
 				return "datepart(?1,?2)";
 		}

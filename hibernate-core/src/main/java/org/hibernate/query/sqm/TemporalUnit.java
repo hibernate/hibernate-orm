@@ -154,8 +154,7 @@ public enum TemporalUnit {
 	TIME,
 	/**
 	 * An internal value representing the Unix epoch, the elapsed
-	 * seconds since January 1, 1970. Currently not supported in
-	 * HQL.
+	 * seconds since January 1, 1970.
 	 */
 	EPOCH,
 	/**

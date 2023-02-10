@@ -320,6 +320,16 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String extractPattern(TemporalUnit unit) {
+		if ( unit == TemporalUnit.EPOCH ) {
+			return "unix_timestamp(?2)";
+		}
+		else {
+			return super.extractPattern(unit);
+		}
+	}
+
+	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;
 	}

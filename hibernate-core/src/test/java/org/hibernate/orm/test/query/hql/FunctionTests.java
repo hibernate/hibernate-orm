@@ -1519,6 +1519,17 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select extract(epoch from local datetime)", Long.class).getSingleResult();
+					session.createQuery("select extract(epoch from offset datetime)", Long.class).getSingleResult();
+					assertThat( session.createQuery("select extract(epoch from datetime 1974-03-23 12:35)", Long.class).getSingleResult(), is(133274100L) );
+				}
+		);
+	}
+
+	@Test
 	public void testExtractFunctionWeek(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

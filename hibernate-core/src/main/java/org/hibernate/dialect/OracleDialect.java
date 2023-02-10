@@ -480,6 +480,8 @@ public class OracleDialect extends Dialect {
 				return "to_number(to_char(?2,'MI'))";
 			case SECOND:
 				return "to_number(to_char(?2,'SS'))";
+			case EPOCH:
+				return "trunc((cast(?2 at time zone 'UTC' as date) - date '1970-1-1')*86400)";
 			default:
 				return super.extractPattern(unit);
 		}

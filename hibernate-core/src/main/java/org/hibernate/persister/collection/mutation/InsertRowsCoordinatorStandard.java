@@ -112,7 +112,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 							entry,
 							entryCount,
 							session,
-							jdbcValueBindings::bindValue
+							jdbcValueBindings
 					);
 					mutationExecutor.execute( entry, null, null, null, session );
 				}

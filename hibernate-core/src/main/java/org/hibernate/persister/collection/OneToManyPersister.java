@@ -243,11 +243,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							entry,
 							nextIndex,
 							session,
-							(jdbcValue, jdbcValueMapping, usage) -> jdbcValueBindings.bindValue(
-									jdbcValue,
-									jdbcValueMapping,
-									usage
-							)
+							jdbcValueBindings
 					);
 
 					updateRowRestrictions.applyRestrictions(
@@ -256,11 +252,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							entry,
 							nextIndex,
 							session,
-							(jdbcValue, jdbcValueMapping) -> jdbcValueBindings.bindValue(
-									jdbcValue,
-									jdbcValueMapping,
-									ParameterUsage.RESTRICT
-							)
+							jdbcValueBindings
 					);
 
 					mutationExecutor.execute( collection, null, null, null, session );

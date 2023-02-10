@@ -9,7 +9,9 @@ package org.hibernate.engine.jdbc.mutation;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.sql.model.TableMapping;
 
 /**
@@ -18,7 +20,7 @@ import org.hibernate.sql.model.TableMapping;
  * @author Steve Ebersole
  */
 @Incubating
-public interface JdbcValueBindings {
+public interface JdbcValueBindings extends RowMutationOperations.ValuesBindingConsumer, ModelPart.JdbcValueConsumer {
 	/**
 	 * Get the bindings for the specific table, or {@code null}
 	 */
@@ -45,4 +47,14 @@ public interface JdbcValueBindings {
 	 * Called after the execution of the operation for the specified table
 	 */
 	void afterStatement(TableMapping mutatingTable);
+
+	@Override
+	default void consumeJdbcValueBinding(Object value, SelectableMapping jdbcValueMapping, ParameterUsage usage) {
+		bindValue( value, jdbcValueMapping, usage );
+	}
+
+	@Override
+	default void consume(Object value, SelectableMapping jdbcValueMapping) {
+		bindValue( value, jdbcValueMapping, ParameterUsage.RESTRICT );
+	}
 }

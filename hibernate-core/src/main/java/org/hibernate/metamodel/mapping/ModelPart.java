@@ -143,11 +143,6 @@ public interface ModelPart extends MappingModelExpressible {
 
 	void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session);
 
-	@FunctionalInterface
-	interface IndexedJdbcValueConsumer {
-		void consume(int valueIndex, Object value, SelectableMapping jdbcValueMapping);
-	}
-
 	default void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		breakDownJdbcValues( domainValue, valueConsumer, session );
 	}

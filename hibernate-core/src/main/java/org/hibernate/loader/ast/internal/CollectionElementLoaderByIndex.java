@@ -23,7 +23,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -116,14 +115,12 @@ public class CollectionElementLoaderByIndex implements Loader {
 
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				key,
-				Clause.WHERE,
 				attributeMapping.getKeyDescriptor(),
 				jdbcParameters,
 				session
 		);
 		offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 				incrementIndexByBase( index ),
-				Clause.WHERE,
 				offset,
 				attributeMapping.getIndexDescriptor(),
 				jdbcParameters,

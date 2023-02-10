@@ -25,7 +25,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -180,7 +179,6 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 			for ( int i = smallBatchStart; i < smallBatchStart + smallBatchLength; i++ ) {
 				offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 						batchIds[i],
-						Clause.WHERE,
 						offset,
 						getLoadable().getKeyDescriptor(),
 						jdbcParameters,

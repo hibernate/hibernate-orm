@@ -52,6 +52,11 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		}
 	}
 
+	@Override
+	public boolean hasIdentifierMapper() {
+		return getSuperclass().hasIdentifierMapper();
+	}
+
 	public Iterator getReferenceablePropertyIterator() {
 		return getPropertyIterator();
 	}

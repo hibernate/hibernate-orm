@@ -3769,7 +3769,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( inferredEntityMapping == null ) {
 				// When the inferred mapping is null, we try to resolve to the FK by default,
 				// which is fine because expansion to all target columns for select and group by clauses is handled below
-				if ( entityValuedModelPart instanceof EntityAssociationMapping && ( (EntityAssociationMapping) entityValuedModelPart ).getSideNature() != ForeignKeyDescriptor.Nature.TARGET ) {
+				if ( entityValuedModelPart instanceof EntityAssociationMapping && ( (EntityAssociationMapping) entityValuedModelPart ).isFkOptimizationAllowed() ) {
 					// If the table group uses an association mapping that is not a one-to-many,
 					// we make use of the FK model part
 					final EntityAssociationMapping associationMapping = (EntityAssociationMapping) entityValuedModelPart;

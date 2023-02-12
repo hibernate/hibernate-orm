@@ -11,9 +11,9 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -38,13 +38,15 @@ public class NaturalIdCacheKey implements Serializable {
 	}
 
 	public NaturalIdCacheKey(Object naturalIdValues, EntityPersister persister, String entityName, SharedSessionContractImplementor session) {
+		this(persister.getNaturalIdMapping().disassemble( naturalIdValues, session ), entityName, session.getTenantIdentifier(), persister.getNaturalIdMapping().calculateHashCode( naturalIdValues ));
+	}
+
+	@Internal
+	public NaturalIdCacheKey(Object naturalIdValues, String entityName, String tenantId, int hashCode) {
+		this.naturalIdValues = naturalIdValues;
 		this.entityName = entityName;
-		this.tenantId = session.getTenantIdentifier();
-
-		final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
-
-		this.naturalIdValues = naturalIdMapping.disassemble( naturalIdValues, session );
-		this.hashCode = naturalIdMapping.calculateHashCode( naturalIdValues );
+		this.tenantId = tenantId;
+		this.hashCode = hashCode;
 
 		initTransients();
 	}

@@ -524,10 +524,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+					Namespace.Name logicalName = namespace.getName();
+					Namespace.Name physicalName = namespace.getPhysicalName();
+
 					if ( tryToCreateCatalogs ) {
-						final Identifier catalogLogicalName = namespace.getName().getCatalog();
-						final Identifier catalogPhysicalName =
-								context.catalogWithDefault( namespace.getPhysicalName().getCatalog() );
+						final Identifier catalogLogicalName = logicalName.getCatalog();
+						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.getCatalog() );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 							applySqlStrings(
 									dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
@@ -539,15 +541,16 @@ public class SchemaCreatorImpl implements SchemaCreator {
 						}
 					}
 
-					final Identifier schemaPhysicalName =
-							context.schemaWithDefault( namespace.getPhysicalName().getSchema() );
-					if ( tryToCreateSchemas && schemaPhysicalName != null ) {
-						applySqlStrings(
-								dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
-								formatter,
-								options,
-								targets
-						);
+					if ( tryToCreateSchemas ) {
+						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.getSchema() );
+						if ( schemaPhysicalName != null ) {
+							applySqlStrings(
+									dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
+									formatter,
+									options,
+									targets
+							);
+						}
 					}
 				}
 			}

@@ -16,15 +16,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public class ClockHelper {
 
-	private static final Duration TICK_8 = Duration.ofNanos( 10L );
-	private static final Duration TICK_7 = Duration.ofNanos( 100L );
-	private static final Duration TICK_6 = Duration.ofNanos( 1000L );
-	private static final Duration TICK_5 = Duration.ofNanos( 10000L );
-	private static final Duration TICK_4 = Duration.ofNanos( 100000L );
-	private static final Duration TICK_3 = Duration.ofNanos( 1000000L );
-	private static final Duration TICK_2 = Duration.ofNanos( 10000000L );
-	private static final Duration TICK_1 = Duration.ofNanos( 100000000L );
-	private static final Duration TICK_0 = Duration.ofNanos( 1000000000L );
+	private static final Clock TICK_9 = Clock.systemDefaultZone();
+	private static final Clock TICK_8 = Clock.tick( TICK_9, Duration.ofNanos( 10L ) );
+	private static final Clock TICK_7 = Clock.tick( TICK_9, Duration.ofNanos( 100L ) );
+	private static final Clock TICK_6 = Clock.tick( TICK_9, Duration.ofNanos( 1000L ) );
+	private static final Clock TICK_5 = Clock.tick( TICK_9, Duration.ofNanos( 10000L ) );
+	private static final Clock TICK_4 = Clock.tick( TICK_9, Duration.ofNanos( 100000L ) );
+	private static final Clock TICK_3 = Clock.tick( TICK_9, Duration.ofNanos( 1000000L ) );
+	private static final Clock TICK_2 = Clock.tick( TICK_9, Duration.ofNanos( 10000000L ) );
+	private static final Clock TICK_1 = Clock.tick( TICK_9, Duration.ofNanos( 100000000L ) );
+	private static final Clock TICK_0 = Clock.tick( TICK_9, Duration.ofNanos( 1000000000L ) );
 
 	public static Clock forPrecision(Integer precision, SharedSessionContractImplementor session) {
 		final int resolvedPrecision;
@@ -34,28 +35,27 @@ public class ClockHelper {
 		else {
 			resolvedPrecision = precision;
 		}
-		final Clock clock = Clock.systemDefaultZone();
 		switch ( resolvedPrecision ) {
 			case 0:
-				return Clock.tick( clock, TICK_0 );
+				return TICK_0;
 			case 1:
-				return Clock.tick( clock, TICK_1 );
+				return TICK_1;
 			case 2:
-				return Clock.tick( clock, TICK_2 );
+				return TICK_2;
 			case 3:
-				return Clock.tick( clock, TICK_3 );
+				return TICK_3;
 			case 4:
-				return Clock.tick( clock, TICK_4 );
+				return TICK_4;
 			case 5:
-				return Clock.tick( clock, TICK_5 );
+				return TICK_5;
 			case 6:
-				return Clock.tick( clock, TICK_6 );
+				return TICK_6;
 			case 7:
-				return Clock.tick( clock, TICK_7 );
+				return TICK_7;
 			case 8:
-				return Clock.tick( clock, TICK_8 );
+				return TICK_8;
 			case 9:
-				return clock;
+				return TICK_9;
 		}
 		throw new IllegalArgumentException( "Illegal precision: " + resolvedPrecision );
 	}

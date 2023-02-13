@@ -19,6 +19,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.type.descriptor.DateTimeUtils;
+
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -136,6 +138,11 @@ public class TenantIdTest implements SessionFactoryProducer {
         scope.inTransaction( s -> s.persist( record ) );
         assertEquals( "mine", record.state.tenantId );
         assertNotNull( record.state.updated );
+        // Round the temporal to avoid issues when the VM produces nanosecond precision timestamps
+        record.state.updated = DateTimeUtils.roundToDefaultPrecision(
+                record.state.updated,
+                scope.getSessionFactory().getJdbcServices().getDialect()
+        );
         scope.inTransaction( s -> {
             Record r = s.find( Record.class, record.id );
             assertEquals( "mine", r.state.tenantId );

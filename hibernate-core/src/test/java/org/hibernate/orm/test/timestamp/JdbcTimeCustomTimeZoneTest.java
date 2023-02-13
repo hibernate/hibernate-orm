@@ -8,12 +8,12 @@ package org.hibernate.orm.test.timestamp;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.time.Instant;
 import java.time.OffsetTime;
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -24,34 +24,23 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
  */
 @SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
 public class JdbcTimeCustomTimeZoneTest
 		extends BaseSessionFactoryFunctionalTest {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider(
-			true,
-			false
 	);
 
 	private static final TimeZone TIME_ZONE = TimeZone.getTimeZone(
@@ -84,7 +73,7 @@ public class JdbcTimeCustomTimeZoneTest
 	}
 
 	@Test
-	public void testTimeZone() {
+	public void testTimeZone() throws Throwable {
 
 		connectionProvider.clear();
 		inTransaction( s -> {
@@ -97,22 +86,15 @@ public class JdbcTimeCustomTimeZoneTest
 		assertEquals( 1, connectionProvider.getPreparedStatements().size() );
 		PreparedStatement ps = connectionProvider.getPreparedStatements()
 				.get( 0 );
-		try {
-			ArgumentCaptor<Calendar> calendarArgumentCaptor = ArgumentCaptor.forClass(
-					Calendar.class );
-			verify( ps, times( 1 ) ).setTime(
-					anyInt(),
-					any( Time.class ),
-					calendarArgumentCaptor.capture()
-			);
-			assertEquals(
-					TIME_ZONE,
-					calendarArgumentCaptor.getValue().getTimeZone()
-			);
-		}
-		catch (SQLException e) {
-			fail( e.getMessage() );
-		}
+		List<Object[]> setTimeCalls = connectionProvider.spyContext.getCalls(
+				PreparedStatement.class.getMethod( "setTime", int.class, Time.class, Calendar.class ),
+				ps
+		);
+		assertEquals( 1, setTimeCalls.size() );
+		assertEquals(
+				TIME_ZONE,
+				( (Calendar) setTimeCalls.get( 0 )[2] ).getTimeZone()
+		);
 
 		connectionProvider.clear();
 		inTransaction( s -> {

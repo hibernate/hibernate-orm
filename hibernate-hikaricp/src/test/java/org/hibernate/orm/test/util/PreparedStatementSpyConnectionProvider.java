@@ -9,21 +9,14 @@ package org.hibernate.orm.test.util;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+import org.hibernate.testing.jdbc.JdbcSpies;
 
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
-import org.mockito.internal.util.MockUtil;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it
@@ -33,11 +26,7 @@ import org.mockito.internal.util.MockUtil;
  */
 public class PreparedStatementSpyConnectionProvider
 		extends ConnectionProviderDelegate {
-
-	// We must keep around the mocked connections, otherwise the are garbage collected and trigger finalizers
-	// Since we use CALLS_REAL_METHODS this might close underlying IO resources which make other objects unusable
-	private static final Queue<Object> MOCKS = new LinkedBlockingQueue<>();
-	private final Map<PreparedStatement, String> preparedStatementMap = new LinkedHashMap<>();
+	public final JdbcSpies.SpyContext spyContext = new JdbcSpies.SpyContext();
 
 	private final List<Connection> acquiredConnections = new ArrayList<>( );
 	private final List<Connection> releasedConnections = new ArrayList<>( );
@@ -52,7 +41,6 @@ public class PreparedStatementSpyConnectionProvider
 	@Override
 	public Connection getConnection() throws SQLException {
 		Connection connection = spy( actualConnection() );
-		MOCKS.add( connection );
 		acquiredConnections.add( connection );
 		return connection;
 	}
@@ -61,7 +49,7 @@ public class PreparedStatementSpyConnectionProvider
 	public void closeConnection(Connection conn) throws SQLException {
 		acquiredConnections.remove( conn );
 		releasedConnections.add( conn );
-		super.closeConnection( (Connection) MockUtil.getMockSettings( conn ).getSpiedInstance() );
+		super.closeConnection( spyContext.getSpiedInstance( conn ) );
 	}
 
 	@Override
@@ -71,29 +59,7 @@ public class PreparedStatementSpyConnectionProvider
 	}
 
 	private Connection spy(Connection connection) {
-		if ( MockUtil.isMock( connection ) ) {
-			return connection;
-		}
-		Connection connectionSpy = Mockito.spy( connection );
-		try {
-			Mockito.doAnswer( invocation -> {
-				PreparedStatement statement = (PreparedStatement) invocation.callRealMethod();
-				PreparedStatement statementSpy = Mockito.spy( statement );
-				String sql = (String) invocation.getArguments()[0];
-				preparedStatementMap.put( statementSpy, sql );
-				return statementSpy;
-			} ).when( connectionSpy ).prepareStatement( ArgumentMatchers.anyString() );
-
-			Mockito.doAnswer( invocation -> {
-				Statement statement = (Statement) invocation.callRealMethod();
-				Statement statementSpy = Mockito.spy( statement );
-				return statementSpy;
-			} ).when( connectionSpy ).createStatement();
-		}
-		catch ( SQLException e ) {
-			throw new IllegalArgumentException( e );
-		}
-		return connectionSpy;
+		return JdbcSpies.spy( connection, spyContext );
 	}
 
 	/**
@@ -102,8 +68,7 @@ public class PreparedStatementSpyConnectionProvider
 	public void clear() {
 		acquiredConnections.clear();
 		releasedConnections.clear();
-		preparedStatementMap.keySet().forEach( Mockito::reset );
-		preparedStatementMap.clear();
+		spyContext.clear();
 	}
 
 	/**

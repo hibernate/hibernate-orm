@@ -305,39 +305,30 @@ public class SchemaDropperImpl implements SchemaDropper {
 			);
 		}
 
-		if ( tryToDropCatalogs || tryToDropSchemas ) {
-			Set<Identifier> exportedCatalogs = new HashSet<>();
+		if ( tryToDropCatalogs || tryToDropSchemas) {
+			final Set<Identifier> exportedCatalogs = new HashSet<>();
 
-			for ( Namespace namespace : database.getNamespaces() ) {
+			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+				if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+					Namespace.Name logicalName = namespace.getName();
+					Namespace.Name physicalName = namespace.getPhysicalName();
 
-				if ( ! options.getSchemaFilter().includeNamespace( namespace ) ) {
-					continue;
-				}
+					if ( tryToDropSchemas ) {
+						final Identifier schemaPhysicalName = sqlStringGenerationContext.schemaWithDefault( physicalName.getSchema() );
+						if ( schemaPhysicalName != null ) {
+							final String schemaName = schemaPhysicalName.render( dialect );
+							applySqlStrings( dialect.getDropSchemaCommand( schemaName ), formatter, options, targets);
+						}
+					}
 
-				if ( tryToDropSchemas && namespace.getPhysicalName().getSchema() != null ) {
-					applySqlStrings(
-							dialect.getDropSchemaCommand(
-									namespace.getPhysicalName().getSchema().render( dialect )
-							),
-							formatter,
-							options,
-							targets
-					);
-				}
-				if ( tryToDropCatalogs ) {
-					final Identifier catalogLogicalName = namespace.getName().getCatalog();
-					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
-
-					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
-						applySqlStrings(
-								dialect.getDropCatalogCommand(
-										catalogPhysicalName.render( dialect )
-								),
-								formatter,
-								options,
-								targets
-						);
-						exportedCatalogs.add( catalogLogicalName );
+					if (tryToDropCatalogs) {
+						final Identifier catalogLogicalName = logicalName.getCatalog();
+						final Identifier catalogPhysicalName = sqlStringGenerationContext.catalogWithDefault( physicalName.getCatalog() );
+						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
+							final String catalogName = catalogPhysicalName.render( dialect );
+							applySqlStrings( dialect.getDropCatalogCommand( catalogName ), formatter, options, targets );
+							exportedCatalogs.add( catalogLogicalName );
+						}
 					}
 				}
 			}

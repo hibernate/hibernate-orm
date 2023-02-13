@@ -27,8 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class StoreProcedureStatementsClosedTest extends BaseSessionFactoryFunctionalTest {
 
 	private final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider(
-			true,
-			false
 	);
 
 	@Override

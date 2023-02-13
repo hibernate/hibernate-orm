@@ -7,7 +7,6 @@
 package org.hibernate.test.hikaricp;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -15,26 +14,21 @@ import jakarta.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.orm.test.util.PreparedStatementSpyConnectionProvider;
+
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
 @SkipForDialect(value = SybaseDialect.class, comment = "The jTDS driver doesn't implement Connection#isValid so this fails")
 public class HikariCPSkipAutoCommitTest extends BaseCoreFunctionalTestCase {
 
@@ -91,12 +85,15 @@ public class HikariCPSkipAutoCommitTest extends BaseCoreFunctionalTestCase {
 
 		List<Connection> connections = connectionProvider.getReleasedConnections();
 		assertEquals( 1, connections.size() );
-		Connection connection = connections.get( 0 );
 		try {
-			verify(connection, never()).setAutoCommit( false );
+			List<Object[]> setAutoCommitCalls = connectionProvider.spyContext.getCalls(
+					Connection.class.getMethod( "setAutoCommit", boolean.class ),
+					connections.get( 0 )
+			);
+			assertTrue( "setAutoCommit should never be called", setAutoCommitCalls.isEmpty() );
 		}
-		catch (SQLException e) {
-			fail(e.getMessage());
+		catch (NoSuchMethodException e) {
+			throw new RuntimeException( e );
 		}
 	}
 

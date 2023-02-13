@@ -10,27 +10,23 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Id;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
-
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
@@ -39,7 +35,7 @@ import static org.mockito.Mockito.verify;
 public abstract class AbstractSkipAutoCommitTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider =
-		new PreparedStatementSpyConnectionProvider( false, true ) {
+		new PreparedStatementSpyConnectionProvider() {
 			@Override
 			protected Connection actualConnection() throws SQLException {
 				Connection connection = super.actualConnection();
@@ -84,7 +80,7 @@ public abstract class AbstractSkipAutoCommitTest extends EntityManagerFactoryBas
 	}
 
 	@Test
-	public void test() {
+	public void test() throws Throwable {
 		inTransaction(
 				entityManager -> {
 					// Moved inside the transaction because the new base class defers the EMF creation w/ respect to the
@@ -113,18 +109,17 @@ public abstract class AbstractSkipAutoCommitTest extends EntityManagerFactoryBas
 		verifyConnections();
 	}
 
-	private void verifyConnections() {
+	private void verifyConnections() throws Throwable {
 		assertTrue( connectionProvider.getAcquiredConnections().isEmpty() );
 
 		List<Connection> connections = connectionProvider.getReleasedConnections();
 		assertEquals( 1, connections.size() );
 		Connection connection = connections.get( 0 );
-		try {
-			verify(connection, never()).setAutoCommit( false );
-		}
-		catch (SQLException e) {
-			fail(e.getMessage());
-		}
+		List<Object[]> setAutoCommitCalls = connectionProvider.spyContext.getCalls(
+				Connection.class.getMethod( "setAutoCommit", boolean.class ),
+				connection
+		);
+		assertEquals( 0, setAutoCommitCalls.size() );
 	}
 
 	@Entity(name = "City" )

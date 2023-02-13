@@ -65,6 +65,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					tryToCreateSchemas,
 					exportedCatalogs,
 					namespace,
+					context,
 					targets
 			);
 			for ( Table table : namespace.getTables() ) {

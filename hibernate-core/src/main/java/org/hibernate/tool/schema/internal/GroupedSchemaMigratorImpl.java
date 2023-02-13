@@ -65,6 +65,7 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 					tryToCreateSchemas,
 					exportedCatalogs,
 					namespace,
+					context,
 					targets
 			);
 

@@ -37,6 +37,9 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
+import org.hibernate.grammars.hql.HqlParser.AssignmentContext;
+import org.hibernate.grammars.hql.HqlParser.ExpressionContext;
+import org.hibernate.grammars.hql.HqlParser.ExpressionOrPredicateContext;
 import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.internal.util.QuotingHelper;
@@ -570,12 +573,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			updateStatement.versioned( versioned );
 			final HqlParser.SetClauseContext setClauseCtx = (HqlParser.SetClauseContext) ctx.getChild( dmlTargetIndex + 1 );
 			for ( ParseTree subCtx : setClauseCtx.children ) {
-				if ( subCtx instanceof HqlParser.AssignmentContext ) {
-					final HqlParser.AssignmentContext assignmentContext = (HqlParser.AssignmentContext) subCtx;
+				if ( subCtx instanceof AssignmentContext ) {
+					final AssignmentContext assignmentContext = (AssignmentContext) subCtx;
+
+					final HqlParser.SimplePathContext assignmentTargetContext = (HqlParser.SimplePathContext) assignmentContext.getChild( 0 );
 					//noinspection unchecked
+					final SqmPath<Object> assignmentTarget = (SqmPath<Object>) consumeDomainPath( assignmentTargetContext );
+
 					updateStatement.applyAssignment(
-							(SqmPath<Object>) consumeDomainPath( (HqlParser.SimplePathContext) assignmentContext.getChild( 0 ) ),
-							(SqmExpression<?>) assignmentContext.getChild( 2 ).accept( this )
+							assignmentTarget,
+							interpretAssignmentValue( assignmentContext, assignmentTarget )
 					);
 				}
 			}
@@ -591,6 +598,26 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		finally {
 			processingStateStack.pop();
 		}
+	}
+
+	private SqmExpression<?> interpretAssignmentValue(AssignmentContext assignmentContext, SqmPath<?> assignmentTarget) {
+		final ExpressionOrPredicateContext assignmentValueContext = (ExpressionOrPredicateContext) assignmentContext.getChild( 2 );
+
+		if ( assignmentTarget.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
+				&& assignmentValueContext.expression() != null ) {
+			// the assignment value could be an enum literal
+			final ExpressionContext assignmentValueExpressionContext = assignmentValueContext.expression();
+			final Map<Class<?>, Enum<?>> possibleEnumValues = getPossibleEnumValues( assignmentValueExpressionContext );
+			if ( possibleEnumValues != null ) {
+				return resolveEnumShorthandLiteral(
+						assignmentValueExpressionContext,
+						possibleEnumValues,
+						assignmentTarget.getJavaType()
+				);
+			}
+		}
+
+		return (SqmExpression<?>) assignmentValueContext.accept( this );
 	}
 
 	@Override
@@ -1258,7 +1285,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmSelectableNode<?> visitSelectableNode(HqlParser.SelectionContext ctx) {
 		final ParseTree subCtx = ctx.getChild( 0 ).getChild( 0 );
-		if ( subCtx instanceof HqlParser.ExpressionOrPredicateContext ) {
+		if ( subCtx instanceof ExpressionOrPredicateContext ) {
 			final SqmExpression<?> sqmExpression = (SqmExpression<?>) subCtx.accept( this );
 			if ( sqmExpression instanceof SqmPath ) {
 				final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpression;
@@ -2382,8 +2409,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final ComparisonOperator comparisonOperator = (ComparisonOperator) ctx.getChild( 1 ).accept( this );
 		final SqmExpression<?> left;
 		final SqmExpression<?> right;
-		final HqlParser.ExpressionContext leftExpressionContext = (HqlParser.ExpressionContext) ctx.getChild( 0 );
-		final HqlParser.ExpressionContext rightExpressionContext = (HqlParser.ExpressionContext) ctx.getChild( 2 );
+		final ExpressionContext leftExpressionContext = (ExpressionContext) ctx.getChild( 0 );
+		final ExpressionContext rightExpressionContext = (ExpressionContext) ctx.getChild( 2 );
 		switch (comparisonOperator) {
 			case EQUAL:
 			case NOT_EQUAL:
@@ -2458,7 +2485,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private <T> SqmExpression<T> createDiscriminatorValue(
 			AnyDiscriminatorSqmPath<T> anyDiscriminatorTypeSqmPath,
-			HqlParser.ExpressionContext valueExpressionContext) {
+			ExpressionContext valueExpressionContext) {
 		return new SqmAnyDiscriminatorValue<>(
 				anyDiscriminatorTypeSqmPath.getNodeType().getPathName(),
 				creationContext.getJpaMetamodel().resolveHqlEntityReference( valueExpressionContext.getText() ),
@@ -2467,7 +2494,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-	private SqmExpression<?> resolveEnumShorthandLiteral(HqlParser.ExpressionContext expressionContext, Map<Class<?>, Enum<?>> possibleEnumValues, Class<?> enumType) {
+	private SqmExpression<?> resolveEnumShorthandLiteral(ExpressionContext expressionContext, Map<Class<?>, Enum<?>> possibleEnumValues, Class<?> enumType) {
 		final Enum<?> enumValue;
 		if ( possibleEnumValues != null && ( enumValue = possibleEnumValues.get( enumType ) ) != null ) {
 			DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
@@ -2480,7 +2507,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
-	private Map<Class<?>, Enum<?>> getPossibleEnumValues(HqlParser.ExpressionContext expressionContext) {
+	private Map<Class<?>, Enum<?>> getPossibleEnumValues(ExpressionContext expressionContext) {
 		ParseTree ctx;
 		// Traverse the expression structure according to the grammar
 		if ( expressionContext instanceof HqlParser.BarePrimaryExpressionContext && expressionContext.getChildCount() == 1 ) {
@@ -2599,12 +2626,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				final List<SqmExpression<?>> listExpressions = new ArrayList<>( estimatedSize );
 				for ( int i = 1; i < size; i++ ) {
 					final ParseTree parseTree = tupleExpressionListContext.getChild( i );
-					if ( parseTree instanceof HqlParser.ExpressionOrPredicateContext ) {
+					if ( parseTree instanceof ExpressionOrPredicateContext ) {
 						final ParseTree child = parseTree.getChild( 0 );
-						final HqlParser.ExpressionContext expressionContext;
+						final ExpressionContext expressionContext;
 						final Map<Class<?>, Enum<?>> possibleEnumValues;
-						if ( isEnum && child instanceof HqlParser.ExpressionContext
-								&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) child ) ) != null ) {
+						if ( isEnum && child instanceof ExpressionContext
+								&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (ExpressionContext) child ) ) != null ) {
 							listExpressions.add(
 									resolveEnumShorthandLiteral(
 											expressionContext,
@@ -3037,7 +3064,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final List<SqmExpression<?>> expressions = new ArrayList<>( estimateExpressionsCount );
 		for ( int i = 0; i < size; i++ ) {
 			final ParseTree parseTree = parentContext.getChild( i );
-			if ( parseTree instanceof HqlParser.ExpressionOrPredicateContext ) {
+			if ( parseTree instanceof ExpressionOrPredicateContext ) {
 				expressions.add( (SqmExpression<?>) parseTree.accept( this ) );
 			}
 		}

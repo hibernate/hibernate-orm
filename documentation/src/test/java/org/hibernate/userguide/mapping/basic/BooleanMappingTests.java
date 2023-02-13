@@ -7,11 +7,6 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -23,6 +18,12 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -93,8 +94,37 @@ public class BooleanMappingTests {
 					equalTo( Types.INTEGER )
 			);
 		}
+	}
 
+	@Test
+	void testQueryLiteralUsage(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createSelectionQuery( "from EntityOfBooleans where implicit = true" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where implicit = false" ).list();
 
+			session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = true" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = false" ).list();
+
+			session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = true" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = false" ).list();
+
+			session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = true" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = false" ).list();
+		} );
+	}
+
+	@Test
+	void testBadQueryLiteralUsage(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = 'y'" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = 'n'" ).list();
+
+			session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = 't'" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = 'f'" ).list();
+
+			session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = 1" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = 0" ).list();
+		} );
 	}
 
 	@Entity(name = "EntityOfBooleans")

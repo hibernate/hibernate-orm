@@ -252,37 +252,36 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
 			Set<Identifier> exportedCatalogs = new HashSet<>();
-			for ( Namespace namespace : database.getNamespaces() ) {
+			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
+				if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+					Namespace.Name logicalName = namespace.getName();
+					Namespace.Name physicalName = namespace.getPhysicalName();
 
-				if ( ! options.getSchemaFilter().includeNamespace( namespace ) ) {
-					continue;
-				}
-
-				if ( tryToCreateCatalogs ) {
-					final Identifier catalogLogicalName = namespace.getName().getCatalog();
-					final Identifier catalogPhysicalName =
-							sqlStringGenerationContext.catalogWithDefault( namespace.getPhysicalName().getCatalog() );
-
-					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
-						applySqlStrings(
-								dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
-								formatter,
-								options,
-								targets
-						);
-						exportedCatalogs.add( catalogLogicalName );
+					if ( tryToCreateCatalogs ) {
+						final Identifier catalogLogicalName = logicalName.getCatalog();
+						final Identifier catalogPhysicalName = sqlStringGenerationContext.catalogWithDefault( physicalName.getCatalog() );
+						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
+							applySqlStrings(
+									dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
+									formatter,
+									options,
+									targets
+							);
+							exportedCatalogs.add( catalogLogicalName );
+						}
 					}
-				}
 
-				final Identifier schemaPhysicalName =
-						sqlStringGenerationContext.schemaWithDefault( namespace.getPhysicalName().getSchema() );
-				if ( tryToCreateSchemas && schemaPhysicalName != null ) {
-					applySqlStrings(
-							dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
-							formatter,
-							options,
-							targets
-					);
+					if ( tryToCreateSchemas ) {
+						final Identifier schemaPhysicalName = sqlStringGenerationContext.schemaWithDefault( physicalName.getSchema() );
+						if ( schemaPhysicalName != null ) {
+							applySqlStrings(
+									dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
+									formatter,
+									options,
+									targets
+							);
+						}
+					}
 				}
 			}
 		}

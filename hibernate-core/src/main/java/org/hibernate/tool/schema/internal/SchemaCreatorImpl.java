@@ -233,11 +233,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					continue;
 				}
 
-				if ( tryToCreateCatalogs ) {
-					final Identifier catalogLogicalName = namespace.getName().getCatalog();
-					final Identifier catalogPhysicalName =
-							sqlStringGenerationContext.catalogWithDefault( namespace.getPhysicalName().getCatalog() );
+				Namespace.Name logicalName = namespace.getName();
+				Namespace.Name physicalName = namespace.getPhysicalName();
 
+				if ( tryToCreateCatalogs ) {
+					final Identifier catalogLogicalName = logicalName.getCatalog();
+					final Identifier catalogPhysicalName = sqlStringGenerationContext.catalogWithDefault( physicalName.getCatalog() );
 					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 						applySqlStrings(
 								dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
@@ -249,15 +250,16 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					}
 				}
 
-				final Identifier schemaPhysicalName =
-						sqlStringGenerationContext.schemaWithDefault( namespace.getPhysicalName().getSchema() );
-				if ( tryToCreateSchemas && schemaPhysicalName != null ) {
-					applySqlStrings(
-							dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
-							formatter,
-							options,
-							targets
-					);
+				if ( tryToCreateSchemas ) {
+					final Identifier schemaPhysicalName = sqlStringGenerationContext.schemaWithDefault( physicalName.getSchema() );
+					if ( schemaPhysicalName != null ) {
+						applySqlStrings(
+								dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
+								formatter,
+								options,
+								targets
+						);
+					}
 				}
 			}
 		}

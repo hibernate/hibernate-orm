@@ -132,7 +132,8 @@ public final class ByteBuddyState {
 		if (DEBUG) {
 			try {
 				result.saveIn(new File(System.getProperty("java.io.tmpdir") + "/bytebuddy/"));
-			} catch (IOException e) {
+			}
+			catch (IOException e) {
 				LOG.warn("Unable to save generated class %1$s", result.getTypeDescription().getName(), e);
 			}
 		}

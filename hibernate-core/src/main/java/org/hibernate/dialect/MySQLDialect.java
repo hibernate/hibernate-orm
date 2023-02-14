@@ -561,6 +561,7 @@ public class MySQLDialect extends Dialect {
 		functionFactory.position();
 		functionFactory.nowCurdateCurtime();
 		functionFactory.trunc_truncate();
+		functionFactory.dateTrunc_format( "str_to_date", false );
 		functionFactory.insert();
 		functionFactory.bitandorxornot_operator();
 		functionFactory.bitAndOr();

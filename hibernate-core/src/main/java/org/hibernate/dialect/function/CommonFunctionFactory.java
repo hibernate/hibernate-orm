@@ -2560,20 +2560,30 @@ public class CommonFunctionFactory {
 
 	public void dateTrunc() {
 		functionRegistry.patternDescriptorBuilder( "date_trunc", "date_trunc('?1',?2)" )
-				.setInvariantType(timestampType)
+				.setReturnTypeResolver( useArgType( 2 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
+				.setParameterTypes( TEMPORAL_UNIT, TEMPORAL )
+				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
+				.register();
+	}
+
+	public void dateTrunc_datetrunc() {
+		functionRegistry.patternDescriptorBuilder( "date_trunc", "datetrunc(?1,?2)" )
+				.setReturnTypeResolver( useArgType( 2 ) )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( TEMPORAL_UNIT, TEMPORAL )
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
 				.register();
 	}
 
 	public void dateTrunc_trunc() {
-		functionRegistry.patternDescriptorBuilder( "date_trunc", "trunc(?2,'?1')" )
-				.setInvariantType(timestampType)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
-				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
-				.register();
+		functionRegistry.register( "date_trunc", new DateTruncTrunc( typeConfiguration ) );
 	}
 
+	public void dateTrunc_format(String toDateFunction, boolean useConvertToFormat) {
+		functionRegistry.register(
+				"date_trunc",
+				new DateTruncEmulation( toDateFunction, useConvertToFormat, typeConfiguration )
+		);
+	}
 }

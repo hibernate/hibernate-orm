@@ -291,9 +291,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		}
 
+		final SharedSessionContractImplementor session = executionContext.getSession();
+
 		final boolean stats;
 		long startTime = 0;
-		final StatisticsImplementor statistics = executionContext.getSession().getFactory().getStatistics();
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( executionContext.hasQueryExecutionToBeAddedToStatistics()
 				&& jdbcValues instanceof JdbcValuesResultSetImpl ) {
 			stats = statistics.isStatisticsEnabled();
@@ -359,7 +361,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final T result = resultsConsumer.consume(
 				jdbcValues,
-				executionContext.getSession(),
+				session,
 				processingOptions,
 				valuesProcessingState,
 				rowProcessingState,

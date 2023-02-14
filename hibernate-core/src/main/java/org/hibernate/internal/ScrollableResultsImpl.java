@@ -7,6 +7,7 @@
 package org.hibernate.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
@@ -122,15 +123,22 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 			return;
 		}
 
-		currentRow = getRowReader().readRow(
-				getRowProcessingState(),
-				getProcessingOptions()
-		);
+		final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
 
-		getRowProcessingState().finishRowProcessing();
-		getJdbcValuesSourceProcessingState().finishUp();
+		persistenceContext.beforeLoad();
+		try {
+			currentRow = getRowReader().readRow(
+					getRowProcessingState(),
+					getProcessingOptions()
+			);
 
-		getRowProcessingState().getSession().getPersistenceContext().initializeNonLazyCollections();
+			getRowProcessingState().finishRowProcessing();
+			getJdbcValuesSourceProcessingState().finishUp();
+		}
+		finally {
+			persistenceContext.afterLoad();
+		}
+		persistenceContext.initializeNonLazyCollections();
 
 		afterScrollOperation();
 	}

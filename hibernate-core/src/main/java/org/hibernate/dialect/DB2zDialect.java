@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 
+import org.hibernate.QueryException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
@@ -17,6 +18,7 @@ import org.hibernate.dialect.sequence.DB2zSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Column;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -29,6 +31,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import jakarta.persistence.TemporalType;
 
 import java.util.List;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -43,6 +47,8 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
  * @author Christian Beikov
  */
 public class DB2zDialect extends DB2Dialect {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DB2zDialect.class.getName() );
 
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12, 1 );
 	final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
@@ -227,5 +233,10 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	public String getRowIdColumnString(String rowId) {
 		return rowId( rowId ) + " rowid not null generated always";
+	}
+
+	@Override
+	public String extractPattern(TemporalUnit unit) {
+		throw new QueryException( LOG.epochNotSupportedOnDb2z() );
 	}
 }

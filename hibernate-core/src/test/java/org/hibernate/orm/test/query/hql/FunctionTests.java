@@ -9,6 +9,8 @@ package org.hibernate.orm.test.query.hql;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DB2iDialect;
+import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -1519,6 +1521,9 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = DB2zDialect.class)
+	@SkipForDialect(dialectClass = DB2iDialect.class, majorVersion = 7, minorVersion = 1)
+	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5)
 	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -1819,4 +1819,15 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 513)
 	void unableToGenerateReflectionOptimizer(String className, @Cause Throwable cause);
 
+	@LogMessage(level = ERROR)
+	@Message(value = "the epoch keyword is not supported in DB2 before version 11.1", id = Message.NONE)
+	void epochNotSupportedOnDb2Before111();
+
+	@LogMessage(level = ERROR)
+	@Message(value = "the epoch keyword is not supported in DB2i before version 7.2", id = Message.NONE)
+	String epochNotSupportedOnDb2iBefore72();
+
+	@LogMessage(level = ERROR)
+	@Message(value = "the epoch keyword is not supported in DB2z", id = Message.NONE)
+	String epochNotSupportedOnDb2z();
 }

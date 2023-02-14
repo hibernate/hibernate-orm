@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.hibernate.LockOptions;
+import org.hibernate.QueryException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -43,6 +44,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -84,6 +86,8 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.jboss.logging.Logger;
+
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -109,6 +113,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * @author Gavin King
  */
 public class DB2Dialect extends Dialect {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DB2Dialect.class.getName() );
 
 	final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 5 );
 	private static final int BIND_PARAMETERS_NUMBER_LIMIT = 32_767;
@@ -888,6 +894,9 @@ public class DB2Dialect extends Dialect {
 
 			if ( -952 == errorCode && "57014".equals( sqlState ) ) {
 				throw new LockTimeoutException( message, sqlException, sql );
+			} else if ( -104 == errorCode && "42601".equals( sqlState ) ) {
+				LOG.epochNotSupportedOnDb2Before111();
+				throw new QueryException( message, sql, sqlException );
 			}
 			return null;
 		};

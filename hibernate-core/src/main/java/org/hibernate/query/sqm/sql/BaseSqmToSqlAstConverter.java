@@ -7162,7 +7162,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.getEntityMappingType()
 				.getIdentifierMapping();
 		final Fetchable fetchableIdentifierMapping = (Fetchable) identifierMapping;
-		return createFetch( fetchParent, fetchableIdentifierMapping, true );
+		return createFetch( fetchParent, fetchableIdentifierMapping, false );
 	}
 
 	private Fetch createFetch(FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {

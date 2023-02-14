@@ -2651,6 +2651,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <T extends TemporalAccessor> SqmFunction<T> truncate(Expression<T> datetime, TemporalUnit temporalUnit) {
+		return getFunctionDescriptor( "trunc" ).generateSqmExpression(
+				asList(
+						(SqmTypedNode<?>) datetime,
+						new SqmExtractUnit<>( temporalUnit, getIntegerType(), this )
+				),
+				null,
+				queryEngine,
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
 	public SqmFunction<String> overlay(Expression<String> string, String replacement, int start) {
 		return overlay( string, replacement, value( start ), null );
 	}

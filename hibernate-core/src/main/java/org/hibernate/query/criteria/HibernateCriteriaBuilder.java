@@ -36,6 +36,7 @@ import org.hibernate.Incubating;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -996,6 +997,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	JpaFunction<Float> second(Expression<? extends TemporalAccessor> datetime);
+
+	@Incubating
+	<T extends TemporalAccessor> JpaFunction<T> truncate(Expression<T> datetime, TemporalUnit temporalUnit);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)

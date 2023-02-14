@@ -52,6 +52,7 @@ import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.Tuple;
@@ -1301,6 +1302,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaFunction<Float> second(Expression<? extends TemporalAccessor> datetime) {
 		return criteriaBuilder.second( datetime );
+	}
+
+	@Override
+	public <T extends TemporalAccessor> JpaFunction<T> truncate(Expression<T> datetime, TemporalUnit temporalUnit) {
+		return criteriaBuilder.truncate( datetime, temporalUnit );
 	}
 
 	@Override

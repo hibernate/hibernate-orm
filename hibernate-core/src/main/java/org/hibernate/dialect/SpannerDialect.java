@@ -38,7 +38,6 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -53,6 +52,7 @@ import org.hibernate.type.StandardBasicTypes;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -394,7 +394,7 @@ public class SpannerDialect extends Dialect {
 				.setExactArgumentCount( 3 )
 				.register();
 		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "date_trunc" )
-				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 2 ) )
+				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
 				.register();
 		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "date_from_unix_date" )

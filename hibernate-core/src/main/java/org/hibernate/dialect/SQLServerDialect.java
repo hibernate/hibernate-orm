@@ -370,6 +370,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			functionFactory.leastGreatest();
+			functionFactory.dateTrunc_datetrunc();
+		}
+		else {
+			functionFactory.dateTrunc_format( "convert", false );
 		}
 	}
 

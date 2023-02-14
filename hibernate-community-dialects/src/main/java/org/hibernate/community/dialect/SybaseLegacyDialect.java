@@ -218,6 +218,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		functionFactory.varPopSamp();
 		functionFactory.trunc_floorPower();
 		functionFactory.round_round();
+		functionFactory.dateTrunc_format( "convert", true );
 
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
 		functionContributions.getFunctionRegistry().register(

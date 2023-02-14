@@ -215,7 +215,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		} );
 	}
 
-	private static void breakDownJdbcValue(
+	protected void breakDownJdbcValue(
 			Object id,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
@@ -235,7 +235,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		);
 	}
 
-	private void decomposeAttribute(
+	protected void decomposeAttribute(
 			Object value,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,

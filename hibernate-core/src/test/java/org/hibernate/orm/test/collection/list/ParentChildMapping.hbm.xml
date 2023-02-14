@@ -3,17 +3,17 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-lazy="false" package="org.hibernate.orm.test.collection.list">
-    <class name="Parent" table="custom_field">
+    <class name="Parent" table="parent_table">
         <id name="id"/>
         <property name="name" column="name"/>
         <list name="children" inverse="true" cascade="all-delete-orphan">
-            <key column="custom_field_id"/>
+            <key column="parent_id"/>
             <index column="seq_num"/>
             <one-to-many class="Child"/>
         </list>
     </class>
-    <class name="Child" table="custom_field_option">
+    <class name="Child" table="child_table">
         <id name="id"/>
-        <many-to-one name="parent" not-null="true" column="custom_field_id"/>
+        <many-to-one name="parent" not-null="true" column="parent_id"/>
     </class>
 </hibernate-mapping>

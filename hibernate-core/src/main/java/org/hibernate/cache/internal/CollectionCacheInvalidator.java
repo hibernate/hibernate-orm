@@ -181,13 +181,14 @@ public class CollectionCacheInvalidator
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
 		}
-		AfterTransactionCompletionProcess afterTransactionProcess = new CollectionEvictCacheAction(
+		CollectionEvictCacheAction evictCacheAction = new CollectionEvictCacheAction(
 				collectionPersister,
 				null,
 				id,
 				session
-		).lockCache();
-		session.getActionQueue().registerProcess( afterTransactionProcess );
+		);
+		evictCacheAction.execute();
+		session.getActionQueue().registerProcess( evictCacheAction.getAfterTransactionCompletionProcess() );
 	}
 
 	//execute the same process as invalidation with collection operations
@@ -202,11 +203,8 @@ public class CollectionCacheInvalidator
 
 		@Override
 		public void execute() throws HibernateException {
-		}
-
-		public AfterTransactionCompletionProcess lockCache() {
 			beforeExecutions();
-			return getAfterTransactionCompletionProcess();
+			evict();
 		}
 	}
 

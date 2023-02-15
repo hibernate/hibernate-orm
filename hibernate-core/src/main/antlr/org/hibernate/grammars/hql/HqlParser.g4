@@ -1245,6 +1245,7 @@ frameExclusion
 standardFunction
 	: castFunction
 	| extractFunction
+	| truncFunction
 	| formatFunction
 	| collateFunction
 	| substringFunction
@@ -1450,6 +1451,13 @@ format
 extractFunction
 	: EXTRACT LEFT_PAREN extractField FROM expression RIGHT_PAREN
 	| datetimeField LEFT_PAREN expression RIGHT_PAREN
+	;
+
+/**
+ * The 'trunc()' function for truncating both numeric and datetime values
+ */
+truncFunction
+	: (TRUNC | TRUNCATE) LEFT_PAREN expression (COMMA (datetimeField | expression))? RIGHT_PAREN
 	;
 
 /**
@@ -1688,6 +1696,7 @@ rollup
 	| TRAILING
 	| TREAT
 	| TRIM
+	| TRUNC
 	| TRUNCATE
 	| TYPE
 	| UNBOUNDED

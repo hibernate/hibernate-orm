@@ -800,13 +800,14 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-nullif-example]
 [[hql-functions-datetime]]
 ==== Functions for working with dates and times
 
-There are two very important function for working with dates and times.
+There are some very important functions for working with dates and times.
 
 |===
 | Special function | Purpose | Signature | JPA standard
 
 | `extract()` | Extract a datetime field | `extract(field from x)` | &check;
 | `format()` | Format a datetime as a string | `format(datetime as pattern)` | &cross;
+| `trunc()` or `truncate()` | Datetime truncation | `truncate(datetime, field)` | &cross;
 |===
 
 [[hql-function-extract]]
@@ -854,6 +855,16 @@ This function formats a date, time, or datetime according to a pattern.
 The syntax is `format(datetime as pattern)`, and the pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
 
 For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect#appendDatetimeFormat`].
+
+[[hql-function-trunc-datetime]]
+===== `trunc()` or `truncate()`
+
+This function truncates a date, time, or datetime to the temporal unit specified by field.
+
+The syntax is `truncate(datetime, field)`. Supported temporal units are: `year`, `month`, `day`, `hour`, `minute` or `second`.
+
+Truncating a date, time or datetime value translates to obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
+For hours, minutes and second this means setting them to `00`. For months and days, this means setting them to `01'.
 
 [[hql-string-functions]]
 ==== Functions for working with strings

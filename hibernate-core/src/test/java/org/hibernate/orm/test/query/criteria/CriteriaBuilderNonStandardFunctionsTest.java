@@ -16,7 +16,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
@@ -24,6 +23,7 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -433,6 +433,34 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			Tuple result = session.createQuery( query ).getSingleResult();
 			assertEquals( 180.0, result.get( 0, Double.class ), 1e-9 );
 			assertEquals( Math.PI, result.get( 1, Double.class ), 1e-9 );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-16185")
+	public void testCustomFunctionTrunc(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final CriteriaBuilder cb = session.getCriteriaBuilder();
+			final CriteriaQuery<Tuple> query = cb.createTupleQuery();
+			query.multiselect(
+					cb.function( "trunc", Float.class, cb.literal( 32.92345f ) ),
+					cb.function( "truncate", Float.class, cb.literal( 32.92345f ) ),
+					cb.function( "trunc", Float.class, cb.literal( 32.92345f ), cb.literal( 3 ) ),
+					cb.function( "truncate", Float.class, cb.literal( 32.92345f ), cb.literal( 3 ) ),
+					cb.function( "trunc", Double.class, cb.literal( 32.92345d ) ),
+					cb.function( "truncate", Double.class, cb.literal( 32.92345d ) ),
+					cb.function( "trunc", Double.class, cb.literal( 32.92345d ), cb.literal( 3 ) ),
+					cb.function( "truncate", Double.class, cb.literal( 32.92345d ), cb.literal( 3 ) )
+			);
+			final Tuple result = session.createQuery( query ).getSingleResult();
+			assertEquals( 32f, result.get( 0 ) );
+			assertEquals( 32f, result.get( 1 ) );
+			assertEquals( 32.923f, result.get( 2 ) );
+			assertEquals( 32.923f, result.get( 3 ) );
+			assertEquals( 32d, result.get( 4 ) );
+			assertEquals( 32d, result.get( 5 ) );
+			assertEquals( 32.923d, result.get( 6 ) );
+			assertEquals( 32.923d, result.get( 7 ) );
 		} );
 	}
 }

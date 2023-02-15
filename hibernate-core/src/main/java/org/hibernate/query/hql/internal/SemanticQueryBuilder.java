@@ -4328,6 +4328,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public Object visitTruncFunction(HqlParser.TruncFunctionContext ctx) {
+		final SqmExpression<?> expression = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
+		final SqmTypedNode<?> secondArg;
+		if ( ctx.getChildCount() == 6 ) {
+			secondArg = (SqmTypedNode<?>) ctx.getChild( 4 ).accept( this );
+		}
+		else {
+			secondArg = null;
+		}
+
+		return getFunctionDescriptor( "trunc" ).generateSqmExpression(
+				secondArg == null ? singletonList( expression ) : asList( expression, secondArg ),
+				null,
+				creationContext.getQueryEngine(),
+				creationContext.getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
 	public Object visitFormat(HqlParser.FormatContext ctx) {
 		final String format = QuotingHelper.unquoteStringLiteral( ctx.getChild( 0 ).getText() );
 		return new SqmFormat(

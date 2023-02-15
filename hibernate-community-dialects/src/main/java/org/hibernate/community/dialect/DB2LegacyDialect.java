@@ -295,8 +295,6 @@ public class DB2LegacyDialect extends Dialect {
 		functionFactory.octetLength();
 		functionFactory.ascii();
 		functionFactory.char_chr();
-		functionFactory.trunc();
-//		functionFactory.truncate();
 		functionFactory.insert();
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
 		functionFactory.stddev();
@@ -312,6 +310,7 @@ public class DB2LegacyDialect extends Dialect {
 			functionFactory.varPopSamp();
 			functionFactory.varianceSamp();
 			functionFactory.dateTrunc();
+			functionFactory.trunc_dateTrunc();
 		}
 		else {
 			// Before version 11, the position function required the use of the code units
@@ -327,7 +326,7 @@ public class DB2LegacyDialect extends Dialect {
 			functionFactory.stddevSamp_sumCount();
 			functionContributions.getFunctionRegistry().registerAlternateKey( "var_pop", "variance" );
 			functionFactory.varSamp_sumCount();
-			functionFactory.dateTrunc_trunc();
+			functionFactory.trunc_dateTrunc_trunc();
 		}
 
 		functionFactory.addYearsMonthsDaysHoursMinutesSeconds();

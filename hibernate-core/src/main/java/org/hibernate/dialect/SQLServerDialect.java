@@ -28,6 +28,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
+import org.hibernate.dialect.function.SqlServerConvertTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -309,7 +310,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		functionFactory.log_log();
 
-		functionFactory.trunc_round();
 		functionFactory.round_round();
 		functionFactory.everyAny_minMaxIif();
 		functionFactory.octetLength_pattern( "datalength(?1)" );
@@ -371,9 +371,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			functionFactory.leastGreatest();
 			functionFactory.dateTrunc_datetrunc();
+			functionFactory.trunc_round_datetrunc();
 		}
 		else {
-			functionFactory.dateTrunc_format( "convert", false );
+			functionContributions.getFunctionRegistry().register(
+					"trunc",
+					new SqlServerConvertTruncFunction( functionContributions.getTypeConfiguration() )
+			);
+			functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 		}
 	}
 

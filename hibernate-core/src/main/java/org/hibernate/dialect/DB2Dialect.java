@@ -1012,6 +1012,12 @@ public class DB2Dialect extends Dialect {
 				return "dayofweek(?2)";
 			case QUARTER:
 				return "quarter(?2)";
+			case EPOCH:
+				if ( getDB2Version().isBefore( 11 ) ) {
+					return timestampdiffPattern( TemporalUnit.SECOND, TemporalType.TIMESTAMP, TemporalType.TIMESTAMP )
+							.replace( "?2", "'1970-01-01 00:00:00'" )
+							.replace( "?3", "?2" );
+				}
 		}
 		return super.extractPattern( unit );
 	}

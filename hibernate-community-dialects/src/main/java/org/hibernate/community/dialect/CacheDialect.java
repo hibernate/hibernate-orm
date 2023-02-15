@@ -168,7 +168,7 @@ public class CacheDialect extends Dialect {
 		functionFactory.weekQuarter();
 		functionFactory.daynameMonthname();
 		functionFactory.toCharNumberDateTimestamp();
-		functionFactory.truncate();
+		functionFactory.trunc_truncate();
 		functionFactory.dayofweekmonthyear();
 		functionFactory.repeat_replicate();
 		functionFactory.datepartDatename();

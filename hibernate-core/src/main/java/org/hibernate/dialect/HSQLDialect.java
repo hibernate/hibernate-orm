@@ -140,9 +140,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.degrees();
 		functionFactory.log10();
 		functionFactory.rand();
-		functionFactory.trunc();
-//		functionFactory.truncate();
-		functionFactory.dateTrunc_trunc();
+		functionFactory.trunc_dateTrunc_trunc();
 		functionFactory.pi();
 		functionFactory.soundex();
 		functionFactory.reverse();

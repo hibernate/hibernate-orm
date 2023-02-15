@@ -290,6 +290,7 @@ TO					: [tT] [oO];
 TRAILING			: [tT] [rR] [aA] [iI] [lL] [iI] [nN] [gG];
 TREAT				: [tT] [rR] [eE] [aA] [tT];
 TRIM				: [tT] [rR] [iI] [mM];
+TRUNC				: [tT] [rR] [uU] [nN] [cC];
 TRUNCATE			: [tT] [rR] [uU] [nN] [cC] [aA] [tT] [eE];
 TYPE				: [tT] [yY] [pP] [eE];
 UNBOUNDED			: [uU] [nN] [bB] [oO] [uU] [nN] [dD] [eE] [dD];

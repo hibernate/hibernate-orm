@@ -496,6 +496,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	@Override
 	public AttributeMappingsList getAttributeMappings() {
+		checkIsReady();
 		return attributeMappings;
 	}
 

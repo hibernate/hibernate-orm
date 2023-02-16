@@ -54,10 +54,16 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	public InsertCoordinator(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
-		insertBatchKey = new BasicBatchKey(
-				entityPersister.getEntityName() + "#INSERT",
-				null
-		);
+		if ( entityPersister.hasInsertGeneratedProperties() ) {
+			// disable batching in case of insert generated properties
+			insertBatchKey = null;
+		}
+		else {
+			insertBatchKey = new BasicBatchKey(
+					entityPersister.getEntityName() + "#INSERT",
+					null
+			);
+		}
 
 		if ( entityPersister.getEntityMetamodel().isDynamicInsert() ) {
 			// the entity specified dynamic-insert - skip generating the

@@ -89,10 +89,16 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// there are cases where we need the full static updates.
 		this.staticUpdateGroup = buildStaticUpdateGroup();
 		this.versionUpdateGroup = buildVersionUpdateGroup();
-		this.batchKey = new BasicBatchKey(
-				entityPersister.getEntityName() + "#UPDATE",
-				null
-		);
+		if ( entityPersister.hasUpdateGeneratedProperties() ) {
+			// disable batching in case of update generated properties
+			this.batchKey = null;
+		}
+		else {
+			this.batchKey = new BasicBatchKey(
+					entityPersister.getEntityName() + "#UPDATE",
+					null
+			);
+		}
 	}
 
 	@Override

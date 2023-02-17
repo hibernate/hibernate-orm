@@ -119,60 +119,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	private Expression createCaseSearchedExpression(TableGroup entityTableGroup) {
-		return new SelfRenderingExpression() {
-			CaseSearchedExpression caseSearchedExpression;
-
-			@Override
-			public void renderToSql(
-					SqlAppender sqlAppender,
-					SqlAstTranslator<?> walker,
-					SessionFactoryImplementor sessionFactory) {
-				if ( caseSearchedExpression == null ) {
-					// todo (6.0): possible optimization is to omit cases for table reference joins, that touch a super class, where a subclass is inner joined due to pruning
-					caseSearchedExpression = new CaseSearchedExpression( CaseStatementDiscriminatorMappingImpl.this );
-					tableDiscriminatorDetailsMap.forEach(
-							(tableName, tableDiscriminatorDetails) -> {
-								final TableReference tableReference = entityTableGroup.getTableReference(
-										entityTableGroup.getNavigablePath(),
-										tableName,
-										false,
-										false
-								);
-
-								if ( tableReference == null ) {
-									// assume this is because it is a table that is not part of the processing entity's sub-hierarchy
-									return;
-								}
-
-								final Predicate predicate = new NullnessPredicate(
-										new ColumnReference(
-												tableReference,
-												tableDiscriminatorDetails.getCheckColumnName(),
-												false,
-												null,
-												getJdbcMapping()
-										),
-										true
-								);
-
-								caseSearchedExpression.when(
-										predicate,
-										new QueryLiteral<>(
-												tableDiscriminatorDetails.getDiscriminatorValue(),
-												getUnderlyingJdbcMappingType()
-										)
-								);
-							}
-					);
-				}
-				caseSearchedExpression.accept( walker );
-			}
-
-			@Override
-			public JdbcMappingContainer getExpressionType() {
-				return CaseStatementDiscriminatorMappingImpl.this;
-			}
-		};
+		return new CaseStatementDiscriminatorExpression( entityTableGroup );
 	}
 
 	@Override
@@ -281,4 +228,63 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		}
 	}
 
+	public final class CaseStatementDiscriminatorExpression implements SelfRenderingExpression {
+		private final TableGroup entityTableGroup;
+		CaseSearchedExpression caseSearchedExpression;
+
+		public CaseStatementDiscriminatorExpression(TableGroup entityTableGroup) {
+			this.entityTableGroup = entityTableGroup;
+		}
+
+		@Override
+		public void renderToSql(
+				SqlAppender sqlAppender,
+				SqlAstTranslator<?> walker,
+				SessionFactoryImplementor sessionFactory) {
+			if ( caseSearchedExpression == null ) {
+				// todo (6.0): possible optimization is to omit cases for table reference joins, that touch a super class, where a subclass is inner joined due to pruning
+				caseSearchedExpression = new CaseSearchedExpression( CaseStatementDiscriminatorMappingImpl.this );
+				tableDiscriminatorDetailsMap.forEach(
+						(tableName, tableDiscriminatorDetails) -> {
+							final TableReference tableReference = entityTableGroup.getTableReference(
+									entityTableGroup.getNavigablePath(),
+									tableName,
+									false,
+									false
+							);
+
+							if ( tableReference == null ) {
+								// assume this is because it is a table that is not part of the processing entity's sub-hierarchy
+								return;
+							}
+
+							final Predicate predicate = new NullnessPredicate(
+									new ColumnReference(
+											tableReference,
+											tableDiscriminatorDetails.getCheckColumnName(),
+											false,
+											null,
+											getJdbcMapping()
+									),
+									true
+							);
+
+							caseSearchedExpression.when(
+									predicate,
+									new QueryLiteral<>(
+											tableDiscriminatorDetails.getDiscriminatorValue(),
+											getUnderlyingJdbcMappingType()
+									)
+							);
+						}
+				);
+			}
+			caseSearchedExpression.accept( walker );
+		}
+
+		@Override
+		public JdbcMappingContainer getExpressionType() {
+			return CaseStatementDiscriminatorMappingImpl.this;
+		}
+	}
 }

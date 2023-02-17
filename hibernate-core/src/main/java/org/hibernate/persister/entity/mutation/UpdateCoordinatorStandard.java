@@ -216,7 +216,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 	}
 
-	private void performUpdate(
+	protected void performUpdate(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -294,7 +294,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private static int[] dirtyAttributeIndexes(int[] incomingDirtyIndexes, int[] preUpdateGeneratedIndexes) {
+	protected static int[] dirtyAttributeIndexes(int[] incomingDirtyIndexes, int[] preUpdateGeneratedIndexes) {
 		if ( preUpdateGeneratedIndexes.length == 0 ) {
 			return incomingDirtyIndexes;
 		}
@@ -356,7 +356,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private boolean handlePotentialImplicitForcedVersionIncrement(
+	protected boolean handlePotentialImplicitForcedVersionIncrement(
 			Object entity,
 			Object id,
 			Object[] values,
@@ -532,7 +532,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	 * Transform the array of property indexes to an array of booleans for each attribute,
 	 * true when the property is dirty
 	 */
-	private boolean[] getPropertiesToUpdate(final int[] dirtyProperties, final boolean hasDirtyCollection) {
+	protected boolean[] getPropertiesToUpdate(final int[] dirtyProperties, final boolean hasDirtyCollection) {
 		final boolean[] updateability = entityPersister().getPropertyUpdateability();
 		if ( dirtyProperties == null ) {
 			return updateability;

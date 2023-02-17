@@ -139,4 +139,24 @@ public class GeneratedValuesProcessor {
 			attribute.getAttributeMetadata().getPropertyAccess().getSetter().set( entity, generatedValue );
 		}
 	}
+
+	public SelectStatement getSelectStatement() {
+		return selectStatement;
+	}
+
+	public List<AttributeMapping> getGeneratedValuesToSelect() {
+		return generatedValuesToSelect;
+	}
+
+	public List<JdbcParameter> getJdbcParameters() {
+		return jdbcParameters;
+	}
+
+	public EntityMappingType getEntityDescriptor() {
+		return entityDescriptor;
+	}
+
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
 }

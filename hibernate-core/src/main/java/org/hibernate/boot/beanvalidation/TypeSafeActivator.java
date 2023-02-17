@@ -483,11 +483,6 @@ class TypeSafeActivator {
 			return Validation.buildDefaultValidatorFactory();
 		}
 		catch ( Exception e ) {
-			LOG.infof(
-					e,
-					"Error calling `%s`",
-					"jakarta.validation.Validation#buildDefaultValidatorFactory"
-			);
 			throw new IntegrationException( "Unable to build the default ValidatorFactory", e );
 		}
 	}

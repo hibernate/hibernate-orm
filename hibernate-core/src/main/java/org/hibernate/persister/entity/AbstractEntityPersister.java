@@ -1000,6 +1000,16 @@ public abstract class AbstractEntityPersister
 		return sqlVersionSelectString;
 	}
 
+	@Internal
+	public GeneratedValuesProcessor getInsertGeneratedValuesProcessor() {
+		return insertGeneratedValuesProcessor;
+	}
+
+	@Internal
+	public GeneratedValuesProcessor getUpdateGeneratedValuesProcessor() {
+		return updateGeneratedValuesProcessor;
+	}
+
 	@Override
 	public boolean hasRowId() {
 		return rowIdName != null;

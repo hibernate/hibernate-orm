@@ -28,6 +28,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
+import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
@@ -65,6 +66,7 @@ import static org.hibernate.query.results.ResultsHelper.attributeName;
 public class DomainResultCreationStateImpl
 		implements DomainResultCreationState, SqlAstCreationState, SqlAstProcessingState, SqlExpressionResolver {
 
+	private static final String DISCRIMINATOR_ALIAS = "clazz_";
 	private final String stateIdentifier;
 	private final FromClauseAccessImpl fromClauseAccess;
 
@@ -288,6 +290,26 @@ public class DomainResultCreationStateImpl
 			final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection(
 					valuesArrayPosition,
 					columnReference.getJdbcMapping()
+			);
+
+			sqlSelectionMap.put( key, sqlSelection );
+			sqlSelectionConsumer.accept( sqlSelection );
+
+			return sqlSelection;
+		}
+		else if ( created instanceof CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression ) {
+			final int valuesArrayPosition;
+			if ( nestingFetchParent != null ) {
+				valuesArrayPosition = nestingFetchParent.getReferencedMappingType().getSelectableIndex( DISCRIMINATOR_ALIAS );
+			}
+			else {
+				final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( DISCRIMINATOR_ALIAS );
+				valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+			}
+
+			final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection(
+					valuesArrayPosition,
+					created.getExpressionType().getSingleJdbcMapping()
 			);
 
 			sqlSelectionMap.put( key, sqlSelection );

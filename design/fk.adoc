@@ -31,7 +31,7 @@ Assuming bi-directionality, we have 2 `Association` refs:
 
 
 
-There is a single ForeignKeyDescriptor instance for this FK in our metamodel, with 2 Sides:
+There is a single `ForeignKeyDescriptor` instance for this FK in our metamodel, with 2 Sides:
 
 ```
 ForeignKeyDescriptor (

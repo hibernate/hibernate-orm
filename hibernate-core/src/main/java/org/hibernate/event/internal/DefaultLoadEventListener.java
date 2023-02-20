@@ -12,11 +12,13 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
@@ -37,6 +39,9 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -530,7 +535,16 @@ public class DefaultLoadEventListener implements LoadEventListener {
 					= CacheEntityLoaderHelper.INSTANCE.loadFromSessionCache( event, keyToLoad, options );
 			final Object entity = persistenceContextEntry.getEntity();
 			if ( entity != null ) {
-				return persistenceContextEntry.isManaged() ? entity : null;
+				if ( persistenceContextEntry.isManaged() ) {
+					if ( isPersistentAttributeInterceptable( entity ) ) {
+						final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+						if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+							( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( entity, null );
+						}
+					}
+					return entity;
+				}
+				return null;
 			}
 			else {
 				return load( event, persister, keyToLoad );

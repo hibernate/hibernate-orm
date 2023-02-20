@@ -12,7 +12,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.nuodb.jdbc:nuodb-jdbc:23.0.0'
+        classpath 'com.nuodb.jdbc:nuodb-jdbc:24.0.0'
     }
 }
 // END: For NUODB

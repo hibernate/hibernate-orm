@@ -15,6 +15,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -865,6 +866,19 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('F' as TrueFalse)", Boolean.class).getSingleResult(), is(false) );
 				}
 		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DB2Dialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	public void testCastToOffsetDatetime(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createQuery("select cast(datetime 1911-10-09 12:13:14-02:00 as String)", String.class).getSingleResult();
+			session.createQuery("select cast('1911-10-09 12:13:14.123-02:00' as OffsetDateTime)", OffsetDateTime.class)
+					.getSingleResult();
+
+		});
 	}
 
 	@Test

@@ -15,6 +15,7 @@ import java.util.function.Function;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -72,6 +73,7 @@ public class DomainResultCreationStateImpl
 
 	private final JdbcValuesMetadata jdbcResultsMetadata;
 	private final Consumer<SqlSelection> sqlSelectionConsumer;
+	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final Map<ColumnReferenceKey, ResultSetMappingSqlSelection> sqlSelectionMap = new HashMap<>();
 	private boolean allowPositionalSelections = true;
 
@@ -92,10 +94,12 @@ public class DomainResultCreationStateImpl
 			JdbcValuesMetadata jdbcResultsMetadata,
 			Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders,
 			Consumer<SqlSelection> sqlSelectionConsumer,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 		this.stateIdentifier = stateIdentifier;
 		this.jdbcResultsMetadata = jdbcResultsMetadata;
 		this.sqlSelectionConsumer = sqlSelectionConsumer;
+		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.fromClauseAccess = new FromClauseAccessImpl();
 		this.sqlAliasBaseManager = new SqlAliasBaseManager();
 
@@ -243,6 +247,11 @@ public class DomainResultCreationStateImpl
 	@Override
 	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 		return sqlAliasBaseManager;
+	}
+
+	@Override
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return loadQueryInfluencers;
 	}
 
 

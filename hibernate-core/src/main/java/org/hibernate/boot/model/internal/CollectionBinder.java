@@ -77,13 +77,13 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
@@ -165,7 +165,6 @@ import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
-import static org.hibernate.cfg.AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -1789,26 +1788,13 @@ public abstract class CollectionBinder {
 	private String getWhereOnClassClause() {
 		if ( property.getElementClass() != null ) {
 			final Where whereOnClass = getOverridableAnnotation( property.getElementClass(), Where.class, getBuildingContext() );
-			return whereOnClass != null
-				&& ( whereOnClass.applyInToManyFetch() || useEntityWhereClauseForCollections() )
+			return whereOnClass != null && ModelBinder.useEntityWhereClauseForCollections( buildingContext )
 					? whereOnClass.clause()
 					: null;
 		}
 		else {
 			return null;
 		}
-	}
-
-	private boolean useEntityWhereClauseForCollections() {
-		return getBoolean(
-				USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
-				buildingContext
-						.getBuildingOptions()
-						.getServiceRegistry()
-						.getService( ConfigurationService.class )
-						.getSettings(),
-				true
-		);
 	}
 
 	private void addFilter(boolean hasAssociationTable, FilterJoinTable filter) {

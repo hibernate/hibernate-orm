@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -75,6 +76,7 @@ class DatabaseSnapshotExecutor {
 				LockOptions.NONE,
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
+				LoadQueryInfluencers.NONE,
 				sessionFactory
 		);
 

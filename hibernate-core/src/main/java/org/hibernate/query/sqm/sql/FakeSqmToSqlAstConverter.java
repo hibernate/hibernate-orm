@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
@@ -60,6 +61,11 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	@Override
 	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 		return creationState.getSqlAliasBaseGenerator();
+	}
+
+	@Override
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return LoadQueryInfluencers.NONE;
 	}
 
 	@Override

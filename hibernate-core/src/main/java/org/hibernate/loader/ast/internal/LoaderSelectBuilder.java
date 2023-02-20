@@ -380,6 +380,7 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				this::visitFetches,
 				forceIdentifierSelection,
+				loadQueryInfluencers,
 				creationContext
 		);
 
@@ -962,6 +963,7 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				this::visitFetches,
 				numberOfKeysToLoad > 1,
+				loadQueryInfluencers,
 				creationContext
 		);
 

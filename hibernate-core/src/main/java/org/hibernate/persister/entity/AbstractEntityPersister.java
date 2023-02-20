@@ -1680,6 +1680,7 @@ public abstract class AbstractEntityPersister
 				LockOptions.NONE,
 				this::fetchProcessor,
 				true,
+				LoadQueryInfluencers.NONE,
 				getFactory()
 		);
 

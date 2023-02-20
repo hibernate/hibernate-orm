@@ -259,8 +259,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * <ul>
  *     <li>{@link #columnType(int)} to define a mapping from SQL
  *     {@linkplain SqlTypes type codes} to database column types, and
- *     <li>{@link #initializeFunctionRegistry(FunctionContributions)} to register
- *     mappings for standard HQL functions with the
+ *     <li>{@link #initializeFunctionRegistry(FunctionContributions)} to
+ *     register mappings for standard HQL functions with the
  *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
  * </ul>
  * <p>

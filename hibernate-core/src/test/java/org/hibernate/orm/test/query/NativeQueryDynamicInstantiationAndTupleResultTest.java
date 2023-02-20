@@ -31,7 +31,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16199")
+@TestForIssue(jiraKey = "HHH-16119")
 public class NativeQueryDynamicInstantiationAndTupleResultTest {
 
 	public static final String DEMO_NAME = "it is a demo demo";

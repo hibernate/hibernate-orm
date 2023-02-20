@@ -70,16 +70,14 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 				entityInstance = loadingEntityEntry.getEntityInstance();
 			}
 			else {
-				if ( entityInstance == null ) {
-					// Force creating a proxy
-					entityInstance = session.internalLoad(
-							entityKey.getEntityName(),
-							entityKey.getIdentifier(),
-							false,
-							false
-					);
-					toBatchLoad.add( entityKey );
-				}
+				// Force creating a proxy
+				entityInstance = session.internalLoad(
+						entityKey.getEntityName(),
+						entityKey.getIdentifier(),
+						false,
+						false
+				);
+				toBatchLoad.add( entityKey );
 			}
 		}
 	}

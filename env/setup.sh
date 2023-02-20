@@ -2,7 +2,12 @@
 
 SCRIPT_DIR=$(cd `dirname $0` && pwd)
 IMG_NAME=${NUODB_IMAGE:-"nuodb/nuodb-ce:latest"}
-sudo rm -fr "$SCRIPT_DIR"/{vol1,vol2}
+
+# Since we don't have sudo on the build servers, we need to use
+# docker container to run as original user, mount the directories
+# we need to clean and remove the old volX directories.
+docker run --rm --volume "$SCRIPT_DIR:/var/opt/nuodb" "$IMG_NAME" /bin/bash -c 'rm -fr /var/opt/nuodb/vol{1,2}'
+
 mkdir "$SCRIPT_DIR"/{vol1,vol2}
 chmod a+rw "$SCRIPT_DIR"/{vol1,vol2}
 

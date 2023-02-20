@@ -186,8 +186,6 @@ org.hibernate.jpa.test.schemagen.SchemaScriptFileGenerationTest
 org.hibernate.jpa.test.secondarytable.JoinedTableNullNonOptionalSecondaryTableTest
 org.hibernate.jpa.test.serialization.EntityManagerDeserializationTest
 org.hibernate.jpa.test.statistics.SessionCloseCountTest
-org.hibernate.jpa.test.transaction.batch.JtaWithFailingBatchTest
-org.hibernate.jpa.test.transaction.batch.JtaWithStatementsBatchTest
 org.hibernate.jpa.test.transaction.ClosedEntityManagerWithJpaTransactionComplianceTest
 org.hibernate.jpa.test.transaction.ClosedEntityManagerWithoutJpaTransactionComplianceTest
 org.hibernate.jpa.test.transaction.GetTransactionTest
@@ -344,7 +342,6 @@ org.hibernate.test.any.AnyTypeTest
 org.hibernate.test.array.ArrayTest
 org.hibernate.test.ast.ASTIteratorTest
 org.hibernate.test.ast.ASTUtilTest
-org.hibernate.test.batch.BatchingBatchFailureTest
 org.hibernate.test.batchfetch.BatchFetchBootstrapTest
 org.hibernate.test.batchfetch.BatchFetchTest
 org.hibernate.test.batch.NonBatchingBatchFailureTest
@@ -621,8 +618,6 @@ org.hibernate.test.inheritance.discriminator.MultiInheritanceImplicitDowncastTes
 org.hibernate.test.inheritance.discriminator.SingleTableRelationsTest
 org.hibernate.test.inheritance.MappedSuperclassInheritanceTest
 org.hibernate.test.inheritance.relationship.JoinedInheritancePropertyNameConflictTest
-org.hibernate.test.insertordering.ElementCollectionTest
-org.hibernate.test.insertordering.InsertOrderingTest
 org.hibernate.test.insertordering.InsertOrderingWithCascadeOnPersist
 org.hibernate.test.interceptor.InterceptorTransactionEventTest
 org.hibernate.test.interfaceproxy.InterfaceProxyTest
@@ -634,7 +629,6 @@ org.hibernate.test.jdbc.GeneralWorkTest
 org.hibernate.test.jdbc.internal.AggressiveReleaseTest
 org.hibernate.test.jdbc.internal.BasicConnectionTest
 org.hibernate.test.jdbc.internal.BatchingTest
-org.hibernate.test.jdbc.internal.SessionJdbcBatchTest
 org.hibernate.test.joinedsubclassduplicatefields.JoinedSubclassDuplicateFieldsWithTreatTest
 org.hibernate.test.joinfetch.JoinFetchTest
 org.hibernate.test.join.OptionalJoinTest

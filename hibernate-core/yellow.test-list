@@ -1,0 +1,6 @@
+org.hibernate.jpa.test.transaction.batch.JtaWithFailingBatchTest
+org.hibernate.jpa.test.transaction.batch.JtaWithStatementsBatchTest
+org.hibernate.test.batch.BatchingBatchFailureTest
+org.hibernate.test.insertordering.ElementCollectionTest
+org.hibernate.test.insertordering.InsertOrderingTest
+org.hibernate.test.jdbc.internal.SessionJdbcBatchTest

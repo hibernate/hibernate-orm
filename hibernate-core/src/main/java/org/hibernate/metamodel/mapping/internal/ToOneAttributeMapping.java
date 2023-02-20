@@ -1672,20 +1672,8 @@ public class ToOneAttributeMapping
 		// This is vital for the map key property check that comes next
 		assert !( lhs instanceof PluralTableGroup );
 
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			if ( fetched ) {
-				joinType = getDefaultSqlAstJoinType( lhs );
-			}
-			else {
-				joinType = SqlAstJoinType.INNER;
-			}
-		}
-		else {
-			joinType = requestedJoinType;
-		}
-
 		final FromClauseAccess fromClauseAccess = creationState.getFromClauseAccess();
+		final SqlAstJoinType joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
 
 		// If a parent is a collection part, there is no custom predicate and the join is INNER or LEFT
 		// we check if this attribute is the map key property to reuse the existing index table group
@@ -1805,18 +1793,32 @@ public class ToOneAttributeMapping
 							creationState
 					) );
 
-					if ( hasNotFoundAction() ) {
-						getAssociatedEntityMappingType().applyWhereRestrictions(
-								join::applyPredicate,
-								tableGroup,
-								true,
-								null
-						);
-					}
+					getAssociatedEntityMappingType().applyWhereRestrictions(
+							join::applyPredicate,
+							tableGroup,
+							true,
+							null
+					);
 				}
 		);
 
 		return join;
+	}
+
+	private SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
+		final SqlAstJoinType joinType;
+		if ( requestedJoinType == null ) {
+			if ( fetched ) {
+				joinType = getDefaultSqlAstJoinType( lhs );
+			}
+			else {
+				joinType = SqlAstJoinType.INNER;
+			}
+		}
+		else {
+			joinType = requestedJoinType;
+		}
+		return joinType;
 	}
 
 	@Override

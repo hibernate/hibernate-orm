@@ -1257,7 +1257,7 @@ public class OracleDialect extends Dialect {
 		// offset we need to use the ANSI syntax
 		if ( precision == TemporalType.TIMESTAMP && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 			appender.appendSql( "timestamp '" );
-			appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+			appendAsTimestampWithNanos( appender, temporalAccessor, true, jdbcTimeZone, false );
 			appender.appendSql( '\'' );
 		}
 		else {

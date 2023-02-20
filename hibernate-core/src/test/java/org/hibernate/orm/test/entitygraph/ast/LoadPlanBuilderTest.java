@@ -64,7 +64,7 @@ public class LoadPlanBuilderTest {
 
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
 				.getJdbcValuesMappingProducer()
-				.resolve( null, sessionFactory )
+				.resolve( null, LoadQueryInfluencers.NONE, sessionFactory )
 				.getDomainResults();
 
 		assertThat( domainResults ).hasSize( 1 );
@@ -105,7 +105,7 @@ public class LoadPlanBuilderTest {
 		);
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
 				.getJdbcValuesMappingProducer()
-				.resolve( null, sessionFactory )
+				.resolve( null, LoadQueryInfluencers.NONE, sessionFactory )
 				.getDomainResults();
 
 		assertThat( domainResults ).hasSize( 1 );

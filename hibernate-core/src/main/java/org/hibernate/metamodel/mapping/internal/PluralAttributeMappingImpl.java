@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.ArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -48,7 +47,6 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -58,6 +56,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -570,6 +569,45 @@ public class PluralAttributeMappingImpl
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
+		final PredicateCollector predicateCollector = new PredicateCollector();
+		final TableGroup tableGroup = createRootTableGroupJoin(
+				navigablePath,
+				lhs,
+				explicitSourceAlias,
+				explicitSqlAliasBase,
+				requestedJoinType,
+				fetched,
+				predicateCollector::applyPredicate,
+				creationState
+		);
+
+		getCollectionDescriptor().applyBaseRestrictions(
+				predicateCollector::applyPredicate,
+				tableGroup,
+				true,
+				creationState.getLoadQueryInfluencers().getEnabledFilters(),
+				null,
+				creationState
+		);
+
+		getCollectionDescriptor().applyBaseManyToManyRestrictions(
+				predicateCollector::applyPredicate,
+				tableGroup,
+				true,
+				creationState.getLoadQueryInfluencers().getEnabledFilters(),
+				null,
+				creationState
+		);
+
+		return new TableGroupJoin(
+				navigablePath,
+				determineSqlJoinType( lhs, requestedJoinType, fetched ),
+				tableGroup,
+				predicateCollector.getPredicate()
+		);
+	}
+
+	private SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
 		final SqlAstJoinType joinType;
 		if ( requestedJoinType == null ) {
 			if ( fetched ) {
@@ -582,25 +620,7 @@ public class PluralAttributeMappingImpl
 		else {
 			joinType = requestedJoinType;
 		}
-		final java.util.List<Predicate> predicates = new ArrayList<>( 2 );
-		final TableGroup tableGroup = createRootTableGroupJoin(
-				navigablePath,
-				lhs,
-				explicitSourceAlias,
-				explicitSqlAliasBase,
-				requestedJoinType,
-				fetched,
-				predicates::add,
-				creationState
-		);
-		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
-				navigablePath,
-				joinType,
-				tableGroup,
-				null
-		);
-		predicates.forEach( tableGroupJoin::applyPredicate );
-		return tableGroupJoin;
+		return joinType;
 	}
 
 	@Override
@@ -644,6 +664,7 @@ public class PluralAttributeMappingImpl
 		if ( predicateConsumer != null ) {
 			predicateConsumer.accept( getKeyDescriptor().generateJoinPredicate( lhs, tableGroup, creationState ) );
 		}
+
 		return tableGroup;
 	}
 

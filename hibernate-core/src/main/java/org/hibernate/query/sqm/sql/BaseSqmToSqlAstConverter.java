@@ -77,6 +77,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SqlExpressible;
@@ -394,7 +395,6 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
-import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -3052,15 +3052,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
-
-			pluralAttributeMapping.applyBaseRestrictions(
-					(predicate) -> addCollectionFilterPredicate( joinedTableGroup.getNavigablePath(), predicate ),
-					joinedTableGroup,
-					true,
-					getLoadQueryInfluencers().getEnabledFilters(),
-					null,
-					this
-			);
+//
+//			pluralAttributeMapping.applyBaseRestrictions(
+//					(predicate) -> addCollectionFilterPredicate( joinedTableGroup.getNavigablePath(), predicate ),
+//					joinedTableGroup,
+//					true,
+//					getLoadQueryInfluencers().getEnabledFilters(),
+//					null,
+//					this
+//			);
 		}
 		else {
 			assert modelPart instanceof TableGroupJoinProducer;
@@ -7145,13 +7145,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 		boolean joined = false;
 
-		EntityGraphTraversalState.TraversalResult traversalResult = null;
-		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
-		final SqmAttributeJoin<?, ?> fetchedJoin = fromClauseIndex.findFetchedJoinByPath( resolvedNavigablePath );
-		boolean explicitFetch = false;
-
 		final NavigablePath fetchablePath;
 		final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
+		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
+		final SqmAttributeJoin<?, ?> fetchedJoin = fromClauseIndex.findFetchedJoinByPath( resolvedNavigablePath );
+
+		boolean explicitFetch = false;
+		EntityGraphTraversalState.TraversalResult traversalResult = null;
+
 		if ( fetchedJoin != null ) {
 			fetchablePath = fetchedJoin.getNavigablePath();
 			// there was an explicit fetch in the SQM
@@ -7224,17 +7225,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 			}
 
-//			final TableGroup existingJoinedGroup = fromClauseIndex.findTableGroup( fetchablePath );
-//			if ( existingJoinedGroup != null ) {
-				// we can use this to trigger the fetch from the joined group.
-
-				// todo (6.0) : do we want to do this though?
-				//  	On the positive side it would allow EntityGraph to use the existing TableGroup.  But that ties in
-				//  	to the discussion above regarding how to handle eager and EntityGraph (JOIN versus SELECT).
-				//		Can be problematic if the existing one is restricted
-//				fetchTiming = FetchTiming.IMMEDIATE;
-//			}
-
 			// lastly, account for any app-defined max-fetch-depth
 			if ( maxDepth != null ) {
 				if ( fetchDepth >= maxDepth ) {
@@ -7259,6 +7249,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									BaseSqmToSqlAstConverter.this
 							);
 							lhs.addTableGroupJoin( tableGroupJoin );
+
+//							if ( fetchable instanceof PluralAttributeMapping ) {
+//								// apply restrictions
+//								( (Restrictable) fetchable ).applyBaseRestrictions(
+//										tableGroupJoin::applyPredicate,
+//										tableGroupJoin.getJoinedGroup(),
+//										true,
+//										loadQueryInfluencers.getEnabledFilters(),
+//										null,
+//										getSqlAstCreationState()
+//								);
+//
+//								( (PluralAttributeMapping) fetchable ).applyBaseManyToManyRestrictions(
+//										tableGroupJoin::applyPredicate,
+//										tableGroupJoin.getJoinedGroup(),
+//										true,
+//										loadQueryInfluencers.getEnabledFilters(),
+//										null,
+//										getSqlAstCreationState()
+//								);
+//							}
+
+							// and return the joined group
 							return tableGroupJoin.getJoinedGroup();
 						}
 				);

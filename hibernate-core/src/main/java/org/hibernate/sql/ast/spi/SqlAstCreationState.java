@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 
 /**
  * Access to stuff used while creating a SQL AST
@@ -23,6 +24,8 @@ public interface SqlAstCreationState {
 	FromClauseAccess getFromClauseAccess();
 
 	SqlAliasBaseGenerator getSqlAliasBaseGenerator();
+
+	LoadQueryInfluencers getLoadQueryInfluencers();
 
 	void registerLockMode(String identificationVariable, LockMode explicitLockMode);
 }

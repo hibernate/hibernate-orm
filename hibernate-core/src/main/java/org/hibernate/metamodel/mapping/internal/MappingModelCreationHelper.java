@@ -61,6 +61,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -1596,6 +1597,15 @@ public class MappingModelCreationHelper {
 					|| value instanceof OneToOne && value.isNullable()
 					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
+				if ( lazy ) {
+					if ( MappingModelCreationLogger.DEBUG_ENABLED ) {
+						MappingModelCreationLogger.LOGGER.debugf(
+								"Forcing FetchTiming.IMMEDIATE for to-one association : %s.%s",
+								declaringType.getNavigableRole(),
+								bootProperty.getName()
+						);
+					}
+				}
 			}
 			else {
 				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );

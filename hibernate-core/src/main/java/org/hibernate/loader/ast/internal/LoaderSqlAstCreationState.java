@@ -15,6 +15,7 @@ import jakarta.persistence.CacheStoreMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -51,6 +52,7 @@ public class LoaderSqlAstCreationState
 
 	private final SqlAliasBaseManager sqlAliasBaseManager;
 	private final boolean forceIdentifierSelection;
+	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final SqlAstCreationContext sf;
 	private final SqlAstQueryPartProcessingStateImpl processingState;
 	private final FromClauseAccess fromClauseAccess;
@@ -68,12 +70,14 @@ public class LoaderSqlAstCreationState
 			LockOptions lockOptions,
 			FetchProcessor fetchProcessor,
 			boolean forceIdentifierSelection,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext sf) {
 		this.sqlAliasBaseManager = sqlAliasBaseManager;
 		this.fromClauseAccess = fromClauseAccess;
 		this.lockOptions = lockOptions;
 		this.fetchProcessor = fetchProcessor;
 		this.forceIdentifierSelection = forceIdentifierSelection;
+		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.sf = sf;
 		this.processingState = new SqlAstQueryPartProcessingStateImpl(
 				queryPart,
@@ -112,6 +116,11 @@ public class LoaderSqlAstCreationState
 	@Override
 	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 		return sqlAliasBaseManager;
+	}
+
+	@Override
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return loadQueryInfluencers;
 	}
 
 	@Override

@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -249,7 +248,6 @@ public class LoaderSelectBuilder {
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
-	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 	private boolean hasCollectionJoinFetches;
 	private String currentBagRole;
 
@@ -474,20 +472,10 @@ public class LoaderSelectBuilder {
 		if ( loadable instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
 			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
-			applyOrdering( rootTableGroup, pluralAttributeMapping );
+			applyOrdering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 		}
 		else {
 			applyFiltering( rootQuerySpec, rootTableGroup, (Restrictable) loadable, sqlAstCreationState );
-		}
-
-		if ( orderByFragments != null ) {
-			orderByFragments.forEach(
-					entry -> entry.getKey().apply(
-							rootQuerySpec,
-							entry.getValue(),
-							sqlAstCreationState
-					)
-			);
 		}
 
 		return new SelectStatement( rootQuerySpec, domainResults );
@@ -642,21 +630,31 @@ public class LoaderSelectBuilder {
 		);
 	}
 
-	private void applyOrdering(TableGroup tableGroup, PluralAttributeMapping pluralAttributeMapping) {
+	private void applyOrdering(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			PluralAttributeMapping pluralAttributeMapping,
+			SqlAstCreationState astCreationState) {
 		if ( pluralAttributeMapping.getOrderByFragment() != null ) {
-			applyOrdering( tableGroup, pluralAttributeMapping.getOrderByFragment() );
+			applyOrdering( querySpec, tableGroup, pluralAttributeMapping.getOrderByFragment(), astCreationState );
 		}
 
 		if ( pluralAttributeMapping.getManyToManyOrderByFragment() != null ) {
-			applyOrdering( tableGroup, pluralAttributeMapping.getManyToManyOrderByFragment() );
+			applyOrdering(
+					querySpec,
+					tableGroup,
+					pluralAttributeMapping.getManyToManyOrderByFragment(),
+					astCreationState
+			);
 		}
 	}
 
-	private void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
-		if ( orderByFragments == null ) {
-			orderByFragments = new ArrayList<>();
-		}
-		orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
+	private void applyOrdering(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			OrderByFragment orderByFragment,
+			SqlAstCreationState astCreationState) {
+		orderByFragment.apply( querySpec, tableGroup, astCreationState );
 	}
 
 	private ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
@@ -859,6 +857,7 @@ public class LoaderSelectBuilder {
 								creationState
 						);
 						applyOrdering(
+								querySpec,
 								fetchablePath,
 								pluralAttributeMapping,
 								creationState
@@ -906,6 +905,7 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applyOrdering(
+			QuerySpec querySpec,
 			NavigablePath navigablePath,
 			PluralAttributeMapping pluralAttributeMapping,
 			LoaderSqlAstCreationState sqlAstCreationState) {
@@ -914,7 +914,7 @@ public class LoaderSelectBuilder {
 		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( navigablePath );
 		assert tableGroup != null;
 
-		applyOrdering( tableGroup, pluralAttributeMapping );
+		applyOrdering( querySpec, tableGroup, pluralAttributeMapping, sqlAstCreationState );
 	}
 
 	private SelectStatement generateSelect(SubselectFetch subselect) {
@@ -983,7 +983,7 @@ public class LoaderSelectBuilder {
 
 		// NOTE : no need to check - we are explicitly processing a plural-attribute
 		applyFiltering( rootQuerySpec, rootTableGroup, attributeMapping, sqlAstCreationState );
-		applyOrdering( rootTableGroup, attributeMapping );
+		applyOrdering( rootQuerySpec, rootTableGroup, attributeMapping, sqlAstCreationState );
 
 		// register the jdbc-parameters
 		// todo (6.0) : analyzing the call paths, it seems like `jdbcParameterConsumer`

@@ -6,11 +6,12 @@
  */
 package org.hibernate.query.sqm.function;
 
-import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
+import org.hibernate.internal.util.collections.CaseInsensitiveDictionary;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.NamedFunctionDescriptorBuilder;
 import org.hibernate.query.sqm.produce.function.PatternFunctionDescriptorBuilder;
@@ -35,27 +36,31 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
 public class SqmFunctionRegistry {
 	private static final Logger log = Logger.getLogger( SqmFunctionRegistry.class );
 
-	private final Map<String, SqmFunctionDescriptor> functionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
-	private final Map<String,String> alternateKeyMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
+	private final CaseInsensitiveDictionary<SqmFunctionDescriptor> functionMap = new CaseInsensitiveDictionary<>();
+	private final CaseInsensitiveDictionary<String> alternateKeyMap = new CaseInsensitiveDictionary<>();
 
 	public SqmFunctionRegistry() {
 		log.trace( "SqmFunctionRegistry created" );
 	}
 
-	public Map<String, SqmFunctionDescriptor> getFunctions() {
-		return functionMap;
+	public Set<String> getValidFunctionKeys() {
+		return functionMap.unmodifiableKeySet();
 	}
 
+	/**
+	 * Useful for diagnostics - not efficient: do not use in production code.
+	 *
+	 * @return
+	 */
 	public Stream<Map.Entry<String, SqmFunctionDescriptor>> getFunctionsByName() {
-		return Stream.concat(
-				functionMap.entrySet().stream(),
-				alternateKeyMap.entrySet().stream().map(
-						entry -> new AbstractMap.SimpleEntry<>(
-								entry.getKey(),
-								functionMap.get( entry.getValue() )
-						)
-				)
-		);
+		final Map<String, SqmFunctionDescriptor> sortedFunctionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
+		for ( Map.Entry<String, SqmFunctionDescriptor> e : functionMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( e.getKey(), e.getValue() );
+		}
+		for ( Map.Entry<String, String> e : alternateKeyMap.unmodifiableEntrySet() ) {
+			sortedFunctionMap.put( e.getKey(), functionMap.get( e.getValue() ) );
+		}
+		return sortedFunctionMap.entrySet().stream();
 	}
 
 	/**

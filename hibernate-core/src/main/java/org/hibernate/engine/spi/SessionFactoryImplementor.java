@@ -13,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -150,6 +151,11 @@ public interface SessionFactoryImplementor
 	FastSessionServices getFastSessionServices();
 
 	WrapperOptions getWrapperOptions();
+
+	SessionFactoryOptions getSessionFactoryOptions();
+
+	FilterDefinition getFilterDefinition(String filterName);
+
 
 
 

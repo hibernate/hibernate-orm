@@ -35,8 +35,7 @@ public abstract class SpatialSessionFactoryAware extends SpatialTestDataProvider
 			this.supportedFunctions = scope.getSessionFactory()
 					.getQueryEngine()
 					.getSqmFunctionRegistry()
-					.getFunctions()
-					.keySet();
+					.getValidFunctionKeys();
 			if ( DialectContext.getDialect() instanceof H2Dialect ) {
 				initH2GISExtensionsForInMemDb();
 			}

@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
 /*
@@ -13,16 +13,11 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -39,6 +34,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -51,7 +55,9 @@ import static org.junit.Assert.assertTrue;
 @TestForIssue(jiraKey = "HHH-11147")
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions(lazyLoading = true)
-public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctionalTestCase {
+public class LoadANonExistingNotFoundLazyBatchEntityTest extends BaseNonConfigCoreFunctionalTestCase {
+
+	private static final int NUMBER_OF_ENTITIES = 20;
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11147")
@@ -59,18 +65,22 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 		statistics.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Employee employee = session.load( Employee.class, 1 );
-					Hibernate.initialize( employee );
-					assertNull( employee.employer );
-				}
-		);
+		inTransaction( (session) -> {
+			List<Employee> employees = new ArrayList<>( NUMBER_OF_ENTITIES );
+			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
+				employees.add( session.load( Employee.class, i + 1 ) );
+			}
+			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
+				Hibernate.initialize( employees.get( i ) );
+				assertNull( employees.get( i ).employer );
+			}
+		} );
 
-		// The Employee#employer must be initialized immediately because
-		// enhanced proxies (and HibernateProxy objects) should never be created
+		// A "not found" association cannot be batch fetched because
+		// Employee#employer must be initialized immediately.
+		// Enhanced proxies (and HibernateProxy objects) should never be created
 		// for a "not found" association.
-		assertEquals( 2, statistics.getPrepareStatementCount() );
+		assertEquals( 2 * NUMBER_OF_ENTITIES, statistics.getPrepareStatementCount() );
 	}
 
 	@Test
@@ -79,17 +89,18 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 		statistics.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Employee employee = session.get( Employee.class, 1 );
-					assertNull( employee.employer );
-				}
-		);
+		inTransaction( (session) -> {
+			for ( int i = 0 ; i < NUMBER_OF_ENTITIES ; i++ ) {
+				Employee employee = session.get( Employee.class, i + 1 );
+				assertNull( employee.employer );
+			}
+		} );
 
-		// The Employee#employer must be initialized immediately because
-		// enhanced proxies (and HibernateProxy objects) should never be created
+		// A "not found" association cannot be batch fetched because
+		// Employee#employer must be initialized immediately.
+		// Enhanced proxies (and HibernateProxy objects) should never be created
 		// for a "not found" association.
-		assertEquals( 2, statistics.getPrepareStatementCount() );
+		assertEquals( 2 * NUMBER_OF_ENTITIES, statistics.getPrepareStatementCount() );
 	}
 
 	@Test
@@ -98,24 +109,24 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 		final StatisticsImplementor statistics = sessionFactory().getStatistics();
 		statistics.clear();
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Employee employee = session.get( Employee.class, 1 );
-					Employer employer = new Employer();
-					employer.id = 2 * employee.id;
-					employer.name = "Employer #" + employer.id;
-					employee.employer = employer;
-				}
-		);
+		inTransaction( (session) -> {
+			for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
+				Employee employee = session.get( Employee.class, i + 1 );
+				Employer employer = new Employer();
+				employer.id = 2 * employee.id;
+				employer.name = "Employer #" + employer.id;
+				employee.employer = employer;
+			}
+		} );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					Employee employee = session.get( Employee.class, 1 );
-					assertTrue( Hibernate.isInitialized( employee.employer ) );
-					assertEquals( employee.id * 2, employee.employer.id );
-					assertEquals( "Employer #" + employee.employer.id, employee.employer.name );
-				}
-		);
+		inTransaction( (session) -> {
+			for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
+				Employee employee = session.get( Employee.class, i + 1 );
+				assertTrue( Hibernate.isInitialized( employee.employer ) );
+				assertEquals( employee.id * 2, employee.employer.id );
+				assertEquals( "Employer #" + employee.employer.id, employee.employer.name );
+			}
+		} );
 	}
 
 	@Override
@@ -130,10 +141,12 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 	public void setUpData() {
 		doInHibernate(
 				this::sessionFactory, session -> {
-					final Employee employee = new Employee();
-					employee.id = 1;
-					employee.name = "Employee #" + employee.id;
-					session.persist( employee );
+					for ( int i = 0; i < NUMBER_OF_ENTITIES; i++ ) {
+						final Employee employee = new Employee();
+						employee.id = i + 1;
+						employee.name = "Employee #" + employee.id;
+						session.persist( employee );
+					}
 				}
 		);
 
@@ -141,7 +154,7 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 		doInHibernate(
 				this::sessionFactory, session -> {
 					// Add "not found" associations
-					session.createNativeQuery( "update Employee set employer_id = 0 ").executeUpdate();
+					session.createNativeQuery( "update Employee set employer_id = id" ).executeUpdate();
 				}
 		);
 	}
@@ -179,12 +192,13 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 		private String name;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-		@JoinColumn(name = "employer_id",foreignKey = @ForeignKey(value= ConstraintMode.NO_CONSTRAINT))
+		@JoinColumn(name = "employer_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 		@NotFound(action=NotFoundAction.IGNORE)
 		private Employer employer;
 	}
 
 	@Entity(name = "Employer")
+	@BatchSize(size = 10)
 	public static class Employer {
 		@Id
 		private int id;

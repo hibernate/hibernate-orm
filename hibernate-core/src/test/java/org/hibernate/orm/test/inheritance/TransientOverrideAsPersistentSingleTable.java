@@ -7,6 +7,10 @@
 package org.hibernate.orm.test.inheritance;
 
 import java.util.List;
+
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
@@ -296,6 +300,7 @@ public class TransientOverrideAsPersistentSingleTable {
 		// Editor#title (which uses the same e_title column) can be non-null,
 		// and there is no associated group.
 		@ManyToOne(optional = false)
+		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(name = "e_title", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		public Group getGroup() {
 			return group;

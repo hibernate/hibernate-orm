@@ -115,9 +115,8 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 
 		final List<Integer> paramterCounts = statementInspector.parameterCounts;
 
-		// there should be 1 SQL statement with a join executed
-		assertThat( paramterCounts ).hasSize( 1 );
-		assertThat( paramterCounts.get( 0 ) ).isEqualTo( 0 );
+		// there should be 5 SQL statements executed
+		assertThat( paramterCounts ).hasSize( 5 );
 
 		assertEquals( NUMBER_OF_EMPLOYEES, employees.size() );
 		for ( int i = 0; i < NUMBER_OF_EMPLOYEES; i++ ) {
@@ -158,9 +157,8 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 
 		final List<Integer> paramterCounts = statementInspector.parameterCounts;
 
-		// there should be 1 SQL statement with a join executed
-		assertThat( paramterCounts ).hasSize( 1 );
-		assertThat( paramterCounts.get( 0 ) ).isEqualTo( 0 );
+		// there should be 8 SQL statements executed
+		assertThat( paramterCounts ).hasSize( 8 );
 
 		assertEquals( NUMBER_OF_EMPLOYEES, employees.size() );
 

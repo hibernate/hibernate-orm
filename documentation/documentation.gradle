@@ -123,6 +123,42 @@ tasks.register('buildTutorialZip', Zip) { task ->
 }
 
 
+// Introduction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+task renderIntroduction(type: AsciidoctorTask, group: 'Documentation') {task->
+	description = 'Renders the Introduction in HTML format using Asciidoctor.'
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
+
+	dependsOn tasks.collectConfigProperties
+
+	sourceDir = file( 'src/main/asciidoc/introduction' )
+	sources {
+		include 'Hibernate_Introduction.adoc'
+	}
+	outputDir = "$buildDir/asciidoc/introduction/html_single"
+
+	attributes linkcss: true,
+			stylesheet: "css/hibernate.css",
+			docinfo: 'private',
+			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+	resources {
+		from('src/main/asciidoc/introduction/') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'css/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'js/**'
+		}
+	}
+}
+
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tasks.register('renderUserGuide', AsciidoctorTask) { task ->

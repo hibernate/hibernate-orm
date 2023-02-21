@@ -16,6 +16,7 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
+import org.hibernate.sql.results.graph.entity.internal.AbstractNonJoinedEntityFetch;
 
 /**
  * This is essentially a List of Fetch(es), but exposing
@@ -50,7 +51,7 @@ public interface FetchList extends Iterable<Fetch> {
 
 	default boolean hasJoinFetches() {
 		for ( Fetch fetch : this ) {
-			if ( fetch instanceof BasicFetch<?> || fetch.getTiming() == FetchTiming.DELAYED ) {
+			if ( fetch instanceof BasicFetch<?> || fetch instanceof AbstractNonJoinedEntityFetch || fetch.getTiming() == FetchTiming.DELAYED ) {
 				// That's fine
 			}
 			else if ( fetch instanceof EmbeddableResultGraphNode ) {

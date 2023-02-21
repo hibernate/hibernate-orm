@@ -1,0 +1,15 @@
+[[preface]]
+
+[preface]
+== Preface
+
+Hibernate 6 is a major redesign of the world's most popular and feature-rich ORM solution.
+The redesign has touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and query language.
+This new Hibernate is more powerful, more robust, and more typesafe.
+
+Unfortunately, the changes in Hibernate 6 have obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
+
+On the other hand, the Hibernate User Guide provides a great deal of detail about many aspects of Hibernate, but with so much information to cover, readability is difficult to achieve.
+
+This is therefore the new canonical guide to Hibernate.
+We do not attempt to cover every detail of Hibernate here, and so this guide should be used in conjunction with the extensive Javadoc available for Hibernate 6, and with the User Guide.

@@ -1,0 +1,58 @@
+= An introduction to Hibernate 6
+Gavin King and the Hibernate team
+:toc:
+:toclevels: 3
+
+include::Preface.adoc[]
+
+:numbered:
+
+[[overview]]
+== Overview
+
+Hibernate is a library that makes it easy to map Java classes to relational database tables.
+Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of this specification.
+
+_Object/relational mapping_ takes the pain out persistence by relieving the developer of the need to hand-write tedious, repetitive, and fragile code for flattening graphs of objects to database tables and rebuilding graphs of objects from flat SQL query result sets.
+Even better, ORM makes it much easier to tune performance later, after the basic persistence logic has already been written.
+
+[TIP]
+====
+A perennial question is: should I use ORM, or plain SQL?
+The answer is usually: _use both_.
+JPA and Hibernate were designed to work _in conjunction with_ handwritten SQL.
+You see, most programs with nontrivial data access logic will benefit from the use of ORM at least _somewhere_.
+But if Hibernate is making things more difficult, for some particularly tricky piece of data access logic, the only sensible thing to do is to use something better suited to the problem!
+Just because you're using Hibernate for persistence doesn't mean you have to use it for _everything_.
+====
+
+We can think of the library in terms of three basic elements:
+
+- an implementation of the JPA-defined APIs, most importantly, of the interfaces `EntityManagerFactory` and `EntityManager`, and of the JPA-defined O/R mapping annotations,
+- a _native API_ exposing the full set of available functionality, centered around the interfaces `SessionFactory`, which extends `EntityManagerFactory`, and `Session`, which extends `EntityManager`, and
+- a set of _mapping annotations_ which augment the O/R mapping annotations defined by JPA, and which may be used with the JPA-defined interfaces, or with the native API.
+
+As an application developer, you must decide whether to:
+
+- write your program in terms of `Session` and `SessionFactory`, or
+- maximize portability to other implementations of JPA by, wherever reasonable, writing code in terms of  `EntityManager` and `EntityManagerFactory`, falling back to the native APIs only where necessary.
+
+Whichever path you take, you will use the JPA-defined mapping annotations most of the time, and the Hibernate-defined annotations for more advanced mapping problems.
+
+[TIP]
+You might wonder if it's possible to develop an application using _only_ JPA-defined APIs, and, indeed, that's possible in principle.
+JPA is a great baseline that really nails the basics of the object/relational mapping problem.
+But without the native APIs, and extended mapping annotations, you miss out on much of the power of Hibernate.
+
+This introduction will guide you through the basic tasks involved in developing a program that uses Hibernate for persistence:
+
+1. configuring and bootstrapping Hibernate, and obtaining an instance of `SessionFactory` or `EntityManagerFactory`,
+2. writing a _domain model_, that is, a set of _entity classes_ which represent the persistent types in your program, and which map to tables of your database,
+3. using the `Session` or `EntityManager` to perform operations which query the database and return entity instances, or which update the data held in the database,
+4. writing complex queries using the Hibernate Query Language (HQL) or native SQL, and, finally
+5. tuning performance of the data access logic.
+
+Naturally, we'll start at the top of this list, with the least-interesting topic: configuration.
+
+include::Configuration.adoc[]
+

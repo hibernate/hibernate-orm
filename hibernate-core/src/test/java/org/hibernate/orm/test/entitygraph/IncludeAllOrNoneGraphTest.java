@@ -1,7 +1,5 @@
 package org.hibernate.orm.test.entitygraph;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,10 +18,11 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(
 		annotatedClasses = {
@@ -49,21 +48,14 @@ public class IncludeAllOrNoneGraphTest {
 
 				ContainedEntity containedLazy = new ContainedEntity( i * 100 + 2 );
 				entity.getContainedLazy().add( containedLazy );
-				containedLazy.setContainingLazy( entity );
 
 				session.persist( containedLazy );
 			}
 		} );
 	}
+
 	@AfterEach
 	void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			List<ContainedEntity> containedList = session.createQuery(
-					"select c from ContainedEntity c", ContainedEntity.class ).list();
-			for ( ContainedEntity entity : containedList ) {
-				entity.setContainingLazy( null );
-			}
-		} );
 		scope.inTransaction( session -> {
 			session.createMutationQuery( "delete RootEntity" ).executeUpdate();
 			session.createMutationQuery( "delete ContainedEntity" ).executeUpdate();
@@ -73,37 +65,34 @@ public class IncludeAllOrNoneGraphTest {
 	@Test
 	void includeAll_fetchGraph(SessionFactoryScope scope) {
 		// Before HHH-16175 gets fixed, this leads to AssertionError in StandardEntityGraphTraversalStateImpl.traverse
-		testLoadingWithGraph(scope, RootEntity.GRAPH_INCLUDE_ALL, GraphSemantic.FETCH,
-				true, true );
+		testLoadingWithGraph( scope, RootEntity.GRAPH_INCLUDE_ALL, GraphSemantic.FETCH, true, true );
 	}
 
 	@Test
 	void includeAll_loadGraph(SessionFactoryScope scope) {
 		// Before HHH-16175 gets fixed, this leads to AssertionError in StandardEntityGraphTraversalStateImpl.traverse
-		testLoadingWithGraph(scope, RootEntity.GRAPH_INCLUDE_ALL, GraphSemantic.LOAD,
-				true, true );
+		testLoadingWithGraph( scope, RootEntity.GRAPH_INCLUDE_ALL, GraphSemantic.LOAD, true, true );
 	}
 
 	@Test
 	void includeNone_fetchGraph(SessionFactoryScope scope) {
-		testLoadingWithGraph(scope, RootEntity.GRAPH_INCLUDE_NONE, GraphSemantic.FETCH,
-				false, false );
+		testLoadingWithGraph( scope, RootEntity.GRAPH_INCLUDE_NONE, GraphSemantic.FETCH, false, false );
 	}
 
 	@Test
 	void includeNone_loadGraph(SessionFactoryScope scope) {
-		testLoadingWithGraph(scope, RootEntity.GRAPH_INCLUDE_NONE, GraphSemantic.LOAD,
-				true, false );
+		testLoadingWithGraph( scope, RootEntity.GRAPH_INCLUDE_NONE, GraphSemantic.LOAD, true, false );
 	}
 
-	private void testLoadingWithGraph(SessionFactoryScope scope, String graphName, GraphSemantic graphSemantic,
+	private void testLoadingWithGraph(
+			SessionFactoryScope scope, String graphName, GraphSemantic graphSemantic,
 			boolean expectContainedEagerInitialized, boolean expectContainedLazyInitialized) {
 		scope.inTransaction( session -> {
 			assertThat( session.createQuery( "select e from RootEntity e where id in (:ids)", RootEntity.class )
-					.applyGraph( session.getEntityGraph( graphName ), graphSemantic )
-					.setFetchSize( 100 )
-					.setParameter( "ids", List.of( 0L, 100L, 200L ) )
-					.list() )
+								.applyGraph( session.getEntityGraph( graphName ), graphSemantic )
+								.setFetchSize( 100 )
+								.setParameter( "ids", List.of( 0L, 100L, 200L ) )
+								.list() )
 					.isNotEmpty()
 					.allSatisfy( loaded -> assertThat( Hibernate.isInitialized( loaded.getContainedEager() ) )
 							.as( "Hibernate::isInitialized for .getContainedEager() on %s", loaded )
@@ -133,7 +122,7 @@ public class IncludeAllOrNoneGraphTest {
 		@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
 		private ContainedEntity containedEager;
 
-		@OneToMany(mappedBy = "containingLazy", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+		@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private List<ContainedEntity> containedLazy = new ArrayList<>();
 
 		public RootEntity() {
@@ -177,10 +166,6 @@ public class IncludeAllOrNoneGraphTest {
 		@OneToOne(mappedBy = "containedEager")
 		private RootEntity containingEager;
 
-		@ManyToOne
-		private RootEntity containingLazy;
-
-
 		public ContainedEntity() {
 		}
 
@@ -204,12 +189,5 @@ public class IncludeAllOrNoneGraphTest {
 			this.containingEager = containingEager;
 		}
 
-		public RootEntity getContainingLazy() {
-			return containingLazy;
-		}
-
-		public void setContainingLazy(RootEntity containingLazy) {
-			this.containingLazy = containingLazy;
-		}
 	}
 }

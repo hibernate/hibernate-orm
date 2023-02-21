@@ -300,7 +300,7 @@ public class ToOneAttributeMapping
 				}
 			}
 			isOptional = ( (ManyToOne) bootValue ).isIgnoreNotFound();
-			isInternalLoadNullable = ( isNullable && bootValue.isForeignKeyEnabled() ) || notFoundAction == NotFoundAction.IGNORE;
+			isInternalLoadNullable = ( isNullable && bootValue.isForeignKeyEnabled() ) || hasNotFoundAction();
 		}
 		else {
 			assert bootValue instanceof OneToOne;
@@ -1303,14 +1303,13 @@ public class ToOneAttributeMapping
 				&& parentNavigablePath.equals( fetchParent.getNavigablePath().getRealParent() );
 
 		/*
-		 In case of @NotFound we are going to add fetch for the `fetchablePath` only if there is not already a `TableGroupJoin`.
+		 In case of selected we are going to add a fetch for the `fetchablePath` only if there is not already a `TableGroupJoin`.
 
 		 e.g. given :
 		 	public static class EntityA {
 				...
 
-			@ManyToOne(fetch = FetchType.LAZY)
-			@NotFound(action = NotFoundAction.IGNORE)
+			@ManyToOne(fetch = FetchType.EAGER)
 			private EntityB entityB;
 		 	}
 
@@ -1327,7 +1326,7 @@ public class ToOneAttributeMapping
 
 		 having the left join we don't want to add an extra implicit join that will be translated into an SQL inner join (see HHH-15342)
 		*/
-		if ( fetchTiming == FetchTiming.IMMEDIATE && selected || hasNotFoundAction() ) {
+		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
 			final TableGroup tableGroup = determineTableGroupForFetch(
 					fetchablePath,
 					fetchParent,
@@ -1339,9 +1338,11 @@ public class ToOneAttributeMapping
 
 			return withRegisteredAssociationKeys(
 					() -> {
-						final DomainResult<?> keyResult;
-						if ( notFoundAction != null ) {
-							if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+						DomainResult<?> keyResult = null;
+						if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+							// If the key side is non-nullable we also need to add the keyResult
+							// to be able to manually check invalid foreign key references
+							if ( notFoundAction != null || !isInternalLoadNullable ) {
 								keyResult = foreignKeyDescriptor.createKeyDomainResult(
 										fetchablePath,
 										parentTableGroup,
@@ -1349,17 +1350,15 @@ public class ToOneAttributeMapping
 										creationState
 								);
 							}
-							else {
-								keyResult = foreignKeyDescriptor.createTargetDomainResult(
-										fetchablePath,
-										parentTableGroup,
-										fetchParent,
-										creationState
-								);
-							}
 						}
-						else {
-							keyResult = null;
+						else if ( notFoundAction != null ) {
+							// For the target side only add keyResult when a not-found action is present
+							keyResult = foreignKeyDescriptor.createTargetDomainResult(
+									fetchablePath,
+									parentTableGroup,
+									fetchParent,
+									creationState
+							);
 						}
 
 						return new EntityFetchJoinedImpl(
@@ -1367,7 +1366,8 @@ public class ToOneAttributeMapping
 								this,
 								tableGroup,
 								keyResult,
-								fetchablePath,creationState
+								fetchablePath,
+								creationState
 						);
 					},
 					creationState
@@ -1417,7 +1417,8 @@ public class ToOneAttributeMapping
 		);
 		final boolean selectByUniqueKey = isSelectByUniqueKey( side );
 
-		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
+		// Consider all associations annotated with @NotFound as EAGER
+		if ( fetchTiming == FetchTiming.IMMEDIATE || hasNotFoundAction() ) {
 			return new EntityFetchSelectImpl(
 					fetchParent,
 					this,

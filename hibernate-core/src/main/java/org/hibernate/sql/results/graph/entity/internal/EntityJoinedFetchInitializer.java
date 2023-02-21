@@ -77,11 +77,11 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 		// need to also look at the foreign-key value column to check
 		// for a dangling foreign-key
 
-		if ( notFoundAction != null && keyAssembler != null ) {
+		if ( keyAssembler != null ) {
 			final Object fkKeyValue = keyAssembler.assemble( rowProcessingState );
 			if ( fkKeyValue != null ) {
 				if ( isMissing() ) {
-					if ( notFoundAction == NotFoundAction.EXCEPTION ) {
+					if ( notFoundAction != NotFoundAction.IGNORE ) {
 						throw new FetchNotFoundException(
 								referencedFetchable.getEntityMappingType().getEntityName(),
 								fkKeyValue

@@ -52,7 +52,7 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 		final Fetch fetch = parent.generateFetchableFetch(
 				fetchable,
 				fetchPath,
-				FetchTiming.DELAYED,
+				fetchable.getMappedFetchOptions().getTiming(),
 				false,
 				null,
 				creationState

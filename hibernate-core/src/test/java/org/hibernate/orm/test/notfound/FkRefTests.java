@@ -9,26 +9,24 @@ package org.hibernate.orm.test.notfound;
 import java.io.Serializable;
 import java.util.List;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.ParsingException;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,11 +42,6 @@ public class FkRefTests {
 	@Test
 	@JiraKey( "HHH-15099" )
 	@JiraKey( "HHH-15106" )
-	@FailureExpected(
-			reason = "Coin is selected and so its currency needs to be fetched.  At the " +
-					"moment, that fetch always happens via a join-fetch.  Ideally we'd support " +
-					"loading these via subsequent-select also"
-	)
 	public void testSimplePredicateUse(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -160,11 +153,6 @@ public class FkRefTests {
 	@Test
 	@JiraKey( "HHH-15099" )
 	@JiraKey( "HHH-15106" )
-	@FailureExpected(
-			reason = "Coin is selected and so its currency needs to be fetched.  At the " +
-					"moment, that fetch always happens via a join-fetch.  Ideally we'd support " +
-					"loading these via subsequent-select also"
-	)
 	public void testNullnessPredicateUse2(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();

@@ -62,8 +62,7 @@ public class NotFoundAndSelectJoinTest {
 					assertThat( person ).isNotNull();
 					assertThat( Hibernate.isInitialized( person ) );
 
-					assertThat( statementInspector.getSqlQueries().size() ).isEqualTo( 1 );
-					assertThat( statementInspector.getNumberOfJoins( 0 ) ).isEqualTo( 1 );
+					assertThat( statementInspector.getSqlQueries().size() ).isEqualTo( 2 );
 				}
 		);
 	}

@@ -157,6 +157,10 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 		);
 	}
 
+	protected PreparedStatementGroup getNonBatchedStatementGroup() {
+		return nonBatchedStatementGroup;
+	}
+
 	@Override
 	public JdbcValueBindings getJdbcValueBindings() {
 		return valueBindings;

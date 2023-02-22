@@ -330,6 +330,16 @@ public interface SharedSessionContractImplementor
 	String bestGuessEntityName(Object object);
 
 	/**
+	 * Obtain the best estimate of the entity name of the given entity
+	 * instance, which is not involved in an association, by also
+	 * considering information held in the proxy, and whether the object
+	 * is already associated with this session.
+	 */
+	default String bestGuessEntityName(Object object, EntityEntry entry) {
+		return bestGuessEntityName( object );
+	}
+
+	/**
 	 * Obtain an estimate of the entity name of the given entity instance,
 	 * which is not involved in an association, using only the
 	 * {@link org.hibernate.EntityNameResolver}.

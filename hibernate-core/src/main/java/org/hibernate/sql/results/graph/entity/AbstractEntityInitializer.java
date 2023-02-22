@@ -695,9 +695,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			preLoad( rowProcessingState );
 
 			final LazyInitializer lazyInitializer = extractLazyInitializer( entityInstance );
+			final SharedSessionContractImplementor session = rowProcessingState.getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			if ( lazyInitializer != null ) {
-				final SharedSessionContractImplementor session = rowProcessingState.getSession();
-				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 				Object instance = persistenceContext.getEntity( entityKey );
 				if ( instance == null ) {
 					instance = resolveInstance(
@@ -711,8 +711,42 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				entityInstanceForNotify = instance;
 			}
 			else {
-				initializeEntity( entityInstance, rowProcessingState );
-				entityInstanceForNotify = entityInstance;
+				if ( entityDescriptor.canReadFromCache() ) {
+					/*
+						@Cache
+						class Child {
+
+							@ManyToOne
+							private Parent parent;
+						}
+
+						@Cache
+						class Parent {
+							@OneToOne
+							private Parent parent;
+
+						}
+
+						when the query "select c from Child c" is executed and the second level cache (2LC) contains
+						an instance of Child and Parent
+						then when the EntitySelectFetchInitializer#initializeInstance() is executed before the EntityResultInitializer one
+						the persistence context will contain the instances retrieved form the 2LC
+					 */
+					final Object entity = persistenceContext.getEntity( entityKey );
+					if ( entity != null ) {
+						entityInstance = entity;
+						registerLoadingEntity( rowProcessingState, entityInstance );
+						initializeEntityInstance( entityInstance, rowProcessingState );
+					}
+					else {
+						initializeEntity( entityInstance, rowProcessingState );
+					}
+					entityInstanceForNotify = entityInstance;
+				}
+				else {
+					initializeEntity( entityInstance, rowProcessingState );
+					entityInstanceForNotify = entityInstance;
+				}
 			}
 
 			notifyResolutionListeners( entityInstanceForNotify );

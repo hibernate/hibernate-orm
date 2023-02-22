@@ -494,7 +494,7 @@ include::{example-dir-model}/PersonNames.java[tags=sql-ConstructorResult-dto-exa
 ====
 [source, JAVA, indent=0]
 ----
-include::{modeldir}/Person.java[tags=sql-multiple-scalar-values-dto-NamedNativeQuery-example]
+include::{example-dir-model}/Person.java[tags=sql-multiple-scalar-values-dto-NamedNativeQuery-example]
 ----
 ====
 

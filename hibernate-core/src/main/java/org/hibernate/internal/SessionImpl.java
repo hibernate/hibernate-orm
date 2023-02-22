@@ -1719,6 +1719,25 @@ public class SessionImpl
 	}
 
 	@Override
+	public String bestGuessEntityName(Object object, EntityEntry entry) {
+		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+		if ( lazyInitializer != null ) {
+			// it is possible for this method to be called during flush processing,
+			// so make certain that we do not accidentally initialize an uninitialized proxy
+			if ( lazyInitializer.isUninitialized() ) {
+				return lazyInitializer.getEntityName();
+			}
+			object = lazyInitializer.getImplementation();
+		}
+		if ( entry == null ) {
+			return guessEntityName( object );
+		}
+		else {
+			return entry.getPersister().getEntityName();
+		}
+	}
+
+	@Override
 	public String getEntityName(Object object) {
 		checkOpen();
 //		checkTransactionSynchStatus();

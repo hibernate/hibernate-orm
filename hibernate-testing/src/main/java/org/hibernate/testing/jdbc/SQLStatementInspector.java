@@ -99,7 +99,7 @@ public class SQLStatementInspector implements StatementInspector {
 	public void assertNumberOfOccurrenceInQueryNoSpace(int queryNumber, String toCheck, int expectedNumberOfOccurrences) {
 		String query = sqlQueries.get( queryNumber );
 		int actual = query.split( toCheck, -1 ).length - 1;
-		assertThat( "number of " + toCheck, actual, is( expectedNumberOfOccurrences ) );
+		assertThat( "number of " + toCheck + " in:\n" + query, actual, is( expectedNumberOfOccurrences ) );
 	}
 
 	public void assertIsSelect(int queryNumber) {

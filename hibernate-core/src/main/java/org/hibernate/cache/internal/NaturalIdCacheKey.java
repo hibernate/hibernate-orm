@@ -38,7 +38,7 @@ public class NaturalIdCacheKey implements Serializable {
 	}
 
 	public NaturalIdCacheKey(Object naturalIdValues, EntityPersister persister, String entityName, SharedSessionContractImplementor session) {
-		this( persister.getNaturalIdMapping().disassemble( naturalIdValues, session ), entityName, session.getTenantIdentifier(), persister.getNaturalIdMapping().calculateHashCode( naturalIdValues ) );
+		this( persister.getNaturalIdMapping().disassemble( naturalIdValues, session ), entityName, session.getTenantIdentifier(), persister.getNaturalIdMapping().calculateHashCode( naturalIdValues, session ) );
 	}
 
 	@Internal

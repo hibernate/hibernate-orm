@@ -17,11 +17,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -31,14 +35,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
-@DomainModel(annotatedClasses = {
+@DomainModel( annotatedClasses = {
 		JoinedInheritanceSameAttributeNameTest.BaseObj.class,
 		JoinedInheritanceSameAttributeNameTest.Comment.class,
+		JoinedInheritanceSameAttributeNameTest.Author.class,
 		JoinedInheritanceSameAttributeNameTest.Post.class,
-		JoinedInheritanceSameAttributeNameTest.Author.class
-})
+		JoinedInheritanceSameAttributeNameTest.AuthorEmbedded.class,
+} )
 @SessionFactory
-@JiraKey("HHH-16166")
+@JiraKey( "HHH-16166" )
 public class JoinedInheritanceSameAttributeNameTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -51,6 +56,8 @@ public class JoinedInheritanceSameAttributeNameTest {
 			session.persist( post );
 			session.persist( comment );
 			session.persist( author );
+			final AuthorEmbedded authorEmbedded = new AuthorEmbedded( "Andrea", "comments" );
+			session.persist( authorEmbedded );
 		} );
 	}
 
@@ -76,8 +83,8 @@ public class JoinedInheritanceSameAttributeNameTest {
 		} );
 	}
 
-	@Entity(name = "BaseObj")
-	@Inheritance(strategy = InheritanceType.JOINED)
+	@Entity( name = "BaseObj" )
+	@Inheritance( strategy = InheritanceType.JOINED )
 	public static class BaseObj {
 		@Id
 		@GeneratedValue
@@ -94,8 +101,8 @@ public class JoinedInheritanceSameAttributeNameTest {
 		}
 	}
 
-	@Entity(name = "Comment")
-	@Table(name = "Comments")
+	@Entity( name = "Comment" )
+	@Table( name = "Comments" )
 	public static class Comment extends BaseObj {
 		@ManyToOne
 		private Post post;
@@ -124,9 +131,9 @@ public class JoinedInheritanceSameAttributeNameTest {
 	 * This sub-entity has the same attribute name
 	 * as {@link Author} but with a different (Collection) type
 	 */
-	@Entity(name = "Post")
+	@Entity( name = "Post" )
 	public static class Post extends BaseObj {
-		@OneToMany(mappedBy = "post")
+		@OneToMany( mappedBy = "post" )
 		private Set<Comment> comments;
 
 		public Post() {
@@ -142,7 +149,7 @@ public class JoinedInheritanceSameAttributeNameTest {
 	 * This sub-entity has the same attribute name
 	 * as {@link Post} but with a different (SimpleValue) type
 	 */
-	@Entity(name = "Author")
+	@Entity( name = "Author" )
 	public static class Author extends BaseObj {
 		private String comments;
 
@@ -159,6 +166,77 @@ public class JoinedInheritanceSameAttributeNameTest {
 
 		public void setComments(String comments) {
 			this.comments = comments;
+		}
+	}
+
+	@Embeddable
+	public static class NestedEmbeddable {
+		@ElementCollection
+		@CollectionTable(
+				name = "author_comments",
+				joinColumns = @JoinColumn( name = "name", referencedColumnName = "name" )
+		)
+		private Set<String> comments;
+
+		private Integer testProperty;
+
+		public NestedEmbeddable() {
+			comments = new HashSet<>();
+		}
+
+		public Set<String> getComments() {
+			return comments;
+		}
+
+		public void setComments(Set<String> comments) {
+			this.comments = comments;
+		}
+
+		public Integer getTestProperty() {
+			return testProperty;
+		}
+
+		public void setTestProperty(Integer testProperty) {
+			this.testProperty = testProperty;
+		}
+	}
+
+	@Embeddable
+	public static class AuthorEmbeddable {
+		private NestedEmbeddable nestedEmbeddable;
+
+		public AuthorEmbeddable() {
+			this.nestedEmbeddable = new NestedEmbeddable();
+		}
+
+		public NestedEmbeddable getNestedEmbeddable() {
+			return nestedEmbeddable;
+		}
+
+		public void setNestedEmbeddable(NestedEmbeddable nestedEmbeddable) {
+			this.nestedEmbeddable = nestedEmbeddable;
+		}
+	}
+
+	@Entity( name = "AuthorEmbedded" )
+	public static class AuthorEmbedded extends BaseObj {
+		private AuthorEmbeddable authorEmbeddable;
+
+		public AuthorEmbedded() {
+		}
+
+		public AuthorEmbedded(String name, String comment) {
+			setName( name );
+			this.authorEmbeddable = new AuthorEmbeddable();
+			this.authorEmbeddable.getNestedEmbeddable().getComments().add( comment );
+		}
+
+		public AuthorEmbeddable getAuthorEmbeddable() {
+			return authorEmbeddable;
+		}
+
+		public void setAuthorEmbeddable(AuthorEmbeddable authorEmbeddable) {
+			this.authorEmbeddable = authorEmbeddable;
 		}
 	}
 }

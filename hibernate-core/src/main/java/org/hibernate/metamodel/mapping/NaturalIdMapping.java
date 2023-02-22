@@ -112,7 +112,7 @@ public interface NaturalIdMapping extends VirtualModelPart {
 	 * @param value The natural-id value
 	 * @return The hash-code
 	 */
-	int calculateHashCode(Object value);
+	int calculateHashCode(Object value, SharedSessionContractImplementor session);
 
 	/**
 	 * Make a loader capable of loading a single entity by natural-id

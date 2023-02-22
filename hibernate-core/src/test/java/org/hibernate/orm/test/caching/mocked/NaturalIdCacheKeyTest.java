@@ -46,7 +46,7 @@ public class NaturalIdCacheKeyTest {
         when( entityPersister.getRootEntityName() ).thenReturn( "EntityName" );
         when( entityPersister.getNaturalIdMapping() ).thenReturn( naturalIdMapping );
         when( naturalIdMapping.disassemble( any(), eq( sessionImplementor ) ) ).thenAnswer( invocation -> invocation.getArguments()[0] );
-        when( naturalIdMapping.calculateHashCode( any() ) ).thenAnswer( invocation -> invocation.getArguments()[0].hashCode() );
+        when( naturalIdMapping.calculateHashCode( any(), eq( sessionImplementor ) ) ).thenAnswer( invocation -> invocation.getArguments()[0].hashCode() );
 
 
         final NaturalIdCacheKey key = (NaturalIdCacheKey) DefaultCacheKeysFactory.staticCreateNaturalIdKey( new Object[] {"a", "b", "c"}, entityPersister, sessionImplementor );

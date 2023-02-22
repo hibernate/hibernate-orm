@@ -136,7 +136,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public int calculateHashCode(Object value) {
+	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
 		//noinspection unchecked
 		return value == null ? 0 : ( (JavaType<Object>) getJavaType() ).extractHashCode( value );
 	}

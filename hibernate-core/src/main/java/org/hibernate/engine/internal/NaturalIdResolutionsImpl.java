@@ -770,7 +770,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			final int prime = 31;
 			int hashCodeCalculation = 1;
 			hashCodeCalculation = prime * hashCodeCalculation + entityDescriptor.hashCode();
-			hashCodeCalculation = prime * hashCodeCalculation + entityDescriptor.getNaturalIdMapping().calculateHashCode( naturalIdValue );
+			hashCodeCalculation = prime * hashCodeCalculation + entityDescriptor.getNaturalIdMapping().calculateHashCode( naturalIdValue, persistenceContext.getSession() );
 
 			this.hashCode = hashCodeCalculation;
 		}

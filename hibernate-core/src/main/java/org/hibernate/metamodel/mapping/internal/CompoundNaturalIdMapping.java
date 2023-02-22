@@ -172,8 +172,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public int calculateHashCode(Object value) {
-		return 0;
+	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
+		Object o = disassemble( value, session ) ;
+		return Arrays.hashCode((Object[]) o);
 	}
 
 	@Override

@@ -15,6 +15,9 @@ import org.gradle.api.logging.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
 
 public class ConfigurationPropertyCollector {
 
@@ -101,17 +104,111 @@ public class ConfigurationPropertyCollector {
 				link.attr( "href", href );
 			}
 
-			org.jsoup.nodes.Element result = new org.jsoup.nodes.Element( "div" );
+			Elements result = new Elements();
 			for ( org.jsoup.nodes.Element child : block.children() ) {
 				if ( "h4".equalsIgnoreCase( child.tagName() ) || "pre".equalsIgnoreCase( child.tagName() ) ) {
 					continue;
 				}
-				result.appendChild( child );
+				result.add( child );
 			}
 
-			return result.toString();
+			return convertToAsciidoc( result );
 		}
 		return "";
+	}
+
+	private String convertToAsciidoc(Elements elements) {
+		StringBuilder doc = new StringBuilder( "" );
+		for ( Element element : elements ) {
+			convertToAsciidoc( element, doc, false );
+		}
+
+		return doc.toString();
+	}
+
+	private void convertToAsciidoc(Node node, StringBuilder doc, boolean innerBlock) {
+		if ( node instanceof Element ) {
+			Element element = (Element) node;
+			String tag = element.tagName();
+			if ( "p".equalsIgnoreCase( tag ) || "div".equalsIgnoreCase( tag ) || "dl".equalsIgnoreCase( tag ) ) {
+				if ( doc.length() != 0 ) {
+					if ( !innerBlock ) {
+						doc.append( "\n+" );
+					}
+					doc.append( "\n\n" );
+				}
+				boolean deprecation = element.hasClass( "deprecationBlock" );
+				if ( deprecation ) {
+					doc.append( "+\n[WARNING]\n====\n" );
+				}
+				for ( Node child : element.childNodes() ) {
+					convertToAsciidoc( child, doc, deprecation );
+				}
+				doc.append( '\n' );
+				if ( deprecation ) {
+					doc.append( "====\n" );
+				}
+			}
+			else if ( "a".equalsIgnoreCase( tag ) ) {
+				convertToAsciidoc( element, "link:" + element.attr( "href" ) + "[", "]", doc, innerBlock );
+			}
+			else if ( "code".equalsIgnoreCase( tag ) ) {
+				convertToAsciidoc( element, "`", "`", doc, innerBlock );
+			}
+			else if ( "strong".equalsIgnoreCase( tag ) || "em".equalsIgnoreCase( tag ) || "b".equalsIgnoreCase( tag ) ) {
+				convertToAsciidoc( element, "**", "**", doc, innerBlock );
+			}
+			else if ( "ul".equalsIgnoreCase( tag ) || "ol".equalsIgnoreCase( tag ) ) {
+				if ( doc.lastIndexOf( "\n" ) != doc.length() - 1 ) {
+					doc.append( '\n' );
+				}
+				convertToAsciidoc( element, "+\n", "", doc, innerBlock );
+			}
+			else if ( "li".equalsIgnoreCase( tag ) ) {
+				convertToAsciidoc( element, "\n  * ", "", doc, innerBlock );
+			}
+			else if ( "dt".equalsIgnoreCase( tag ) ) {
+				convertToAsciidoc( element, "+\n**", "**", doc, innerBlock );
+			}
+			else if ( "dd".equalsIgnoreCase( tag ) ) {
+				convertToAsciidoc( element, " ", "", doc, innerBlock );
+			}
+			else if ( "span".equalsIgnoreCase( tag ) ) {
+				if ( element.hasClass( "deprecatedLabel" ) ) {
+					// label for deprecation, let's make it bold to stand out:
+					convertToAsciidoc( element, "**", "**", doc, innerBlock );
+				}
+				else {
+					// simply pass to render items:
+					convertToAsciidoc( element, "", "", doc, innerBlock );
+				}
+			}
+			else {
+				// if we encounter an element that we are not handling - we want to fail as the result might be missing some details:
+				throw new IllegalStateException( "Unknown element: " + element );
+			}
+		}
+		else if ( node instanceof TextNode ) {
+			if ( doc.lastIndexOf( "+\n\n" ) == doc.length() - "+\n\n".length() ) {
+				// if it's a start of paragraph - remove any leading spaces:
+				doc.append( ( (TextNode) node ).text().replaceAll( "^\\s+", "" ) );
+			}
+			else {
+				doc.append( ( (TextNode) node ).text() );
+			}
+		}
+		else {
+			// if we encounter a node that we are not handling - we want to fail as the result might be missing some details:
+			throw new IllegalStateException( "Unknown node: " + node );
+		}
+	}
+
+	private void convertToAsciidoc(Element element, String pre, String post, StringBuilder doc, boolean innerBlock) {
+		doc.append( pre );
+		for ( Node childNode : element.childNodes() ) {
+			convertToAsciidoc( childNode, doc, innerBlock );
+		}
+		doc.append( post );
 	}
 
 	private String withoutPackagePrefix(String className) {

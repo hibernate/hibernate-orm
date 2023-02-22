@@ -41,10 +41,7 @@ public class AsciiDocWriter implements BiConsumer<Set<ConfigurationProperty>, Wr
 				writer.write( '`' );
 				writer.write( "::\n" );
 
-				// using inline passthrough for javadocs to not render HTML.
-				writer.write( "+++ " );
 				writer.write( el.javadoc() );
-				writer.write( " +++ " );
 
 				writer.write( '\n' );
 			}

@@ -263,6 +263,14 @@ plural attribute classification
 See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#collection-type-reg-ann
 for details of using `@CollectionTypeRegistration`
 
+[[bigint-long-mapping]]
+=== SQL `BIGINT`/`count()` mapping changes
+
+The type code `SqlType.BIGINT` is now mapped to the Java type `Long` by default; it previously was (incorrectly) mapped to `BigInteger`.
+
+As a result, native queries whose "select" clause returns a `BIGINT` element will now convert that element to `Long`,
+instead of `BigInteger` previously. This will be the case for native queries returning a `count()` in particular.
+
 === Duration mapping changes
 
 Duration now maps to the type code `SqlType.INTERVAL_SECOND` by default, which maps to the SQL type `interval second`

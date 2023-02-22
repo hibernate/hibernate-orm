@@ -81,7 +81,7 @@ public class DefaultPersistEventListener
 	private void persist(PersistEvent event, PersistContext createCache, Object entity) {
 		final EventSource source = event.getSession();
 		final EntityEntry entityEntry = source.getPersistenceContextInternal().getEntry( entity );
-		final String entityName = entityName( event, entity );
+		final String entityName = entityName( event, entity, entityEntry );
 		switch ( entityState( event, entity, entityName, entityEntry ) ) {
 			case DETACHED:
 				throw new PersistentObjectException( "detached entity passed to persist: "
@@ -133,13 +133,13 @@ public class DefaultPersistEventListener
 		return entityState;
 	}
 
-	private static String entityName(PersistEvent event, Object entity) {
+	private static String entityName(PersistEvent event, Object entity, EntityEntry entityEntry) {
 		if ( event.getEntityName() != null ) {
 			return event.getEntityName();
 		}
 		else {
 			// changes event.entityName by side effect!
-			final String entityName = event.getSession().bestGuessEntityName( entity );
+			final String entityName = event.getSession().bestGuessEntityName( entity, entityEntry );
 			event.setEntityName( entityName );
 			return entityName;
 		}

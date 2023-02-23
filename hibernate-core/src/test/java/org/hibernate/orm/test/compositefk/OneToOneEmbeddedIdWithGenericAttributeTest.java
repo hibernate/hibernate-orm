@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.compositefk;
 
 import java.io.Serializable;
-import java.util.Random;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -31,17 +30,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Marco Belladelli
  */
 @DomainModel(annotatedClasses = {
-		OneToOneEmbeddedIdWithGenericsTest.Customer.class,
-		OneToOneEmbeddedIdWithGenericsTest.Invoice.class
+		OneToOneEmbeddedIdWithGenericAttributeTest.Customer.class,
+		OneToOneEmbeddedIdWithGenericAttributeTest.Invoice.class
 })
 @SessionFactory
 @JiraKey("HHH-16070")
-public class OneToOneEmbeddedIdWithGenericsTest {
+@JiraKey("HHH-16195")
+public class OneToOneEmbeddedIdWithGenericAttributeTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Customer customer = new Customer( 1, "Francisco" );
-			Invoice invoice = new Invoice( 1, customer );
+			final Customer customer = new Customer( 1, "Francisco" );
+			final Invoice invoice = new Invoice( 1, customer );
 			customer.setInvoice( invoice );
 			session.persist( customer );
 			session.persist( invoice );
@@ -58,10 +58,14 @@ public class OneToOneEmbeddedIdWithGenericsTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
+		final Customer customer = scope.fromTransaction( session -> session.createQuery(
+				"from Customer",
+				Customer.class
+		).getSingleResult() );
+		assertNotNull( customer );
+
 		scope.inTransaction( session -> {
-			Customer customer = session.createQuery( "from Customer", Customer.class ).getSingleResult();
-			assertNotNull( customer );
-			Invoice invoice = session.createQuery(
+			final Invoice invoice = session.createQuery(
 							"from Invoice i where i.customer.id = :customerId",
 							Invoice.class
 					)
@@ -69,14 +73,28 @@ public class OneToOneEmbeddedIdWithGenericsTest {
 					.getSingleResult();
 			assertNotNull( invoice );
 		} );
+
+		scope.inTransaction( session -> {
+			final Invoice invoice = session.createQuery(
+							"from Invoice i where i.customer.id.value = :idValue",
+							Invoice.class
+					)
+					.setParameter( "idValue", customer.getId().getValue() )
+					.getSingleResult();
+			assertNotNull( invoice );
+		} );
 	}
 
 	@Test
 	public void testInverse(SessionFactoryScope scope) {
+		final Invoice invoice = scope.fromTransaction( session -> session.createQuery(
+				"from Invoice",
+				Invoice.class
+		).getSingleResult() );
+		assertNotNull( invoice );
+
 		scope.inTransaction( session -> {
-			Invoice invoice = session.createQuery( "from Invoice", Invoice.class ).getSingleResult();
-			assertNotNull( invoice );
-			Customer customer = session.createQuery(
+			final Customer customer = session.createQuery(
 							"from Customer c where c.invoice.id = :invoiceId",
 							Customer.class
 					)
@@ -84,44 +102,73 @@ public class OneToOneEmbeddedIdWithGenericsTest {
 					.getSingleResult();
 			assertNotNull( customer );
 		} );
+
+		scope.inTransaction( session -> {
+			final Customer customer = session.createQuery(
+							"from Customer c where c.invoice.id.value = :idValue",
+							Customer.class
+					)
+					.setParameter( "idValue", invoice.getId().getValue() )
+					.getSingleResult();
+			assertNotNull( customer );
+		} );
 	}
 
-	@MappedSuperclass
-	public abstract static class DomainEntityId implements Serializable {
+	@Embeddable
+	public static class DomainEntityId<T> implements Serializable {
 		@Column(name = "id_value")
-		private final Long value;
+		private T value;
 
-		protected DomainEntityId() {
-			Random random = new Random();
-			this.value = random.nextLong();
+		public DomainEntityId() {
 		}
 
-		public Long getValue() {
+		public DomainEntityId(T value) {
+			this.value = value;
+		}
+
+		public T getValue() {
 			return value;
 		}
+
+		public void setValue(T value) {
+			this.value = value;
+		}
 	}
 
 	@MappedSuperclass
-	public abstract static class DomainEntityModel<ID extends DomainEntityId> {
+	public abstract static class DomainEntityModel<T> {
 		@EmbeddedId
-		private final ID id;
+		private DomainEntityId<T> id;
 
-		protected DomainEntityModel(ID id) {
+		public DomainEntityModel() {
+		}
+
+		protected DomainEntityModel(DomainEntityId<T> id) {
 			this.id = id;
 		}
 
-		public ID getId() {
+		public DomainEntityId<T> getId() {
 			return id;
+		}
+
+		public void setId(DomainEntityId<T> id) {
+			this.id = id;
 		}
 	}
 
 	@Embeddable
-	public static class CustomerId extends DomainEntityId {
+	public static class CustomerId extends DomainEntityId<String> {
+		public CustomerId() {
+		}
+
+		public CustomerId(String value) {
+			super( value );
+		}
 	}
 
 	@Entity(name = "Customer")
 	@Table(name = "Customer")
-	public static class Customer extends DomainEntityModel<CustomerId> {
+	public static class Customer extends DomainEntityModel<String> {
 		private Integer code;
 		private String name;
 
@@ -135,7 +182,7 @@ public class OneToOneEmbeddedIdWithGenericsTest {
 		}
 
 		protected Customer() {
-			super( new CustomerId() );
+			super( new CustomerId( "customer" ) );
 		}
 
 		public Integer getCode() {
@@ -164,33 +211,28 @@ public class OneToOneEmbeddedIdWithGenericsTest {
 	}
 
 	@Embeddable
-	public static class InvoiceId extends DomainEntityId {
+	public static class InvoiceId extends DomainEntityId<Integer> {
+		public InvoiceId() {
+		}
+
+		public InvoiceId(Integer value) {
+			super( value );
+		}
 	}
 
 	@Entity(name = "Invoice")
 	@Table(name = "Invoice")
-	public static class Invoice extends DomainEntityModel<InvoiceId> {
-		private Integer serial;
-
+	public static class Invoice extends DomainEntityModel<Integer> {
 		@OneToOne
 		private Customer customer;
 
+		public Invoice() {
+			super();
+		}
+
 		public Invoice(Integer serial, Customer customer) {
-			this();
-			this.serial = serial;
+			super( new InvoiceId( serial ) );
 			this.customer = customer;
-		}
-
-		protected Invoice() {
-			super( new InvoiceId() );
-		}
-
-		public Integer getSerial() {
-			return serial;
-		}
-
-		public void setSerial(Integer serial) {
-			this.serial = serial;
 		}
 
 		public Customer getCustomer() {

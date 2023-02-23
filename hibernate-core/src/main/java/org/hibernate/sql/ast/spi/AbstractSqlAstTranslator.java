@@ -193,6 +193,8 @@ import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -843,10 +845,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return new JdbcOperationQuerySelect(
 				getSql(),
 				getParameterBinders(),
-				new JdbcValuesMappingProducerStandard(
-						selectStatement.getQuerySpec().getSelectClause().getSqlSelections(),
-						selectStatement.getDomainResultDescriptors()
-				),
+				buildJdbcValuesMappingProducer( selectStatement ),
 				getAffectedTableNames(),
 				getFilterJdbcParameters(),
 				rowsToSkip = getRowsToSkip( selectStatement, getJdbcParameterBindings() ),
@@ -856,6 +855,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getOffsetParameter(),
 				getLimitParameter()
 		);
+	}
+
+	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
+		final JdbcValuesMappingProducerProvider producerProvider = getSessionFactory()
+				.getServiceRegistry()
+				.getService( JdbcValuesMappingProducerProvider.class );
+		return producerProvider.buildMappingProducer( selectStatement, getSessionFactory() );
 	}
 
 	protected int getRowsToSkip(SelectStatement sqlAstSelect, JdbcParameterBindings jdbcParameterBindings) {

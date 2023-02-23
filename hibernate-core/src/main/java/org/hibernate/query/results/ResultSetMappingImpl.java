@@ -86,6 +86,16 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	@Override
+	public String getMappingIdentifier(){
+		return mappingIdentifier;
+	}
+
+	@Override
+	public boolean isDynamic() {
+		return isDynamic;
+	}
+
+	@Override
 	public int getNumberOfResultBuilders() {
 		return resultBuilders == null ? 0 : resultBuilders.size();
 	}
@@ -154,10 +164,6 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		if ( previousBuilder != null ) {
 			// todo (6.0) : error?  log?  nothing?
 		}
-	}
-
-	public String getMappingIdentifier(){
-		return mappingIdentifier;
 	}
 
 	@Override

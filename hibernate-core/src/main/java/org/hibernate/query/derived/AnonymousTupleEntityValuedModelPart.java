@@ -49,10 +49,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -239,27 +237,22 @@ public class AnonymousTupleEntityValuedModelPart
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
+			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 
 		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
@@ -270,9 +263,8 @@ public class AnonymousTupleEntityValuedModelPart
 		lazyTableGroup.setTableGroupInitializerCallback(
 				createTableGroupInitializerCallback(
 						lhs,
-						sqlExpressionResolver,
-						sessionFactory,
-						tableGroupJoin::applyPredicate
+						tableGroupJoin::applyPredicate,
+						creationState
 				)
 		);
 		return tableGroupJoin;
@@ -280,9 +272,8 @@ public class AnonymousTupleEntityValuedModelPart
 
 	private Consumer<TableGroup> createTableGroupInitializerCallback(
 			TableGroup lhs,
-			SqlExpressionResolver sqlExpressionResolver,
-			SessionFactoryImplementor sessionFactory,
-			Consumer<Predicate> predicateConsumer) {
+			Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState) {
 		// -----------------
 		// Collect the selectable mappings for the FK key side and target side
 		// As we will "resolve" the derived column references for these mappings
@@ -290,6 +281,8 @@ public class AnonymousTupleEntityValuedModelPart
 
 		final List<SelectableMapping> keyMappings;
 		final List<SelectableMapping> targetMappings;
+
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
 		if ( delegate instanceof OneToManyCollectionPart ) {
 			final OneToManyCollectionPart oneToMany = (OneToManyCollectionPart) delegate;
@@ -407,13 +400,11 @@ public class AnonymousTupleEntityValuedModelPart
 			boolean fetched,
 			String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final EntityMappingType entityMappingType = delegate.getEntityMappingType();
 		final TableReference primaryTableReference = entityMappingType.createPrimaryTableReference(
 				sqlAliasBase,
-				sqlExpressionResolver,
-				creationContext
+				creationState
 		);
 
 		return new StandardTableGroup(
@@ -430,10 +421,9 @@ public class AnonymousTupleEntityValuedModelPart
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,
-						sqlExpressionResolver,
-						creationContext
+						creationState
 				),
-				creationContext.getSessionFactory()
+				creationState.getCreationContext().getSessionFactory()
 		);
 	}
 
@@ -442,14 +432,17 @@ public class AnonymousTupleEntityValuedModelPart
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
+				explicitSqlAliasBase,
+				explicitSourceAlias,
+				this,
+				creationState.getSqlAliasBaseGenerator()
+		);
 		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
 		final EntityPersister entityPersister = delegate.getEntityMappingType().getEntityPersister();
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
@@ -462,8 +455,7 @@ public class AnonymousTupleEntityValuedModelPart
 						fetched,
 						null,
 						sqlAliasBase,
-						sqlExpressionResolver,
-						creationContext
+						creationState
 				),
 				(np, tableExpression) -> {
 					if ( !tableExpression.isEmpty() && !entityPersister.containsTableReference( tableExpression ) ) {
@@ -485,18 +477,13 @@ public class AnonymousTupleEntityValuedModelPart
 				this,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationContext.getSessionFactory(),
+				creationState.getCreationContext().getSessionFactory(),
 				lhs
 		);
 
 		if ( predicateConsumer != null ) {
 			lazyTableGroup.setTableGroupInitializerCallback(
-					createTableGroupInitializerCallback(
-							lhs,
-							sqlExpressionResolver,
-							creationContext.getSessionFactory(),
-							predicateConsumer
-					)
+					createTableGroupInitializerCallback( lhs, predicateConsumer, creationState )
 			);
 		}
 

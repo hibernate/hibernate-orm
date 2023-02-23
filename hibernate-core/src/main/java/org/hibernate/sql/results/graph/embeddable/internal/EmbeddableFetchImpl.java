@@ -60,6 +60,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 							getNavigablePath(),
 							lhsTableGroup,
 							null,
+							null,
 							SqlAstJoinType.INNER,
 							true,
 							false,

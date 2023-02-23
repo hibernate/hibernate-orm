@@ -73,8 +73,8 @@ public class ImplicitModelPartResultBuilderEntity
 							navigablePath,
 							null,
 							null,
-							creationStateImpl,
-							creationStateImpl.getCreationContext()
+							null,
+							creationStateImpl
 					);
 				}
 		);

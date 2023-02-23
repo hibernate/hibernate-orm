@@ -10,22 +10,19 @@ import java.util.Arrays;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FromClauseAccessImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -105,11 +102,9 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 				false,
 				navigablePath,
 				tableAlias,
-				null,
 				new SqlAliasBaseConstant( tableAlias ),
-				creationStateImpl.getSqlExpressionResolver(),
-				creationStateImpl.getFromClauseAccess(),
-				sessionFactory
+				null,
+				creationStateImpl
 		);
 		fromClauseAccess.registerTableGroup( navigablePath, rootTableGroup );
 

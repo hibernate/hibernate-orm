@@ -936,11 +936,9 @@ public abstract class AbstractCollectionPersister
 				true,
 				entityPath,
 				null,
-				() -> p -> {},
 				new SqlAliasBaseConstant( alias ),
-				sqlAstCreationState.getSqlExpressionResolver(),
-				sqlAstCreationState.getFromClauseAccess(),
-				getFactory()
+				() -> p -> {},
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );

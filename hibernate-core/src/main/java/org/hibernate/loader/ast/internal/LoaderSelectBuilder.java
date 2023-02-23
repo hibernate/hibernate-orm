@@ -386,9 +386,9 @@ public class LoaderSelectBuilder {
 				true,
 				rootNavigablePath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState,
-				creationContext
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -405,6 +405,7 @@ public class LoaderSelectBuilder {
 					final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 							navigablePath,
 							rootTableGroup,
+							null,
 							null,
 							SqlAstJoinType.LEFT,
 							true,
@@ -966,9 +967,9 @@ public class LoaderSelectBuilder {
 				true,
 				rootNavigablePath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState,
-				creationContext
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );

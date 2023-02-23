@@ -122,9 +122,9 @@ public class CockroachDialect extends Dialect {
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 21, 1 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 21, 1 );
 
-	private final PostgreSQLDriverKind driverKind;
+	protected final PostgreSQLDriverKind driverKind;
 
 	public CockroachDialect() {
 		this( MINIMUM_VERSION );
@@ -333,7 +333,10 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
+		contributeCockroachTypes( typeContributions, serviceRegistry );
+	}
 
+	protected void contributeCockroachTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );

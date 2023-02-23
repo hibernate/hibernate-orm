@@ -23,7 +23,9 @@ import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ResultSetMappingImpl;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
@@ -86,7 +88,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
 
-		ResultSetMappingImpl resultSetMapping = new ResultSetMappingImpl( registeredName );
+		final ResultSetMapping resultSetMapping = buildResultSetMapping( registeredName, sessionFactory );
 
 		if ( specifiesResultClasses ) {
 			Util.resolveResultSetMappingClasses(
@@ -123,6 +125,13 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 				null,
 				hints
 		);
+	}
+
+	private ResultSetMapping buildResultSetMapping(String registeredName, SessionFactoryImplementor sessionFactory) {
+		return sessionFactory
+				.getServiceRegistry()
+				.getService( JdbcValuesMappingProducerProvider.class )
+				.buildResultSetMapping( registeredName, false, sessionFactory );
 	}
 
 	static class ParameterDefinitions {

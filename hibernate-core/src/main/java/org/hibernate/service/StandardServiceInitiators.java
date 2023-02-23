@@ -37,6 +37,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInit
 import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerProviderInitiator;
 import org.hibernate.tool.schema.internal.SchemaManagementToolInitiator;
 import org.hibernate.tool.schema.internal.script.SqlScriptExtractorInitiator;
 
@@ -94,6 +95,8 @@ public final class StandardServiceInitiators {
 
 		serviceInitiators.add( ManagedBeanRegistryInitiator.INSTANCE );
 		serviceInitiators.add( EntityCopyObserverFactoryInitiator.INSTANCE );
+
+		serviceInitiators.add( JdbcValuesMappingProducerProviderInitiator.INSTANCE );
 
 		serviceInitiators.trimToSize();
 

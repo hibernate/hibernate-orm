@@ -1819,4 +1819,9 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 513)
 	void unableToGenerateReflectionOptimizer(String className, @Cause Throwable cause);
 
+	@LogMessage(level = WARN)
+	@Message(value = "PostgreSQL JDBC driver classes are inaccessible and thus, certain DDL types like JSONB, JSON, GEOMETRY can not be used.",
+			id = 514)
+	void postgreSQLJdbcDriverNotAccessible();
+
 }

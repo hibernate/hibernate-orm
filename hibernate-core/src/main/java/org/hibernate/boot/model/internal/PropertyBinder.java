@@ -343,58 +343,14 @@ public class PropertyBinder {
 			rootClass.setDeclaredIdentifierProperty( prop );
 			return;
 		}
-		// If the type has type parameters, we have to set the declared identifier property on the rootClass
-		// to be able to retrieve it with the correct type based on type variable assignment in the subclass
 		final Class<?> type = buildingContext.getBootstrapContext().getReflectionManager().toClass( declaringClass );
-		if ( type.getTypeParameters().length == 0 ) {
-			superclass.setDeclaredIdentifierProperty( prop );
-		}
-		else {
-			// If the type has type parameters, we have to look up the XClass and actual property again
-			// because the given XClass has a TypeEnvironment based on the type variable assignments of a subclass
-			// and that might result in a wrong property type being used for a property which uses a type variable
-			final XClass actualDeclaringClass = buildingContext.getBootstrapContext().getReflectionManager().toXClass( type );
-			for ( XProperty declaredProperty : actualDeclaringClass.getDeclaredProperties( prop.getPropertyAccessorName() ) ) {
-				if ( prop.getName().equals( declaredProperty.getName() ) ) {
-					final PropertyData inferredData = new PropertyInferredData(
-							actualDeclaringClass,
-							declaredProperty,
-							null,
-							buildingContext.getBootstrapContext().getReflectionManager()
-					);
-					final Value originalValue = prop.getValue();
-					if ( originalValue instanceof SimpleValue ) {
-						// Avoid copying when the property doesn't depend on a type variable
-						if ( inferredData.getTypeName().equals( ClassPropertyHolder.getTypeName( prop ) ) ) {
-							superclass.setDeclaredIdentifierProperty( prop );
-							return;
-						}
-					}
-					// If the property depends on a type variable, we have to copy it and the Value
-					final Property actualProperty = prop.copy();
-					actualProperty.setReturnedClassName( inferredData.getTypeName() );
-					final Value value = actualProperty.getValue().copy();
-					assert !(value instanceof Collection);
-					ClassPropertyHolder.setTypeName( value, inferredData.getTypeName() );
-					if ( value instanceof Component ) {
-						Component component = ( (Component) value );
-						Iterator<Property> propertyIterator = component.getPropertyIterator();
-						while ( propertyIterator.hasNext() ) {
-							Property property = propertyIterator.next();
-							try {
-								property.getGetter( component.getComponentClass() );
-							}
-							catch (PropertyNotFoundException e) {
-								propertyIterator.remove();
-							}
-						}
-					}
-					actualProperty.setValue( value );
-					superclass.setDeclaredIdentifierProperty( actualProperty );
-					break;
-				}
-			}
-		}
+		ClassPropertyHolder.prepareActualPropertyForSuperclass(
+				prop,
+				type,
+				false,
+				buildingContext,
+				superclass::setDeclaredIdentifierProperty
+		);
 	}
 
 	private Component getOrCreateCompositeId(RootClass rootClass) {

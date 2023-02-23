@@ -126,6 +126,65 @@ public class EmbeddableWithGenericAndMappedSuperClassTest {
 	}
 
 	@Test
+	public void testQueryParam(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<Long> rareBookIds = session.createQuery(
+							"select id from RareBook b where b.edition.code = :code",
+							Long.class
+					).setParameter( "code", RARE_BOOK_CODE ).list();
+
+					assertThat( rareBookIds ).hasSize( 1 );
+
+					Long id = rareBookIds.get( 0 );
+					assertThat( id ).isEqualTo( RARE_BOOK_ID );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					List<Long> rareBookIds = session.createQuery(
+							"select id from RareBook b where b.edition = :edition",
+							Long.class
+					).setParameter( "edition", new Edition<>( "Rare", RARE_BOOK_CODE ) ).list();
+
+					assertThat( rareBookIds ).hasSize( 1 );
+
+					Long id = rareBookIds.get( 0 );
+					assertThat( id ).isEqualTo( RARE_BOOK_ID );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					List<Long> popularBookIds = session.createQuery(
+							"select id from PopularBook b where b.edition.code = :code",
+							Long.class
+					).setParameter( "code", POPULAR_BOOK_CODE ).list();
+
+					assertThat( popularBookIds ).hasSize( 1 );
+
+					Long id = popularBookIds.get( 0 );
+					assertThat( id ).isEqualTo( POPULAR_BOOK_ID );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					List<Long> popularBookIds = session.createQuery(
+							"select id from PopularBook b where b.edition = :edition",
+							Long.class
+					).setParameter( "edition", new Edition<>( "Popular", POPULAR_BOOK_CODE ) ).list();
+
+					assertThat( popularBookIds ).hasSize( 1 );
+
+					Long id = popularBookIds.get( 0 );
+					assertThat( id ).isEqualTo( POPULAR_BOOK_ID );
+				}
+		);
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-4299")
 	public void testGenericEmbeddedAttribute(SessionFactoryScope scope) {
 		scope.inTransaction(

@@ -57,7 +57,6 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
@@ -118,7 +117,7 @@ public class NativeQueryImpl<R>
 	private final List<ParameterOccurrence> parameterOccurrences;
 	private final QueryParameterBindings parameterBindings;
 
-	private final ResultSetMappingImpl resultSetMapping;
+	private final ResultSetMapping resultSetMapping;
 	private final boolean resultMappingSuppliedToCtor;
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
@@ -137,13 +136,13 @@ public class NativeQueryImpl<R>
 				memento,
 				() -> {
 					if ( memento.getResultMappingName() != null ) {
-						return new ResultSetMappingImpl( memento.getResultMappingName() );
+						return buildResultSetMapping( memento.getResultMappingName(), false, session );
 					}
 					else if ( memento.getResultMappingClass() != null ) {
-						return new ResultSetMappingImpl( memento.getResultMappingClass().getName() );
+						return buildResultSetMapping( memento.getResultMappingClass().getName(), false, session );
 					}
 
-					return new ResultSetMappingImpl( memento.getSqlString() );
+					return buildResultSetMapping( memento.getSqlString(), false, session );
 				},
 				(resultSetMapping, querySpaceConsumer, context ) -> {
 					if ( memento.getResultMappingName() != null ) {
@@ -176,14 +175,21 @@ public class NativeQueryImpl<R>
 	@FunctionalInterface
 	private interface ResultSetMappingHandler {
 		boolean resolveResultSetMapping(
-				ResultSetMappingImpl resultSetMapping,
+				ResultSetMapping resultSetMapping,
 				Consumer<String> querySpaceConsumer,
 				ResultSetMappingResolutionContext context);
 	}
 
+	private static ResultSetMapping buildResultSetMapping(
+			String registeredName,
+			boolean isDynamic,
+			SharedSessionContractImplementor session) {
+		return ResultSetMapping.resolveResultSetMapping( registeredName, isDynamic, session.getFactory() );
+	}
+
 	public NativeQueryImpl(
 			NamedNativeQueryMemento memento,
-			Supplier<ResultSetMappingImpl> resultSetMappingCreator,
+			Supplier<ResultSetMapping> resultSetMappingCreator,
 			ResultSetMappingHandler resultSetMappingHandler,
 			SharedSessionContractImplementor session) {
 		super( session );
@@ -226,7 +232,7 @@ public class NativeQueryImpl<R>
 				memento,
 				() -> {
 					final String mappingIdentifier = resultJavaType != null ? resultJavaType.getName() : null;
-					return new ResultSetMappingImpl( mappingIdentifier );
+					return buildResultSetMapping( mappingIdentifier, false, session );
 				},
 				(resultSetMapping, querySpaceConsumer, context) -> {
 					if ( memento.getResultMappingName() != null ) {
@@ -284,7 +290,7 @@ public class NativeQueryImpl<R>
 			SharedSessionContractImplementor session) {
 		this(
 				memento,
-				() -> new ResultSetMappingImpl( resultSetMappingName ),
+				() -> buildResultSetMapping( resultSetMappingName, false, session ),
 				(resultSetMapping, querySpaceConsumer, context) -> {
 					final NamedResultSetMappingMemento mappingMemento = session.getFactory()
 							.getQueryEngine()
@@ -314,7 +320,7 @@ public class NativeQueryImpl<R>
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 		this.querySpaces = new HashSet<>();
 
-		this.resultSetMapping = new ResultSetMappingImpl( resultSetMappingMemento.getName() );
+		this.resultSetMapping = buildResultSetMapping( resultSetMappingMemento.getName(), false, session );
 		resultSetMappingMemento.resolve(
 				resultSetMapping,
 				this::addSynchronizedQuerySpace,
@@ -379,7 +385,7 @@ public class NativeQueryImpl<R>
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
 		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
-		this.resultSetMapping = new ResultSetMappingImpl( sqlString, true );
+		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( sqlString, true, session.getFactory() );
 		this.resultMappingSuppliedToCtor = false;
 	}
 
@@ -463,7 +469,7 @@ public class NativeQueryImpl<R>
 		);
 	}
 
-	private Class<?> extractResultClass(ResultSetMappingImpl resultSetMapping) {
+	private Class<?> extractResultClass(ResultSetMapping resultSetMapping) {
 		final List<ResultBuilder> resultBuilders = resultSetMapping.getResultBuilders();
 		if ( resultBuilders.size() == 1 ) {
 			final ResultBuilder resultBuilder = resultBuilders.get( 0 );

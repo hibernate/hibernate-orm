@@ -51,7 +51,6 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
@@ -94,6 +93,7 @@ import jakarta.persistence.TransactionRequiredException;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
 import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
+import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
 
 /**
  * Standard implementation of {@link ProcedureCall}
@@ -134,7 +134,7 @@ public class ProcedureCallImpl<R>
 		this.parameterMetadata = new ProcedureParameterMetadataImpl();
 		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
-		this.resultSetMapping = new ResultSetMappingImpl( procedureName, true );
+		this.resultSetMapping = resolveResultSetMapping( procedureName, true, session.getSessionFactory() );
 
 		this.synchronizedQuerySpaces = null;
 	}
@@ -160,7 +160,7 @@ public class ProcedureCallImpl<R>
 
 		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultClasses );
 
-		this.resultSetMapping = new ResultSetMappingImpl( mappingId );
+		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappingClasses(
 				resultClasses,
@@ -193,7 +193,7 @@ public class ProcedureCallImpl<R>
 		this.synchronizedQuerySpaces = new HashSet<>();
 
 		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultSetMappingNames );
-		this.resultSetMapping = new ResultSetMappingImpl( mappingId );
+		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappingNames(
 				resultSetMappingNames,
@@ -219,7 +219,7 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
-		this.resultSetMapping = new ResultSetMappingImpl( memento.getRegistrationName() );
+		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( memento.getRegistrationName(), session.getSessionFactory() );
 
 		Util.resolveResultSetMappings(
 				memento.getResultSetMappingNames(),
@@ -252,7 +252,7 @@ public class ProcedureCallImpl<R>
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
 		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultTypes );
-		this.resultSetMapping = new ResultSetMappingImpl( mappingId );
+		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappings(
 				null,
@@ -279,7 +279,7 @@ public class ProcedureCallImpl<R>
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
 		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultSetMappingNames );
-		this.resultSetMapping = new ResultSetMappingImpl( mappingId );
+		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappings(
 				resultSetMappingNames,

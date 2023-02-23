@@ -52,7 +52,7 @@ public abstract class PostgreSQLPGObjectJdbcType implements JdbcType {
 			valueSetter = ReflectHelper.setterMethodOrNull( pgObjectClass, "value", String.class );
 		}
 		catch (Exception e) {
-			LOG.warn( "PostgreSQL JDBC driver classes are inaccessible and thus, certain DDL types like JSONB, JSON, GEOMETRY can not be used!", e );
+			LOG.postgreSQLJdbcDriverNotAccessible();
 		}
 		PG_OBJECT_CONSTRUCTOR = constructor;
 		TYPE_SETTER = typeSetter;

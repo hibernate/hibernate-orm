@@ -6,10 +6,8 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.List;
-
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -61,6 +59,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 							navigablePath,
 							tableGroup,
 							resultVariable,
+							null,
 							SqlAstJoinType.INNER,
 							true,
 							false,

@@ -147,13 +147,9 @@ public class InlineUpdateHandler implements UpdateHandler {
 				final Object[] id = (Object[]) ids.get( i );
 				final List<Expression> tupleElements = new ArrayList<>( jdbcTypeCount );
 				inListExpressions.add( new SqlTuple( tupleElements, identifierMapping ) );
-				identifierMapping.forEachJdbcType(
-						(index, jdbcMapping) -> {
-							tupleElements.add(
-									new QueryLiteral<>( id[index], (BasicValuedMapping) jdbcMapping )
-							);
-						}
-				);
+				identifierMapping.forEachJdbcType( (index, jdbcMapping) -> {
+					tupleElements.add( new QueryLiteral<>( id[index], (BasicValuedMapping) jdbcMapping ) );
+				} );
 			}
 		}
 
@@ -356,12 +352,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 		tableKeyColumnVisitationSupplier.get().accept(
 				(columnIndex, selection) -> {
 					assert selection.getContainingTableExpression().equals( tableExpression );
-					keyColumnCollector.apply(
-							new ColumnReference(
-									(String) null,
-									selection
-							)
-					);
+					keyColumnCollector.apply( new ColumnReference( (String) null, selection ) );
 				}
 		);
 
@@ -375,11 +366,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Create the SQL AST and convert it into a JdbcOperation
 		final NamedTableReference dmlTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
-		final UpdateStatement sqlAst = new UpdateStatement(
-				dmlTableReference,
-				assignments,
-				idListPredicate
-		);
+		final UpdateStatement sqlAst = new UpdateStatement( dmlTableReference, assignments, idListPredicate );
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcOperationQueryUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
@@ -430,11 +417,9 @@ public class InlineUpdateHandler implements UpdateHandler {
 					true,
 					updatingTableGroup.getNavigablePath(),
 					updatingTableGroup.getSourceAlias(),
-					() -> predicate -> {},
 					new SqlAliasBaseImpl( updatingTableGroup.getGroupAlias() ),
-					null,
-					null,
-					sessionFactory
+					() -> predicate -> {},
+					null
 			);
 			final List<String> columnNames;
 			final Predicate joinPredicate;

@@ -138,11 +138,9 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 							true,
 							navigablePath,
 							tableAlias,
-							null,
 							new SqlAliasBaseConstant( tableAlias ),
-							impl.getSqlExpressionResolver(),
-							impl.getFromClauseAccess(),
-							impl.getCreationContext()
+							null,
+							impl
 					)
 			);
 

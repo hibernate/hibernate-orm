@@ -62,11 +62,8 @@ import org.hibernate.spi.TreatedNavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
@@ -1488,6 +1485,7 @@ public class ToOneAttributeMapping
 							fetchablePath,
 							parentTableGroup,
 							resultVariable,
+							null,
 							joinType,
 							true,
 							false,
@@ -1538,6 +1536,7 @@ public class ToOneAttributeMapping
 						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 								navigablePath,
 								tableGroup,
+								null,
 								null,
 								getDefaultSqlAstJoinType( tableGroup ),
 								true,
@@ -1663,13 +1662,11 @@ public class ToOneAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		// Make sure the lhs is never a plural table group directly, but always a table group for a part
 		// This is vital for the map key property check that comes next
 		assert !( lhs instanceof PluralTableGroup );
@@ -1686,6 +1683,8 @@ public class ToOneAttributeMapping
 		else {
 			joinType = requestedJoinType;
 		}
+
+		final FromClauseAccess fromClauseAccess = creationState.getFromClauseAccess();
 
 		// If a parent is a collection part, there is no custom predicate and the join is INNER or LEFT
 		// we check if this attribute is the map key property to reuse the existing index table group
@@ -1770,14 +1769,13 @@ public class ToOneAttributeMapping
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
+
 		final TableGroupJoin join = new TableGroupJoin(
 				navigablePath,
 				joinType,
@@ -1803,8 +1801,7 @@ public class ToOneAttributeMapping
 					join.applyPredicate( foreignKeyDescriptor.generateJoinPredicate(
 							targetTableReference,
 							keyTableReference,
-							sqlExpressionResolver,
-							creationContext
+							creationState
 					) );
 
 					if ( hasNotFoundAction() ) {
@@ -1826,14 +1823,17 @@ public class ToOneAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( sqlAliasStem );
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
+				explicitSqlAliasBase,
+				explicitSourceAlias,
+				this,
+				creationState.getSqlAliasBaseGenerator()
+		);
 
 		final boolean canUseInnerJoin;
 		if ( ! lhs.canUseInnerJoins() ) {
@@ -1847,9 +1847,11 @@ public class ToOneAttributeMapping
 		}
 
 		TableGroup realParentTableGroup = lhs;
+		final FromClauseAccess fromClauseAccess = creationState.getFromClauseAccess();
 		while ( realParentTableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
 			realParentTableGroup = fromClauseAccess.findTableGroup( realParentTableGroup.getNavigablePath().getParent() );
 		}
+
 		final TableGroupProducer tableGroupProducer;
 		if ( realParentTableGroup instanceof CorrelatedTableGroup ) {
 			// If the parent is a correlated table group, we can't refer to columns of the table in the outer query,
@@ -1860,6 +1862,7 @@ public class ToOneAttributeMapping
 		else {
 			tableGroupProducer = this;
 		}
+
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,
@@ -1870,8 +1873,7 @@ public class ToOneAttributeMapping
 						fetched,
 						null,
 						sqlAliasBase,
-						sqlExpressionResolver,
-						creationContext
+						creationState
 				),
 				(np, tableExpression) -> {
 					if ( !canUseParentTableGroup || tableGroupProducer != ToOneAttributeMapping.this ) {
@@ -1898,7 +1900,7 @@ public class ToOneAttributeMapping
 				tableGroupProducer,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationContext.getSessionFactory(),
+				creationState.getCreationContext().getSessionFactory(),
 				lhs
 		);
 
@@ -1913,8 +1915,7 @@ public class ToOneAttributeMapping
 							foreignKeyDescriptor.generateJoinPredicate(
 									sideNature == ForeignKeyDescriptor.Nature.TARGET ? lhsTableReference : tableGroup.getPrimaryTableReference(),
 									sideNature == ForeignKeyDescriptor.Nature.TARGET ? tableGroup.getPrimaryTableReference() : lhsTableReference,
-									sqlExpressionResolver,
-									creationContext
+									creationState
 							)
 					)
 			);
@@ -1953,12 +1954,10 @@ public class ToOneAttributeMapping
 			boolean fetched,
 			String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final TableReference primaryTableReference = getEntityMappingType().createPrimaryTableReference(
 				sqlAliasBase,
-				sqlExpressionResolver,
-				creationContext
+				creationState
 		);
 
 		return new StandardTableGroup(
@@ -1975,10 +1974,9 @@ public class ToOneAttributeMapping
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,
-						sqlExpressionResolver,
-						creationContext
+						creationState
 				),
-				creationContext.getSessionFactory()
+				creationState.getCreationContext().getSessionFactory()
 		);
 	}
 

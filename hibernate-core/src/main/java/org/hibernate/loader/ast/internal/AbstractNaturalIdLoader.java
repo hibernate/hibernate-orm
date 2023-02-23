@@ -162,9 +162,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				true,
 				entityPath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState,
-				sessionFactory
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );

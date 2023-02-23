@@ -129,10 +129,6 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		return serviceRegistry;
 	}
 
-	public Object visitStatement(SqmStatement<?> sqmStatement) {
-		return sqmStatement.accept( this );
-	}
-
 	@Override
 	public Object visitSelectStatement(SqmSelectStatement<?> statement) {
 		visitCteContainer( statement );

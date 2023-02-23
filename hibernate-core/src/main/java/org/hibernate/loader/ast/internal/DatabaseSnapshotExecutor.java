@@ -84,9 +84,9 @@ class DatabaseSnapshotExecutor {
 				true,
 				rootPath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				state,
-				sessionFactory
+				state
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );

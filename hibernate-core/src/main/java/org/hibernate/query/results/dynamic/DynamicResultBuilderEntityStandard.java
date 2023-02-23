@@ -198,8 +198,7 @@ public class DynamicResultBuilderEntityStandard
 				np -> {
 					final TableReference tableReference = entityMapping.createPrimaryTableReference(
 							new SqlAliasBaseConstant( tableAlias ),
-							creationState.getSqlExpressionResolver(),
-							creationState.getCreationContext()
+							creationState
 					);
 
 					if ( lockMode != null ) {

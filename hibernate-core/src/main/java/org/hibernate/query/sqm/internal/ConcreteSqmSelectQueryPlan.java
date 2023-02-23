@@ -366,7 +366,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				true
 		);
 
-//			tableGroupAccess = sqmConverter.getFromClauseAccess();
 		final SqmTranslation<SelectStatement> sqmInterpretation = sqmConverter.translate();
 		final FromClauseAccess tableGroupAccess = sqmConverter.getFromClauseAccess();
 

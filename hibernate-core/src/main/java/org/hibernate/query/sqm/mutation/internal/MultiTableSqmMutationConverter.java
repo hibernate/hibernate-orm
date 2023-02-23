@@ -116,11 +116,10 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				true,
 				sqmRoot.getNavigablePath(),
 				sourceAlias,
-				() -> predicate -> {
-					this.discriminatorPredicate = predicate;
-				},
-				this,
-				creationContext.getSessionFactory() );
+				null,
+				() -> (predicate) -> this.discriminatorPredicate = predicate,
+				this
+		);
 
 		getFromClauseAccess().registerTableGroup( sqmRoot.getNavigablePath(), mutatingTableGroup );
 	}

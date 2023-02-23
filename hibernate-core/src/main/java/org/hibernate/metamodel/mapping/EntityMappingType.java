@@ -32,11 +32,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
@@ -508,47 +505,22 @@ public interface EntityMappingType
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationState creationState,
-			SqlAstCreationContext creationContext) {
-		return createRootTableGroup(
-				canUseInnerJoins,
-				navigablePath,
-				explicitSourceAlias,
-				additionalPredicateCollectorAccess,
-				creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() ),
-				creationState.getSqlExpressionResolver(),
-				creationState.getFromClauseAccess(),
-				creationContext
-		);
-	}
-
-	@Override
-	default TableGroup createRootTableGroup(
-			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver expressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		return getEntityPersister().createRootTableGroup(
 				canUseInnerJoins,
 				navigablePath,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				additionalPredicateCollectorAccess,
-				sqlAliasBase,
-				expressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 	}
 
 	default TableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		throw new UnsupportedMappingException(
 				"Entity mapping does not support primary TableReference creation [" +
 						getClass().getName() + " : " + getEntityName() + "]"
@@ -559,8 +531,7 @@ public interface EntityMappingType
 			String joinTableExpression,
 			SqlAliasBase sqlAliasBase,
 			TableReference lhs,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		throw new UnsupportedMappingException(
 				"Entity mapping does not support primary TableReference join creation [" +
 						getClass().getName() + " : " + getEntityName() + "]"

@@ -6,11 +6,8 @@
  */
 package org.hibernate.query.results.implicit;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -18,13 +15,12 @@ import java.util.function.Function;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -111,6 +107,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 					final TableGroupJoin tableGroupJoin = fetchable.createTableGroupJoin(
 							fetchPath,
 							parentTableGroup,
+							null,
 							null,
 							SqlAstJoinType.INNER,
 							true,

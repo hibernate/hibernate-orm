@@ -12,9 +12,9 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -121,11 +121,9 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 				true,
 				navigablePath,
 				tableAlias,
-				null,
 				new SqlAliasBaseConstant( tableAlias ),
-				creationStateImpl,
-				creationStateImpl.getFromClauseAccess(),
-				creationStateImpl.getCreationContext()
+				null,
+				creationStateImpl
 		);
 
 		creationStateImpl.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );

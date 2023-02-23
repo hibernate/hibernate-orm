@@ -24,7 +24,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -780,17 +779,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}
-
-//	@Override
-//	protected boolean isSubclassTableSequentialSelect(int j) {
-//		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
-//	}
-
-	/*public void postInstantiate() throws MappingException {
-		super.postInstantiate();
-		//TODO: other lock modes?
-		loader = createEntityLoader(LockMode.NONE, CollectionHelper.EMPTY_MAP);
-	}*/
 
 	@Override
 	public String getSubclassPropertyTableName(int i) {

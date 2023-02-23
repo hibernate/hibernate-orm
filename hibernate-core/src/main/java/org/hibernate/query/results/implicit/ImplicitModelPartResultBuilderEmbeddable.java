@@ -74,6 +74,7 @@ public class ImplicitModelPartResultBuilderEmbeddable
 							navigablePath,
 							parentTableGroup,
 							null,
+							null,
 							SqlAstJoinType.INNER,
 							true,
 							false,

@@ -766,7 +766,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	@Override
-	public final void contributeFunctions(FunctionContributions functionContributions) {
+	public void contributeFunctions(FunctionContributions functionContributions) {
 		initializeFunctionRegistry( functionContributions );
 	}
 
@@ -1485,7 +1485,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @see #initDefaultProperties()
 	 */
-	public final Properties getDefaultProperties() {
+	public Properties getDefaultProperties() {
 		return properties;
 	}
 
@@ -1522,7 +1522,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	// database type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public final void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		contributeTypes( typeContributions, serviceRegistry );
 	}
 
@@ -3047,7 +3047,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see #openQuote()
 	 * @see #closeQuote()
 	 */
-	public final String quote(String name) {
+	public String quote(String name) {
 		if ( name == null ) {
 			return null;
 		}

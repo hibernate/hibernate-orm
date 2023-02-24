@@ -142,7 +142,6 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
@@ -210,9 +209,10 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
@@ -4941,19 +4941,17 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		// we need the boot model so we can have access to the Table
-		final RootClass rootClass = (RootClass) creationProcess.getCreationContext()
-				.getBootModel().getEntityBinding( entityMappingDescriptor.getRootEntityName() );
-		return SqmMutationStrategyHelper.resolveStrategy( rootClass, entityMappingDescriptor, creationProcess );
+		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
+		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+				.createMutationStrategy( entityMappingDescriptor, creationProcess );
 	}
 
 	protected static SqmMultiTableInsertStrategy interpretSqmMultiTableInsertStrategy(
 			AbstractEntityPersister entityMappingDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		// we need the boot model so we can have access to the Table
-		final RootClass rootClass = (RootClass) creationProcess.getCreationContext()
-				.getBootModel().getEntityBinding( entityMappingDescriptor.getRootEntityName() );
-		return SqmMutationStrategyHelper.resolveInsertStrategy( rootClass, entityMappingDescriptor, creationProcess );
+		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
+		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+				.createInsertStrategy( entityMappingDescriptor, creationProcess );
 	}
 
 	@Override

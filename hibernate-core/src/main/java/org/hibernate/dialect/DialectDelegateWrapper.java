@@ -108,14 +108,22 @@ public class DialectDelegateWrapper extends Dialect {
 		this.wrapped = Objects.requireNonNull( wrapped );
 	}
 
+	//can't be overriden because of how Dialects get initialized: see constructor of parent
 	@Override
-	public void checkVersion() {
-		wrapped.checkVersion();
+	protected final void checkVersion() {
+		//intentionally empty: this is used by the super constructor (yuk)
 	}
 
+	//can't be overriden because of how Dialects get initialized: see constructor of parent
 	@Override
-	public void initDefaultProperties() {
-		wrapped.initDefaultProperties();
+	protected final void registerDefaultKeywords() {
+		//intentionally empty: this is used by the super constructor (yuk)
+	}
+
+	//can't be overriden because of how Dialects get initialized: see constructor of parent
+	@Override
+	protected final void initDefaultProperties() {
+		//intentionally empty: this is used by the super constructor (yuk)
 	}
 
 	@Override
@@ -131,11 +139,6 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public String castType(int sqlTypeCode) {
 		return wrapped.castType( sqlTypeCode );
-	}
-
-	@Override
-	public void registerDefaultKeywords() {
-		wrapped.registerDefaultKeywords();
 	}
 
 	@Override

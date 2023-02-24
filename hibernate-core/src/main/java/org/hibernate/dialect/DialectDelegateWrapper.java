@@ -108,6 +108,14 @@ public class DialectDelegateWrapper extends Dialect {
 		this.wrapped = Objects.requireNonNull( wrapped );
 	}
 
+	/**
+	 * Exposed so to allow code needing to know the implementation.
+	 * @return the wrapped Dialect
+	 */
+	public Dialect getWrappedDialect() {
+		return wrapped;
+	}
+
 	//can't be overriden because of how Dialects get initialized: see constructor of parent
 	@Override
 	protected final void checkVersion() {

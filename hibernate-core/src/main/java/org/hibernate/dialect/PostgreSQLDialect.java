@@ -29,6 +29,7 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
@@ -136,12 +137,12 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Gavin King
  */
 public class PostgreSQLDialect extends Dialect {
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
 
 	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
-	private final PostgreSQLDriverKind driverKind;
+	protected final PostgreSQLDriverKind driverKind;
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
 
 	public PostgreSQLDialect() {
@@ -564,7 +565,6 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.concat_pipeOperator( "convert_from(lo_get(?1),pg_client_encoding())" );
 		functionFactory.localtimeLocaltimestamp();
-		functionFactory.dateTrunc();
 		functionFactory.length_characterLength_pattern( "length(lo_get(?1),pg_client_encoding())" );
 		functionFactory.bitLength_pattern( "bit_length(?1)", "length(lo_get(?1))*8" );
 		functionFactory.octetLength_pattern( "octet_length(?1)", "length(lo_get(?1))" );
@@ -604,9 +604,11 @@ public class PostgreSQLDialect extends Dialect {
 				"round", new PostgreSQLTruncRoundFunction( "round", true )
 		);
 		functionContributions.getFunctionRegistry().register(
-				"trunc", new PostgreSQLTruncRoundFunction( "trunc", true )
+				"trunc",
+				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+		functionFactory.dateTrunc();
 	}
 
 	/**
@@ -1308,7 +1310,15 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
+		contributePostgreSQLTypes(typeContributions, serviceRegistry);
+	}
 
+	/**
+	 * Allow for extension points to override this only
+	 * @param typeContributions
+	 * @param serviceRegistry
+	 */
+	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at

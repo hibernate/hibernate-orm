@@ -7,6 +7,7 @@
 package org.hibernate.internal.util.collections;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -275,6 +276,10 @@ public final class CollectionHelper {
 		return objects == null || objects.length == 0;
 	}
 
+	public static boolean isNotEmpty(Object[] objects) {
+		return objects != null && objects.length > 0;
+	}
+
 	public static <T> List<T> listOf(T value1) {
 		final List<T> list = new ArrayList<>( 1 );
 		list.add( value1 );
@@ -418,12 +423,33 @@ public final class CollectionHelper {
 		return result;
 	}
 
+	public static Map<String,Object> toSettingsMap(Object... pairs) {
+		assert pairs.length % 2 == 0;
+		if ( pairs.length == 2 ) {
+			return Collections.singletonMap( (String) pairs[0], pairs[1] );
+		}
+
+		final Map<String,Object> result = new HashMap<>();
+		applyToMap( result, pairs );
+		return result;
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static void applyToMap(Map<String,?> map, Object... pairs) {
 		assert pairs.length % 2 == 0;
 		for ( int i = 0; i < pairs.length; i+=2 ) {
 			( (Map) map ).put( pairs[i], pairs[i+1] );
 		}
+	}
+
+	public static String[] asPairs(Map<String,String> map) {
+		final String[] pairs = new String[ map.size() * 2 ];
+		int i = 0;
+		for ( Map.Entry<String,String> entry : map.entrySet() ) {
+			pairs[i++] = entry.getKey();
+			pairs[i++] = entry.getValue();
+		}
+		return pairs;
 	}
 
 	public static Properties toProperties(Object... pairs) {
@@ -461,5 +487,13 @@ public final class CollectionHelper {
 
 	public static int size(List<?> values) {
 		return values == null ? 0 : values.size();
+	}
+
+	public static <X> Set<X> toSet(X... values) {
+		final HashSet<X> result = new HashSet<>();
+		if ( isNotEmpty( values ) ) {
+			result.addAll( Arrays.asList( values ) );
+		}
+		return result;
 	}
 }

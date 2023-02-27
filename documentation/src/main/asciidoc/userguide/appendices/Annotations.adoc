@@ -1184,6 +1184,13 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 See the <<chapters/domain/embeddables.adoc#embeddable-Parent,`@Parent` mapping>> section for more info.
 
+[[annotations-hibernate-partition-key]]
+==== `@PartitionKey`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/PartitionKey.html[`@PartitionKey`] annotation is used to identify a field of an entity that holds the partition key of a table.
+
+See the <<chapters/domain/embeddables.adoc#embeddable-Parent,`@PartitionKey` mapping>> section for more info.
+
 [[annotations-hibernate-persister]]
 ==== `@Persister`
 

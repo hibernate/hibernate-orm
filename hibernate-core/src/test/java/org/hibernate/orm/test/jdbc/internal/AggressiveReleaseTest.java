@@ -39,8 +39,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider(
-			false,
-			false,
 			true
 	);
 

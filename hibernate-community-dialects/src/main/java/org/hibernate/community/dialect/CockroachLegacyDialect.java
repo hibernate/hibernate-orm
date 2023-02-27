@@ -45,7 +45,7 @@ import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
-import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -114,8 +114,8 @@ public class CockroachLegacyDialect extends Dialect {
 
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
-	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 19, 2 );
-	private final PostgreSQLDriverKind driverKind;
+	protected static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 19, 2 );
+	protected final PostgreSQLDriverKind driverKind;
 
 	public CockroachLegacyDialect() {
 		this( DEFAULT_VERSION );
@@ -322,7 +322,10 @@ public class CockroachLegacyDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
+		contributeCockroachTypes( typeContributions, serviceRegistry );
+	}
 
+	protected void contributeCockroachTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
@@ -432,7 +435,11 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 
 		functionContributions.getFunctionRegistry().register(
-				"trunc", new PostgreSQLTruncRoundFunction( "trunc", getVersion().isSameOrAfter( 22, 2 ) )
+				"trunc",
+				new PostgreSQLTruncFunction(
+						getVersion().isSameOrAfter( 22, 2 ),
+						functionContributions.getTypeConfiguration()
+				)
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}

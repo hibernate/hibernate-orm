@@ -1245,6 +1245,7 @@ frameExclusion
 standardFunction
 	: castFunction
 	| extractFunction
+	| truncFunction
 	| formatFunction
 	| collateFunction
 	| substringFunction
@@ -1453,6 +1454,13 @@ extractFunction
 	;
 
 /**
+ * The 'trunc()' function for truncating both numeric and datetime values
+ */
+truncFunction
+	: (TRUNC | TRUNCATE) LEFT_PAREN expression (COMMA (datetimeField | expression))? RIGHT_PAREN
+	;
+
+/**
  * A field that may be extracted from a date, time, or datetime
  */
 extractField
@@ -1473,6 +1481,7 @@ datetimeField
 	| MINUTE
 	| SECOND
 	| NANOSECOND
+	| EPOCH
 	;
 
 dayField
@@ -1577,6 +1586,7 @@ rollup
 	| EMPTY
 	| END
 	| ENTRY
+	| EPOCH
 	| ERROR
 	| ESCAPE
 	| EVERY
@@ -1686,6 +1696,7 @@ rollup
 	| TRAILING
 	| TREAT
 	| TRIM
+	| TRUNC
 	| TRUNCATE
 	| TYPE
 	| UNBOUNDED

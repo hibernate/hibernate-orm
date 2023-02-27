@@ -382,6 +382,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -3082,18 +3083,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
 
 			pluralAttributeMapping.applyBaseRestrictions(
-					(predicate) -> {
-						final PredicateCollector existing = collectionFilterPredicates.get( joinedTableGroup.getNavigablePath() );
-						final PredicateCollector collector;
-						if ( existing == null ) {
-							collector = new PredicateCollector( predicate );
-							collectionFilterPredicates.put( joinedTableGroup.getNavigablePath(), collector );
-						}
-						else {
-							collector = existing;
-							collector.applyPredicate( predicate );
-						}
-					},
+					(predicate) -> addCollectionFilterPredicate( joinedTableGroup.getNavigablePath(), predicate ),
 					joinedTableGroup,
 					true,
 					getLoadQueryInfluencers().getEnabledFilters(),
@@ -3779,7 +3769,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( inferredEntityMapping == null ) {
 				// When the inferred mapping is null, we try to resolve to the FK by default,
 				// which is fine because expansion to all target columns for select and group by clauses is handled below
-				if ( entityValuedModelPart instanceof EntityAssociationMapping && ( (EntityAssociationMapping) entityValuedModelPart ).getSideNature() != ForeignKeyDescriptor.Nature.TARGET ) {
+				if ( entityValuedModelPart instanceof EntityAssociationMapping && ( (EntityAssociationMapping) entityValuedModelPart ).isFkOptimizationAllowed() ) {
 					// If the table group uses an association mapping that is not a one-to-many,
 					// we make use of the FK model part
 					final EntityAssociationMapping associationMapping = (EntityAssociationMapping) entityValuedModelPart;
@@ -5072,8 +5062,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final List<Expression> list = new ArrayList<>( embeddableValuedModelPart.getJdbcTypeCount() );
 			embeddableValuedModelPart.forEachJdbcValue(
 					literal.getLiteralValue(),
-					(selectionIndex, value, jdbcMapping)
-							-> list.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
+					list,
+					null,
+					(selectionIndex, expressions, noop, value, jdbcMapping)
+							-> expressions.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
 					null
 			);
 			return new SqlTuple( list, expressible );
@@ -5116,8 +5108,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final List<Expression> list = new ArrayList<>( associationKeyPart.getJdbcTypeCount() );
 				associationKeyPart.forEachJdbcValue(
 						associationKey,
-						(selectionIndex, value, jdbcMapping)
-								-> list.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
+						list,
+						null,
+						(selectionIndex, expressions, noop, value, jdbcMapping)
+								-> expressions.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
 						null
 				);
 				return new SqlTuple( list, associationKeyPart );
@@ -5219,7 +5213,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				for ( List<JdbcParameter> parameters : jdbcParamsForSqmParameter ) {
 					assert parameters.size() == 1;
 					final JdbcParameter jdbcParameter = parameters.get( 0 );
-					if ( ( (SqlExpressible) jdbcParameter ).getJdbcMapping() != valueMapping ) {
+					if ( ( (SqlExpressible) jdbcParameter ).getJdbcMapping() != jdbcMapping ) {
 						final JdbcParameter newJdbcParameter = new JdbcParameterImpl( jdbcMapping );
 						parameters.set( 0, newJdbcParameter );
 						jdbcParameters.getJdbcParameters().remove( jdbcParameter );
@@ -7162,7 +7156,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //				.getOrMakeJavaDescriptor( namedClass );
 	}
 
-	private void addFetch(ImmutableFetchList.Builder fetches, FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
+	@Override
+	public Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
+		final EntityIdentifierMapping identifierMapping = fetchParent.getEntityValuedModelPart()
+				.getEntityMappingType()
+				.getIdentifierMapping();
+		final Fetchable fetchableIdentifierMapping = (Fetchable) identifierMapping;
+		return createFetch( fetchParent, fetchableIdentifierMapping, false );
+	}
+
+	private Fetch createFetch(FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
 		final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );
 		final Map.Entry<Integer, List<SqlSelection>> sqlSelectionsToTrack = trackedFetchSelectionsForGroup.get( resolvedNavigablePath );
 		final int sqlSelectionStartIndexForFetch;
@@ -7308,8 +7311,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 
 				if ( biDirectionalFetch != null ) {
-					fetches.add( biDirectionalFetch );
-					return;
+					return biDirectionalFetch;
 				}
 			}
 			final Fetch fetch = buildFetch(
@@ -7318,6 +7320,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					fetchable,
 					fetchTiming,
 					joined,
+					explicitFetch,
 					alias
 			);
 
@@ -7344,8 +7347,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						currentBagRole = fetchable.getNavigableRole().getNavigableName();
 					}
 				}
-				fetches.add( fetch );
 			}
+			return fetch;
 		}
 		finally {
 			if ( incrementFetchDepth ) {
@@ -7374,10 +7377,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final int size = referencedMappingContainer.getNumberOfFetchables();
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( referencedMappingContainer );
 		for ( int i = 0; i < keySize; i++ ) {
-			addFetch( fetches, fetchParent, referencedMappingContainer.getKeyFetchable( i ), true );
+			final Fetch fetch = createFetch( fetchParent, referencedMappingContainer.getKeyFetchable( i ), true );
+			if ( fetch != null ) {
+				fetches.add( fetch );
+			}
 		}
 		for ( int i = 0; i < size; i++ ) {
-			addFetch( fetches, fetchParent, referencedMappingContainer.getFetchable( i ), false );
+			final Fetch fetch = createFetch( fetchParent, referencedMappingContainer.getFetchable( i ), false );
+			if ( fetch != null ) {
+				fetches.add( fetch );
+			}
 		}
 		return fetches.build();
 	}
@@ -7409,6 +7418,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			Fetchable fetchable,
 			FetchTiming fetchTiming,
 			boolean joined,
+			boolean explicitFetch,
 			String alias) {
 		// fetch has access to its parent in addition to the parent having its fetches.
 		//
@@ -7432,18 +7442,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
 				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 
-				final Joinable joinable = pluralAttributeMapping
-						.getCollectionDescriptor()
-						.getCollectionType()
-						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
-				joinable.applyBaseRestrictions(
-						(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
-						tableGroup,
-						true,
-						getLoadQueryInfluencers().getEnabledFilters(),
-						null,
-						this
-				);
+				// Base restrictions have already been applied if this is an explicit fetch
+				if ( !explicitFetch ) {
+					final Joinable joinable = pluralAttributeMapping
+							.getCollectionDescriptor()
+							.getCollectionType()
+							.getAssociatedJoinable( getCreationContext().getSessionFactory() );
+					joinable.applyBaseRestrictions(
+							(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
+							tableGroup,
+							true,
+							getLoadQueryInfluencers().getEnabledFilters(),
+							null,
+							this
+					);
+				}
 
 				pluralAttributeMapping.applyBaseManyToManyRestrictions(
 						(predicate) -> {

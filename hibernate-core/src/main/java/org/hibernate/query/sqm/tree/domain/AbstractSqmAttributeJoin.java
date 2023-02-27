@@ -49,7 +49,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 			NodeBuilder nodeBuilder) {
 		this(
 				lhs,
-				SqmCreationHelper.buildSubNavigablePath( lhs, joinedNavigable.getName(), alias ),
+				joinedNavigable.createNavigablePath( lhs, alias ),
 				joinedNavigable,
 				alias == SqmCreationHelper.IMPLICIT_ALIAS ? null : alias,
 				joinType,

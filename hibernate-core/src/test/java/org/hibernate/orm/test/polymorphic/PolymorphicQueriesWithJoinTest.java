@@ -144,7 +144,7 @@ public class PolymorphicQueriesWithJoinTest {
 	public static class Cat implements Animal {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.AUTO)
 		private long id;
 
 		private String name;
@@ -169,7 +169,7 @@ public class PolymorphicQueriesWithJoinTest {
 	public static class Dog implements Animal {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.AUTO)
 		private long id;
 
 		private String name;

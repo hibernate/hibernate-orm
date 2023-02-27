@@ -6,6 +6,9 @@
  */
 
 /**
- * Defines actual contract used for strategy selection : {@link org.hibernate.boot.registry.selector.spi.StrategySelector}.
+ * Defines actual contract used for
+ * {@linkplain org.hibernate.boot.registry.selector.spi.StrategySelector strategy selection}.
+ *
+ * @link org.hibernate.boot.registry.selector.spi.StrategySelector
  */
 package org.hibernate.boot.registry.selector.spi;

@@ -18,6 +18,7 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
+import org.hibernate.dialect.function.SybaseTruncFunction;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -216,7 +217,6 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		functionFactory.varPopSamp_varp();
 		functionFactory.stddevPopSamp();
 		functionFactory.varPopSamp();
-		functionFactory.trunc_floorPower();
 		functionFactory.round_round();
 
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
@@ -248,6 +248,11 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 		functionContributions.getFunctionRegistry().register( "timestampadd",
 				new IntegralTimestampaddFunction( this, functionContributions.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register(
+				"trunc",
+				new SybaseTruncFunction( functionContributions.getTypeConfiguration() )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}
 
 	@Override

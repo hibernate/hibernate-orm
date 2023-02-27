@@ -371,7 +371,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		}
 		catch ( Exception e ) {
-			disintegrate( integratorObserver );
+			disintegrate( e, integratorObserver );
 
 			try {
 				close();
@@ -453,12 +453,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 	}
 
-	private void disintegrate(IntegratorObserver integratorObserver) {
-		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
-			integrator.disintegrate( this, serviceRegistry );
-			integratorObserver.integrators.remove( integrator );
-			serviceRegistry.close();
+	private void disintegrate(Exception startupException, IntegratorObserver integratorObserver) {
+		for ( Integrator integrator : integratorObserver.integrators ) {
+			try {
+				integrator.disintegrate( this, serviceRegistry );
+			}
+			catch (Throwable ex) {
+				startupException.addSuppressed( ex );
+			}
 		}
+		integratorObserver.integrators.clear();
 	}
 
 

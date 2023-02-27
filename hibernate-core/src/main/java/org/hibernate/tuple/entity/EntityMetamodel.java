@@ -309,7 +309,7 @@ public class EntityMetamodel implements Serializable {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			// generated value strategies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			final Generator generator = buildGenerator( property, creationContext );
+			final Generator generator = buildGenerator( name, property, creationContext );
 			if ( generator != null ) {
 				if ( i == tempVersionProperty && !generator.generatedOnExecution() ) {
 					// when we have an in-memory generator for the version, we
@@ -469,6 +469,7 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private static Generator buildGenerator(
+			final String entityName,
 			final Property mappingProperty,
 			final RuntimeModelCreationContext context) {
 		final GeneratorCreator generatorCreator = mappingProperty.getValueGeneratorCreator();
@@ -480,7 +481,7 @@ public class EntityMetamodel implements Serializable {
 		}
 		if ( mappingProperty.getValue() instanceof Component ) {
 			final Dialect dialect = context.getDialect();
-			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder( mappingProperty, dialect );
+			final CompositeGeneratorBuilder builder = new CompositeGeneratorBuilder( entityName, mappingProperty, dialect );
 			final Component component = (Component) mappingProperty.getValue();
 			for ( Property property : component.getProperties() ) {
 				builder.add( property.createGenerator( context ) );

@@ -6,8 +6,9 @@
  */
 package org.hibernate.orm.test.query;
 
-import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -34,8 +35,7 @@ import jakarta.persistence.Table;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Gail Badner
@@ -44,8 +44,6 @@ import static org.mockito.Mockito.verify;
 public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider(
-			true,
-			false
 	);
 	private static final String QUERY = "update AnEntity set name='abc'";
 
@@ -93,12 +91,15 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 					query.executeUpdate();
 
 					try {
-						verify(
-								CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery ),
-								times( 1 )
-						).setQueryTimeout( 123 );
+						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
+								Statement.class.getMethod( "setQueryTimeout", int.class ),
+								CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery )
+						);
+						assertEquals( 2, setQueryTimeoutCalls.size() );
+						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
+						assertEquals( 0, setQueryTimeoutCalls.get( 1 )[0] );
 					}
-					catch (SQLException ex) {
+					catch (Exception ex) {
 						fail( "should not have thrown exception" );
 					}
 				}
@@ -115,12 +116,15 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 					query.executeUpdate();
 
 					try {
-						verify(
-								CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery ),
-								times( 1 )
-						).setQueryTimeout( 123 );
+						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
+								Statement.class.getMethod( "setQueryTimeout", int.class ),
+								CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery )
+						);
+						assertEquals( 2, setQueryTimeoutCalls.size() );
+						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
+						assertEquals( 0, setQueryTimeoutCalls.get( 1 )[0] );
 					}
-					catch (SQLException ex) {
+					catch (Exception ex) {
 						fail( "should not have thrown exception" );
 					}
 				}
@@ -137,9 +141,15 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 					query.executeUpdate();
 
 					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
+						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
+								Statement.class.getMethod( "setQueryTimeout", int.class ),
+								CONNECTION_PROVIDER.getPreparedStatement( QUERY )
+						);
+						assertEquals( 2, setQueryTimeoutCalls.size() );
+						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
+						assertEquals( 0, setQueryTimeoutCalls.get( 1 )[0] );
 					}
-					catch (SQLException ex) {
+					catch (Exception ex) {
 						fail( "should not have thrown exception" );
 					}
 				}
@@ -156,9 +166,15 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 					query.executeUpdate();
 
 					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
+						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
+								Statement.class.getMethod( "setQueryTimeout", int.class ),
+								CONNECTION_PROVIDER.getPreparedStatement( QUERY )
+						);
+						assertEquals( 2, setQueryTimeoutCalls.size() );
+						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
+						assertEquals( 0, setQueryTimeoutCalls.get( 1 )[0] );
 					}
-					catch (SQLException ex) {
+					catch (Exception ex) {
 						fail( "should not have thrown exception" );
 					}
 				}
@@ -175,9 +191,15 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 					query.executeUpdate();
 
 					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
+						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
+								Statement.class.getMethod( "setQueryTimeout", int.class ),
+								CONNECTION_PROVIDER.getPreparedStatement( QUERY )
+						);
+						assertEquals( 2, setQueryTimeoutCalls.size() );
+						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
+						assertEquals( 0, setQueryTimeoutCalls.get( 1 )[0] );
 					}
-					catch (SQLException ex) {
+					catch (Exception ex) {
 						fail( "should not have thrown exception" );
 					}
 				}
@@ -194,9 +216,15 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 					query.executeUpdate();
 
 					try {
-						verify( CONNECTION_PROVIDER.getPreparedStatement( QUERY ), times( 1 ) ).setQueryTimeout( 123 );
+						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
+								Statement.class.getMethod( "setQueryTimeout", int.class ),
+								CONNECTION_PROVIDER.getPreparedStatement( QUERY )
+						);
+						assertEquals( 2, setQueryTimeoutCalls.size() );
+						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
+						assertEquals( 0, setQueryTimeoutCalls.get( 1 )[0] );
 					}
-					catch (SQLException ex) {
+					catch (Exception ex) {
 						fail( "should not have thrown exception" );
 					}
 				}

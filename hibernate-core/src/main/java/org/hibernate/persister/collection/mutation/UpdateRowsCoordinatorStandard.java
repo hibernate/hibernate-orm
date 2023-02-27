@@ -126,11 +126,7 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 				entry,
 				entryPosition,
 				session,
-				(jdbcValue, jdbcValueMapping, usage) -> mutationExecutor.getJdbcValueBindings().bindValue(
-						jdbcValue,
-						jdbcValueMapping,
-						usage
-				)
+				mutationExecutor.getJdbcValueBindings()
 		);
 
 		rowMutationOperations.getUpdateRowRestrictions().applyRestrictions(
@@ -139,11 +135,7 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 				entry,
 				entryPosition,
 				session,
-				(jdbcValue, jdbcValueMapping) -> mutationExecutor.getJdbcValueBindings().bindValue(
-						jdbcValue,
-						jdbcValueMapping,
-						ParameterUsage.RESTRICT
-				)
+				mutationExecutor.getJdbcValueBindings()
 		);
 
 		mutationExecutor.execute( collection, null, null, null, session );

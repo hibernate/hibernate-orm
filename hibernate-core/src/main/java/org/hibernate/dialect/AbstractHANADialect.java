@@ -472,6 +472,8 @@ public abstract class AbstractHANADialect extends Dialect {
 				return "dayofyear(?2)";
 			case QUARTER:
 				return "((month(?2)+2)/3)";
+			case EPOCH:
+				return "seconds_between('1970-01-01', ?2)";
 			default:
 				//I think week() returns the ISO week number
 				return "?1(?2)";

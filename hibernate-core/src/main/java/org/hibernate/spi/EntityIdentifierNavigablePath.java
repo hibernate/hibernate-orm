@@ -24,6 +24,11 @@ public class EntityIdentifierNavigablePath extends NavigablePath {
 		this.identifierAttributeName = identifierAttributeName;
 	}
 
+	public EntityIdentifierNavigablePath(NavigablePath parent, String alias, String identifierAttributeName) {
+		super( parent, EntityIdentifierMapping.ROLE_LOCAL_NAME, alias );
+		this.identifierAttributeName = identifierAttributeName;
+	}
+
 	public String getIdentifierAttributeName() {
 		return identifierAttributeName;
 	}

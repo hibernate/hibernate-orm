@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.sql.model.ModelMutationLogging;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -112,26 +113,31 @@ public abstract class AbstractMutationCoordinator {
 			Object[] loadedState,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
-		if ( entityPersister().hasPartitionedSelectionMapping() ) {
-			entityPersister().forEachAttributeMapping(
-					(index, attributeMapping) -> {
-						if ( attributeMapping.hasPartitionedSelectionMapping() ) {
-							attributeMapping.decompose(
-									loadedState[index],
-									(value, jdbcValueMapping) -> {
-										if ( jdbcValueMapping.isPartitioned() ) {
-											jdbcValueBindings.bindValue(
-													value,
-													jdbcValueMapping,
-													ParameterUsage.RESTRICT
-											);
-										}
-									},
-									session
-							);
-						}
-					}
-			);
+		final AbstractEntityPersister persister = entityPersister();
+		if ( persister.hasPartitionedSelectionMapping() ) {
+			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
+			final int size = attributeMappings.size();
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				if ( attributeMapping.hasPartitionedSelectionMapping() ) {
+					attributeMapping.decompose(
+							loadedState[i],
+							0,
+							jdbcValueBindings,
+							null,
+							(valueIndex, bindings, noop, value, jdbcValueMapping) -> {
+								if ( jdbcValueMapping.isPartitioned() ) {
+									bindings.bindValue(
+											value,
+											jdbcValueMapping,
+											ParameterUsage.RESTRICT
+									);
+								}
+							},
+							session
+					);
+				}
+			}
 		}
 	}
 }

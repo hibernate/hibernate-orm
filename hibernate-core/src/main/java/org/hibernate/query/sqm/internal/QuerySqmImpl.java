@@ -1128,8 +1128,8 @@ public class QuerySqmImpl<R>
 			return new NamedCriteriaQueryMementoImpl(
 					name,
 					sqmStatement,
-					getFirstResult(),
-					getMaxResults(),
+					getQueryOptions().getLimit().getFirstRow(),
+					getQueryOptions().getLimit().getMaxRows(),
 					isCacheable(),
 					getCacheRegion(),
 					getCacheMode(),
@@ -1147,8 +1147,8 @@ public class QuerySqmImpl<R>
 		return new NamedHqlQueryMementoImpl(
 				name,
 				getQueryString(),
-				getFirstResult(),
-				getMaxResults(),
+				getQueryOptions().getLimit().getFirstRow(),
+				getQueryOptions().getLimit().getMaxRows(),
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),

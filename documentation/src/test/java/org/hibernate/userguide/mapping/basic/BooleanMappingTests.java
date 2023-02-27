@@ -7,11 +7,6 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -20,9 +15,16 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -93,8 +95,24 @@ public class BooleanMappingTests {
 					equalTo( Types.INTEGER )
 			);
 		}
+	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16182" )
+	public void testQueryLiteralUsage(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = true" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = true" ).list();
+			session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = true" ).list();
 
+			session.createMutationQuery( "delete EntityOfBooleans where convertedYesNo = true" ).executeUpdate();
+			session.createMutationQuery( "delete EntityOfBooleans where convertedTrueFalse = true" ).executeUpdate();
+			session.createMutationQuery( "delete EntityOfBooleans where convertedNumeric = true" ).executeUpdate();
+
+			session.createMutationQuery( "update EntityOfBooleans set convertedYesNo = true" ).executeUpdate();
+			session.createMutationQuery( "update EntityOfBooleans set convertedTrueFalse = true" ).executeUpdate();
+			session.createMutationQuery( "update EntityOfBooleans set convertedNumeric = true" ).executeUpdate();
+		} );
 	}
 
 	@Entity(name = "EntityOfBooleans")

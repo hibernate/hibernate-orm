@@ -15,6 +15,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
+import org.hibernate.dialect.function.SybaseTruncFunction;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -220,7 +221,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		functionFactory.varPopSamp_varp();
 		functionFactory.stddevPopSamp();
 		functionFactory.varPopSamp();
-		functionFactory.trunc_floorPower();
 		functionFactory.round_round();
 
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
@@ -252,6 +252,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 		functionContributions.getFunctionRegistry().register( "timestampadd",
 				new IntegralTimestampaddFunction( this, functionContributions.getTypeConfiguration() ) );
+		functionContributions.getFunctionRegistry().register(
+				"trunc",
+				new SybaseTruncFunction( functionContributions.getTypeConfiguration() )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}
 
 	@Override
@@ -300,8 +305,13 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		//TODO!!
-		return "datepart(?1,?2)";
+		if ( unit == TemporalUnit.EPOCH ) {
+			return "datediff(second, '1970-01-01 00:00:00', ?2)";
+		}
+		else {
+			//TODO!!
+			return "datepart(?1,?2)";
+		}
 	}
 
 	@Override

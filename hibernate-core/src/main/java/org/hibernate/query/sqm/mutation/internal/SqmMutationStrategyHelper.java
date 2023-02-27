@@ -9,17 +9,11 @@ package org.hibernate.query.sqm.mutation.internal;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -31,57 +25,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  * @author Steve Ebersole
  */
 public class SqmMutationStrategyHelper {
-	/**
-	 * Singleton access
-	 */
-	public static final SqmMutationStrategyHelper INSTANCE = new SqmMutationStrategyHelper();
-
 	private SqmMutationStrategyHelper() {
-	}
-
-	/**
-	 * Standard resolution of {@link SqmMultiTableMutationStrategy} to use for a given entity hierarchy.
-	 *
-	 * @see org.hibernate.dialect.Dialect#getFallbackSqmMutationStrategy
-	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableMutationStrategy
-	 */
-	public static SqmMultiTableMutationStrategy resolveStrategy(
-			RootClass entityBootDescriptor,
-			EntityMappingType rootEntityDescriptor,
-			MappingModelCreationProcess creationProcess) {
-		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
-		final SessionFactoryOptions options = creationContext.getSessionFactoryOptions();
-
-		final SqmMultiTableMutationStrategy specifiedStrategy = options.getCustomSqmMultiTableMutationStrategy();
-		if ( specifiedStrategy != null ) {
-			return specifiedStrategy;
-		}
-
-		// todo (6.0) : add capability define strategy per-hierarchy
-
-		return creationContext.getDialect().getFallbackSqmMutationStrategy( rootEntityDescriptor, creationContext );
-	}
-
-	/**
-	 * Standard resolution of {@link SqmMultiTableInsertStrategy} to use for a given entity hierarchy.
-	 *
-	 * @see org.hibernate.dialect.Dialect#getFallbackSqmInsertStrategy
-	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableInsertStrategy
-	 */
-	public static SqmMultiTableInsertStrategy resolveInsertStrategy(
-			RootClass entityBootDescriptor,
-			EntityMappingType rootEntityDescriptor,
-			MappingModelCreationProcess creationProcess) {
-		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
-		final SessionFactoryOptions options = creationContext.getSessionFactoryOptions();
-
-		final SqmMultiTableInsertStrategy specifiedStrategy = options.getCustomSqmMultiTableInsertStrategy();
-		if ( specifiedStrategy != null ) {
-			return specifiedStrategy;
-		}
-
-		// todo (6.0) : add capability define strategy per-hierarchy
-		return creationContext.getDialect().getFallbackSqmInsertStrategy( rootEntityDescriptor, creationContext );
 	}
 
 	public static void visitCollectionTables(

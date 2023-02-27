@@ -365,7 +365,7 @@ public class PropertyBinder {
 					final Value originalValue = prop.getValue();
 					if ( originalValue instanceof SimpleValue ) {
 						// Avoid copying when the property doesn't depend on a type variable
-						if ( inferredData.getTypeName().equals( ClassPropertyHolder.getTypeName( originalValue ) ) ) {
+						if ( inferredData.getTypeName().equals( ClassPropertyHolder.getTypeName( prop ) ) ) {
 							superclass.setDeclaredIdentifierProperty( prop );
 							return;
 						}

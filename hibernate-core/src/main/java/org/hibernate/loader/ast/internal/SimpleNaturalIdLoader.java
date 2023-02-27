@@ -63,7 +63,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 		else {
 			naturalIdMapping().getAttribute().breakDownJdbcValues(
 					bindValue,
-					(jdbcValue, jdbcValueMapping) -> {
+					(valueIndex, jdbcValue, jdbcValueMapping) -> {
 						final Expression columnReference = resolveColumnReference(
 								rootTableGroup,
 								jdbcValueMapping,

@@ -10,6 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -36,7 +37,7 @@ public interface FetchParent extends DomainResultGraphNode {
 
 	default NavigablePath resolveNavigablePath(Fetchable fetchable) {
 		final String fetchableName = fetchable.getFetchableName();
-		if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( fetchableName ) ) {
+		if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( fetchableName ) || fetchable instanceof EntityIdentifierMapping ) {
 			return new EntityIdentifierNavigablePath( getNavigablePath(), fetchableName );
 		}
 		else {
@@ -53,8 +54,7 @@ public interface FetchParent extends DomainResultGraphNode {
 			else {
 				fetchParentType = fetchableEntityType;
 			}
-			if ( fetchParentType != fetchableEntityType ) {
-				// todo (6.0): if the fetchParentType is a subtype of fetchableEntityType this shouldn't be necessary
+			if ( fetchParentType != null && !fetchParentType.isTypeOrSuperType( fetchableEntityType ) ) {
 				return getNavigablePath().treatAs( fetchableEntityType.getEntityName() )
 						.append( fetchableName );
 			}

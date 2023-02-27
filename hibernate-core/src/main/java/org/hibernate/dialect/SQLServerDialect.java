@@ -28,6 +28,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
+import org.hibernate.dialect.function.SqlServerConvertTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -309,7 +310,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		functionFactory.log_log();
 
-		functionFactory.trunc_round();
 		functionFactory.round_round();
 		functionFactory.everyAny_minMaxIif();
 		functionFactory.octetLength_pattern( "datalength(?1)" );
@@ -370,6 +370,15 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			functionFactory.leastGreatest();
+			functionFactory.dateTrunc_datetrunc();
+			functionFactory.trunc_round_datetrunc();
+		}
+		else {
+			functionContributions.getFunctionRegistry().register(
+					"trunc",
+					new SqlServerConvertTruncFunction( functionContributions.getTypeConfiguration() )
+			);
+			functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 		}
 	}
 
@@ -753,6 +762,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			case SECOND:
 				//this should evaluate to a floating point type
 				return "(datepart(second,?2)+datepart(nanosecond,?2)/1e9)";
+			case EPOCH:
+				return "datediff_big(second, '1970-01-01', ?2)";
 			default:
 				return "datepart(?1,?2)";
 		}

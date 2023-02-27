@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -25,7 +24,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
@@ -75,16 +73,14 @@ public interface JdbcParameterBindings {
 
 	default int registerParametersForEachJdbcValue(
 			Object value,
-			Clause clause,
 			Bindable bindable,
 			List<JdbcParameter> jdbcParameters,
 			SharedSessionContractImplementor session) {
-		return registerParametersForEachJdbcValue( value, clause, 0, bindable, jdbcParameters, session );
+		return registerParametersForEachJdbcValue( value, 0, bindable, jdbcParameters, session );
 	}
 
 	default int registerParametersForEachJdbcValue(
 			Object value,
-			Clause clause,
 			int offset,
 			Bindable bindable,
 			List<JdbcParameter> jdbcParameters,
@@ -92,14 +88,16 @@ public interface JdbcParameterBindings {
 		return bindable.forEachJdbcValue(
 				value,
 				offset,
-				(selectionIndex, jdbcValue, type) -> {
+				jdbcParameters,
+				session.getFactory().getTypeConfiguration(),
+				(selectionIndex, params, typeConfiguration, jdbcValue, type) -> {
 					addBinding(
-						jdbcParameters.get( selectionIndex ),
+						params.get( selectionIndex ),
 						new JdbcParameterBindingImpl(
 								BindingTypeHelper.INSTANCE.resolveBindType(
 										jdbcValue,
 										type,
-										session.getFactory().getTypeConfiguration()
+										typeConfiguration
 								),
 								jdbcValue
 						)

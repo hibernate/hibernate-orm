@@ -117,6 +117,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -137,6 +138,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsert
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -259,8 +261,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * <ul>
  *     <li>{@link #columnType(int)} to define a mapping from SQL
  *     {@linkplain SqlTypes type codes} to database column types, and
- *     <li>{@link #initializeFunctionRegistry(FunctionContributions)} to register
- *     mappings for standard HQL functions with the
+ *     <li>{@link #initializeFunctionRegistry(FunctionContributions)} to
+ *     register mappings for standard HQL functions with the
  *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
  * </ul>
  * <p>
@@ -766,7 +768,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	@Override
-	public final void contributeFunctions(FunctionContributions functionContributions) {
+	public void contributeFunctions(FunctionContributions functionContributions) {
 		initializeFunctionRegistry( functionContributions );
 	}
 
@@ -1485,7 +1487,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @see #initDefaultProperties()
 	 */
-	public final Properties getDefaultProperties() {
+	public Properties getDefaultProperties() {
 		return properties;
 	}
 
@@ -1522,7 +1524,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	// database type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public final void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		contributeTypes( typeContributions, serviceRegistry );
 	}
 
@@ -2492,7 +2494,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * The {@link SqmMultiTableMutationStrategy} to use when not specified by
 	 * {@link org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableMutationStrategy}.
 	 *
-	 * @see org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper#resolveStrategy
+	 * @see SqmMultiTableMutationStrategyProvider#createMutationStrategy
 	 */
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
@@ -2512,7 +2514,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * The {@link SqmMultiTableInsertStrategy} to use when not specified by
 	 * {@link org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableInsertStrategy}.
 	 *
-	 * @see org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper#resolveInsertStrategy
+	 * @see SqmMultiTableMutationStrategyProvider#createInsertStrategy
 	 */
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType entityDescriptor,
@@ -3047,7 +3049,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see #openQuote()
 	 * @see #closeQuote()
 	 */
-	public final String quote(String name) {
+	public String quote(String name) {
 		if ( name == null ) {
 			return null;
 		}

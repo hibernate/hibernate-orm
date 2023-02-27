@@ -170,14 +170,17 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 						final String mutationTableName = persister.getAttributeMutationTableName( attributeIndex );
 						attribute.breakDownJdbcValues(
 								loadedValue,
-								(jdbcValue, jdbcValueMapping) -> {
+								0,
+								jdbcValueBindings,
+								mutationTableName,
+								(valueIndex, bindings, tableName, jdbcValue, jdbcValueMapping) -> {
 									if ( jdbcValue == null ) {
 										// presumably the SQL was generated with `is null`
 										return;
 									}
-									jdbcValueBindings.bindValue(
+									bindings.bindValue(
 											jdbcValue,
-											mutationTableName,
+											tableName,
 											jdbcValueMapping.getSelectionExpression(),
 											ParameterUsage.RESTRICT
 									);

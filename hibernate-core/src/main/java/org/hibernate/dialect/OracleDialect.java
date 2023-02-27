@@ -24,6 +24,7 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
+import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
@@ -150,6 +151,13 @@ public class OracleDialect extends Dialect {
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
+	private static final String yqmSelect =
+		"( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') + ( LEAST( EXTRACT( DAY FROM %2$s ), EXTRACT( DAY FROM LAST_DAY( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') ) ) ) - 1 ) )";
+
+	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
+	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
+	private static final String ADD_MONTH_EXPRESSION = String.format( yqmSelect, "?2", "?3" );
+
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 2 );
 
 	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
@@ -215,7 +223,6 @@ public class OracleDialect extends Dialect {
 		functionFactory.cosh();
 		functionFactory.sinh();
 		functionFactory.tanh();
-		functionFactory.trunc();
 		functionFactory.log();
 		functionFactory.log10_log();
 		functionFactory.soundex();
@@ -229,7 +236,6 @@ public class OracleDialect extends Dialect {
 		functionFactory.bitand();
 		functionFactory.lastDay();
 		functionFactory.toCharNumberDateTimestamp();
-		functionFactory.dateTrunc_trunc();
 		functionFactory.ceiling_ceil();
 		functionFactory.concat_pipeOperator();
 		functionFactory.rownumRowid();
@@ -281,6 +287,11 @@ public class OracleDialect extends Dialect {
 				"mode",
 				new ModeStatsModeEmulation( typeConfiguration )
 		);
+		functionContributions.getFunctionRegistry().register(
+				"trunc",
+				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}
 
 	@Override
@@ -473,6 +484,8 @@ public class OracleDialect extends Dialect {
 				return "to_number(to_char(?2,'MI'))";
 			case SECOND:
 				return "to_number(to_char(?2,'SS'))";
+			case EPOCH:
+				return "trunc((cast(?2 at time zone 'UTC' as date) - date '1970-1-1')*86400)";
 			default:
 				return super.extractPattern(unit);
 		}
@@ -480,63 +493,36 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+
 		StringBuilder pattern = new StringBuilder();
-		pattern.append("(?3+");
 		switch ( unit ) {
 			case YEAR:
+				pattern.append( ADD_YEAR_EXPRESSION );
+				break;
 			case QUARTER:
+				pattern.append( ADD_QUARTER_EXPRESSION );
+				break;
 			case MONTH:
-				pattern.append("numtoyminterval");
+				pattern.append( ADD_MONTH_EXPRESSION );
 				break;
 			case WEEK:
+				pattern.append("(?3+numtodsinterval((?2)*7,'day'))");
+				break;
 			case DAY:
 			case HOUR:
 			case MINUTE:
 			case SECOND:
+				pattern.append("(?3+numtodsinterval(?2,'?1'))");
+				break;
 			case NANOSECOND:
+				pattern.append("(?3+numtodsinterval((?2)/1e9,'second'))");
+				break;
 			case NATIVE:
-				pattern.append("numtodsinterval");
+				pattern.append("(?3+numtodsinterval(?2,'second'))");
 				break;
 			default:
 				throw new SemanticException(unit + " is not a legal field");
 		}
-		pattern.append("(");
-		switch ( unit ) {
-			case NANOSECOND:
-			case QUARTER:
-			case WEEK:
-				pattern.append("(");
-				break;
-		}
-		pattern.append("?2");
-		switch ( unit ) {
-			case QUARTER:
-				pattern.append(")*3");
-				break;
-			case WEEK:
-				pattern.append(")*7");
-				break;
-			case NANOSECOND:
-				pattern.append(")/1e9");
-				break;
-		}
-		pattern.append(",'");
-		switch ( unit ) {
-			case QUARTER:
-				pattern.append("month");
-				break;
-			case WEEK:
-				pattern.append("day");
-				break;
-			case NANOSECOND:
-			case NATIVE:
-				pattern.append("second");
-				break;
-			default:
-				pattern.append("?1");
-		}
-		pattern.append("')");
-		pattern.append(")");
 		return pattern.toString();
 	}
 
@@ -1275,7 +1261,7 @@ public class OracleDialect extends Dialect {
 		// offset we need to use the ANSI syntax
 		if ( precision == TemporalType.TIMESTAMP && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 			appender.appendSql( "timestamp '" );
-			appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+			appendAsTimestampWithNanos( appender, temporalAccessor, true, jdbcTimeZone, false );
 			appender.appendSql( '\'' );
 		}
 		else {

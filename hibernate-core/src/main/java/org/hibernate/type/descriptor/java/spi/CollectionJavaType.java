@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import java.lang.reflect.ParameterizedType;
+import java.util.Objects;
 
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -89,17 +90,34 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 
 	@Override
 	public boolean areEqual(C one, C another) {
-		return one == another ||
-				(
-						one instanceof PersistentCollection &&
-								( (PersistentCollection<?>) one ).wasInitialized() &&
-								( (PersistentCollection<?>) one ).isWrapper( another )
-				) ||
-				(
-						another instanceof PersistentCollection &&
-								( (PersistentCollection<?>) another ).wasInitialized() &&
-								( (PersistentCollection<?>) another ).isWrapper( one )
-				);
+//		return one == another ||
+//				(
+//						one instanceof PersistentCollection &&
+//								( (PersistentCollection<?>) one ).wasInitialized() &&
+//								( (PersistentCollection<?>) one ).isWrapper( another )
+//				) ||
+//				(
+//						another instanceof PersistentCollection &&
+//								( (PersistentCollection<?>) another ).wasInitialized() &&
+//								( (PersistentCollection<?>) another ).isWrapper( one )
+//				);
+
+
+		if ( one == another ) {
+			return true;
+		}
+
+		if ( one instanceof PersistentCollection ) {
+			final PersistentCollection pc = (PersistentCollection) one;
+			return pc.wasInitialized() && ( pc.isWrapper( another ) || pc.isDirectlyProvidedCollection( another ) );
+		}
+
+		if ( another instanceof PersistentCollection ) {
+			final PersistentCollection pc = (PersistentCollection) another;
+			return pc.wasInitialized() && ( pc.isWrapper( one ) || pc.isDirectlyProvidedCollection( one ) );
+		}
+
+		return Objects.equals( one, another );
 	}
 
 	@Override

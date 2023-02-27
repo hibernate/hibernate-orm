@@ -10,6 +10,7 @@ import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 
 import org.hibernate.testing.util.ReflectionUtil;
 
+import org.mockito.Answers;
 import org.mockito.MockSettings;
 import org.mockito.Mockito;
 
@@ -18,25 +19,24 @@ import org.mockito.Mockito;
  */
 public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 
-	private static final MockSettings VERIFIEABLE_MOCK_SETTINGS = Mockito.withSettings()
-			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
-
 	private final Map<Connection, Connection> connectionSpyMap = new HashMap<>();
-
-	private static <T> T spy(T subject) {
-		return Mockito.mock( (Class<T>) subject.getClass(), VERIFIEABLE_MOCK_SETTINGS.spiedInstance( subject ) );
-	}
 
 	@Override
 	public void configure(Map<String, Object> props) {
 		super.configure( props );
 		DataSource ds = unwrap( DataSource.class );
-		DataSource dataSource = spy( ds );
+		DataSource dataSource = Mockito.mock(
+				ds.getClass(),
+				Mockito.withSettings().defaultAnswer( Answers.CALLS_REAL_METHODS ).spiedInstance( ds )
+		);
 
 		try {
 			Mockito.doAnswer( invocation -> {
 				Connection connection = (Connection) invocation.callRealMethod();
-				Connection connectionSpy = spy( connection );
+				Connection connectionSpy = Mockito.mock(
+						connection.getClass(),
+						Mockito.withSettings().defaultAnswer( Answers.CALLS_REAL_METHODS ).spiedInstance( connection )
+				);
 				connectionSpyMap.put( connectionSpy, connection );
 				return connectionSpy;
 			} ).when( dataSource ).getConnection();

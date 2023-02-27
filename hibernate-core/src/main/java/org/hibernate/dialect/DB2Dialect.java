@@ -289,8 +289,6 @@ public class DB2Dialect extends Dialect {
 		functionFactory.octetLength();
 		functionFactory.ascii();
 		functionFactory.char_chr();
-		functionFactory.trunc();
-//		functionFactory.truncate();
 		functionFactory.insert();
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );
 		functionFactory.stddev();
@@ -306,6 +304,7 @@ public class DB2Dialect extends Dialect {
 			functionFactory.varPopSamp();
 			functionFactory.varianceSamp();
 			functionFactory.dateTrunc();
+			functionFactory.trunc_dateTrunc();
 		}
 		else {
 			// Before version 11, the position function required the use of the code units
@@ -321,7 +320,7 @@ public class DB2Dialect extends Dialect {
 			functionFactory.stddevSamp_sumCount();
 			functionContributions.getFunctionRegistry().registerAlternateKey( "var_pop", "variance" );
 			functionFactory.varSamp_sumCount();
-			functionFactory.dateTrunc_trunc();
+			functionFactory.trunc_dateTrunc_trunc();
 		}
 
 		functionFactory.addYearsMonthsDaysHoursMinutesSeconds();
@@ -1012,6 +1011,12 @@ public class DB2Dialect extends Dialect {
 				return "dayofweek(?2)";
 			case QUARTER:
 				return "quarter(?2)";
+			case EPOCH:
+				if ( getDB2Version().isBefore( 11 ) ) {
+					return timestampdiffPattern( TemporalUnit.SECOND, TemporalType.TIMESTAMP, TemporalType.TIMESTAMP )
+							.replace( "?2", "'1970-01-01 00:00:00'" )
+							.replace( "?3", "?2" );
+				}
 		}
 		return super.extractPattern( unit );
 	}

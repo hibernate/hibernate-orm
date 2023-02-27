@@ -82,12 +82,18 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
-		getAssociatedEntityMappingType().getIdentifierMapping().breakDownJdbcValues(
+		return getAssociatedEntityMappingType().getIdentifierMapping().breakDownJdbcValues(
 				disassemble( domainValue, session ),
+				offset,
+				x,
+				y,
 				valueConsumer,
 				session
 		);

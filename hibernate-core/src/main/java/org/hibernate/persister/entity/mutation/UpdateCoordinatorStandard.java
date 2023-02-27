@@ -89,10 +89,16 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// there are cases where we need the full static updates.
 		this.staticUpdateGroup = buildStaticUpdateGroup();
 		this.versionUpdateGroup = buildVersionUpdateGroup();
-		this.batchKey = new BasicBatchKey(
-				entityPersister.getEntityName() + "#UPDATE",
-				null
-		);
+		if ( entityPersister.hasUpdateGeneratedProperties() ) {
+			// disable batching in case of update generated properties
+			this.batchKey = null;
+		}
+		else {
+			this.batchKey = new BasicBatchKey(
+					entityPersister.getEntityName() + "#UPDATE",
+					null
+			);
+		}
 	}
 
 	@Override
@@ -216,7 +222,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 	}
 
-	private void performUpdate(
+	protected void performUpdate(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -294,7 +300,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private static int[] dirtyAttributeIndexes(int[] incomingDirtyIndexes, int[] preUpdateGeneratedIndexes) {
+	protected static int[] dirtyAttributeIndexes(int[] incomingDirtyIndexes, int[] preUpdateGeneratedIndexes) {
 		if ( preUpdateGeneratedIndexes.length == 0 ) {
 			return incomingDirtyIndexes;
 		}
@@ -356,7 +362,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private boolean handlePotentialImplicitForcedVersionIncrement(
+	protected boolean handlePotentialImplicitForcedVersionIncrement(
 			Object entity,
 			Object id,
 			Object[] values,
@@ -532,7 +538,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	 * Transform the array of property indexes to an array of booleans for each attribute,
 	 * true when the property is dirty
 	 */
-	private boolean[] getPropertiesToUpdate(final int[] dirtyProperties, final boolean hasDirtyCollection) {
+	protected boolean[] getPropertiesToUpdate(final int[] dirtyProperties, final boolean hasDirtyCollection) {
 		final boolean[] updateability = entityPersister().getPropertyUpdateability();
 		if ( dirtyProperties == null ) {
 			return updateability;
@@ -675,10 +681,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object attributeLockValue) {
 		attributeMapping.decompose(
 				attributeLockValue,
-				(jdbcValue, columnMapping) -> {
+				0,
+				analysis,
+				null,
+				(valueIndex, updateAnalysis, noop, jdbcValue, columnMapping) -> {
 					if ( !columnMapping.isFormula() ) {
 						final EntityTableMapping tableMapping = entityPersister().getPhysicalTableMappingForMutation( columnMapping );
-						analysis.registerColumnOptLock( tableMapping, columnMapping.getSelectionExpression(), jdbcValue );
+						updateAnalysis.registerColumnOptLock( tableMapping, columnMapping.getSelectionExpression(), jdbcValue );
 					}
 				},
 				session
@@ -854,11 +863,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object values) {
 		attributeMapping.decompose(
 				values,
-				(jdbcValue, jdbcMapping) -> {
+				0,
+				jdbcValueBindings,
+				tableMapping,
+				(valueIndex, bindings, table, jdbcValue, jdbcMapping) -> {
 					if ( !jdbcMapping.isFormula() && jdbcMapping.isUpdateable() ) {
-						jdbcValueBindings.bindValue(
+						bindings.bindValue(
 								jdbcValue,
-								tableMapping.getTableName(),
+								table.getTableName(),
 								jdbcMapping.getSelectionExpression(),
 								ParameterUsage.SET
 						);

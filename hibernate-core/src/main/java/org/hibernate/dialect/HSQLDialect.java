@@ -140,8 +140,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.degrees();
 		functionFactory.log10();
 		functionFactory.rand();
-		functionFactory.trunc();
-//		functionFactory.truncate();
+		functionFactory.trunc_dateTrunc_trunc();
 		functionFactory.pi();
 		functionFactory.soundex();
 		functionFactory.reverse();
@@ -317,6 +316,16 @@ public class HSQLDialect extends Dialect {
 			pattern.append( "/7)" );
 		}
 		return pattern.toString();
+	}
+
+	@Override
+	public String extractPattern(TemporalUnit unit) {
+		if ( unit == TemporalUnit.EPOCH ) {
+			return "unix_timestamp(?2)";
+		}
+		else {
+			return super.extractPattern(unit);
+		}
 	}
 
 	@Override

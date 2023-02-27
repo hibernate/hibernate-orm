@@ -401,19 +401,23 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		final Object[] values = (Object[]) domainValue;
 		assert values.length == modelParts.size();
-
+		int span = 0;
 		int i = 0;
 		for ( ModelPart mapping : modelParts.values() ) {
 			final Object attributeValue = values[ i ];
-			mapping.breakDownJdbcValues( attributeValue, valueConsumer, session );
+			span += mapping.breakDownJdbcValues( attributeValue, offset + span, x, y, valueConsumer, session );
 			i++;
 		}
+		return span;
 	}
 
 	@Override
@@ -431,33 +435,37 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		final Object[] values = (Object[]) value;
 		int span = 0;
 		int i = 0;
 		for ( ModelPart mapping : modelParts.values() ) {
-			span += mapping.forEachDisassembledJdbcValue( values[i], span + offset, valuesConsumer, session );
+			span += mapping.forEachDisassembledJdbcValue( values[i], span + offset, x, y, valuesConsumer, session );
 			i++;
 		}
 		return span;
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
 			SharedSessionContractImplementor session) {
 		final Object[] values = (Object[]) value;
 		int span = 0;
 		int i = 0;
 		for ( ModelPart attributeMapping : modelParts.values() ) {
 			final Object o = values[i];
-			span += attributeMapping.forEachJdbcValue( o, span + offset, consumer, session );
+			span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, consumer, session );
 			i++;
 		}
 		return span;

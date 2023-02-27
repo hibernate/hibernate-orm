@@ -22,8 +22,6 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -99,7 +97,6 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				key,
-				Clause.WHERE,
 				attributeMapping.getKeyDescriptor(),
 				jdbcParameters,
 				session

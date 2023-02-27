@@ -24,7 +24,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.jboss.logging.Logger;
 
 /**
- * Standard implementation of the StrategySelector contract.
+ * Standard implementation of the {@link StrategySelector} contract.
  *
  * @author Steve Ebersole
  */

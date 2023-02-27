@@ -142,7 +142,6 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
@@ -210,9 +209,10 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
@@ -998,6 +998,16 @@ public abstract class AbstractEntityPersister
 
 	public String getVersionSelectString() {
 		return sqlVersionSelectString;
+	}
+
+	@Internal
+	public GeneratedValuesProcessor getInsertGeneratedValuesProcessor() {
+		return insertGeneratedValuesProcessor;
+	}
+
+	@Internal
+	public GeneratedValuesProcessor getUpdateGeneratedValuesProcessor() {
+		return updateGeneratedValuesProcessor;
 	}
 
 	@Override
@@ -4459,7 +4469,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getNaturalIdentifierProperties();
 	}
 
-	private void verifyHasNaturalId() {
+	protected void verifyHasNaturalId() {
 		if ( ! hasNaturalIdentifier() ) {
 			throw new HibernateException( "Entity does not define a natural id : " + getEntityName() );
 		}
@@ -4880,7 +4890,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private NaturalIdMapping generateNaturalIdMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	protected NaturalIdMapping generateNaturalIdMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		//noinspection AssertWithSideEffects
 		assert bootEntityDescriptor.hasNaturalId();
 
@@ -4931,19 +4941,17 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		// we need the boot model so we can have access to the Table
-		final RootClass rootClass = (RootClass) creationProcess.getCreationContext()
-				.getBootModel().getEntityBinding( entityMappingDescriptor.getRootEntityName() );
-		return SqmMutationStrategyHelper.resolveStrategy( rootClass, entityMappingDescriptor, creationProcess );
+		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
+		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+				.createMutationStrategy( entityMappingDescriptor, creationProcess );
 	}
 
 	protected static SqmMultiTableInsertStrategy interpretSqmMultiTableInsertStrategy(
 			AbstractEntityPersister entityMappingDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		// we need the boot model so we can have access to the Table
-		final RootClass rootClass = (RootClass) creationProcess.getCreationContext()
-				.getBootModel().getEntityBinding( entityMappingDescriptor.getRootEntityName() );
-		return SqmMutationStrategyHelper.resolveInsertStrategy( rootClass, entityMappingDescriptor, creationProcess );
+		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
+		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+				.createInsertStrategy( entityMappingDescriptor, creationProcess );
 	}
 
 	@Override
@@ -5840,25 +5848,29 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return getIdentifierMapping()
-				.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+				.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
 			SharedSessionContractImplementor session) {
 		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
 		final Object identifier = value == null ? null
 				: identifierMapping.disassemble( identifierMapping.getIdentifier( value ), session );
-		return identifierMapping.forEachDisassembledJdbcValue( identifier, offset, consumer, session );
+		return identifierMapping.forEachDisassembledJdbcValue( identifier, offset, x, y, consumer, session );
 	}
 
 	@Override

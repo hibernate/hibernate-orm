@@ -54,10 +54,16 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	public InsertCoordinator(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
-		insertBatchKey = new BasicBatchKey(
-				entityPersister.getEntityName() + "#INSERT",
-				null
-		);
+		if ( entityPersister.hasInsertGeneratedProperties() ) {
+			// disable batching in case of insert generated properties
+			insertBatchKey = null;
+		}
+		else {
+			insertBatchKey = new BasicBatchKey(
+					entityPersister.getEntityName() + "#INSERT",
+					null
+			);
+		}
 
 		if ( entityPersister.getEntityMetamodel().isDynamicInsert() ) {
 			// the entity specified dynamic-insert - skip generating the
@@ -215,7 +221,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		} );
 	}
 
-	private static void breakDownJdbcValue(
+	protected void breakDownJdbcValue(
 			Object id,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
@@ -235,7 +241,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		);
 	}
 
-	private void decomposeAttribute(
+	protected void decomposeAttribute(
 			Object value,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
@@ -243,9 +249,12 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		if ( !(mapping instanceof PluralAttributeMapping) ) {
 			mapping.decompose(
 					value,
-					(jdbcValue, selectableMapping) -> {
+					0,
+					jdbcValueBindings,
+					null,
+					(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
 						if ( selectableMapping.isInsertable() ) {
-							jdbcValueBindings.bindValue(
+							bindings.bindValue(
 									jdbcValue,
 									entityPersister().physicalTableNameForMutation( selectableMapping ),
 									selectableMapping.getSelectionExpression(),

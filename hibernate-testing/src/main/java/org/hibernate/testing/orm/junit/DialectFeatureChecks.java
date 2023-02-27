@@ -15,6 +15,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -149,6 +150,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof AbstractHANADialect
 					|| dialect instanceof CockroachDialect
 					|| dialect instanceof MySQLDialect
@@ -158,6 +160,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsJdbcDriverProxying implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return !( dialect instanceof DB2Dialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect );
@@ -245,12 +248,14 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsPadWithChar implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return !( dialect instanceof DerbyDialect );
 		}
 	}
 
 	public static class SupportsGroupByRollup implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof DB2Dialect
 					|| dialect instanceof OracleDialect
 					|| dialect instanceof PostgreSQLDialect
@@ -263,6 +268,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsGroupByGroupingSets implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof DB2Dialect
 					|| dialect instanceof OracleDialect
 					|| dialect instanceof PostgreSQLDialect
@@ -297,6 +303,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsCharCodeConversion implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// Derby doesn't support the `ASCII` or `CHR` functions
 			return !( dialect instanceof DerbyDialect );
 		}
@@ -304,6 +311,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsReplace implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// Derby doesn't support the `REPLACE` function
 			return !( dialect instanceof DerbyDialect );
 		}
@@ -353,6 +361,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsOrderByInCorrelatedSubquery implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect.supportsOrderByInSubquery()
 					// For some reason, HANA doesn't support order by in correlated subqueries...
 					&& !( dialect instanceof AbstractHANADialect );
@@ -385,6 +394,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsStringAggregation implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof H2Dialect
 					|| dialect instanceof HSQLDialect
 					|| dialect instanceof MySQLDialect
@@ -400,6 +410,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsInverseDistributionFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 )
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
@@ -413,6 +424,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsHypotheticalSetFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 )
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
@@ -426,6 +438,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsWindowFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// Derby doesn't really support window functions, only row_number()
 			return dialect.supportsWindowFunctions() && !( dialect instanceof DerbyDialect );
 		}
@@ -433,6 +446,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsFilterClause implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// Derby doesn't really support window functions, only row_number()
 			return dialect instanceof PostgreSQLDialect;
 		}
@@ -440,6 +454,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsSubqueryInOnClause implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// TiDB db does not support subqueries for ON condition
 			return !( dialect instanceof TiDBDialect );
 		}
@@ -447,6 +462,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsFullJoin implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// TiDB db does not support subqueries for ON condition
 			return !( dialect instanceof H2Dialect
 					|| dialect instanceof MySQLDialect
@@ -457,6 +473,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsMedian implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return !( dialect instanceof MySQLDialect
 					|| dialect instanceof SybaseDialect
 					|| dialect instanceof DerbyDialect
@@ -474,6 +491,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsTruncateTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof MySQLDialect
 				|| dialect instanceof H2Dialect
 				|| dialect instanceof SQLServerDialect

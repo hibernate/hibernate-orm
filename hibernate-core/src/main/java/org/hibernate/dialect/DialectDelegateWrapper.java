@@ -109,6 +109,23 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	/**
+	 * Extract the wrapped dialect, recursively until a non-wrapped implementation is found;
+	 * this is useful for all the code needing to know "of which type" the underlying
+	 * implementation actually is.
+	 * @param dialect the Dialect to unwrap
+	 * @return a Dialect implementation which is not a DialectDelegateWrapper; could be the same as the argument.
+	 */
+	public static Dialect extractRealDialect(Dialect dialect) {
+		Objects.requireNonNull( dialect );
+		if ( !( dialect instanceof DialectDelegateWrapper ) ) {
+			return dialect;
+		}
+		else {
+			return extractRealDialect( ( (DialectDelegateWrapper) dialect ).wrapped );
+		}
+	}
+
+    /**
 	 * Exposed so to allow code needing to know the implementation.
 	 * @return the wrapped Dialect
 	 */

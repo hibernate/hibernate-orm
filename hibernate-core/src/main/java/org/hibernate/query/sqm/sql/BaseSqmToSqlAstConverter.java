@@ -6925,9 +6925,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new LikePredicate(
 				visitWithInferredType( predicate.getMatchExpression(), predicate.getPattern() ),
 				visitWithInferredType( predicate.getPattern(), predicate.getMatchExpression() ),
-				predicate.getEscapeCharacter() == null
-						? null
-						: visitWithInferredType( predicate.getEscapeCharacter(), predicate.getMatchExpression() ),
+				predicate.getEscapeCharacter() == null ?
+						null :
+						(Expression) visitWithInferredType( predicate.getEscapeCharacter(), () -> basicType( Character.class ) ),
 				predicate.isNegated(),
 				predicate.isCaseSensitive(),
 				getBooleanType()

@@ -51,7 +51,7 @@ jobs:
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
       - name: Reclaim Disk Space

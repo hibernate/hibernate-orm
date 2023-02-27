@@ -11,6 +11,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.SequenceStructure;
@@ -43,7 +44,8 @@ public class OrderedSequenceStructure extends SequenceStructure {
 			Class<?> numberType) {
 		super( jdbcEnvironment, "envers", qualifiedSequenceName, initialValue, incrementSize, numberType );
 		this.sequenceObject = new OrderedSequence();
-		if ( jdbcEnvironment.getDialect() instanceof OracleDialect ) {
+		final Dialect dialect = DialectDelegateWrapper.extractRealDialect( jdbcEnvironment.getDialect() );
+		if ( dialect instanceof OracleDialect ) {
 			this.suffix = ( noCache ? " NOCACHE" : "" ) + " ORDER";
 		}
 		else {

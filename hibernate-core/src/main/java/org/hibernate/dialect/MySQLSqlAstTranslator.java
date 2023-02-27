@@ -281,7 +281,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	public MySQLDialect getDialect() {
-		return (MySQLDialect) super.getDialect();
+		return (MySQLDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
 	}
 
 	@Override

@@ -1188,7 +1188,7 @@ public class EntityBinder {
 		if ( persistentClass instanceof RootClass ) {
 			bindRootEntity();
 		}
-		else if ( isMutable() ) {
+		else if ( !isMutable() ) {
 			LOG.immutableAnnotationOnNonRoot( annotatedClass.getName() );
 		}
 

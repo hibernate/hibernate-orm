@@ -1065,7 +1065,15 @@ public class ToOneAttributeMapping
 			}
 			return false;
 		}
-		return parentNavigablePath.isSuffix( bidirectionalAttributePath );
+
+		NavigablePath navigablePath = parentNavigablePath.trimSuffix( bidirectionalAttributePath );
+		if ( navigablePath != null ) {
+			if ( navigablePath.getLocalName().equals( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
+				navigablePath = navigablePath.getParent();
+			}
+			return creationState.resolveModelPart( navigablePath ).getPartMappingType() == entityMappingType;
+		}
+		return false;
 	}
 
 	private boolean isParentEmbeddedCollectionPart(DomainResultCreationState creationState, NavigablePath parentNavigablePath) {

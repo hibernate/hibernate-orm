@@ -772,10 +772,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
-	@Override
-	public Statement visitStatement(SqmStatement<?> sqmStatement) {
-		return (Statement) sqmStatement.accept( this );
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Update statement

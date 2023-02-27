@@ -206,6 +206,30 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	/**
+	 *
+	 * Removes the suffix part from the NavigablePath,
+	 * when the NavigablePath does not contain the suffix it returns null;
+	 *
+	 * @param suffix the part to remove from the NavigablePath
+	 *
+	 * @return the NavigablePath stripped of the suffix part
+	 * or null if the NavigablePath does not contain the suffix.
+	 *
+	 */
+	public NavigablePath trimSuffix(DotIdentifierSequence suffix) {
+		if ( suffix == null ) {
+			return this;
+		}
+		if ( !getLocalName().equals( suffix.getLocalName() ) ) {
+			return null;
+		}
+		if ( getParent() != null ) {
+			return getParent().trimSuffix( suffix.getParent() );
+		}
+		return null;
+	}
+
+	/**
 	 * Determine whether this path is part of the given path's parent
 	 */
 	public boolean isParentOrEqual(NavigablePath navigablePath) {

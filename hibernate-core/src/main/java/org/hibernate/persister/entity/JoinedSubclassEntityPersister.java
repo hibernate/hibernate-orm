@@ -58,6 +58,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -1336,10 +1337,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 			// Add the table references for all table names of the treated entities as we have to retain these table references.
 			// Table references not appearing in this set can later be pruned away
-			// todo (6.0): no need to resolve all table references, only the ones needed for cardinality
 			for ( String subclassTableName : subclassTableNames ) {
 				final TableReference tableReference =
-						tableGroup.resolveTableReference( null, subclassTableName, false );
+						tableGroup.getTableReference( null, subclassTableName, false, false );
+				if ( tableReference == null ) {
+					throw new UnknownTableReferenceException( getRootTableName(), "Couldn't find table reference" );
+				}
 				retainedTableReferences.add( tableReference );
 			}
 		}

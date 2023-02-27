@@ -59,6 +59,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
+import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
@@ -416,7 +417,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
-		final NamedTableReference tableReference = (NamedTableReference) tableGroup.resolveTableReference( getRootTableName() );
+		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getTableReference( getRootTableName() );
+		if ( tableReference == null ) {
+			throw new UnknownTableReferenceException( getRootTableName(), "Couldn't find table reference" );
+		}
 		// Replace the default union sub-query with a specially created one that only selects the tables for the treated entity names
 		tableReference.setPrunedTableExpression( generateSubquery( treatedEntityNames ) );
 	}

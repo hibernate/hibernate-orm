@@ -2930,6 +2930,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tg -> new HashSet<>( 1 )
 		);
 		treatedEntityNames.add( treatedType.getHibernateEntityName() );
+
+		// Resolve the table references for the tables that the treated type touches
+		final AbstractEntityPersister persister = (AbstractEntityPersister) creationContext.getSessionFactory()
+				.getRuntimeMetamodels()
+				.getEntityMappingType( treatedType.getHibernateEntityName() );
+		// Avoid doing this for single table entity persisters, as the table span includes secondary tables,
+		// which we don't want to resolve, though we know that there is only a single table anyway
+		if ( persister instanceof SingleTableEntityPersister ) {
+			return;
+		}
+		final int subclassTableSpan = persister.getSubclassTableSpan();
+		for ( int i = 0; i < subclassTableSpan; i++ ) {
+			tableGroup.resolveTableReference( null, persister.getSubclassTableName( i ), false );
+		}
 	}
 
 	protected void registerTypeUsage(DiscriminatorSqmPath path) {

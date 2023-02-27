@@ -24,30 +24,32 @@ import jakarta.persistence.OneToOne;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "TODO")
+@TestForIssue(jiraKey = "HHH-16209")
 public class EmbeddableWithIdenticallyNamedAssociationTest {
 
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		EntityA a1 = new EntityA();
 		a1.setId( 1 );
+
 		EntityB b1 = new EntityB();
 		b1.setId( 1 );
-		b1.setIdenticallyNamedAssociationFromB( a1 );
-		a1.setIdenticallyNamedAssociationFromA( b1 );
+		b1.setEntityA( a1 );
+		a1.setEntityB( b1 );
 
 		EntityA a2 = new EntityA();
 		a2.setId( 2 );
 		EntityB b2 = new EntityB();
 		b2.setId( 2 );
-		b2.setIdenticallyNamedAssociationFromB( a2 );
-		a2.setIdenticallyNamedAssociationFromA( b2 );
+		b2.setEntityA( a2 );
+		a2.setEntityB( b2 );
 
 		EmbeddableB embeddableB = new EmbeddableB();
-		embeddableB.setIdenticallyNamedAssociationFromB( a2 );
+		embeddableB.setEntityA( a2 );
 		b1.setEmbeddableB( embeddableB );
+
 		EmbeddableA embeddableA = new EmbeddableA();
-		embeddableA.setIdenticallyNamedAssociationFromA( b1 );
+		embeddableA.setEntityB( b1 );
 		a2.setEmbeddableA( embeddableA );
 
 		scope.inTransaction( session -> {
@@ -66,16 +68,16 @@ public class EmbeddableWithIdenticallyNamedAssociationTest {
 		assertThat( b1 ).isNotNull();
 		assertThat( b2 ).isNotNull();
 
-		assertThat( b1.getIdenticallyNamedAssociationFromB() ).isEqualTo( a1 );
-		assertThat( a1.getIdenticallyNamedAssociationFromA() ).isEqualTo( b1 );
+		assertThat( b1.getEntityA() ).isEqualTo( a1 );
+		assertThat( a1.getEntityB() ).isEqualTo( b1 );
 
-		assertThat( b2.getIdenticallyNamedAssociationFromB() ).isEqualTo( a2 );
-		assertThat( a2.getIdenticallyNamedAssociationFromA() ).isEqualTo( b2 );
+		assertThat( b2.getEntityA() ).isEqualTo( a2 );
+		assertThat( a2.getEntityB() ).isEqualTo( b2 );
 
 		assertThat( b1.getEmbeddableB() ).isNotNull();
-		assertThat( b1.getEmbeddableB().getIdenticallyNamedAssociationFromB() ).isEqualTo( a2 );
+		assertThat( b1.getEmbeddableB().getEntityA() ).isEqualTo( a2 );
 		assertThat( a2.getEmbeddableA() ).isNotNull();
-		assertThat( a2.getEmbeddableA().getIdenticallyNamedAssociationFromA() ).isEqualTo( b1 );
+		assertThat( a2.getEmbeddableA().getEntityB() ).isEqualTo( b1 );
 	}
 
 	@Test
@@ -97,8 +99,8 @@ public class EmbeddableWithIdenticallyNamedAssociationTest {
 		@Id
 		private Integer id;
 
-		@OneToOne(mappedBy = "identicallyNamedAssociationFromB")
-		private EntityB identicallyNamedAssociationFromA;
+		@OneToOne(mappedBy = "entityA")
+		private EntityB entityB;
 
 		@Embedded
 		private EmbeddableA embeddableA;
@@ -107,7 +109,7 @@ public class EmbeddableWithIdenticallyNamedAssociationTest {
 		public String toString() {
 			return "EntityB{" +
 					"id=" + id +
-					", identicallyNamedAssociationFromA=" + identicallyNamedAssociationFromA.getId() +
+					", entityB =" + entityB.getId() +
 					", embeddableA=" + embeddableA +
 					'}';
 		}
@@ -120,12 +122,12 @@ public class EmbeddableWithIdenticallyNamedAssociationTest {
 			this.id = id;
 		}
 
-		public EntityB getIdenticallyNamedAssociationFromA() {
-			return identicallyNamedAssociationFromA;
+		public EntityB getEntityB() {
+			return entityB;
 		}
 
-		public void setIdenticallyNamedAssociationFromA(EntityB identicallyNamedAssociationFromA) {
-			this.identicallyNamedAssociationFromA = identicallyNamedAssociationFromA;
+		public void setEntityB(EntityB entityB) {
+			this.entityB = entityB;
 		}
 
 		public EmbeddableA getEmbeddableA() {
@@ -139,22 +141,22 @@ public class EmbeddableWithIdenticallyNamedAssociationTest {
 
 	@Embeddable
 	public static class EmbeddableA {
-		@OneToOne(mappedBy = "embeddableB.identicallyNamedAssociationFromB")
-		private EntityB identicallyNamedAssociationFromA;
+		@OneToOne(mappedBy = "embeddableB.entityA")
+		private EntityB entityB;
 
 		@Override
 		public String toString() {
 			return "EmbeddableA{" +
-					", identicallyNamedAssociationFromA=" + identicallyNamedAssociationFromA.getId() +
+					", entityB=" + entityB.getId() +
 					'}';
 		}
 
-		public EntityB getIdenticallyNamedAssociationFromA() {
-			return identicallyNamedAssociationFromA;
+		public EntityB getEntityB() {
+			return entityB;
 		}
 
-		public void setIdenticallyNamedAssociationFromA(EntityB a) {
-			this.identicallyNamedAssociationFromA = a;
+		public void setEntityB(EntityB a) {
+			this.entityB = a;
 		}
 	}
 
@@ -165,7 +167,7 @@ public class EmbeddableWithIdenticallyNamedAssociationTest {
 
 		@OneToOne
 		@JoinColumn(name = "entityA_id")
-		private EntityA identicallyNamedAssociationFromB;
+		private EntityA entityA;
 
 		@Embedded
 		private EmbeddableB embeddableB;
@@ -174,7 +176,7 @@ public class EmbeddableWithIdenticallyNamedAssociationTest {
 		public String toString() {
 			return "EntityB{" +
 					"id=" + id +
-					", identicallyNamedAssociationFromB=" + identicallyNamedAssociationFromB.getId() +
+					", entityA=" + entityA.getId() +
 					", embeddableB=" + embeddableB +
 					'}';
 		}
@@ -187,12 +189,12 @@ public class EmbeddableWithIdenticallyNamedAssociationTest {
 			this.id = id;
 		}
 
-		public EntityA getIdenticallyNamedAssociationFromB() {
-			return identicallyNamedAssociationFromB;
+		public EntityA getEntityA() {
+			return entityA;
 		}
 
-		public void setIdenticallyNamedAssociationFromB(EntityA a) {
-			this.identicallyNamedAssociationFromB = a;
+		public void setEntityA(EntityA a) {
+			this.entityA = a;
 		}
 
 		public EmbeddableB getEmbeddableB() {
@@ -208,21 +210,21 @@ public class EmbeddableWithIdenticallyNamedAssociationTest {
 	public static class EmbeddableB {
 		@OneToOne
 		@JoinColumn(name = "emb_entityA_id")
-		private EntityA identicallyNamedAssociationFromB;
+		private EntityA entityA;
 
 		@Override
 		public String toString() {
 			return "EmbeddableB{" +
-					", identicallyNamedAssociationFromB=" + identicallyNamedAssociationFromB.getId() +
+					", entityA=" + entityA.getId() +
 					'}';
 		}
 
-		public EntityA getIdenticallyNamedAssociationFromB() {
-			return identicallyNamedAssociationFromB;
+		public EntityA getEntityA() {
+			return entityA;
 		}
 
-		public void setIdenticallyNamedAssociationFromB(EntityA a) {
-			this.identicallyNamedAssociationFromB = a;
+		public void setEntityA(EntityA a) {
+			this.entityA = a;
 		}
 	}
 

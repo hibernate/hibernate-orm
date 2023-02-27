@@ -95,6 +95,7 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -102,7 +103,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -192,7 +192,6 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.type.BasicPluralType;
@@ -268,6 +267,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private final List<JdbcParameterBinder> parameterBinders = new ArrayList<>();
 	private final JdbcParametersImpl jdbcParameters = new JdbcParametersImpl();
+	private JdbcParameterBindings jdbcParameterBindings;
+	private Map<JdbcParameter, JdbcParameterBinding> appliedParameterBindings = Collections.emptyMap();
+	private SqlAstNodeRenderingMode parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
+	private final JdbcParameterRenderer jdbcParameterRenderer;
+
+
 
 	private final Set<FilterJdbcParameter> filterJdbcParameters = new HashSet<>();
 
@@ -302,15 +307,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private transient BasicType<String> stringType;
 	private transient BasicType<Boolean> booleanType;
 
-	private SqlAstNodeRenderingMode parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
-
-	private Map<JdbcParameter, JdbcParameterBinding> appliedParameterBindings = Collections.emptyMap();
-	private JdbcParameterBindings jdbcParameterBindings;
 	private LockOptions lockOptions;
 	private Limit limit;
 	private JdbcParameter offsetParameter;
 	private JdbcParameter limitParameter;
 	private ForUpdateClause forUpdate;
+
+	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+		this.sessionFactory = sessionFactory;
+		this.dialect = sessionFactory.getJdbcServices().getDialect();
+		this.statementStack.push( statement );
+		this.jdbcParameterRenderer = sessionFactory.getServiceRegistry().getService( JdbcParameterRenderer.class );
+	}
 
 	private static Clause matchWithClause(Clause clause) {
 		if ( clause == Clause.WITH ) {
@@ -321,12 +329,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	public Dialect getDialect() {
 		return dialect;
-	}
-
-	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		this.sessionFactory = sessionFactory;
-		this.dialect = sessionFactory.getJdbcServices().getDialect();
-		this.statementStack.push( statement );
 	}
 
 	@Override
@@ -499,7 +501,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public boolean supportsFilterClause() {
-		// By default we report false because not many dialects support this
+		// By default, we report false because not many dialects support this
 		return false;
 	}
 
@@ -6178,25 +6180,36 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitParameter(JdbcParameter jdbcParameter) {
 		switch ( getParameterRenderingMode() ) {
 			case NO_UNTYPED:
-			case NO_PLAIN_PARAMETER:
+			case NO_PLAIN_PARAMETER: {
 				renderCasted( jdbcParameter );
 				break;
+			}
 			case INLINE_PARAMETERS:
-			case INLINE_ALL_PARAMETERS:
+			case INLINE_ALL_PARAMETERS: {
 				renderExpressionAsLiteral( jdbcParameter, jdbcParameterBindings );
 				break;
+			}
 			case DEFAULT:
-			default:
-				jdbcParameter.getExpressionType()
-						.getJdbcMappings()
-						.get( 0 )
-						.getJdbcType()
-						.appendWriteExpression( "?", this, getDialect() );
-
-				parameterBinders.add( jdbcParameter.getParameterBinder() );
-				jdbcParameters.addParameter( jdbcParameter );
+			default: {
+				visitParameterAsParameter( jdbcParameter );
 				break;
+			}
 		}
+	}
+
+	protected void visitParameterAsParameter(JdbcParameter jdbcParameter) {
+		renderParameterAsParameter( jdbcParameter );
+		parameterBinders.add( jdbcParameter.getParameterBinder() );
+		jdbcParameters.addParameter( jdbcParameter );
+	}
+
+	protected void renderParameterAsParameter(JdbcParameter jdbcParameter) {
+		jdbcParameterRenderer.renderJdbcParameter(
+				parameterBinders.size() + 1,
+				jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType(),
+				this,
+				getDialect()
+		);
 	}
 
 	@Override

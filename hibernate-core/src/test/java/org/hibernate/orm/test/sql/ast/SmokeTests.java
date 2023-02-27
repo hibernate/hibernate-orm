@@ -71,62 +71,46 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SmokeTests {
 	@Test
 	public void testSimpleHqlInterpretation(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					final QueryImplementor<String> query = session.createQuery(
-							"select e.name from SimpleEntity e",
-							String.class
-					);
-					final SqmQueryImplementor<String> hqlQuery = (SqmQueryImplementor<String>) query;
-					final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();
+		scope.inTransaction( (session) -> {
+			final SelectStatement sqlAst = SqlAstHelper.translateHqlSelectQuery(
+					"select e.name from SimpleEntity e",
+					String.class,
+					session
+			);
 
-					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
-							sqmStatement,
-							hqlQuery.getQueryOptions(),
-							( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
-							query.getParameterBindings(),
-							session.getLoadQueryInfluencers(),
-							scope.getSessionFactory(),
-							true
-					);
+			final FromClause fromClause = sqlAst.getQuerySpec().getFromClause();
+			assertThat( fromClause.getRoots().size(), is( 1 ) );
 
-					final SqmTranslation<SelectStatement> sqmInterpretation = sqmConverter.translate();
-					final SelectStatement sqlAst = sqmInterpretation.getSqlAst();
+			final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
+			assertThat( rootTableGroup.getPrimaryTableReference(), notNullValue() );
+			assertThat( rootTableGroup.getPrimaryTableReference().getTableId(), is( "mapping_simple_entity" ) );
 
-					final FromClause fromClause = sqlAst.getQuerySpec().getFromClause();
-					assertThat( fromClause.getRoots().size(), is( 1 ) );
+			assertThat( rootTableGroup.getTableReferenceJoins().size(), is( 0 ) );
 
-					final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
-					assertThat( rootTableGroup.getPrimaryTableReference(), notNullValue() );
-					assertThat( rootTableGroup.getPrimaryTableReference().getTableId(), is( "mapping_simple_entity" ) );
-
-					assertThat( rootTableGroup.getTableReferenceJoins().size(), is( 0 ) );
-
-					assertThat( rootTableGroup.getTableGroupJoins().isEmpty(), is( true ) );
+			assertThat( rootTableGroup.getTableGroupJoins().isEmpty(), is( true ) );
 
 
-					// `s` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
-					// the query the base becomes `s1`.  The primary table reference is always suffixed as `_0`
-					assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "s1_0" ) );
+			// `s` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
+			// the query the base becomes `s1`.  The primary table reference is always suffixed as `_0`
+			assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "s1_0" ) );
 
-					final SelectClause selectClause = sqlAst.getQuerySpec().getSelectClause();
-					assertThat( selectClause.getSqlSelections().size(), is( 1 ) ) ;
-					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( 0 );
-					assertThat( sqlSelection.getJdbcResultSetIndex(), is( 1 ) );
-					assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
-					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
+			final SelectClause selectClause = sqlAst.getQuerySpec().getSelectClause();
+			assertThat( selectClause.getSqlSelections().size(), is( 1 ) ) ;
+			final SqlSelection sqlSelection = selectClause.getSqlSelections().get( 0 );
+			assertThat( sqlSelection.getJdbcResultSetIndex(), is( 1 ) );
+			assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
+			assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
 
-					final JdbcOperationQuerySelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcOperationQuerySelect>(
-							session.getSessionFactory(),
-							sqlAst
-					).translate( null, QueryOptions.NONE );
+			final JdbcOperationQuerySelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcOperationQuerySelect>(
+					session.getSessionFactory(),
+					sqlAst
+			).translate( null, QueryOptions.NONE );
 
-					assertThat(
-							jdbcSelectOperation.getSqlString(),
-							is( "select s1_0.name from mapping_simple_entity s1_0" )
-					);
-				}
-		);
+			assertThat(
+					jdbcSelectOperation.getSqlString(),
+					is( "select s1_0.name from mapping_simple_entity s1_0" )
+			);
+		} );
 	}
 
 	@Test

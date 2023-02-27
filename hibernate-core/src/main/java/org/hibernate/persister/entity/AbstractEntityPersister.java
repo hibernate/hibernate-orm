@@ -4469,7 +4469,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getNaturalIdentifierProperties();
 	}
 
-	private void verifyHasNaturalId() {
+	protected void verifyHasNaturalId() {
 		if ( ! hasNaturalIdentifier() ) {
 			throw new HibernateException( "Entity does not define a natural id : " + getEntityName() );
 		}
@@ -4890,7 +4890,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private NaturalIdMapping generateNaturalIdMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	protected NaturalIdMapping generateNaturalIdMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		//noinspection AssertWithSideEffects
 		assert bootEntityDescriptor.hasNaturalId();
 

@@ -84,6 +84,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
+		entityKey = null;
 		clearResolutionListeners();
 	}
 

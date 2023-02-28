@@ -11,6 +11,8 @@ import java.util.function.Function;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -34,5 +36,8 @@ public interface EntityManagerFactoryScope {
 	<T> T fromTransaction(Function<EntityManager, T> action);
 	<T> T fromTransaction(EntityManager entityManager, Function<EntityManager, T> action);
 
+	default Dialect getDialect() {
+		return ((SessionFactoryImplementor) getEntityManagerFactory()).getJdbcServices().getDialect();
+	}
 
 }

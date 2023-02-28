@@ -86,4 +86,11 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	default SqmExpressible<J> getExpressible() {
 		return (SqmExpressible<J>) getSqmPathType();
 	}
+
+	/**
+	 * Indicates if this path source is generically typed
+	 */
+	default boolean isGeneric() {
+		return false;
+	}
 }

@@ -59,10 +59,12 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 
 	SingularPersistentAttribute<? super J,?> findSingularAttribute(String name);
 	PluralPersistentAttribute<? super J, ?,?> findPluralAttribute(String name);
+	SingularPersistentAttribute<? super J, ?> findConcreteEmbeddableAttribute(String name);
 
 	PersistentAttribute<J,?> findDeclaredAttribute(String name);
 	SingularPersistentAttribute<? super J, ?> findDeclaredSingularAttribute(String name);
 	PluralPersistentAttribute<? super J, ?, ?> findDeclaredPluralAttribute(String name);
+	SingularPersistentAttribute<? super J, ?> findDeclaredConcreteEmbeddableAttribute(String name);
 
 	SubGraphImplementor<J> makeSubGraph();
 	<S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subClassType);

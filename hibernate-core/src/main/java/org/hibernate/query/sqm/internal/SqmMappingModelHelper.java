@@ -78,6 +78,14 @@ public class SqmMappingModelHelper {
 			String name,
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType) {
+		return resolveSqmPathSource( name, valueDomainType, jpaBindableType, false );
+	}
+
+	public static <J> SqmPathSource<J> resolveSqmPathSource(
+			String name,
+			DomainType<J> valueDomainType,
+			Bindable.BindableType jpaBindableType,
+			boolean isGeneric) {
 
 		if ( valueDomainType instanceof BasicDomainType<?> ) {
 			return new BasicSqmPathSource<>(
@@ -99,7 +107,8 @@ public class SqmMappingModelHelper {
 			return new EmbeddedSqmPathSource<>(
 					name,
 					(EmbeddableDomainType<J>) valueDomainType,
-					jpaBindableType
+					jpaBindableType,
+					isGeneric
 			);
 		}
 

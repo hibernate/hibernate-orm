@@ -66,6 +66,12 @@ public interface AttributeContainer<J> {
 			);
 		}
 
+		default void addConcreteEmbeddableAttribute(SingularPersistentAttribute<J, ?> idAttribute) {
+			throw new UnsupportedMappingException(
+					"AttributeContainer [" + getClass().getName() + "] does not generic embeddables"
+			);
+		}
+
 		/**
 		 * Called when configuration of the type is complete
 		 */

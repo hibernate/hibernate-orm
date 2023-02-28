@@ -59,6 +59,7 @@ public class SingularAttributeImpl<D,J>
 			boolean isIdentifier,
 			boolean isVersion,
 			boolean isOptional,
+			boolean isGeneric,
 			MetadataContext metadataContext) {
 		super(
 				declaringType,
@@ -77,7 +78,8 @@ public class SingularAttributeImpl<D,J>
 		this.sqmPathSource = SqmMappingModelHelper.resolveSqmPathSource(
 				name,
 				attributeType,
-				BindableType.SINGULAR_ATTRIBUTE
+				BindableType.SINGULAR_ATTRIBUTE,
+				isGeneric
 		);
 	}
 
@@ -122,6 +124,11 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
+	public boolean isGeneric() {
+		return sqmPathSource.isGeneric();
+	}
+
+	@Override
 	public SqmAttributeJoin<D,J> createSqmJoin(
 			SqmFrom lhs,
 			SqmJoinType joinType,
@@ -154,6 +161,7 @@ public class SingularAttributeImpl<D,J>
 				SimpleDomainType<J> attributeType,
 				Member member,
 				AttributeClassification attributeClassification,
+				boolean isGeneric,
 				MetadataContext metadataContext) {
 			super(
 					declaringType,
@@ -164,6 +172,7 @@ public class SingularAttributeImpl<D,J>
 					true,
 					false,
 					false,
+					isGeneric,
 					metadataContext
 			);
 		}
@@ -203,6 +212,7 @@ public class SingularAttributeImpl<D,J>
 					member,
 					false,
 					true,
+					false,
 					false,
 					metadataContext
 			);

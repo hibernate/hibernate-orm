@@ -424,7 +424,8 @@ public abstract class AbstractIdentifiableType<J>
 				return new EmbeddedSqmPathSource<>(
 						EntityIdentifierMapping.ROLE_LOCAL_NAME,
 						compositeType,
-						Bindable.BindableType.SINGULAR_ATTRIBUTE
+						Bindable.BindableType.SINGULAR_ATTRIBUTE,
+						id.isGeneric()
 				);
 			}
 		}
@@ -441,7 +442,8 @@ public abstract class AbstractIdentifiableType<J>
 				return new EmbeddedSqmPathSource<>(
 						EntityIdentifierMapping.ROLE_LOCAL_NAME,
 						idClassType,
-						Bindable.BindableType.SINGULAR_ATTRIBUTE
+						Bindable.BindableType.SINGULAR_ATTRIBUTE,
+						false
 				);
 			}
 		}

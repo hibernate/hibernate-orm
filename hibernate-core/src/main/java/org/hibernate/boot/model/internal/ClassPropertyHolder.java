@@ -320,6 +320,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 						setTypeName( value, inferredData.getTypeName() );
 					}
 					if ( value instanceof Component ) {
+						actualProperty.setGenericEmbeddable( true );
 						final Component component = ( (Component) value );
 						final Iterator<Property> propertyIterator = component.getPropertyIterator();
 						while ( propertyIterator.hasNext() ) {

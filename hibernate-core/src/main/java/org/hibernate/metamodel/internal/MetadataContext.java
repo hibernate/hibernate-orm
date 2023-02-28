@@ -420,20 +420,26 @@ public class MetadataContext {
 	private void applyIdMetadata(PersistentClass persistentClass, IdentifiableDomainType<?> identifiableType) {
 		if ( persistentClass.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
+			//noinspection rawtypes
+			final AttributeContainer attributeContainer = (AttributeContainer) identifiableType;
 			if ( declaredIdentifierProperty != null ) {
 				final SingularPersistentAttribute<?, Object> idAttribute = attributeFactory.buildIdAttribute(
 						identifiableType,
 						declaredIdentifierProperty
 				);
-
-				//noinspection unchecked rawtypes
-				( ( AttributeContainer) identifiableType ).getInFlightAccess().applyIdAttribute( idAttribute );
+				//noinspection unchecked
+				attributeContainer.getInFlightAccess().applyIdAttribute( idAttribute );
 			}
 			else if ( persistentClass.getIdentifier() instanceof Component
 					&& persistentClass.getIdentifierProperty() != getSuperclassIdentifier( persistentClass ) ) {
 				// If the identifier is a generic component, we have to call buildIdAttribute anyway,
 				// as this will create and register the EmbeddableType for the subtype
-				attributeFactory.buildIdAttribute( identifiableType, persistentClass.getIdentifierProperty() );
+				final SingularPersistentAttribute<?, Object> concreteEmbeddable = attributeFactory.buildIdAttribute(
+						identifiableType,
+						persistentClass.getIdentifierProperty()
+				);
+				//noinspection unchecked
+				attributeContainer.getInFlightAccess().addConcreteEmbeddableAttribute( concreteEmbeddable );
 			}
 		}
 		else {

@@ -56,6 +56,7 @@ public abstract class AbstractManagedType<J>
 
 	private final Map<String, SingularPersistentAttribute<J, ?>> declaredSingularAttributes = new LinkedHashMap<>();
 	private volatile Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes ;
+	private volatile Map<String, SingularPersistentAttribute<J, ?>> declaredConcreteEmbeddedAttributes;
 
 	private final List<ManagedDomainType> subTypes = new ArrayList<>();
 
@@ -465,6 +466,24 @@ public abstract class AbstractManagedType<J>
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Generic Embeddable attributes
+
+	@Override
+	public SingularPersistentAttribute<? super J, ?> findConcreteEmbeddableAttribute(String name) {
+		SingularPersistentAttribute<? super J, ?> attribute = findDeclaredConcreteEmbeddableAttribute( name );
+		if ( attribute == null && getSuperType() != null ) {
+			attribute = getSuperType().findDeclaredConcreteEmbeddableAttribute( name );
+		}
+		return attribute;
+	}
+
+	@Override
+	public SingularPersistentAttribute<? super J, ?> findDeclaredConcreteEmbeddableAttribute(String name) {
+		return declaredConcreteEmbeddedAttributes == null ? null : declaredConcreteEmbeddedAttributes.get( name );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Bags
 
 	@Override
@@ -738,6 +757,14 @@ public abstract class AbstractManagedType<J>
 						"Unable to classify attribute as singular or plural [" + attribute + "] for `" + this + '`'
 				);
 			}
+		}
+
+		@Override
+		public void addConcreteEmbeddableAttribute(SingularPersistentAttribute<J, ?> attribute) {
+			if ( declaredConcreteEmbeddedAttributes == null ) {
+				declaredConcreteEmbeddedAttributes = new HashMap<>();
+			}
+			declaredConcreteEmbeddedAttributes.put( attribute.getName(), attribute );
 		}
 
 		@Override

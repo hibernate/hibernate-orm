@@ -7,10 +7,10 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -18,12 +18,15 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 public class EmbeddedSqmPathSource<J>
 		extends AbstractSqmPathSource<J>
 		implements CompositeSqmPathSource<J> {
+	private final boolean isGeneric;
 
 	public EmbeddedSqmPathSource(
 			String localPathName,
 			EmbeddableDomainType<J> domainType,
-			BindableType jpaBindableType) {
+			BindableType jpaBindableType,
+			boolean isGeneric) {
 		super( localPathName, domainType, jpaBindableType );
+		this.isGeneric = isGeneric;
 	}
 
 	@Override
@@ -35,6 +38,11 @@ public class EmbeddedSqmPathSource<J>
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
 		return (SqmPathSource<?>) getSqmPathType().findAttribute( name );
+	}
+
+	@Override
+	public boolean isGeneric() {
+		return isGeneric;
 	}
 
 	@Override

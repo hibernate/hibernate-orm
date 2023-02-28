@@ -123,6 +123,13 @@ public class SqmJpaCriteriaParameterWrapper<T>
 		jpaCriteriaParameter.appendHqlString( sb );
 	}
 
+	@Override
+	public int compare(SqmParameter anotherParameter) {
+		return anotherParameter instanceof SqmJpaCriteriaParameterWrapper ?
+				getJpaCriteriaParameter().compare( ( (SqmJpaCriteriaParameterWrapper<?>) anotherParameter ).getJpaCriteriaParameter() )
+				: 1;
+	}
+
 //	@Override
 //	public Expression toSqlExpression(
 //			Clause clause,

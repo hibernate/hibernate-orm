@@ -88,16 +88,12 @@ import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
-import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
@@ -115,6 +111,8 @@ import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.derived.AnonymousTupleType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -392,6 +390,8 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
@@ -501,6 +501,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean negativeAdjustment;
 
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
+	private final MappingMetamodel domainModel;
 
 	public BaseSqmToSqlAstConverter(
 			SqlAstCreationContext creationContext,
@@ -569,8 +570,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.domainParameterXref = domainParameterXref;
 		this.domainParameterBindings = domainParameterBindings;
-		this.jpaCriteriaParamResolutions = domainParameterXref.getParameterResolutions()
-				.getJpaCriteriaParamResolutions();
+		this.jpaCriteriaParamResolutions = domainParameterXref.getParameterResolutions().getJpaCriteriaParamResolutions();
+		this.domainModel = creationContext.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 	}
 
 	private static Boolean stackMatchHelper(SqlAstProcessingState processingState, SqlAstProcessingState c) {
@@ -4813,14 +4814,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// A case wrapper for non-basic paths is not possible,
 				// because a case expression must return a scalar value,
 				// so we instead add the type restriction predicate as conjunct
-				final MappingMetamodel domainModel = creationContext.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel();
-				final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(
-						treatedPath.getTreatTarget().getHibernateEntityName()
-				);
-				conjunctTreatUsages.computeIfAbsent( wrappedPath, p -> new HashSet<>( 1 ) )
-								.addAll( entityDescriptor.getSubclassEntityNames() );
+				final String treatedName = treatedPath.getTreatTarget().getHibernateEntityName();
+				final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatedName );
+				conjunctTreatUsages
+						.computeIfAbsent( wrappedPath, p -> new HashSet<>( 1 ) )
+						.addAll( entityDescriptor.getSubclassEntityNames() );
 				return expression;
 			}
 			if ( wrappedPath instanceof DiscriminatorSqmPath ) {
@@ -4869,18 +4867,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, EntityDomainType<?> treatTarget) {
-		final MappingMetamodel domainModel = creationContext.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
 		final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
 		return createTreatTypeRestriction( lhs, subclassEntityNames );
 	}
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, Set<String> subclassEntityNames) {
-		final MappingMetamodel domainModel = creationContext.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
 		// Do what visitSelfInterpretingSqmPath does, except for calling preparingReusablePath
 		// as that would register a type usage for the table group that we don't want here
 		final DiscriminatorSqmPath discriminatorSqmPath = (DiscriminatorSqmPath) lhs.type();
@@ -5264,25 +5256,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmExpression instanceof SqmParameter ) {
 			return determineValueMapping( (SqmParameter<?>) sqmExpression );
 		}
-		else if ( sqmExpression instanceof SqmPath ) {
+
+		if ( sqmExpression instanceof SqmPath ) {
 			log.debugf( "Determining mapping-model type for SqmPath : %s ", sqmExpression );
-			final MappingMetamodel domainModel = creationContext.getSessionFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel();
+
 			return SqmMappingModelHelper.resolveMappingModelExpressible(
 					sqmExpression,
 					domainModel,
 					fromClauseIndex::findTableGroup
 			);
 		}
+
+		if ( sqmExpression instanceof SqmBooleanExpressionPredicate ) {
+			final SqmBooleanExpressionPredicate expressionPredicate = (SqmBooleanExpressionPredicate) sqmExpression;
+			return determineValueMapping( expressionPredicate.getBooleanExpression(), fromClauseIndex );
+		}
+
 		// The model type of an enum literal is always inferred
-		else if ( sqmExpression instanceof SqmEnumLiteral<?> ) {
+		if ( sqmExpression instanceof SqmEnumLiteral<?> ) {
 			final MappingModelExpressible<?> mappingModelExpressible = resolveInferredType();
 			if ( mappingModelExpressible != null ) {
 				return mappingModelExpressible;
 			}
 		}
-		else if ( sqmExpression instanceof SqmSubQuery<?> ) {
+
+		if ( sqmExpression instanceof SqmSubQuery<?> ) {
 			final SqmSubQuery<?> subQuery = (SqmSubQuery<?>) sqmExpression;
 			final SqmSelectClause selectClause = subQuery.getQuerySpec().getSelectClause();
 			if ( selectClause.getSelections().size() == 1 ) {
@@ -5293,9 +5291,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				final SqmExpressible<?> selectionNodeType = subQuerySelection.getNodeType();
 				if ( selectionNodeType != null ) {
-					final MappingMetamodel domainModel = creationContext.getSessionFactory()
-							.getRuntimeMetamodels()
-							.getMappingMetamodel();
 					final MappingModelExpressible<?> expressible = domainModel.resolveMappingExpressible(selectionNodeType, this::findTableGroupByPath );
 
 					if ( expressible != null ) {
@@ -5321,6 +5316,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// We can't determine the type of the expression
 			return null;
 		}
+
 		if ( nodeType instanceof EmbeddedSqmPathSource<?> ) {
 			if ( sqmExpression instanceof SqmBinaryArithmetic<?> ) {
 				final SqmBinaryArithmetic<?> binaryArithmetic = (SqmBinaryArithmetic<?>) sqmExpression;
@@ -5332,9 +5328,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 			}
 		}
-		final MappingMetamodel domainModel = creationContext.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
+
+
 		final MappingModelExpressible<?> valueMapping = domainModel.resolveMappingExpressible(
 				nodeType,
 				fromClauseIndex::getTableGroup
@@ -5348,7 +5343,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		if ( valueMapping == null ) {
-			// For literals it is totally possible that we can't figure out a mapping type
+			// For literals, it is totally possible that we can't figure out a mapping type
 			if ( sqmExpression instanceof SqmLiteral<?> ) {
 				return null;
 			}
@@ -6785,10 +6780,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		finally {
 			inferrableTypeAccessStack.pop();
 		}
-		ComparisonOperator sqmOperator = predicate.getSqmOperator();
-		if ( predicate.isNegated() ) {
-			sqmOperator = sqmOperator.negated();
-		}
+
+		final ComparisonOperator sqmOperator = predicate.isNegated()
+				? predicate.getSqmOperator().negated()
+				: predicate.getSqmOperator();
 		return new ComparisonPredicate( lhs, sqmOperator, rhs, getBooleanType() );
 	}
 
@@ -7099,20 +7094,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitBooleanExpressionPredicate(SqmBooleanExpressionPredicate predicate) {
 		final Expression booleanExpression = (Expression) predicate.getBooleanExpression().accept( this );
-		if ( booleanExpression instanceof SelfRenderingExpression ) {
-			final Predicate sqlPredicate = new SelfRenderingPredicate( (SelfRenderingExpression) booleanExpression );
-			if ( predicate.isNegated() ) {
-				return new NegatedPredicate( sqlPredicate );
-			}
-			return sqlPredicate;
-		}
-		else {
-			return new BooleanExpressionPredicate(
+		final JdbcMapping jdbcMapping = booleanExpression.getExpressionType().getJdbcMapping( 0 );
+		if ( jdbcMapping.getValueConverter() != null ) {
+			// handle converted booleans (yes-no, etc)
+			return new ComparisonPredicate(
 					booleanExpression,
-					predicate.isNegated(),
-					getBooleanType()
+					ComparisonOperator.EQUAL,
+					new JdbcLiteral<>( jdbcMapping.convertToRelationalValue( !predicate.isNegated() ), jdbcMapping )
 			);
 		}
+
+		return new BooleanExpressionPredicate(
+				booleanExpression,
+				predicate.isNegated(),
+				getBooleanType()
+		);
 	}
 
 	@Override

@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.util.Objects;
+
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -61,5 +63,13 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	@Override
 	public int hashCode() {
 		return System.identityHashCode( this );
+	}
+
+	@Override
+	public int compare(SqmParameter anotherParameter) {
+		if ( this == anotherParameter ) {
+			return 0;
+		}
+		return 1;
 	}
 }

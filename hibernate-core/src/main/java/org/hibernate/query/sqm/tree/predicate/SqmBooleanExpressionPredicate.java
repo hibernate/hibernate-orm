@@ -18,6 +18,7 @@ import jakarta.persistence.criteria.Expression;
 
 /**
  * Represents an expression whose type is boolean, and can therefore be used as a predicate.
+ * E.g. {@code `from Employee e where e.isActive`}
  *
  * @author Steve Ebersole
  */
@@ -34,7 +35,7 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 			SqmExpression<Boolean> booleanExpression,
 			boolean negated,
 			NodeBuilder nodeBuilder) {
-		super( negated, nodeBuilder );
+		super( booleanExpression.getExpressible(), negated, nodeBuilder );
 
 		assert booleanExpression.getNodeType() != null;
 		final Class<?> expressionJavaType = booleanExpression.getNodeType().getExpressibleJavaType().getJavaTypeClass();
@@ -85,5 +86,15 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmBooleanExpressionPredicate( booleanExpression, !isNegated(), nodeBuilder() );
+	}
+
+	@Override
+	public String toString() {
+		if ( isNegated() ) {
+			return "SqmBooleanExpressionPredicate( (not) " + booleanExpression + " )";
+		}
+		else {
+			return "SqmBooleanExpressionPredicate( " + booleanExpression + " )";
+		}
 	}
 }

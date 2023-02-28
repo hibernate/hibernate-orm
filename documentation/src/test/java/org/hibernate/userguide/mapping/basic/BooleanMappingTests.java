@@ -7,17 +7,25 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
+import java.util.List;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -28,6 +36,7 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.isOneOf;
 
@@ -97,22 +106,211 @@ public class BooleanMappingTests {
 		}
 	}
 
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final EntityOfBooleans entity = new EntityOfBooleans();
+			entity.id = 1;
+			assert !entity.convertedYesNo;
+			assert !entity.convertedTrueFalse;
+			assert !entity.convertedNumeric;
+			session.persist( entity );
+		} );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createMutationQuery( "delete EntityOfBooleans" ).executeUpdate();
+		} );
+	}
+
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16182" )
-	public void testQueryLiteralUsage(SessionFactoryScope scope) {
+	public void testComparisonLiteralHandling(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = true" ).list();
-			session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = true" ).list();
-			session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = true" ).list();
-
-			session.createMutationQuery( "delete EntityOfBooleans where convertedYesNo = true" ).executeUpdate();
-			session.createMutationQuery( "delete EntityOfBooleans where convertedTrueFalse = true" ).executeUpdate();
-			session.createMutationQuery( "delete EntityOfBooleans where convertedNumeric = true" ).executeUpdate();
-
-			session.createMutationQuery( "update EntityOfBooleans set convertedYesNo = true" ).executeUpdate();
-			session.createMutationQuery( "update EntityOfBooleans set convertedTrueFalse = true" ).executeUpdate();
-			session.createMutationQuery( "update EntityOfBooleans set convertedNumeric = true" ).executeUpdate();
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = true" ).list(),
+					hasSize( 0 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = true" ).list(),
+					hasSize( 0 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = true" ).list(),
+					hasSize( 0 )
+			);
 		} );
+
+		scope.inTransaction( (session) -> {
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo = false" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse = false" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric = false" ).list(),
+					hasSize( 1 )
+			);
+		} );
+
+		scope.inTransaction( (session) -> {
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo != true" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse != true" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric != true" ).list(),
+					hasSize( 1 )
+			);
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16182" )
+	public void testExpressionAsPredicateUsage(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo" ).list(),
+					hasSize( 0 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse" ).list(),
+					hasSize( 0 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric" ).list(),
+					hasSize( 0 )
+			);
+		} );
+
+		scope.inTransaction( (session) -> {
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where (convertedYesNo)" ).list(),
+					hasSize( 0 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where (convertedTrueFalse)" ).list(),
+					hasSize( 0 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where (convertedNumeric)" ).list(),
+					hasSize( 0 )
+			);
+		} );
+	}
+
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16182" )
+	public void testNegatedExpressionAsPredicateUsage(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where not convertedYesNo" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where not convertedTrueFalse" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where not convertedNumeric" ).list(),
+					hasSize( 1 )
+			);
+		} );
+		scope.inTransaction( (session) -> {
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where not (convertedYesNo)" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where not (convertedTrueFalse)" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where not (convertedNumeric)" ).list(),
+					hasSize( 1 )
+			);
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16182" )
+	public void testSetClauseUsage(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			assertThat(
+					session.createMutationQuery( "update EntityOfBooleans set convertedYesNo = true" ).executeUpdate(),
+					equalTo( 1 )
+			);
+			assertThat(
+					session.createMutationQuery( "update EntityOfBooleans set convertedTrueFalse = true" ).executeUpdate(),
+					equalTo( 1 )
+			);
+			assertThat(
+					session.createMutationQuery( "update EntityOfBooleans set convertedNumeric = true" ).executeUpdate(),
+					equalTo( 1 )
+			);
+		} );
+
+		scope.inTransaction( (session) -> {
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedYesNo" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedTrueFalse" ).list(),
+					hasSize( 1 )
+			);
+			assertThat(
+					session.createSelectionQuery( "from EntityOfBooleans where convertedNumeric" ).list(),
+					hasSize( 1 )
+			);
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16182" )
+	public void testCriteriaUsage(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			assertThat( countByCriteria( "convertedYesNo", true, session ), equalTo( 0 ) );
+			assertThat( countByCriteria( "convertedTrueFalse", true, session ), equalTo( 0 ) );
+			assertThat( countByCriteria( "convertedNumeric", true, session ), equalTo( 0 ) );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16182" )
+	public void testNegatedCriteriaUsage(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			assertThat( countByCriteria( "convertedYesNo", false, session ), equalTo( 1 ) );
+			assertThat( countByCriteria( "convertedTrueFalse", false, session ), equalTo( 1 ) );
+			assertThat( countByCriteria( "convertedNumeric", false, session ), equalTo( 1 ) );
+		} );
+	}
+
+	private int countByCriteria(String attributeName, boolean matchValue, SessionImplementor session) {
+		final HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
+		final JpaCriteriaQuery<Long> criteria = builder.createQuery( Long.class );
+		criteria.select( builder.count( builder.literal( 1 ) ) );
+		final JpaRoot<EntityOfBooleans> root = criteria.from( EntityOfBooleans.class );
+		final JpaPath<Boolean> convertedYesNo = root.get( attributeName );
+		if ( matchValue ) {
+			criteria.where( convertedYesNo );
+		}
+		else {
+			criteria.where( builder.not( convertedYesNo ) );
+		}
+
+		final Long result = session.createQuery( criteria ).uniqueResult();
+		return result.intValue();
 	}
 
 	@Entity(name = "EntityOfBooleans")

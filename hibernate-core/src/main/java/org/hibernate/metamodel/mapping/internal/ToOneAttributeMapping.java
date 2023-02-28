@@ -1068,7 +1068,10 @@ public class ToOneAttributeMapping
 
 		NavigablePath navigablePath = parentNavigablePath.trimSuffix( bidirectionalAttributePath );
 		if ( navigablePath != null ) {
-			if ( navigablePath.getLocalName().equals( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
+			final String localName = navigablePath.getLocalName();
+			if ( localName.equals( EntityIdentifierMapping.ROLE_LOCAL_NAME )
+					|| localName.equals( ForeignKeyDescriptor.PART_NAME )
+					|| localName.equals( ForeignKeyDescriptor.TARGET_PART_NAME ) ) {
 				navigablePath = navigablePath.getParent();
 			}
 			return creationState.resolveModelPart( navigablePath ).getPartMappingType() == entityMappingType;

@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.hibernate.HibernateException;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -21,9 +20,7 @@ import org.hibernate.query.sqm.SqmTreeTransformationLogger;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
-import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 
 /**
  * Maintains a cross-reference between SqmParameter and QueryParameter references.
@@ -32,8 +29,7 @@ import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
  */
 public class DomainParameterXref {
 	/**
-	 * Create a DomainParameterXref for the parameters defined in the passed
-	 * SQM statement
+	 * Create a DomainParameterXref for the parameters defined in the SQM statement
 	 */
 	public static DomainParameterXref from(SqmStatement<?> sqmStatement) {
 		// `xrefMap` is used to help maintain the proper cardinality between an
@@ -42,10 +38,7 @@ public class DomainParameterXref {
 		// `.. where a.b = :param or a.c = :param`.  Here we have 2 SqmParameter
 		// references (one for each occurrence of `:param`) both of which map to
 		// the same QueryParameter.
-		final Map<SqmParameter, QueryParameterImplementor<?>> xrefMap = new TreeMap<>(
-				(o1, o2) ->
-						o1.compare( o2 )
-		);
+		final Map<SqmParameter<?>, QueryParameterImplementor<?>> xrefMap = new TreeMap<>();
 
 		final SqmStatement.ParameterResolutions parameterResolutions = sqmStatement.resolveParameters();
 		if ( parameterResolutions.getSqmParameters().isEmpty() ) {

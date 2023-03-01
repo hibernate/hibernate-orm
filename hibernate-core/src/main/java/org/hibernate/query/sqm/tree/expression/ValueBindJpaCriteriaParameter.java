@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.Objects;
-
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -54,10 +52,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		return false;
+		return this == o;
 	}
 
 	@Override
@@ -66,7 +61,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	}
 
 	@Override
-	public int compare(SqmParameter anotherParameter) {
+	public int compareTo(SqmParameter anotherParameter) {
 		if ( this == anotherParameter ) {
 			return 0;
 		}

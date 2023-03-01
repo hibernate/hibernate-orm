@@ -71,6 +71,11 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
+		if ( shouldSkipResolveInstance( rowProcessingState ) ) {
+			missing = true;
+			return;
+		}
+
 		super.resolveKey( rowProcessingState );
 
 		// super processes the foreign-key target column.  here we

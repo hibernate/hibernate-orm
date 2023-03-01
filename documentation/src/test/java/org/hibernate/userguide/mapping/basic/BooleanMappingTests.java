@@ -10,6 +10,9 @@ import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -29,6 +32,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -326,6 +330,9 @@ public class BooleanMappingTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class)
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	public void testBooleanFunctionAsPredicate(SessionFactoryScope scope) {
 		// Not strictly relevant to boolean mappings, but test that boolean
 		// functions work *as a* predicate after HHH-16182
@@ -342,6 +349,9 @@ public class BooleanMappingTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class)
+	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	public void testBooleanFunctionInPredicate(SessionFactoryScope scope) {
 		// Not strictly relevant to boolean mappings, but test that boolean
 		// functions work *in a* predicate after HHH-16182

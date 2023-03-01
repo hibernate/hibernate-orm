@@ -331,7 +331,7 @@ public class BooleanMappingTests {
 
 	@Test
 	@SkipForDialect(dialectClass = OracleDialect.class)
-	@SkipForDialect(dialectClass = SybaseDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	public void testBooleanFunctionAsPredicate(SessionFactoryScope scope) {
 		// Not strictly relevant to boolean mappings, but test that boolean
@@ -350,7 +350,7 @@ public class BooleanMappingTests {
 
 	@Test
 	@SkipForDialect(dialectClass = OracleDialect.class)
-	@SkipForDialect(dialectClass = SybaseDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	public void testBooleanFunctionInPredicate(SessionFactoryScope scope) {
 		// Not strictly relevant to boolean mappings, but test that boolean

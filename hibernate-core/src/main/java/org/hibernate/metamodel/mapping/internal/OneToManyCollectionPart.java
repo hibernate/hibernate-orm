@@ -199,7 +199,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 				navigablePath,
 				fetched,
 				explicitSourceAlias,
-				explicitSqlAliasBase,
+				creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() ),
 				creationState
 		);
 	}

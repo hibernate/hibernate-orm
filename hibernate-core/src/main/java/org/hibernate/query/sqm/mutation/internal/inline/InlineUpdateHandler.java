@@ -147,13 +147,9 @@ public class InlineUpdateHandler implements UpdateHandler {
 				final Object[] id = (Object[]) ids.get( i );
 				final List<Expression> tupleElements = new ArrayList<>( jdbcTypeCount );
 				inListExpressions.add( new SqlTuple( tupleElements, identifierMapping ) );
-				identifierMapping.forEachJdbcType(
-						(index, jdbcMapping) -> {
-							tupleElements.add(
-									new QueryLiteral<>( id[index], (BasicValuedMapping) jdbcMapping )
-							);
-						}
-				);
+				identifierMapping.forEachJdbcType( (index, jdbcMapping) -> {
+					tupleElements.add( new QueryLiteral<>( id[index], (BasicValuedMapping) jdbcMapping ) );
+				} );
 			}
 		}
 

@@ -617,12 +617,7 @@ public class PluralAttributeMappingImpl
 		final SqlAstJoinType joinType = requestedJoinType == null
 				? SqlAstJoinType.INNER
 				: requestedJoinType;
-		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
-				explicitSqlAliasBase,
-				explicitSourceAlias,
-				this,
-				creationState.getSqlAliasBaseGenerator()
-		);
+		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
 
 		final TableGroup tableGroup;
 		if ( collectionDescriptor.isOneToMany() ) {
@@ -689,7 +684,7 @@ public class PluralAttributeMappingImpl
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 					tableGroup,
 					null,
-					null,
+					sqlAliasBase,
 					SqlAstJoinType.INNER,
 					fetched,
 					false,
@@ -741,7 +736,7 @@ public class PluralAttributeMappingImpl
 					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 					tableGroup,
 					null,
-					null,
+					sqlAliasBase,
 					SqlAstJoinType.INNER,
 					fetched,
 					false,
@@ -755,7 +750,7 @@ public class PluralAttributeMappingImpl
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 					tableGroup,
 					null,
-					null,
+					sqlAliasBase,
 					SqlAstJoinType.INNER,
 					fetched,
 					false,

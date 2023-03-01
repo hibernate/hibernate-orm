@@ -484,7 +484,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final Map<SqmPath<?>, Set<String>> conjunctTreatUsages = new IdentityHashMap<>();
 	private SqlAstProcessingState lastPoppedProcessingState;
 	private FromClauseIndex lastPoppedFromClauseIndex;
-	private SqlExpressionResolver lastPoppedSqlExpressionResolver;
 	private SqmJoin<?, ?> currentlyProcessingJoin;
 	protected Predicate additionalRestrictions;
 
@@ -617,8 +616,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected void popProcessingStateStack() {
-		lastPoppedSqlExpressionResolver = processingStateStack.getCurrent().getSqlExpressionResolver();
-		assert lastPoppedSqlExpressionResolver != null;
 		lastPoppedFromClauseIndex = fromClauseIndexStack.pop();
 		lastPoppedProcessingState = processingStateStack.pop();
 	}
@@ -709,9 +706,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public SqlExpressionResolver getSqlExpressionResolver() {
-		if ( getCurrentProcessingState() == null ) {
-			return lastPoppedSqlExpressionResolver;
-		}
 		return getCurrentProcessingState().getSqlExpressionResolver();
 	}
 
@@ -1878,7 +1872,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			currentClauseStack.pop();
 			// Avoid leaking the processing state from CTEs to upper levels
-			lastPoppedSqlExpressionResolver = null;
 			lastPoppedFromClauseIndex = null;
 			lastPoppedProcessingState = null;
 		}

@@ -67,10 +67,8 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 				}
 		);
 
-		// The Employee#employer must be initialized immediately because
-		// enhanced proxies (and HibernateProxy objects) should never be created
-		// for a "not found" association.
-		assertEquals( 2, statistics.getPrepareStatementCount() );
+		// we should get 1 query for the Employee with join
+		assertEquals( 1, statistics.getPrepareStatementCount() );
 	}
 
 	@Test
@@ -86,10 +84,8 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 				}
 		);
 
-		// The Employee#employer must be initialized immediately because
-		// enhanced proxies (and HibernateProxy objects) should never be created
-		// for a "not found" association.
-		assertEquals( 2, statistics.getPrepareStatementCount() );
+		// we should get 1 query for the Employee with join
+		assertEquals( 1, statistics.getPrepareStatementCount() );
 	}
 
 	@Test
@@ -178,7 +174,7 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 
 		private String name;
 
-		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+		@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 		@JoinColumn(name = "employer_id",foreignKey = @ForeignKey(value= ConstraintMode.NO_CONSTRAINT))
 		@NotFound(action=NotFoundAction.IGNORE)
 		private Employer employer;

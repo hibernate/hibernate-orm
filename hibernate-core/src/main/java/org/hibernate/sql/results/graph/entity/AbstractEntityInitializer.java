@@ -98,7 +98,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private EntityKey entityKey;
 	private Object entityInstance;
 	private Object entityInstanceForNotify;
-	private boolean missing;
+	protected boolean missing;
 	boolean isInitialized;
 	private boolean isOwningInitializer;
 	private Object[] resolvedEntityState;
@@ -399,26 +399,44 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private boolean shouldSkipResolveInstance(RowProcessingState rowProcessingState) {
-		final NavigablePath parent = navigablePath.getParent();
-		if ( parent != null ) {
-			final Initializer parentInitializer = rowProcessingState.resolveInitializer( parent );
-			if ( parentInitializer != null && parentInitializer.isEntityInitializer() ) {
-				if ( isReferencedModelPartAssignableToConcreteParent( parentInitializer ) ) {
-					return true;
+	protected boolean shouldSkipResolveInstance(RowProcessingState rowProcessingState) {
+		if ( navigablePath.getParent() != null ) {
+			Initializer parentInitializer = rowProcessingState.resolveInitializer( navigablePath.getParent() );
+			if ( parentInitializer != null ) {
+				ModelPart modelPart = referencedModelPart;
+				NavigablePath currentNavigablePath = navigablePath;
+				// Walk back initializers until we find an EntityInitializer
+				while ( parentInitializer != null && !parentInitializer.isEntityInitializer() ) {
+					modelPart = parentInitializer.getInitializedPart();
+					currentNavigablePath = currentNavigablePath.getParent();
+					parentInitializer = rowProcessingState.resolveInitializer( currentNavigablePath.getParent() );
+				}
+				if ( parentInitializer != null && parentInitializer.asEntityInitializer()
+						.getEntityDescriptor()
+						.getEntityMetamodel()
+						.isPolymorphic() ) {
+					parentInitializer.resolveKey( rowProcessingState );
+					return isReferencedModelPartInConcreteParent(
+							modelPart,
+							currentNavigablePath,
+							parentInitializer
+					);
 				}
 			}
 		}
 		return false;
 	}
 
-	private boolean isReferencedModelPartAssignableToConcreteParent(Initializer parentInitializer) {
+	private boolean isReferencedModelPartInConcreteParent(
+			ModelPart modelPart,
+			NavigablePath partNavigablePath,
+			Initializer parentInitializer) {
 		final EntityPersister parentConcreteDescriptor = parentInitializer.asEntityInitializer()
 				.getConcreteDescriptor();
-		if ( parentConcreteDescriptor != null && parentConcreteDescriptor.getEntityMetamodel().isPolymorphic()) {
-			final ModelPart concreteModelPart = parentConcreteDescriptor.findByPath( navigablePath.getLocalName() );
+		if ( parentConcreteDescriptor != null && parentConcreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
+			final ModelPart concreteModelPart = parentConcreteDescriptor.findByPath( partNavigablePath.getLocalName() );
 			if ( concreteModelPart == null
-					|| !referencedModelPart.getJavaType().getJavaTypeClass()
+					|| !modelPart.getJavaType().getJavaTypeClass()
 					.isAssignableFrom( concreteModelPart.getJavaType().getJavaTypeClass() ) ) {
 		/*
 			Given:

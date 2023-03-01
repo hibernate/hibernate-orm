@@ -434,7 +434,12 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitTableGroupJoin(TableGroupJoin tableGroupJoin) {
-		tableGroupJoin.getJoinedGroup().accept( this );
+		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
+		if ( joinedGroup.isInitialized() ) {
+			// Only process already initialized table groups to avoid
+			// forced initialization of joined lazy table groups
+			joinedGroup.accept( this );
+		}
 		if ( tableGroupJoin.getPredicate() != null ) {
 			tableGroupJoin.getPredicate().accept( this );
 		}

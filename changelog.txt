@@ -3,6 +3,66 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.0.CR3 (March 01, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32132
+
+** Bug
+    * [HHH-16233] -  Bad error for mutable non-root entity
+    * [HHH-16230] - Wrong data in self-reference using L2C and BatchSize
+    * [HHH-16217] - Documentation for chapter 34 is being misrendered
+    * [HHH-16209] - Identically-named association in entity root and embeddable leads to mixup during association loading
+    * [HHH-16202] - @OrderBy not applied to collections when @Fetch(value = FetchMode.SUBSELECT)
+    * [HHH-16199] - org.hibernate.AssertionFailure: force initializing collection loading
+    * [HHH-16197] - Circular references of the same entity result in different Java objects when caching is enabled and using a query
+    * [HHH-16195] - Hibernate 6 fails to bind appropriate type for mapped superclass with generic attribute
+    * [HHH-16193] - LazyInitializationException when accessing loaded reference after session is closed using bytecode enhancement
+    * [HHH-16184] - Two queries are execute to initialize empty collections   
+    * [HHH-16182] - Converted boolean mappings not always working in predicates
+    * [HHH-16177] - Catalog/schema creation/dropping sometimes ignores default catalog/schema
+    * [HHH-16175] - AssertionError in StandardEntityGraphTraversalStateImpl.traverse when using entity graph
+    * [HHH-16169] - NullPointerException when merging detached collections due to LOG.debugf
+    * [HHH-16165] - Incorrect SQL generated when using SELECT DISTINCT and @OrderBy
+    * [HHH-16157] - Query with join fetch on collection of entities with @DiscriminatorValue causes duplicate condition
+    * [HHH-16155] - Problem with @Generated and jdbc.batch_size
+    * [HHH-16151] - NPE SqmTreePrinter.visitLikePredicate getEscapeCharacter is null
+    * [HHH-16150] - Hibernate ORM no longer drops the schema when using the create-drop strategy and a session factory observer throws an exception on startup
+    * [HHH-16137] - Same named parameter appearing in SELECT and WHERE clauses throws JDBC parameter value not bound error
+    * [HHH-16136] - LAZY @ManyToOne may break EAGER @ManyToOne when used on the same entity in a different parent with Bytecode Enhancement
+    * [HHH-16131] - Date calculation errors in Oracle and TiDB
+    * [HHH-16123] - Invalid generated SQL query when accessing join from a treated abstract superclass path
+    * [HHH-16122] - Named type [class xxx] did not implement BasicType nor UserType
+    * [HHH-16119] - Named native queries do not work with jakarta.persistence.Tuple result class
+    * [HHH-16113] - Add version checks for MERGE support to dialects
+    * [HHH-16112] - Using hibernate.jdbc.batch_size configuration causes BatchedTooManyRowsAffectedException for OneToMany relationship with orphan removal
+    * [HHH-16109] - createNamedQuery adds offset and limit to all queries
+    * [HHH-16081] - Converted collection-as-basic values are considered immutable
+    * [HHH-16080] - UnknownTableReferenceException with JPQL query of Entity with unidirectional OneToOne mapping 
+    * [HHH-16053] - join fetch in @Query has no effect for for nested entities with @DiscriminatorValue (SINGLE_TABLE inheritance)
+    * [HHH-16009] - jakarta @OrderBy annotation generates a non-transformed column name in the SQL query for a composite key's field
+    * [HHH-15990] - Unable to determine TableReference when associate ManyToOne fetch lazy and NotFound IGNORE: issue using Projection
+    * [HHH-15964] - Incorrect results for pageable EntityGraph with Hibernate 6.1.6
+    * [HHH-15895] - IllegalArgumentException :Cannot create binding for parameter referencen with criteria builder
+    * [HHH-15875] - Join fetch doesn't work with @EmbeddedId associations in Hibernate 6
+    * [HHH-14514] - Auto evict collection cache not work when use transactional cache concurrency strategy
+
+** Improvement
+    * [HHH-16243] - Change scope of AbstractEntityPersister#generateNonIdAttributeMapping
+    * [HHH-16242] - Change scopes of methods in AbstractEntityInitializer class
+    * [HHH-16229] - Consider pluggability for rendering "JDBC" parameters
+    * [HHH-16227] - Introduce SqmMultiTableMutationStrategyProvider
+    * [HHH-16226] - Introduce JdbcValuesMappingProducerProvider
+    * [HHH-16214] - Improve memory and access efficiency in SqmFunctionRegistry
+    * [HHH-16185] - Standardize the date_trunc() function, emulating it for Dialects that don't support native versions
+    * [HHH-16183] - Change scopes of private methods in InsertCoordinator
+    * [HHH-16174] - allow 'extract(epoch from ...)' in HQL
+    * [HHH-16172] - Expose internal state of 2nd-level cache keys
+    * [HHH-16170] - Support literal enum simple names in HQL 'set' clause.
+    * [HHH-16133] - Allow @TenantId annotation on @Embedded
+    * [HHH-15870] - allow SchemaMigrator to update column types
+
+
 Changes in 6.2.0.CR2 (January 27, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

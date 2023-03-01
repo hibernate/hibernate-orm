@@ -926,29 +926,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		for ( SqmAssignment<?> sqmAssignment : setClause.getAssignments() ) {
 			targetColumnReferences.clear();
-			pushProcessingState(
-					new SqlAstProcessingStateImpl(
-							getCurrentProcessingState(),
-							this,
-							getCurrentClauseStack()::getCurrent) {
-						@Override
-						public Expression resolveSqlExpression(
-								ColumnReferenceKey key,
-								Function<SqlAstProcessingState, Expression> creator) {
-							final Expression expression = getParentState()
-									.getSqlExpressionResolver()
-									.resolveSqlExpression( key, creator );
-							assert expression instanceof ColumnReference;
-							targetColumnReferences.add( (ColumnReference) expression );
-							return expression;
-						}
-					},
-					getFromClauseIndex()
-			);
 
-			currentClauseStack.push( Clause.SET );
 			final SqmPathInterpretation<?> assignedPathInterpretation;
 			try {
+				pushProcessingState(
+						createAssignmentProcessingState( targetColumnReferences ),
+						getFromClauseIndex()
+				);
+				currentClauseStack.push( Clause.SET );
+
 				assignedPathInterpretation = (SqmPathInterpretation<?>) sqmAssignment.getTargetPath().accept( this );
 			}
 			finally {
@@ -956,32 +942,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				popProcessingStateStack();
 			}
 
-			inferrableTypeAccessStack.push( assignedPathInterpretation::getExpressionType );
-
-//			final List<ColumnReference> valueColumnReferences = new ArrayList<>();
-			// todo: check if we can remove this
-			pushProcessingState(
-					new SqlAstProcessingStateImpl(
-							getCurrentProcessingState(),
-							this,
-							getCurrentClauseStack()::getCurrent) {
-						@Override
-						public Expression resolveSqlExpression(
-								ColumnReferenceKey key,
-								Function<SqlAstProcessingState, Expression> creator) {
-							final Expression expression = getParentState()
-									.getSqlExpressionResolver()
-									.resolveSqlExpression( key, creator );
-							assert expression instanceof ColumnReference;
-//							valueColumnReferences.add( (ColumnReference) expression );
-							return expression;
-						}
-					},
-					getFromClauseIndex()
-			);
-			currentClauseStack.push( Clause.SET_EXPRESSION );
-
 			try {
+				inferrableTypeAccessStack.push( assignedPathInterpretation::getExpressionType );
+				currentClauseStack.push( Clause.SET_EXPRESSION );
+
 				final SqmExpression<?> assignmentValue = sqmAssignment.getValue();
 				final SqmParameter<?> assignmentValueParameter = getSqmParameter( assignmentValue );
 				if ( assignmentValueParameter != null ) {
@@ -1036,18 +1000,34 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						}
 					}
 				}
-				currentClauseStack.pop();
 			}
 			finally {
-				popProcessingStateStack();
+				currentClauseStack.pop();
 				inferrableTypeAccessStack.pop();
 			}
 		}
+
 		if ( aggregateColumnAssignmentHandler != null ) {
 			aggregateColumnAssignmentHandler.aggregateAssignments( assignments );
 		}
 
 		return assignments;
+	}
+
+	private SqlAstProcessingStateImpl createAssignmentProcessingState(ArrayList<ColumnReference> targetColumnReferences) {
+		return new SqlAstProcessingStateImpl( getCurrentProcessingState(), this, getCurrentClauseStack()::getCurrent ) {
+			@Override
+			public Expression resolveSqlExpression(
+					ColumnReferenceKey key,
+					Function<SqlAstProcessingState, Expression> creator) {
+				final Expression expression = getParentState()
+						.getSqlExpressionResolver()
+						.resolveSqlExpression( key, creator );
+				assert expression instanceof ColumnReference;
+				targetColumnReferences.add( (ColumnReference) expression );
+				return expression;
+			}
+		};
 	}
 
 	private void addAssignment(

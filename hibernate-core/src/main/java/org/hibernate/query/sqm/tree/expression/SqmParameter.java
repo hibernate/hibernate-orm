@@ -23,7 +23,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
  *
  * @author Steve Ebersole
  */
-public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpression<T> {
+public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpression<T>, Comparable<SqmParameter<T>> {
 	/**
 	 * If this represents a named parameter, return that parameter name;
 	 * otherwise return {@code null}.
@@ -76,20 +76,25 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	@Override
 	SqmParameter<T> copy(SqmCopyContext context);
 
-	default int compare(SqmParameter anotherParameter) {
+	/**
+	 * @implSpec Defined as default since this is an SPI to
+	 * support any previous extensions
+	 */
+	@Override
+	default int compareTo(SqmParameter<T> anotherParameter) {
 		if ( this instanceof SqmNamedParameter ) {
 			final SqmNamedParameter<?> one = (SqmNamedParameter<?>) this;
 			return anotherParameter instanceof SqmNamedParameter<?>
-					? one.getName().compareTo( ( (SqmNamedParameter<?>) anotherParameter ).getName() )
+					? one.getName().compareTo( anotherParameter.getName() )
 					: -1;
 		}
 		else if ( this instanceof SqmPositionalParameter ) {
 			final SqmPositionalParameter<?> one = (SqmPositionalParameter<?>) this;
 			return anotherParameter instanceof SqmPositionalParameter<?>
-					? one.getPosition().compareTo( ( (SqmPositionalParameter<?>) anotherParameter ).getPosition() )
+					? one.getPosition().compareTo( anotherParameter.getPosition() )
 					: 1;
 		}
-		else if ( anotherParameter instanceof SqmJpaCriteriaParameterWrapper
+		else if ( this instanceof SqmJpaCriteriaParameterWrapper
 				&& anotherParameter instanceof SqmJpaCriteriaParameterWrapper ) {
 			return Integer.compare( this.hashCode(), anotherParameter.hashCode() );
 		}

@@ -83,7 +83,7 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public int compare(SqmParameter anotherParameter) {
+	public int compareTo(SqmParameter anotherParameter) {
 		return anotherParameter instanceof SqmNamedParameter<?>
 				? getName().compareTo( ( (SqmNamedParameter<?>) anotherParameter ).getName() )
 				: -1;

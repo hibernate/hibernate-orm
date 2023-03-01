@@ -7,8 +7,9 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import java.util.List;
 
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -18,8 +19,12 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -35,6 +40,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
@@ -45,8 +51,14 @@ import static org.hamcrest.Matchers.isOneOf;
  *
  * @author Steve Ebersole
  */
+@BootstrapServiceRegistry(
+		javaServices = @BootstrapServiceRegistry.JavaService(
+				role = FunctionContributor.class,
+				impl = BooleanMappingTests.FunctionContributorImpl.class
+		)
+)
 @DomainModel(annotatedClasses = BooleanMappingTests.EntityOfBooleans.class)
-@SessionFactory
+@SessionFactory(useCollectingStatementInspector = true)
 public class BooleanMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
@@ -313,6 +325,38 @@ public class BooleanMappingTests {
 		return result.intValue();
 	}
 
+	@Test
+	public void testBooleanFunctionAsPredicate(SessionFactoryScope scope) {
+		// Not strictly relevant to boolean mappings, but test that boolean
+		// functions work *as a* predicate after HHH-16182
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			session.createSelectionQuery( "from EntityOfBooleans where boolean_func1 or boolean_func2" ).list();
+		} );
+
+		assertThat( statementInspector.getSqlQueries().size(), equalTo( 1 ) );
+		assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( "(1=1)" )  );
+		assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( "(2=2)" )  );
+	}
+
+	@Test
+	public void testBooleanFunctionInPredicate(SessionFactoryScope scope) {
+		// Not strictly relevant to boolean mappings, but test that boolean
+		// functions work *in a* predicate after HHH-16182
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			session.createSelectionQuery( "from EntityOfBooleans where boolean_func1 = true or boolean_func2 = false" ).list();
+		} );
+
+		assertThat( statementInspector.getSqlQueries().size(), equalTo( 1 ) );
+		assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( "(1=1)" )  );
+		assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( "(2=2)" )  );
+	}
+
 	@Entity(name = "EntityOfBooleans")
 	@Table(name = "EntityOfBooleans")
 	public static class EntityOfBooleans {
@@ -349,5 +393,24 @@ public class BooleanMappingTests {
 		@Convert(converter = org.hibernate.type.NumericBooleanConverter.class)
 		boolean convertedNumeric;
 		//end::basic-boolean-example-explicit-numeric[]
+	}
+
+	public static class FunctionContributorImpl implements FunctionContributor {
+		@Override
+		public void contributeFunctions(FunctionContributions functionContributions) {
+			final BasicType<Boolean> booleanBasicType = functionContributions
+					.getTypeConfiguration()
+					.getBasicTypeForJavaType( Boolean.class );
+
+			final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+			functionRegistry
+					.patternDescriptorBuilder( "boolean_func1", "(1=1)" )
+					.setInvariantType( booleanBasicType )
+					.register();
+			functionRegistry
+					.patternDescriptorBuilder( "boolean_func2", "(2=2)" )
+					.setInvariantType( booleanBasicType )
+					.register();
+		}
 	}
 }

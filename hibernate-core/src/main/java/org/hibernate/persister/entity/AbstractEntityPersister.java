@@ -5272,7 +5272,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private AttributeMapping generateNonIdAttributeMapping(
+	protected AttributeMapping generateNonIdAttributeMapping(
 			NonIdentifierAttribute tupleAttrDefinition,
 			Property bootProperty,
 			int stateArrayPosition,

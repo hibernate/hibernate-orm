@@ -49,17 +49,17 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  * @author Steve Ebersole
  */
 public class MutationExecutorPostInsert implements MutationExecutor {
-	private final EntityMutationTarget mutationTarget;
-	private final MutationOperationGroup mutationOperationGroup;
+	protected final EntityMutationTarget mutationTarget;
+	protected final MutationOperationGroup mutationOperationGroup;
 
-	private final PreparedStatementDetails identityInsertStatementDetails;
+	protected final PreparedStatementDetails identityInsertStatementDetails;
 
 	/**
 	 * Any non-batched JDBC statements
 	 */
-	private final PreparedStatementGroup secondaryTablesStatementGroup;
+	protected final PreparedStatementGroup secondaryTablesStatementGroup;
 
-	private final JdbcValueBindingsImpl valueBindings;
+	protected final JdbcValueBindingsImpl valueBindings;
 
 	public MutationExecutorPostInsert(MutationOperationGroup mutationOperationGroup, SharedSessionContractImplementor session) {
 		this.mutationTarget = (EntityMutationTarget) mutationOperationGroup.getMutationTarget();

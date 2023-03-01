@@ -7,9 +7,19 @@
 package org.hibernate.orm.test.inheritance;
 
 import java.util.List;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
@@ -27,33 +37,24 @@ import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-
 @TestForIssue(jiraKey = "HHH-14103")
 @DomainModel(
 		annotatedClasses = {
-				TransientOverrideAsPersistentMappedSuperclass.Employee.class,
-				TransientOverrideAsPersistentMappedSuperclass.Editor.class,
-				TransientOverrideAsPersistentMappedSuperclass.Writer.class,
-				TransientOverrideAsPersistentMappedSuperclass.Group.class,
-				TransientOverrideAsPersistentMappedSuperclass.Job.class
+				TransientOverrideAsPersistentWithEmbeddable.Employee.class,
+				TransientOverrideAsPersistentWithEmbeddable.Editor.class,
+				TransientOverrideAsPersistentWithEmbeddable.Writer.class,
+				TransientOverrideAsPersistentWithEmbeddable.Group.class,
+				TransientOverrideAsPersistentWithEmbeddable.Job.class
 		}
 )
 @SessionFactory
-public class TransientOverrideAsPersistentMappedSuperclass {
+public class TransientOverrideAsPersistentWithEmbeddable {
 
 	@Test
 	public void testFindByRootClass(SessionFactoryScope scope) {
@@ -64,8 +65,8 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 			final Employee writer = session.find( Employee.class, "John Smith" );
 			assertThat( writer, instanceOf( Writer.class ) );
 			assertEquals( "Writing", writer.getTitle() );
-			assertNotNull( ( (Writer) writer ).getGroup() );
-			final Group group = ( (Writer) writer ).getGroup();
+			assertNotNull( ( (Writer) writer ).getWriterEmbeddable().getGroup() );
+			final Group group = ( (Writer) writer ).getWriterEmbeddable().getGroup();
 			assertEquals( writer.getTitle(), group.getName() );
 			final Job jobEditor = session.find( Job.class, "Edit" );
 			assertSame( editor, jobEditor.getEmployee() );
@@ -82,8 +83,8 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 			assertEquals( "Senior Editor", editor.getTitle() );
 			final Writer writer = session.find( Writer.class, "John Smith" );
 			assertEquals( "Writing", writer.getTitle() );
-			assertNotNull( writer.getGroup() );
-			final Group group = writer.getGroup();
+			assertNotNull( writer.getWriterEmbeddable().getGroup() );
+			final Group group = writer.getWriterEmbeddable().getGroup();
 			assertEquals( writer.getTitle(), group.getName() );
 			final Job jobEditor = session.find( Job.class, "Edit" );
 			assertSame( editor, jobEditor.getEmployee() );
@@ -104,8 +105,8 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 			assertEquals( "Senior Editor", editor.getTitle() );
 			final Writer writer = (Writer) employees.get( 1 );
 			assertEquals( "Writing", writer.getTitle() );
-			assertNotNull( writer.getGroup() );
-			final Group group = writer.getGroup();
+			assertNotNull( writer.getWriterEmbeddable().getGroup() );
+			final Group group = writer.getWriterEmbeddable().getGroup();
 			assertEquals( writer.getTitle(), group.getName() );
 		} );
 	}
@@ -122,8 +123,8 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
 			assertThat( writer, instanceOf( Writer.class ) );
-			assertNotNull( ( (Writer) writer ).getGroup() );
-			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup().getName() );
+			assertNotNull( ( (Writer) writer ).getWriterEmbeddable().getGroup() );
+			assertEquals( writer.getTitle(), ( (Writer) writer ).getWriterEmbeddable().getGroup().getName() );
 		} );
 	}
 
@@ -131,22 +132,22 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 	public void testQueryByRootClassAndOverridenPropertyTreat(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Employee editor = session.createQuery(
-					"from Employee e where treat( e as Editor ).title=:title",
-					Employee.class
-			)
+							"from Employee e where treat( e as Editor ).title=:title",
+							Employee.class
+					)
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
 			assertThat( editor, instanceOf( Editor.class ) );
 
 			final Employee writer = session.createQuery(
-					"from Employee e where treat( e as Writer).title=:title",
-					Employee.class
-			)
+							"from Employee e where treat( e as Writer).title=:title",
+							Employee.class
+					)
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
 			assertThat( writer, instanceOf( Writer.class ) );
-			assertNotNull( ( (Writer) writer ).getGroup() );
-			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup().getName() );
+			assertNotNull( ( (Writer) writer ).getWriterEmbeddable().getGroup() );
+			assertEquals( writer.getTitle(), ( (Writer) writer ).getWriterEmbeddable().getGroup().getName() );
 		} );
 	}
 
@@ -161,8 +162,8 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 			final Writer writer = session.createQuery( "from Writer where title=:title", Writer.class )
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
-			assertNotNull( writer.getGroup() );
-			assertEquals( writer.getTitle(), writer.getGroup().getName() );
+			assertNotNull( writer.getWriterEmbeddable().getGroup() );
+			assertEquals( writer.getTitle(), writer.getWriterEmbeddable().getGroup().getName() );
 		} );
 	}
 
@@ -195,8 +196,8 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
 			assertThat( writer, instanceOf( Writer.class ) );
-			assertNotNull( ( (Writer) writer ).getGroup() );
-			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup().getName() );
+			assertNotNull( ( (Writer) writer ).getWriterEmbeddable().getGroup() );
+			assertEquals( writer.getTitle(), ( (Writer) writer ).getWriterEmbeddable().getGroup().getName() );
 		} );
 	}
 
@@ -210,7 +211,7 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 
 			Employee editor = jobEditor.getEmployee();
 			Employee writer = jobWriter.getEmployee();
-			Group group = Writer.class.cast( writer ).getGroup();
+			Group group = Writer.class.cast( writer ).getWriterEmbeddable().getGroup();
 
 			session.persist( editor );
 			session.persist( group );
@@ -290,14 +291,9 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 		}
 	}
 
-	@Entity(name = "Writer")
-	public static class Writer extends Employee {
+	@Embeddable
+	public static class WriterEmbeddable {
 		private Group group;
-
-		public Writer(String name, Group group) {
-			super( name );
-			setGroup( group );
-		}
 
 		// Cannot have a constraint on e_title because
 		// Editor#title (which uses the same e_title column) can be non-null,
@@ -306,6 +302,21 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 		@JoinColumn(name = "e_title", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		public Group getGroup() {
 			return group;
+		}
+
+		public void setGroup(Group group) {
+			this.group = group;
+		}
+	}
+
+	@Entity(name = "Writer")
+	public static class Writer extends Employee {
+		private WriterEmbeddable writerEmbeddable;
+
+		public Writer(String name, Group group) {
+			super( name );
+			this.writerEmbeddable = new WriterEmbeddable();
+			setGroup( group );
 		}
 
 		@Column(name = "e_title", insertable = false, updatable = false)
@@ -323,8 +334,16 @@ public class TransientOverrideAsPersistentMappedSuperclass {
 		}
 
 		protected void setGroup(Group group) {
-			this.group = group;
+			this.writerEmbeddable.setGroup( group );
 			setTitle( group.getName() );
+		}
+
+		public WriterEmbeddable getWriterEmbeddable() {
+			return writerEmbeddable;
+		}
+
+		public void setWriterEmbeddable(WriterEmbeddable writerEmbeddable) {
+			this.writerEmbeddable = writerEmbeddable;
 		}
 	}
 

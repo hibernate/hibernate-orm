@@ -65,8 +65,19 @@ NOTE:: On MySQL, enums are now stored using the `ENUM` datatype by default
 [[ddl-timezones]]
 === Timezone and offset storage
 
-`OffsetDateTime` and `ZonedDateTime` now always map to `TIMESTAMP WITH TIME ZONE` by default
+`hibernate.timezone.default_storage` now defaults to `DEFAULT`, meaning:
 
+* if the database/dialect supports it, time zones of date/time values are stored by using the `timestamp with time zone` SQL column type;
+* otherwise, time zones of date/time values are not stored, and date/time values are normalized to UTC.
+
+In Hibernate ORM 5, time zones were not stored, but normalized to the time zone set in `hibernate.jdbc.time_zone`, the JVM time zone by default.
+
+This discrepancy might lead to incorrect date/time being loaded from the database
+for properties of type `OffsetDateTime` and `ZonedDateTime`
+if your application was migrated from Hibernate ORM 5 and
+was setting `hibernate.jdbc.time_zone` to a non-UTC timezone.
+
+To revert to Hibernate ORM 5's behavior, set the configuration property `hibernate.timezone.default_storage` to `NORMALIZE`.
 
 [[ddl-check]]
 === Check constraints for boolean and enum mappings

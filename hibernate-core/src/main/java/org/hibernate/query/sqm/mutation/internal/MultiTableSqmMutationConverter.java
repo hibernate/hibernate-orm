@@ -154,7 +154,8 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 			SqmParameterResolutionConsumer parameterResolutionConsumer) {
 		this.parameterResolutionConsumer = parameterResolutionConsumer;
 
-		for ( Assignment assignment : super.visitSetClause( setClause ) ) {
+		final List<Assignment> assignments = super.visitSetClause( setClause );
+		for ( Assignment assignment : assignments ) {
 			assignmentConsumer.accept( assignment );
 		}
 	}

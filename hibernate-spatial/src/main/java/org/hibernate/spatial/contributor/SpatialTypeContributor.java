@@ -18,8 +18,8 @@ public class SpatialTypeContributor implements TypeContributor {
 		ContributorImplementor contributorImplementor = ContributorResolver.resolveSpatialtypeContributorImplementor( serviceRegistry );
 
 		if (contributorImplementor != null) {
-			contributorImplementor.contributeJavaTypes( typeContributions );
-			contributorImplementor.contributeJdbcTypes( typeContributions );
+			contributorImplementor.contributeJavaTypes( typeContributions, serviceRegistry );
+			contributorImplementor.contributeJdbcTypes( typeContributions, serviceRegistry );
 		}
 
 	}

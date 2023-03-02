@@ -37,19 +37,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class ArrayJdbcType implements JdbcType {
 
 	public static final ArrayJdbcType INSTANCE = new ArrayJdbcType( ObjectJdbcType.INSTANCE );
-	private static final ClassValue<Method> NAME_BINDER = new ClassValue<>() {
-		@Override
-		protected Method computeValue(Class<?> type) {
-			try {
-				return type.getMethod( "setArray", String.class, java.sql.Array.class );
-			}
-			catch ( Exception ex ) {
-				// add logging? Did we get NoSuchMethodException or SecurityException?
-				// Doesn't matter which. We can't use it.
-			}
-			return null;
-		}
-	};
 
 	private final JdbcType elementJdbcType;
 
@@ -126,25 +113,11 @@ public class ArrayJdbcType implements JdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final java.sql.Array arr = getArray( value, containerJavaType, options );
-				final Method nameBinder = NAME_BINDER.get( st.getClass() );
-				if ( nameBinder == null ) {
-					try {
-						st.setObject( name, arr, java.sql.Types.ARRAY );
-						return;
-					}
-					catch (SQLException ex) {
-						throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional.", ex );
-					}
-				}
-				// Note that it's supposed to have setArray(String,Array) by standard.
-				// There are numerous missing methods that only have versions for positional parameter,
-				// but not named ones.
-
 				try {
-					nameBinder.invoke( st, name, arr );
+					st.setObject( name, arr, java.sql.Types.ARRAY );
 				}
-				catch ( Throwable t ) {
-					throw new HibernateException( t );
+				catch (SQLException ex) {
+					throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional.", ex );
 				}
 			}
 

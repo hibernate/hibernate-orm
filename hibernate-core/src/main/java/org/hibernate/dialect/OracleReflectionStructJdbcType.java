@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
@@ -15,19 +17,34 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 
-import oracle.sql.TIMESTAMPTZ;
-
 /**
  * @author Christian Beikov
  */
-public class OracleStructJdbcType extends StructJdbcType {
+public class OracleReflectionStructJdbcType extends StructJdbcType {
+	public static final AggregateJdbcType INSTANCE = new OracleReflectionStructJdbcType();
 
-	public OracleStructJdbcType() {
+	private static final ClassValue<Method> RAW_JDBC_TRANSFORMER = new ClassValue<>() {
+		@Override
+		protected Method computeValue(Class<?> type) {
+			if ( "oracle.sql.TIMESTAMPTZ".equals( type.getName() ) ) {
+				try {
+					return type.getMethod( "offsetDateTimeValue", Connection.class );
+				}
+				catch (NoSuchMethodException e) {
+					throw new RuntimeException( e );
+				}
+			}
+			return null;
+		}
+	};
+
+
+	private OracleReflectionStructJdbcType() {
 		// The default instance is for reading only and will return an Object[]
 		this( null, null, null );
 	}
 
-	private OracleStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
+	public OracleReflectionStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
 		super(
 				embeddableMappingType,
 				typeName == null ? null : typeName.toUpperCase( Locale.ROOT ),
@@ -40,7 +57,7 @@ public class OracleStructJdbcType extends StructJdbcType {
 			EmbeddableMappingType mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
-		return new OracleStructJdbcType(
+		return new OracleReflectionStructJdbcType(
 				mappingType,
 				sqlType,
 				creationContext.getBootModel()
@@ -53,20 +70,22 @@ public class OracleStructJdbcType extends StructJdbcType {
 
 	@Override
 	protected Object transformRawJdbcValue(Object rawJdbcValue, WrapperOptions options) {
-		if ( rawJdbcValue.getClass() == TIMESTAMPTZ.class ) {
-			try {
-				return ( (TIMESTAMPTZ) rawJdbcValue ).offsetDateTimeValue(
-						options.getSession()
-								.getJdbcCoordinator()
-								.getLogicalConnection()
-								.getPhysicalConnection()
-				);
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Could not transform the raw jdbc value", e );
-			}
+		Method rawJdbcTransformer = RAW_JDBC_TRANSFORMER.get( rawJdbcValue.getClass() );
+		if ( rawJdbcTransformer == null ) {
+			return rawJdbcValue;
 		}
-		return rawJdbcValue;
+		try {
+			return rawJdbcTransformer.invoke(
+					rawJdbcValue,
+					options.getSession()
+							.getJdbcCoordinator()
+							.getLogicalConnection()
+							.getPhysicalConnection()
+			);
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not transform the raw jdbc value", e );
+		}
 	}
 
 }

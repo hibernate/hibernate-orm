@@ -13,12 +13,12 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 /**
  * @author Christian Beikov
  */
-public class PostgreSQLJsonbJdbcType extends AbstractPostgreSQLJsonJdbcType {
-
-	public static final PostgreSQLJsonbJdbcType INSTANCE = new PostgreSQLJsonbJdbcType( null );
-
-	public PostgreSQLJsonbJdbcType(EmbeddableMappingType embeddableMappingType) {
-		super( embeddableMappingType, "jsonb" );
+public class PostgreSQLJsonPGObjectJsonType extends AbstractPostgreSQLJsonPGObjectType {
+	public PostgreSQLJsonPGObjectJsonType() {
+		this( null, false );
+	}
+	private PostgreSQLJsonPGObjectJsonType(EmbeddableMappingType embeddableMappingType, boolean jsonb) {
+		super( embeddableMappingType, jsonb );
 	}
 
 	@Override
@@ -26,6 +26,6 @@ public class PostgreSQLJsonbJdbcType extends AbstractPostgreSQLJsonJdbcType {
 			EmbeddableMappingType mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
-		return new PostgreSQLJsonbJdbcType( mappingType );
+		return new PostgreSQLJsonPGObjectJsonType( mappingType, false );
 	}
 }

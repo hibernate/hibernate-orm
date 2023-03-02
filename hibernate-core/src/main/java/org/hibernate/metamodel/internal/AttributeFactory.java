@@ -129,7 +129,7 @@ public class AttributeFactory {
 				false,
 				false,
 				property.isOptional(),
-				property.isGenericEmbeddable(),
+				property.isGeneric(),
 				metadataContext
 		);
 	}
@@ -177,7 +177,7 @@ public class AttributeFactory {
 				(SimpleDomainType<Y>) determineSimpleType( attributeMetadata.getValueContext() ),
 				attributeMetadata.getMember(),
 				attributeMetadata.getAttributeClassification(),
-				property.isGenericEmbeddable(),
+				property.isGeneric(),
 				context
 		);
 	}

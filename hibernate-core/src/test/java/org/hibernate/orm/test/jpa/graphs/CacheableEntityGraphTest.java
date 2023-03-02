@@ -23,9 +23,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Version;
+
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -33,7 +35,7 @@ public class CacheableEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{Product.class, Color.class, Tag.class};
+		return new Class[] { Product.class, Color.class, Tag.class };
 	}
 
 	@Test
@@ -42,34 +44,32 @@ public class CacheableEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		EntityManager em = getOrCreateEntityManager();
 
 		em.getTransaction().begin();
-		Tag tag = new Tag(Set.of(TagType.FOO));
-		em.persist(tag);
+		Tag tag = new Tag( Set.of( TagType.FOO ) );
+		em.persist( tag );
 
 		Color color = new Color();
-		em.persist(color);
+		em.persist( color );
 
-		Product product = new Product(tag, color);
-		em.persist(product);
+		Product product = new Product( tag, color );
+		em.persist( product );
 		em.getTransaction().commit();
 
 		em.clear();
 
-		EntityGraph<Product> entityGraph = em.createEntityGraph(Product.class);
-		entityGraph.addAttributeNodes("tag");
+		EntityGraph<Product> entityGraph = em.createEntityGraph( Product.class );
+		entityGraph.addAttributeNodes( "tag" );
 
-		em.createQuery(
-						"select p from org.hibernate.orm.test.jpa.graphs.CacheableEntityGraphTest$Product p",
-						Product.class)
-				.setMaxResults(2)
-				.setHint("jakarta.persistence.loadgraph", entityGraph)
+		em.createQuery( "select p from Product p", Product.class )
+				.setMaxResults( 2 )
+				.setHint( "jakarta.persistence.loadgraph", entityGraph )
 				.getSingleResult();
 	}
 
-	@Entity
+	@Entity(name = "Product")
 	public static class Product {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public int id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
@@ -87,11 +87,11 @@ public class CacheableEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		}
 	}
 
-	@Entity
+	@Entity(name = "Color")
 	public static class Color {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public int id;
 
 		@OneToOne(fetch = FetchType.LAZY)
@@ -99,11 +99,11 @@ public class CacheableEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Cacheable
-	@Entity
+	@Entity(name = "Tag")
 	public static class Tag {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public int id;
 
 		@Version
@@ -118,7 +118,7 @@ public class CacheableEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		}
 
 		public Tag(Set<TagType> types) {
-			this.types.addAll(types);
+			this.types.addAll( types );
 		}
 	}
 

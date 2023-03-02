@@ -10,6 +10,8 @@ import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -330,16 +332,7 @@ public class BooleanMappingTests {
 		return result.intValue();
 	}
 
-	/**
-	 * @implNote Skipped for dialects without support for boolean (predicate) expressions.  The test
-	 * is really about handling the SQM function reference anyway; the actual Dialect implementation
-	 * is not standard.
-	 */
 	@Test
-	@SkipForDialect(dialectClass = OracleDialect.class)
-	@SkipForDialect(dialectClass = SybaseDialect.class)
-	@SkipForDialect(dialectClass = SybaseASEDialect.class)
-	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	public void testBooleanFunctionAsPredicate(SessionFactoryScope scope) {
 		// Not strictly relevant to boolean mappings, but test that boolean
 		// functions work *as a* predicate after HHH-16182
@@ -351,20 +344,20 @@ public class BooleanMappingTests {
 		} );
 
 		assertThat( statementInspector.getSqlQueries().size(), equalTo( 1 ) );
-		assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( "(1=1)" )  );
-		assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( "(2=2)" )  );
+		assertThat( statementInspector.getSqlQueries().get( 0 ), containsString( "where (1=1) or (2=2)" )  );
 	}
 
 	/**
-	 * @implNote Skipped for dialects without support for boolean (predicate) expressions.  The test
-	 * is really about handling the SQM function reference anyway; the actual Dialect implementation
-	 * is not standard.
+	 * @implNote Skipped for dialects without support for comparing a boolean predicate against a boolean expressions,
+	 * i.e. `(1=1)=true`. The test is really about handling the SQM function reference anyway;
+	 * the actual Dialect implementation is not standard.
 	 */
 	@Test
 	@SkipForDialect(dialectClass = OracleDialect.class)
-	@SkipForDialect(dialectClass = SybaseDialect.class)
-	@SkipForDialect(dialectClass = SybaseASEDialect.class)
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10)
 	public void testBooleanFunctionInPredicate(SessionFactoryScope scope) {
 		// Not strictly relevant to boolean mappings, but test that boolean
 		// functions work *in a* predicate after HHH-16182

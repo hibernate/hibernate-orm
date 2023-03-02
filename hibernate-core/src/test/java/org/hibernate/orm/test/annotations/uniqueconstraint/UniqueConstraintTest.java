@@ -28,6 +28,7 @@ import static org.junit.Assert.fail;
 @DomainModel( annotatedClasses = { Room.class, Building.class, House.class } )
 @SessionFactory
 @SkipForDialect( dialectClass = SybaseDialect.class,
+        matchSubTypes = true,
         reason = "Sybase does not properly support unique constraints on nullable columns" )
 public class UniqueConstraintTest {
 

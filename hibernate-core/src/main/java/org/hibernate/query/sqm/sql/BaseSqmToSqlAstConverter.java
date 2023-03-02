@@ -7058,21 +7058,30 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitBooleanExpressionPredicate(SqmBooleanExpressionPredicate predicate) {
 		final Expression booleanExpression = (Expression) predicate.getBooleanExpression().accept( this );
-		final JdbcMapping jdbcMapping = booleanExpression.getExpressionType().getJdbcMapping( 0 );
-		if ( jdbcMapping.getValueConverter() != null ) {
-			// handle converted booleans (yes-no, etc)
-			return new ComparisonPredicate(
+		if ( booleanExpression instanceof SelfRenderingExpression ) {
+			final Predicate sqlPredicate = new SelfRenderingPredicate( (SelfRenderingExpression) booleanExpression );
+			if ( predicate.isNegated() ) {
+				return new NegatedPredicate( sqlPredicate );
+			}
+			return sqlPredicate;
+		}
+		else {
+			final JdbcMapping jdbcMapping = booleanExpression.getExpressionType().getJdbcMapping( 0 );
+			if ( jdbcMapping.getValueConverter() != null ) {
+				// handle converted booleans (yes-no, etc)
+				return new ComparisonPredicate(
+						booleanExpression,
+						ComparisonOperator.EQUAL,
+						new JdbcLiteral<>( jdbcMapping.convertToRelationalValue( !predicate.isNegated() ), jdbcMapping )
+				);
+			}
+
+			return new BooleanExpressionPredicate(
 					booleanExpression,
-					ComparisonOperator.EQUAL,
-					new JdbcLiteral<>( jdbcMapping.convertToRelationalValue( !predicate.isNegated() ), jdbcMapping )
+					predicate.isNegated(),
+					getBooleanType()
 			);
 		}
-
-		return new BooleanExpressionPredicate(
-				booleanExpression,
-				predicate.isNegated(),
-				getBooleanType()
-		);
 	}
 
 	@Override

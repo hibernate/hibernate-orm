@@ -24,7 +24,6 @@ import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -274,6 +273,7 @@ public class MetadataContext {
 
 					applyIdMetadata( safeMapping, jpaMapping );
 					applyVersionAttribute( safeMapping, jpaMapping );
+					applyGenericEmbeddableProperties( safeMapping, jpaMapping );
 
 					for ( Property property : safeMapping.getDeclaredProperties() ) {
 						if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
@@ -571,6 +571,43 @@ public class MetadataContext {
 					attributeFactory.buildVersionAttribute( jpaMappingType, declaredVersion )
 			);
 		}
+	}
+
+	private <X> void applyGenericEmbeddableProperties(
+			PersistentClass persistentClass,
+			EntityDomainType<X> entityType) {
+		MappedSuperclass mappedSuperclass = getMappedSuperclass( persistentClass );
+		while ( mappedSuperclass != null ) {
+			for ( Property superclassProperty : mappedSuperclass.getDeclaredProperties() ) {
+				if ( superclassProperty.isGeneric() && superclassProperty.isComposite() ) {
+					final Property property = persistentClass.getProperty( superclassProperty.getName() );
+					final SingularPersistentAttribute<X, ?> attribute = (SingularPersistentAttribute<X, ?>) attributeFactory.buildAttribute(
+							entityType,
+							property
+					);
+					//noinspection unchecked rawtypes
+					( (AttributeContainer) entityType ).getInFlightAccess().addConcreteEmbeddableAttribute( attribute );
+				}
+			}
+			mappedSuperclass = getMappedSuperclass( mappedSuperclass );
+		}
+	}
+
+	private MappedSuperclass getMappedSuperclass(PersistentClass persistentClass) {
+		while ( persistentClass != null ) {
+			final MappedSuperclass mappedSuperclass = persistentClass.getSuperMappedSuperclass();
+			if ( mappedSuperclass != null ) {
+				return mappedSuperclass;
+			}
+			persistentClass = persistentClass.getSuperclass();
+		}
+		return null;
+	}
+
+	private MappedSuperclass getMappedSuperclass(MappedSuperclass mappedSuperclass) {
+		return mappedSuperclass.getSuperMappedSuperclass() != null
+				? mappedSuperclass.getSuperMappedSuperclass()
+				: getMappedSuperclass( mappedSuperclass.getSuperPersistentClass() );
 	}
 
 	private <X> Set<SingularPersistentAttribute<? super X, ?>> buildIdClassAttributes(

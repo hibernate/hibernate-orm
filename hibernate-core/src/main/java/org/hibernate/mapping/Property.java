@@ -57,7 +57,7 @@ public class Property implements Serializable, MetaAttributable {
 	private java.util.Map metaAttributes;
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
-	private boolean genericEmbeddable;
+	private boolean isGeneric;
 	private boolean lob;
 	private java.util.List<CallbackDefinition> callbackDefinitions;
 	private String returnedClassName;
@@ -418,12 +418,12 @@ public class Property implements Serializable, MetaAttributable {
 		this.naturalIdentifier = naturalIdentifier;
 	}
 
-	public boolean isGenericEmbeddable() {
-		return genericEmbeddable;
+	public boolean isGeneric() {
+		return isGeneric;
 	}
 
-	public void setGenericEmbeddable(boolean genericEmbeddable) {
-		this.genericEmbeddable = genericEmbeddable;
+	public void setGeneric(boolean generic) {
+		this.isGeneric = generic;
 	}
 
 	public boolean isLob() {

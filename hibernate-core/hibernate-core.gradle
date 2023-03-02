@@ -45,6 +45,7 @@ dependencies {
     compileOnly jakartaLibs.jsonbApi
     compileOnly libs.jackson
     compileOnly libs.jacksonXml
+    compileOnly dbLibs.postgresql
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')

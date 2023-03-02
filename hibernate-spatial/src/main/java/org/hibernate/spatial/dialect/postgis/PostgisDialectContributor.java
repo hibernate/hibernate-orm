@@ -9,7 +9,7 @@ package org.hibernate.spatial.dialect.postgis;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
+import org.hibernate.dialect.PgJdbcHelper;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
@@ -17,16 +17,16 @@ import org.hibernate.spatial.contributor.ContributorImplementor;
 
 public class PostgisDialectContributor implements ContributorImplementor {
 
-	private final ServiceRegistry serviceRegistryegistry;
+	private final ServiceRegistry serviceRegistry;
 
 	public PostgisDialectContributor(ServiceRegistry serviceRegistry) {
-		this.serviceRegistryegistry = serviceRegistry;
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
-	public void contributeJdbcTypes(TypeContributions typeContributions) {
+	public void contributeJdbcTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+		if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcType( PGGeometryJdbcType.INSTANCE_WKB_2 );
 			typeContributions.contributeJdbcType( PGGeographyJdbcType.INSTANCE_WKB_2 );
 		}
@@ -50,6 +50,6 @@ public class PostgisDialectContributor implements ContributorImplementor {
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return this.serviceRegistryegistry;
+		return this.serviceRegistry;
 	}
 }

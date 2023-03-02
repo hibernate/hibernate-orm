@@ -22,7 +22,7 @@ public class SqlServerDialectContributor implements ContributorImplementor {
 	}
 
 	@Override
-	public void contributeJdbcTypes(TypeContributions typeContributions) {
+	public void contributeJdbcTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		typeContributions.contributeJdbcType( SqlServerGeometryType.INSTANCE );
 		typeContributions.contributeJdbcType( SqlServerGeographyType.INSTANCE );

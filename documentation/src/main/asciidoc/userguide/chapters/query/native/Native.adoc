@@ -342,6 +342,15 @@ include::{doc-emeddable-example-dir}/SQLTest.java[tags=sql-hibernate-dto-query-e
 There's no such equivalent in Jakarta Persistence because the `jakarta.persistence.Query` interface does not define a `setResultTransformer` method equivalent.
 ====
 
+[IMPORTANT]
+====
+When materializing a native query result as a polymorphic entity, it is important to understand that both the `JOINED` as well as the `TABLE_PER_CLASS` inheritance strategies require that the native query also include a special `clazz_` select item, which returns the subclass id that Hibernate needs to determine the concrete Java type for a row.
+
+The subclass id is determined based on some order and the base class of the entity hierarchy has the number 0.
+
+Refer to the respective sections in the inheritance chapter for examples of this.
+====
+
 The above query will return a list of `PersonSummaryDTO` which has been instantiated and injected the values of `id` and `name` into its corresponding properties or fields.
 
 [[sql-inheritance-query]]

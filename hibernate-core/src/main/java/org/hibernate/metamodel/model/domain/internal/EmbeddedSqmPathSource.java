@@ -22,10 +22,11 @@ public class EmbeddedSqmPathSource<J>
 
 	public EmbeddedSqmPathSource(
 			String localPathName,
+			SqmPathSource<J> pathModel,
 			EmbeddableDomainType<J> domainType,
 			BindableType jpaBindableType,
 			boolean isGeneric) {
-		super( localPathName, domainType, jpaBindableType );
+		super( localPathName, pathModel, domainType, jpaBindableType );
 		this.isGeneric = isGeneric;
 	}
 
@@ -56,7 +57,7 @@ public class EmbeddedSqmPathSource<J>
 		}
 		return new SqmEmbeddedValuedSimplePath<>(
 				navigablePath,
-				this,
+				pathModel,
 				lhs,
 				lhs.nodeBuilder()
 		);

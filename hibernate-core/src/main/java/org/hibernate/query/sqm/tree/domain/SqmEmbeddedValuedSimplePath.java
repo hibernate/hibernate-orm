@@ -82,6 +82,12 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public SqmPath<?> get(String attributeName) {
+		final SqmPathSource<?> subNavigable = getResolvedModel().getSubPathSource( attributeName );
+		return resolvePath( attributeName, subNavigable );
+	}
+
+	@Override
+	public SqmPathSource<?> getResolvedModel() {
 		final DomainType<?> lhsType;
 		final SqmPathSource<T> pathSource = getReferencedPathSource();
 		if ( pathSource.isGeneric() && ( lhsType = getLhs().getReferencedPathSource()
@@ -91,11 +97,10 @@ public class SqmEmbeddedValuedSimplePath<T>
 					pathSource.getPathName()
 			);
 			if ( concreteEmbeddable != null ) {
-				final SqmPathSource<?> subNavigable = concreteEmbeddable.getSubPathSource( attributeName );
-				return resolvePath( attributeName, subNavigable );
+				return concreteEmbeddable;
 			}
 		}
-		return super.get( attributeName );
+		return getModel();
 	}
 
 	@Override
@@ -128,6 +133,4 @@ public class SqmEmbeddedValuedSimplePath<T>
 	public Class<T> getBindableJavaType() {
 		return getJavaType();
 	}
-
-
 }

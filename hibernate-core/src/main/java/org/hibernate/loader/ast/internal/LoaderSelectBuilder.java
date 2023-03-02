@@ -7,6 +7,7 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -625,7 +626,8 @@ public class LoaderSelectBuilder {
 				querySpec::applyPredicate,
 				tableGroup,
 				true,
-				loadQueryInfluencers.getEnabledFilters(),
+				// HHH-16179 Session.find should not apply filters
+				Collections.emptyMap(),//loadQueryInfluencers.getEnabledFilters(),
 				null,
 				astCreationState
 		);

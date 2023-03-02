@@ -29,7 +29,7 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 			DomainType<D> discriminatorValueType,
 			EntityDomainType<?> entityDomainType,
 			EntityMappingType entityMapping) {
-		super( EntityDiscriminatorMapping.ROLE_NAME, discriminatorValueType, BindableType.SINGULAR_ATTRIBUTE );
+		super( EntityDiscriminatorMapping.ROLE_NAME, null, discriminatorValueType, BindableType.SINGULAR_ATTRIBUTE );
 		this.entityDomainType = entityDomainType;
 		this.entityMapping = entityMapping;
 	}
@@ -43,7 +43,7 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 		else {
 			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
 		}
-		return new DiscriminatorSqmPath( navigablePath, this, lhs, entityDomainType, entityMapping, lhs.nodeBuilder() );
+		return new DiscriminatorSqmPath( navigablePath, pathModel, lhs, entityDomainType, entityMapping, lhs.nodeBuilder() );
 	}
 
 	@Override

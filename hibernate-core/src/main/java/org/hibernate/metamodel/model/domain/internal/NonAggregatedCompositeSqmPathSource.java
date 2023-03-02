@@ -20,9 +20,10 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 public class NonAggregatedCompositeSqmPathSource<J> extends AbstractSqmPathSource<J> implements CompositeSqmPathSource<J> {
 	public NonAggregatedCompositeSqmPathSource(
 			String localName,
+			SqmPathSource<J> pathModel,
 			BindableType bindableType,
 			ManagedDomainType<J> container) {
-		super( localName, container, bindableType );
+		super( localName, pathModel, container, bindableType );
 	}
 
 	@Override
@@ -46,7 +47,7 @@ public class NonAggregatedCompositeSqmPathSource<J> extends AbstractSqmPathSourc
 		}
 		return new NonAggregatedCompositeSimplePath<>(
 				navigablePath,
-				this,
+				pathModel,
 				lhs,
 				lhs.nodeBuilder()
 		);

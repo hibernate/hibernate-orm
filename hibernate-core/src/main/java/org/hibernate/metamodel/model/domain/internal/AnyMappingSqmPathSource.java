@@ -13,8 +13,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.ConvertedBasicType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
 
@@ -27,12 +25,19 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 
 	public AnyMappingSqmPathSource(
 			String localPathName,
+			SqmPathSource<J> pathModel,
 			AnyMappingDomainType<J> domainType,
 			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
-		keyPathSource = new BasicSqmPathSource<>( "id", (BasicDomainType<?>) domainType.getKeyType(), SINGULAR_ATTRIBUTE );
+		super( localPathName, pathModel, domainType, jpaBindableType );
+		keyPathSource = new BasicSqmPathSource<>(
+				"id",
+				null,
+				(BasicDomainType<?>) domainType.getKeyType(),
+				SINGULAR_ATTRIBUTE
+		);
 		discriminatorPathSource = new AnyDiscriminatorSqmPathSource<>(
 				localPathName,
+				null,
 				domainType.getDiscriminatorType(),
 				jpaBindableType
 		);
@@ -64,6 +69,6 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 		else {
 			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
 		}
-		return new SqmAnyValuedSimplePath<>( navigablePath, this, lhs, lhs.nodeBuilder() );
+		return new SqmAnyValuedSimplePath<>( navigablePath, pathModel, lhs, lhs.nodeBuilder() );
 	}
 }

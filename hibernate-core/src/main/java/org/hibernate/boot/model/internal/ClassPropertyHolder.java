@@ -288,6 +288,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					}
 					// If the property depends on a type variable, we have to copy it and the Value
 					final Property actualProperty = prop.copy();
+					actualProperty.setGeneric( true );
 					actualProperty.setReturnedClassName( inferredData.getTypeName() );
 					final Value value = actualProperty.getValue().copy();
 					if ( value instanceof Collection ) {
@@ -320,7 +321,6 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 						setTypeName( value, inferredData.getTypeName() );
 					}
 					if ( value instanceof Component ) {
-						actualProperty.setGenericEmbeddable( true );
 						final Component component = ( (Component) value );
 						final Iterator<Property> propertyIterator = component.getPropertyIterator();
 						while ( propertyIterator.hasNext() ) {

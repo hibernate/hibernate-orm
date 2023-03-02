@@ -23,11 +23,14 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 /**
  * @author Christian Beikov
  */
-public class PostgreSQLCastingStructJdbcType extends PostgreSQLStructJdbcType {
+public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdbcType {
 
-	public static final PostgreSQLCastingStructJdbcType INSTANCE = new PostgreSQLCastingStructJdbcType( null, null, null );
+	public static final PostgreSQLStructCastingJdbcType INSTANCE = new PostgreSQLStructCastingJdbcType();
+	public PostgreSQLStructCastingJdbcType() {
+		this( null, null, null );
+	}
 
-	public PostgreSQLCastingStructJdbcType(
+	private PostgreSQLStructCastingJdbcType(
 			EmbeddableMappingType embeddableMappingType,
 			String typeName,
 			int[] orderMapping) {
@@ -39,7 +42,7 @@ public class PostgreSQLCastingStructJdbcType extends PostgreSQLStructJdbcType {
 			EmbeddableMappingType mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
-		return new PostgreSQLCastingStructJdbcType(
+		return new PostgreSQLStructCastingJdbcType(
 				mappingType,
 				sqlType,
 				creationContext.getBootModel()
@@ -68,7 +71,7 @@ public class PostgreSQLCastingStructJdbcType extends PostgreSQLStructJdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final String stringValue = ( (PostgreSQLCastingStructJdbcType) getJdbcType() ).toString(
+				final String stringValue = ( (PostgreSQLStructCastingJdbcType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options
@@ -79,7 +82,7 @@ public class PostgreSQLCastingStructJdbcType extends PostgreSQLStructJdbcType {
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final String stringValue = ( (PostgreSQLCastingStructJdbcType) getJdbcType() ).toString(
+				final String stringValue = ( (PostgreSQLStructCastingJdbcType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options

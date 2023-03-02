@@ -1337,16 +1337,16 @@ public class PostgreSQLDialect extends Dialect {
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			// HHH-9562
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getStructJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
 			}
 			else {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingStructJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
 			}
 		}
@@ -1354,7 +1354,7 @@ public class PostgreSQLDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingStructJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
 		}
 

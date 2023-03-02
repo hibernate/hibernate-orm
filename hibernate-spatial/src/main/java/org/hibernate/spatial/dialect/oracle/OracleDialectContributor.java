@@ -38,7 +38,7 @@ public class OracleDialectContributor implements ContributorImplementor {
 	}
 
 	@Override
-	public void contributeJdbcTypes(TypeContributions typeContributions) {
+	public void contributeJdbcTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		final ConfigurationService cfgService = getServiceRegistry().getService( ConfigurationService.class );
 		final StrategySelector strategySelector = getServiceRegistry().getService( StrategySelector.class );

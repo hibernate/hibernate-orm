@@ -30,17 +30,12 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PgJdbcHelper;
 import org.hibernate.dialect.PostgreSQLCastingInetJdbcType;
 import org.hibernate.dialect.PostgreSQLCastingIntervalSecondJdbcType;
 import org.hibernate.dialect.PostgreSQLCastingJsonJdbcType;
-import org.hibernate.dialect.PostgreSQLCastingStructJdbcType;
 import org.hibernate.dialect.PostgreSQLDriverKind;
-import org.hibernate.dialect.PostgreSQLInetJdbcType;
-import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
-import org.hibernate.dialect.PostgreSQLJsonJdbcType;
-import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
-import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
-import org.hibernate.dialect.PostgreSQLStructJdbcType;
+import org.hibernate.dialect.PostgreSQLStructCastingJdbcType;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
@@ -1334,15 +1329,15 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructJdbcType.INSTANCE );
+			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getStructJdbcType( serviceRegistry ) );
 			}
 			else {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingStructJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 			}
 
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
@@ -1350,16 +1345,16 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
 					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
-						if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
 						}
 						else {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
 						}
 					}
 					else {
-						if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
+						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonJdbcType( serviceRegistry ) );
 						}
 						else {
 							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
@@ -1371,7 +1366,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		else {
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingStructJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );

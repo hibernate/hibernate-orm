@@ -6,6 +6,10 @@
  */
 package org.hibernate.dialect;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -30,6 +34,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.SqlTypes;
@@ -39,6 +44,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
@@ -54,9 +60,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *
  * @author Christian Beikov
  */
-public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType implements AggregateJdbcType {
-
-	public static final PostgreSQLStructJdbcType INSTANCE = new PostgreSQLStructJdbcType( null, null, null );
+public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcType {
 
 	private static final DateTimeFormatter LOCAL_DATE_TIME;
 	static {
@@ -83,14 +87,16 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 				.appendOffset( "+HH:mm", "+00" )
 				.toFormatter();
 	}
-
+	private final String typeName;
 	private final int[] orderMapping;
 	private final int[] inverseOrderMapping;
 	private final EmbeddableMappingType embeddableMappingType;
-	private final ValueExtractor<Object[]> objectArrayExtractor;
 
-	public PostgreSQLStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
-		super( typeName, SqlTypes.STRUCT );
+	protected AbstractPostgreSQLStructJdbcType(
+			EmbeddableMappingType embeddableMappingType,
+			String typeName,
+			int[] orderMapping) {
+		this.typeName = typeName;
 		this.embeddableMappingType = embeddableMappingType;
 		this.orderMapping = orderMapping;
 		if ( orderMapping == null ) {
@@ -103,10 +109,6 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 			}
 			this.inverseOrderMapping = inverseOrderMapping;
 		}
-		// We cache the extractor for Obje
-		// We cache the extractor for Object[] here
-		// since that is used in AggregateEmbeddableFetchImpl and AggregateEmbeddableResultImpl
-		this.objectArrayExtractor = super.getExtractor( new UnknownBasicJavaType<>( Object[].class ) );
 	}
 
 	@Override
@@ -114,20 +116,8 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 		return SqlTypes.STRUCT;
 	}
 
-	@Override
-	public AggregateJdbcType resolveAggregateJdbcType(
-			EmbeddableMappingType mappingType,
-			String sqlType,
-			RuntimeModelCreationContext creationContext) {
-		return new PostgreSQLStructJdbcType(
-				mappingType,
-				sqlType,
-				creationContext.getBootModel()
-						.getDatabase()
-						.getDefaultNamespace()
-						.locateUserDefinedType( Identifier.toIdentifier( sqlType ) )
-						.getOrderMapping()
-		);
+	public String getTypeName() {
+		return typeName;
 	}
 
 	@Override
@@ -151,14 +141,36 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
-		if ( javaType.getJavaTypeClass() == Object[].class ) {
-			//noinspection unchecked
-			return (ValueExtractor<X>) objectArrayExtractor;
-		}
-		return super.getExtractor( javaType );
+		return new BasicExtractor<>( javaType, this ) {
+			@Override
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return getObject( rs.getObject( paramIndex ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return getObject( statement.getObject( index ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+					throws SQLException {
+				return getObject( statement.getObject( name ), options );
+			}
+
+			private X getObject(Object object, WrapperOptions options) throws SQLException {
+				if ( object == null ) {
+					return null;
+				}
+				return ( (AbstractPostgreSQLStructJdbcType) getJdbcType() ).fromString(
+						object.toString(),
+						getJavaType(),
+						options
+				);
+			}
+		};
 	}
 
-	@Override
 	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) throws SQLException {
 		if ( string == null ) {
 			return null;
@@ -407,9 +419,9 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 						if ( string.charAt( i + 1 ) == '(' ) {
 							// This could be a nested struct
 							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
-							if ( jdbcMapping.getJdbcType() instanceof PostgreSQLStructJdbcType ) {
-								final PostgreSQLStructJdbcType structJdbcType;
-								structJdbcType = (PostgreSQLStructJdbcType) jdbcMapping.getJdbcType();
+							if ( jdbcMapping.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
+								final AbstractPostgreSQLStructJdbcType structJdbcType;
+								structJdbcType = (AbstractPostgreSQLStructJdbcType) jdbcMapping.getJdbcType();
 								final Object[] subValues = new Object[structJdbcType.embeddableMappingType.getJdbcValueCount()];
 								final int subEnd = structJdbcType.deserializeStruct(
 										string,
@@ -655,7 +667,6 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 		return array;
 	}
 
-	@Override
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -718,7 +729,7 @@ public class PostgreSQLStructJdbcType extends PostgreSQLPGObjectJdbcType impleme
 						continue;
 					}
 					appender.quoteStart();
-					( (PostgreSQLStructJdbcType) aggregateMapping.getJdbcMapping().getJdbcType() ).serializeStructTo(
+					( (AbstractPostgreSQLStructJdbcType) aggregateMapping.getJdbcMapping().getJdbcType() ).serializeStructTo(
 							appender,
 							attributeValue,
 							options

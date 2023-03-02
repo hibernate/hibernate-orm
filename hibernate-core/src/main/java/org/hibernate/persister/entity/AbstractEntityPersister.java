@@ -1829,7 +1829,7 @@ public abstract class AbstractEntityPersister
 		return fetches.build();
 	}
 
-	protected boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
+	public boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
 		if ( fetchParent instanceof EmbeddableResultGraphNode ) {
 			return true;
 		}
@@ -4157,6 +4157,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public CascadeStyle[] getPropertyCascadeStyles() {
 		return entityMetamodel.getCascadeStyles();
+	}
+
+	@Override
+	public boolean isPropertySelectable(int propertyNumber) {
+		return propertySelectable[propertyNumber];
 	}
 
 	@Override

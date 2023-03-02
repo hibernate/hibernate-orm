@@ -323,7 +323,12 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			resultBuilderEntity.addProperty( loadable.getIdentifierPropertyName(), identifierAliases );
 		}
 
-		for ( String propertyName : loadable.getPropertyNames() ) {
+		final String[] propertyNames = loadable.getPropertyNames();
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			if ( !loadable.isPropertySelectable( i ) ) {
+				continue;
+			}
+			final String propertyName = propertyNames[i];
 			final String[] columnAliases = loadable.getSubclassPropertyColumnAliases( propertyName, suffix );
 			final Type propertyType = loadable.getPropertyType( propertyName );
 			addFetchBuilder(

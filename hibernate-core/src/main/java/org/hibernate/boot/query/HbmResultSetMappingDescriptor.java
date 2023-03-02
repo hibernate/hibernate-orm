@@ -670,7 +670,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 							)
 					);
 				}
-				fetchable = (Fetchable) ( (FetchableContainer) fetchable ).findSubPart( propertyPathParts[i], null );
+				fetchable = (Fetchable) ( (FetchableContainer) fetchable.getPartMappingType() ).findSubPart( propertyPathParts[i], null );
 				navigablePath = navigablePath.append( fetchable.getFetchableName() );
 			}
 

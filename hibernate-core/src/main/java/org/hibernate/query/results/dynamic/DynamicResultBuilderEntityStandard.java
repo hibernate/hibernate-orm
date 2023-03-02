@@ -187,7 +187,7 @@ public class DynamicResultBuilderEntityStandard
 		final NavigablePath elementNavigablePath;
 		if ( fetchable instanceof PluralAttributeMapping ) {
 			collectionTableGroup = fromClauseAccess.getTableGroup( navigablePath );
-			elementNavigablePath = navigablePath.append( fetchable.getPartName() );
+			elementNavigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}
 		else {
 			collectionTableGroup = null;

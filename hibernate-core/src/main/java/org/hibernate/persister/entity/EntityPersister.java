@@ -674,6 +674,10 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	 */
 	CascadeStyle[] getPropertyCascadeStyles();
 
+	default boolean isPropertySelectable(int propertyNumber) {
+		return true;
+	}
+
 	/**
 	 * Get the identifier type
 	 */

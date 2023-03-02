@@ -77,6 +77,7 @@ public class SingularAttributeImpl<D,J>
 
 		this.sqmPathSource = SqmMappingModelHelper.resolveSqmPathSource(
 				name,
+				this,
 				attributeType,
 				BindableType.SINGULAR_ATTRIBUTE,
 				isGeneric
@@ -121,6 +122,11 @@ public class SingularAttributeImpl<D,J>
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
 		return sqmPathSource.findSubPathSource( name );
+	}
+
+	@Override
+	public SqmPathSource<J> getPathSource() {
+		return this.sqmPathSource;
 	}
 
 	@Override

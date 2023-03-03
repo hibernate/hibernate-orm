@@ -434,10 +434,57 @@ The right way to do this is de-referencing the association by the FK attribute `
 which is guaranteed to not produce a join, or use an entity reference for `... where alias.association = :param`
 where `param` is bound to `entityManager.getReference(EntityClass.class, 1)`.
 
+[[query-path-comparison]]
+=== Query Path comparison
 
+Prior to 6.0 it was possible to compare two paths of different types or comparing an entity path against a literal e.g.:
 
-[[query-sqm-psuedo-attr]]
-==== Collection psuedo-attributes
+```
+session.createQuery( "select a from MyEntity a, MyEntity b where a = b.id" )
+```
+
+or
+
+```
+session.createQuery( "select a from MyEntity a where a = 123")
+```
+
+This is not allowed anymore. The queries have to be changed to
+
+```
+session.createQuery( "select a from MyEntity a, MyEntity b where a = b" )
+```
+
+and
+
+```
+session.createQuery( "select a from MyEntity a where a.id = 123");
+```
+
+The same is true for the left and right hand side types of a comparison predicate. Queries like
+
+```
+Root<Participation> root = criteria.from( Participation.class );
+Root<Submission> rootSubQuery = subQuery.from( Submission.class );
+subQuery.select( rootSubQuery.join( "submitters" ) );
+
+// left hand side of type Submission.id and right hand side of Submissions types
+criteria.where( root.get( "id" ).in( subQuery ) );
+```
+
+will be considered invalid and should be changed into
+
+```
+Root<Participation> root = criteria.from( Participation.class );
+Root<Submission> rootSubQuery = subQuery.from( Submission.class );
+subQuery.select( rootSubQuery.join( "submitters" ) );
+
+// left hand side of type Submission.id and right hand side of Submissions types
+criteria.where( root.in( subQuery ) );
+```
+
+[[query-sqm-pseudo-attr]]
+==== Collection pseudo-attributes
 
 Prior to 6.0, it was possible to de-reference special properties on plural attributes like `size` which was dropped.
 The special properties lead to confusion and were sometimes ambiguous. The replacement is the function syntax.

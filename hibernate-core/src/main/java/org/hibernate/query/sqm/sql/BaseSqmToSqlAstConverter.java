@@ -393,6 +393,7 @@ import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverte
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -6061,7 +6062,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private static Expression getActualExpression(Expression expression) {
 		if ( expression.getExpressionType() instanceof EmbeddableValuedModelPart ) {
 			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) expression.getExpressionType();
-			if ( embeddableValuedModelPart.getJavaType().isTemporalType() ) {
+			if ( JavaTypeHelper.isTemporal( embeddableValuedModelPart.getJavaType() ) ) {
 				return ( (SqlTupleContainer) expression ).getSqlTuple().getExpressions().get( 0 );
 			}
 		}

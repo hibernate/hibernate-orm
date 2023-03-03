@@ -6,19 +6,16 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartPath<T> {
-	private final SqmPathSource<T> indexPathSource;
 	private final String functionName;
 
 	public SqmIndexAggregateFunction(SqmPath<?> pluralDomainPath, String functionName) {
@@ -26,21 +23,10 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 		super(
 				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), "{" + functionName + "-index}" ),
 				pluralDomainPath,
-				(PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource()
+				(PluralPersistentAttribute<?, ?, ?>) pluralDomainPath.getReferencedPathSource(),
+				(SqmPathSource<T>) ( (PluralPersistentAttribute<?, ?, ?>) pluralDomainPath.getReferencedPathSource() ).getIndexPathSource()
 		);
 		this.functionName = functionName;
-
-		if ( getPluralAttribute() instanceof ListPersistentAttribute ) {
-			//noinspection unchecked
-			this.indexPathSource = (SqmPathSource<T>) getPluralAttribute().getIndexPathSource();
-		}
-		else if ( getPluralAttribute() instanceof MapPersistentAttribute ) {
-			//noinspection unchecked
-			this.indexPathSource = ( (MapPersistentAttribute<?, T, ?>) getPluralAttribute() ).getKeyPathSource();
-		}
-		else {
-			throw new UnsupportedOperationException( "Plural attribute [" + getPluralAttribute() + "] is not indexed" );
-		}
 	}
 
 	@Override
@@ -73,11 +59,6 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 		final SqmPath<?> sqmPath = get( name );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
-	}
-
-	@Override
-	public SqmPathSource<T> getReferencedPathSource() {
-		return indexPathSource;
 	}
 
 	@Override

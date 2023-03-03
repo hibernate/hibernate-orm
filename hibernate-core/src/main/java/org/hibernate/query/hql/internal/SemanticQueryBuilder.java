@@ -2464,7 +2464,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				break;
 			}
 		}
-		((SqmCriteriaNodeBuilder) creationContext.getNodeBuilder()).assertComparable( left, right );
+		( (SqmCriteriaNodeBuilder) creationContext.getNodeBuilder() ).assertComparable( left, right );
 		return new SqmComparisonPredicate(
 				left,
 				comparisonOperator,
@@ -3485,9 +3485,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private static LocalTime localTime(HqlParser.TimeContext ctx) {
 		final int hour = Integer.parseInt( ctx.hour().getText() );
 		final int minute = Integer.parseInt( ctx.minute().getText() );
-		if ( ctx.second() != null ) {
-			final String secondText = ctx.second().getText();
-			final int index = secondText.indexOf( '.');
+		final HqlParser.SecondContext secondContext = ctx.second();
+		if ( secondContext != null ) {
+			final String secondText = secondContext.getText();
+			final int index = secondText.indexOf( '.' );
 			if ( index < 0 ) {
 				return LocalTime.of(
 						hour,
@@ -3496,11 +3497,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 			else {
+				final String secondFractions = secondText.substring( index + 1 );
 				return LocalTime.of(
 						hour,
 						minute,
 						Integer.parseInt( secondText.substring( 0, index ) ),
-						Integer.parseInt( secondText.substring( index + 1 ) )
+						Integer.parseInt( secondFractions ) * (int) Math.pow( 10, 9 - secondFractions.length() )
 				);
 			}
 		}

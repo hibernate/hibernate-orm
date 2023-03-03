@@ -84,11 +84,25 @@ The way in which Hibernate determines implicit names for sequences and tables as
 generation has changed in 6.0 which may affect migrating applications.
 
 As of 6.0, Hibernate by default creates a sequence per entity hierarchy instead of a single sequence `hibernate_sequence`.
-In addition to that, these sequences now also respect the defaults of the JPA `@SequenceGenerator` annotation,
-which means that the sequences have an allocation size of 50.
 
 Due to this change, users that previously used `@GeneratedValue(strategy = GenerationStrategy.AUTO)` or simply `@GeneratedValue` (since `AUTO` is the default),
 need to ensure that the database now contains sequences for every entity, named `<entity name>_seq`. For an entity `Person`, a sequence `person_seq` is expected to exist. It's best to run hbm2ddl (e.g. by temporarily setting `hbm2ddl.auto=create`) to obtain a list of DDL statements for the sequences.
+
+Users that use a `import.sql` file to import test or static data during application boot or for tests have to make sure the new sequences match expectations of Hibernate. If a `import.sql` file contains references to the `hibernate_sequence`, these have to be replaced with `<entity name>_seq`. Also note that the <<id-sequence-defaults,default allocation size changed>> for such implicit sequences.
+
+To help with backwards compatibility, or to apply any general naming strategy, 6.0 introduces the
+`org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy` contract which can be specified using
+the `hibernate.id.db_structure_naming_strategy` setting.  See discussion at
+link:{javadocsBase}/org/hibernate/cfg/AvailableSettings.html#ID_DB_STRUCTURE_NAMING_STRATEGY
+
+For backwards compatibility, use either `hibernate.id.db_structure_naming_strategy=single` or
+`hibernate.id.db_structure_naming_strategy=legacy` depending on needs
+
+[[id-sequence-defaults]]
+== Defaults for implicit sequence generators
+
+Implicit sequences, like the `hibernate_sequence` before, now respect the defaults of the JPA `@SequenceGenerator` annotation,
+which means that the sequences have an allocation size of 50.
 
 Users that use a `import.sql` file to import test or static data during application boot or for tests have to make sure the new sequences match expectations of Hibernate. If a `import.sql` file contains inserts to a table, the sequence for that table has to be reset to `<max id value of table> + 1 + <allocation size>`. This is because Hibernate interprets the value returned by the sequence as hi-value for its pooled optimizer. An alternative is to reset the sequence to `<max id value of table> + 1` and also configure the sequence generator to that initial value, by specifying `@SequenceGenerator(sequenceName = "<entity name>_seq", initialValue = <max id value of table> + 1)` on every entity.
 
@@ -99,9 +113,7 @@ To help with backwards compatibility, or to apply any general naming strategy, 6
 the `hibernate.id.db_structure_naming_strategy` setting.  See discussion at
 link:{javadocsBase}/org/hibernate/cfg/AvailableSettings.html#ID_DB_STRUCTURE_NAMING_STRATEGY
 
-For backwards compatibility, use either `hibernate.id.db_structure_naming_strategy=single` or
-`hibernate.id.db_structure_naming_strategy=legacy` depending on needs
-
+For backwards compatibility, use `hibernate.id.db_structure_naming_strategy=legacy`.
 
 [[type]]
 == Type system

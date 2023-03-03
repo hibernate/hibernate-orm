@@ -2992,9 +2992,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			String queryGroupAlias = null;
 			if ( currentQueryPart instanceof QueryGroup ) {
-				// We always need query wrapping if we are in a query group and this query spec has a fetch clause
-				// because of order by precedence in SQL
-				if ( querySpec.hasOffsetOrFetchClause() ) {
+				// We always need query wrapping if we are in a query group and this query spec has a fetch or order by
+				// clause, because of order by precedence in SQL
+				if ( querySpec.hasOffsetOrFetchClause() || querySpec.hasSortSpecifications() ) {
 					queryGroupAlias = "";
 					// If the parent is a query group with a fetch clause we must use a select wrapper,
 					// or if the database does not support simple query grouping, we must use a select wrapper

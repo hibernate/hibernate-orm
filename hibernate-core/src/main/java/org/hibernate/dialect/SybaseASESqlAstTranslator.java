@@ -146,9 +146,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected void visitSqlSelections(SelectClause selectClause) {
-		if ( supportsTopClause() ) {
-			renderTopClause( (QuerySpec) getQueryPartStack().getCurrent(), true, false );
-		}
+		renderTopClause( (QuerySpec) getQueryPartStack().getCurrent(), true, false );
 		super.visitSqlSelections( selectClause );
 	}
 
@@ -192,7 +190,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		assertRowsOnlyFetchClauseType( queryPart );
 		if ( !queryPart.isRoot() && queryPart.hasOffsetOrFetchClause() ) {
-			if ( queryPart.getFetchClauseExpression() != null && !supportsTopClause() || queryPart.getOffsetClauseExpression() != null ) {
+			if ( queryPart.getFetchClauseExpression() != null && queryPart.getOffsetClauseExpression() != null ) {
 				throw new IllegalArgumentException( "Can't emulate offset fetch clause in subquery" );
 			}
 		}
@@ -388,11 +386,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean needsMaxRows() {
-		return !supportsTopClause();
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntax() {
 		return false;
 	}
@@ -410,10 +403,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected String getFromDual() {
 		return " from (select 1) dual(c1)";
-	}
-
-	private boolean supportsTopClause() {
-		return true;
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

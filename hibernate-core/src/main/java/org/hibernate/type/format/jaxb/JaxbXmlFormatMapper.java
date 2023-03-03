@@ -23,6 +23,8 @@ import javax.xml.namespace.QName;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -449,7 +451,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				.getTypeConfiguration()
 				.getJavaTypeRegistry()
 				.findDescriptor( elementClass );
-		if ( exampleElement == null && ( elementJavaType == null || elementJavaType.isUnknownType() ) ) {
+		if ( exampleElement == null && ( elementJavaType == null || JavaTypeHelper.isUnknown( elementJavaType ) ) ) {
 			try {
 				final Constructor<?> declaredConstructor = elementClass.getDeclaredConstructor();
 				exampleElement = declaredConstructor.newInstance();
@@ -479,7 +481,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			Object exampleElement,
 			JAXBIntrospector introspector,
 			WrapperOptions wrapperOptions) {
-		if ( exampleElement == null && elementJavaType.isUnknownType() ) {
+		if ( exampleElement == null && JavaTypeHelper.isUnknown( elementJavaType ) ) {
 			try {
 				final Constructor<?> declaredConstructor = elementJavaType.getJavaTypeClass().getDeclaredConstructor();
 				exampleElement = declaredConstructor.newInstance();

@@ -45,6 +45,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPathSource;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
@@ -150,6 +151,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.Tuple;
@@ -166,6 +168,7 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.EntityType;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
@@ -234,40 +237,63 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return sessionFactory.get();
 	}
 
-	public boolean areTypesComparable(SqmExpressible<?> lhsType, SqmExpressible<?> rhsType) {
-		if ( lhsType == null || rhsType == null || lhsType == rhsType ) {
-			return true;
-		}
-
-		if ( !lhsType.checkTypeComparability() || !rhsType.checkTypeComparability() ) {
+	public static boolean areTypesComparable(SqmExpressible<?> lhsType, SqmExpressible<?> rhsType) {
+		if ( lhsType == null || rhsType == null || lhsType == rhsType
+				|| isDiscriminatorComparison( lhsType, rhsType )
+				// Allow comparing an embeddable against a tuple literal
+				|| lhsType instanceof EmbeddedSqmPathSource<?> && rhsType instanceof TupleType
+				|| rhsType instanceof EmbeddedSqmPathSource<?> && lhsType instanceof TupleType
+				// Since we don't know any better, we just allow any comparison with multi-valued parameters
+				|| lhsType instanceof MultiValueParameterType<?>
+				|| rhsType instanceof MultiValueParameterType<?>) {
 			return true;
 		}
 
 		final JavaType<?> lhsJavaType = lhsType.getExpressibleJavaType();
 		final JavaType<?> rhsJavaType = rhsType.getExpressibleJavaType();
 
-		if ( lhsJavaType.isTemporalType() || rhsJavaType.isTemporalType() ) {
-			return true;
-		}
-
-		if ( lhsJavaType.isUnknownType() || rhsJavaType.isUnknownType() ) {
-			return true;
-		}
-
-		if ( lhsJavaType == rhsJavaType
+		return lhsJavaType == rhsJavaType
+				// If we don't know the java types, let's just be lenient
+				|| JavaTypeHelper.isUnknown( lhsJavaType )
+				|| JavaTypeHelper.isUnknown( rhsJavaType )
+				// Allow comparing two temporal expressions regardless of their concrete java types
+				|| JavaTypeHelper.isTemporal( lhsJavaType ) && JavaTypeHelper.isTemporal( rhsJavaType )
+				// Assume we can coerce one to another
 				|| lhsJavaType.isWider( rhsJavaType )
-				|| rhsJavaType.isWider( lhsJavaType ) ) {
-			// Assume we can coerce one to another
-			return true;
+				|| rhsJavaType.isWider( lhsJavaType )
+				// Polymorphic entity comparison
+				|| lhsJavaType.getJavaTypeClass().isAssignableFrom( rhsJavaType.getJavaTypeClass() )
+				|| rhsJavaType.getJavaTypeClass().isAssignableFrom( lhsJavaType.getJavaTypeClass() );
+	}
+
+	private static boolean isDiscriminatorComparison(SqmExpressible<?> lhsType, SqmExpressible<?> rhsType) {
+		final SqmExpressible<?> nonDiscriminator;
+		if ( lhsType instanceof DiscriminatorSqmPathSource<?> ) {
+			nonDiscriminator = rhsType;
+		}
+		else if ( rhsType instanceof DiscriminatorSqmPathSource<?> ) {
+			nonDiscriminator = lhsType;
+		}
+		else {
+			return false;
 		}
 
-		if ( lhsJavaType.getJavaTypeClass().isAssignableFrom( rhsJavaType.getJavaTypeClass() )
-				|| rhsJavaType.getJavaTypeClass().isAssignableFrom( lhsJavaType.getJavaTypeClass() ) ) {
-			// Polymorphic entity comparison
+		// Comparing the discriminator against an entity type is fine
+		if ( nonDiscriminator instanceof EntityType<?> ) {
 			return true;
 		}
-
-		return false;
+		final JavaType<?> nonDiscriminatorJavaType = nonDiscriminator.getExpressibleJavaType();
+		// Comparing the discriminator against the discriminator value is fine
+		switch ( nonDiscriminatorJavaType.getJavaTypeClass().getTypeName() ) {
+			case "java.lang.String":
+			case "char":
+			case "java.lang.Character":
+			case "int":
+			case "java.lang.Integer":
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	@Override
@@ -1292,11 +1318,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		public Class<T> getBindableJavaType() {
 			return javaType.getJavaTypeClass();
 		}
-
-		@Override
-		public boolean checkTypeComparability() {
-			return false;
-		}
 	}
 
 	@Override
@@ -2070,8 +2091,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	public void assertComparable(Expression<?> x, Expression<?> y) {
-		final SqmExpressible<?> lhsType = ((SqmExpression<?>) x).getNodeType();
-		final SqmExpressible<?> rhsType = ((SqmExpression<?>) y).getNodeType();
+		final SqmExpressible<?> lhsType = ( (SqmExpression<?>) x ).getNodeType();
+		final SqmExpressible<?> rhsType = ( (SqmExpression<?>) y ).getNodeType();
 		if ( !areTypesComparable( lhsType, rhsType ) ) {
 			throw new IllegalArgumentException(
 					String.format(

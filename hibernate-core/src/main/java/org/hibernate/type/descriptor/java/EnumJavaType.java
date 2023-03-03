@@ -230,6 +230,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
+		// This is necessary to allow comparing/assigning an enum attribute against a literal of the JdbcType
 		switch ( javaType.getJavaType().getTypeName() ) {
 			case "byte":
 			case "java.lang.Byte":

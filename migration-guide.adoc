@@ -264,4 +264,31 @@ The return type of `JdbcType#getJdbcRecommendedJavaTypeMapping()` was changed fr
 Even though this is a source compatible change, it breaks binary backwards compatibility.
 We decided that it is fine to do this though, as this is a new minor version.
 
+[[query-path-comparison]]
+=== Query Path comparison
 
+As of 6.2, comparisons of paths are type checked early. This means that a comparison predicate in HQL or JPA Criteria
+might fail to construct if the types of the left and right hand side are not compatible.
+
+In general, two types T1 and T2 are considered compatible if
+
+* T1 == T2
+* T1 instanceof T2 or T2 instanceof T1
+* T1 is temporal and T2 is temporal
+* T1 or T2 is unknown
+* T1 can be widened/coerced to T2, or the other way around
+
+Widening/Coercion usually refers to e.g. widening an integer to a long, but can also mean
+that a string constant can be interpreted as enum when comparing against an enum attribute.
+
+Note that a comparison of a temporal attribute against a string literal worked before
+
+```sql
+from MyEntity e where e.temporalAttribute > '2020-01-01'
+```
+
+but has to be changed to the proper temporal literal now
+
+```sql
+from MyEntity e where e.temporalAttribute > date 2020-01-01
+```

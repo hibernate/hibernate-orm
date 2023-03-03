@@ -47,9 +47,4 @@ public interface PluralPersistentAttribute<D, C, E>
 				"Plural attribute [" +  getPathName() + "] is not indexed (list / map)"
 		);
 	}
-
-	@Override
-	default boolean checkTypeComparability() {
-		return false;
-	}
 }

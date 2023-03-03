@@ -34,8 +34,4 @@ public interface SqmExpressible<J> extends BindableType<J> {
 	default SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory) {
 		return this;
 	}
-
-	default boolean checkTypeComparability(){
-		return true;
-	}
 }

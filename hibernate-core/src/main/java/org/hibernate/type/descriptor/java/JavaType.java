@@ -333,13 +333,4 @@ public interface JavaType<T> extends Serializable {
 		return false;
 	}
 
-	/**
-	 * Return true if the implementation is an instance of {@link  org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType}
-	 *
-	 * @return true if it is an instance of {@link  UnknownBasicJavaType}; false otherwise
-	 */
-	default boolean isUnknownType(){
-		return false;
-	}
-
 }

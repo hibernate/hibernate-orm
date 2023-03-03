@@ -96,6 +96,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	// per-row state
 	private EntityPersister concreteDescriptor;
 	private EntityKey entityKey;
+	private Object version;
 	private Object entityInstance;
 	private Object entityInstanceForNotify;
 	protected boolean missing;
@@ -827,7 +828,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		// Also register possible unique key entries
 		registerPossibleUniqueKeyEntries( toInitialize, session );
 
-		final Object version = versionAssembler != null ? versionAssembler.assemble( rowProcessingState ) : null;
+		version = versionAssembler != null ? versionAssembler.assemble( rowProcessingState ) : null;
 		final Object rowId = rowIdAssembler != null ? rowIdAssembler.assemble( rowProcessingState ) : null;
 
 		// from the perspective of Hibernate, an entity is read locked as soon as it is read
@@ -846,8 +847,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				concreteDescriptor,
 				false
 		);
-
-		updateCaches( toInitialize, rowProcessingState, session, persistenceContext, entityIdentifier, version );
 
 		registerNaturalIdResolution( persistenceContext, entityIdentifier );
 
@@ -1141,10 +1140,23 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
+		final SharedSessionContractImplementor session = rowProcessingState.getSession();
+		if ( resolvedEntityState != null ) {
+			updateCaches(
+					entityInstanceForNotify,
+					rowProcessingState,
+					session,
+					session.getPersistenceContext(),
+					entityKey.getIdentifier(),
+					version
+			);
+		}
+
 		// reset row state
 		isOwningInitializer = false;
 		concreteDescriptor = null;
 		entityKey = null;
+		version = null;
 		entityInstance = null;
 		entityInstanceForNotify = null;
 		missing = false;

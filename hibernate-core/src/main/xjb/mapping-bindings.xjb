@@ -29,6 +29,12 @@
             <bindings node=".//xsd:element[@name='identifier-generator']">
 	            <property name="genericGenerators"/>
             </bindings>
+            <bindings node=".//xsd:element[@name='sequence-generator']">
+	            <property name="sequenceGenerators"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='table-generator']">
+	            <property name="tableGenerators"/>
+            </bindings>
             <bindings node=".//xsd:element[@name='database-object']">
 	            <property name="databaseObjects"/>
             </bindings>
@@ -59,6 +65,33 @@
             <bindings node=".//xsd:element[@name='converter']">
 	            <property name="converters"/>
             </bindings>
+            <bindings node=".//xsd:element[@name='java-type']">
+	            <property name="javaTypeRegistrations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='jdbc-type']">
+	            <property name="jdbcTypeRegistrations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='user-type']">
+	            <property name="userTypeRegistrations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='composite-user-type']">
+	            <property name="compositeUserTypeRegistrations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='collection-user-type']">
+	            <property name="collectionUserTypeRegistrations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='embeddable-instantiator']">
+	            <property name="embeddableInstantiatorRegistrations"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='conversion']">
+	            <property name="converterRegistrations"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='collection-user-type-registration']">
+			<bindings node=".//xsd:element[@name='param']">
+				<property name="parameters"/>
+			</bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='entity']">
@@ -382,6 +415,12 @@
 			<javaType name="jakarta.persistence.ConstraintMode"
 					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.ConstraintModeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.marshall.ConstraintModeMarshalling.toXml" />
+        </bindings>
+
+		<bindings node="//xsd:simpleType[@name='collection-classifications']">
+			<javaType name="org.hibernate.metamodel.CollectionClassification"
+					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.CollectionClassificationMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.marshall.CollectionClassificationMarshalling.toXml" />
         </bindings>
 
     </bindings>

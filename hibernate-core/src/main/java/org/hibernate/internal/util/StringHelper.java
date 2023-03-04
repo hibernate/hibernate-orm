@@ -584,6 +584,25 @@ public final class StringHelper {
 		return isEmpty( prefix ) ? name : prefix + '.' + name;
 	}
 
+	/**
+	 * Qualifies {@code name} with {@code prefix} separated by a '.' if<ul>
+	 *     <li>{@code name} is not already qualified</li>
+	 *     <li>{@code prefix} is not null</li>
+	 * </ul>
+	 *
+	 * @apiNote Similar to {@link #qualifyConditionally}, except that here we explicitly
+	 * check whether {@code name} is already qualified.
+	 */
+	public static String qualifyConditionallyIfNot(String prefix, String name) {
+		if ( name == null ) {
+			throw new NullPointerException( "name was null attempting to build qualified name" );
+		}
+		if ( name.indexOf( '.' ) > 0 || isEmpty( prefix ) ) {
+			return name;
+		}
+		return prefix + '.' + name;
+	}
+
 	public static String[] qualify(String prefix, String[] names) {
 		if ( prefix == null ) {
 			return names;

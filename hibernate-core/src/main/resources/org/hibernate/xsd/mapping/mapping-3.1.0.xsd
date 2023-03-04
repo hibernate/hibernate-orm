@@ -87,10 +87,15 @@
                 <!-- hbm : whether entities should be lazy (by default) or not -->
                 <xsd:element name="default-lazy" type="xsd:boolean" minOccurs="0" />
 
-                <!-- hbm: <type-def/> definitions -->
-                <!-- hbm: disabled for now to see if we can move away from String-base type mappings in XML also -->
-                <!-- <xsd:element name="type-def" type="orm:hbm-type-def" minOccurs="0" maxOccurs="unbounded" /> -->
-                <!-- hbm: Definitions of filer -->
+                <xsd:element name="java-type" type="orm:java-type-registration" minOccurs="0" maxOccurs="unbounded" />
+                <xsd:element name="jdbc-type" type="orm:jdbc-type-registration" minOccurs="0" maxOccurs="unbounded" />
+                <xsd:element name="user-type" type="orm:user-type-registration" minOccurs="0" maxOccurs="unbounded" />
+                <xsd:element name="composite-user-type" type="orm:composite-user-type-registration" minOccurs="0" maxOccurs="unbounded" />
+                <xsd:element name="collection-user-type" type="orm:collection-user-type-registration" minOccurs="0" maxOccurs="unbounded" />
+                <xsd:element name="conversion" type="orm:converter-registration" minOccurs="0" maxOccurs="unbounded" />
+
+                <xsd:element name="embeddable-instantiator" type="orm:embeddable-instantiator-registration" minOccurs="0" maxOccurs="unbounded" />
+
                 <xsd:element name="filter-def" type="orm:filter-def" minOccurs="0" maxOccurs="unbounded" />
                 <xsd:element name="fetch-profile" type="orm:fetch-profile" minOccurs="0" maxOccurs="unbounded" />
 
@@ -152,6 +157,110 @@
         <xsd:attribute name="name" use="required" type="xsd:string"/>
         <xsd:attribute name="minimumVersion" type="xsd:string"/>
         <xsd:attribute name="maximumVersion" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="java-type-registration">
+        <xsd:annotation>
+            <xsd:documentation>
+                See @JavaTypeRegistration
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="class" use="required" type="xsd:string"/>
+        <xsd:attribute name="descriptor" use="required" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="jdbc-type-registration">
+        <xsd:annotation>
+            <xsd:documentation>
+                See @JdbcTypeRegistration
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="code" type="xsd:int"/>
+        <xsd:attribute name="descriptor" use="required" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="user-type-registration">
+        <xsd:annotation>
+            <xsd:documentation>
+                See @TypeRegistration
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="class" use="required" type="xsd:string"/>
+        <xsd:attribute name="descriptor" use="required" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="composite-user-type-registration">
+        <xsd:annotation>
+            <xsd:documentation>
+                See @CompositeTypeRegistration
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="class" use="required" type="xsd:string"/>
+        <xsd:attribute name="descriptor" use="required" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="collection-user-type-registration">
+        <xsd:annotation>
+            <xsd:documentation>
+                See @CollectionTypeRegistration
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="param" minOccurs="0" maxOccurs="unbounded" type="configuration-parameter"/>
+        </xsd:sequence>
+        <xsd:attribute name="classification" use="required" type="orm:collection-classifications"/>
+        <xsd:attribute name="descriptor" use="required" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="configuration-parameter">
+        <xsd:annotation>
+            <xsd:documentation>
+                Configuration parameter user-types
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="name" use="required" type="xsd:string"/>
+        <xsd:attribute name="value" use="required" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:simpleType name="collection-classifications">
+        <xsd:annotation>
+            <xsd:documentation>
+                See `@org.hibernate.metamodel.CollectionClassification`
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="array"/>
+            <xsd:enumeration value="bag"/>
+            <xsd:enumeration value="id-bag"/>
+            <xsd:enumeration value="list"/>
+            <xsd:enumeration value="set"/>
+            <xsd:enumeration value="sorted-set"/>
+            <xsd:enumeration value="ordered-set"/>
+            <xsd:enumeration value="map"/>
+            <xsd:enumeration value="sorted-map"/>
+            <xsd:enumeration value="ordered-map"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="converter-registration">
+        <xsd:annotation>
+            <xsd:documentation>
+                See @ConverterRegistration
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="converter" use="required" type="xsd:string"/>
+        <xsd:attribute name="class" type="xsd:string"/>
+        <xsd:attribute name="auto-apply" type="xsd:boolean" default="true"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="embeddable-instantiator-registration">
+        <xsd:annotation>
+            <xsd:documentation>
+                See @EmbeddableInstantiatorRegistration
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="embeddableClass" use="required" type="xsd:string"/>
+        <xsd:attribute name="instantiator" use="required" type="xsd:string"/>
     </xsd:complexType>
 
 
@@ -282,10 +391,10 @@
             <!-- hbm : declare a SQL fragment to append to SELECT queries as a filter for this entity : @Where  -->
             <xsd:element name="where" type="xsd:string" minOccurs="0"/>
 
-            <xsd:element name="loader" type="orm:custom-loader" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="sql-insert" type="orm:custom-sql" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="sql-update" type="orm:custom-sql" minOccurs="0" maxOccurs="1"/>
-            <xsd:element name="sql-delete" type="orm:custom-sql" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="loader" type="orm:custom-loader" minOccurs="0"/>
+            <xsd:element name="sql-insert" type="orm:custom-sql" minOccurs="0"/>
+            <xsd:element name="sql-update" type="orm:custom-sql" minOccurs="0"/>
+            <xsd:element name="sql-delete" type="orm:custom-sql" minOccurs="0"/>
 
             <!-- hbm : should INSERT statements be dynamically generated : @DynamicInsert -->
             <xsd:element name="dynamic-insert" type="xsd:boolean" minOccurs="0"/>
@@ -318,7 +427,7 @@
             <xsd:element name="polymorphism" type="orm:polymorphism-type" default="implicit" minOccurs="0" />
 
             <xsd:element name="discriminator-value" type="orm:discriminator-value" minOccurs="0"/>
-            <xsd:choice minOccurs="0" maxOccurs="1">
+            <xsd:choice minOccurs="0">
                 <xsd:element name="discriminator-column" type="orm:discriminator-column" />
                 <!-- hbm: support for Hibernate formula mapping -->
                 <xsd:element name="discriminator-formula" type="xsd:string" />
@@ -353,7 +462,7 @@
             <xsd:element name="named-entity-graph" type="orm:named-entity-graph" minOccurs="0" maxOccurs="unbounded"/>
 
             <!-- hbm: intended for use when mapping dynamic (MAP) models -->
-            <xsd:element name="extends" type="xsd:string" minOccurs="0" maxOccurs="1" />
+            <xsd:element name="extends" type="xsd:string" minOccurs="0"/>
 
             <xsd:element name="filter" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
 
@@ -2122,7 +2231,7 @@
 
     <xsd:simpleType name="versionType">
         <xsd:restriction base="xsd:token">
-            <xsd:pattern value="[0-9]+(\.[0-9]+)*"/>
+            <xsd:pattern value="\d+(\.\d+)*"/>
         </xsd:restriction>
     </xsd:simpleType>
 
@@ -2161,7 +2270,7 @@
                     <xsd:attribute name="type" use="required" type="xsd:string"/>
                 </xsd:complexType>
             </xsd:element>
-            <xsd:element name="condition" type="xsd:string" minOccurs="0" maxOccurs="1" />
+            <xsd:element name="condition" type="xsd:string" minOccurs="0"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>
@@ -2481,9 +2590,9 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="type" type="xsd:string" minOccurs="0" maxOccurs="1" />
-            <xsd:element name="column" type="orm:column" minOccurs="0" maxOccurs="1" />
-            <xsd:element name="mapping" type="orm:hbm-any-discriminator-value-mapping" minOccurs="1" maxOccurs="unbounded" />
+            <xsd:element name="type" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="column" type="orm:column" minOccurs="0"/>
+            <xsd:element name="mapping" type="orm:hbm-any-discriminator-value-mapping" maxOccurs="unbounded" />
         </xsd:sequence>
     </xsd:complexType>
 
@@ -2494,7 +2603,7 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="type" type="xsd:string" minOccurs="0" maxOccurs="1" />
+            <xsd:element name="type" type="xsd:string" minOccurs="0"/>
             <xsd:element name="column" type="orm:column" minOccurs="0" maxOccurs="unbounded" />
         </xsd:sequence>
     </xsd:complexType>
@@ -2705,4 +2814,5 @@
             <xsd:enumeration value="never"/>
         </xsd:restriction>
     </xsd:simpleType>
+
 </xsd:schema>

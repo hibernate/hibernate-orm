@@ -82,7 +82,7 @@ public class OneToOneEmbeddedIdWithGenericsTest {
 					)
 					.setParameter( "invoiceId", invoice.getId() )
 					.getSingleResult();
-			assertNotNull( invoice );
+			assertNotNull( customer );
 		} );
 	}
 

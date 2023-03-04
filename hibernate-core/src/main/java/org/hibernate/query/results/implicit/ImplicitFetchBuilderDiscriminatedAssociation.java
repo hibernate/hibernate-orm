@@ -59,6 +59,7 @@ public class ImplicitFetchBuilderDiscriminatedAssociation implements ImplicitFet
 							fetchPath,
 							parentTableGroup,
 							null,
+							null,
 							SqlAstJoinType.INNER,
 							true,
 							false,

@@ -10,11 +10,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -26,22 +24,19 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 public interface RootTableGroupProducer extends TableGroupProducer {
 	/**
 	 * Create a root TableGroup as defined by this producer
+	 *
+	 * @param canUseInnerJoins Whether inner joins can be used when creating {@linkplain TableReference table-references} within this group
+	 * @param navigablePath The overall NavigablePath for the root
+	 * @param explicitSourceAlias The alias, if one, explicitly provided by the application for this root
+	 * @param explicitSqlAliasBase A specific SqlAliasBase to use.  May be {@code null} indicating one should be created using the {@linkplain SqlAliasBaseGenerator} from {@code creationState}
+	 * @param additionalPredicateCollectorAccess Collector for additional predicates associated with this producer
+	 * @param creationState The creation state
 	 */
 	TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationState creationState,
-			SqlAstCreationContext creationContext);
-
-	TableGroup createRootTableGroup(
-			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver expressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationState creationState);
 }

@@ -7,10 +7,13 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyNotFoundException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -249,46 +252,55 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	private void addPropertyToMappedSuperclass(Property prop, XClass declaringClass) {
 		final Class<?> type = getContext().getBootstrapContext().getReflectionManager().toClass( declaringClass );
-		MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( type );
+		final MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( type );
+		prepareActualPropertyForSuperclass( prop, type, true, getContext(), superclass::addDeclaredProperty );
+	}
+
+	static void prepareActualPropertyForSuperclass(
+			Property prop,
+			Class<?> type,
+			boolean allowCollections,
+			MetadataBuildingContext context,
+			Consumer<Property> propertyConsumer) {
 		if ( type.getTypeParameters().length == 0 ) {
-			superclass.addDeclaredProperty( prop );
+			propertyConsumer.accept( prop );
 		}
 		else {
 			// If the type has type parameters, we have to look up the XClass and actual property again
 			// because the given XClass has a TypeEnvironment based on the type variable assignments of a subclass
 			// and that might result in a wrong property type being used for a property which uses a type variable
-			final XClass actualDeclaringClass = getContext().getBootstrapContext().getReflectionManager().toXClass( type );
+			final XClass actualDeclaringClass = context.getBootstrapContext().getReflectionManager().toXClass( type );
 			for ( XProperty declaredProperty : actualDeclaringClass.getDeclaredProperties( prop.getPropertyAccessorName() ) ) {
 				if ( prop.getName().equals( declaredProperty.getName() ) ) {
 					final PropertyData inferredData = new PropertyInferredData(
 							actualDeclaringClass,
 							declaredProperty,
 							null,
-							getContext().getBootstrapContext().getReflectionManager()
+							context.getBootstrapContext().getReflectionManager()
 					);
 					final Value originalValue = prop.getValue();
 					if ( originalValue instanceof SimpleValue ) {
 						// Avoid copying when the property doesn't depend on a type variable
 						if ( inferredData.getTypeName().equals( getTypeName( prop ) ) ) {
-							superclass.addDeclaredProperty( prop );
+							propertyConsumer.accept( prop );
 							return;
 						}
 					}
-					if ( originalValue instanceof Component ) {
-						superclass.addDeclaredProperty( prop );
-						return;
-					}
 					// If the property depends on a type variable, we have to copy it and the Value
 					final Property actualProperty = prop.copy();
+					actualProperty.setGeneric( true );
 					actualProperty.setReturnedClassName( inferredData.getTypeName() );
 					final Value value = actualProperty.getValue().copy();
 					if ( value instanceof Collection ) {
+						if ( !allowCollections ) {
+							throw new AssertionFailure( "Collections are not allowed as identifier properties" );
+						}
 						final Collection collection = (Collection) value;
 						// The owner is a MappedSuperclass which is not a PersistentClass, so set it to null
 //						collection.setOwner( null );
 						collection.setRole( type.getName() + "." + prop.getName() );
 						// To copy the element and key values, we need to defer setting the type name until the CollectionBinder ran
-						getContext().getMetadataCollector().addSecondPass(
+						context.getMetadataCollector().addSecondPass(
 								new SecondPass() {
 									@Override
 									public void doSecondPass(Map persistentClasses) throws MappingException {
@@ -308,33 +320,33 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					else {
 						setTypeName( value, inferredData.getTypeName() );
 					}
-//					if ( value instanceof Component ) {
-//						Component component = ( (Component) value );
-//						Iterator<Property> propertyIterator = component.getPropertyIterator();
-//						while ( propertyIterator.hasNext() ) {
-//							Property property = propertyIterator.next();
-//							try {
-//								property.getGetter( component.getComponentClass() );
-//							}
-//							catch (PropertyNotFoundException e) {
-//								propertyIterator.remove();
-//							}
-//						}
-//					}
+					if ( value instanceof Component ) {
+						final Component component = ( (Component) value );
+						final Iterator<Property> propertyIterator = component.getPropertyIterator();
+						while ( propertyIterator.hasNext() ) {
+							Property property = propertyIterator.next();
+							try {
+								property.getGetter( component.getComponentClass() );
+							}
+							catch (PropertyNotFoundException e) {
+								propertyIterator.remove();
+							}
+						}
+					}
 					actualProperty.setValue( value );
-					superclass.addDeclaredProperty( actualProperty );
+					propertyConsumer.accept( actualProperty );
 					break;
 				}
 			}
 		}
 	}
 
-	static String getTypeName(Property property) {
+	private static String getTypeName(Property property) {
 		final String typeName = getTypeName( property.getValue() );
 		return typeName != null ? typeName : property.getReturnedClassName();
 	}
 
-	static String getTypeName(Value value) {
+	private static String getTypeName(Value value) {
 		if ( value instanceof Component ) {
 			final Component component = (Component) value;
 			final String typeName = component.getTypeName();
@@ -346,7 +358,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return ( (SimpleValue) value ).getTypeName();
 	}
 
-	static void setTypeName(Value value, String typeName) {
+	private static void setTypeName(Value value, String typeName) {
 		if ( value instanceof ToOne ) {
 			final ToOne toOne = (ToOne) value;
 			toOne.setReferencedEntityName( typeName );
@@ -354,7 +366,11 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 		else if ( value instanceof Component ) {
 			final Component component = (Component) value;
-			component.setComponentClassName( typeName );
+			// Avoid setting component class name to java.lang.Object
+			// for embeddable types with generic type parameters
+			if ( !typeName.equals( Object.class.getName() ) ) {
+				component.setComponentClassName( typeName );
+			}
 			if ( component.getTypeName() != null ) {
 				component.setTypeName( typeName );
 			}

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.id.usertype.json;
 
-import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
+import org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 
 public class JsonType extends AbstractSingleColumnStandardBasicType<Json> {
@@ -14,7 +14,7 @@ public class JsonType extends AbstractSingleColumnStandardBasicType<Json> {
 	public static final JsonType INSTANCE = new JsonType();
 
 	public JsonType() {
-		super( PostgreSQLJsonbJdbcType.INSTANCE, JsonJavaType.INSTANCE );
+		super( new PostgreSQLJsonPGObjectJsonbType(), JsonJavaType.INSTANCE );
 	}
 
 	@Override

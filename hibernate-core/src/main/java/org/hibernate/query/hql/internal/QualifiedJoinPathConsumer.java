@@ -192,7 +192,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		final SqmJoin<Object, Object> join = ( (SqmJoinable<Object, Object>) subPathSource ).createSqmJoin(
 				lhs,
 				joinType,
-				isTerminal ? alias : allowReuse ? SqmCreationHelper.IMPLICIT_ALIAS : Long.toString( System.nanoTime() ),
+				isTerminal ? alias : allowReuse ? SqmCreationHelper.IMPLICIT_ALIAS : null,
 				fetch,
 				creationState
 		);

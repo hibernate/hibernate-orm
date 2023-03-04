@@ -9,8 +9,13 @@ package org.hibernate.orm.test.jpa.graphs;
 import jakarta.persistence.MapKey;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
@@ -45,7 +50,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Foo.class, Bar.class, Baz.class, Author.class, Book.class,
+		return new Class[] { Foo.class, Bar.class, Baz.class, Author.class, Book.class, Prize.class,
 				Company.class, Employee.class, Manager.class, Location.class };
 	}
 
@@ -328,6 +333,97 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-15964")
+	public void paginationOverCollectionFetch() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		String authorName = UUID.randomUUID().toString();
+		Set<Integer> authorIds = IntStream.range(0, 3)
+				.mapToObj(v -> {
+					Author author = new Author(authorName);
+					em.persist(author);
+					em.persist(new Book(author));
+					em.persist(new Book(author));
+					return author;
+				})
+				.map(author -> author.id)
+				.collect(Collectors.toSet());
+
+		em.getTransaction().commit();
+		em.clear();
+
+		em.getTransaction().begin();
+		EntityGraph<Author> entityGraph = em.createEntityGraph(Author.class);
+		entityGraph.addAttributeNodes("books");
+
+		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+		CriteriaQuery<Author> query = criteriaBuilder.createQuery(Author.class);
+		Root<Author> root = query.from(Author.class);
+		query.where(criteriaBuilder.equal(root.get("name"), authorName));
+
+		List<Integer> fetchedAuthorIds = em.createQuery(query)
+				.setFirstResult(0)
+				.setMaxResults(4)
+				.setHint("jakarta.persistence.loadgraph", entityGraph)
+				.getResultList()
+				.stream()
+				.map(author -> author.id)
+				.collect(Collectors.toList());
+
+		assertEquals(3, fetchedAuthorIds.size());
+		assertTrue(fetchedAuthorIds.containsAll(authorIds));
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-15964")
+	public void paginationOverEagerCollectionWithEmptyEG() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		String authorName = UUID.randomUUID().toString();
+		Set<Integer> authorIds = IntStream.range(0, 3)
+				.mapToObj(v -> {
+					Author author = new Author(authorName);
+					em.persist(author);
+					em.persist(new Prize(author));
+					em.persist(new Prize(author));
+					return author;
+				})
+				.map(author -> author.id)
+				.collect(Collectors.toSet());
+
+		em.getTransaction().commit();
+		em.clear();
+
+		em.getTransaction().begin();
+		EntityGraph<Author> entityGraph = em.createEntityGraph(Author.class);
+
+		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+		CriteriaQuery<Author> query = criteriaBuilder.createQuery(Author.class);
+		Root<Author> root = query.from(Author.class);
+		query.where(criteriaBuilder.equal(root.get("name"), authorName));
+
+		List<Integer> fetchedAuthorIds = em.createQuery(query)
+				.setFirstResult(0)
+				.setMaxResults(4)
+				.setHint("jakarta.persistence.loadgraph", entityGraph)
+				.getResultList()
+				.stream()
+				.map(author -> author.id)
+				.collect(Collectors.toList());
+
+		assertEquals(3, fetchedAuthorIds.size());
+		assertTrue(fetchedAuthorIds.containsAll(authorIds));
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
     @Entity
 	@Table(name = "foo")
     public static class Foo {
@@ -377,6 +473,33 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		private Author author;
+
+		public Book() {
+
+		}
+
+		public Book(Author author) {
+			this.author = author;
+		}
+	}
+
+	@Entity
+	public static class Prize {
+		@Id
+		@GeneratedValue
+		public Integer id;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		private Author author;
+
+		public Prize() {
+
+		}
+
+		public Prize(Author author) {
+			this.author = author;
+		}
+
 	}
 
 	@Entity
@@ -389,5 +512,18 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
 		@MapKey
 		public Map<Integer, Book> books = new HashMap<>();
+
+		@OneToMany(fetch = FetchType.EAGER, mappedBy = "author")
+		public Set<Prize> eagerPrizes = new HashSet<>();
+
+		public String name;
+
+		public Author() {
+
+		}
+
+		public Author(String name) {
+			this.name = name;
+		}
 	}
 }

@@ -11,8 +11,7 @@ import java.util.function.IntFunction;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -81,7 +80,8 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			FetchParent fetchParent, DomainResultCreationState creationState);
+			FetchParent fetchParent,
+			DomainResultCreationState creationState);
 
 	/**
 	 * Create a DomainResult for the target-side of the fk
@@ -89,25 +89,25 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	DomainResult<?> createTargetDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			FetchParent fetchParent, DomainResultCreationState creationState);
+			FetchParent fetchParent,
+			DomainResultCreationState creationState);
 
 	DomainResult<?> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			Nature side,
-			FetchParent fetchParent, DomainResultCreationState creationState);
+			FetchParent fetchParent,
+			DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationState creationState);
 
 	Predicate generateJoinPredicate(
 			TableReference targetSideReference,
 			TableReference keySideReference,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationState creationState);
 
 	boolean isSimpleJoinPredicate(Predicate predicate);
 

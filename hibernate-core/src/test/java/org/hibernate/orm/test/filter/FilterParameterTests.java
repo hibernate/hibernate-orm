@@ -67,7 +67,9 @@ public class FilterParameterTests {
 		scope.inTransaction( (session) -> {
 			session.enableFilter( "filterYesNoConverter" ).setParameter( "yesNo", Boolean.FALSE );
 
-			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
+			final EntityOne loaded = session.createQuery( "from EntityOne e where e.id = :id", EntityOne.class )
+					.setParameter( "id", 1 )
+					.getSingleResultOrNull();
 			assertThat( loaded ).isNull();
 		} );
 	}
@@ -95,7 +97,9 @@ public class FilterParameterTests {
 			session.enableFilter( "filterYesNoBoolean" ).setParameter( "yesNo", Boolean.FALSE );
 
 			try {
-				session.byId( EntityOne.class ).load( 1 );
+				session.createQuery( "from EntityOne e where e.id = :id", EntityOne.class )
+						.setParameter( "id", 1 )
+						.getSingleResultOrNull();
 				fail( "Expecting an exception" );
 			}
 			catch (Exception expected) {
@@ -114,7 +118,9 @@ public class FilterParameterTests {
 		scope.inTransaction( (session) -> {
 			session.enableFilter( "filterNumberConverter" ).setParameter( "zeroOne", Boolean.FALSE );
 
-			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
+			final EntityTwo loaded = session.createQuery( "from EntityTwo e where e.id = :id", EntityTwo.class )
+					.setParameter( "id", 1 )
+					.getSingleResultOrNull();
 			assertThat( loaded ).isNull();
 		} );
 	}
@@ -142,7 +148,9 @@ public class FilterParameterTests {
 			session.enableFilter( "filterNumberBoolean" ).setParameter( "zeroOne", Boolean.FALSE );
 
 			try {
-				session.byId( EntityTwo.class ).load( 1 );
+				session.createQuery( "from EntityTwo e where e.id = :id", EntityTwo.class )
+						.setParameter( "id", 1 )
+						.getSingleResultOrNull();
 				fail( "Expecting an exception" );
 			}
 			catch (Exception expected) {
@@ -166,7 +174,9 @@ public class FilterParameterTests {
 			session.enableFilter( "filterMismatchConverter" ).setParameter( "mismatch", Boolean.FALSE );
 
 			try {
-				session.byId( EntityThree.class ).load( 1 );
+				session.createQuery( "from EntityThree e where e.id = :id", EntityThree.class )
+						.setParameter( "id", 1 )
+						.getSingleResultOrNull();
 				fail( "Expecting an exception" );
 			}
 			catch (Exception expected) {

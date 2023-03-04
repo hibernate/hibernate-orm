@@ -17,7 +17,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 

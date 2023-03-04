@@ -24,7 +24,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -58,6 +57,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -780,17 +780,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return isInverseTable[j];
 	}
 
-//	@Override
-//	protected boolean isSubclassTableSequentialSelect(int j) {
-//		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
-//	}
-
-	/*public void postInstantiate() throws MappingException {
-		super.postInstantiate();
-		//TODO: other lock modes?
-		loader = createEntityLoader(LockMode.NONE, CollectionHelper.EMPTY_MAP);
-	}*/
-
 	@Override
 	public String getSubclassPropertyTableName(int i) {
 		return subclassTableNameClosure[subclassPropertyTableNumberClosure[i]];
@@ -1336,10 +1325,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 			// Add the table references for all table names of the treated entities as we have to retain these table references.
 			// Table references not appearing in this set can later be pruned away
-			// todo (6.0): no need to resolve all table references, only the ones needed for cardinality
 			for ( String subclassTableName : subclassTableNames ) {
 				final TableReference tableReference =
-						tableGroup.resolveTableReference( null, subclassTableName, false );
+						tableGroup.getTableReference( null, subclassTableName, false, false );
+				if ( tableReference == null ) {
+					throw new UnknownTableReferenceException( getRootTableName(), "Couldn't find table reference" );
+				}
 				retainedTableReferences.add( tableReference );
 			}
 		}

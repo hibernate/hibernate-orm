@@ -18,7 +18,7 @@ import org.hibernate.spatial.JTSGeometryJavaType;
  */
 public interface ContributorImplementor {
 
-	default void contributeJavaTypes(TypeContributions typeContributions) {
+	default void contributeJavaTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		typeContributions.contributeJavaType( GeolatteGeometryJavaType.GEOMETRY_INSTANCE );
 		typeContributions.contributeJavaType( GeolatteGeometryJavaType.POINT_INSTANCE );
 		typeContributions.contributeJavaType( GeolatteGeometryJavaType.LINESTRING_INSTANCE );
@@ -40,7 +40,7 @@ public interface ContributorImplementor {
 
 	}
 
-	void contributeJdbcTypes(TypeContributions typeContributions);
+	void contributeJdbcTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry);
 
 	void contributeFunctions(FunctionContributions functionContributions);
 

@@ -67,8 +67,7 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 				}
 		);
 
-		// not-found associations are always join-fetched, so we should
-		// get 1 query for the Employee with join
+		// we should get 1 query for the Employee with join
 		assertEquals( 1, statistics.getPrepareStatementCount() );
 	}
 
@@ -85,8 +84,7 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 				}
 		);
 
-		// not-found associations are always join-fetched, so we should
-		// get 1 query for the Employee with join
+		// we should get 1 query for the Employee with join
 		assertEquals( 1, statistics.getPrepareStatementCount() );
 	}
 
@@ -176,7 +174,7 @@ public class LoadANonExistingNotFoundEntityTest extends BaseNonConfigCoreFunctio
 
 		private String name;
 
-		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+		@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 		@JoinColumn(name = "employer_id",foreignKey = @ForeignKey(value= ConstraintMode.NO_CONSTRAINT))
 		@NotFound(action=NotFoundAction.IGNORE)
 		private Employer employer;

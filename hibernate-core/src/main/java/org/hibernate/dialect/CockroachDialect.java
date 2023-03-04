@@ -342,10 +342,10 @@ public class CockroachDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
 			}
 			else {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );

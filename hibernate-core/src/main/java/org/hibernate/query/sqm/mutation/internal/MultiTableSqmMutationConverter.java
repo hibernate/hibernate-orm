@@ -116,11 +116,12 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				true,
 				sqmRoot.getNavigablePath(),
 				sourceAlias,
-				() -> predicate -> {
+				null,
+				() -> (predicate) -> {
 					this.discriminatorPredicate = predicate;
 				},
-				this,
-				creationContext.getSessionFactory() );
+				this
+		);
 
 		getFromClauseAccess().registerTableGroup( sqmRoot.getNavigablePath(), mutatingTableGroup );
 	}
@@ -145,8 +146,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	}
 
 	/**
-	 * Specialized hook to visit the assignments defined by the update SQM allow
-	 * "listening" for each SQL assignment.
+	 * Specialized hook to visit the assignments defined by the update SQM.
 	 */
 	public void visitSetClause(
 			SqmSetClause setClause,
@@ -154,7 +154,8 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 			SqmParameterResolutionConsumer parameterResolutionConsumer) {
 		this.parameterResolutionConsumer = parameterResolutionConsumer;
 
-		for ( Assignment assignment : super.visitSetClause( setClause ) ) {
+		final List<Assignment> assignments = super.visitSetClause( setClause );
+		for ( Assignment assignment : assignments ) {
 			assignmentConsumer.accept( assignment );
 		}
 	}
@@ -164,8 +165,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	}
 
 	/**
-	 * Specialized hook to visit the assignments defined by the update SQM allow
-	 * "listening" for each SQL assignment.
+	 * Specialized hook to visit the target paths defined by the insert SQM.
 	 */
 	public AdditionalInsertValues visitInsertionTargetPaths(
 			BiConsumer<Assignable, List<ColumnReference>> targetColumnReferenceConsumer,

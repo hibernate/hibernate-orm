@@ -27,5 +27,4 @@ public interface TupleType<J> extends SqmExpressible<J> {
 
 	SqmExpressible<?> get(int index);
 	SqmExpressible<?> get(String componentName);
-
 }

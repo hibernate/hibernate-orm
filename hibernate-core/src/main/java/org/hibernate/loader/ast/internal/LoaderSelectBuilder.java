@@ -7,6 +7,7 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -386,9 +387,9 @@ public class LoaderSelectBuilder {
 				true,
 				rootNavigablePath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState,
-				creationContext
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -405,6 +406,7 @@ public class LoaderSelectBuilder {
 					final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 							navigablePath,
 							rootTableGroup,
+							null,
 							null,
 							SqlAstJoinType.LEFT,
 							true,
@@ -624,7 +626,8 @@ public class LoaderSelectBuilder {
 				querySpec::applyPredicate,
 				tableGroup,
 				true,
-				loadQueryInfluencers.getEnabledFilters(),
+				// HHH-16179 Session.find should not apply filters
+				Collections.emptyMap(),//loadQueryInfluencers.getEnabledFilters(),
 				null,
 				astCreationState
 		);
@@ -737,9 +740,12 @@ public class LoaderSelectBuilder {
 				// 'entity graph' takes precedence over 'fetch profile'
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
-					fetchTiming = traversalResult.getFetchTiming();
-					joined = traversalResult.isJoined();
-					explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
+					EntityGraphTraversalState.FetchStrategy fetchStrategy = traversalResult.getFetchStrategy();
+					if ( fetchStrategy != null ) {
+						fetchTiming = fetchStrategy.getFetchTiming();
+						joined = fetchStrategy.isJoined();
+						explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
+					}
 				}
 				else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 					// There is no point in checking the fetch profile if it can't affect this fetchable
@@ -963,9 +969,9 @@ public class LoaderSelectBuilder {
 				true,
 				rootNavigablePath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState,
-				creationContext
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );

@@ -9,7 +9,7 @@ package org.hibernate.spatial.dialect.cockroachdb;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
+import org.hibernate.dialect.PgJdbcHelper;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.FunctionKey;
@@ -30,9 +30,9 @@ public class CockroachDbContributor implements ContributorImplementor {
 	}
 
 	@Override
-	public void contributeJdbcTypes(TypeContributions typeContributions) {
+	public void contributeJdbcTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
+		if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcType( PGGeometryJdbcType.INSTANCE_WKB_2 );
 			typeContributions.contributeJdbcType( PGGeographyJdbcType.INSTANCE_WKB_2 );
 		}

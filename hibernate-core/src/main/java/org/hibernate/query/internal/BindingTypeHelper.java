@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -41,7 +42,7 @@ public class BindingTypeHelper {
 			SessionFactoryImplementor sessionFactory) {
 		if ( precision != null ) {
 			final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible( sessionFactory );
-			if ( !( sqmExpressible.getExpressibleJavaType() instanceof TemporalJavaType ) ) {
+			if ( !( JavaTypeHelper.isTemporal( sqmExpressible.getExpressibleJavaType() ) ) ) {
 				throw new UnsupportedOperationException(
 						"Cannot treat non-temporal parameter type with temporal precision"
 				);
@@ -64,7 +65,7 @@ public class BindingTypeHelper {
 			Object value,
 			JdbcMapping baseType,
 			TypeConfiguration typeConfiguration) {
-		if ( value == null || !( baseType.getJdbcJavaType() instanceof TemporalJavaType<?> ) ) {
+		if ( value == null || !JavaTypeHelper.isTemporal( baseType.getJdbcJavaType() ) ) {
 			return baseType;
 		}
 

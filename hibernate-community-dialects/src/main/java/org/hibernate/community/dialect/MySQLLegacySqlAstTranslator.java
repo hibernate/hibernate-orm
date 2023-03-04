@@ -6,6 +6,7 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -245,7 +246,7 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	public MySQLDialect getDialect() {
-		return (MySQLDialect) super.getDialect();
+		return (MySQLDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
 	}
 
 	@Override

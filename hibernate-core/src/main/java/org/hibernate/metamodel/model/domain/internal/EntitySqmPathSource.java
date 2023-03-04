@@ -23,9 +23,10 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements SqmJoinable<Object, J> {
 	public EntitySqmPathSource(
 			String localPathName,
+			SqmPathSource<J> pathModel,
 			EntityDomainType<J> domainType,
 			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
+		super( localPathName, pathModel, domainType, jpaBindableType );
 	}
 
 	@Override
@@ -51,7 +52,7 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 		}
 		return new SqmEntityValuedSimplePath<>(
 				navigablePath,
-				this,
+				pathModel,
 				lhs,
 				lhs.nodeBuilder()
 		);
@@ -66,7 +67,7 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 			SqmCreationState creationState) {
 		return new SqmPluralPartJoin<>(
 				lhs,
-				this,
+				pathModel,
 				alias,
 				joinType,
 				creationState.getCreationContext().getNodeBuilder()

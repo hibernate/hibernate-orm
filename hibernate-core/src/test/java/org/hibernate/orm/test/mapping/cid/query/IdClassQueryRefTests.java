@@ -25,7 +25,6 @@ public class IdClassQueryRefTests {
 	public void testHqlVirtualIdReferences(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			session.createQuery( "from Order o where o.orderNumber = 123" ).list();
-			session.createQuery( "from Order o where o.customer = 1" ).list();
 			session.createQuery( "from Order o where o.customer.id = 1" ).list();
 		} );
 	}

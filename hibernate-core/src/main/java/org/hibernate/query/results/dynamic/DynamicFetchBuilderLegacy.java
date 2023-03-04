@@ -18,20 +18,17 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -39,11 +36,9 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -145,13 +140,11 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 					fetchPath,
 					ownerTableGroup,
 					tableAlias,
+					sqlAliasBase,
 					SqlAstJoinType.INNER,
 					true,
 					false,
-					s -> sqlAliasBase,
-					creationState.getSqlExpressionResolver(),
-					creationState.getFromClauseAccess(),
-					creationState.getCreationContext()
+					creationState
 			);
 			ownerTableGroup.addTableGroupJoin( tableGroupJoin );
 			creationState.getFromClauseAccess().registerTableGroup( fetchPath, tableGroup = tableGroupJoin.getJoinedGroup() );

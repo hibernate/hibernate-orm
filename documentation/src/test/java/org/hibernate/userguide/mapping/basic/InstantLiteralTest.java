@@ -51,7 +51,7 @@ public class InstantLiteralTest extends BaseEntityManagerFunctionalTestCase {
 			.createQuery(
 				"select de " +
 				"from DateEvent de " +
-				"where de.createdOn = '2016-10-13T06:40:18.745Z' ", DateEvent.class)
+				"where de.createdOn = zoned datetime 2016-10-13 06:40:18.745Z ", DateEvent.class)
 			.getSingleResult();
 
 			assertNotNull(dateEvent);

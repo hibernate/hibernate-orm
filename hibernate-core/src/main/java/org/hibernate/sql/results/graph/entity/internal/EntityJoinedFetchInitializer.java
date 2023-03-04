@@ -71,17 +71,22 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
+		if ( shouldSkipResolveInstance( rowProcessingState ) ) {
+			missing = true;
+			return;
+		}
+
 		super.resolveKey( rowProcessingState );
 
 		// super processes the foreign-key target column.  here we
 		// need to also look at the foreign-key value column to check
 		// for a dangling foreign-key
 
-		if ( notFoundAction != null && keyAssembler != null ) {
+		if ( keyAssembler != null ) {
 			final Object fkKeyValue = keyAssembler.assemble( rowProcessingState );
 			if ( fkKeyValue != null ) {
 				if ( isMissing() ) {
-					if ( notFoundAction == NotFoundAction.EXCEPTION ) {
+					if ( notFoundAction != NotFoundAction.IGNORE ) {
 						throw new FetchNotFoundException(
 								referencedFetchable.getEntityMappingType().getEntityName(),
 								fkKeyValue

@@ -9,7 +9,6 @@ package org.hibernate.sql.results.graph;
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.AttributeNode;
-import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 
 /**
@@ -26,17 +25,30 @@ public interface EntityGraphTraversalState {
 	 */
 	class TraversalResult {
 		private final GraphImplementor<?> previousContext;
-		private final FetchTiming fetchTiming;
-		private final boolean joined;
+		private final FetchStrategy fetchStrategy;
 
-		public TraversalResult(GraphImplementor<?> previousContext, FetchTiming fetchTiming, boolean joined) {
+		public TraversalResult(GraphImplementor<?> previousContext, FetchStrategy fetchStrategy) {
 			this.previousContext = previousContext;
-			this.fetchTiming = fetchTiming;
-			this.joined = joined;
+			this.fetchStrategy = fetchStrategy;
 		}
 
 		public GraphImplementor<?> getGraph() {
 			return previousContext;
+		}
+
+		public FetchStrategy getFetchStrategy() {
+			return fetchStrategy;
+		}
+	}
+
+	class FetchStrategy {
+		private final FetchTiming fetchTiming;
+		private final boolean joined;
+
+		public FetchStrategy(FetchTiming fetchTiming, boolean joined) {
+			assert fetchTiming != null;
+			this.fetchTiming = fetchTiming;
+			this.joined = joined;
 		}
 
 		public FetchTiming getFetchTiming() {

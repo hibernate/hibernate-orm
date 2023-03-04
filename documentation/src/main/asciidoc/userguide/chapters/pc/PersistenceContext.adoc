@@ -542,9 +542,9 @@ include::{extrasdir}/pc-filter-entity-query-example.sql[]
 
 [IMPORTANT]
 ====
-Filters apply to entity queries and to direct fetching.
+Filters apply to entity queries, but not to direct fetching.
 
-Therefore, even in the following example, the filter is taken into consideration when fetching an entity from the Persistence Context.
+Therefore, in the following example, the filter is not taken into consideration when fetching an entity from the Persistence Context.
 
 [[pc-filter-entity-example]]
 .Fetching entities mapped with `@Filter`
@@ -558,7 +558,7 @@ include::{example-dir-pc}/FilterTest.java[tags=pc-filter-entity-example]
 include::{extrasdir}/pc-filter-entity-example.sql[]
 ----
 
-As you can see from the example above, just like an entity query, the filter prevents the entity from being loaded.
+As you can see from the example above, contrary to an entity query, the filter does not prevent the entity from being loaded.
 ====
 
 Just like with entity queries, collections can be filtered as well, but only if the filter is explicitly enabled on the currently running Hibernate `Session`.

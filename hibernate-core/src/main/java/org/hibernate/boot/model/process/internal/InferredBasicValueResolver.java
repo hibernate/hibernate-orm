@@ -29,6 +29,7 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
@@ -81,7 +82,7 @@ public class InferredBasicValueResolver {
 						typeConfiguration
 				);
 			}
-			else if ( explicitJavaType instanceof TemporalJavaType ) {
+			else if ( JavaTypeHelper.isTemporal( explicitJavaType ) ) {
 				return fromTemporal(
 						(TemporalJavaType<T>) explicitJavaType,
 						null,
@@ -133,7 +134,7 @@ public class InferredBasicValueResolver {
 						typeConfiguration
 				);
 			}
-			else if ( reflectedJtd instanceof TemporalJavaType ) {
+			else if ( JavaTypeHelper.isTemporal( reflectedJtd ) ) {
 				return fromTemporal(
 						(TemporalJavaType<T>) reflectedJtd,
 						null,
@@ -170,7 +171,7 @@ public class InferredBasicValueResolver {
 						);
 						registeredElementType = resolution.getLegacyResolvedBasicType();
 					}
-					else if ( elementJtd instanceof TemporalJavaType ) {
+					else if ( JavaTypeHelper.isTemporal( elementJtd ) ) {
 						final InferredBasicValueResolution resolution = InferredBasicValueResolver.fromTemporal(
 								(TemporalJavaType<T>) elementJtd,
 								null,
@@ -492,7 +493,7 @@ public class InferredBasicValueResolver {
 		// Case #1 - explicit JavaType
 
 		if ( explicitJavaType != null ) {
-			if ( !(explicitJavaType instanceof TemporalJavaType) ) {
+			if ( !JavaTypeHelper.isTemporal( explicitJavaType ) ) {
 				throw new MappingException(
 						"Explicit JavaType [" + explicitJavaType +
 								"] defined for temporal value must implement TemporalJavaType"

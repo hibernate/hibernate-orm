@@ -218,13 +218,11 @@ import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -1257,19 +1255,16 @@ public abstract class AbstractEntityPersister
 	@Override
 	public TableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState sqlAstCreationState) {
 		return new NamedTableReference( getTableName(), sqlAliasBase.generateNewAlias() );
 	}
-
 
 	@Override
 	public TableReferenceJoin createTableReferenceJoin(
 			String joinTableExpression,
 			SqlAliasBase sqlAliasBase,
 			TableReference lhs,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
 			final String subclassTableName = getSubclassTableName( i );
 			if ( subclassTableName.equals( joinTableExpression ) ) {
@@ -1279,7 +1274,7 @@ public abstract class AbstractEntityPersister
 						sqlAliasBase,
 						shouldInnerJoinSubclassTable( i, emptySet() ),
 						getSubclassTableKeyColumns( i ),
-						sqlExpressionResolver
+						creationState
 				);
 			}
 		}
@@ -1293,7 +1288,7 @@ public abstract class AbstractEntityPersister
 			SqlAliasBase sqlAliasBase,
 			boolean innerJoin,
 			String[] targetColumns,
-			SqlExpressionResolver sqlExpressionResolver) {
+			SqlAstCreationState creationState) {
 		final NamedTableReference joinedTableReference = new NamedTableReference(
 				joinTableExpression,
 				sqlAliasBase.generateNewAlias(),
@@ -1308,7 +1303,7 @@ public abstract class AbstractEntityPersister
 						joinedTableReference,
 						getKeyColumnNames(),
 						targetColumns,
-						sqlExpressionResolver
+						creationState
 				)
 		);
 	}
@@ -1318,7 +1313,7 @@ public abstract class AbstractEntityPersister
 			TableReference joinedTableReference,
 			String[] pkColumnNames,
 			String[] fkColumnNames,
-			SqlExpressionResolver sqlExpressionResolver) {
+			SqlAstCreationState creationState) {
 		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
 
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
@@ -1329,7 +1324,7 @@ public abstract class AbstractEntityPersister
 		identifierMapping.forEachSelectable(
 				(columnIndex, selection) -> {
 					final String rootPkColumnName = pkColumnNames[ columnIndex ];
-					final Expression pkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+					final Expression pkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
 							createColumnReferenceKey( rootTableReference, rootPkColumnName ),
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableReference.getIdentificationVariable(),
@@ -1341,7 +1336,7 @@ public abstract class AbstractEntityPersister
 					);
 
 					final String fkColumnName = fkColumnNames[ columnIndex ];
-					final Expression fkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+					final Expression fkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
 							createColumnReferenceKey( joinedTableReference, fkColumnName ),
 							sqlAstProcessingState -> new ColumnReference(
 									joinedTableReference.getIdentificationVariable(),
@@ -1693,11 +1688,9 @@ public abstract class AbstractEntityPersister
 				true,
 				entityPath,
 				null,
-				() -> p -> {},
 				new SqlAliasBaseConstant( alias ),
-				sqlAstCreationState.getSqlExpressionResolver(),
-				sqlAstCreationState.getFromClauseAccess(),
-				getFactory()
+				() -> p -> {},
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -1836,7 +1829,7 @@ public abstract class AbstractEntityPersister
 		return fetches.build();
 	}
 
-	protected boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
+	public boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
 		if ( fetchParent instanceof EmbeddableResultGraphNode ) {
 			return true;
 		}
@@ -2969,12 +2962,15 @@ public abstract class AbstractEntityPersister
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver expressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
+				explicitSqlAliasBase,
+				explicitSourceAlias,
+				this,
+				creationState.getSqlAliasBaseGenerator()
+		);
 		final TableReference rootTableReference = new NamedTableReference(
 				needsDiscriminator() ? getRootTableName() : getTableName(),
 				sqlAliasBase.generateNewAlias()
@@ -3010,7 +3006,7 @@ public abstract class AbstractEntityPersister
 															? getRootTableKeyColumnNames()
 															: getKeyColumnNames(),
 													getSubclassTableKeyColumns( i ),
-													expressionResolver
+													creationState
 											)
 							);
 						}
@@ -3022,7 +3018,7 @@ public abstract class AbstractEntityPersister
 
 		if ( additionalPredicateCollectorAccess != null && needsDiscriminator() ) {
 			final String alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-			final Predicate discriminatorPredicate = createDiscriminatorPredicate( alias, tableGroup, expressionResolver );
+			final Predicate discriminatorPredicate = createDiscriminatorPredicate( alias, tableGroup, creationState );
 			additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
 		}
 
@@ -3036,15 +3032,14 @@ public abstract class AbstractEntityPersister
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
 		if ( needsDiscriminator() ) {
-			final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
-			predicateConsumer.accept( createDiscriminatorPredicate( alias, tableGroup, expressionResolver ) );
+			predicateConsumer.accept( createDiscriminatorPredicate( alias, tableGroup, creationState ) );
 		}
 	}
 
 	private Predicate createDiscriminatorPredicate(
 			String alias,
 			TableGroup tableGroup,
-			SqlExpressionResolver expressionResolver) {
+			SqlAstCreationState creationState) {
 		final SqlExpressionResolver.ColumnReferenceKey columnReferenceKey;
 		final String discriminatorExpression;
 		if ( isDiscriminatorFormula() ) {
@@ -3063,7 +3058,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		final BasicType<?> discriminatorType = (BasicType<?>) getDiscriminatorMapping().getJdbcMapping();
-		final Expression sqlExpression = expressionResolver.resolveSqlExpression(
+		final Expression sqlExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
 				columnReferenceKey,
 				sqlAstProcessingState -> new ColumnReference(
 						alias,
@@ -4162,6 +4157,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public CascadeStyle[] getPropertyCascadeStyles() {
 		return entityMetamodel.getCascadeStyles();
+	}
+
+	@Override
+	public boolean isPropertySelectable(int propertyNumber) {
+		return propertySelectable[propertyNumber];
 	}
 
 	@Override
@@ -5272,7 +5272,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private AttributeMapping generateNonIdAttributeMapping(
+	protected AttributeMapping generateNonIdAttributeMapping(
 			NonIdentifierAttribute tupleAttrDefinition,
 			Property bootProperty,
 			int stateArrayPosition,

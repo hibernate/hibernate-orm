@@ -15,6 +15,7 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -43,6 +44,11 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	 */
 	<S extends T> JpaPath<S> treatAs(EntityDomainType<S> treatJavaType);
 
+	/**
+	 * Get this pat's actual resolved model, e.g. the
+	 * concrete embeddable type for generic embeddables
+	 */
+	SqmPathSource<?> getResolvedModel();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

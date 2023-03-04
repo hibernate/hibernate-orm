@@ -76,8 +76,7 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 			}
 		} );
 
-		// not-found associations are always join-fetched, so we should
-		// get `NUMBER_OF_ENTITIES` queries
+		// we should get `NUMBER_OF_ENTITIES` queries
 		assertEquals( NUMBER_OF_ENTITIES, statistics.getPrepareStatementCount() );
 	}
 
@@ -94,9 +93,8 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 			}
 		} );
 
-		// not-found associations are always join-fetched, so we should
-		// get `NUMBER_OF_ENTITIES` queries
-		assertThat( statistics.getPrepareStatementCount() ).isEqualTo( NUMBER_OF_ENTITIES  );
+		// we should get `NUMBER_OF_ENTITIES` queries
+		assertEquals( NUMBER_OF_ENTITIES, statistics.getPrepareStatementCount() );
 	}
 
 	@Test
@@ -187,7 +185,7 @@ public class LoadANonExistingNotFoundBatchEntityTest extends BaseNonConfigCoreFu
 
 		private String name;
 
-		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+		@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 		@JoinColumn(name = "employer_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 		@NotFound(action=NotFoundAction.IGNORE)
 		private Employer employer;

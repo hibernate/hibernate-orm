@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.List;
-
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -34,7 +32,6 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -79,6 +76,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 							navigablePath,
 							tg,
 							resultVariable,
+							null,
 							SqlAstJoinType.INNER,
 							true,
 							false,

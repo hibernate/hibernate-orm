@@ -22,9 +22,10 @@ public class BasicSqmPathSource<J>
 
 	public BasicSqmPathSource(
 			String localPathName,
+			SqmPathSource<J> pathModel,
 			BasicDomainType<J> domainType,
 			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
+		super( localPathName, pathModel, domainType, jpaBindableType );
 	}
 
 	@Override
@@ -49,7 +50,7 @@ public class BasicSqmPathSource<J>
 		}
 		return new SqmBasicValuedSimplePath<>(
 				navigablePath,
-				this,
+				pathModel,
 				lhs,
 				lhs.nodeBuilder()
 		);

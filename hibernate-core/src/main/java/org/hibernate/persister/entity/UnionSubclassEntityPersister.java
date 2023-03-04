@@ -49,16 +49,15 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
+import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
@@ -253,11 +252,17 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return false;
 	}
 
+
 	@Override
 	public UnionTableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver expressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
+		sqlAliasBase = SqlAliasBase.from(
+				sqlAliasBase,
+				null,
+				this,
+				creationState.getSqlAliasBaseGenerator()
+		);
 		return new UnionTableReference( getTableName(), subclassTableExpressions, sqlAliasBase.generateNewAlias() );
 	}
 
@@ -266,15 +271,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver expressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationState creationState) {
 		return new UnionTableGroup(
 				canUseInnerJoins,
 				navigablePath,
-				createPrimaryTableReference( sqlAliasBase, expressionResolver, creationContext ),
+				createPrimaryTableReference( sqlAliasBase, creationState ),
 				this,
 				explicitSourceAlias
 		);
@@ -416,7 +419,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
-		final NamedTableReference tableReference = (NamedTableReference) tableGroup.resolveTableReference( getRootTableName() );
+		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getTableReference( getRootTableName() );
+		if ( tableReference == null ) {
+			throw new UnknownTableReferenceException( getRootTableName(), "Couldn't find table reference" );
+		}
 		// Replace the default union sub-query with a specially created one that only selects the tables for the treated entity names
 		tableReference.setPrunedTableExpression( generateSubquery( treatedEntityNames ) );
 	}

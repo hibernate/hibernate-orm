@@ -24,6 +24,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
@@ -111,7 +112,7 @@ public class SqmExpressionHelper {
 	public static boolean isCompositeTemporal(SqmExpression<?> expression) {
 		// When TimeZoneStorageStrategy.COLUMN is used, that implies using a composite user type
 		return expression instanceof SqmPath<?> && expression.getNodeType() instanceof EmbeddedSqmPathSource<?>
-				&& expression.getJavaTypeDescriptor() instanceof TemporalJavaType<?>;
+				&& JavaTypeHelper.isTemporal( expression.getJavaTypeDescriptor() );
 	}
 
 	public static SqmExpression<?> getActualExpression(SqmExpression<?> expression) {

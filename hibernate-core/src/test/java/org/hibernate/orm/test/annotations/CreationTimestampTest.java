@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.annotations;
 
+import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Assert;
@@ -14,6 +16,8 @@ import java.sql.Timestamp;
 import java.time.*;
 import java.util.Calendar;
 import java.util.Date;
+
+import org.hibernate.testing.TestForIssue;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -170,21 +174,40 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
             Event event = new Event();
             entityManager.persist(event);
             entityManager.flush();
-            Assert.assertNotNull(event.getDate());
-            Assert.assertNotNull(event.getCalendar());
-            Assert.assertNotNull(event.getSqlDate());
-            Assert.assertNotNull(event.getTime());
-            Assert.assertNotNull(event.getTimestamp());
-            Assert.assertNotNull(event.getInstant());
-            Assert.assertNotNull(event.getLocalDate());
-            Assert.assertNotNull(event.getLocalDateTime());
-            Assert.assertNotNull(event.getLocalTime());
-            Assert.assertNotNull(event.getMonthDay());
-            Assert.assertNotNull(event.getOffsetDateTime());
-            Assert.assertNotNull(event.getOffsetTime());
-            Assert.assertNotNull(event.getYear());
-            Assert.assertNotNull(event.getYearMonth());
-            Assert.assertNotNull(event.getZonedDateTime());
+            check( event );
         });
+    }
+
+    @Test
+    @TestForIssue( jiraKey = "HHH-16240")
+    public void generatesCurrentTimestampInStatelessSession() {
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap( Session.class);
+            try (StatelessSession statelessSession = session.getSessionFactory().openStatelessSession()) {
+                Event event = new Event();
+                statelessSession.getTransaction().begin();
+                statelessSession.insert(event);
+                statelessSession.getTransaction().commit();
+                check( event );
+            }
+        });
+    }
+
+    private void check(Event event) {
+        Assert.assertNotNull(event.getDate());
+        Assert.assertNotNull(event.getCalendar());
+        Assert.assertNotNull(event.getSqlDate());
+        Assert.assertNotNull(event.getTime());
+        Assert.assertNotNull(event.getTimestamp());
+        Assert.assertNotNull(event.getInstant());
+        Assert.assertNotNull(event.getLocalDate());
+        Assert.assertNotNull(event.getLocalDateTime());
+        Assert.assertNotNull(event.getLocalTime());
+        Assert.assertNotNull(event.getMonthDay());
+        Assert.assertNotNull(event.getOffsetDateTime());
+        Assert.assertNotNull(event.getOffsetTime());
+        Assert.assertNotNull(event.getYear());
+        Assert.assertNotNull(event.getYearMonth());
+        Assert.assertNotNull(event.getZonedDateTime());
     }
 }

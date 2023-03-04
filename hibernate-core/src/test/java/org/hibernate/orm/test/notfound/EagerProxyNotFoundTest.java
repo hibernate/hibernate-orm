@@ -197,6 +197,40 @@ public class EagerProxyNotFoundTest {
 	}
 
 	@Test
+	public void testGetEmployeeWithNotExistingAssociation(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Employee employee = new Employee();
+					employee.id = 1;
+					session.persist( employee );
+
+					session.flush();
+
+					session.createNativeQuery( "update Employee set locationId = 3 where id = 1" )
+							.executeUpdate();
+				} );
+		try {
+			scope.inTransaction( session -> session.get( Employee.class, 1 ) );
+			fail( "EntityNotFoundException should have been thrown because Employee.location is not found " +
+						  "and is not mapped with @NotFound(IGNORE)" );
+		}
+		catch (EntityNotFoundException expected) {
+		}
+
+		// also test explicit join
+		try {
+			scope.inTransaction( session -> session.createQuery(
+					"from Employee e left join e.location ",
+					Employee.class
+			).getSingleResult() );
+			fail( "EntityNotFoundException should have been thrown because Employee.location is not found " +
+						  "and is not mapped with @NotFound(IGNORE)" );
+		}
+		catch (EntityNotFoundException expected) {
+		}
+	}
+
+	@Test
 	public void testExistingProxyWithNoAssociation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

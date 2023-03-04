@@ -23,6 +23,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 /**
  * Custom {@link TruncFunction} for Sybase which uses a dialect-specific emulation function for datetimes
@@ -94,10 +95,16 @@ public class SybaseTruncFunction extends TruncFunction {
 			sqlAppender.append( '(' );
 			sqlAppender.append( "datetime,substring(convert(varchar," );
 			sqlAstArguments.get( 0 ).accept( walker );
-			sqlAppender.append( ",21),1,17-len(" );
-			sqlAstArguments.get( 1 ).accept( walker );
-			sqlAppender.append( "))+" );
-			sqlAstArguments.get( 1 ).accept( walker );
+			sqlAppender.append( ",21),1,17" );
+			if ( sqlAstArguments.size() > 1 ) {
+				sqlAppender.append( "-len(" );
+				sqlAstArguments.get( 1 ).accept( walker );
+				sqlAppender.append( "))+" );
+				sqlAstArguments.get( 1 ).accept( walker );
+			}
+			else {
+				sqlAppender.append( ')' );
+			}
 			sqlAppender.append( ",21)" );
 		}
 
@@ -127,22 +134,25 @@ public class SybaseTruncFunction extends TruncFunction {
 					literal = ":00";
 					break;
 				case SECOND:
-					literal = "";
+					literal = null;
 					break;
 				default:
 					throw new UnsupportedOperationException( "Temporal unit not supported [" + temporalUnit + "]" );
 			}
-			final SqmTypedNode<?> datetime = arguments.get( 0 );
-			final SqmLiteral<String> sqmLiteral = new SqmLiteral<>(
-					literal,
-					typeConfiguration.getBasicTypeForJavaType( String.class ),
-					nodeBuilder
-			);
 
 			return new SelfRenderingSqmFunction<>(
 					this,
 					this,
-					asList( datetime, sqmLiteral ),
+					literal == null ?
+							singletonList( arguments.get( 0 ) ) :
+							asList(
+									arguments.get( 0 ),
+									new SqmLiteral<>(
+											literal,
+											typeConfiguration.getBasicTypeForJavaType( String.class ),
+											nodeBuilder
+									)
+							),
 					impliedResultType,
 					null,
 					getReturnTypeResolver(),

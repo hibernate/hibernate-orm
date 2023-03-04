@@ -78,10 +78,20 @@ public class SqmMappingModelHelper {
 			String name,
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType) {
+		return resolveSqmPathSource( name, null, valueDomainType, jpaBindableType, false );
+	}
+
+	public static <J> SqmPathSource<J> resolveSqmPathSource(
+			String name,
+			SqmPathSource<J> pathModel,
+			DomainType<J> valueDomainType,
+			Bindable.BindableType jpaBindableType,
+			boolean isGeneric) {
 
 		if ( valueDomainType instanceof BasicDomainType<?> ) {
 			return new BasicSqmPathSource<>(
 					name,
+					pathModel,
 					(BasicDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -90,6 +100,7 @@ public class SqmMappingModelHelper {
 		if ( valueDomainType instanceof AnyMappingDomainType<?> ) {
 			return new AnyMappingSqmPathSource<>(
 					name,
+					pathModel,
 					(AnyMappingDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -98,14 +109,17 @@ public class SqmMappingModelHelper {
 		if ( valueDomainType instanceof EmbeddableDomainType<?> ) {
 			return new EmbeddedSqmPathSource<>(
 					name,
+					pathModel,
 					(EmbeddableDomainType<J>) valueDomainType,
-					jpaBindableType
+					jpaBindableType,
+					isGeneric
 			);
 		}
 
 		if ( valueDomainType instanceof EntityDomainType<?> ) {
 			return new EntitySqmPathSource<>(
 					name,
+					pathModel,
 					(EntityDomainType<J>) valueDomainType,
 					jpaBindableType
 			);
@@ -114,6 +128,7 @@ public class SqmMappingModelHelper {
 		if ( valueDomainType instanceof MappedSuperclassDomainType<?> ) {
 			return new MappedSuperclassSqmPathSource<>(
 					name,
+					pathModel,
 					(MappedSuperclassDomainType<J>) valueDomainType,
 					jpaBindableType
 			);

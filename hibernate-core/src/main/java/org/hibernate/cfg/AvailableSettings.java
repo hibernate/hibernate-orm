@@ -308,7 +308,7 @@ public interface AvailableSettings {
 	 * Setting that controls whether we seek out JPA "static metamodel" classes
 	 * and populate them, either:<ul>
 	 *     <li>
-	 *         <b>enabled</b> -Do the population
+	 *         <b>enabled</b> - Do the population
 	 *     </li>
 	 *     <li>
 	 *         <b>disabled</b> - Do not do the population
@@ -1420,7 +1420,7 @@ public interface AvailableSettings {
 	 *     <li>a {@link Class} implementing {@link org.hibernate.cache.spi.CacheKeysFactory},
 	 *     <li>the name of a class implementing {@link org.hibernate.cache.spi.CacheKeysFactory},
 	 *     <li>{@code "default"} as a short name for {@link org.hibernate.cache.internal.DefaultCacheKeysFactory}, or
-	 *     <li>'{@code "simple"} as a short name for {@link org.hibernate.cache.internal.SimpleCacheKeysFactory}.
+	 *     <li>{@code "simple"} as a short name for {@link org.hibernate.cache.internal.SimpleCacheKeysFactory}.
 	 * </ul>
 	 *
 	 * @since 5.2

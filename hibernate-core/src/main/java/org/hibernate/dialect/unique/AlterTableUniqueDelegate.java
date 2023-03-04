@@ -76,13 +76,20 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 			SqlStringGenerationContext context) {
 		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
 		final StringBuilder command = new StringBuilder( dialect.getAlterTableString(tableName) );
+		command.append( ' ' );
 		command.append( dialect.getDropUniqueKeyString() );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			command.append( "if exists " );
+			command.append( " if exists " );
+			command.append( dialect.quote( uniqueKey.getName() ) );
 		}
-		command.append( dialect.quote( uniqueKey.getName() ) );
-		if ( dialect.supportsIfExistsAfterConstraintName() ) {
+		else if ( dialect.supportsIfExistsAfterConstraintName() ) {
+			command.append( ' ' );
+			command.append( dialect.quote( uniqueKey.getName() ) );
 			command.append( " if exists" );
+		}
+		else {
+			command.append( ' ' );
+			command.append( dialect.quote( uniqueKey.getName() ) );
 		}
 		return command.toString();
 	}

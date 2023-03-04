@@ -14,10 +14,20 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -124,4 +134,86 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 
 		assertEquals("alter table if exists table_name", dialect.getAlterTableString( "table_name" ));
 	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-16252" )
+	public void testAlterTableDropConstraintString() {
+		PostgreSQLDialect dialect = new PostgreSQLDialect();
+		AlterTableUniqueDelegate alterTable = new AlterTableUniqueDelegate( dialect );
+		final Table table = new Table( "orm", "table_name" );
+		final UniqueKey uniqueKey = new UniqueKey();
+		uniqueKey.setName( "unique_something" );
+		uniqueKey.setTable( table );
+		final String sql = alterTable.getAlterTableToDropUniqueKeyCommand(
+				uniqueKey,
+				null,
+				new MockSqlStringGenerationContext()
+		);
+
+		assertEquals("alter table if exists table_name drop constraint if exists unique_something", sql );
+	}
+
+	private static class MockSqlStringGenerationContext implements SqlStringGenerationContext {
+
+		@Override
+		public Dialect getDialect() {
+			return null;
+		}
+
+		@Override
+		public IdentifierHelper getIdentifierHelper() {
+			return null;
+		}
+
+		@Override
+		public Identifier toIdentifier(String text) {
+			return null;
+		}
+
+		@Override
+		public Identifier getDefaultCatalog() {
+			return null;
+		}
+
+		@Override
+		public Identifier catalogWithDefault(Identifier explicitCatalogOrNull) {
+			return null;
+		}
+
+		@Override
+		public Identifier getDefaultSchema() {
+			return null;
+		}
+
+		@Override
+		public Identifier schemaWithDefault(Identifier explicitSchemaOrNull) {
+			return null;
+		}
+
+		@Override
+		public String format(QualifiedTableName qualifiedName) {
+			return qualifiedName.getTableName().render();
+		}
+
+		@Override
+		public String format(QualifiedSequenceName qualifiedName) {
+			return null;
+		}
+
+		@Override
+		public String format(QualifiedName qualifiedName) {
+			return null;
+		}
+
+		@Override
+		public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
+			return null;
+		}
+
+		@Override
+		public boolean isMigration() {
+			return false;
+		}
+	}
+
 }

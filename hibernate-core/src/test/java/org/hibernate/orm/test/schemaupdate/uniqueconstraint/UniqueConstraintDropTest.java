@@ -139,11 +139,11 @@ public class UniqueConstraintDropTest {
 	}
 
 	private boolean checkDropConstraint(String tableName, String columnName) throws IOException {
-		String regex = getDialect().getAlterTableString( tableName ) + getDialect().getDropUniqueKeyString();
+		String regex = getDialect().getAlterTableString( tableName ) + ' ' + getDialect().getDropUniqueKeyString();
 		if ( getDialect().supportsIfExistsBeforeConstraintName() ) {
-			regex += "if exists ";
+			regex += " if exists";
 		}
-		regex += "uk_.*";
+		regex += " uk_.*";
 		if ( getDialect().supportsIfExistsAfterConstraintName() ) {
 			regex += " if exists";
 		}

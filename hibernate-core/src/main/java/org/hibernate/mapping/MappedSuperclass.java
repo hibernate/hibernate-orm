@@ -17,18 +17,23 @@ import java.util.List;
  *
  * @author Emmanuel Bernard
  */
-public class MappedSuperclass {
+public class MappedSuperclass implements IdentifiableTypeClass {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
 	private final List<Property> declaredProperties;
+	private final Table implicitTable;
 	private Class<?> mappedClass;
 	private Property identifierProperty;
 	private Property version;
 	private Component identifierMapper;
 
-	public MappedSuperclass(MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass) {
+	public MappedSuperclass(
+			MappedSuperclass superMappedSuperclass,
+			PersistentClass superPersistentClass,
+			Table implicitTable) {
 		this.superMappedSuperclass = superMappedSuperclass;
 		this.superPersistentClass = superPersistentClass;
+		this.implicitTable = implicitTable;
 		this.declaredProperties = new ArrayList<>();
 	}
 
@@ -204,5 +209,50 @@ public class MappedSuperclass {
 
 	public void prepareForMappingModel() {
 		declaredProperties.sort( Comparator.comparing( Property::getName ) );
+	}
+
+	@Override
+	public Table findTable(String name) {
+		return null;
+	}
+
+	@Override
+	public Table getTable(String name) {
+		return null;
+	}
+
+	@Override
+	public Join findSecondaryTable(String name) {
+		return null;
+	}
+
+	@Override
+	public Join getSecondaryTable(String name) {
+		return null;
+	}
+
+	@Override
+	public IdentifiableTypeClass getSuperType() {
+		if ( superPersistentClass != null ) {
+			return superPersistentClass;
+		}
+		return superMappedSuperclass;
+	}
+
+	@Override
+	public List<IdentifiableTypeClass> getSubTypes() {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public Table getImplicitTable() {
+		return implicitTable;
+	}
+
+	@Override
+	public void applyProperty(Property property) {
+		assert property.getValue().getTable() != null;
+		assert property.getValue().getTable().equals( getImplicitTable() );
+		addDeclaredProperty( property );
 	}
 }

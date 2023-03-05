@@ -513,6 +513,10 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		return this;
 	}
 
+	public AttributeConverterManager getAttributeConverterManager() {
+		return attributeConverterManager;
+	}
+
 	@Override
 	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 		attributeConverterManager.addConverter(

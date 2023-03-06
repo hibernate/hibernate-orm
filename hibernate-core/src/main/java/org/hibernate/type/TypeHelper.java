@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 
@@ -182,41 +183,55 @@ public class TypeHelper {
 			final Object owner,
 			final Map<Object, Object> copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
-		Object[] copied = new Object[original.length];
+		final Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
-			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				copied[i] = target[i];
-			}
-			else if ( types[i].isComponentType() ) {
-				// need to extract the component values and check for subtype replacements...
-				CompositeType componentType = ( CompositeType ) types[i];
-				Type[] subtypes = componentType.getSubtypes();
-				Object[] origComponentValues = original[i] == null
-						? new Object[subtypes.length]
-						: componentType.getPropertyValues( original[i], session );
-				Object[] targetComponentValues = target[i] == null
-						? new Object[subtypes.length]
-						: componentType.getPropertyValues( target[i], session );
-				final Object[] objects = replaceAssociations(
-						origComponentValues,
-						targetComponentValues,
-						subtypes,
-						session,
-						null,
-						copyCache,
-						foreignKeyDirection
-				);
-				if ( componentType.isMutable() && target[i] != null && objects != null ) {
-					componentType.setPropertyValues( target[i], objects );
-				}
-				copied[i] = target[i];
-			}
-			else if ( !types[i].isAssociationType() ) {
+			final Object currentOriginal = original[i];
+			if ( currentOriginal == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| currentOriginal == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else {
-				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache, foreignKeyDirection );
+				final Type type = types[i];
+				if ( type.isComponentType() ) {
+					final CompositeType compositeType = (CompositeType) type;
+					// need to extract the component values and check for subtype replacements...
+					final Type[] subtypes = compositeType.getSubtypes();
+					final Object[] origComponentValues = currentOriginal == null
+							? new Object[subtypes.length]
+							: compositeType.getPropertyValues( currentOriginal, session );
+					final Object[] targetComponentValues = target[i] == null
+							? new Object[subtypes.length]
+							: compositeType.getPropertyValues( target[i], session );
+					final Object[] objects = replaceAssociations(
+							origComponentValues,
+							targetComponentValues,
+							subtypes,
+							session,
+							null,
+							copyCache,
+							foreignKeyDirection
+					);
+					if ( target[i] != null && compositeType instanceof ComponentType ) {
+						final ComponentType componentType = (ComponentType) compositeType;
+						if ( componentType.isCompositeUserType() ) {
+							final EmbeddableInstantiator instantiator = ( (ComponentType) compositeType ).getMappingModelPart()
+									.getEmbeddableTypeDescriptor()
+									.getRepresentationStrategy()
+									.getInstantiator();
+							target[i] = instantiator.instantiate( () -> objects, session.getSessionFactory() );
+						}
+						else {
+							compositeType.setPropertyValues( target[i], objects );
+						}
+					}
+					copied[i] = target[i];
+				}
+				else if ( !type.isAssociationType() ) {
+					copied[i] = target[i];
+				}
+				else {
+					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
+				}
 			}
 		}
 		return copied;

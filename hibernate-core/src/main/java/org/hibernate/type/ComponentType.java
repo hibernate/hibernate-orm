@@ -837,4 +837,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		}
 		return mappingModelPart;
 	}
+
+	public boolean isCompositeUserType() {
+		return compositeUserType != null;
+	}
 }

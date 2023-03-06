@@ -314,7 +314,7 @@ public class CommonFunctionFactory {
 	 * SAP HANA
 	 */
 	public void trunc_roundMode() {
-		trunc( "round(?1,0,round_down)", "round(?1,?2,round_down)", TruncFunction.DatetimeTrunc.FORMAT, "to_date" );
+		trunc( "round(?1,0,round_down)", "round(?1,?2,round_down)", TruncFunction.DatetimeTrunc.FORMAT, "to_timestamp" );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

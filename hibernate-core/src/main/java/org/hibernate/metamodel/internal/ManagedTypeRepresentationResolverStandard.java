@@ -69,14 +69,12 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
 //		RepresentationMode representation = bootDescriptor.getExplicitRepresentationMode();
-		RepresentationMode representation = null;
-		if ( representation == null ) {
-			if ( bootDescriptor.getComponentClassName() == null ) {
-				representation = RepresentationMode.MAP;
-			}
-			else {
-				representation = RepresentationMode.POJO;
-			}
+		final RepresentationMode representation;
+		if ( bootDescriptor.getComponentClassName() == null ) {
+			representation = RepresentationMode.MAP;
+		}
+		else {
+			representation = RepresentationMode.POJO;
 		}
 
 		final CompositeUserType<?> compositeUserType;

@@ -688,7 +688,7 @@ public class DefaultCatalogAndSchemaTest {
 				serviceRegistry.getService( ConfigurationService.class ).getSettings()
 		);
 		StringWriter writer = new StringWriter();
-		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, action );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, action );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 

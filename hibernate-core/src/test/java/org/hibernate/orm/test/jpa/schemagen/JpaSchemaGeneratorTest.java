@@ -70,7 +70,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 		Map<Object, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE, getCreateSqlScript() );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, getCreateSqlScript() );
 		doTest( settings );
 	}
 
@@ -80,7 +80,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 		Map<Object, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE, getResourceUrlString( getCreateSqlScript() ) );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, getResourceUrlString( getCreateSqlScript() ) );
 		doTest( settings );
 	}
 

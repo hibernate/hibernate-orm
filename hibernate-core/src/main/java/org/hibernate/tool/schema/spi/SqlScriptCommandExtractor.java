@@ -19,9 +19,9 @@ import org.hibernate.service.ServiceRegistry;
  * @author Lukasz Antoniak
  *
  * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_IMPORT_FILES
- * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_LOAD_SCRIPT_SOURCE
- * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_CREATE_SCRIPT_SOURCE
- * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DROP_SCRIPT_SOURCE
+ * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+ * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE
+ * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE
  */
 public interface SqlScriptCommandExtractor extends Service {
 	/**

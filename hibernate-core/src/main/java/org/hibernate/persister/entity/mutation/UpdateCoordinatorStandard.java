@@ -970,7 +970,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return session.getSessionFactory()
 				.getServiceRegistry()
 				.getService( MutationExecutorService.class )
-				.createExecutor( () -> batchKey, group, session );
+				.createExecutor( ( session.getTransactionCoordinator() != null &&
+										session.getTransactionCoordinator().isTransactionActive() ? () -> batchKey : () -> null ),
+								group, session );
 	}
 
 	protected MutationOperationGroup generateDynamicUpdateGroup(

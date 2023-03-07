@@ -47,7 +47,7 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 @SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = {
-				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
 public class LazyToOneWithSelectFetchModeTests {

@@ -57,7 +57,7 @@ public class OrderSequenceGenerationTest extends BaseEnversJPAFunctionalTestCase
 		options.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
 		options.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
 		options.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
-		options.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
+		options.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		options.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 	}
 

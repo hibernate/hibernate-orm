@@ -37,7 +37,7 @@ import static org.junit.Assert.assertThat;
 )
 @ServiceRegistry(
 		settings = {
-				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
 @SessionFactory

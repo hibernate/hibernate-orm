@@ -46,7 +46,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(
 		settings = {
-				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
 public class EagerToOneWithSelectFetchModeTests {

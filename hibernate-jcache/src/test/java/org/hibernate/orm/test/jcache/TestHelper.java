@@ -119,7 +119,7 @@ public class TestHelper {
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
 				.configure( "hibernate-config/hibernate.cfg.xml" )
 				.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" )
-				.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )
+				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
 		if ( H2Dialect.class.equals( DialectContext.getDialect().getClass() ) ) {

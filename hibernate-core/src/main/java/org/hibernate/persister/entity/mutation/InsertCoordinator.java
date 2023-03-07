@@ -49,17 +49,17 @@ import static org.hibernate.generator.EventType.INSERT;
 @Internal
 public class InsertCoordinator extends AbstractMutationCoordinator {
 	private final MutationOperationGroup staticInsertGroup;
-	private final BasicBatchKey insertBatchKey;
+	private final BasicBatchKey batchKey;
 
 	public InsertCoordinator(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
 		if ( entityPersister.hasInsertGeneratedProperties() ) {
 			// disable batching in case of insert generated properties
-			insertBatchKey = null;
+			batchKey = null;
 		}
 		else {
-			insertBatchKey = new BasicBatchKey(
+			batchKey = new BasicBatchKey(
 					entityPersister.getEntityName() + "#INSERT",
 					null
 			);
@@ -80,7 +80,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	}
 
 	public BasicBatchKey getInsertBatchKey() {
-		return insertBatchKey;
+		return batchKey;
 	}
 
 	/**
@@ -301,11 +301,13 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup insertGroup) {
+	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group) {
 		return session.getFactory()
 				.getServiceRegistry()
 				.getService( MutationExecutorService.class )
-				.createExecutor( () -> insertBatchKey, insertGroup, session );
+				.createExecutor( ( session.getTransactionCoordinator() != null &&
+									session.getTransactionCoordinator().isTransactionActive() ? () -> batchKey : () -> null ),
+								group, session );
 	}
 
 	protected static TableInclusionChecker getTableInclusionChecker(InsertValuesAnalysis insertValuesAnalysis) {

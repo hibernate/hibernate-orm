@@ -38,7 +38,7 @@ public class UserDetail {
 	@JoinColumn(name = "user_fk")
 	private User user;
 
-	private UserDetail() {
+	protected UserDetail() {
 	}
 
 	public UserDetail(Integer id, String city, Boolean active, User user) {

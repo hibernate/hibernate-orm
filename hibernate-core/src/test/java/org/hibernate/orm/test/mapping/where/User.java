@@ -47,7 +47,7 @@ public class User {
 	@OneToMany(mappedBy = "user", fetch = LAZY)
 	private Set<UserSkill> skills = new HashSet<>();
 
-	private User() {
+	protected User() {
 	}
 
 	public User(Integer id, String name) {
@@ -105,9 +105,9 @@ public class User {
 		return hash(id);
 	}
 
-	@Override
-	public String toString() {
-		return format("User(id={0}, name={1}, detail={2}, skills=[{3}])",
-				id, name, detail, skills.stream().map(UserSkill::toString).collect(joining(", ")));
-	}
+//	@Override
+//	public String toString() {
+//		return format("User(id={0}, name={1}, detail={2}, skills=[{3}])",
+//				id, name, detail, skills.stream().map(UserSkill::toString).collect(joining(", ")));
+//	}
 }

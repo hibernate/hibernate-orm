@@ -3052,15 +3052,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
-
-			pluralAttributeMapping.applyBaseRestrictions(
-					(predicate) -> addCollectionFilterPredicate( joinedTableGroup.getNavigablePath(), predicate ),
-					joinedTableGroup,
-					true,
-					getLoadQueryInfluencers().getEnabledFilters(),
-					null,
-					this
-			);
+//
+//			pluralAttributeMapping.applyBaseRestrictions(
+//					(predicate) -> addCollectionFilterPredicate( joinedTableGroup.getNavigablePath(), predicate ),
+//					joinedTableGroup,
+//					true,
+//					getLoadQueryInfluencers().getEnabledFilters(),
+//					null,
+//					this
+//			);
 		}
 		else {
 			assert modelPart instanceof TableGroupJoinProducer;
@@ -7250,26 +7250,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							);
 							lhs.addTableGroupJoin( tableGroupJoin );
 
-							if ( fetchable instanceof PluralAttributeMapping ) {
-								// apply restrictions
-								( (Restrictable) fetchable ).applyBaseRestrictions(
-										tableGroupJoin::applyPredicate,
-										tableGroupJoin.getJoinedGroup(),
-										true,
-										loadQueryInfluencers.getEnabledFilters(),
-										null,
-										getSqlAstCreationState()
-								);
-
-								( (PluralAttributeMapping) fetchable ).applyBaseManyToManyRestrictions(
-										tableGroupJoin::applyPredicate,
-										tableGroupJoin.getJoinedGroup(),
-										true,
-										loadQueryInfluencers.getEnabledFilters(),
-										null,
-										getSqlAstCreationState()
-								);
-							}
+//							if ( fetchable instanceof PluralAttributeMapping ) {
+//								// apply restrictions
+//								( (Restrictable) fetchable ).applyBaseRestrictions(
+//										tableGroupJoin::applyPredicate,
+//										tableGroupJoin.getJoinedGroup(),
+//										true,
+//										loadQueryInfluencers.getEnabledFilters(),
+//										null,
+//										getSqlAstCreationState()
+//								);
+//
+//								( (PluralAttributeMapping) fetchable ).applyBaseManyToManyRestrictions(
+//										tableGroupJoin::applyPredicate,
+//										tableGroupJoin.getJoinedGroup(),
+//										true,
+//										loadQueryInfluencers.getEnabledFilters(),
+//										null,
+//										getSqlAstCreationState()
+//								);
+//							}
 
 							// and return the joined group
 							return tableGroupJoin.getJoinedGroup();

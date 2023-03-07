@@ -9,6 +9,7 @@ package org.hibernate.sql.results.jdbc.spi;
 import java.util.Set;
 
 import org.hibernate.Incubating;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.results.ResultSetMapping;
 
@@ -32,6 +33,7 @@ public interface JdbcValuesMappingProducer {
 	 */
 	JdbcValuesMapping resolve(
 			JdbcValuesMetadata jdbcResultsMetadata,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory);
 
 	void addAffectedTableNames(Set<String> affectedTableNames, SessionFactoryImplementor sessionFactory);

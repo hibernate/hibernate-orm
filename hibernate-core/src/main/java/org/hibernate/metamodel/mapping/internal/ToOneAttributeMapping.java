@@ -1793,11 +1793,12 @@ public class ToOneAttributeMapping
 							creationState
 					) );
 
+					// Note specifically we DO NOT apply `@Filter` restrictions
 					getAssociatedEntityMappingType().applyWhereRestrictions(
 							join::applyPredicate,
 							tableGroup,
 							true,
-							null
+							creationState
 					);
 				}
 		);

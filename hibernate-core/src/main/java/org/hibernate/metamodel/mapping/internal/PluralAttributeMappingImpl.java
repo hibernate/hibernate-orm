@@ -581,6 +581,24 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 
+		getCollectionDescriptor().applyBaseRestrictions(
+				predicateCollector::applyPredicate,
+				tableGroup,
+				true,
+				creationState.getLoadQueryInfluencers().getEnabledFilters(),
+				null,
+				creationState
+		);
+
+		getCollectionDescriptor().applyBaseManyToManyRestrictions(
+				predicateCollector::applyPredicate,
+				tableGroup,
+				true,
+				creationState.getLoadQueryInfluencers().getEnabledFilters(),
+				null,
+				creationState
+		);
+
 		return new TableGroupJoin(
 				navigablePath,
 				determineSqlJoinType( lhs, requestedJoinType, fetched ),

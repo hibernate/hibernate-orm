@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -43,6 +44,7 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 	@Override
 	public JdbcValuesMapping resolve(
 			JdbcValuesMetadata jdbcResultsMetadata,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 		final List<SqlSelection> sqlSelections = resolvedMapping.getSqlSelections();
 		List<SqlSelection> resolvedSelections = null;

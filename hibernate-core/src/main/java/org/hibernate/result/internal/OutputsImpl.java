@@ -177,7 +177,7 @@ public class OutputsImpl implements Outputs {
 				null,
 				null,
 				this.context.getQueryOptions(),
-				resultSetMapping.resolve( resultSetAccess, getSessionFactory() ),
+				resultSetMapping.resolve( resultSetAccess, context.getSession().getLoadQueryInfluencers(), getSessionFactory() ),
 				null,
 				executionContext
 		);

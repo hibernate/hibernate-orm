@@ -38,7 +38,7 @@ public class UserSkill {
 	@JoinColumn(name = "user_fk")
 	private User user;
 
-	private UserSkill() {
+	protected UserSkill() {
 	}
 
 	public UserSkill(Integer id, String skillName, Boolean deleted, User user) {

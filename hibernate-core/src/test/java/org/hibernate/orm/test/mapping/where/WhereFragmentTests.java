@@ -8,12 +8,14 @@ package org.hibernate.orm.test.mapping.where;
 
 import java.util.Map;
 
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.Where;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.SpecHints;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -32,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for {@link Where} handling
+ * Tests for {@link Where} handling.
  *
  * @implNote Requires H2 simply because we need hard-coded schema export.  The schema is simple and would
  * probably work on a larger number of databases; but there should really be nothing database specific in
@@ -55,10 +57,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @DomainModel( annotatedClasses = { User.class, UserDetail.class, UserSkill.class } )
-@SessionFactory
+@SessionFactory( useCollectingStatementInspector = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16019" )
 @RequiresDialect( H2Dialect.class )
 public class WhereFragmentTests {
+	/**
+	 * Loads a User, fetching their detail and skills using an entity-graph
+	 */
 	public User findUserByIdUsingEntityGraph(Integer id, SessionFactoryScope factoryScope) {
 		return factoryScope.fromTransaction( (session) -> {
 			final Map<String, Object> properties = toSettingsMap(
@@ -70,6 +75,9 @@ public class WhereFragmentTests {
 		} );
 	}
 
+	/**
+	 * Loads a User (via HQL), fetching their detail and skills using an entity-graph
+	 */
 	public User findUserByNameUsingEntityGraph(String name, SessionFactoryScope factoryScope) {
 		return factoryScope.fromTransaction( (session) -> {
 			final RootGraphImplementor<?> entityGraph = session.getEntityGraph( "user-entity-graph" );
@@ -80,6 +88,9 @@ public class WhereFragmentTests {
 		} );
 	}
 
+	/**
+	 * Loads a User (via HQL), fetching their detail and skills using HQL fetch joins
+	 */
 	public User findUserByNameUsingHqlFetches(String name, SessionFactoryScope factoryScope) {
 		final String queryString = "from User u left join fetch u.detail left join fetch u.skills where u.name=?1";
 		return factoryScope.fromTransaction( (session) ->session
@@ -98,45 +109,58 @@ public class WhereFragmentTests {
 		} );
 	}
 
-	@Test
-	public void findUserByIdWithNoDetailAndNoSkillTest(SessionFactoryScope scope) {
-		// Given
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Alice - no detail and no skills
+
+	/**
+	 * Create the user Alice who has no details and no skills
+	 */
+	private void createAlice(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			User user = new User( 1, "Alice");
 			session.persist( user );
 		} );
+	}
 
-		// When
+	private void verifyAlice(User alice) {
+		assertThat( alice ).isNotNull();
+		assertThat( alice.getName() ).isEqualTo( "Alice" );
+		assertThat( alice.getDetail() ).isNull();
+		assertThat( alice.getSkills() ).isEmpty();
+	}
+
+	@Test
+	public void testFindAliceById(SessionFactoryScope scope) {
+		createAlice( scope );
+
 		User alice = findUserByIdUsingEntityGraph( 1, scope );
-
-		// Then
-		assertThat( alice ).isNotNull();
-		assertThat( alice.getName() ).isEqualTo( "Alice" );
-		assertThat( alice.getDetail() ).isNull();
-		assertThat( alice.getSkills() ).isEmpty();
+		verifyAlice( alice );
 	}
 
 	@Test
-	public void findUserByNameWithNoDetailAndNoSkillTest(SessionFactoryScope scope) {
-		// Given
-		scope.inTransaction( (session) -> {
-			User user = new User( 1, "Alice");
-			session.persist(user);
-		} );
+	public void testFindAliceByHql(SessionFactoryScope scope) {
+		createAlice( scope );
 
-		// When
 		User alice = findUserByNameUsingEntityGraph("Alice", scope);
-
-		// Then
-		assertThat( alice ).isNotNull();
-		assertThat( alice.getName() ).isEqualTo( "Alice" );
-		assertThat( alice.getDetail() ).isNull();
-		assertThat( alice.getSkills() ).isEmpty();
+		verifyAlice( alice );
 	}
 
 	@Test
-	public void findUserByIdWithInactiveDetailAndNoSkillTest(SessionFactoryScope scope) {
-		// Given
+	public void testFindAliceByHqlWithFetchJoin(SessionFactoryScope scope) {
+		createAlice( scope );
+
+		User alice = findUserByNameUsingHqlFetches("Alice", scope);
+		verifyAlice( alice );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Bob - an inactive detail and no skills
+
+	/**
+	 * Create the user Bob who has an inactive detail and no skills
+	 */
+	private static void createBob(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			User user = new User( 1, "Bob" );
 			session.persist( user );
@@ -144,57 +168,45 @@ public class WhereFragmentTests {
 			UserDetail detail = new UserDetail( 1, "New York", false, user );
 			session.persist( detail );
 		} );
+	}
 
-		// When
+	private static void verifyBob(User bob) {
+		assertThat( bob ).isNotNull();
+		assertThat( bob.getName() ).isEqualTo( "Bob" );
+		assertThat( bob.getDetail() ).isNull();
+		assertThat( bob.getSkills() ).isEmpty();
+	}
+
+	@Test
+	public void testFindBobById(SessionFactoryScope scope) {
+		createBob( scope );
+
 		User bob = findUserByIdUsingEntityGraph( 1, scope );
-
-		// Then
-		assertThat( bob ).isNotNull();
-		assertThat( bob.getName() ).isEqualTo( "Bob" );
-		assertThat( bob.getDetail() ).isNull();
-		assertThat( bob.getSkills() ).isEmpty();
+		verifyBob( bob );
 	}
 
 	@Test
-	public void findUserByNameWithInactiveDetailAndNoSkillTest(SessionFactoryScope scope) {
-		// Given
-		scope.inTransaction( (session) -> {
-			User user = new User( 1, "Bob" );
-			session.persist(user);
+	public void testFindBobByHql(SessionFactoryScope scope) {
+		createBob( scope );
 
-			UserDetail detail = new UserDetail( 1, "New York", false, user );
-			session.persist(detail);
-		} );
-
-
-		// When
 		User bob = findUserByNameUsingEntityGraph( "Bob", scope );
-
-		// Then
-		assertThat( bob ).isNotNull();
-		assertThat( bob.getName() ).isEqualTo( "Bob" );
-		assertThat( bob.getDetail() ).isNull();
-		assertThat( bob.getSkills() ).isEmpty();
+		verifyBob( bob );
 	}
 
 	@Test
-	public void testActiveDetailAndDeletedSkillFromLoad(SessionFactoryScope scope) {
-		createCharlie( scope );
-		verifyActiveDetailAndDeletedSkill( findUserByIdUsingEntityGraph( 1, scope ) );
+	public void testFindBobByHqlWithFetchJoin(SessionFactoryScope scope) {
+		createBob( scope );
+
+		User bob = findUserByNameUsingHqlFetches( "Bob", scope );
+		verifyBob( bob );
 	}
 
-	@Test
-	public void testActiveDetailAndDeletedSkillFromHqlWithGraph(SessionFactoryScope scope) {
-		createCharlie( scope );
-		verifyActiveDetailAndDeletedSkill( findUserByNameUsingEntityGraph( "Charlie", scope ) );
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Charlie - an active detail and a deleted skill
 
-	@Test
-	public void testActiveDetailAndDeletedSkillFromHqlWithFetches(SessionFactoryScope scope) {
-		createCharlie( scope );
-		verifyActiveDetailAndDeletedSkill( findUserByNameUsingHqlFetches( "Charlie", scope ) );
-	}
-
+	/**
+	 * Create the user Bob who has an active detail and a deleted skill
+	 */
 	private static void createCharlie(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			User user = new User( 1, "Charlie" );
@@ -208,7 +220,7 @@ public class WhereFragmentTests {
 		} );
 	}
 
-	private void verifyActiveDetailAndDeletedSkill(User user) {
+	private void verifyCharlie(User user) {
 		assertThat( user ).isNotNull();
 		assertThat( user.getName() ).isEqualTo( "Charlie" );
 		assertThat( user.getDetail() ).isNotNull();
@@ -218,8 +230,31 @@ public class WhereFragmentTests {
 	}
 
 	@Test
-	public void findUserByIdWithMultipleDetailsAndSingleSkillTest(SessionFactoryScope scope) {
-		// Given
+	public void testFindCharlieById(SessionFactoryScope scope) {
+		createCharlie( scope );
+		verifyCharlie( findUserByIdUsingEntityGraph( 1, scope ) );
+	}
+
+	@Test
+	public void testFindCharlieByHqlWithGraph(SessionFactoryScope scope) {
+		createCharlie( scope );
+		verifyCharlie( findUserByNameUsingEntityGraph( "Charlie", scope ) );
+	}
+
+	@Test
+	public void testFindCharlieByHqlWithJoinFetch(SessionFactoryScope scope) {
+		createCharlie( scope );
+		verifyCharlie( findUserByNameUsingHqlFetches( "Charlie", scope ) );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// David - multiple details, single skill
+
+	/**
+	 * Create the user David with multiple details, single skill
+	 */
+	private static void createDavid(SessionFactoryScope scope) {
 		scope.inTransaction( (entityManager) -> {
 			User user = new User( 1, "David" );
 			entityManager.persist( user );
@@ -233,139 +268,53 @@ public class WhereFragmentTests {
 			UserSkill skill = new UserSkill( 1, "Kotlin", false, user );
 			entityManager.persist( skill );
 		} );
+	}
 
-		// When
+	private static void verifyDavid(User david) {
+		assertNotNull( david );
+		assertEquals("David", david.getName());
+
+		assertNotNull( david.getDetail());
+		assertTrue( david.getDetail().getActive());
+		assertEquals("Rome", david.getDetail().getCity());
+
+		assertFalse( david.getSkills().isEmpty());
+		assertTrue( david.getSkills().stream().noneMatch(UserSkill::getDeleted));
+		assertEquals(1, david.getSkills().size());
+		assertEquals("Kotlin", david.getSkills().stream().findFirst().orElseThrow(IllegalStateException::new).getSkillName());
+	}
+
+	@Test
+	public void testFindDavidById(SessionFactoryScope scope) {
+		createDavid( scope );
+
 		User david = findUserByIdUsingEntityGraph( 1, scope );
-
-		// Then
-		assertNotNull(david);
-		assertEquals("David", david.getName());
-
-		assertNotNull(david.getDetail());
-		assertTrue(david.getDetail().getActive());
-		assertEquals("Rome", david.getDetail().getCity());
-
-		assertFalse(david.getSkills().isEmpty());
-		assertTrue(david.getSkills().stream().noneMatch(UserSkill::getDeleted));
-		assertEquals(1, david.getSkills().size());
-		assertEquals("Kotlin", david.getSkills().stream().findFirst().orElseThrow(IllegalStateException::new).getSkillName());
+		verifyDavid( david );
 	}
 
 	@Test
-	public void findUserByNameWithMultipleDetailsAndSingleSkillTest(SessionFactoryScope scope) {
-		// Given
-		scope.inTransaction( (entityManager) -> {
-			User user = new User( 1, "David" );
-			entityManager.persist( user );
+	public void testFindDavidByHqlWithGraph(SessionFactoryScope scope) {
+		createDavid( scope );
 
-			UserDetail detail1 = new UserDetail( 1, "London", false, user );
-			entityManager.persist( detail1 );
-
-			UserDetail detail2 = new UserDetail( 2, "Rome", true, user );
-			entityManager.persist( detail2 );
-
-			UserSkill skill = new UserSkill( 1, "Kotlin", false, user );
-			entityManager.persist( skill );
-		} );
-
-		// When
 		User david = findUserByNameUsingEntityGraph("David", scope );
-
-		// Then
-		assertNotNull(david);
-		assertEquals("David", david.getName());
-
-		assertNotNull(david.getDetail());
-		assertTrue(david.getDetail().getActive());
-		assertEquals("Rome", david.getDetail().getCity());
-
-		assertFalse(david.getSkills().isEmpty());
-		assertTrue(david.getSkills().stream().noneMatch(UserSkill::getDeleted));
-		assertEquals(1, david.getSkills().size());
-		assertEquals("Kotlin", david.getSkills().stream().findFirst().orElseThrow(IllegalStateException::new).getSkillName());
+		verifyDavid( david );
 	}
 
 	@Test
-	public void findUserByIdWithSingleDetailAndMultipleSkillsTest(SessionFactoryScope scope) {
-		// Given
-		scope.inTransaction( (entityManager) -> {
-			User user = new User( 1, "Frank" );
-			entityManager.persist( user );
+	public void testFindDavidByHqlWithJoinFetch(SessionFactoryScope scope) {
+		createDavid( scope );
 
-			UserDetail detail = new UserDetail( 1, "Madrid", true, user );
-			entityManager.persist( detail );
-
-			UserSkill skill1 = new UserSkill( 1, "Rust", true, user );
-			entityManager.persist( skill1 );
-
-			UserSkill skill2 = new UserSkill( 2, "Erlang", false, user );
-			entityManager.persist( skill2 );
-
-			UserSkill skill3 = new UserSkill( 3, "Go", false, user );
-			entityManager.persist( skill3 );
-
-			UserSkill skill4 = new UserSkill( 4, "C", true, user );
-			entityManager.persist( skill4 );
-		} );
-
-		// When
-		User frank = findUserByIdUsingEntityGraph( 1, scope );
-
-		// Then
-		assertNotNull(frank);
-		assertEquals("Frank", frank.getName());
-
-		assertNotNull(frank.getDetail());
-		assertTrue(frank.getDetail().getActive());
-		assertEquals("Madrid", frank.getDetail().getCity());
-
-		assertFalse(frank.getSkills().isEmpty());
-		assertTrue(frank.getSkills().stream().noneMatch(UserSkill::getDeleted));
-		assertEquals(2, frank.getSkills().size());
+		User david = findUserByNameUsingHqlFetches("David", scope );
+		verifyDavid( david );
 	}
 
-	@Test
-	public void findUserByNameWithSingleDetailAndMultipleSkillsTest(SessionFactoryScope scope) {
-		// Given
-		scope.inTransaction( (entityManager) -> {
-			User user = new User( 1, "Frank" );
-			entityManager.persist( user );
 
-			UserDetail detail = new UserDetail( 1, "Madrid", true, user );
-			entityManager.persist( detail );
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Eve
+	//		- 1 active and 2 inactive details
+	//		- 1 active and 1 inactive skills
 
-			UserSkill skill1 = new UserSkill( 1, "Rust", true, user );
-			entityManager.persist( skill1 );
-
-			UserSkill skill2 = new UserSkill( 2, "Erlang", false, user );
-			entityManager.persist( skill2 );
-
-			UserSkill skill3 = new UserSkill( 3, "Go", false, user );
-			entityManager.persist( skill3 );
-
-			UserSkill skill4 = new UserSkill( 4, "C", true, user );
-			entityManager.persist( skill4 );
-		} );
-
-		// When
-		User frank = findUserByNameUsingEntityGraph( "Frank", scope );
-
-		// Then
-		assertNotNull(frank);
-		assertEquals("Frank", frank.getName());
-
-		assertNotNull(frank.getDetail());
-		assertTrue(frank.getDetail().getActive());
-		assertEquals("Madrid", frank.getDetail().getCity());
-
-		assertFalse(frank.getSkills().isEmpty());
-		assertTrue(frank.getSkills().stream().noneMatch(UserSkill::getDeleted));
-		assertEquals(2, frank.getSkills().size());
-	}
-
-	@Test
-	public void findUserByIdWithMultipleDetailsAndMultipleSkillsTest1(SessionFactoryScope scope) {
-		// Given
+	private static void createEve(SessionFactoryScope scope) {
 		scope.inTransaction( (entityManager) -> {
 			User user = new User( 1, "Eve" );
 			entityManager.persist( user );
@@ -385,67 +334,121 @@ public class WhereFragmentTests {
 			UserSkill skill2 = new UserSkill( 2, "Ruby", false, user );
 			entityManager.persist( skill2 );
 		} );
+	}
 
-		// When
+	private static void verifyEve(User eve) {
+		assertNotNull( eve );
+		assertEquals("Eve", eve.getName());
+
+		assertNotNull( eve.getDetail());
+		assertTrue( eve.getDetail().getActive());
+		assertEquals("Berlin", eve.getDetail().getCity());
+
+		assertFalse( eve.getSkills().isEmpty());
+		assertTrue( eve.getSkills().stream().noneMatch(UserSkill::getDeleted));
+		assertEquals(1, eve.getSkills().size());
+		assertEquals("Ruby", eve.getSkills().stream().findFirst().orElseThrow(IllegalStateException::new).getSkillName());
+	}
+
+	@Test
+	public void testFindEveById(SessionFactoryScope scope) {
+		createEve( scope );
+
 		User eve = findUserByIdUsingEntityGraph( 1, scope );
-
-		// Then
-		assertNotNull(eve);
-		assertEquals("Eve", eve.getName());
-
-		assertNotNull(eve.getDetail());
-		assertTrue(eve.getDetail().getActive());
-		assertEquals("Berlin", eve.getDetail().getCity());
-
-		assertFalse(eve.getSkills().isEmpty());
-		assertTrue(eve.getSkills().stream().noneMatch(UserSkill::getDeleted));
-		assertEquals(1, eve.getSkills().size());
-		assertEquals("Ruby", eve.getSkills().stream().findFirst().orElseThrow(IllegalStateException::new).getSkillName());
+		verifyEve( eve );
 	}
 
 	@Test
-	public void findUserByNameWithMultipleDetailsAndMultipleSkillsTest1(SessionFactoryScope scope) {
-		// Given
-		scope.inTransaction( (entityManager) -> {
-			User user = new User( 1, "Eve" );
-			entityManager.persist( user );
+	public void testFindEveByHqlWithGraph(SessionFactoryScope scope) {
+		createEve( scope );
 
-			UserDetail detail1 = new UserDetail( 1, "Moscow", false, user );
-			entityManager.persist( detail1 );
-
-			UserDetail detail2 = new UserDetail( 2, "Istanbul", false, user );
-			entityManager.persist( detail2 );
-
-			UserDetail detail3 = new UserDetail( 3, "Berlin", true, user );
-			entityManager.persist( detail3 );
-
-			UserSkill skill1 = new UserSkill( 1, "Python", true, user );
-			entityManager.persist( skill1 );
-
-			UserSkill skill2 = new UserSkill( 2, "Ruby", false, user );
-			entityManager.persist( skill2 );
-		} );
-
-		// When
 		User eve = findUserByNameUsingEntityGraph( "Eve", scope );
-
-		// Then
-		assertNotNull(eve);
-		assertEquals("Eve", eve.getName());
-
-		assertNotNull(eve.getDetail());
-		assertTrue(eve.getDetail().getActive());
-		assertEquals("Berlin", eve.getDetail().getCity());
-
-		assertFalse(eve.getSkills().isEmpty());
-		assertTrue(eve.getSkills().stream().noneMatch(UserSkill::getDeleted));
-		assertEquals(1, eve.getSkills().size());
-		assertEquals("Ruby", eve.getSkills().stream().findFirst().orElseThrow(IllegalStateException::new).getSkillName());
+		verifyEve( eve );
 	}
 
 	@Test
-	public void findUserByIdWithMultipleDetailsAndMultipleSkillsTest2(SessionFactoryScope scope) {
-		// Given
+	public void testFindEveByHqlWithJoinFetch(SessionFactoryScope scope) {
+		createEve( scope );
+
+		User eve = findUserByNameUsingHqlFetches( "Eve", scope );
+		verifyEve( eve );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Frank
+	//		- 1 active detail
+	//		- 2 deleted and 2 active skills
+
+	/**
+	 * Create the user Frank with a single active detail and 2 deleted and 2 active skills
+	 */
+	private static void createFrank(SessionFactoryScope scope) {
+		scope.inTransaction( (entityManager) -> {
+			User user = new User( 1, "Frank" );
+			entityManager.persist( user );
+
+			UserDetail detail = new UserDetail( 1, "Madrid", true, user );
+			entityManager.persist( detail );
+
+			UserSkill skill1 = new UserSkill( 1, "Rust", true, user );
+			entityManager.persist( skill1 );
+
+			UserSkill skill2 = new UserSkill( 2, "Erlang", false, user );
+			entityManager.persist( skill2 );
+
+			UserSkill skill3 = new UserSkill( 3, "Go", false, user );
+			entityManager.persist( skill3 );
+
+			UserSkill skill4 = new UserSkill( 4, "C", true, user );
+			entityManager.persist( skill4 );
+		} );
+	}
+
+	private static void verifyFrank(User frank) {
+		assertNotNull( frank );
+		assertEquals("Frank", frank.getName());
+
+		assertNotNull( frank.getDetail());
+		assertTrue( frank.getDetail().getActive());
+		assertEquals("Madrid", frank.getDetail().getCity());
+
+		assertFalse( frank.getSkills().isEmpty());
+		assertTrue( frank.getSkills().stream().noneMatch(UserSkill::getDeleted));
+		assertEquals(2, frank.getSkills().size());
+	}
+
+	@Test
+	public void testFindFrankById(SessionFactoryScope scope) {
+		createFrank( scope );
+
+		User frank = findUserByIdUsingEntityGraph( 1, scope );
+		verifyFrank( frank );
+	}
+
+	@Test
+	public void testFindFrankByHqlWithGraph(SessionFactoryScope scope) {
+		createFrank( scope );
+
+		User frank = findUserByNameUsingEntityGraph( "Frank", scope );
+		verifyFrank( frank );
+	}
+
+	@Test
+	public void testFindFrankByHqlWithJoinFetch(SessionFactoryScope scope) {
+		createFrank( scope );
+
+		User frank = findUserByNameUsingHqlFetches( "Frank", scope );
+		verifyFrank( frank );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Grace
+	//		- 1 active and 1 inactive details
+	//		- 4 inactive skills
+
+	private static void createGrace(SessionFactoryScope scope) {
 		scope.inTransaction( (entityManager) -> {
 			User user = new User( 1, "Grace" );
 			entityManager.persist( user );
@@ -468,62 +471,112 @@ public class WhereFragmentTests {
 			UserSkill skill4 = new UserSkill( 4, "Scala", false, user );
 			entityManager.persist( skill4 );
 		} );
+	}
 
-		// When
+	private static void verifyGrace(User grace) {
+		assertNotNull( grace );
+		assertEquals("Grace", grace.getName());
+
+		assertNotNull( grace.getDetail());
+		assertTrue( grace.getDetail().getActive());
+		assertEquals("Barcelona", grace.getDetail().getCity());
+
+		assertFalse( grace.getSkills().isEmpty());
+		assertTrue( grace.getSkills().stream().noneMatch(UserSkill::getDeleted));
+		assertEquals(4, grace.getSkills().size());
+	}
+
+	@Test
+	public void testFindGraceById(SessionFactoryScope scope) {
+		createGrace( scope );
+
 		User grace = findUserByIdUsingEntityGraph( 1, scope );
-
-		// Then
-		assertNotNull(grace);
-		assertEquals("Grace", grace.getName());
-
-		assertNotNull(grace.getDetail());
-		assertTrue(grace.getDetail().getActive());
-		assertEquals("Barcelona", grace.getDetail().getCity());
-
-		assertFalse(grace.getSkills().isEmpty());
-		assertTrue(grace.getSkills().stream().noneMatch(UserSkill::getDeleted));
-		assertEquals(4, grace.getSkills().size());
+		verifyGrace( grace );
 	}
 
 	@Test
-	public void findUserByNameWithMultipleDetailsAndMultipleSkillsTest2(SessionFactoryScope scope) {
-		// Given
-		scope.inTransaction( (entityManager) -> {
-			User user = new User( 1, "Grace" );
-			entityManager.persist( user );
+	public void testFindGraceByHqlWithGraph(SessionFactoryScope scope) {
+		createGrace( scope );
 
-			UserDetail detail1 = new UserDetail( 1, "Vienna", false, user );
-			entityManager.persist( detail1 );
+		User grace = findUserByNameUsingEntityGraph( "Grace", scope );
+		verifyGrace( grace );
+	}
 
-			UserDetail detail2 = new UserDetail( 2, "Barcelona", true, user );
-			entityManager.persist( detail2 );
+	@Test
+	public void testFindGraceByHqlWithJoinFetch(SessionFactoryScope scope) {
+		createGrace( scope );
 
-			UserSkill skill1 = new UserSkill( 1, "PHP", false, user );
-			entityManager.persist( skill1 );
+		User grace = findUserByNameUsingHqlFetches( "Grace", scope );
+		verifyGrace( grace );
+	}
 
-			UserSkill skill2 = new UserSkill( 2, "Swift", false, user );
-			entityManager.persist( skill2 );
 
-			UserSkill skill3 = new UserSkill( 3, "Dart", false, user );
-			entityManager.persist( skill3 );
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Zurg
+	//		- 1 active and 1 inactive detail
+	//		- 1 active and 1 inactive skill
 
-			UserSkill skill4 = new UserSkill( 4, "Scala", false, user );
-			entityManager.persist( skill4 );
+	private void createZurg(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final User user = new User( 1, "Zurg" );
+			session.persist( user );
+
+			UserDetail detail1 = new UserDetail( 1, "Infinity", false, user );
+			session.persist( detail1 );
+
+			UserDetail detail2 = new UserDetail( 2, "Beyond", true, user );
+			session.persist( detail2 );
+
+			UserSkill skill1 = new UserSkill( 1, "Plundering", false, user );
+			session.persist( skill1 );
+
+			UserSkill skill2 = new UserSkill( 2, "Pillaging", true, user );
+			session.persist( skill2 );
+		} );
+	}
+
+	@Test
+	public void testLoadEntity(SessionFactoryScope scope) {
+		createZurg( scope );
+
+		scope.inTransaction( (session) -> {
+			final UserSkill skill1 = session.find( UserSkill.class, 1 );
+			assertThat( skill1 ).isNotNull();
+
+			final UserSkill skill2 = session.find( UserSkill.class, 2 );
+			assertThat( skill2 ).isNull();
 		} );
 
-		// When
-		User grace = findUserByNameUsingEntityGraph( "Grace", scope );
+		scope.inTransaction( (session) -> {
+			final UserDetail detail1 = session.find( UserDetail.class, 1 );
+			assertThat( detail1 ).isNull();
 
-		// Then
-		assertNotNull(grace);
-		assertEquals("Grace", grace.getName());
+			final UserDetail detail2 = session.find( UserDetail.class, 2 );
+			assertThat( detail2 ).isNotNull();
+		} );
+	}
 
-		assertNotNull(grace.getDetail());
-		assertTrue(grace.getDetail().getActive());
-		assertEquals("Barcelona", grace.getDetail().getCity());
+	@Test
+	public void testSubsequentInitialization(SessionFactoryScope scope) {
+		createZurg( scope );
 
-		assertFalse(grace.getSkills().isEmpty());
-		assertTrue(grace.getSkills().stream().noneMatch(UserSkill::getDeleted));
-		assertEquals(4, grace.getSkills().size());
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			User user = session.find( User.class, 1 );
+
+			// this should have initialized User & User#detail in 2 separate selects
+			assertThat( Hibernate.isInitialized( user.getDetail() ) ).isTrue();
+			assertThat( Hibernate.isInitialized( user.getSkills() ) ).isFalse();
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
+
+			// trigger load of User#skills
+			statementInspector.clear();
+			Hibernate.initialize( user.getSkills() );
+			assertThat( Hibernate.isInitialized( user.getSkills() ) ).isTrue();
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( user.getSkills() ).hasSize( 1 );
+		} );
 	}
 }

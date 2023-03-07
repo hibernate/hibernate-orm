@@ -287,15 +287,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return ( (Joinable) getElementPersister() ).getTableName();
 	}
 
-	@Override
-	public void applyWhereRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			boolean useQualifier,
-			SqlAstCreationState creationState) {
-		super.applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
-	}
-
 	protected void applyWhereFragments(
 			Consumer<Predicate> predicateConsumer,
 			String alias,

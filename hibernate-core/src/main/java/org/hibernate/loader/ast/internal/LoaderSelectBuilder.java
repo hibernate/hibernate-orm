@@ -43,6 +43,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
@@ -688,6 +689,11 @@ public class LoaderSelectBuilder {
 			LoaderSqlAstCreationState creationState,
 			ImmutableFetchList.Builder fetches) {
 		return (fetchable, isKeyFetchable) -> {
+			final FetchableContainer parentMappingType = fetchParent.getReferencedMappingContainer();
+			if ( parentMappingType instanceof AbstractEntityPersister
+					&& !( (AbstractEntityPersister) parentMappingType ).isSelectable( fetchParent, fetchable ) ) {
+				return;
+			}
 			final NavigablePath fetchablePath;
 
 			if ( isKeyFetchable ) {

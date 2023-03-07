@@ -89,7 +89,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlDropScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DROP_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
 		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, getDropSqlScript() );
 		doTest( settings );
@@ -99,7 +99,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlDropScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DROP_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
 		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, getResourceUrlString( getDropSqlScript() ) );
 		doTest( settings );

@@ -12,8 +12,8 @@ import org.hibernate.cfg.AvailableSettings;
  * Enumeration of the various types of sources understood by various SchemaManagementTooling
  * delegates.
  *
- * @see AvailableSettings#HBM2DDL_CREATE_SOURCE
- * @see AvailableSettings#HBM2DDL_DROP_SOURCE
+ * @see AvailableSettings#JAKARTA_HBM2DDL_CREATE_SOURCE
+ * @see AvailableSettings#JAKARTA_HBM2DDL_DROP_SOURCE
  *
  * @author Steve Ebersole
  */

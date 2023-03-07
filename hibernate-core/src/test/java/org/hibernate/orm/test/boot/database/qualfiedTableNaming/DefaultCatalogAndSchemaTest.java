@@ -689,7 +689,7 @@ public class DefaultCatalogAndSchemaTest {
 		);
 		StringWriter writer = new StringWriter();
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, action );
-		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 
 		SchemaManagementToolCoordinator.process(

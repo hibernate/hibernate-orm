@@ -1646,20 +1646,10 @@ public interface AvailableSettings {
 	String HBM2DDL_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**
-	 * Specifies whether schema generation commands for schema dropping are to be determined
-	 * based on object/relational mapping metadata, DDL scripts, or a combination of the two.
-	 * See {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
-	 * <p>
-	 * If no value is specified, a default is inferred as follows:
-	 * <ul>
-	 *     <li>if source scripts are specified via {@value #HBM2DDL_DROP_SCRIPT_SOURCE}, then
-	 *         {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
-	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
-	 *         assumed.
-	 * </ul>
-	 *
+	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_DROP_SOURCE}.
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
+	@Deprecated
 	String HBM2DDL_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
 
 	/**
@@ -1937,7 +1927,7 @@ public interface AvailableSettings {
 	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading
 	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
 	 *
-	 * @see #HBM2DDL_DROP_SOURCE
+	 * @see #JAKARTA_HBM2DDL_DROP_SOURCE
 	 */
 	String JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE = "jakarta.persistence.schema-generation.drop-script-source";
 

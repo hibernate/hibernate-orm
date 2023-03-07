@@ -242,6 +242,12 @@ public class Identifier implements Comparable<Identifier> {
 		return getCanonicalName().equals( that.getCanonicalName() );
 	}
 
+	public boolean matches(String name) {
+		return isQuoted()
+				? text.equals( name )
+				: text.equalsIgnoreCase( name );
+	}
+
 	@Override
 	public int hashCode() {
 		return isQuoted ? text.hashCode() : text.toLowerCase( Locale.ENGLISH ).hashCode();

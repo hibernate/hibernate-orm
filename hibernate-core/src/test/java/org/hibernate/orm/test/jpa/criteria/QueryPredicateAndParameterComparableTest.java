@@ -170,7 +170,7 @@ public class QueryPredicateAndParameterComparableTest {
 		private Set<Submission> submissions;
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public int getId() {
 			return id;
 		}
@@ -221,7 +221,7 @@ public class QueryPredicateAndParameterComparableTest {
 		}
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		public int getSubmissionid() {
 			return submissionid;
 		}

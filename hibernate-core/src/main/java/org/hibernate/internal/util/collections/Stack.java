@@ -36,6 +36,11 @@ public interface Stack<T> {
 	T getCurrent();
 
 	/**
+	 * The element at the given offset, relative to the top of the stack
+	 */
+	T peek(int offsetFromTop);
+
+	/**
 	 * The element currently at the bottom of the stack
 	 */
 	T getRoot();

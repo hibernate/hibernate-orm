@@ -323,6 +323,12 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		else if ( offsetFetchClauseMode == OffsetFetchClauseMode.EMULATED ) {
 			renderTopClause( querySpec, isRowsOnlyFetchClauseType( querySpec ), true );
 		}
+		else if ( getQueryPartStack().depth() > 1 && querySpec.hasSortSpecifications()
+				&& getQueryPartStack().peek( 1 ) instanceof QueryGroup ) {
+			// If the current query spec has a query group parent, no offset/fetch clause, but an order by clause,
+			// then we must render "top 100 percent" as that is needed for the SQL to be valid
+			appendSql( "top 100 percent " );
+		}
 		super.visitSqlSelections( selectClause );
 	}
 

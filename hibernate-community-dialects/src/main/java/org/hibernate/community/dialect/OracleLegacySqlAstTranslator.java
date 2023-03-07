@@ -335,7 +335,16 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			if ( supportsOffsetFetchClause() ) {
-				renderOffsetFetchClause( queryPart, true );
+				if ( getQueryPartStack().depth() > 1 && queryPart.hasSortSpecifications()
+						&& getQueryPartStack().peek( 1 ) instanceof QueryGroup
+						&& ( queryPart.isRoot() && !hasLimit() || !queryPart.hasOffsetOrFetchClause() ) ) {
+					// If the current query part has a query group parent, no offset/fetch clause, but an order by clause,
+					// then we must render "offset 0 rows" as that is needed for the SQL to be valid
+					appendSql( " offset 0 rows" );
+				}
+				else {
+					renderOffsetFetchClause( queryPart, true );
+				}
 			}
 			else {
 				assertRowsOnlyFetchClauseType( queryPart );

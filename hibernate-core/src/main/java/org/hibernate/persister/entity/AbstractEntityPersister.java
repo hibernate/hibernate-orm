@@ -255,7 +255,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -370,7 +369,6 @@ public abstract class AbstractEntityPersister
 	private final String[][] propertyColumnWriters;
 	private final boolean[][] propertyColumnUpdateable;
 	private final boolean[][] propertyColumnInsertable;
-	private final boolean[] propertySelectable;
 
 	private final List<Integer> lobProperties;
 
@@ -619,7 +617,6 @@ public abstract class AbstractEntityPersister
 		propertyColumnNames = new String[hydrateSpan][];
 		propertyColumnFormulaTemplates = new String[hydrateSpan][];
 		propertyColumnWriters = new String[hydrateSpan][];
-		propertySelectable = new boolean[hydrateSpan];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
 
@@ -690,8 +687,6 @@ public abstract class AbstractEntityPersister
 
 			propertyColumnUpdateable[i] = prop.getValue().getColumnUpdateability();
 			propertyColumnInsertable[i] = prop.getValue().getColumnInsertability();
-
-			propertySelectable[i] = prop.isSelectable();
 
 			if ( prop.isLob() && dialect.forceLobAsLastValue() ) {
 				lobPropertiesLocalCollector.add( i );
@@ -1813,7 +1808,7 @@ public abstract class AbstractEntityPersister
 					throw new AssertionFailure("fetchTiming was null");
 				}
 
-				if ( isSelectable( fetchParent, fetchable ) ) {
+				if ( fetchable.isSelectable() ) {
 					final Fetch fetch = fetchParent.generateFetchableFetch(
 							fetchable,
 							fetchParent.resolveNavigablePath( fetchable ),
@@ -1830,37 +1825,12 @@ public abstract class AbstractEntityPersister
 		return fetches.build();
 	}
 
+	/**
+	 * @deprecated use {@link Fetchable#isSelectable()} instead.
+	 */
+	@Deprecated
 	public boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
-		if ( fetchParent instanceof EmbeddableResultGraphNode ) {
-			return true;
-		}
-		else {
-			final AttributeMapping attributeMapping = fetchable.asAttributeMapping();
-			if ( attributeMapping != null ) {
-				final int propertyNumber = attributeMapping.getStateArrayPosition();
-				if ( propertyNumber < propertySelectable.length ) {
-					return propertySelectable[propertyNumber];
-				}
-				else {
-					final ManagedMappingType declaringType = attributeMapping.getDeclaringType();
-					// try to check select-ability from the declaring type
-					if ( declaringType != this ) {
-						assert declaringType instanceof AbstractEntityPersister;
-						final AbstractEntityPersister subPersister = (AbstractEntityPersister) declaringType;
-						return subPersister.propertySelectable[propertyNumber];
-					}
-					else {
-						throw new IllegalArgumentException(
-								"Unrecognized fetchable [" + fetchable.getFetchableName() + "] at index "
-										+ propertyNumber + " for entity [" + getEntityName() + "]"
-						);
-					}
-				}
-			}
-			else {
-				return true;
-			}
-		}
+		return fetchable.isSelectable();
 	}
 
 	@Override
@@ -4162,7 +4132,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isPropertySelectable(int propertyNumber) {
-		return propertySelectable[propertyNumber];
+		return getAttributeMapping( propertyNumber ).getAttributeMetadata().isSelectable();
 	}
 
 	@Override
@@ -5424,7 +5394,8 @@ public abstract class AbstractEntityPersister
 					bootProperty.isOptional(),
 					bootProperty.isInsertable(),
 					bootProperty.isUpdateable(),
-					bootProperty.isOptimisticLocked()
+					bootProperty.isOptimisticLocked(),
+					bootProperty.isSelectable()
 			);
 
 			return new DiscriminatedAssociationAttributeMapping(

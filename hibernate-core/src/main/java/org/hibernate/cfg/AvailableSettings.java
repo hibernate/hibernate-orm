@@ -1698,7 +1698,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * The default value is {@code /import.sql}.
 	 * <p>
-	 * The JPA-standard setting {@link #HBM2DDL_CREATE_SCRIPT_SOURCE} is now preferred.
+	 * The JPA-standard setting {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE} is now preferred.
 	 */
 	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
 
@@ -1711,8 +1711,8 @@ public interface AvailableSettings {
 
 	/**
 	 * The {@link org.hibernate.tool.schema.spi.SqlScriptCommandExtractor} implementation
-	 * to use for parsing source/import files specified by {@link #HBM2DDL_CREATE_SCRIPT_SOURCE},
-	 * {@link #HBM2DDL_DROP_SCRIPT_SOURCE} or {@link #HBM2DDL_IMPORT_FILES}. Either:
+	 * to use for parsing source/import files specified by {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE},
+	 * {@link #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE} or {@link #HBM2DDL_IMPORT_FILES}. Either:
 	 * <ul>
 	 * <li>an instance of {@link org.hibernate.tool.schema.spi.SqlScriptCommandExtractor},
 	 * <li>a {@link Class} object representing a class that implements {@code SqlScriptCommandExtractor},
@@ -1866,7 +1866,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #HBM2DDL_CREATE_SCRIPT_SOURCE},
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_CREATE_SOURCE},
 	 *     then {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
 	 *     assumed.
@@ -1883,7 +1883,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #HBM2DDL_DROP_SCRIPT_SOURCE}, then
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}, then
 	 *     {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "metadata"}
 	 *     is assumed.
@@ -1900,7 +1900,7 @@ public interface AvailableSettings {
 	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.
 	 * This setting is now preferred.
 	 *
-	 * @see #HBM2DDL_CREATE_SOURCE
+	 * @see #JAKARTA_HBM2DDL_CREATE_SOURCE
 	 * @see #HBM2DDL_IMPORT_FILES
 	 */
 	String JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE = "jakarta.persistence.schema-generation.create-script-source";

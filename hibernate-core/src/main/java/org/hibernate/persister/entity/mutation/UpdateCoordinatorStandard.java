@@ -1564,7 +1564,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private MutationOperationGroup buildVersionUpdateGroup() {
 		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
-		if ( versionMapping == null || entityPersister().getSuperMappingType() != null ) {
+		if ( versionMapping == null ) {
 			return null;
 		}
 		else {
@@ -1590,7 +1590,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			return new MutationOperationGroupSingle( MutationType.UPDATE, entityPersister(), jdbcMutation );
 		}
-
 	}
 
 	private void addPartitionRestriction(TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder) {

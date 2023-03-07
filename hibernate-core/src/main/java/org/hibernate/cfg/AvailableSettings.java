@@ -1653,15 +1653,9 @@ public interface AvailableSettings {
 	String HBM2DDL_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
 
 	/**
-	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading
-	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
-	 * <p>
-	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.
-	 * This setting is now preferred.
-	 *
-	 * @see #HBM2DDL_CREATE_SOURCE
-	 * @see #HBM2DDL_IMPORT_FILES
+	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}
 	 */
+	@Deprecated
 	String HBM2DDL_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
 
 	/**

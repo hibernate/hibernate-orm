@@ -1639,20 +1639,10 @@ public interface AvailableSettings {
 	String HBM2DDL_CONNECTION = "javax.persistence.schema-generation-connection";
 
 	/**
-	 * Specifies whether schema generation commands for schema creation are to be determined based
-	 * on object/relational mapping metadata, DDL scripts, or a combination of the two. See
-	 * {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
-	 * <p>
-	 * If no value is specified, a default is inferred as follows:
-	 * <ul>
-	 *     <li>if source scripts are specified via {@value #HBM2DDL_CREATE_SCRIPT_SOURCE}, then
-	 *         {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
-	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
-	 *         assumed.
-	 * </ul>
-	 *
+	 * @deprecated  Migrate to {@link #JAKARTA_HBM2DDL_CREATE_SOURCE} instead
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
+	@Deprecated
 	String HBM2DDL_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**

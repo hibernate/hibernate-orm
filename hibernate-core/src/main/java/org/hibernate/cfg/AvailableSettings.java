@@ -1659,22 +1659,15 @@ public interface AvailableSettings {
 	String HBM2DDL_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
 
 	/**
-	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading
-	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
-	 *
-	 * @see #HBM2DDL_DROP_SOURCE
+	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}
 	 */
+	@Deprecated
 	String HBM2DDL_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
 
 	/**
-	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema creation
-	 * commands should be written to DDL script file, {@value #HBM2DDL_SCRIPTS_CREATE_TARGET}
-	 * specifies either a {@link java.io.Writer} configured for output of the DDL script or a
-	 * string specifying the file URL for the DDL script.
-	 *
-	 * @see #HBM2DDL_SCRIPTS_ACTION
+	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET}
 	 */
-	@SuppressWarnings("JavaDoc")
+	@Deprecated
 	String HBM2DDL_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
 
 	/**

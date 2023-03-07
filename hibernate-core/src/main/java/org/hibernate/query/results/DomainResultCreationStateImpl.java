@@ -31,7 +31,6 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -460,9 +459,7 @@ public class DomainResultCreationStateImpl
 
 	private Consumer<Fetchable> createFetchableConsumer(FetchParent fetchParent, ImmutableFetchList.Builder fetches) {
 		return fetchable -> {
-			final FetchableContainer parentMappingType = fetchParent.getReferencedMappingContainer();
-			if ( parentMappingType instanceof AbstractEntityPersister
-					&& !( ( (AbstractEntityPersister) parentMappingType ).isSelectable( fetchParent, fetchable ) ) ) {
+			if ( !fetchable.isSelectable() ) {
 				return;
 			}
 			final String fetchableName = fetchable.getFetchableName();

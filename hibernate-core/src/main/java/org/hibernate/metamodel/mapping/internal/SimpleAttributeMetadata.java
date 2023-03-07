@@ -21,6 +21,7 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 	private final boolean nullable;
 	private final boolean insertable;
 	private final boolean updateable;
+	private final boolean selectable;
 	private final boolean includeInOptimisticLocking;
 	private final CascadeStyle cascadeStyle;
 
@@ -36,14 +37,19 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 				value.isNullable(),
 				bootProperty.isInsertable(),
 				bootProperty.isUpdateable(),
-				bootProperty.isOptimisticLocked()
+				bootProperty.isOptimisticLocked(),
+				bootProperty.isSelectable()
 		);
 	}
 
 	public SimpleAttributeMetadata(
 			PropertyAccess propertyAccess,
 			MutabilityPlan mutabilityPlan,
-			boolean nullable, boolean insertable, boolean updateable, boolean includeInOptimisticLocking) {
+			boolean nullable,
+			boolean insertable,
+			boolean updateable,
+			boolean includeInOptimisticLocking,
+			boolean selectable) {
 		this(
 				propertyAccess,
 				mutabilityPlan,
@@ -51,6 +57,7 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 				insertable,
 				updateable,
 				includeInOptimisticLocking,
+				selectable,
 				CascadeStyles.NONE // default - but beware of comment on AttributeMetadata#getCascadeStyle having a TODO
 		);
 	}
@@ -62,12 +69,14 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 			boolean insertable,
 			boolean updateable,
 			boolean includeInOptimisticLocking,
+			boolean selectable,
 			CascadeStyle cascadeStyle) {
 		this.propertyAccess = propertyAccess;
 		this.mutabilityPlan = mutabilityPlan;
 		this.nullable = nullable;
 		this.insertable = insertable;
 		this.updateable = updateable;
+		this.selectable = selectable;
 		this.includeInOptimisticLocking = includeInOptimisticLocking;
 		this.cascadeStyle = cascadeStyle;
 	}
@@ -95,6 +104,11 @@ public final class SimpleAttributeMetadata implements AttributeMetadata {
 	@Override
 	public boolean isUpdatable() {
 		return updateable;
+	}
+
+	@Override
+	public boolean isSelectable(){
+		return selectable;
 	}
 
 	@Override

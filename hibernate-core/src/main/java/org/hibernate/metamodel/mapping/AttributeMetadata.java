@@ -25,6 +25,8 @@ public interface AttributeMetadata {
 
 	boolean isUpdatable();
 
+	boolean isSelectable();
+
 	boolean isIncludedInDirtyChecking();
 
 	boolean isIncludedInOptimisticLocking();

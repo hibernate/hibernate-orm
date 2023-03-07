@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.Remove;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
@@ -2059,25 +2060,19 @@ public interface AvailableSettings {
 	 * The {@link org.hibernate.annotations.Where} annotation specifies a restriction
 	 * on the table rows which are visible as entity class instances or collection
 	 * elements.
-	 * <p>
-	 * This setting controls whether the restriction is applied when loading a
-	 * {@link jakarta.persistence.OneToMany one-to-many} or
-	 * {@link jakarta.persistence.ManyToMany many-to-many} association whose target
-	 * type defines the restriction.
-	 * <p>
-	 * By default, the restriction is applied. When this setting is disabled, the
-	 * restriction is not applied.
-	 * <p>
-	 * The setting has no effect on a collection of {@link jakarta.persistence.Embeddable
-	 * embeddable} values containing a {@link jakarta.persistence.ManyToOne many-to-one}
-	 * association to the entity.
-	 * <p>
-	 * This behavior may now be controlled in a safer and more granular way using
-	 * {@link org.hibernate.annotations.Where#applyInToManyFetch}, and so the use
-	 * of this configuration property is no longer recommended.
+	 * <p/>
+	 * This setting controls whether the restriction applied to an entity should
+	 * be applied to association fetches (one-to-one, many-to-one, one-to-many and many-to-many)
+	 * targeting the entity.
 	 *
-	 * @see org.hibernate.annotations.Where#applyInToManyFetch
+	 * @apiNote The setting is very misnamed - it applies across all entity associations, not just collections.
+	 *
+	 * @implSpec Enabled ({@code true}) by default, meaning the restriction is applied. When this setting
+	 * is disabled ({@code false}), the restriction is not applied.
+	 *
+	 * @deprecated Originally added as a backwards compatibility flag
 	 */
+	@Remove @Deprecated( forRemoval = true, since = "6.2" )
 	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
 
 	/**

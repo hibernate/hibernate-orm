@@ -17,6 +17,7 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.Remove;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -160,6 +161,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
+import static org.hibernate.cfg.AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
@@ -194,6 +196,28 @@ public class ModelBinder {
 		};
 		this.implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 		this.relationalObjectBinder = new RelationalObjectBinder( context );
+	}
+
+	/**
+	 * @deprecated Interprets the setting {@value AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS},
+	 * which itself is deprecated
+	 */
+	@SuppressWarnings("removal")
+	@Remove
+	@Deprecated( since = "6.2" )
+	public static boolean useEntityWhereClauseForCollections(MetadataBuildingContext buildingContext) {
+		final Object explicitSetting = buildingContext
+				.getBuildingOptions()
+				.getServiceRegistry()
+				.getService( ConfigurationService.class )
+				.getSettings()
+				.get( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
+		if ( explicitSetting != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSettingNoReplacement( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
+			return ConfigurationHelper.toBoolean( explicitSetting, true );
+		}
+
+		return true;
 	}
 
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
@@ -3420,7 +3444,7 @@ public class ModelBinder {
 
 				final PersistentClass referencedEntityBinding = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
-				if ( useEntityWhereClauseForCollections() ) {
+				if ( useEntityWhereClauseForCollections( metadataBuildingContext ) ) {
 					// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
 					// to the associated entity table:
 					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
@@ -3490,7 +3514,7 @@ public class ModelBinder {
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 
-				if ( useEntityWhereClauseForCollections() ) {
+				if ( useEntityWhereClauseForCollections( metadataBuildingContext ) ) {
 					// For a many-to-many association, there are 2 possible sources of "where" clauses that apply
 					// to the associated entity table (not the join table):
 					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
@@ -3606,18 +3630,6 @@ public class ModelBinder {
 			}
 			return entityBinding;
 		}
-	}
-
-	private boolean useEntityWhereClauseForCollections() {
-		return ConfigurationHelper.getBoolean(
-				AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
-				metadataBuildingContext
-						.getBuildingOptions()
-						.getServiceRegistry()
-						.getService( ConfigurationService.class )
-						.getSettings(),
-				true
-		);
 	}
 
 	private class PluralAttributeListSecondPass extends AbstractPluralAttributeSecondPass {

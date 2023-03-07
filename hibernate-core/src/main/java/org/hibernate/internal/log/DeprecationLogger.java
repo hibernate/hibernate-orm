@@ -266,4 +266,15 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	void deprecatedSettingForRemoval(String settingName, String defaultValue);
 
+	/**
+	 * Different from {@link #deprecatedSetting} in that sometimes there is no
+	 * direct alternative
+	 */
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000030,
+			value = "The [%s] configuration is deprecated and will be removed."
+	)
+	void deprecatedSettingNoReplacement(String settingName);
+
 }

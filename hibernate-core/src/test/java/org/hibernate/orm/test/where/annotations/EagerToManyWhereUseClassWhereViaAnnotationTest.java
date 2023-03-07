@@ -45,11 +45,6 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest extends BaseNonConfi
 		return new Class[] { Product.class, Category.class };
 	}
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "false" );
-	}
-
 	@Test
 	@TestForIssue( jiraKey = "HHH-15936" )
 	public void testAssociatedWhereClause() {
@@ -198,7 +193,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest extends BaseNonConfi
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "inactive = 0", applyInToManyFetch = true)
+	@Where(clause = "inactive = 0")
 	public static class Category {
 		@Id
 		private int id;

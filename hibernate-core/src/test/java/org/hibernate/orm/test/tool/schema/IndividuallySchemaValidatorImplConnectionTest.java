@@ -90,7 +90,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 		connection = connectionProvider.getConnection();
 
 		ssr = new StandardServiceRegistryBuilder()
-			.applySetting( AvailableSettings.HBM2DDL_CONNECTION, connection )
+			.applySetting( AvailableSettings.JAKARTA_HBM2DDL_CONNECTION, connection )
 			.build();
 
 		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );

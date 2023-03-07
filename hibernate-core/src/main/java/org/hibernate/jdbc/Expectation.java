@@ -18,7 +18,7 @@ import org.hibernate.HibernateException;
 public interface Expectation {
 
 	/**
-	 * Is it acceptable to combiner this expectation with statement batching?
+	 * Is it acceptable to combine this expectation with statement batching?
 	 *
 	 * @return True if batching can be combined with this expectation; false otherwise.
 	 */

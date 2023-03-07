@@ -370,6 +370,7 @@ public class MappingModelCreationHelper {
 				bootProperty.isInsertable(),
 				bootProperty.isUpdateable(),
 				bootProperty.isOptimisticLocked(),
+				bootProperty.isSelectable(),
 				cascadeStyle
 		);
 	}
@@ -416,7 +417,7 @@ public class MappingModelCreationHelper {
 
 	@SuppressWarnings("rawtypes")
 	public static AttributeMetadata getAttributeMetadata(PropertyAccess propertyAccess) {
-		return new SimpleAttributeMetadata( propertyAccess, ImmutableMutabilityPlan.INSTANCE, false, true, false, false, null);// todo (6.0) : not sure if CascadeStyle=null is correct
+		return new SimpleAttributeMetadata( propertyAccess, ImmutableMutabilityPlan.INSTANCE, false, true, false, false, true, null);// todo (6.0) : not sure if CascadeStyle=null is correct
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -605,6 +606,7 @@ public class MappingModelCreationHelper {
 				bootProperty.isInsertable(),
 				bootProperty.isUpdateable(),
 				bootProperty.isOptimisticLocked(),
+				bootProperty.isSelectable(),
 				cascadeStyle
 		);
 

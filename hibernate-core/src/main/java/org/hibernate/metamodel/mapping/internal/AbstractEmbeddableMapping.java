@@ -348,6 +348,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						insertable,
 						updateable,
 						includeInOptimisticLocking,
+						true,
 						cascadeStyle
 				);
 

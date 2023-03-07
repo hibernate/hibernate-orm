@@ -102,7 +102,6 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryLogging;
@@ -7130,6 +7129,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Fetch createFetch(FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
+		if ( !fetchable.isSelectable() ) {
+			return null;
+		}
 		final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );
 		final Map.Entry<Integer, List<SqlSelection>> sqlSelectionsToTrack = trackedFetchSelectionsForGroup.get( resolvedNavigablePath );
 		final int sqlSelectionStartIndexForFetch;
@@ -7249,27 +7251,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									BaseSqmToSqlAstConverter.this
 							);
 							lhs.addTableGroupJoin( tableGroupJoin );
-
-//							if ( fetchable instanceof PluralAttributeMapping ) {
-//								// apply restrictions
-//								( (Restrictable) fetchable ).applyBaseRestrictions(
-//										tableGroupJoin::applyPredicate,
-//										tableGroupJoin.getJoinedGroup(),
-//										true,
-//										loadQueryInfluencers.getEnabledFilters(),
-//										null,
-//										getSqlAstCreationState()
-//								);
-//
-//								( (PluralAttributeMapping) fetchable ).applyBaseManyToManyRestrictions(
-//										tableGroupJoin::applyPredicate,
-//										tableGroupJoin.getJoinedGroup(),
-//										true,
-//										loadQueryInfluencers.getEnabledFilters(),
-//										null,
-//										getSqlAstCreationState()
-//								);
-//							}
 
 							// and return the joined group
 							return tableGroupJoin.getJoinedGroup();
@@ -7426,11 +7407,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 				// Base restrictions have already been applied if this is an explicit fetch
 				if ( !explicitFetch ) {
-					final Joinable joinable = pluralAttributeMapping
+					final Restrictable restrictable = pluralAttributeMapping
 							.getCollectionDescriptor()
 							.getCollectionType()
 							.getAssociatedJoinable( getCreationContext().getSessionFactory() );
-					joinable.applyBaseRestrictions(
+					restrictable.applyBaseRestrictions(
 							(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
 							tableGroup,
 							true,

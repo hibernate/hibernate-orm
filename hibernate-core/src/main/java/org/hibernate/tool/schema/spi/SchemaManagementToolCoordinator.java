@@ -514,6 +514,17 @@ public class SchemaManagementToolCoordinator {
 		Object getScriptTargetSetting(Map<?,?> configurationValues);
 	}
 
+	private static Object getConfigurationValue(final Map<?,?> configurationValues, final String referenceKey, final String legacyKey) {
+		Object setting = configurationValues.get( referenceKey );
+		if ( setting == null ) {
+			setting = configurationValues.get( legacyKey );
+			if ( setting != null ) {
+				DEPRECATION_LOGGER.deprecatedSetting( referenceKey, legacyKey );
+			}
+		}
+		return setting;
+	}
+
 	private static class CreateSettingSelector implements SettingSelector {
 		/**
 		 * Singleton access
@@ -522,29 +533,17 @@ public class SchemaManagementToolCoordinator {
 
 		@Override
 		public Object getSourceTypeSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_CREATE_SOURCE );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_CREATE_SOURCE );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_CREATE_SOURCE, HBM2DDL_CREATE_SOURCE );
 		}
 
 		@Override
 		public Object getScriptSourceSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_CREATE_SCRIPT_SOURCE );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, HBM2DDL_CREATE_SCRIPT_SOURCE );
 		}
 
 		@Override
 		public Object getScriptTargetSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, HBM2DDL_SCRIPTS_CREATE_TARGET );
 		}
 	}
 
@@ -556,29 +555,17 @@ public class SchemaManagementToolCoordinator {
 
 		@Override
 		public Object getSourceTypeSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_DROP_SOURCE );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_DROP_SOURCE );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_DROP_SOURCE, HBM2DDL_DROP_SOURCE );
 		}
 
 		@Override
 		public Object getScriptSourceSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_DROP_SCRIPT_SOURCE );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE, HBM2DDL_DROP_SCRIPT_SOURCE );
 		}
 
 		@Override
 		public Object getScriptTargetSetting(Map<?,?> configurationValues) {
-			Object setting = configurationValues.get( HBM2DDL_SCRIPTS_DROP_TARGET );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, HBM2DDL_SCRIPTS_DROP_TARGET );
 		}
 	}
 
@@ -606,11 +593,7 @@ public class SchemaManagementToolCoordinator {
 		@Override
 		public Object getScriptTargetSetting(Map<?,?> configurationValues) {
 			// for now, reuse the CREATE script target setting
-			Object setting = configurationValues.get( HBM2DDL_SCRIPTS_CREATE_TARGET );
-			if ( setting == null ) {
-				setting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET );
-			}
-			return setting;
+			return getConfigurationValue( configurationValues, JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, HBM2DDL_SCRIPTS_CREATE_TARGET );
 		}
 	}
 

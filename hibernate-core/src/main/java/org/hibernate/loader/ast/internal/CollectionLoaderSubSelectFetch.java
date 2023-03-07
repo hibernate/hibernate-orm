@@ -106,7 +106,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 							new CollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() )
 					);
 
-					if ( containedCollection != collection ) {
+					if ( containedCollection != null && containedCollection != collection ) {
 						containedCollection.beginRead();
 						containedCollection.beforeInitialize( getLoadable().getCollectionDescriptor(), -1 );
 

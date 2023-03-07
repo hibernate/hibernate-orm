@@ -91,7 +91,7 @@ public class SchemaMigrationToOutputScriptTest {
 	private void createServiceRegistryAndMetadata(String append) {
 		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.FORMAT_SQL, "false" )
-				.applySetting( Environment.HBM2DDL_SCRIPTS_ACTION, "update" )
+				.applySetting( Environment.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "update" )
 				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, output.getAbsolutePath() );
 
 		if ( append != null ) {

@@ -67,7 +67,7 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 			fail( e.getMessage() );
 		}
 		this.output.deleteOnExit();
-		configuration.setProperty( Environment.HBM2DDL_SCRIPTS_ACTION, "create" );
+		configuration.setProperty( Environment.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "create" );
 		configuration.setProperty( Environment.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, this.output.getAbsolutePath() );
 	}
 

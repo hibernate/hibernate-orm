@@ -25,15 +25,18 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SessionFactory
 @DomainModel(annotatedClasses = { Account.class, Client.class, Record.class })
 @ServiceRegistry(
         settings = {
-                @Setting(name = HBM2DDL_DATABASE_ACTION, value = "create-drop")
+                @Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
         }
 )
 public class TenantIdTest implements SessionFactoryProducer {

@@ -54,7 +54,7 @@ import static org.junit.Assert.assertTrue;
 		settings = {
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
 				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
-				@Setting( name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop" )
+				@Setting( name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop" )
 		}
 )
 @DomainModel(

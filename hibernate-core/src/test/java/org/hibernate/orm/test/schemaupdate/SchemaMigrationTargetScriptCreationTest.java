@@ -60,7 +60,7 @@ public class SchemaMigrationTargetScriptCreationTest extends BaseCoreFunctionalT
 			fail( e.getMessage() );
 		}
 		output.deleteOnExit();
-		configuration.setProperty( Environment.HBM2DDL_DATABASE_ACTION, "update" );
+		configuration.setProperty( Environment.JAKARTA_HBM2DDL_DATABASE_ACTION, "update" );
 		configuration.setProperty( Environment.HBM2DDL_SCRIPTS_ACTION, "update" );
 		configuration.setProperty( Environment.HBM2DDL_SCRIPTS_CREATE_TARGET, output.getAbsolutePath() );
 	}

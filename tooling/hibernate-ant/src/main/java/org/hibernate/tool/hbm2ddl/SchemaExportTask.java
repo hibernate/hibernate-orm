@@ -243,7 +243,7 @@ public class SchemaExportTask extends MatchingTask {
 		}
 
 		if ( output.doExport() ) {
-			ssrBuilder.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, exportType.getAction() );
+			ssrBuilder.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, exportType.getAction() );
 		}
 
 

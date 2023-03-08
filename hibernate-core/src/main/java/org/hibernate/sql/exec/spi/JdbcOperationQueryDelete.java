@@ -18,12 +18,24 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
  */
 public class JdbcOperationQueryDelete extends AbstractJdbcOperationQuery implements JdbcOperationQueryMutation {
 
+	/**
+	 * @deprecated {@code filterJdbcParameters} is no longer used
+	 */
+	@Deprecated
 	public JdbcOperationQueryDelete(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
 			Set<String> affectedTableNames,
 			Set<FilterJdbcParameter> filterJdbcParameters,
 			Map<JdbcParameter, JdbcParameterBinding> appliedParameters) {
-		super( sql, parameterBinders, affectedTableNames, filterJdbcParameters, appliedParameters );
+		this( sql, parameterBinders, affectedTableNames, appliedParameters );
+	}
+
+	public JdbcOperationQueryDelete(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			Set<String> affectedTableNames,
+			Map<JdbcParameter, JdbcParameterBinding> appliedParameters) {
+		super( sql, parameterBinders, affectedTableNames, appliedParameters );
 	}
 }

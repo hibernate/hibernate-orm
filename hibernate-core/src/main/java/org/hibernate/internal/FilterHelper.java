@@ -7,7 +7,6 @@
 package org.hibernate.internal;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -15,13 +14,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.Filter;
-import org.hibernate.MappingException;
-import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -163,48 +159,7 @@ public class FilterHelper {
 			final String filterName = filterNames[i];
 			final FilterImpl enabledFilter = (FilterImpl) enabledFilters.get( filterName );
 			if ( enabledFilter != null ) {
-				String condition = render( aliasGenerator, i );
-				final List<String> filterParameterNames = parameterNames[i];
-				if ( CollectionHelper.isNotEmpty( filterParameterNames ) ) {
-					for ( int paramPos = 0; paramPos < filterParameterNames.size(); paramPos++ ) {
-						final String parameterName = filterParameterNames.get( paramPos );
-						final FilterDefinition filterDefinition = enabledFilter.getFilterDefinition();
-						final JdbcMapping jdbcMapping = filterDefinition.getParameterJdbcMapping( parameterName );
-						final Object parameterValue = enabledFilter.getParameter( parameterName );
-						if ( parameterValue == null ) {
-							throw new MappingException( String.format( "unknown parameter [%s] for filter [%s]", parameterName, filterName ) );
-						}
-
-						final StringBuilder paramMarkers = new StringBuilder( "?" );
-						if ( parameterValue instanceof Iterable
-								&& !jdbcMapping.getJavaTypeDescriptor().isInstance( parameterValue ) ) {
-							final Iterator<?> iterator = ( (Iterable<?>) parameterValue ).iterator();
-							if ( iterator.hasNext() ) {
-								final Object element = iterator.next();
-								final FilterJdbcParameter jdbcParameter = new FilterJdbcParameter( jdbcMapping, element );
-								filterPredicate.applyParameter( jdbcParameter );
-
-								while ( iterator.hasNext() ) {
-									paramMarkers.append( ",?" );
-									filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, iterator.next() ) );
-								}
-							}
-							else {
-								// We need a dummy value if the list is empty
-								filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, null ) );
-							}
-						}
-						else {
-							final Object argument = filterDefinition.processArgument( parameterValue );
-							filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, argument) );
-						}
-
-						final String marker = ":" + filterNames[ i ] + "." + parameterName;
-						condition = condition.replaceAll( marker, paramMarkers.toString() );
-					}
-				}
-
-				filterPredicate.applyFragment( condition );
+				filterPredicate.applyFragment( render( aliasGenerator, i ), enabledFilter, parameterNames[i] );
 			}
 		}
 

@@ -304,7 +304,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	private JdbcParameterBindings createJdbcParameterBindings(CacheableSqmInterpretation sqmInterpretation, DomainQueryExecutionContext executionContext) {
 		final SharedSessionContractImplementor session = executionContext.getSession();
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+		return SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				sqmInterpretation.getJdbcParamsXref(),
@@ -319,8 +319,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				},
 				session
 		);
-		sqmInterpretation.getJdbcSelect().bindFilterJdbcParameters( jdbcParameterBindings );
-		return jdbcParameterBindings;
 	}
 
 	private static CacheableSqmInterpretation buildCacheableSqmInterpretation(

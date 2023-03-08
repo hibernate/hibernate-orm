@@ -113,11 +113,6 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 	}
 
 	@Override
-	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-		return Collections.emptySet();
-	}
-
-	@Override
 	public boolean dependsOnParameterBindings() {
 		return false;
 	}

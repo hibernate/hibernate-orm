@@ -123,9 +123,6 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		if ( deleteTranslator != null ) {
 			jdbcDelete = deleteTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		}
-		else {
-			jdbcDelete.bindFilterJdbcParameters( jdbcParameterBindings );
-		}
 
 		final boolean missingRestriction = sqmDelete.getWhereClause() == null
 				|| sqmDelete.getWhereClause().getPredicate() == null;

@@ -126,7 +126,6 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		assert jdbcParameters.size() % jdbcTypeCount == 0;
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcTypeCount );
-		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		int offset = 0;
 		while ( offset < jdbcParameters.size() ) {

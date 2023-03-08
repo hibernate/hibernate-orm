@@ -30,6 +30,10 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 	private final JdbcParameter limitParameter;
 	private final JdbcLockStrategy jdbcLockStrategy;
 
+	/**
+	 * @deprecated {@code filterJdbcParameters} is no longer used
+	 */
+	@Deprecated
 	public JdbcOperationQuerySelect(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
@@ -40,8 +44,21 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 				sql,
 				parameterBinders,
 				jdbcValuesMappingProducer,
+				affectedTableNames
+		);
+	}
+
+	public JdbcOperationQuerySelect(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Set<String> affectedTableNames) {
+		this(
+				sql,
+				parameterBinders,
+				jdbcValuesMappingProducer,
 				affectedTableNames,
-				filterJdbcParameters,
+				null,
 				0,
 				Integer.MAX_VALUE,
 				Collections.emptyMap(),
@@ -51,6 +68,10 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 		);
 	}
 
+	/**
+	 * @deprecated {@code filterJdbcParameters} is no longer used
+	 */
+	@Deprecated
 	public JdbcOperationQuerySelect(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
@@ -63,7 +84,32 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 			JdbcLockStrategy jdbcLockStrategy,
 			JdbcParameter offsetParameter,
 			JdbcParameter limitParameter) {
-		super( sql, parameterBinders, affectedTableNames, filterJdbcParameters, appliedParameters );
+		this(
+				sql,
+				parameterBinders,
+				jdbcValuesMappingProducer,
+				affectedTableNames,
+				rowsToSkip,
+				maxRows,
+				appliedParameters,
+				jdbcLockStrategy,
+				offsetParameter,
+				limitParameter
+		);
+	}
+
+	public JdbcOperationQuerySelect(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Set<String> affectedTableNames,
+			int rowsToSkip,
+			int maxRows,
+			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
+			JdbcLockStrategy jdbcLockStrategy,
+			JdbcParameter offsetParameter,
+			JdbcParameter limitParameter) {
+		super( sql, parameterBinders, affectedTableNames, appliedParameters );
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.rowsToSkip = rowsToSkip;
 		this.maxRows = maxRows;

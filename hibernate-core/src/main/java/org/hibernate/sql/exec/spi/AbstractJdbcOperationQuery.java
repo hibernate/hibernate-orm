@@ -24,9 +24,12 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 	protected final String sql;
 	protected final List<JdbcParameterBinder> parameterBinders;
 	protected final Set<String> affectedTableNames;
-	protected final Set<FilterJdbcParameter> filterJdbcParameters;
 	protected final Map<JdbcParameter, JdbcParameterBinding> appliedParameters;
 
+	/**
+	 * @deprecated {@code filterJdbcParameters} is no longer used
+	 */
+	@Deprecated
 	public AbstractJdbcOperationQuery(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
@@ -35,22 +38,43 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 		this(
 				sql,
 				parameterBinders,
-				affectedTableNames,
-				filterJdbcParameters,
-				Collections.emptyMap()
+				affectedTableNames
 		);
 	}
 
 	public AbstractJdbcOperationQuery(
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
+			Set<String> affectedTableNames) {
+		this(
+				sql,
+				parameterBinders,
+				affectedTableNames,
+				Collections.emptyMap()
+		);
+	}
+
+	/**
+	 * @deprecated {@code filterJdbcParameters} is no longer used
+	 */
+	@Deprecated
+	public AbstractJdbcOperationQuery(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
 			Set<String> affectedTableNames,
 			Set<FilterJdbcParameter> filterJdbcParameters,
+			Map<JdbcParameter, JdbcParameterBinding> appliedParameters) {
+		this( sql, parameterBinders, affectedTableNames, appliedParameters );
+	}
+
+	public AbstractJdbcOperationQuery(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			Set<String> affectedTableNames,
 			Map<JdbcParameter, JdbcParameterBinding> appliedParameters) {
 		this.sql = sql;
 		this.parameterBinders = parameterBinders;
 		this.affectedTableNames = affectedTableNames;
-		this.filterJdbcParameters = filterJdbcParameters;
 		this.appliedParameters = appliedParameters;
 	}
 
@@ -67,11 +91,6 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 	@Override
 	public Set<String> getAffectedTableNames() {
 		return affectedTableNames;
-	}
-
-	@Override
-	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-		return filterJdbcParameters;
 	}
 
 	@Override

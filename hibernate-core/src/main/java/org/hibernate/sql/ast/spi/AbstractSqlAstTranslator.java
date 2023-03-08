@@ -149,6 +149,8 @@ import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate.FilterFragmentParameter;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate.FilterFragmentPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -272,9 +274,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private SqlAstNodeRenderingMode parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 	private final JdbcParameterRenderer jdbcParameterRenderer;
 
-
-
-	private final Set<FilterJdbcParameter> filterJdbcParameters = new HashSet<>();
 
 	private final Stack<Clause> clauseStack = new StandardStack<>( Clause.class );
 	private final Stack<QueryPart> queryPartStack = new StandardStack<>( QueryPart.class );
@@ -454,10 +453,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return parameterBinders;
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-		return filterJdbcParameters;
-	}
 
 	@SuppressWarnings("unused")
 	protected SqlAppender getSqlAppender() {
@@ -786,15 +781,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				throw new IllegalArgumentException( "Unexpected statement - " + statement );
 			}
 
-			if ( jdbcParameterBindings != null && CollectionHelper.isNotEmpty( getFilterJdbcParameters() ) ) {
-				for ( FilterJdbcParameter filterJdbcParameter : getFilterJdbcParameters() ) {
-					jdbcParameterBindings.addBinding(
-							filterJdbcParameter.getParameter(),
-							filterJdbcParameter.getBinding()
-					);
-				}
-			}
-
 			//noinspection unchecked
 			return (T) jdbcOperation;
 		}
@@ -810,7 +796,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				getFilterJdbcParameters(),
 				getAppliedParameterBindings()
 		);
 	}
@@ -822,7 +807,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				getFilterJdbcParameters(),
 				getAppliedParameterBindings()
 		);
 	}
@@ -849,7 +833,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getParameterBinders(),
 				buildJdbcValuesMappingProducer( selectStatement ),
 				getAffectedTableNames(),
-				getFilterJdbcParameters(),
 				rowsToSkip = getRowsToSkip( selectStatement, getJdbcParameterBindings() ),
 				getMaxRows( selectStatement, getJdbcParameterBindings(), rowsToSkip ),
 				getAppliedParameterBindings(),
@@ -6653,21 +6636,70 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitFilterPredicate(FilterPredicate filterPredicate) {
-		visitJunction( filterPredicate.getFragments() );
-
-		final List<FilterJdbcParameter> parameters = filterPredicate.getParameters();
-		if ( parameters != null ) {
-			for ( FilterJdbcParameter filterJdbcParameter : parameters ) {
-				parameterBinders.add( filterJdbcParameter.getBinder() );
-				jdbcParameters.addParameter( filterJdbcParameter.getParameter() );
-				filterJdbcParameters.add( filterJdbcParameter );
+		// visits each fragment with " and " between them
+		final List<FilterFragmentPredicate> filters = filterPredicate.getFragments();
+		for ( int i = 0; i < filters.size(); i++ ) {
+			final FilterFragmentPredicate filter = filters.get( i );
+			visitFilterFragmentPredicate( filter );
+			if ( i + 1 < filters.size() ) {
+				appendSql( " and " );
 			}
 		}
 	}
 
 	@Override
-	public void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate fragmentPredicate) {
-		appendSql( fragmentPredicate.getSqlFragment() );
+	public void visitFilterFragmentPredicate(FilterFragmentPredicate filter) {
+		// process a specific filter
+		final String sqlFragment = filter.getSqlFragment();
+
+		if ( filter.getParameters() == null ) {
+			sqlBuffer.append( sqlFragment );
+			return;
+		}
+
+		int lastEnd = 0;
+		for ( int p = 0; p < filter.getParameters().size(); p++ ) {
+			final FilterFragmentParameter parameter = filter.getParameters().get( p );
+			lastEnd = processFilterParameter( parameter, sqlFragment, lastEnd );
+		}
+
+		if ( lastEnd < sqlFragment.length() ) {
+			appendSql( sqlFragment.substring( lastEnd ) );
+		}
+	}
+
+	private int processFilterParameter(FilterFragmentParameter parameter, String sqlFragment, int startPosition) {
+		final String marker = ":" + parameter.getFilterName() + "." + parameter.getParameterName();
+		final int markerStart = sqlFragment.indexOf( marker, startPosition );
+
+		appendSql( sqlFragment.substring( startPosition, markerStart ) );
+
+		final Object value = parameter.getValue();
+		final JdbcMapping valueMapping = parameter.getValueMapping();
+
+		if ( value instanceof Iterable
+				&& !valueMapping.getJavaTypeDescriptor().isInstance( value ) ) {
+			processIterableFilterParameterValue( valueMapping, ( (Iterable<?>) value ).iterator() );
+		}
+		else {
+			processSingularFilterParameterValue( valueMapping, value );
+		}
+
+		return markerStart + marker.length();
+	}
+
+	private void processSingularFilterParameterValue(JdbcMapping valueMapping, Object value) {
+		visitParameterAsParameter( new FilterJdbcParameter( valueMapping, value ) );
+	}
+
+	private void processIterableFilterParameterValue(JdbcMapping valueMapping, Iterator<?> iterator) {
+		while ( iterator.hasNext() ) {
+			final Object element = iterator.next();
+			processSingularFilterParameterValue( valueMapping, element );
+			if ( iterator.hasNext() ) {
+				appendSql( "," );
+			}
+		}
 	}
 
 	@Override

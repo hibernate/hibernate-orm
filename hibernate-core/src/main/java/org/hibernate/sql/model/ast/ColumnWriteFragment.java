@@ -17,7 +17,11 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
- * Models a column's "write fragment" within the SQL AST
+ * Models a column's value expression within the SQL AST. Used to model:<ul>
+ *     <li>a column's new value in a SET clause</li>
+ *     <li>a column's new value in a SET clause</li>
+ *     <li>a column's old value in a restriction (optimistic locking)</li>
+ * </ul>
  *
  * @see ColumnTransformer#write()
  *

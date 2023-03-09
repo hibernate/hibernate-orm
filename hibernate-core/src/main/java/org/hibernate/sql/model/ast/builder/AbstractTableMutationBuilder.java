@@ -12,20 +12,14 @@ import java.util.List;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnValueParameterList;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableMutation;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Base support for TableMutationBuilder implementations
@@ -108,44 +102,19 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 			JdbcMapping jdbcMapping) {
 		return createValueBinding( columnName, columnWriteFragment, jdbcMapping, ParameterUsage.SET );
 	}
-
 	protected ColumnValueBinding createValueBinding(
 			String columnName,
 			String customWriteExpression,
 			JdbcMapping jdbcMapping,
 			ParameterUsage parameterUsage) {
-		final ColumnReference columnReference = new ColumnReference( mutatingTable, columnName, jdbcMapping );
-		final ColumnWriteFragment columnWriteFragment;
-		if ( customWriteExpression.contains( "?" ) ) {
-			final JdbcType jdbcType = jdbcMapping.getJdbcType();
-			final EmbeddableMappingType aggregateMappingType = jdbcType instanceof AggregateJdbcType
-					? ( (AggregateJdbcType) jdbcType ).getEmbeddableMappingType()
-					: null;
-			if ( aggregateMappingType != null && !aggregateMappingType.shouldBindAggregateMapping() ) {
-				final ColumnValueParameterList parameters = new ColumnValueParameterList(
-						getMutatingTable(),
-						parameterUsage,
-						aggregateMappingType.getJdbcTypeCount()
-				);
-				aggregateMappingType.forEachSelectable( parameters );
-				this.parameters.addAll( parameters );
-
-				columnWriteFragment = new ColumnWriteFragment(
-						customWriteExpression,
-						parameters,
-						jdbcMapping
-				);
-			}
-			else {
-				final ColumnValueParameter parameter = new ColumnValueParameter( columnReference, parameterUsage );
-				parameters.add( parameter );
-				columnWriteFragment = new ColumnWriteFragment( customWriteExpression, parameter, jdbcMapping );
-			}
-		}
-		else {
-			columnWriteFragment = new ColumnWriteFragment( customWriteExpression, jdbcMapping );
-		}
-		return new ColumnValueBinding( columnReference, columnWriteFragment ) ;
+		return ColumnValueBindingBuilder.createValueBinding(
+				columnName,
+				customWriteExpression,
+				jdbcMapping,
+				getMutatingTable(),
+				parameterUsage,
+				parameters::apply
+		);
 	}
 
 	@SafeVarargs

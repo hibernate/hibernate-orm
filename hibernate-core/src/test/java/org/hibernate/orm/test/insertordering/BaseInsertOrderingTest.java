@@ -48,6 +48,7 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 				.get( AvailableSettings.CONNECTION_PROVIDER );
 		this.connectionProvider.setConnectionProvider( connectionProvider );
 		builer.applySetting( AvailableSettings.CONNECTION_PROVIDER, this.connectionProvider );
+		builer.applySetting( AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, false );
 		builer.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 

@@ -41,7 +41,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Jpa(
 		annotatedClasses = { NamedQueryCommentTest.Game.class },
 		integrationSettings = {
-				@Setting( name = AvailableSettings.USE_SQL_COMMENTS, value = "true" )
+				@Setting( name = AvailableSettings.USE_SQL_COMMENTS, value = "true" ),
+				@Setting( name = AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, value = "false" )
 		},
 		useCollectingStatementInspector = true
 )

@@ -23,6 +23,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -32,6 +33,7 @@ import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.Before;
 import org.junit.Test;
 
+import static java.lang.Boolean.FALSE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,6 +51,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		sqlStatementInterceptor = new SQLStatementInterceptor( options );
+		options.put( AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, FALSE );
 	}
 
 	@Override

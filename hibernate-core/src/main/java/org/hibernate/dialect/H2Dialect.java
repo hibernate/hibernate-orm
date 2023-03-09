@@ -57,6 +57,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -906,5 +907,15 @@ public class H2Dialect extends Dialect {
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
 		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	@Override
+	public JdbcParameterRenderer getNativeParameterRenderer() {
+		return H2Dialect::renderNatively;
+	}
+
+	private static void renderNatively(int position, JdbcType jdbcType, SqlAppender appender, Dialect dialect) {
+		appender.append( "?" );
+		appender.appendSql( position );
 	}
 }

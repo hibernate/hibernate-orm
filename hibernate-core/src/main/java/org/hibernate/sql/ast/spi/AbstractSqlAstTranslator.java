@@ -6187,8 +6187,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderParameterAsParameter(JdbcParameter jdbcParameter) {
+		renderParameterAsParameter( jdbcParameter, parameterBinders.size() + 1 );
+	}
+
+	protected void renderParameterAsParameter(JdbcParameter jdbcParameter, int position) {
 		jdbcParameterRenderer.renderJdbcParameter(
-				parameterBinders.size() + 1,
+				position,
 				jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType(),
 				this,
 				getDialect()

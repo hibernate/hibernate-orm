@@ -297,7 +297,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		
 		try {
 			final QueryableCollection queryableCollection = (QueryableCollection) transactionsPersister;
-			SimpleSelect select = new SimpleSelect( sessionFactory().getJdbcServices().getDialect() )
+			SimpleSelect select = new SimpleSelect( sessionFactory() )
 					.setTableName( queryableCollection.getTableName() )
 					.addColumn( "code" )
 					.addColumn( "transactions_index" );

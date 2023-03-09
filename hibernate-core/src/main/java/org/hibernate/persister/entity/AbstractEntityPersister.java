@@ -1910,8 +1910,7 @@ public abstract class AbstractEntityPersister
 	 * Generate the SQL that selects the version number by id
 	 */
 	public String generateSelectVersionString() {
-		final SimpleSelect select = new SimpleSelect( getFactory().getJdbcServices().getDialect() )
-				.setTableName( getVersionedTableName() );
+		final SimpleSelect select = new SimpleSelect( getFactory() ).setTableName( getVersionedTableName() );
 		if ( isVersioned() ) {
 			select.addColumn( getVersionColumnName(), VERSION_COLUMN_ALIAS );
 		}
@@ -1921,7 +1920,7 @@ public abstract class AbstractEntityPersister
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( "get version " + getEntityName() );
 		}
-		return select.addCondition( rootTableKeyColumnNames, "=?" ).toStatementString();
+		return select.addRestriction( rootTableKeyColumnNames ).toStatementString();
 	}
 
 	private GeneratedValuesProcessor createGeneratedValuesProcessor(EventType timing) {
@@ -2741,12 +2740,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String getSelectByUniqueKeyString(String[] propertyNames) {
-		final SimpleSelect select =
-				new SimpleSelect( getFactory().getJdbcServices().getDialect() )
-						.setTableName( getTableName(0) )
-						.addColumns( getKeyColumns(0) );
+		final SimpleSelect select = new SimpleSelect( getFactory() )
+				.setTableName( getTableName(0) )
+				.addColumns( getKeyColumns(0) );
 		for ( int i = 0; i < propertyNames.length; i++ ) {
-			select.addCondition( getPropertyColumnNames( propertyNames[i] ), "= ?" );
+			select.addRestriction( getPropertyColumnNames( propertyNames[i] ) );
 		}
 		return select.toStatementString();
 	}
@@ -6039,9 +6037,9 @@ public abstract class AbstractEntityPersister
 	@Deprecated(forRemoval = true)
 	@Remove
 	public String generateDeleteString(int j) {
-		final Delete delete = new Delete()
+		final Delete delete = new Delete( getFactory() )
 				.setTableName( getTableName( j ) )
-				.addPrimaryKeyColumns( getKeyColumns( j ) );
+				.addColumnRestriction( getKeyColumns( j ) );
 		if ( j == 0 ) {
 			delete.setVersionColumnName( getVersionColumnName() );
 		}
@@ -6137,9 +6135,9 @@ public abstract class AbstractEntityPersister
 		int span = getTableSpan();
 		String[] deleteStrings = new String[span];
 		for ( int j = span - 1; j >= 0; j-- ) {
-			final Delete delete = new Delete()
+			final Delete delete = new Delete( getFactory() )
 					.setTableName( getTableName( j ) )
-					.addPrimaryKeyColumns( getKeyColumns( j ) );
+					.addColumnRestriction( getKeyColumns( j ) );
 			if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 				delete.setComment( "delete " + getEntityName() + " [" + j + "]" );
 			}
@@ -6154,10 +6152,10 @@ public abstract class AbstractEntityPersister
 					boolean[] propertyNullness = types[i].toColumnNullness( loadedState[i], getFactory() );
 					for ( int k = 0; k < propertyNullness.length; k++ ) {
 						if ( propertyNullness[k] ) {
-							delete.addWhereFragment( propertyColumnNames[k] + " = ?" );
+							delete.addColumnRestriction( propertyColumnNames[k] );
 						}
 						else {
-							delete.addWhereFragment( propertyColumnNames[k] + " is null" );
+							delete.addColumnNullnessRestriction( propertyColumnNames[k] );
 						}
 					}
 				}

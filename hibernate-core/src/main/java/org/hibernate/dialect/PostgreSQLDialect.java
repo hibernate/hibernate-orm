@@ -145,33 +145,34 @@ public class PostgreSQLDialect extends Dialect {
 
 	protected final PostgreSQLDriverKind driverKind;
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
+	private final JdbcParameterRenderer parameterRenderer;
 
 	public PostgreSQLDialect() {
 		this( MINIMUM_VERSION );
 	}
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
-		super(info);
-		driverKind = PostgreSQLDriverKind.determineKind( info );
-		optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( info );
+		this( info, PostgreSQLDriverKind.determineKind( info ) );
+	}
+
+	public PostgreSQLDialect(DatabaseVersion version) {
+		this( version, PostgreSQLDriverKind.PG_JDBC );
+	}
+
+	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
+		super( version );
+
+		this.driverKind = driverKind;
+		this.optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
+		this.parameterRenderer = driverKind == PostgreSQLDriverKind.VERT_X
+				? NativeParameterMarkers.INSTANCE
+				: super.getNativeParameterRenderer();
 	}
 
 	private static OptionalTableUpdateStrategy determineOptionalTableUpdateStrategy(DatabaseVersion version) {
 		return version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) )
 				? PostgreSQLDialect::usingMerge
 				: PostgreSQLDialect::withoutMerge;
-	}
-
-	public PostgreSQLDialect(DatabaseVersion version) {
-		super(version);
-		driverKind = PostgreSQLDriverKind.PG_JDBC;
-		optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
-	}
-
-	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
-		super(version);
-		this.driverKind = driverKind;
-		optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
 	}
 
 	@Override
@@ -1433,11 +1434,18 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public JdbcParameterRenderer getNativeParameterRenderer() {
-		return PostgreSQLDialect::renderNatively;
+		return parameterRenderer;
 	}
 
-	private static void renderNatively(int position, JdbcType jdbcType, SqlAppender appender, Dialect dialect) {
-		appender.append( "$" );
-		appender.appendSql( position );
+	private static class NativeParameterMarkers implements JdbcParameterRenderer {
+		/**
+		 * Singleton access
+		 */
+		public static final NativeParameterMarkers INSTANCE = new NativeParameterMarkers();
+
+		@Override
+		public String renderJdbcParameter(int position, JdbcType jdbcType) {
+			return "$" + position;
+		}
 	}
 }

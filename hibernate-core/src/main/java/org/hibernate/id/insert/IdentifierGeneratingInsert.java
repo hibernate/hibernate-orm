@@ -6,6 +6,7 @@
  */
 package org.hibernate.id.insert;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.Insert;
 
 /**
@@ -16,7 +17,7 @@ import org.hibernate.sql.Insert;
  * @author Steve Ebersole
  */
 public class IdentifierGeneratingInsert extends Insert {
-	public IdentifierGeneratingInsert(Dialect dialect) {
-		super( dialect );
+	public IdentifierGeneratingInsert(SessionFactoryImplementor sessionFactory) {
+		super( sessionFactory );
 	}
 }

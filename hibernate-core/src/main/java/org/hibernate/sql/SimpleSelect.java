@@ -9,7 +9,6 @@ package org.hibernate.sql;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,47 +26,44 @@ import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
  * @author Gavin King
  */
 @Internal
-public class SimpleSelect {
+public class SimpleSelect implements RestrictionRenderingContext {
 	protected String tableName;
 	protected String orderBy;
 	protected String comment;
 
 	protected List<String> columns = new ArrayList<>();
 	protected Map<String, String> aliases = new HashMap<>();
-	protected List<String> whereTokens = new ArrayList<>();
+	protected List<Restriction> restrictions = new ArrayList<>();
 
 	protected LockOptions lockOptions = new LockOptions( LockMode.READ );
 
 	private final SessionFactoryImplementor factory;
 	private final Dialect dialect;
-	private JdbcParameterRenderer _jdbcParameterRenderer;
+	private final JdbcParameterRenderer jdbcParameterRenderer;
+	private int parameterCount;
 
 	public SimpleSelect(SessionFactoryImplementor factory) {
 		this.factory = factory;
 		this.dialect = factory.getJdbcServices().getDialect();
+		this.jdbcParameterRenderer = factory.getServiceRegistry().getService( JdbcParameterRenderer.class );
 	}
 
-	//private static final Alias DEFAULT_ALIAS = new Alias(10, null);
+	@Override
+	public String makeParameterMarker() {
+		return jdbcParameterRenderer.renderJdbcParameter( ++parameterCount, null );
+	}
 
-
-	public SimpleSelect addColumns(String[] columnNames, String[] columnAliases) {
-		for ( int i = 0; i < columnNames.length; i++ ) {
-			if ( columnNames[i] != null ) {
-				addColumn( columnNames[i], columnAliases[i] );
-			}
-		}
+	/**
+	 * Sets the name of the table we are selecting from
+	 */
+	public SimpleSelect setTableName(String tableName) {
+		this.tableName = tableName;
 		return this;
 	}
 
-	public SimpleSelect addColumns(String[] columns, String[] aliases, boolean[] ignore) {
-		for ( int i = 0; i < ignore.length; i++ ) {
-			if ( !ignore[i] && columns[i] != null ) {
-				addColumn( columns[i], aliases[i] );
-			}
-		}
-		return this;
-	}
-
+	/**
+	 * Adds selections
+	 */
 	public SimpleSelect addColumns(String[] columnNames) {
 		for ( String columnName : columnNames ) {
 			if ( columnName != null ) {
@@ -77,20 +73,66 @@ public class SimpleSelect {
 		return this;
 	}
 
+	/**
+	 * Adds a selection
+	 */
 	public SimpleSelect addColumn(String columnName) {
 		columns.add( columnName );
-		//aliases.put( columnName, DEFAULT_ALIAS.toAliasString(columnName) );
 		return this;
 	}
 
+	/**
+	 * Adds a selection, with an alias
+	 */
 	public SimpleSelect addColumn(String columnName, String alias) {
 		columns.add( columnName );
 		aliases.put( columnName, alias );
 		return this;
 	}
 
-	public SimpleSelect setTableName(String tableName) {
-		this.tableName = tableName;
+	/**
+	 * Appends a complete {@linkplain org.hibernate.annotations.Where where} condition.
+	 * The {@code condition} is added as-is.
+	 */
+	public SimpleSelect addWhereToken(String condition) {
+		if ( condition != null ) {
+			restrictions.add( new CompleteRestriction( condition ) );
+		}
+		return this;
+	}
+
+	/**
+	 * Appends a restriction comparing the {@code columnName} for equality with a parameter
+	 *
+	 * @see #addRestriction(String, String, String)
+	 */
+	public SimpleSelect addRestriction(String columnName) {
+		restrictions.add( new ComparisonRestriction( columnName ) );
+		return this;
+	}
+
+	/**
+	 * Appends a restriction based on the comparison between {@code lhs} and {@code rhs}.
+	 * <p/>
+	 * The {@code rhs} is checked for parameter marker and processed via {@link JdbcParameterRenderer}
+	 * if needed.
+	 */
+	public SimpleSelect addRestriction(String lhs, String op, String rhs) {
+		restrictions.add( new ComparisonRestriction( lhs, op, rhs ) );
+		return this;
+	}
+
+	/**
+	 * Appends a restriction comparing each name in {@code columnNames} for equality with a parameter
+	 *
+	 * @see #addRestriction(String)
+	 */
+	public SimpleSelect addRestriction(String... columnNames) {
+		for ( int i = 0; i < columnNames.length; i++ ) {
+			if ( columnNames[i] != null ) {
+				addRestriction( columnNames[i] );
+			}
+		}
 		return this;
 	}
 
@@ -104,114 +146,6 @@ public class SimpleSelect {
 		return this;
 	}
 
-	/**
-	 * Appends a complete {@linkplain org.hibernate.annotations.Where where} fragment.  The {@code token} is added as-is
-	 */
-	public SimpleSelect addWhereToken(String token) {
-		if (token != null ) {
-			and();
-			whereTokens.add( token );
-		}
-		return this;
-	}
-
-	private void and() {
-		if ( !whereTokens.isEmpty() ) {
-			whereTokens.add( "and" );
-		}
-	}
-
-	private JdbcParameterRenderer jdbcParameterRenderer() {
-		if ( _jdbcParameterRenderer == null ) {
-			_jdbcParameterRenderer = factory.getServiceRegistry().getService( JdbcParameterRenderer.class );
-		}
-		return _jdbcParameterRenderer;
-	}
-
-	public SimpleSelect addCondition(String lhs, String op, String rhs) {
-		and();
-		whereTokens.add( lhs + ' ' + op + ' ' + rhs );
-		return this;
-	}
-
-	public SimpleSelect addCondition(String lhs, String condition) {
-		and();
-		whereTokens.add( lhs + ' ' + condition );
-		return this;
-	}
-
-	public SimpleSelect addCondition(String[] lhs, String condition) {
-		for ( String lh : lhs ) {
-			if ( lh != null ) {
-				addCondition( lh, condition );
-			}
-		}
-		return this;
-	}
-
-	public String toStatementString() {
-		StringBuilder buf = new StringBuilder(
-				columns.size() * 10 +
-						tableName.length() +
-						whereTokens.size() * 10 +
-						10
-		);
-
-		if ( comment != null ) {
-			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
-		}
-
-		buf.append( "select " );
-		Set<String> uniqueColumns = new HashSet<>();
-		Iterator<String> iter = columns.iterator();
-		boolean appendComma = false;
-		while ( iter.hasNext() ) {
-			String col = iter.next();
-			String alias = aliases.get( col );
-			if ( uniqueColumns.add( alias == null ? col : alias ) ) {
-				if ( appendComma ) {
-					buf.append( ", " );
-				}
-				buf.append( col );
-				if ( alias != null && !alias.equals( col ) ) {
-					buf.append( " as " )
-							.append( alias );
-				}
-				appendComma = true;
-			}
-		}
-
-		buf.append( " from " )
-				.append( dialect.appendLockHint( lockOptions, tableName ) );
-
-		if ( whereTokens.size() > 0 ) {
-			buf.append( " where " )
-					.append( toWhereClause() );
-		}
-
-		if ( orderBy != null ) {
-			buf.append( orderBy );
-		}
-
-		if ( lockOptions != null ) {
-			buf = new StringBuilder( dialect.applyLocksToSql( buf.toString(), lockOptions, null ) );
-		}
-
-		return dialect.transformSelectString( buf.toString() );
-	}
-
-	public String toWhereClause() {
-		StringBuilder buf = new StringBuilder( whereTokens.size() * 5 );
-		Iterator<String> iter = whereTokens.iterator();
-		while ( iter.hasNext() ) {
-			buf.append( iter.next() );
-			if ( iter.hasNext() ) {
-				buf.append( ' ' );
-			}
-		}
-		return buf.toString();
-	}
-
 	public SimpleSelect setOrderBy(String orderBy) {
 		this.orderBy = orderBy;
 		return this;
@@ -220,6 +154,82 @@ public class SimpleSelect {
 	public SimpleSelect setComment(String comment) {
 		this.comment = comment;
 		return this;
+	}
+
+	public String toStatementString() {
+		final StringBuilder buf = new StringBuilder(
+				columns.size() * 10 +
+						tableName.length() +
+						restrictions.size() * 10 +
+						10
+		);
+
+		applyComment( buf );
+		applySelectClause( buf );
+		applyFromClause( buf );
+		applyWhereClause( buf );
+		applyOrderBy( buf );
+
+		final String selectString = (lockOptions != null)
+				? dialect.applyLocksToSql( buf.toString(), lockOptions, null )
+				: buf.toString();
+
+		return dialect.transformSelectString( selectString );
+	}
+
+	private void applyComment(StringBuilder buf) {
+		if ( comment != null ) {
+			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
+		}
+	}
+
+	private void applySelectClause(StringBuilder buf) {
+		buf.append( "select " );
+
+		boolean appendComma = false;
+		final Set<String> uniqueColumns = new HashSet<>();
+		for ( int i = 0; i < columns.size(); i++ ) {
+			final String col = columns.get( i );
+			final String alias = aliases.get( col );
+
+			if ( uniqueColumns.add( alias == null ? col : alias ) ) {
+				if ( appendComma ) {
+					buf.append( ", " );
+				}
+				buf.append( col );
+				if ( alias != null && !alias.equals( col ) ) {
+					buf.append( " as " ).append( alias );
+				}
+				appendComma = true;
+			}
+		}
+	}
+
+	private void applyFromClause(StringBuilder buf) {
+		buf.append( " from " ).append( dialect.appendLockHint( lockOptions, tableName ) );
+	}
+
+	private void applyWhereClause(StringBuilder buf) {
+		if ( restrictions.isEmpty() ) {
+			return;
+		}
+
+		buf.append( " where " );
+
+		for ( int i = 0; i < restrictions.size(); i++ ) {
+			if ( i > 0 ) {
+				buf.append( " and " );
+			}
+
+			final Restriction restriction = restrictions.get( i );
+			restriction.render( buf, this );
+		}
+	}
+
+	private void applyOrderBy(StringBuilder buf) {
+		if ( orderBy != null ) {
+			buf.append( ' ' ).append( orderBy );
+		}
 	}
 
 }

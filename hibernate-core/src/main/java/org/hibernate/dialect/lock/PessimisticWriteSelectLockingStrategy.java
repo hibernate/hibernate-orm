@@ -107,13 +107,13 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 		final SessionFactoryImplementor factory = getLockable().getFactory();
 		final LockOptions lockOptions = new LockOptions( getLockMode() );
 		lockOptions.setTimeOut( lockTimeout );
-		final SimpleSelect select = new SimpleSelect( factory.getJdbcServices().getDialect() )
+		final SimpleSelect select = new SimpleSelect( factory )
 				.setLockOptions( lockOptions )
 				.setTableName( getLockable().getRootTableName() )
 				.addColumn( getLockable().getRootTableIdentifierColumnNames()[0] )
-				.addCondition( getLockable().getRootTableIdentifierColumnNames(), "=?" );
+				.addRestriction( getLockable().getRootTableIdentifierColumnNames() );
 		if ( getLockable().isVersioned() ) {
-			select.addCondition( getLockable().getVersionColumnName(), "=?" );
+			select.addRestriction( getLockable().getVersionColumnName() );
 		}
 		if ( factory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( getLockMode() + " lock " + getLockable().getEntityName() );

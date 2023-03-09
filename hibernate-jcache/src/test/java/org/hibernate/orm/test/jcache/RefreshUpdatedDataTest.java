@@ -65,7 +65,7 @@ public class RefreshUpdatedDataTest {
 
 		serviceRegistry = ssrb
 				.configure( "hibernate-config/hibernate.cfg.xml" )
-				.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )
+				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )
 				.build();
 
 		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );

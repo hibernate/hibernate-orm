@@ -380,6 +380,7 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				this::visitFetches,
 				forceIdentifierSelection,
+				loadQueryInfluencers,
 				creationContext
 		);
 
@@ -687,6 +688,10 @@ public class LoaderSelectBuilder {
 			LoaderSqlAstCreationState creationState,
 			ImmutableFetchList.Builder fetches) {
 		return (fetchable, isKeyFetchable) -> {
+			if ( !fetchable.isSelectable() ) {
+				return;
+			}
+
 			final NavigablePath fetchablePath;
 
 			if ( isKeyFetchable ) {
@@ -840,6 +845,7 @@ public class LoaderSelectBuilder {
 					// For non-join fetches, we reset the currentBagRole and set it to the previous value in the finally block
 					currentBagRole = null;
 				}
+
 				final Fetch fetch = fetchParent.generateFetchableFetch(
 						fetchable,
 						fetchablePath,
@@ -962,6 +968,7 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				this::visitFetches,
 				numberOfKeysToLoad > 1,
+				loadQueryInfluencers,
 				creationContext
 		);
 

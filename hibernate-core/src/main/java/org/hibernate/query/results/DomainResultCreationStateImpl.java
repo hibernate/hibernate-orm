@@ -15,6 +15,7 @@ import java.util.function.Function;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -30,7 +31,6 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -72,6 +72,7 @@ public class DomainResultCreationStateImpl
 
 	private final JdbcValuesMetadata jdbcResultsMetadata;
 	private final Consumer<SqlSelection> sqlSelectionConsumer;
+	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final Map<ColumnReferenceKey, ResultSetMappingSqlSelection> sqlSelectionMap = new HashMap<>();
 	private boolean allowPositionalSelections = true;
 
@@ -92,10 +93,12 @@ public class DomainResultCreationStateImpl
 			JdbcValuesMetadata jdbcResultsMetadata,
 			Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders,
 			Consumer<SqlSelection> sqlSelectionConsumer,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 		this.stateIdentifier = stateIdentifier;
 		this.jdbcResultsMetadata = jdbcResultsMetadata;
 		this.sqlSelectionConsumer = sqlSelectionConsumer;
+		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.fromClauseAccess = new FromClauseAccessImpl();
 		this.sqlAliasBaseManager = new SqlAliasBaseManager();
 
@@ -243,6 +246,11 @@ public class DomainResultCreationStateImpl
 	@Override
 	public SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
 		return sqlAliasBaseManager;
+	}
+
+	@Override
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return loadQueryInfluencers;
 	}
 
 
@@ -451,9 +459,7 @@ public class DomainResultCreationStateImpl
 
 	private Consumer<Fetchable> createFetchableConsumer(FetchParent fetchParent, ImmutableFetchList.Builder fetches) {
 		return fetchable -> {
-			final FetchableContainer parentMappingType = fetchParent.getReferencedMappingContainer();
-			if ( parentMappingType instanceof AbstractEntityPersister
-					&& !( ( (AbstractEntityPersister) parentMappingType ).isSelectable( fetchParent, fetchable ) ) ) {
+			if ( !fetchable.isSelectable() ) {
 				return;
 			}
 			final String fetchableName = fetchable.getFetchableName();

@@ -444,6 +444,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						insertable,
 						updateable,
 						includeInOptimisticLocking,
+						true,
 						cascadeStyle
 				);
 

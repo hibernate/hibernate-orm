@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
@@ -155,6 +156,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				lockOptions,
 				fetchProcessor,
 				true,
+				LoadQueryInfluencers.NONE,
 				sessionFactory
 		);
 

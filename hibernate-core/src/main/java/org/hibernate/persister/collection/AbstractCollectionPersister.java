@@ -928,6 +928,7 @@ public abstract class AbstractCollectionPersister
 				LockOptions.NONE,
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
+				LoadQueryInfluencers.NONE,
 				getFactory()
 		);
 

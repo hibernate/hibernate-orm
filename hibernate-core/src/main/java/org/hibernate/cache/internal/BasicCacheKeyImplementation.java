@@ -23,7 +23,7 @@ import org.hibernate.type.Type;
  * @since 6.2
  */
 @Internal
-final class BasicCacheKeyImplementation implements Serializable {
+public final class BasicCacheKeyImplementation implements Serializable {
 
 	final Serializable id;
 	private final String entityOrRoleName;

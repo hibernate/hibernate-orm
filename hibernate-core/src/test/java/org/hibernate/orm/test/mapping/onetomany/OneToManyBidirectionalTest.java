@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true"),
-				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
 public class OneToManyBidirectionalTest {

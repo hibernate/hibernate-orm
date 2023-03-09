@@ -28,9 +28,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION;
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET;
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -45,9 +45,9 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 
 	protected Map getConfig() {
 		final Map<Object, Object> config = Environment.getProperties();
-		config.put( HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
-		config.put( HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
-		config.put( HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
+		config.put( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
+		config.put( JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
+		config.put( JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
 		ArrayList<Class> classes = new ArrayList<Class>();
 
 		classes.addAll( Arrays.asList( new Class[] {TestEntity.class} ) );

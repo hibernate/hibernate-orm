@@ -6,9 +6,7 @@
  */
 package org.hibernate.sql.ast.internal;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -21,7 +19,7 @@ public class JdbcParameterRendererStandard implements JdbcParameterRenderer {
 	public static final JdbcParameterRendererStandard INSTANCE = new JdbcParameterRendererStandard();
 
 	@Override
-	public void renderJdbcParameter(int position, JdbcType jdbcType, SqlAppender appender, Dialect dialect) {
-		jdbcType.appendWriteExpression( "?", appender, dialect );
+	public String renderJdbcParameter(int position, JdbcType jdbcType) {
+		return "?";
 	}
 }

@@ -51,7 +51,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 
 	@Override @Deprecated
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
-		IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
+		IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( persister.getFactory() );
 		insert.addGeneratedColumns( persister.getRootTableKeyColumnNames(), (OnExecutionGenerator) persister.getGenerator() );
 		return insert;
 	}

@@ -203,6 +203,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
@@ -6191,12 +6192,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderParameterAsParameter(JdbcParameter jdbcParameter, int position) {
-		jdbcParameterRenderer.renderJdbcParameter(
-				position,
-				jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType(),
-				this,
-				getDialect()
-		);
+		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		assert jdbcType != null;
+		final String parameterMarker = jdbcParameterRenderer.renderJdbcParameter( position, jdbcType );
+		jdbcType.appendWriteExpression( parameterMarker, this, dialect );
 	}
 
 	@Override

@@ -911,11 +911,18 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public JdbcParameterRenderer getNativeParameterRenderer() {
-		return H2Dialect::renderNatively;
+		return OrdinalParameterRenderer.INSTANCE;
 	}
 
-	private static void renderNatively(int position, JdbcType jdbcType, SqlAppender appender, Dialect dialect) {
-		appender.append( "?" );
-		appender.appendSql( position );
+	public static class OrdinalParameterRenderer implements JdbcParameterRenderer {
+		/**
+		 * Singleton access
+		 */
+		public static final OrdinalParameterRenderer INSTANCE = new OrdinalParameterRenderer();
+
+		@Override
+		public String renderJdbcParameter(int position, JdbcType jdbcType) {
+			return "?" + position;
+		}
 	}
 }

@@ -14,6 +14,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
  */
 public enum PostgreSQLDriverKind {
 	PG_JDBC,
+	VERT_X,
 	OTHER;
 
 	public static PostgreSQLDriverKind determineKind(DialectResolutionInfo dialectResolutionInfo) {

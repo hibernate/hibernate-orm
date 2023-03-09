@@ -109,8 +109,8 @@ public class JdbcParameterRendererTests {
 
 	public static class JdbcParameterRendererImpl implements JdbcParameterRenderer {
 		@Override
-		public void renderJdbcParameter(int position, JdbcType jdbcType, SqlAppender appender, Dialect dialect) {
-			jdbcType.appendWriteExpression( "?" + position, appender, dialect );
+		public String renderJdbcParameter(int position, JdbcType jdbcType) {
+			return "?" + position;
 		}
 	}
 

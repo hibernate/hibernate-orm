@@ -32,7 +32,8 @@ import static org.junit.Assert.assertTrue;
 		annotatedClasses = { InClauseParameterPaddingTest.Person.class },
 		integrationSettings = {
 				@Setting(name = AvailableSettings.USE_SQL_COMMENTS, value = "true"),
-				@Setting(name = AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, value = "true")
+				@Setting(name = AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, value = "true"),
+				@Setting(name = AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, value = "false")
 		},
 		useCollectingStatementInspector = true
 )

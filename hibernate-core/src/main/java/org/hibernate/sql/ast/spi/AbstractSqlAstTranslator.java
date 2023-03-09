@@ -8012,7 +8012,39 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
-		sqlBuffer.append( columnWriteFragment.getFragment() );
+		// if there are no parameters or if we are using the standard parameter renderer
+		//		- the rendering is pretty simple
+		if ( CollectionHelper.isEmpty( columnWriteFragment.getParameters() )
+				|| JdbcParameterRenderer.isStandardRenderer( jdbcParameterRenderer ) ) {
+			simpleColumnWriteFragmentRendering( columnWriteFragment );
+			return;
+		}
+
+		// otherwise, render the fragment using the custom parameter renderer
+		final String sqlFragment = columnWriteFragment.getFragment();
+		int lastEnd = 0;
+
+		for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
+			final int markerStart = sqlFragment.indexOf( "?", lastEnd );
+
+			// append the part of the fragment from the last-end position (start of string for first pass)
+			// to the index of the parameter marker
+			appendSql( sqlFragment.substring( lastEnd, markerStart ) );
+
+			// render the parameter marker and register it
+			visitParameterAsParameter( parameter );
+
+			lastEnd = markerStart + 1;
+		}
+
+		if ( lastEnd < sqlFragment.length() ) {
+			appendSql( sqlFragment.substring( lastEnd ) );
+		}
+	}
+
+	protected void simpleColumnWriteFragmentRendering(ColumnWriteFragment columnWriteFragment) {
+		appendSql( columnWriteFragment.getFragment() );
+
 		for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
 			parameterBinders.add( parameter.getParameterBinder() );
 			jdbcParameters.addParameter( parameter );

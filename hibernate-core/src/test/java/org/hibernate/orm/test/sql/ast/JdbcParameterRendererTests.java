@@ -11,6 +11,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,6 +61,7 @@ public class JdbcParameterRendererTests {
 		final String sql = statementInspector.getSqlQueries().get( 0 );
 		assertThat( sql ).contains( "?1" );
 	}
+
 	@Test
 	public void testFilters(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
@@ -73,6 +74,37 @@ public class JdbcParameterRendererTests {
 			final String sql = statementInspector.getSqlQueries().get( 0 );
 			assertThat( sql ).contains( "?1" );
 		} );
+
+		statementInspector.clear();
+		scope.inTransaction( (session) -> {
+			final EntityWithFilters it = new EntityWithFilters( 1, "It", "EMEA" );
+			session.persist( it );
+		} );
+		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 3 );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?2" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?3" );
+
+		scope.inTransaction( (session) -> {
+			final EntityWithFilters it = session.find( EntityWithFilters.class, 1 );
+			statementInspector.clear();
+			it.setName( "It 2" );
+		} );
+		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 3 );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?2" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?3" );
+
+		scope.inTransaction( (session) -> {
+			final EntityWithFilters it = session.find( EntityWithFilters.class, 1 );
+			statementInspector.clear();
+			session.remove( it );
+		} );
+		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 1 );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" );
 	}
 
 	public static class JdbcParameterRendererImpl implements JdbcParameterRenderer {

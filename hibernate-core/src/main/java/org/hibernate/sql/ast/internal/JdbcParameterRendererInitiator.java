@@ -9,6 +9,10 @@ package org.hibernate.sql.ast.internal;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
 
@@ -23,6 +27,17 @@ public class JdbcParameterRendererInitiator implements StandardServiceInitiator<
 
 	@Override
 	public JdbcParameterRenderer initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+		final boolean useNativeMarkers = ConfigurationHelper.getBoolean(
+				AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS,
+				configurationValues,
+				true
+		);
+
+		if ( useNativeMarkers ) {
+			final Dialect dialect = registry.getService( JdbcServices.class ).getDialect();
+			return dialect.getNativeParameterRenderer();
+		}
+
 		return JdbcParameterRendererStandard.INSTANCE;
 	}
 

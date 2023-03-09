@@ -18,6 +18,8 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
 
 /**
  * A SQL {@code SELECT} statement with no table joins.
@@ -26,13 +28,6 @@ import org.hibernate.dialect.Dialect;
  */
 @Internal
 public class SimpleSelect {
-
-	public SimpleSelect(Dialect dialect) {
-		this.dialect = dialect;
-	}
-
-	//private static final Alias DEFAULT_ALIAS = new Alias(10, null);
-
 	protected String tableName;
 	protected String orderBy;
 	protected String comment;
@@ -43,7 +38,16 @@ public class SimpleSelect {
 
 	protected LockOptions lockOptions = new LockOptions( LockMode.READ );
 
+	private final SessionFactoryImplementor factory;
 	private final Dialect dialect;
+	private JdbcParameterRenderer _jdbcParameterRenderer;
+
+	public SimpleSelect(SessionFactoryImplementor factory) {
+		this.factory = factory;
+		this.dialect = factory.getJdbcServices().getDialect();
+	}
+
+	//private static final Alias DEFAULT_ALIAS = new Alias(10, null);
 
 
 	public SimpleSelect addColumns(String[] columnNames, String[] columnAliases) {
@@ -100,20 +104,28 @@ public class SimpleSelect {
 		return this;
 	}
 
+	/**
+	 * Appends a complete {@linkplain org.hibernate.annotations.Where where} fragment.  The {@code token} is added as-is
+	 */
 	public SimpleSelect addWhereToken(String token) {
 		if (token != null ) {
-			if (!whereTokens.isEmpty()) {
-				and();
-			}
+			and();
 			whereTokens.add( token );
 		}
 		return this;
 	}
 
 	private void and() {
-		if ( whereTokens.size() > 0 ) {
+		if ( !whereTokens.isEmpty() ) {
 			whereTokens.add( "and" );
 		}
+	}
+
+	private JdbcParameterRenderer jdbcParameterRenderer() {
+		if ( _jdbcParameterRenderer == null ) {
+			_jdbcParameterRenderer = factory.getServiceRegistry().getService( JdbcParameterRenderer.class );
+		}
+		return _jdbcParameterRenderer;
 	}
 
 	public SimpleSelect addCondition(String lhs, String op, String rhs) {
@@ -125,13 +137,6 @@ public class SimpleSelect {
 	public SimpleSelect addCondition(String lhs, String condition) {
 		and();
 		whereTokens.add( lhs + ' ' + condition );
-		return this;
-	}
-
-	public SimpleSelect addCondition(String[] lhs, String op, String[] rhs) {
-		for ( int i = 0; i < lhs.length; i++ ) {
-			addCondition( lhs[i], op, rhs[i] );
-		}
 		return this;
 	}
 

@@ -38,6 +38,7 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.metamodel.Bindable;
 
@@ -81,13 +82,21 @@ public class SqmMappingModelHelper {
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType,
 			boolean isGeneric) {
-		return resolveSqmPathSource( name, null, valueDomainType, jpaBindableType, isGeneric );
+		return resolveSqmPathSource(
+				name,
+				null,
+				valueDomainType,
+				valueDomainType.getExpressibleJavaType(),
+				jpaBindableType,
+				isGeneric
+		);
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmPathSource(
 			String name,
 			SqmPathSource<J> pathModel,
 			DomainType<J> valueDomainType,
+			JavaType<?> relationalJavaType,
 			Bindable.BindableType jpaBindableType,
 			boolean isGeneric) {
 
@@ -96,6 +105,7 @@ public class SqmMappingModelHelper {
 					name,
 					pathModel,
 					(BasicDomainType<J>) valueDomainType,
+					relationalJavaType,
 					jpaBindableType,
 					isGeneric
 			);

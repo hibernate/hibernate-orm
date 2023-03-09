@@ -33,6 +33,7 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 				"id",
 				null,
 				(BasicDomainType<?>) domainType.getKeyType(),
+				domainType.getKeyType().getExpressibleJavaType(),
 				SINGULAR_ATTRIBUTE,
 				false
 		);

@@ -91,7 +91,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			SqmExpressible<?> nodeType = argument.getNodeType();
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if ( nodeType != null ) {
-				JavaType<?> javaType = nodeType.getExpressibleJavaType();
+				JavaType<?> javaType = nodeType.getRelationalJavaType();
 				if (javaType != null) {
 					try {
 						checkType(

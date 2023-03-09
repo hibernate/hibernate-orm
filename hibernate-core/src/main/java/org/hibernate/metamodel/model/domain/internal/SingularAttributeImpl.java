@@ -55,6 +55,7 @@ public class SingularAttributeImpl<D,J>
 			String name,
 			AttributeClassification attributeClassification,
 			DomainType<J> attributeType,
+			JavaType<?> relationalJavaType,
 			Member member,
 			boolean isIdentifier,
 			boolean isVersion,
@@ -79,6 +80,7 @@ public class SingularAttributeImpl<D,J>
 				name,
 				this,
 				attributeType,
+				relationalJavaType,
 				BindableType.SINGULAR_ATTRIBUTE,
 				isGeneric
 		);
@@ -174,6 +176,7 @@ public class SingularAttributeImpl<D,J>
 					name,
 					attributeClassification,
 					attributeType,
+					attributeType.getExpressibleJavaType(),
 					member,
 					true,
 					false,
@@ -215,6 +218,7 @@ public class SingularAttributeImpl<D,J>
 					name,
 					attributeClassification,
 					attributeType,
+					attributeType.getExpressibleJavaType(),
 					member,
 					false,
 					true,

@@ -13,6 +13,7 @@ import java.lang.reflect.ParameterizedType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.mapping.Any;
@@ -28,6 +29,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -125,13 +127,19 @@ public class AttributeFactory {
 			);
 		}
 
-		final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>) attributeMetadata;
-		final DomainType<Y> metaModelType = determineSimpleType( singularAttributeMetadata.getValueContext(), metadataContext );
+		final ValueContext valueContext = ( (SingularAttributeMetadata<X, Y>) attributeMetadata ).getValueContext();
+		final DomainType<Y> metaModelType = determineSimpleType( valueContext, metadataContext );
+		final JavaType<?> relationalJavaType = determineRelationalJavaType(
+				valueContext,
+				metaModelType,
+				metadataContext
+		);
 		return new SingularAttributeImpl<>(
 				ownerType,
 				attributeMetadata.getName(),
 				attributeMetadata.getAttributeClassification(),
 				metaModelType,
+				relationalJavaType,
 				attributeMetadata.getMember(),
 				false,
 				false,
@@ -327,6 +335,21 @@ public class AttributeFactory {
 				throw new AssertionFailure( "Unknown type : " + typeContext.getValueClassification() );
 			}
 		}
+	}
+
+	private static JavaType<?> determineRelationalJavaType(
+			ValueContext typeContext,
+			DomainType<?> metaModelType,
+			MetadataContext context) {
+		if ( typeContext.getValueClassification() == ValueClassification.BASIC ) {
+			final ConverterDescriptor descriptor = ( (SimpleValue) typeContext.getHibernateValue() ).getJpaAttributeConverterDescriptor();
+			if ( descriptor != null ) {
+				return context.getJavaTypeRegistry().resolveDescriptor(
+						descriptor.getRelationalValueResolvedType().getErasedType()
+				);
+			}
+		}
+		return metaModelType.getExpressibleJavaType();
 	}
 
 	private static EntityPersister getDeclaringEntity(

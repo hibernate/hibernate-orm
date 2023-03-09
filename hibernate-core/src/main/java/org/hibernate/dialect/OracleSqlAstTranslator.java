@@ -336,6 +336,11 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
+	protected boolean supportsSimpleQueryGrouping() {
+		return supportsOffsetFetchClause();
+	}
+
+	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			if ( supportsOffsetFetchClause() ) {

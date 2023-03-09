@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +49,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
-import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -437,7 +436,7 @@ public class BinderHelper {
 			final String name = collector.getPhysicalColumnName( referencedTable, joinColumn.getReferencedColumn() );
 			final Column column = new Column( name );
 			orderedColumns.add( column );
-			columnsToProperty.put( column, new HashSet<>() );
+			columnsToProperty.put( column, new LinkedHashSet<>() ); //need to use a LinkedHashSet here to make it deterministic
 		}
 
 		// Now, for each column find the properties of the target entity
@@ -520,7 +519,6 @@ public class BinderHelper {
 				}
 				else {
 					// we have the first column of a new property
-					orderedProperties.add( property );
 					if ( property.getColumnSpan() > 1 ) {
 						if ( !property.getColumns().get(0).equals( column ) ) {
 							// the columns have to occur in the right order in the property
@@ -531,6 +529,7 @@ public class BinderHelper {
 						currentProperty = property;
 						lastPropertyColumnIndex = 1;
 					}
+					orderedProperties.add( property );
 				}
 				break; // we're only considering the first matching property for now
 			}

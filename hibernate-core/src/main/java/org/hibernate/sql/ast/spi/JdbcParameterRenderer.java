@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.spi;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.Service;
+import org.hibernate.sql.ast.internal.JdbcParameterRendererStandard;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -26,4 +27,8 @@ public interface JdbcParameterRenderer extends Service {
 	 * @param dialect The Dialect in use within the SessionFactory
 	 */
 	void renderJdbcParameter(int position, JdbcType jdbcType, SqlAppender appender, Dialect dialect);
+
+	static boolean isStandardRenderer(JdbcParameterRenderer check) {
+		return check == null || JdbcParameterRendererStandard.class.equals( check.getClass() );
+	}
 }

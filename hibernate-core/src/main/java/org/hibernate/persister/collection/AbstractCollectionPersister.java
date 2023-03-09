@@ -1021,7 +1021,7 @@ public abstract class AbstractCollectionPersister
 		String selectValue = isIntegerIndexed ?
 				"max(" + getIndexColumnNames()[0] + ") + 1" : // lists, arrays
 				"count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
-		return new SimpleSelect( dialect )
+		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addCondition( getKeyColumnNames(), "=?" )
 				.addWhereToken( sqlWhereString )
@@ -1033,7 +1033,7 @@ public abstract class AbstractCollectionPersister
 		if ( !hasIndex() ) {
 			return null;
 		}
-		return new SimpleSelect( dialect )
+		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addCondition( getKeyColumnNames(), "=?" )
 				.addCondition( getIndexColumnNames(), "=?" )
@@ -1045,7 +1045,7 @@ public abstract class AbstractCollectionPersister
 
 
 	protected String generateDetectRowByElementString() {
-		return new SimpleSelect( dialect )
+		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addCondition( getKeyColumnNames(), "=?" )
 				.addCondition( getElementColumnNames(), "=?" )

@@ -157,6 +157,33 @@ public class ToOneAttributeMapping
 	private String identifyingColumnsTableExpression;
 	private boolean canUseParentTableGroup;
 
+	protected ToOneAttributeMapping(ToOneAttributeMapping delegate) {
+		super(
+				delegate.getAttributeName(),
+				delegate.getStateArrayPosition(),
+				delegate.getFetchableKey(),
+				delegate.getAttributeMetadata(),
+				delegate.getMappedFetchOptions(),
+				delegate.getDeclaringType(),
+				delegate.getPropertyAccess()
+		);
+		navigableRole = delegate.navigableRole;
+		isInternalLoadNullable = delegate.isInternalLoadNullable;
+		notFoundAction = delegate.notFoundAction;
+		unwrapProxy = delegate.unwrapProxy;
+		isOptional = delegate.isOptional;
+		entityMappingType = delegate.entityMappingType;
+		referencedPropertyName = delegate.referencedPropertyName;
+		targetKeyPropertyName = delegate.targetKeyPropertyName;
+		cardinality = delegate.cardinality;
+		bidirectionalAttributePath = delegate.bidirectionalAttributePath;
+		declaringTableGroupProducer = delegate.declaringTableGroupProducer;
+		isKeyTableNullable = delegate.isKeyTableNullable;
+		sqlAliasStem = delegate.sqlAliasStem;
+		targetKeyPropertyNames = delegate.targetKeyPropertyNames;
+		isNullable = delegate.isNullable;
+		foreignKeyDescriptor = delegate.foreignKeyDescriptor;
+	}
 
 	public ToOneAttributeMapping(
 			String name,

@@ -213,8 +213,16 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return navigablePath;
 	}
 
+	protected DomainResultAssembler<?> getIdentifierAssembler() {
+		return identifierAssembler;
+	}
+
 	protected boolean isMissing() {
 		return missing;
+	}
+
+	protected void setMissing(boolean missing) {
+		this.missing = missing;
 	}
 
 	protected abstract boolean isEntityReturn();
@@ -1136,6 +1144,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	protected LockMode getLockMode() {
 		return lockMode;
+	}
+
+	protected DomainResultAssembler<?>[][] getAssemblers() {
+		return assemblers;
 	}
 
 	@Override

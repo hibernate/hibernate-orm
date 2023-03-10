@@ -561,7 +561,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final String revEndColumnName = rootAuditEntity.findAttributeMapping( revEndAttributeName )
 				.getSelectable( 0 )
 				.getSelectionExpression();
-		context.addColumn( revEndColumnName );
+		context.addAssignment( revEndColumnName );
 		context.bind( revisionNumber, revisionEntity.getIdentifierMapping() );
 
 		if ( configuration.isRevisionEndTimestampEnabled() ) {
@@ -569,22 +569,22 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			final String revEndTimestampAttributeName = configuration.getRevisionEndTimestampFieldName();
 			final AttributeMapping revEndTimestampAttributeMapping = rootAuditEntity.findAttributeMapping( revEndTimestampAttributeName );
 			// Apply optional "[, REVEND_TSTMP = ?]" portion of the SQL
-			context.addColumn( revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression() );
+			context.addAssignment( revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression() );
 			context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampAttributeMapping );
 		}
 
 		// Apply "WHERE (entity_id) = ?"
-		context.addPrimaryKeyColumns( rootEntity.getIdentifierColumnNames() );
+		context.addRestriction( rootEntity.getIdentifierColumnNames() );
 		context.bind( id, rootEntity.getIdentifierMapping() );
 
 		// Apply "AND REV <> ?"
 		// todo (PropertyMapping) : need to be able to handle paths
 		final String path = configuration.getRevisionNumberPath();
-		context.addWhereColumn( rootAuditEntity.toColumns( path )[ 0 ], " <> ?" );
+		context.addRestriction( rootAuditEntity.toColumns( path )[ 0 ], "<>", "?" );
 		context.bind( revisionNumber, rootAuditEntity.getPropertyType( path ) );
 
 		// Apply "AND REVEND is null"
-		context.addWhereColumn( revEndColumnName, " is null" );
+		context.addNullnessRestriction( revEndColumnName );
 
 		return context;
 	}
@@ -623,23 +623,23 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final String revEndTimestampAttributeName = configuration.getRevisionEndTimestampFieldName();
 		final AttributeMapping revEndTimestampAttributeMapping = auditEntity.findAttributeMapping( revEndTimestampAttributeName );
 		final String revEndTimestampColumnName = revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression();
-		context.addColumn( revEndTimestampColumnName );
+		context.addAssignment( revEndTimestampColumnName );
 		context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampAttributeMapping );
 
 		// Apply "WHERE (entity_id) = ? AND REV <> ?" portion of the SQL
 		final Number revisionNumber = getRevisionNumber( configuration, revision );
 
 		// Apply "WHERE (entity_id) = ?"
-		context.addPrimaryKeyColumns( entity.getIdentifierColumnNames() );
+		context.addRestriction( entity.getIdentifierColumnNames() );
 		context.bind( id, entity.getIdentifierType() );
 
 		// Apply "AND REV <> ?"
 		// todo (PropertyMapping) : need to be able to handle paths
-		context.addWhereColumn( configuration.getRevisionFieldName(), " <> ?" );
+		context.addRestriction( configuration.getRevisionFieldName(), "<>", "?" );
 		context.bind( revisionNumber, auditEntity.getPropertyType( configuration.getRevisionNumberPath() ) );
 
 		// Apply "AND REVEND_TSTMP is null"
-		context.addWhereColumn( revEndTimestampColumnName, " is null" );
+		context.addNullnessRestriction( revEndTimestampColumnName );
 
 		return context;
 	}
@@ -664,7 +664,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		private final List<QueryParameterBinding> bindings = new ArrayList<>( 0 );
 
 		public UpdateContext(SessionFactoryImplementor sessionFactory) {
-			super ( sessionFactory.getJdbcServices().getDialect() );
+			super ( sessionFactory );
 		}
 
 		public List<QueryParameterBinding> getBindings() {

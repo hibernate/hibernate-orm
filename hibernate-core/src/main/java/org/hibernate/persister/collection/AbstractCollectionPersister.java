@@ -128,7 +128,6 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -1021,9 +1020,9 @@ public abstract class AbstractCollectionPersister
 		String selectValue = isIntegerIndexed ?
 				"max(" + getIndexColumnNames()[0] + ") + 1" : // lists, arrays
 				"count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
-		return new SimpleSelect( dialect )
+		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
-				.addCondition( getKeyColumnNames(), "=?" )
+				.addRestriction( getKeyColumnNames() )
 				.addWhereToken( sqlWhereString )
 				.addColumn( selectValue )
 				.toStatementString();
@@ -1033,11 +1032,11 @@ public abstract class AbstractCollectionPersister
 		if ( !hasIndex() ) {
 			return null;
 		}
-		return new SimpleSelect( dialect )
+		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
-				.addCondition( getKeyColumnNames(), "=?" )
-				.addCondition( getIndexColumnNames(), "=?" )
-				.addCondition( indexFormulas, "=?" )
+				.addRestriction( getKeyColumnNames() )
+				.addRestriction( getIndexColumnNames() )
+				.addRestriction( indexFormulas )
 				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();
@@ -1045,11 +1044,11 @@ public abstract class AbstractCollectionPersister
 
 
 	protected String generateDetectRowByElementString() {
-		return new SimpleSelect( dialect )
+		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
-				.addCondition( getKeyColumnNames(), "=?" )
-				.addCondition( getElementColumnNames(), "=?" )
-				.addCondition( elementFormulas, "=?" )
+				.addRestriction( getKeyColumnNames() )
+				.addRestriction( getElementColumnNames() )
+				.addRestriction( elementFormulas )
 				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();

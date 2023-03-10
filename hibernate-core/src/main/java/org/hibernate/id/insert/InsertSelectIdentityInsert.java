@@ -7,6 +7,7 @@
 package org.hibernate.id.insert;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.Insert;
 import org.hibernate.generator.OnExecutionGenerator;
 
@@ -19,6 +20,10 @@ import org.hibernate.generator.OnExecutionGenerator;
  */
 public class InsertSelectIdentityInsert extends IdentifierGeneratingInsert {
 	protected String identityColumnName;
+
+	public InsertSelectIdentityInsert(SessionFactoryImplementor sessionFactory) {
+		super( sessionFactory );
+	}
 
 	public Insert addIdentityColumn(String columnName) {
 		identityColumnName = columnName;
@@ -34,10 +39,6 @@ public class InsertSelectIdentityInsert extends IdentifierGeneratingInsert {
 		}
 		identityColumnName = columnNames[0];
 		return super.addGeneratedColumns( columnNames, generator );
-	}
-
-	public InsertSelectIdentityInsert(Dialect dialect) {
-		super( dialect );
 	}
 
 	public String toStatementString() {

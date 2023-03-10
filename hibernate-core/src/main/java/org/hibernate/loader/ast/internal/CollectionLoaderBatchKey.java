@@ -172,7 +172,6 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 					.translate( null, QueryOptions.NONE );
 
 			final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount * smallBatchLength );
-			jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
 			int offset = 0;
 

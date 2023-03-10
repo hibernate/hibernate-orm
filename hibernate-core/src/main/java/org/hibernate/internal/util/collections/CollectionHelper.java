@@ -489,6 +489,14 @@ public final class CollectionHelper {
 		return values == null ? 0 : values.size();
 	}
 
+	public static int size(Collection<?> values) {
+		return values == null ? 0 : values.size();
+	}
+
+	public static int size(Map<?,?> values) {
+		return values == null ? 0 : values.size();
+	}
+
 	public static <X> Set<X> toSet(X... values) {
 		final HashSet<X> result = new HashSet<>();
 		if ( isNotEmpty( values ) ) {

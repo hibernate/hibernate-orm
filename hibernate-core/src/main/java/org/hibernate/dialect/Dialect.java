@@ -117,7 +117,6 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -145,6 +144,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.JdbcParameterRendererStandard;
+import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.model.MutationOperation;
@@ -4811,6 +4812,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getTruncateTableStatement(String tableName) {
 		return "truncate table " + tableName;
+	}
+
+	/**
+	 * Support for native parameter rendering
+	 */
+	public JdbcParameterRenderer getNativeParameterRenderer() {
+		return JdbcParameterRendererStandard.INSTANCE;
 	}
 
 	/**

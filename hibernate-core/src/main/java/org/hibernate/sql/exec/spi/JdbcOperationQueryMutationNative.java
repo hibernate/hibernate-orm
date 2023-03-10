@@ -6,11 +6,9 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.query.spi.QueryOptions;
 
 /**
@@ -45,11 +43,6 @@ public class JdbcOperationQueryMutationNative implements JdbcOperationQueryMutat
 	@Override
 	public Set<String> getAffectedTableNames() {
 		return affectedTableNames;
-	}
-
-	@Override
-	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-		return Collections.EMPTY_SET;
 	}
 
 	@Override

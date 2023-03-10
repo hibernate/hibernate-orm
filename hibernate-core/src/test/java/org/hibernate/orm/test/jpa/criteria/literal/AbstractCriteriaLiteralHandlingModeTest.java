@@ -14,6 +14,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -40,6 +41,7 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 	@Override
 	protected void addConfigOptions(Map options) {
 		sqlStatementInterceptor = new SQLStatementInterceptor( options );
+		options.put( AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, Boolean.FALSE );
 	}
 
 	@Override

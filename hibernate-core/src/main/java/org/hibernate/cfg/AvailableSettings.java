@@ -2788,6 +2788,21 @@ public interface AvailableSettings {
 	 */
 	String TIMEZONE_DEFAULT_STORAGE = "hibernate.timezone.default_storage";
 
+	/**
+	 * Controls whether to use JDBC parameter markers (`?`) or dialect native markers.
+	 *
+	 * @implNote By default ({@code true}), dialect native markers are used, if any; disable
+	 * ({@code false}) to use the standard JDBC parameter markers (`?`) instead
+	 *
+	 * @see org.hibernate.sql.ast.spi.JdbcParameterRenderer
+	 * @see org.hibernate.dialect.Dialect#getNativeParameterRenderer()
+	 *
+	 * @since 6.2
+	 */
+	@Incubating
+	String DIALECT_NATIVE_PARAM_MARKERS = "hibernate.dialect.native_param_markers";
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Java (javax) Persistence defined settings
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -6,13 +6,21 @@
  */
 package org.hibernate.sql.ast.spi;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.service.Service;
+import org.hibernate.sql.ast.internal.JdbcParameterRendererStandard;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Extension point, intended for use from Hibernate Reactive, to render JDBC
- * parameter placeholders into the SQL query string being generated.
+ * Extension point for rendering parameter markers.
+ * <p/>
+ * Generally Hibernate will use the JDBC standard marker - {@code ?}.  Many
+ * databases support alternative marker syntax, often numbered.
+ * <p/>
+ * Originally developed as an extension point for use from Hibernate Reactive
+ * to handle the fact that some Vert.X drivers (ok, their PGSQL driver) only
+ * support native parameter marker syntax instead of the JDBC standard
+ *
+ * @see org.hibernate.cfg.AvailableSettings#DIALECT_NATIVE_PARAM_MARKERS
  *
  * @author Steve Ebersole
  */
@@ -21,9 +29,11 @@ public interface JdbcParameterRenderer extends Service {
 	 * Render the parameter for the given position
 	 *
 	 * @param position The 1-based position of the parameter.
-	 * @param jdbcType The type of the parameter
-	 * @param appender The appender where the parameter should be rendered
-	 * @param dialect The Dialect in use within the SessionFactory
+	 * @param jdbcType The type of the parameter, if known
 	 */
-	void renderJdbcParameter(int position, JdbcType jdbcType, SqlAppender appender, Dialect dialect);
+	String renderJdbcParameter(int position, JdbcType jdbcType);
+
+	static boolean isStandardRenderer(JdbcParameterRenderer check) {
+		return check == null || JdbcParameterRendererStandard.class.equals( check.getClass() );
+	}
 }

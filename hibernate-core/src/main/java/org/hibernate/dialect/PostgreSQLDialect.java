@@ -66,6 +66,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -144,33 +145,34 @@ public class PostgreSQLDialect extends Dialect {
 
 	protected final PostgreSQLDriverKind driverKind;
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
+	private final JdbcParameterRenderer parameterRenderer;
 
 	public PostgreSQLDialect() {
 		this( MINIMUM_VERSION );
 	}
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
-		super(info);
-		driverKind = PostgreSQLDriverKind.determineKind( info );
-		optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( info );
+		this( info, PostgreSQLDriverKind.determineKind( info ) );
+	}
+
+	public PostgreSQLDialect(DatabaseVersion version) {
+		this( version, PostgreSQLDriverKind.PG_JDBC );
+	}
+
+	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
+		super( version );
+
+		this.driverKind = driverKind;
+		this.optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
+		this.parameterRenderer = driverKind == PostgreSQLDriverKind.VERT_X
+				? NativeParameterMarkers.INSTANCE
+				: super.getNativeParameterRenderer();
 	}
 
 	private static OptionalTableUpdateStrategy determineOptionalTableUpdateStrategy(DatabaseVersion version) {
 		return version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) )
 				? PostgreSQLDialect::usingMerge
 				: PostgreSQLDialect::withoutMerge;
-	}
-
-	public PostgreSQLDialect(DatabaseVersion version) {
-		super(version);
-		driverKind = PostgreSQLDriverKind.PG_JDBC;
-		optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
-	}
-
-	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
-		super(version);
-		this.driverKind = driverKind;
-		optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
 	}
 
 	@Override
@@ -1428,5 +1430,22 @@ public class PostgreSQLDialect extends Dialect {
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
 		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	@Override
+	public JdbcParameterRenderer getNativeParameterRenderer() {
+		return parameterRenderer;
+	}
+
+	private static class NativeParameterMarkers implements JdbcParameterRenderer {
+		/**
+		 * Singleton access
+		 */
+		public static final NativeParameterMarkers INSTANCE = new NativeParameterMarkers();
+
+		@Override
+		public String renderJdbcParameter(int position, JdbcType jdbcType) {
+			return "$" + position;
+		}
 	}
 }

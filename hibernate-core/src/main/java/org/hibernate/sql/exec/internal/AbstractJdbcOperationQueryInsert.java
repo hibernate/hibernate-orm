@@ -24,6 +24,6 @@ public class AbstractJdbcOperationQueryInsert extends AbstractJdbcOperationQuery
 			String sql,
 			List<JdbcParameterBinder> parameterBinders,
 			Set<String> affectedTableNames) {
-		super( sql, parameterBinders, affectedTableNames, Collections.emptySet() );
+		super( sql, parameterBinders, affectedTableNames );
 	}
 }

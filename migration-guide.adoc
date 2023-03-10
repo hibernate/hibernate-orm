@@ -1037,7 +1037,8 @@ have moved to a separate Maven artifact: `org.hibernate.orm:hibernate-community-
 
 For more information, see https://github.com/hibernate/hibernate-orm/blob/6.0/dialects.adoc#community-dialects.
 
-=== Version-specific and spaical-specific dialects are deprecated
+[[version-specific-and-spatial-dialects]]
+=== Version-specific and spatial-specific dialects are deprecated
 
 As of Hibernate 6.0, dialects can detect and adapt to the version of the database in use and its spatial capabilities.
 

@@ -72,6 +72,8 @@ dependencies {
     testRuntimeOnly testLibs.weld
     testRuntimeOnly testLibs.wildFlyTxnClient
     testRuntimeOnly libs.jackson
+    testRuntimeOnly libs.jacksonXml
+    testRuntimeOnly libs.jacksonJsr310
 
     testAnnotationProcessor project( ':hibernate-jpamodelgen' )
 

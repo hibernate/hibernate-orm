@@ -75,6 +75,7 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
@@ -189,6 +190,11 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
 		return wrapped.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+	}
+
+	@Override
+	public JdbcParameterRenderer getNativeParameterRenderer() {
+		return wrapped.getNativeParameterRenderer();
 	}
 
 	@Override

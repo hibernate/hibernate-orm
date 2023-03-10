@@ -15,7 +15,7 @@ package org.hibernate.grammars.importsql;
 }
 
 script
-	: (NEWLINE | SPACE | TAB)* ( commandBlock (NEWLINE | SPACE | TAB)* )+ EOF
+	: (NEWLINE | SPACE | TAB)* ( commandBlock (NEWLINE | SPACE | TAB)* )* EOF
 	;
 
 commandBlock

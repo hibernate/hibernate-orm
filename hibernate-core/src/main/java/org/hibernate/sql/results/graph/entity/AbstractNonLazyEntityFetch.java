@@ -68,6 +68,10 @@ public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent imp
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		final EntityInitializer entityInitializer = getEntityInitializer( parentAccess, creationState );
+		return buildEntityAssembler( entityInitializer );
+	}
+
+	protected EntityAssembler buildEntityAssembler(EntityInitializer entityInitializer) {
 		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 

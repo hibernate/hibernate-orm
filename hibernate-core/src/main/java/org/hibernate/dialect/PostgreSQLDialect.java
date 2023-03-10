@@ -378,6 +378,29 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String getEnumTypeDeclaration(String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		return type.append( ')' ).toString();
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, String[] values) {
+		//not needed, because we use an 'enum' type
+		return null;
+	}
+
+	@Override
+	public boolean hasNamedEnumTypes() {
+		return true;
+	}
+
+	@Override
 	public String currentTime() {
 		return "localtime";
 	}

@@ -742,6 +742,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this database support PostgreSQL-style named {@code enum} types,
+	 * that is, does it support the syntax {@code create type ... as enum .... }.
+	 */
+	@Incubating
+	public boolean hasNamedEnumTypes() {
+		return false;
+	}
+
+	/**
 	 * Render a SQL check condition for a column that represents an enumerated value
 	 * by its {@linkplain jakarta.persistence.EnumType#STRING string representation}.
 	 *

@@ -7,7 +7,6 @@
 package org.hibernate.type.descriptor.converter.internal;
 
 import java.io.Serializable;
-import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
@@ -19,8 +18,9 @@ import static java.util.Arrays.sort;
 import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
- * BasicValueConverter handling the conversion of an enum based on
- * JPA {@link jakarta.persistence.EnumType#STRING} strategy (storing the name)
+ * {@link org.hibernate.type.descriptor.converter.spi.BasicValueConverter} handling the
+ * conversion of an enum according to the JPA-defined {@link jakarta.persistence.EnumType#STRING}
+ * strategy (storing the name)
  *
  * @author Steve Ebersole
  */
@@ -65,8 +65,7 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 
 	@Override
 	public String toSqlLiteral(Object value) {
-		//noinspection rawtypes
-		return String.format( Locale.ROOT, "'%s'", ( (Enum) value ).name() );
+		return "'" + ( (Enum) value ).name() + "'";
 	}
 
 	@Override

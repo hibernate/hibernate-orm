@@ -97,8 +97,20 @@ public class CustomType<J>
 			valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );
 			//noinspection unchecked
 			valueBinder = (ValueBinder<J>) jdbcType.getBinder( jdbcJavaType );
-			//noinspection unchecked
-			jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( jdbcJavaType );
+			if ( userType instanceof EnhancedUserType ) {
+				// because of the way QueryLiteral handling is implemented in the
+				// BaseSqmToSqlAstConverter.visitEnumLiteral(), we can't just use
+				// jdbcType.getJdbcLiteralFormatter( mappedJavaType ) here, since
+				// we need to un-convert the value back to the enum type
+				// TODO: sort this out!
+				EnhancedUserType enhancedUserType = (EnhancedUserType) userType;
+				jdbcLiteralFormatter = (appender, value, dialect, wrapperOptions)
+						-> appender.appendSql( enhancedUserType.toSqlLiteral( convertToDomainValue( value ) ) );
+			}
+			else {
+				//noinspection unchecked
+				jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( jdbcJavaType );
+			}
 		}
 		else {
 			// create a JdbcType adapter that uses the UserType binder/extract handling

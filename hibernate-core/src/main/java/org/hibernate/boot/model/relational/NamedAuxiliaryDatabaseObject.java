@@ -28,6 +28,17 @@ public class NamedAuxiliaryDatabaseObject
 		this.name = name;
 	}
 
+	public NamedAuxiliaryDatabaseObject(
+			String name,
+			Namespace namespace,
+			String createString,
+			String dropString,
+			Set<String> dialectScopes,
+			boolean beforeTables) {
+		super( namespace, createString, dropString, dialectScopes, beforeTables );
+		this.name = name;
+	}
+
 	@Override
 	public String getExportIdentifier() {
 		return new QualifiedNameImpl(

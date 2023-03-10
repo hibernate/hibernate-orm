@@ -8,6 +8,7 @@ package org.hibernate.boot.model.process.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
+import java.sql.Types;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -22,6 +23,7 @@ import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
+import org.hibernate.type.descriptor.converter.internal.ObjectEnumValueConverter;
 import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
 import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -333,13 +335,15 @@ public class InferredBasicValueResolver {
 
 		switch ( enumStyle ) {
 			case STRING: {
-				return stringEnumValueResolution(
-						enumJavaType,
-						explicitJavaType,
-						explicitJdbcType,
-						stdIndicators,
-						typeConfiguration
-				);
+				return stdIndicators.getDialect().hasNamedEnumTypes()
+						? objectEnumResolution( enumJavaType, typeConfiguration )
+						: stringEnumValueResolution(
+								enumJavaType,
+								explicitJavaType,
+								explicitJdbcType,
+								stdIndicators,
+								typeConfiguration
+						);
 			}
 			case ORDINAL: {
 				return ordinalEnumValueResolution(
@@ -437,7 +441,34 @@ public class InferredBasicValueResolver {
 		final CustomType<E> customType = new CustomType<>(
 				new org.hibernate.type.EnumType<>(
 						enumJavaType.getJavaTypeClass(),
-						new NamedEnumValueConverter<E>(
+						new NamedEnumValueConverter<>(
+								enumJavaType,
+								jdbcType,
+								relationalJtd
+						),
+						typeConfiguration
+				),
+				typeConfiguration
+		);
+		return new InferredBasicValueResolution<>(
+				customType,
+				enumJavaType,
+				relationalJtd,
+				jdbcType,
+				customType,
+				ImmutableMutabilityPlan.instance()
+		);
+	}
+
+	private static <E extends Enum<E>> InferredBasicValueResolution<E, E> objectEnumResolution(
+			EnumJavaType<E> enumJavaType,
+			TypeConfiguration typeConfiguration) {
+		JavaType<E> relationalJtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( Object.class );
+		JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.OTHER );
+		final CustomType<E> customType = new CustomType<>(
+				new org.hibernate.type.EnumType<>(
+						enumJavaType.getJavaTypeClass(),
+						new ObjectEnumValueConverter(
 								enumJavaType,
 								jdbcType,
 								relationalJtd

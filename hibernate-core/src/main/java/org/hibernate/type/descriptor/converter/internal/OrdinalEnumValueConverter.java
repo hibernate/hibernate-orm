@@ -15,8 +15,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * BasicValueConverter handling the conversion of an enum based on
- * JPA {@link jakarta.persistence.EnumType#ORDINAL} strategy (storing the ordinal)
+ * {@link org.hibernate.type.descriptor.converter.spi.BasicValueConverter} handling the
+ * conversion of an enum according to the JPA-defined {@link jakarta.persistence.EnumType#ORDINAL}
+ * strategy (storing the ordinal)
  *
  * @author Steve Ebersole
  */

@@ -15,7 +15,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
  * @author Andrea Boriero
@@ -58,7 +57,7 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 		final Initializer entityInitializer = creationState.resolveInitializer(
 				navigablePath,
 				getEntityValuedModelPart(),
-				() -> new EntityDelayedFetchInitializer(
+				() -> buildEntityDelayedFetchInitializer(
 						parentAccess,
 						navigablePath,
 						(ToOneAttributeMapping) getEntityValuedModelPart(),
@@ -67,6 +66,20 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 				)
 		);
 
+		return buildEntityAssembler( entityInitializer );
+	}
+
+	protected EntityAssembler buildEntityAssembler(Initializer entityInitializer) {
 		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer.asEntityInitializer() );
+	}
+
+	protected Initializer buildEntityDelayedFetchInitializer(FetchParentAccess parentAccess, NavigablePath navigablePath, ToOneAttributeMapping entityValuedModelPart, boolean selectByUniqueKey, DomainResultAssembler<?> resultAssembler) {
+		return new EntityDelayedFetchInitializer(
+				parentAccess,
+				navigablePath,
+				entityValuedModelPart,
+				selectByUniqueKey,
+				resultAssembler
+		);
 	}
 }

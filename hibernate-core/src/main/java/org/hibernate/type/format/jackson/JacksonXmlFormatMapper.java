@@ -6,13 +6,24 @@
  */
 package org.hibernate.type.format.jackson;
 
-import org.hibernate.type.format.FormatMapper;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.format.FormatMapper;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 
 /**
  * @author Christian Beikov
@@ -24,11 +35,25 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 	private final ObjectMapper objectMapper;
 
 	public JacksonXmlFormatMapper() {
-		this(new XmlMapper());
+		this( createXmlMapper() );
 	}
 
 	public JacksonXmlFormatMapper(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
+	}
+
+	private static XmlMapper createXmlMapper() {
+		final XmlMapper xmlMapper = new XmlMapper();
+		// needed to automatically find and register Jackson's jsr310 module for java.time support
+		xmlMapper.findAndRegisterModules();
+		xmlMapper.configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false );
+		xmlMapper.enable( ToXmlGenerator.Feature.WRITE_NULLS_AS_XSI_NIL );
+		// Workaround for null vs empty string handling inside arrays,
+		// see: https://github.com/FasterXML/jackson-dataformat-xml/issues/344
+		final SimpleModule module = new SimpleModule();
+		module.addDeserializer( String[].class, new StringArrayDeserializer() );
+		xmlMapper.registerModule( module );
+		return xmlMapper;
 	}
 
 	@Override
@@ -37,7 +62,10 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 			return (T) charSequence.toString();
 		}
 		try {
-			return objectMapper.readValue( charSequence.toString(), objectMapper.constructType( javaType.getJavaType() ) );
+			return objectMapper.readValue(
+					charSequence.toString(),
+					objectMapper.constructType( javaType.getJavaType() )
+			);
 		}
 		catch (JsonProcessingException e) {
 			throw new IllegalArgumentException( "Could not deserialize string to java type: " + javaType, e );
@@ -49,12 +77,35 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 		if ( javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class ) {
 			return (String) value;
 		}
+		else if ( javaType.getJavaTypeClass().isArray() ) {
+			if ( javaType.getJavaTypeClass().getComponentType().isEnum() ) {
+				// for enum arrays we need to explicitly pass Byte[] as the writer type
+				return writeValueAsString( value, javaType, Byte[].class );
+			}
+		}
+		return writeValueAsString( value, javaType, javaType.getJavaType() );
+	}
+
+	private <T> String writeValueAsString(Object value, JavaType<T> javaType, Type type) {
 		try {
-			return objectMapper.writerFor( objectMapper.constructType( javaType.getJavaType() ) )
-					.writeValueAsString( value );
+			return objectMapper.writerFor( objectMapper.constructType( type ) ).writeValueAsString( value );
 		}
 		catch (JsonProcessingException e) {
 			throw new IllegalArgumentException( "Could not serialize object of java type: " + javaType, e );
+		}
+	}
+
+	private static class StringArrayDeserializer extends JsonDeserializer<String[]> {
+		@Override
+		public String[] deserialize(JsonParser jp, DeserializationContext deserializationContext) throws IOException {
+			final ArrayList<String> result = new ArrayList<>();
+			JsonToken token;
+			while ( ( token = jp.nextValue() ) != JsonToken.END_OBJECT ) {
+				if ( token.isScalarValue() ) {
+					result.add( jp.getValueAsString() );
+				}
+			}
+			return result.toArray( String[]::new );
 		}
 	}
 }

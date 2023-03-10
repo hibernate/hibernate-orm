@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Test;
 
@@ -29,6 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class MultiLineImportExtractorTest {
 	public static final String IMPORT_FILE = "org/hibernate/orm/test/tool/schema/scripts/multi-line-statements2.sql";
+	public static final String IMPORT_FILE_COMMENTS_ONLY = "org/hibernate/orm/test/tool/schema/scripts/comments-only.sql";
 
 	private final MultiLineSqlScriptExtractor extractor = new MultiLineSqlScriptExtractor();
 
@@ -36,9 +38,9 @@ public class MultiLineImportExtractorTest {
 	public void testExtraction() throws IOException {
 		final ClassLoader classLoader = ClassLoader.getSystemClassLoader();
 
-		try (final InputStream stream = classLoader.getResourceAsStream( IMPORT_FILE )) {
+		try ( final InputStream stream = classLoader.getResourceAsStream( IMPORT_FILE ) ) {
 			assertThat( stream, notNullValue() );
-			try (final InputStreamReader reader = new InputStreamReader( stream )) {
+			try ( final InputStreamReader reader = new InputStreamReader( stream ) ) {
 				final List<String> commands = extractor.extractCommands( reader, DialectContext.getDialect() );
 				assertThat( commands, notNullValue() );
 				assertThat( commands.size(), is( 6 ) );
@@ -55,7 +57,10 @@ public class MultiLineImportExtractorTest {
 				assertThat( commands.get( 4 ), startsWith( "INSERT INTO test_data VALUES (3" ) );
 				assertThat( commands.get( 4 ), not( containsString( "third record" ) ) );
 
-				assertThat( commands.get( 5 ).replace( "\t", "" ), is( "INSERT INTO test_data VALUES (     4       , NULL     )" ) );
+				assertThat(
+						commands.get( 5 ).replace( "\t", "" ),
+						is( "INSERT INTO test_data VALUES (     4       , NULL     )" )
+				);
 			}
 		}
 	}
@@ -66,5 +71,20 @@ public class MultiLineImportExtractorTest {
 		final List<String> commands = extractor.extractCommands( reader, DialectContext.getDialect() );
 		assertThat( commands, notNullValue() );
 		assertThat( commands.size(), is( 0 ) );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-16279")
+	public void testExtractionFromCommentsOnlyScript() throws IOException {
+		final ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+
+		try ( final InputStream stream = classLoader.getResourceAsStream( IMPORT_FILE_COMMENTS_ONLY ) ) {
+			assertThat( stream, notNullValue() );
+			try ( final InputStreamReader reader = new InputStreamReader( stream ) ) {
+				final List<String> commands = extractor.extractCommands( reader, DialectContext.getDialect() );
+				assertThat( commands, notNullValue() );
+				assertThat( commands.size(), is( 0 ) );
+			}
+		}
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.action.internal;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -186,8 +187,8 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 
 		if ( persister.canWriteToCache() ) {
-			if ( persister.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
-				persister.getCacheAccessStrategy().remove( session, ck);
+			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
+				persister.getCacheAccessStrategy().remove( session, ck );
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
@@ -217,6 +218,13 @@ public final class EntityUpdateAction extends EntityAction {
 		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
 			factory.getStatistics().updateEntity( getPersister().getEntityName() );
 		}
+	}
+
+	private static boolean isCacheInvalidationRequired(
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		// the cache has to be invalidated when CacheMode is equal to GET or IGNOREgfa
+		return persister.isCacheInvalidationRequired() || session.getCacheMode() == CacheMode.GET || session.getCacheMode() == CacheMode.IGNORE;
 	}
 
 	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {

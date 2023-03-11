@@ -82,6 +82,7 @@ import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
@@ -344,11 +345,11 @@ public class NativeQueryImpl<R>
 		return interpretationCache.resolveNativeQueryParameters(
 					sqlString,
 					s -> {
-						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
+						final ServiceRegistryImplementor serviceRegistry = session.getFactory().getServiceRegistry();
+						final NativeQueryInterpreter queryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
+						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( session.getFactory() );
 
-						session.getFactory().getServiceRegistry()
-								.getService( NativeQueryInterpreter.class )
-								.recognizeParameters( sqlString, parameterRecognizer );
+						queryInterpreter.recognizeParameters( sqlString, parameterRecognizer );
 
 						return new ParameterInterpretationImpl( parameterRecognizer );
 					}

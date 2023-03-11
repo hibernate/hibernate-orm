@@ -14,21 +14,21 @@ import java.util.Map;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.query.ParameterRecognitionException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
+import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
 
 /**
  * @author Steve Ebersole
  */
 public class ParameterRecognizerImpl implements ParameterRecognizer {
-	private enum ParameterStyle {
-		JDBC,
-		ORDINAL,
-		NAMED
-	}
+	private enum ParameterStyle { JDBC, ORDINAL, NAMED }
+
+	private final JdbcParameterRenderer jdbcParameterRenderer;
 
 	private ParameterStyle parameterStyle;
 
@@ -40,8 +40,13 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 	private List<ParameterOccurrence> parameterList;
 	private final StringBuilder sqlStringBuffer = new StringBuilder();
 
-	public ParameterRecognizerImpl() {
-		ordinalParameterImplicitPosition = 1;
+	public ParameterRecognizerImpl(SessionFactoryImplementor factory) {
+		this( factory.getServiceRegistry().getService( JdbcParameterRenderer.class ) );
+	}
+
+	public ParameterRecognizerImpl(JdbcParameterRenderer jdbcParameterRenderer) {
+		this.jdbcParameterRenderer = jdbcParameterRenderer;
+		this.ordinalParameterImplicitPosition = 1;
 	}
 
 	@Override
@@ -84,6 +89,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		return sqlStringBuffer.toString();
 	}
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Recognition code
 
@@ -117,7 +123,11 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		sqlStringBuffer.append( createParameterMarker() );
+	}
+
+	private String createParameterMarker() {
+		return jdbcParameterRenderer.renderJdbcParameter( parameterList.size(), null );
 	}
 
 	@Override
@@ -148,7 +158,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		sqlStringBuffer.append( createParameterMarker() );
 	}
 
 	@Override
@@ -183,7 +193,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		}
 
 		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		sqlStringBuffer.append( createParameterMarker() );
 	}
 
 	@Override

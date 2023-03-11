@@ -9,16 +9,15 @@ package org.hibernate.orm.test.sql.ast;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -47,6 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiresDialect( H2Dialect.class )
 public class JdbcParameterRendererTests {
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16229" )
 	public void basicTest(SessionFactoryScope scope) {
 		final String queryString = "select e from EntityOfBasics e where e.id = :id";
 
@@ -63,6 +63,7 @@ public class JdbcParameterRendererTests {
 	}
 
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16260" )
 	public void testFilters(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -74,8 +75,14 @@ public class JdbcParameterRendererTests {
 			final String sql = statementInspector.getSqlQueries().get( 0 );
 			assertThat( sql ).contains( "?1" );
 		} );
+	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16256" )
+	public void testWriteOperations(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
+
 		scope.inTransaction( (session) -> {
 			final EntityWithFilters it = new EntityWithFilters( 1, "It", "EMEA" );
 			session.persist( it );
@@ -105,6 +112,23 @@ public class JdbcParameterRendererTests {
 		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 		assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 1 );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16256" )
+	public void testNativeQuery(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			session.createNativeQuery( "select count(1) from filtered_entity e where e.region = :region" )
+					.setParameter( "region", "BFE" )
+					.uniqueResult();
+
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" );
+		} );
 	}
 
 	public static class JdbcParameterRendererImpl implements JdbcParameterRenderer {

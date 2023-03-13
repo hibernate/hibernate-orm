@@ -1,19 +1,18 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.persister.entity;
+package org.hibernate.metamodel.mapping;
 
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.persister.internal.EmptyAttributeMappingsMap;
-import org.hibernate.persister.internal.ImmutableAttributeMappingsMap;
+import org.hibernate.metamodel.mapping.internal.EmptyAttributeMappingsMap;
+import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingsMap;
 
 /**
  * Similar to {@link AttributeMappingsList}, this is essentially

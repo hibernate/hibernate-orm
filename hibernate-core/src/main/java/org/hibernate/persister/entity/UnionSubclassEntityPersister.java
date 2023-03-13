@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -76,6 +77,7 @@ import static org.hibernate.jdbc.Expectations.appropriateExpectation;
  *
  * @author Gavin King
  */
+@Internal
 public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	// the class hierarchy structure

@@ -23,6 +23,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -144,6 +145,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  * @see BasicCollectionPersister
  * @see OneToManyPersister
  */
+@Internal
 public abstract class AbstractCollectionPersister
 		implements SQLLoadableCollection, PluralAttributeMappingImpl.Aware, CollectionMutationTarget, CollectionMetadata {
 

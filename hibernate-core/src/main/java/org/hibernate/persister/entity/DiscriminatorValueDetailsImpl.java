@@ -6,12 +6,14 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
 /**
  * @author Steve Ebersole
  */
+@Internal
 public class DiscriminatorValueDetailsImpl implements EntityDiscriminatorMapping.DiscriminatorValueDetails {
 	private final Object value;
 	private final String jdbcLiteral;

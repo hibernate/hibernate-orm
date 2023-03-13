@@ -306,6 +306,7 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  *
  * @author Gavin King
  */
+@Internal
 public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, ClassMetadata, UniqueKeyLoadable,
 				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable,

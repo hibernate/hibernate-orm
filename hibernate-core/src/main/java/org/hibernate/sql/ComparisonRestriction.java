@@ -16,7 +16,7 @@ import org.hibernate.Internal;
 @Internal
 public class ComparisonRestriction implements Restriction {
 	private final String lhs;
-	private final String operator;
+	private final Operator operator;
 	private final String rhs;
 
 	public ComparisonRestriction(String lhs) {
@@ -24,10 +24,10 @@ public class ComparisonRestriction implements Restriction {
 	}
 
 	public ComparisonRestriction(String lhs, String rhs) {
-		this( lhs, "=", rhs );
+		this( lhs, Operator.EQ, rhs );
 	}
 
-	public ComparisonRestriction(String lhs, String operator, String rhs) {
+	public ComparisonRestriction(String lhs, Operator operator, String rhs) {
 		this.lhs = lhs;
 		this.operator = operator;
 		this.rhs = rhs;
@@ -36,13 +36,29 @@ public class ComparisonRestriction implements Restriction {
 	@Override
 	public void render(StringBuilder sqlBuffer, RestrictionRenderingContext context) {
 		sqlBuffer.append( lhs );
-		sqlBuffer.append( operator );
+		sqlBuffer.append( operator.getSqlText() );
 
 		if ( "?".equals( rhs ) ) {
 			sqlBuffer.append( context.makeParameterMarker() );
 		}
 		else {
 			sqlBuffer.append( rhs );
+		}
+	}
+
+	public enum Operator {
+		EQ( "=" ),
+		NE( "<>" )
+		;
+
+		private final String sqlText;
+
+		Operator(String sqlText) {
+			this.sqlText = sqlText;
+		}
+
+		public String getSqlText() {
+			return sqlText;
 		}
 	}
 }

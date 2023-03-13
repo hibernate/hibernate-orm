@@ -144,8 +144,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.JdbcParameterRendererStandard;
-import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.model.MutationOperation;
@@ -4815,10 +4815,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Support for native parameter rendering
+	 * Support for native parameter markers.
+	 * <p/>
+	 * This is generally dependent on both the database and the driver.
+	 *
+	 * @return May return {@code null} to indicate that the JDBC
+	 * {@linkplain ParameterMarkerStrategyStandard standard} strategy should be used
 	 */
-	public JdbcParameterRenderer getNativeParameterRenderer() {
-		return JdbcParameterRendererStandard.INSTANCE;
+	public ParameterMarkerStrategy getNativeParameterMarkerStrategy() {
+		return null;
 	}
 
 	/**

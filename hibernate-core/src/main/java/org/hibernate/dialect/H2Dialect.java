@@ -57,7 +57,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -910,18 +910,18 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public JdbcParameterRenderer getNativeParameterRenderer() {
-		return OrdinalParameterRenderer.INSTANCE;
+	public ParameterMarkerStrategy getNativeParameterMarkerStrategy() {
+		return OrdinalParameterMarkerStrategy.INSTANCE;
 	}
 
-	public static class OrdinalParameterRenderer implements JdbcParameterRenderer {
+	public static class OrdinalParameterMarkerStrategy implements ParameterMarkerStrategy {
 		/**
 		 * Singleton access
 		 */
-		public static final OrdinalParameterRenderer INSTANCE = new OrdinalParameterRenderer();
+		public static final OrdinalParameterMarkerStrategy INSTANCE = new OrdinalParameterMarkerStrategy();
 
 		@Override
-		public String renderJdbcParameter(int position, JdbcType jdbcType) {
+		public String createMarker(int position, JdbcType jdbcType) {
 			return "?" + position;
 		}
 	}

@@ -79,9 +79,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		}
 		else {
 			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
-			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
-
-			jdbcParameterBindings.registerNativeQueryParameters(
+			jdbcParameterBindings = new JdbcParameterBindingsImpl(
 					queryParameterBindings,
 					parameterList,
 					jdbcParameterBinders,
@@ -95,8 +93,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				sql,
 				jdbcParameterBinders,
 				resultSetMapping,
-				affectedTableNames,
-				Collections.emptySet()
+				affectedTableNames
 		);
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
@@ -116,6 +113,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
+			//noinspection unchecked
 			return EmptyScrollableResults.INSTANCE;
 		}
 		final List<JdbcParameterBinder> jdbcParameterBinders;
@@ -128,9 +126,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		}
 		else {
 			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
-			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
-
-			jdbcParameterBindings.registerNativeQueryParameters(
+			jdbcParameterBindings = new JdbcParameterBindingsImpl(
 					queryParameterBindings,
 					parameterList,
 					jdbcParameterBinders,
@@ -142,8 +138,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				sql,
 				jdbcParameterBinders,
 				resultSetMapping,
-				affectedTableNames,
-				Collections.emptySet()
+				affectedTableNames
 		);
 
 		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().scroll(

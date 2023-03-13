@@ -29,6 +29,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -793,7 +794,8 @@ public class LoaderSelectBuilder {
 			final String bagRole;
 			if ( isFetchablePluralAttributeMapping
 					&& ( (PluralAttributeMapping) fetchable ).getMappedType()
-					.getCollectionSemantics() instanceof BagSemantics ) {
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.BAG ) {
 				bagRole = fetchable.getNavigableRole().getNavigableName();
 			}
 			else {
@@ -801,7 +803,7 @@ public class LoaderSelectBuilder {
 			}
 
 			if ( joined && previousBagRole != null && bagRole != null ) {
-				// Avoid join fetching multiple bags
+				// Avoid join fetching multiple bags to prevent result multiplication
 				joined = false;
 			}
 

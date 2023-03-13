@@ -117,26 +117,26 @@ public class JoinColumnOccursOutOfOrderTest {
 
     }
 
-    @Entity
+    @Entity(name = "ChildEntityFour")
     public static class ChildEntityFour {
         @EmbeddedId
         private ChildFourId id;
     }
 
-    @Entity
+    @Entity(name = "ChildEntityOne")
     public static class ChildEntityOne {
         @EmbeddedId
         private ChildOneId id;
     }
 
-    @Entity
+    @Entity(name = "ChildTwoEntity")
     @DynamicUpdate
     public static class ChildTwoEntity {
         @EmbeddedId
         private ChildTwoId id;
     }
 
-    @Entity
+    @Entity(name = "ChildEntityThree")
     public static class ChildEntityThree  {
         @EmbeddedId
         private ChildThreeId id;

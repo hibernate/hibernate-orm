@@ -886,7 +886,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.get( versionMapping.getPartName() ),
 				this,
 				this,
-				jpaQueryComplianceEnabled ).getColumnReferences();
+				jpaQueryComplianceEnabled,
+				Clause.SET
+		).getColumnReferences();
 		assert targetColumnReferences.size() == 1;
 
 		final ColumnReference versionColumn = targetColumnReferences.get( 0 );
@@ -1331,7 +1333,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							.get( versionAttributeName ),
 					this,
 					this,
-					jpaQueryComplianceEnabled
+					jpaQueryComplianceEnabled,
+					getCurrentClauseStack().getCurrent()
 			);
 			final List<ColumnReference> targetColumnReferences = versionPath.getColumnReferences();
 			assert targetColumnReferences.size() == 1;
@@ -3960,7 +3963,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						sqmPath,
 						this,
 						this,
-						jpaQueryComplianceEnabled
+						jpaQueryComplianceEnabled,
+						getCurrentClauseStack().getCurrent()
 				)
 		);
 		Expression result = path;
@@ -4058,7 +4062,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return withTreatRestriction(
 				prepareReusablePath(
 						sqmPath,
-						() -> EmbeddableValuedPathInterpretation.from( sqmPath, this, this, jpaQueryComplianceEnabled )
+						() -> EmbeddableValuedPathInterpretation.from(
+								sqmPath,
+								this,
+								this,
+								jpaQueryComplianceEnabled,
+								getCurrentClauseStack().getCurrent()
+						)
 				),
 				sqmPath
 		);

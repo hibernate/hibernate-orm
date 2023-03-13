@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -88,6 +89,7 @@ import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
  * @author Gavin King
  * @author Brett Meyer
  */
+@Internal
 public class OneToManyPersister extends AbstractCollectionPersister {
 	private final RowMutationOperations rowMutationOperations;
 

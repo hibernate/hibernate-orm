@@ -1,34 +1,34 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.persister.entity;
+package org.hibernate.metamodel.mapping;
 
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.persister.internal.EmptyAttributeMappingsMap;
-import org.hibernate.persister.internal.ImmutableAttributeMappingsMap;
+import org.hibernate.metamodel.mapping.internal.EmptyAttributeMappingsMap;
+import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingsMap;
 
 /**
- * Similarly to @{@link AttributeMappingsList}, this is essentially
+ * Similar to {@link AttributeMappingsList}, this is essentially
  * an immutable Map of AttributeMapping(s), allowing iteration of
  * all mappings but also retrieval by name (a String key).
  * Exposing a custom interface is more suitable to our needs than
  * reusing the stock Map API; it expresses the immutable nature of
- * this structure, and might allows us to extend it with additional
+ * this structure, and might allow us to extend it with additional
  * convenience methods such as needs evolve.
  * And additional reason for the custom interface is to allow
  * custom implementations which can be highly optimised as
  * necessary for our specific needs; for example the
- * implementation @{@link ImmutableAttributeMappingsMap}
+ * implementation {@link ImmutableAttributeMappingsMap}
  * is able to avoid caching problems related to JDK-8180450, which would
  * not have been possible with a standard generic container.
+ *
  * @since 6.2
  */
 @Incubating

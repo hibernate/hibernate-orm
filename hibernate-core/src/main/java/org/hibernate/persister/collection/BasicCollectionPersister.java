@@ -7,6 +7,7 @@
 package org.hibernate.persister.collection;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -67,6 +68,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  *
  * @author Gavin King
  */
+@Internal
 public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private final RowMutationOperations rowMutationOperations;
 	private final InsertRowsCoordinator insertRowsCoordinator;

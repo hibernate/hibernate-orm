@@ -8,6 +8,7 @@ package org.hibernate.persister.entity;
 
 import java.util.TimeZone;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -17,6 +18,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Christian Beikov
  */
+@Internal
 public class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 
 	private final SessionFactoryImplementor factory;

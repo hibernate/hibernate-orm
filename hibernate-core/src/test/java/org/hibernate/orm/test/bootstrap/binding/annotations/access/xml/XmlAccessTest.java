@@ -11,18 +11,19 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import jakarta.persistence.AccessType;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.AccessType;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

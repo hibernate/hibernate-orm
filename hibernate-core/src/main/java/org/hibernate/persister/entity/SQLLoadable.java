@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.type.Type;
 
 /**
@@ -13,7 +14,10 @@ import org.hibernate.type.Type;
  * in the platform native SQL dialect.
  *
  * @author Gavin King, Max Andersen
+ *
+ * @deprecated Use {@link EntityMappingType}
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface SQLLoadable extends Loadable {
 
 	/**

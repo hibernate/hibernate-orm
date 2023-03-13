@@ -32,7 +32,7 @@ public class Troop {
 	private Set<Soldier> soldiers;
 
 	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
-	@OrderBy(clause = "name desc")
+	@OrderBy("name desc")
 	@org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	public Set<Soldier> getSoldiers() {

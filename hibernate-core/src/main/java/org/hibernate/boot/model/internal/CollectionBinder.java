@@ -171,7 +171,6 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Base class for stateful binders responsible for producing mapping model objects of type {@link Collection}.
@@ -1369,7 +1368,7 @@ public abstract class CollectionBinder {
 		if ( ordered ) {
 			// we can only apply the sql-based order by up front.  The jpa order by has to wait for second pass
 			if ( sqlOrderBy != null ) {
-				collection.setOrderBy( sqlOrderBy.clause() );
+				collection.setOrderBy( extractOrdering( sqlOrderBy ) );
 			}
 		}
 
@@ -1379,6 +1378,14 @@ public abstract class CollectionBinder {
 		}
 		collection.setSorted( isSorted );
 		instantiateComparator( collection, comparatorClass );
+	}
+
+	private static String extractOrdering(org.hibernate.annotations.OrderBy orderBy) {
+		assert orderBy != null;
+		if ( isNotEmpty( orderBy.value() ) ) {
+			return orderBy.value();
+		}
+		return orderBy.clause();
 	}
 
 	private void instantiateComparator(Collection collection, Class<? extends Comparator<?>> comparatorClass) {
@@ -1772,29 +1779,42 @@ public abstract class CollectionBinder {
 
 	private String getWhereClause() {
 		// There are 2 possible sources of "where" clauses that apply to the associated entity table:
-		// 1) from the associated entity mapping; i.e., @Entity @Where(clause="...")
-		//    (ignored if useEntityWhereClauseForCollections == false)
-		// 2) from the collection mapping;
-		//    for one-to-many, e.g., @OneToMany @JoinColumn @Where(clause="...") public Set<Rating> getRatings();
-		//    for many-to-many e.g., @ManyToMany @Where(clause="...") public Set<Rating> getRatings();
+		// 		1) from the associated entity mapping; i.e., @Entity @Where(clause="...")[a]
+		// 		2) from the collection mapping:
+		//    		for one-to-many, e.g., @OneToMany @JoinColumn @Where(clause="...") public Set<Rating> getRatings();
+		//    		for many-to-many e.g., @ManyToMany @Where(clause="...") public Set<Rating> getRatings();
+		//
+		// [a] ignored if useEntityWhereClauseForCollections == false
 		return getNonEmptyOrConjunctionIfBothNonEmpty( getWhereOnClassClause(), getWhereOnCollectionClause() );
 	}
 
 	private String getWhereOnCollectionClause() {
 		final Where whereOnCollection = getOverridableAnnotation( property, Where.class, getBuildingContext() );
-		return whereOnCollection != null ? whereOnCollection.clause() : null;
+		if ( whereOnCollection == null ) {
+			return null;
+		}
+		if ( isNotEmpty( whereOnCollection.value() ) ) {
+			return whereOnCollection.value();
+		}
+		return whereOnCollection.clause();
 	}
 
 	private String getWhereOnClassClause() {
-		if ( property.getElementClass() != null ) {
-			final Where whereOnClass = getOverridableAnnotation( property.getElementClass(), Where.class, getBuildingContext() );
-			return whereOnClass != null && ModelBinder.useEntityWhereClauseForCollections( buildingContext )
-					? whereOnClass.clause()
-					: null;
-		}
-		else {
+		if ( !ModelBinder.useEntityWhereClauseForCollections( buildingContext ) ) {
 			return null;
 		}
+		if ( property.getElementClass() == null ) {
+			return null;
+		}
+
+		final Where whereOnClass = getOverridableAnnotation( property.getElementClass(), Where.class, getBuildingContext() );
+		if ( whereOnClass == null ) {
+			return null;
+		}
+		if ( isNotEmpty( whereOnClass.value() ) ) {
+			return whereOnClass.value();
+		}
+		return whereOnClass.clause();
 	}
 
 	private void addFilter(boolean hasAssociationTable, FilterJoinTable filter) {

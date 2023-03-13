@@ -48,18 +48,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * List&lt;Document&gt; documents;
  * </pre>
  * <p>
- * By default, {@code @Where} restrictions declared for an entity are
- * applied when loading associations of that entity type. This behavior can
- * be disabled using the setting {@value org.hibernate.cfg.AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS};
- * note, however, that setting is disabled.
- * <p>
  * Note that {@code @Where} restrictions are always applied and cannot be
  * disabled. Nor may they be parameterized. They're therefore <em>much</em>
  * less flexible than {@linkplain Filter filters}.
  *
  * @see Filter
  * @see DialectOverride.Where
- * @see org.hibernate.cfg.AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS
  * @see WhereJoinTable
  *
  * @author Emmanuel Bernard
@@ -70,5 +64,13 @@ public @interface Where {
 	/**
 	 * A predicate, written in native SQL.
 	 */
-	String clause();
+	String value() default "";
+
+	/**
+	 * A predicate, written in native SQL.
+	 *
+	 * @deprecated Use {@link #value()} instead
+	 */
+	@Deprecated
+	String clause() default "";
 }

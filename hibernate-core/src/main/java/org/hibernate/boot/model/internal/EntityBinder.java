@@ -1478,9 +1478,17 @@ public class EntityBinder {
 
 	public void bindWhere() {
 		final Where where = getOverridableAnnotation( annotatedClass, Where.class, context );
-		if ( where != null ) {
-			this.where = where.clause();
+		this.where = extractWhereFragment( where );
+	}
+
+	private String extractWhereFragment(Where where) {
+		if ( where == null ) {
+			return null;
 		}
+		if ( isNotEmpty( where.value() ) ) {
+			return where.value();
+		}
+		return where.clause();
 	}
 
 	public void setWrapIdsInEmbeddedComponents(boolean wrapIdsInEmbeddedComponents) {

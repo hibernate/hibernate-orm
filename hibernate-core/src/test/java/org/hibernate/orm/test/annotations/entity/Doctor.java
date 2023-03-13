@@ -21,7 +21,7 @@ import org.hibernate.annotations.Where;
  *
  */
 @Entity
-@Where(clause = "yearsExperience > 3")
+@Where("yearsExperience > 3")
 public class Doctor {
 	private Integer id;
 	private String name;

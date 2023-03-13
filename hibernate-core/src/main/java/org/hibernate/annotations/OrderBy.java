@@ -56,7 +56,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface OrderBy {
 	/**
-	 * The native SQL expression used to sort the collection elements.
+	 * The native SQL ordering fragment
+	 * A native SQL expression list used to sort the collection elements.
 	 */
-	String clause();
+	String value() default "";
+
+	/**
+	 * The native SQL expression used to sort the collection elements.
+	 *
+	 * @deprecated Use {@link #value()} instead
+	 */
+	@Deprecated
+	String clause() default "";
 }

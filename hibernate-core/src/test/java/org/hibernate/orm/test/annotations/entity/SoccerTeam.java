@@ -28,7 +28,7 @@ public class SoccerTeam {
 	String name;
 	
 	@OneToMany
-	@Where(clause = "activeLicense = true")
+	@Where("activeLicense = true")
 	private List<Doctor> physiologists = new ArrayList<Doctor>();
 
 	@OneToMany(mappedBy="team",

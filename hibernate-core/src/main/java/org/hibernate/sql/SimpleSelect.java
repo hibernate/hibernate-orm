@@ -18,7 +18,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * A SQL {@code SELECT} statement with no table joins.
@@ -37,20 +37,18 @@ public class SimpleSelect implements RestrictionRenderingContext {
 
 	protected LockOptions lockOptions = new LockOptions( LockMode.READ );
 
-	private final SessionFactoryImplementor factory;
 	private final Dialect dialect;
-	private final JdbcParameterRenderer jdbcParameterRenderer;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
 	private int parameterCount;
 
 	public SimpleSelect(SessionFactoryImplementor factory) {
-		this.factory = factory;
 		this.dialect = factory.getJdbcServices().getDialect();
-		this.jdbcParameterRenderer = factory.getServiceRegistry().getService( JdbcParameterRenderer.class );
+		this.parameterMarkerStrategy = factory.getServiceRegistry().getService( ParameterMarkerStrategy.class );
 	}
 
 	@Override
 	public String makeParameterMarker() {
-		return jdbcParameterRenderer.renderJdbcParameter( ++parameterCount, null );
+		return parameterMarkerStrategy.createMarker( ++parameterCount, null );
 	}
 
 	/**
@@ -104,7 +102,7 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	/**
 	 * Appends a restriction comparing the {@code columnName} for equality with a parameter
 	 *
-	 * @see #addRestriction(String, String, String)
+	 * @see #addRestriction(String, ComparisonRestriction.Operator, String)
 	 */
 	public SimpleSelect addRestriction(String columnName) {
 		restrictions.add( new ComparisonRestriction( columnName ) );
@@ -114,10 +112,10 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	/**
 	 * Appends a restriction based on the comparison between {@code lhs} and {@code rhs}.
 	 * <p/>
-	 * The {@code rhs} is checked for parameter marker and processed via {@link JdbcParameterRenderer}
+	 * The {@code rhs} is checked for parameter marker and processed via {@link ParameterMarkerStrategy}
 	 * if needed.
 	 */
-	public SimpleSelect addRestriction(String lhs, String op, String rhs) {
+	public SimpleSelect addRestriction(String lhs, ComparisonRestriction.Operator op, String rhs) {
 		restrictions.add( new ComparisonRestriction( lhs, op, rhs ) );
 		return this;
 	}

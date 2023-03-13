@@ -6129,7 +6129,7 @@ public abstract class AbstractEntityPersister
 							delete.addColumnRestriction( propertyColumnNames[k] );
 						}
 						else {
-							delete.addColumnNullnessRestriction( propertyColumnNames[k] );
+							delete.addColumnIsNullRestriction( propertyColumnNames[k] );
 						}
 					}
 				}

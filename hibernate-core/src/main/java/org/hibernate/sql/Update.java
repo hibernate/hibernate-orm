@@ -14,7 +14,7 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * A SQL {@code UPDATE} statement.
@@ -28,17 +28,15 @@ public class Update implements RestrictionRenderingContext {
 	protected Map<String,String> assignments = new LinkedHashMap<>();
 	protected List<Restriction> restrictions = new ArrayList<>();
 
-	private final JdbcParameterRenderer jdbcParameterRenderer;
-	private final boolean standardParamRendering;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
 	private int parameterCount;
 
 	public Update(SessionFactoryImplementor factory) {
-		this( factory.getServiceRegistry().getService( JdbcParameterRenderer.class ) );
+		this( factory.getServiceRegistry().getService( ParameterMarkerStrategy.class ) );
 	}
 
-	public Update(JdbcParameterRenderer jdbcParameterRenderer) {
-		this.jdbcParameterRenderer = jdbcParameterRenderer;
-		this.standardParamRendering = JdbcParameterRenderer.isStandardRenderer( jdbcParameterRenderer );
+	public Update(ParameterMarkerStrategy parameterMarkerStrategy) {
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	public String getTableName() {
@@ -91,19 +89,26 @@ public class Update implements RestrictionRenderingContext {
 		return this;
 	}
 
-	public Update addRestriction(String column, String op, String value) {
+	public Update addRestriction(String column, ComparisonRestriction.Operator op, String value) {
 		restrictions.add( new ComparisonRestriction( column, op, value ) );
 		return this;
 	}
 
 	private String normalizeExpressionFragment(String rhs) {
-		return rhs.equals( "?" ) && !standardParamRendering
-				? jdbcParameterRenderer.renderJdbcParameter( ++parameterCount, null )
+		return rhs.equals( "?" )
+				? parameterMarkerStrategy.createMarker( ++parameterCount, null )
 				: rhs;
 	}
 
-	public Update addNullnessRestriction(String column) {
-		restrictions.add( new NullnessRestriction( column ) );
+	@SuppressWarnings("UnusedReturnValue")
+	public Update addColumnIsNullRestriction(String columnName) {
+		restrictions.add( new NullnessRestriction( columnName ) );
+		return this;
+	}
+
+	@SuppressWarnings("UnusedReturnValue")
+	public Update addColumnIsNotNullRestriction(String columnName) {
+		restrictions.add( new NullnessRestriction( columnName, false ) );
 		return this;
 	}
 
@@ -158,6 +163,6 @@ public class Update implements RestrictionRenderingContext {
 
 	@Override
 	public String makeParameterMarker() {
-		return jdbcParameterRenderer.renderJdbcParameter( ++parameterCount, null );
+		return parameterMarkerStrategy.createMarker( ++parameterCount, null );
 	}
 }

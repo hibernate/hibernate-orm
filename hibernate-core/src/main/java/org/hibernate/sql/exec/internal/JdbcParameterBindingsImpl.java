@@ -9,12 +9,25 @@ package org.hibernate.sql.exec.internal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.BindableType;
+import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sql.internal.NativeQueryImpl;
+import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.type.BasicTypeReference;
 
 /**
  * Standard implementation of JdbcParameterBindings
@@ -28,6 +41,83 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 		if ( expectedParameterCount > 0 ) {
 			bindingMap = new IdentityHashMap<>( expectedParameterCount );
 		}
+	}
+
+	public JdbcParameterBindingsImpl(
+			QueryParameterBindings queryParameterBindings,
+			List<ParameterOccurrence> parameterOccurrences,
+			List<JdbcParameterBinder> jdbcParameterBinders,
+			SessionFactoryImplementor factory) {
+		if ( !parameterOccurrences.isEmpty() ) {
+			bindingMap = new IdentityHashMap<>( parameterOccurrences.size() );
+
+			final Dialect dialect = factory.getJdbcServices().getDialect();
+			final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
+			final int inExprLimit = dialect.getInExpressionCountLimit();
+
+			for ( ParameterOccurrence occurrence : parameterOccurrences ) {
+				final QueryParameterImplementor<?> param = occurrence.getParameter();
+				final QueryParameterBinding<?> binding = queryParameterBindings.getBinding( param );
+
+				final JdbcMapping jdbcMapping;
+
+				final BindableType<?> type = determineParamType( param, binding );
+				if ( type == null ) {
+					jdbcMapping = factory.getTypeConfiguration().getBasicTypeForJavaType( Object.class );
+				}
+				else if ( type instanceof BasicTypeReference ) {
+					jdbcMapping = factory.getTypeConfiguration()
+							.getBasicTypeRegistry()
+							.resolve( ( (BasicTypeReference<?>) type ) );
+				}
+				else if ( type instanceof BasicValuedMapping ) {
+					jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
+				}
+				else {
+					throw new IllegalArgumentException( "Could not resolve NativeQuery parameter type : `" + param + "`");
+				}
+
+				if ( binding.isMultiValued() ) {
+					final Collection<?> bindValues = binding.getBindValues();
+					final int bindValueCount = bindValues.size();
+					Object lastBindValue = null;
+					for ( Object bindValue : bindValues ) {
+						final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						jdbcParameterBinders.add( jdbcParameter );
+						addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, bindValue ) );
+						lastBindValue = bindValue;
+					}
+					final int bindValueMaxCount = NativeQueryImpl.determineBindValueMaxCount(
+							paddingEnabled,
+							inExprLimit,
+							bindValueCount
+					);
+					if ( bindValueMaxCount != bindValueCount ) {
+						for ( int i = bindValueCount; i < bindValueMaxCount; i++ ) {
+							final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+							jdbcParameterBinders.add( jdbcParameter );
+							addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
+						}
+					}
+				}
+				else {
+					final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+					jdbcParameterBinders.add( jdbcParameter );
+					addBinding(
+							jdbcParameter,
+							new JdbcParameterBindingImpl( jdbcMapping, binding.getBindValue() )
+					);
+				}
+			}
+		}
+	}
+
+	private BindableType<?> determineParamType(QueryParameterImplementor<?> param, QueryParameterBinding<?> binding) {
+		BindableType<?> type = binding.getBindType();
+		if ( type == null ) {
+			type = param.getHibernateType();
+		}
+		return type;
 	}
 
 	@Override
@@ -47,7 +137,6 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 	@Override
 	public JdbcParameterBinding getBinding(JdbcParameter parameter) {
 		if ( bindingMap == null ) {
-			// no bindings
 			return null;
 		}
 		return bindingMap.get( parameter );
@@ -55,6 +144,9 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 
 	@Override
 	public void visitBindings(BiConsumer<JdbcParameter, JdbcParameterBinding> action) {
+		if ( bindingMap == null ) {
+			return;
+		}
 		for ( Map.Entry<JdbcParameter, JdbcParameterBinding> entry : bindingMap.entrySet() ) {
 			action.accept( entry.getKey(), entry.getValue() );
 		}

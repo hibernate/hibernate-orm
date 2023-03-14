@@ -28,7 +28,10 @@ dependencies {
 hibernate {
     useSameVersion = false
     enhancement {
-        lazyInitialization( true )
+        enableLazyInitialization.set(true)
+        lazyInitialization = true
+
+        enableDirtyTracking.set(true)
         dirtyTracking = true
     }
     jpaMetamodel {

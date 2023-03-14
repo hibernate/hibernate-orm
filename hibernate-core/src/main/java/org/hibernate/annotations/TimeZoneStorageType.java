@@ -78,15 +78,16 @@ public enum TimeZoneStorageType {
 	/**
 	 * Does not store the time zone, and instead:
 	 * <ul>
-	 * <li>normalizes JDBC timestamps to the
-	 *     {@linkplain org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
-	 *     JDBC timezone}, if set, or
-	 * <li>passes them through in the JVM default time zone
-	 *    otherwise.
+	 * <li>when persisting to the database, normalizes JDBC timestamps to the
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE}
+	 * or to the JVM default time zone if not set.
+	 * <li>when reading back from the database, sets the offset or zone
+	 * of {@code OffsetDateTime}/{@code ZonedDateTime} values
+	 * to the JVM default time zone.
 	 * </ul>
 	 * <p>
 	 * Provided partly for backward compatibility with older
-	 * versions of Hibernate
+	 * versions of Hibernate.
 	 */
 	NORMALIZE,
 	/**

@@ -36,10 +36,18 @@ public class EnhancementSpec {
 
 		enableLazyInitialization = makeProperty( project ).convention( true );
 		enableDirtyTracking = makeProperty( project ).convention( true );
-		enableAssociationManagement = makeProperty( project );
-		enableExtendedEnhancement = makeProperty( project );
+		enableAssociationManagement = makeProperty( project ).convention( false );
+		enableExtendedEnhancement = makeProperty( project ).convention( false );
 	}
 
+	@SuppressWarnings( "UnstableApiUsage" )
+	public static Property<Boolean> makeProperty(Project project) {
+		return project.getObjects().property( Boolean.class );
+	}
+
+	/**
+	 * Whether any property values indicate work to be done.
+	 */
 	public boolean hasAnythingToDo() {
 		return enableLazyInitialization.get()
 				|| enableDirtyTracking.get()
@@ -47,96 +55,144 @@ public class EnhancementSpec {
 				|| enableExtendedEnhancement.get();
 	}
 
-	@Deprecated(forRemoval = true)
+	/**
+	 * Whether lazy-initialization handling should be incorporated into the enhanced bytecode
+	 */
 	public Property<Boolean> getEnableLazyInitialization() {
 		return enableLazyInitialization;
 	}
 
+	/**
+	 * Whether dirty-tracking should be incorporated into the enhanced bytecode
+	 */
+	public Property<Boolean> getEnableDirtyTracking() {
+		return enableDirtyTracking;
+	}
+
+	/**
+	 * Whether bidirectional association-management handling should be incorporated into the enhanced bytecode
+	 */
+	public Property<Boolean> getEnableAssociationManagement() {
+		return enableAssociationManagement;
+	}
+
+	/**
+	 * Whether extended enhancement should be performed.
+	 */
+	public Property<Boolean> getEnableExtendedEnhancement() {
+		return enableExtendedEnhancement;
+	}
+
+
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
 	@Deprecated(forRemoval = true)
 	public void setEnableLazyInitialization(boolean enable) {
 		enableLazyInitialization.set( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
 	@Deprecated(forRemoval = true)
 	public void enableLazyInitialization(boolean enable) {
 		setEnableLazyInitialization( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
 	@Deprecated(forRemoval = true)
 	public void lazyInitialization(boolean enable) {
 		setEnableLazyInitialization( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
 	@Deprecated(forRemoval = true)
 	public void setLazyInitialization(boolean enable) {
 		setEnableLazyInitialization( enable );
 	}
 
-
-	@Deprecated(forRemoval = true)
-	public Property<Boolean> getEnableDirtyTracking() {
-		return enableDirtyTracking;
-	}
-
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
 	@Deprecated(forRemoval = true)
 	public void setEnableDirtyTracking(boolean enable) {
 		enableDirtyTracking.set( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
 	@Deprecated(forRemoval = true)
 	public void enableDirtyTracking(boolean enable) {
 		setEnableDirtyTracking( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
 	@Deprecated(forRemoval = true)
 	public void dirtyTracking(boolean enable) {
 		setEnableDirtyTracking( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
 	@Deprecated(forRemoval = true)
 	public void setDirtyTracking(boolean enable) {
 		setEnableDirtyTracking( enable );
 	}
 
-
-	public Property<Boolean> getEnableAssociationManagement() {
-		return enableAssociationManagement;
-	}
-
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
 	public void setEnableAssociationManagement(boolean enable) {
 		enableAssociationManagement.set( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
 	public void enableAssociationManagement(boolean enable) {
 		setEnableAssociationManagement( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
 	public void associationManagement(boolean enable) {
 		setEnableAssociationManagement( enable );
 	}
 
-
-	public Property<Boolean> getEnableExtendedEnhancement() {
-		return enableExtendedEnhancement;
-	}
-
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
 	public void setEnableExtendedEnhancement(boolean enable) {
 		enableExtendedEnhancement.set( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
 	public void enableExtendedEnhancement(boolean enable) {
 		setEnableExtendedEnhancement( enable );
 	}
 
+	/**
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
 	public void extendedEnhancement(boolean enable) {
 		setEnableExtendedEnhancement( enable );
-	}
-
-	@SuppressWarnings( "UnstableApiUsage" )
-	public static Property<Boolean> makeProperty(Project project) {
-		final Property<Boolean> createdProperty = project.getObjects().property( Boolean.class );
-		// default to false
-		createdProperty.convention( false );
-		return createdProperty;
 	}
 }

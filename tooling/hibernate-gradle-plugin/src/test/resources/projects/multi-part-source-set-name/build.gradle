@@ -37,13 +37,12 @@ hibernate {
     useSameVersion = false
     sourceSet = 'mySpecialSourceSet'
     enhancement {
-        lazyInitialization( true )
+        enableLazyInitialization.set(true)
+        lazyInitialization = true
+
+        enableDirtyTracking.set(true)
         dirtyTracking = true
     }
     jpaMetamodel {
     }
-}
-
-tasks.withType(JavaCompile).forEach {
-    logger.lifecycle "   - compile task : " + it.name
 }

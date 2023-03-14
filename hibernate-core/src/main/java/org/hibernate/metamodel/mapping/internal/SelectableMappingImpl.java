@@ -9,14 +9,12 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -93,6 +91,32 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	public static SelectableMapping from(
 			final String containingTableExpression,
 			final Selectable selectable,
+			final JdbcMapping jdbcMapping,
+			final TypeConfiguration typeConfiguration,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			boolean forceNotNullable,
+			final Dialect dialect,
+			final SqmFunctionRegistry sqmFunctionRegistry) {
+		return from(
+				containingTableExpression,
+				selectable,
+				null,
+				jdbcMapping,
+				typeConfiguration,
+				insertable,
+				updateable,
+				partitioned,
+				forceNotNullable,
+				dialect,
+				sqmFunctionRegistry
+		);
+	}
+
+	public static SelectableMapping from(
+			final String containingTableExpression,
+			final Selectable selectable,
 			final SelectablePath parentPath,
 			final JdbcMapping jdbcMapping,
 			final TypeConfiguration typeConfiguration,
@@ -105,14 +129,12 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				containingTableExpression,
 				selectable,
 				parentPath,
-				selectable instanceof Column
-						? ( (Column) selectable ).getQuotedName( dialect )
-						: selectable.getText(),
 				jdbcMapping,
 				typeConfiguration,
 				insertable,
 				updateable,
 				partitioned,
+				false,
 				dialect,
 				sqmFunctionRegistry
 		);
@@ -122,12 +144,12 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			final String containingTableExpression,
 			final Selectable selectable,
 			final SelectablePath parentPath,
-			final String selectableName,
 			final JdbcMapping jdbcMapping,
 			final TypeConfiguration typeConfiguration,
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,
+			boolean forceNotNullable,
 			final Dialect dialect,
 			final SqmFunctionRegistry sqmFunctionRegistry) {
 		final String columnExpression;
@@ -135,6 +157,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		final Long length;
 		final Integer precision;
 		final Integer scale;
+		final String selectableName;
 		final boolean isNullable;
 		if ( selectable.isFormula() ) {
 			columnExpression = selectable.getTemplate( dialect, typeConfiguration, sqmFunctionRegistry );
@@ -143,6 +166,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			precision = null;
 			scale = null;
 			isNullable = true;
+			selectableName = selectable.getText();
 		}
 		else {
 			Column column = (Column) selectable;
@@ -152,7 +176,8 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			precision = column.getPrecision();
 			scale = column.getScale();
 
-			isNullable = column.isNullable();
+			isNullable = forceNotNullable ? false : column.isNullable();
+			selectableName = column.getQuotedName( dialect );
 		}
 		return new SelectableMappingImpl(
 				containingTableExpression,

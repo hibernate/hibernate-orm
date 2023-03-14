@@ -56,30 +56,55 @@ public class JpaMetamodelGenerationSpec {
 		return applyGeneratedAnnotation;
 	}
 
-	public void applyGeneratedAnnotation(boolean apply) {
-		applyGeneratedAnnotation.set( apply );
-	}
-
 	public SetProperty<String> getSuppressions() {
 		return suppressions;
-	}
-
-	public void suppress(String warning) {
-		suppressions.add( warning );
 	}
 
 	public DirectoryProperty getGenerationOutputDirectory() {
 		return generationOutputDirectory;
 	}
 
-	public void generationOutputDirectory(Object ref) {
-		generationOutputDirectory.set( project.file( ref ) );
-	}
-
 	public DirectoryProperty getCompileOutputDirectory() {
 		return compileOutputDirectory;
 	}
 
+
+	/**
+	 * @see #getApplyGeneratedAnnotation()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void applyGeneratedAnnotation(boolean apply) {
+		applyGeneratedAnnotation.set( apply );
+	}
+
+	/**
+	 * @see #getSuppressions()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void suppress(String warning) {
+		suppressions.add( warning );
+	}
+
+	/**
+	 * @see #getGenerationOutputDirectory()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void generationOutputDirectory(Object ref) {
+		generationOutputDirectory.set( project.file( ref ) );
+	}
+
+	/**
+	 * @see #getCompileOutputDirectory()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
 	public void compileOutputDirectory(Object ref) {
 		compileOutputDirectory.set( project.file( ref ) );
 	}

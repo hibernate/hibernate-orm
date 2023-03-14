@@ -69,6 +69,11 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 		return javaPluginExtension.getSourceSets().getByName( name );
 	}
 
+	@Override
+	public abstract ExtensionContainer getExtensions();
+
+
+
 	/**
 	 * Should the plugin inject a dependency on the same version of `hibernate-core`
 	 * as the version of this plugin?  The dependency is added to the `implementation`
@@ -83,52 +88,10 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 	}
 
 	/**
-	 * @see #getUseSameVersion()
-	 */
-	public void setUseSameVersion(boolean value) {
-		useSameVersion.set( value );
-	}
-
-	/**
-	 * @see #getUseSameVersion()
-	 */
-	public void useSameVersion() {
-		useSameVersion.set( true );
-	}
-
-	/**
 	 * The source-set containing the domain model.  Defaults to the `main` source-set
 	 */
 	public Property<SourceSet> getSourceSet() {
 		return sourceSet;
-	}
-
-	/**
-	 * @see #getSourceSet()
-	 */
-	public void setSourceSet(String name) {
-		setSourceSet( resolveSourceSet( name, project ) );
-	}
-
-	/**
-	 * @see #getSourceSet()
-	 */
-	public void setSourceSet(SourceSet sourceSet) {
-		this.sourceSet.set( sourceSet );
-	}
-
-	/**
-	 * @see #getSourceSet()
-	 */
-	public void sourceSet(String name) {
-		setSourceSet( resolveSourceSet( name, project ) );
-	}
-
-	/**
-	 * @see #getSourceSet()
-	 */
-	public void sourceSet(SourceSet sourceSet) {
-		setSourceSet( sourceSet );
 	}
 
 	/**
@@ -138,13 +101,6 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 		return languages;
 	}
 
-	public void setLanguages(Iterable<String> languages) {
-		this.languages.set( languages );
-	}
-
-	public void languages(String language) {
-		this.languages.add( language );
-	}
 
 	/**
 	 * DSL extension for configuring bytecode enhancement.  Also acts as the trigger for
@@ -156,17 +112,6 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 		}
 
 		return enhancementDsl;
-	}
-
-	/**
-	 * Provider access to {@link #getEnhancement()}
-	 */
-	public Provider<EnhancementSpec> getEnhancementDslAccess() {
-		return enhancementDslAccess;
-	}
-
-	public boolean isEnhancementEnabled() {
-		return enhancementDsl != null;
 	}
 
 	/**
@@ -187,18 +132,6 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 		return jpaMetamodelDsl;
 	}
 
-
-	/**
-	 * Provider access to {@link #getJpaMetamodel()}
-	 */
-	public Provider<JpaMetamodelGenerationSpec> getJpaMetamodelDslAccess() {
-		return jpaMetamodelDslAccess;
-	}
-
-	public boolean isMetamodelGenerationEnabled() {
-		return jpaMetamodelDsl != null;
-	}
-
 	/**
 	 * @see #getJpaMetamodel()
 	 */
@@ -206,6 +139,114 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 		action.execute( getJpaMetamodel() );
 	}
 
-	@Override
-	public abstract ExtensionContainer getExtensions();
+
+	public boolean isEnhancementEnabled() {
+		return enhancementDsl != null;
+	}
+
+	public boolean isMetamodelGenerationEnabled() {
+		return jpaMetamodelDsl != null;
+	}
+
+
+	/**
+	 * @see #getUseSameVersion()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void setUseSameVersion(boolean value) {
+		useSameVersion.set( value );
+	}
+
+	/**
+	 * @see #getUseSameVersion()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void useSameVersion() {
+		useSameVersion.set( true );
+	}
+
+	/**
+	 * @see #getSourceSet()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void setSourceSet(String name) {
+		setSourceSet( resolveSourceSet( name, project ) );
+	}
+
+	/**
+	 * @see #getSourceSet()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void setSourceSet(SourceSet sourceSet) {
+		this.sourceSet.set( sourceSet );
+	}
+
+	/**
+	 * @see #getSourceSet()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void sourceSet(String name) {
+		setSourceSet( resolveSourceSet( name, project ) );
+	}
+
+	/**
+	 * @see #getSourceSet()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void sourceSet(SourceSet sourceSet) {
+		setSourceSet( sourceSet );
+	}
+
+	/**
+	 * @see #getLanguages()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated(forRemoval = true)
+	public void setLanguages(Iterable<String> languages) {
+		this.languages.set( languages );
+	}
+
+	/**
+	 * @see #getLanguages()
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated
+	public void languages(String language) {
+		this.languages.add( language );
+	}
+
+	/**
+	 * Provider access to {@link #getEnhancement()}
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated
+	public Provider<EnhancementSpec> getEnhancementDslAccess() {
+		return enhancementDslAccess;
+	}
+
+
+	/**
+	 * Provider access to {@link #getJpaMetamodel()}
+	 *
+	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
+	 */
+	@Deprecated
+	public Provider<JpaMetamodelGenerationSpec> getJpaMetamodelDslAccess() {
+		return jpaMetamodelDslAccess;
+	}
 }

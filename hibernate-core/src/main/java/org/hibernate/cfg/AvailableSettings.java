@@ -1080,7 +1080,10 @@ public interface AvailableSettings {
 	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
-	 * Specifies a {@linkplain java.util.TimeZone time zone} that should be passed to
+	 * Specifies the {@linkplain java.util.TimeZone time zone} to use in the JDBC driver,
+	 * which is supposed to match the database timezone.
+	 * <p>
+	 * This is the timezone what will be passed to
 	 * {@link java.sql.PreparedStatement#setTimestamp(int, java.sql.Timestamp, java.util.Calendar)}
 	 * {@link java.sql.PreparedStatement#setTime(int, java.sql.Time, java.util.Calendar)},
 	 * {@link java.sql.ResultSet#getTimestamp(int, Calendar)}, and

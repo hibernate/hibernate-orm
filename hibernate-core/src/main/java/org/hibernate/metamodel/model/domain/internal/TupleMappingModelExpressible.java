@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -39,6 +40,13 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 			disassembled[i] = components[i].disassemble( array[i], session );
 		}
 		return disassembled;
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		for ( int i = 0; i < components.length; i++ ) {
+			components[i].addToCacheKey( cacheKey, value, session );
+		}
 	}
 
 	@Override

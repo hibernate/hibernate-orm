@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -2239,6 +2240,11 @@ public class ToOneAttributeMapping
 				foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
 				session
 		);
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		foreignKeyDescriptor.addToCacheKey( cacheKey, foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ), session );
 	}
 
 	@Override

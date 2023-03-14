@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.spi.NavigablePath;
@@ -98,6 +99,11 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	@Override
 	default Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return getEntityMappingType().disassemble( value, session );
+	}
+
+	@Override
+	default void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session){
+		getEntityMappingType().addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

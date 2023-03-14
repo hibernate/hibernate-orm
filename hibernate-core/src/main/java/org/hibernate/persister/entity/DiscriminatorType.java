@@ -15,6 +15,7 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -193,6 +194,11 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return toRelationalValue( (T) value );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		underlyingType.addToCacheKey( cacheKey, value, session );
 	}
 
 	// simple delegation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

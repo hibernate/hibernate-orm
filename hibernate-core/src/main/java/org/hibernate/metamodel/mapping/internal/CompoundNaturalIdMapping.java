@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -391,6 +392,18 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		return outgoing;
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		assert value instanceof Object[];
+
+		final Object[] values = (Object[]) value;
+		assert values.length == attributes.size();
+
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			attributes.get( i ).addToCacheKey( cacheKey, values[i], session );
+		}
 	}
 
 	@Override

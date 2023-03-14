@@ -18,6 +18,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.Incubating;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -166,45 +167,25 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
-		final int size = parameterBindingMap.size();
-		final List<Object> allBindValues = new ArrayList<>( size );
-		int hashCode = 0;
+		final MutableCacheKeyImpl mutableCacheKey = new MutableCacheKeyImpl(parameterBindingMap.size());
 
 		for ( QueryParameterBinding<?> binding : parameterBindingMap.values() ) {
 			final MappingModelExpressible<?> mappingType = determineMappingType( binding, persistenceContext );
 			assert mappingType instanceof JavaTypedExpressible;
-			//noinspection unchecked
-			final JavaType<Object> javaType = ( (JavaTypedExpressible<Object>) mappingType ).getExpressibleJavaType();
 
 			if ( binding.isMultiValued() ) {
 				for ( Object bindValue : binding.getBindValues() ) {
 					assert bindValue != null;
-
-					final Object disassembled = mappingType.disassemble( bindValue, persistenceContext );
-					allBindValues.add( disassembled );
-
-					final int valueHashCode = bindValue != null
-							? javaType.extractHashCode( bindValue )
-							: 0;
-
-					hashCode = 37 * hashCode + valueHashCode;
+					mappingType.addToCacheKey( mutableCacheKey, bindValue, persistenceContext );
 				}
 			}
 			else {
 				final Object bindValue = binding.getBindValue();
-
-				final Object disassembled = mappingType.disassemble( bindValue, persistenceContext );
-				allBindValues.add( disassembled );
-
-				final int valueHashCode = bindValue != null
-						? javaType.extractHashCode( bindValue )
-						: 0;
-
-				hashCode = 37 * hashCode + valueHashCode;
+				mappingType.addToCacheKey( mutableCacheKey, bindValue, persistenceContext );
 			}
 		}
 
-		return new ParameterBindingsMementoImpl( allBindValues.toArray( new Object[0] ), hashCode );
+		return mutableCacheKey.build();
 	}
 
 	private MappingModelExpressible<?> determineMappingType(QueryParameterBinding<?> binding, SharedSessionContractImplementor session) {
@@ -250,10 +231,34 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		return typeConfiguration.getBasicTypeForJavaType( binding.getBindType().getBindableJavaType() );
 	}
 
+	private static class MutableCacheKeyImpl implements MutableCacheKeyBuilder {
+
+		final List<Object> values;
+		int hashCode;
+
+		public MutableCacheKeyImpl(int parameterBindingMapSize) {
+			values = new ArrayList<>( parameterBindingMapSize );
+		}
+
+		@Override
+		public void addValue(Object value) {
+			values.add( value );
+		}
+
+		@Override
+		public void addHashCode(int hashCode) {
+			this.hashCode = 37 * this.hashCode + hashCode;
+		}
+
+		@Override
+		public QueryKey.ParameterBindingsMemento build() {
+			return new ParameterBindingsMementoImpl( values.toArray( new Object[0] ), hashCode );
+		}
+	}
 
 	private static class ParameterBindingsMementoImpl implements QueryKey.ParameterBindingsMemento {
-		private final Object[] values;
-		private final int hashCode;
+		final Object[] values;
+		final int hashCode;
 
 		private ParameterBindingsMementoImpl(Object[] values, int hashCode) {
 			this.values = values;
@@ -274,8 +279,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			if ( hashCode != queryKey.hashCode ) {
 				return false;
 			}
-			// Probably incorrect - comparing Object[] arrays with Arrays.equals
-			return Arrays.equals( values, queryKey.values );
+			return Arrays.deepEquals( values, queryKey.values );
 		}
 
 		@Override

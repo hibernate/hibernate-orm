@@ -13,6 +13,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -423,6 +424,16 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		}
 
 		return result;
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		final Object[] values = (Object[]) value;
+		int i = 0;
+		for ( ModelPart mapping : modelParts.values() ) {
+			mapping.addToCacheKey( cacheKey, values[i], session );
+			i++;
+		}
 	}
 
 	@Override

@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -321,6 +322,11 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return type.disassemble( value, session );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		type.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

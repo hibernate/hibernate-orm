@@ -8,6 +8,8 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.Internal;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -63,6 +65,11 @@ public interface EntityCollectionPart extends CollectionPart, EntityValuedFetcha
 	@Override
 	default int getJdbcTypeCount() {
 		return CollectionPart.super.getJdbcTypeCount();
+	}
+
+	@Override
+	default void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		EntityValuedFetchable.super.addToCacheKey( cacheKey, value, session );
 	}
 
 	/**

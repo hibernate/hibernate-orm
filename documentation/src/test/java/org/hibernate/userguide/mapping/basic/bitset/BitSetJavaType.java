@@ -6,7 +6,9 @@
  */
 package org.hibernate.userguide.mapping.basic.bitset;
 
+import java.io.Serializable;
 import java.sql.Types;
+import java.util.Arrays;
 import java.util.BitSet;
 
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -29,6 +31,12 @@ public class BitSetJavaType extends AbstractClassJavaType<BitSet> {
     @Override
     public MutabilityPlan<BitSet> getMutabilityPlan() {
         return BitSetMutabilityPlan.INSTANCE;
+    }
+
+    @Override
+    public int extractHashCodeFromDisassembled(Serializable value) {
+        // Needed because the BitSetMutabilityPlan#disassemble returns a byte[]
+        return Arrays.hashCode( (byte[]) value );
     }
 
     @Override

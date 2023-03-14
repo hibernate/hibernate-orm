@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
@@ -332,6 +333,16 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return versionBasicType.disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return versionBasicType.disassembleForCache( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return versionBasicType.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

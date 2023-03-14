@@ -209,8 +209,17 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Serializable discriminator = metaType.disassemble( value, session, value );
-		return discriminator;
+		return metaType.disassemble( value, session, value );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return metaType.disassemble( value, session, value );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return metaType.getHashCode( value );
 	}
 
 	@Override

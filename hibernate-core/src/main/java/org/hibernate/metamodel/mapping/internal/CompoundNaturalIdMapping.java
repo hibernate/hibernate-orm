@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -391,6 +392,37 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		return outgoing;
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		assert value instanceof Object[];
+
+		final Object[] incoming = (Object[]) value;
+		assert incoming.length == attributes.size();
+
+		final Serializable[] outgoing = new Serializable[ incoming.length ];
+
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			final SingularAttributeMapping attribute = attributes.get( i );
+			outgoing[ i ] = attribute.disassembleForCache( incoming[ i ], session );
+		}
+
+		return outgoing;
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		assert value instanceof Serializable[];
+		final Serializable[] disassembled = (Serializable[]) value;
+		final int size = attributes.size();
+		int hashCode = 0;
+		for ( int i = 0; i < size; i++ ) {
+			final AttributeMapping attributeMapping = attributes.get( i );
+			hashCode = 37 * hashCode + attributeMapping.extractHashCodeFromDisassembled( disassembled[i] );
+		}
+
+		return hashCode;
 	}
 
 	@Override

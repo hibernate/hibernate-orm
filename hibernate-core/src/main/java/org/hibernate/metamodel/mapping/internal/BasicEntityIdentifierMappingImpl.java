@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -380,6 +381,16 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return idType.disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return idType.disassembleForCache( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return idType.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

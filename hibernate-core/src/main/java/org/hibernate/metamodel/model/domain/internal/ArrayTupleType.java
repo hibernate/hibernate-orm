@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -90,6 +91,16 @@ public class ArrayTupleType implements TupleType<Object[]>,
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
 		throw new UnsupportedOperationException();
 	}
 

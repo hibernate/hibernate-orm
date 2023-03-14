@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -240,6 +241,16 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return attribute.disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return attribute.disassembleForCache( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return attribute.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

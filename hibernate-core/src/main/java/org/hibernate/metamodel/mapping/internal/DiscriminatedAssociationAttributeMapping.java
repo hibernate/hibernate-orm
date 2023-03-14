@@ -235,6 +235,34 @@ public class DiscriminatedAssociationAttributeMapping
 		};
 	}
 
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
+
+		final EntityMappingType concreteMappingType = determineConcreteType( value, session );
+		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+
+		final Object discriminator = discriminatorMapping
+				.getModelPart()
+				.resolveDiscriminatorForEntityType( concreteMappingType );
+		final Object identifier = identifierMapping.getIdentifier( value );
+
+		return new Serializable[] {
+				discriminatorMapping.getDiscriminatorPart().disassembleForCache( discriminator, session ),
+				identifierMapping.disassembleForCache( identifier, session )
+		};
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		final Serializable[] array = (Serializable[]) value;
+		int hash = discriminatorMapping.getDiscriminatorPart().extractHashCodeFromDisassembled( array[0] );
+		hash = 37 * hash + array[1].hashCode();
+		return hash;
+	}
+
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
 		final String entityName;
 		if ( session == null ) {

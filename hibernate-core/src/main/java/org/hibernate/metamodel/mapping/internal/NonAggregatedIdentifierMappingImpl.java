@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -145,6 +146,16 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return identifierValueMapper.disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return identifierValueMapper.disassembleForCache( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return identifierValueMapper.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

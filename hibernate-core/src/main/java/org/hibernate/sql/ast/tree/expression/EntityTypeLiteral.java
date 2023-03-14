@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -77,6 +78,16 @@ public class EntityTypeLiteral
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return discriminatorType.disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return discriminatorType.disassembleForCache( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return discriminatorType.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

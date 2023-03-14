@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,51 +52,49 @@ public interface Bindable extends JdbcMappingContainer {
 	}
 
 	/**
-	 * @asciidoc
-	 *
-	 * Breaks down a value of `J` into its simple pieces.  E.g., an embedded
+	 * @asciidoc Breaks down a value of `J` into its simple pieces.  E.g., an embedded
 	 * value gets broken down into an array of its attribute state; a basic
 	 * value converts to itself; etc.
 	 * <p>
 	 * Generally speaking, this is the form in which entity state is kept relative to a
 	 * Session via `EntityEntry`.
-	 *
-	 * @see org.hibernate.engine.spi.EntityEntry
-	 *
-	 * As an example, consider the following domain model:
-	 *
-	 * ````
-	 * @Entity
-	 * class Person {
-	 * 		@Id Integer id;
-	 * 		@Embedded Name name;
-	 * 		int age;
+	 * @Entity class Person {
+	 * @Id Integer id;
+	 * @Embedded Name name;
+	 * int age;
 	 * }
-	 *
-	 * @Embeddable
-	 * class Name {
-	 *     String familiarName;
-	 *     String familyName;
+	 * @Embeddable class Name {
+	 * String familiarName;
+	 * String familyName;
 	 * }
 	 * ````
-	 *
+	 * <p>
 	 * At the top-level, we would want to disassemble a `Person` value so we'd ask the
 	 * `Bindable` for the `Person` entity to disassemble.  Given a Person value:
-	 *
+	 * <p>
 	 * ````
 	 * Person( id=1, name=Name( 'Steve', 'Ebersole' ), 28 )
 	 * ````
-	 *
+	 * <p>
 	 * this disassemble would result in a multi-dimensional array:
-	 *
+	 * <p>
 	 * ````
 	 * [ ["Steve", "Ebersole"], 28 ]
 	 * ````
-	 *
+	 * <p>
 	 * Note that the identifier is not part of this disassembled state.  Note also
 	 * how the embedded value results in a sub-array.
+	 * @see org.hibernate.engine.spi.EntityEntry
+	 * <p>
+	 * As an example, consider the following domain model:
+	 * <p>
+	 * ````
 	 */
 	Object disassemble(Object value, SharedSessionContractImplementor session);
+
+	Serializable disassembleForCache(Object value, SharedSessionContractImplementor session);
+
+	int extractHashCodeFromDisassembled(Serializable value);
 
 	/**
 	 * @asciidoc

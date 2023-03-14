@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.derived;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -386,6 +387,16 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.exec.internal;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -24,6 +25,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -152,6 +154,29 @@ public abstract class AbstractJdbcParameter
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		final BasicValueConverter converter = jdbcMapping.getValueConverter();
+		if ( converter == null ) {
+			return jdbcMapping.getJavaTypeDescriptor().getMutabilityPlan().disassemble( value, session );
+		}
+		else {
+			return converter.getRelationalJavaType().getMutabilityPlan().disassemble( converter.toRelationalValue( value ), session );
+		}
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		if ( jdbcMapping.getValueConverter() == null ) {
+			return jdbcMapping.getMappedJavaType().extractHashCodeFromDisassembled( value );
+		}
+		else {
+			return jdbcMapping.getValueConverter().getRelationalJavaType().extractHashCodeFromDisassembled( value );
+		}
 	}
 
 	@Override

@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
@@ -120,6 +121,11 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	@Override
 	default Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
+	}
+
+	@Override
+	default Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return getJavaTypeDescriptor().getMutabilityPlan().disassemble( (T) value, session );
 	}
 
 	@Override

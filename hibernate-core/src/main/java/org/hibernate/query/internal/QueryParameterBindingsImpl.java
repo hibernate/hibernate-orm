@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.internal;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
@@ -174,17 +175,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			final MappingModelExpressible<?> mappingType = determineMappingType( binding, persistenceContext );
 			assert mappingType instanceof JavaTypedExpressible;
 			//noinspection unchecked
-			final JavaType<Object> javaType = ( (JavaTypedExpressible<Object>) mappingType ).getExpressibleJavaType();
+			final JavaTypedExpressible<Object> javaTypedExpressible = ( (JavaTypedExpressible<Object>) mappingType );
 
 			if ( binding.isMultiValued() ) {
 				for ( Object bindValue : binding.getBindValues() ) {
 					assert bindValue != null;
 
-					final Object disassembled = mappingType.disassemble( bindValue, persistenceContext );
+					final Serializable disassembled = mappingType.disassembleForCache( bindValue, persistenceContext );
 					allBindValues.add( disassembled );
 
-					final int valueHashCode = bindValue != null
-							? javaType.extractHashCode( bindValue )
+					final int valueHashCode = disassembled != null
+							? javaTypedExpressible.extractHashCodeFromDisassembled( disassembled )
 							: 0;
 
 					hashCode = 37 * hashCode + valueHashCode;
@@ -193,11 +194,11 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			else {
 				final Object bindValue = binding.getBindValue();
 
-				final Object disassembled = mappingType.disassemble( bindValue, persistenceContext );
+				final Serializable disassembled = mappingType.disassembleForCache( bindValue, persistenceContext );
 				allBindValues.add( disassembled );
 
-				final int valueHashCode = bindValue != null
-						? javaType.extractHashCode( bindValue )
+				final int valueHashCode = disassembled != null
+						? javaTypedExpressible.extractHashCodeFromDisassembled( disassembled )
 						: 0;
 
 				hashCode = 37 * hashCode + valueHashCode;
@@ -275,7 +276,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				return false;
 			}
 			// Probably incorrect - comparing Object[] arrays with Arrays.equals
-			return Arrays.equals( values, queryKey.values );
+			return Arrays.deepEquals( values, queryKey.values );
 		}
 
 		@Override

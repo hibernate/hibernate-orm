@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -27,6 +28,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Represents a literal in the SQL AST.  This form accepts a {@link JdbcMapping} and acts
@@ -116,6 +118,16 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return ( (MutabilityPlan<Object>) jdbcMapping.getJdbcJavaType().getMutabilityPlan() ).disassemble( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return jdbcMapping.getJavaTypeDescriptor().extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

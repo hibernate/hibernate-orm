@@ -965,6 +965,11 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	 */
 	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
 
+	@Override
+	default Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return (Serializable) disassemble( value, session );
+	}
+
 	/**
 	 * Obtain the {@code EntityPersister} for the concrete class of the given
 	 * entity instance which participates in a mapped inheritance hierarchy

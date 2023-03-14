@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -262,6 +263,16 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return discriminatorMapping.getDiscriminatorPart().disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return discriminatorMapping.getDiscriminatorPart().disassembleForCache( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return discriminatorMapping.getDiscriminatorPart().extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

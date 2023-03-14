@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -121,6 +122,16 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return rowIdType.disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return rowIdType.disassembleForCache( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return rowIdType.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

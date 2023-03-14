@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.derived;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
@@ -312,6 +313,11 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return (Serializable) value;
 	}
 
 	@Override

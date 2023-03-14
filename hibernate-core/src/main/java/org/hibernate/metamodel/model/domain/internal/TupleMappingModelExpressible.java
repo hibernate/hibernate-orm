@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -39,6 +41,26 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 			disassembled[i] = components[i].disassemble( array[i], session );
 		}
 		return disassembled;
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		final Serializable[] disassembled = new Serializable[components.length];
+		final Object[] array = (Object[]) value;
+		for ( int i = 0; i < components.length; i++ ) {
+			disassembled[i] = components[i].disassembleForCache( array[i], session );
+		}
+		return disassembled;
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		final Serializable[] values = (Serializable[]) value;
+		int hashCode = 0;
+		for ( int i = 0; i < components.length; i++ ) {
+			hashCode = 37 * hashCode + components[i].extractHashCodeFromDisassembled( values[i] );
+		}
+		return hashCode;
 	}
 
 	@Override

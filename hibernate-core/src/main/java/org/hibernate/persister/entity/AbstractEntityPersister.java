@@ -5821,6 +5821,21 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
+		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
+		final Object identifier = identifierMapping.getIdentifier( value );
+		return identifierMapping.disassembleForCache( identifier, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable disassembledValue) {
+		return getIdentifierMapping().extractHashCodeFromDisassembled( disassembledValue );
+	}
+
+	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,

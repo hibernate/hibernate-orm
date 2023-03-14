@@ -6,8 +6,12 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 
 /**
  * Any basic-typed ValueMapping.  Generally this would be one of<ul>
@@ -43,4 +47,32 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 	}
 
 	JdbcMapping getJdbcMapping();
+
+	@Override
+	default Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return getJdbcMapping().convertToRelationalValue( value );
+	}
+
+	@Override
+	default Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		final BasicValueConverter converter = jdbcMapping.getValueConverter();
+		if ( converter == null ) {
+			return jdbcMapping.getJavaTypeDescriptor().getMutabilityPlan().disassemble( value, session );
+		}
+		else {
+			return converter.getRelationalJavaType().getMutabilityPlan().disassemble( converter.toRelationalValue( value ), session );
+		}
+	}
+
+	@Override
+	default int extractHashCodeFromDisassembled(Serializable value) {
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		if ( jdbcMapping.getValueConverter() == null ) {
+			return jdbcMapping.getMappedJavaType().extractHashCodeFromDisassembled( value );
+		}
+		else {
+			return jdbcMapping.getValueConverter().getRelationalJavaType().extractHashCodeFromDisassembled( value );
+		}
+	}
 }

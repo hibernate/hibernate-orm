@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.derived;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -549,6 +550,16 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return delegate.disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return delegate.disassembleForCache( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return delegate.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

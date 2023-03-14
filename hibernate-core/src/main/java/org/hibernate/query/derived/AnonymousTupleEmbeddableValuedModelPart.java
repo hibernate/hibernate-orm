@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.derived;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -423,6 +424,33 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		}
 
 		return result;
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		final Object[] values = (Object[]) value;
+		final Serializable[] result = new Serializable[ modelParts.size() ];
+		int i = 0;
+		for ( ModelPart mapping : modelParts.values() ) {
+			Object o = values[i];
+			result[i] = mapping.disassembleForCache( o, session );
+			i++;
+		}
+
+		return result;
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		final Serializable[] values = (Serializable[]) value;
+		int i = 0;
+		int hashCode = 0;
+		for ( ModelPart mapping : modelParts.values() ) {
+			hashCode = 37 * hashCode + mapping.getJavaType().extractHashCodeFromDisassembled( values[i] );
+			i++;
+		}
+
+		return hashCode;
 	}
 
 	@Override

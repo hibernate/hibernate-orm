@@ -97,16 +97,6 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 	}
 
 	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return null;
-		}
-
-		// should be an instance of the associated entity
-		return getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( value );
-	}
-
-	@Override
 	public String getContainingTableExpression() {
 		return getCollectionDescriptor().getAttributeMapping().getKeyDescriptor().getContainingTableExpression();
 	}

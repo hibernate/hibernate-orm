@@ -6,9 +6,16 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.io.Serializable;
+
 /**
  * Contract for something that has an associated JavaType
  */
 public interface JavaTypedExpressible<T> {
 	JavaType<T> getExpressibleJavaType();
+
+	default int extractHashCodeFromDisassembled(Serializable disassembledValue) {
+		return getExpressibleJavaType().extractHashCodeFromDisassembled( disassembledValue );
+	}
+
 }

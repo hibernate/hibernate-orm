@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -113,6 +114,16 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 	@Override
 	default Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().disassemble( value, session );
+	}
+
+	@Override
+	default Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return getEmbeddableTypeDescriptor().disassembleForCache( value, session );
+	}
+
+	@Override
+	default int extractHashCodeFromDisassembled(Serializable value) {
+		return getEmbeddableTypeDescriptor().extractHashCodeFromDisassembled( value );
 	}
 
 	/**

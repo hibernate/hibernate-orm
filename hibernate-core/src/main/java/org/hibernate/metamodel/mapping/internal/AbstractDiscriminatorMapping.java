@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -253,6 +254,11 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return (Serializable) value;
 	}
 
 	@Override

@@ -318,6 +318,15 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 
 	@Override
 	@SuppressWarnings("unchecked")
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return ( (MutabilityPlan) converter.getRelationalJavaType().getMutabilityPlan() ).disassemble(
+				converter.toRelationalValue( (J) value ),
+				session
+		);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		if ( original == null && target == null ) {
 			return null;

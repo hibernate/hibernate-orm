@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -214,6 +215,39 @@ public class CustomType<J>
 			}
 		}
 		return disassembled;
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		final Serializable disassembled = getUserType().disassemble( (J) value );
+		// Since UserType#disassemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for disassembling,
+		// or if that doesn't exist, simply use the domain value as is
+		if ( disassembled == null && value != null ) {
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				return (Serializable) value;
+			}
+			else {
+				return valueConverter.getRelationalJavaType().getMutabilityPlan().disassemble(
+						valueConverter.toRelationalValue( (J) value ),
+						session
+				);
+			}
+		}
+		return disassembled;
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+		if ( valueConverter == null ) {
+			return Objects.hashCode( value );
+		}
+		else {
+			return valueConverter.getRelationalJavaType().extractHashCodeFromDisassembled( value );
+		}
 	}
 
 	@Override

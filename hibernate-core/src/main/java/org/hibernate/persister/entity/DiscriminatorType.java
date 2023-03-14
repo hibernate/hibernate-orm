@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.entity;
 
+import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -193,6 +194,16 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return toRelationalValue( (T) value );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return underlyingType.disassembleForCache( toRelationalValue( (T) value ), session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return underlyingType.extractHashCodeFromDisassembled( value );
 	}
 
 	// simple delegation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

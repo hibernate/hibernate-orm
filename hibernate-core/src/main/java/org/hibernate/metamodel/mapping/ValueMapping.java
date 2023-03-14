@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 import org.hibernate.type.descriptor.java.JavaType;
@@ -27,6 +28,11 @@ public interface ValueMapping extends MappingModelExpressible, JavaTypedExpressi
 	@Override
 	default JavaType<?> getExpressibleJavaType() {
 		return getMappedType().getMappedJavaType();
+	}
+
+	@Override
+	default int extractHashCodeFromDisassembled(Serializable disassembledValue) {
+		return getExpressibleJavaType().extractHashCodeFromDisassembled( disassembledValue );
 	}
 
 	/**

@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -309,6 +310,11 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return (Serializable) value;
 	}
 
 	@Override

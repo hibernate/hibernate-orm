@@ -445,4 +445,5 @@ public class EmbeddedAttributeMapping
 	public boolean isEmbeddedAttributeMapping() {
 		return true;
 	}
+
 }

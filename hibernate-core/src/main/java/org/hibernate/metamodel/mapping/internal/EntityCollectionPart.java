@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.Internal;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.mapping.Collection;
@@ -63,6 +65,11 @@ public interface EntityCollectionPart extends CollectionPart, EntityValuedFetcha
 	@Override
 	default int getJdbcTypeCount() {
 		return CollectionPart.super.getJdbcTypeCount();
+	}
+
+	@Override
+	default int extractHashCodeFromDisassembled(Serializable disassembledValue) {
+		return EntityValuedFetchable.super.extractHashCodeFromDisassembled( disassembledValue );
 	}
 
 	/**

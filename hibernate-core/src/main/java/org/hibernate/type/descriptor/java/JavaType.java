@@ -203,6 +203,17 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
+	 * Extract a proper hash code for the given disassembled value.
+	 *
+	 * @param value The disassembled value for which to extract a hash code.
+	 *
+	 * @return The extracted hash code.
+	 */
+	default int extractHashCodeFromDisassembled(Serializable value) {
+		return extractHashCode( (T) value );
+	}
+
+	/**
 	 * Determine if two instances are equal
 	 *
 	 * @param one One instance

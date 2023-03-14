@@ -181,6 +181,16 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return null;
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return 0;
+	}
+
+	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,

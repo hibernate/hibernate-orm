@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -2188,6 +2189,19 @@ public class ToOneAttributeMapping
 				foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
 				session
 		);
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return foreignKeyDescriptor.disassembleForCache(
+				foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
+				session
+		);
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return foreignKeyDescriptor.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

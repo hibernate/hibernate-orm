@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -98,6 +99,16 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	@Override
 	default Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return getEntityMappingType().disassemble( value, session );
+	}
+
+	@Override
+	default Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return getEntityMappingType().disassembleForCache( value, session );
+	}
+
+	@Override
+	default int extractHashCodeFromDisassembled(Serializable value) {
+		return getEntityMappingType().extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

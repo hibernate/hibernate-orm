@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchStyle;
@@ -321,6 +322,16 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return type.disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return type.disassembleForCache( value, session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return type.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

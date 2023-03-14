@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -52,6 +53,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -416,6 +418,29 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return getJdbcMapping().convertToRelationalValue( value );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		final BasicValueConverter converter = jdbcMapping.getValueConverter();
+		if ( converter == null ) {
+			return jdbcMapping.getJavaTypeDescriptor().getMutabilityPlan().disassemble( value, session );
+		}
+		else {
+			return converter.getRelationalJavaType().getMutabilityPlan().disassemble( converter.toRelationalValue( value ), session );
+		}
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		if ( jdbcMapping.getValueConverter() == null ) {
+			return jdbcMapping.getMappedJavaType().extractHashCodeFromDisassembled( value );
+		}
+		else {
+			return jdbcMapping.getValueConverter().getRelationalJavaType().extractHashCodeFromDisassembled( value );
+		}
 	}
 
 	@Override

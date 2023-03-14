@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -925,7 +926,17 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return elementDescriptor.disassemble( value,session );
+		return elementDescriptor.disassemble( value, session );
+	}
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		return elementDescriptor.disassembleForCache( value,session );
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		return elementDescriptor.extractHashCodeFromDisassembled( value );
 	}
 
 	@Override

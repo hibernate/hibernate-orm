@@ -591,6 +591,38 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		final MutableAttributeMappingList attributes = attributeMappings;
+		final int size = attributes.size();
+		final Serializable[] result = new Serializable[ size ];
+		for ( int i = 0; i < size; i++ ) {
+			final AttributeMapping attributeMapping = attributes.get( i );
+			final Object o = attributeMapping.getValue( value );
+			result[i] = attributeMapping.disassembleForCache( o, session );
+		}
+
+		return result;
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		if ( value == null ) {
+			throw new IllegalArgumentException( "Value to extract hashCode from cannot be null" );
+		}
+		assert value instanceof Serializable[];
+		final Serializable[] disassembled = (Serializable[]) value;
+		final AttributeMappingsList attributes = getAttributeMappings();
+		final int size = attributes.size();
+		int hashCode = 0;
+		for ( int i = 0; i < size; i++ ) {
+			final AttributeMapping attributeMapping = attributes.get( i );
+			hashCode = 37 * hashCode + attributeMapping.extractHashCodeFromDisassembled( disassembled[i] );
+		}
+
+		return hashCode;
+	}
+
+	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,

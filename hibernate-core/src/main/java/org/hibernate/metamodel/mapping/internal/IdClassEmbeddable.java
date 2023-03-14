@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
@@ -303,7 +304,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		return span;
 	}
 
-
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		// todo (6.0) : reduce to-one values to id here?
@@ -315,6 +315,31 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		}
 
 		return result;
+	}
+
+
+	@Override
+	public Serializable disassembleForCache(Object value, SharedSessionContractImplementor session) {
+		// todo (6.0) : reduce to-one values to id here?
+		final Serializable[] result = new Serializable[ getNumberOfAttributeMappings() ];
+		for ( int i = 0; i < result.length; i++ ) {
+			final AttributeMapping attributeMapping = getAttributeMapping( i );
+			Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+			result[i] = attributeMapping.disassembleForCache( o, session );
+		}
+
+		return result;
+	}
+
+	@Override
+	public int extractHashCodeFromDisassembled(Serializable value) {
+		final Serializable[] values = (Serializable[]) value;
+		int hashCode = 0;
+		for ( int i =0; i < values.length; i++ ) {
+			final AttributeMapping attributeMapping = getAttributeMapping( i );
+			hashCode = 37 * hashCode + attributeMapping.extractHashCodeFromDisassembled( values[i] );
+		}
+		return hashCode;
 	}
 
 	@Override

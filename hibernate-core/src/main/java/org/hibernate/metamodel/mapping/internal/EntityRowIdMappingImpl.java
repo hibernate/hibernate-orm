@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -121,6 +122,11 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return rowIdType.disassemble( value, session );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		rowIdType.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

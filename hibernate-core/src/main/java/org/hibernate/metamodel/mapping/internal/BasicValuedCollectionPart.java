@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -356,10 +357,5 @@ public class BasicValuedCollectionPart
 			SharedSessionContractImplementor session) {
 		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return selectableMapping.getJdbcMapping().convertToRelationalValue( value );
 	}
 }

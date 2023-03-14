@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -113,6 +114,11 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 	@Override
 	default Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().disassemble( value, session );
+	}
+
+	@Override
+	default void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		getEmbeddableTypeDescriptor().addToCacheKey( cacheKey, value, session );
 	}
 
 	/**

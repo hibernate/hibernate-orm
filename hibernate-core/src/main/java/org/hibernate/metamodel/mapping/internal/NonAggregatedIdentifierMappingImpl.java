@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -145,6 +146,11 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return identifierValueMapper.disassemble( value, session );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		identifierValueMapper.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

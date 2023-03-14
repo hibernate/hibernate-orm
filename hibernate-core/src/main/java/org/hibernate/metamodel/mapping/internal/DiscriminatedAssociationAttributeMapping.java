@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.SharedSessionContract;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -233,6 +234,23 @@ public class DiscriminatedAssociationAttributeMapping
 				discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session ),
 				identifierMapping.disassemble( identifier, session )
 		};
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return ;
+		}
+
+		final EntityMappingType concreteMappingType = determineConcreteType( value, session );
+
+		final Object discriminator = discriminatorMapping
+				.getModelPart()
+				.resolveDiscriminatorForEntityType( concreteMappingType );
+		discriminatorMapping.getDiscriminatorPart().addToCacheKey( cacheKey, discriminator, session );
+
+		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+		identifierMapping.addToCacheKey( cacheKey, identifierMapping.getIdentifier( value ), session );
 	}
 
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {

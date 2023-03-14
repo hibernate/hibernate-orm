@@ -6,8 +6,10 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.Consumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.EntityKey;
@@ -303,7 +305,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		return span;
 	}
 
-
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		// todo (6.0) : reduce to-one values to id here?
@@ -315,6 +316,16 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		}
 
 		return result;
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		final Serializable[] result = new Serializable[ getNumberOfAttributeMappings() ];
+		for ( int i = 0; i < result.length; i++ ) {
+			final AttributeMapping attributeMapping = getAttributeMapping( i );
+			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+			attributeMapping.addToCacheKey( cacheKey, o, session );
+		}
 	}
 
 	@Override

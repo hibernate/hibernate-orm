@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -262,6 +263,11 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return discriminatorMapping.getDiscriminatorPart().disassemble( value, session );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		discriminatorMapping.getDiscriminatorPart().addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

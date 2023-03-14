@@ -385,6 +385,8 @@ Enable nationalized character support on all string / clob based attribute ( str
 Should we not use contextual LOB creation (aka based on `java.sql.Connection#createBlob()` et al)? The default value for HANA, H2, and PostgreSQL is `true`.
 
 [[jdbc-time-zone]]`*hibernate.jdbc.time_zone*` (e.g. A `java.util.TimeZone`, a `java.time.ZoneId` or a `String` representation of a `ZoneId`)::
+The timezone to use in the JDBC driver, which is supposed to match the database timezone.
++
 Unless specified, the JDBC Driver uses the default JVM time zone. If a different time zone is configured via this setting, the JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[PreparedStatement#setTimestamp] is going to use a `Calendar` instance according to the specified time zone.
 
 `*hibernate.dialect.oracle.prefer_long_raw*` (e.g. `true` or `false` (default value))::

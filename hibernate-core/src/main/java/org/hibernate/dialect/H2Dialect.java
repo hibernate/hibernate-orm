@@ -68,6 +68,7 @@ import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -88,6 +89,7 @@ import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
+import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -229,6 +231,9 @@ public class H2Dialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 		}
+		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		}
 	}
 
 	@Override
@@ -242,6 +247,9 @@ public class H2Dialect extends Dialect {
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
+		}
+		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
 		}
 	}
 
@@ -369,6 +377,9 @@ public class H2Dialect extends Dialect {
 			case OTHER:
 				if ( "GEOMETRY".equals( columnTypeName ) ) {
 					return jdbcTypeRegistry.getDescriptor( GEOMETRY );
+				}
+				else if ( "JSON".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( JSON );
 				}
 				break;
 		}

@@ -67,10 +67,6 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 */
 	JdbcType getJdbcType();
 
-	default CastType getCastType() {
-		return getJdbcType().getCastType();
-	}
-
 	/**
 	 * The strategy for extracting values of this expressible
 	 * type from JDBC ResultSets, CallableStatements, etc
@@ -82,6 +78,10 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * JDBC {@code PreparedStatement}s and {@code CallableStatement}s.
 	 */
 	ValueBinder getJdbcValueBinder();
+
+	default CastType getCastType() {
+		return getJdbcType().getCastType();
+	}
 
 	/**
 	 * The strategy for formatting values of this expressible type to

@@ -6,11 +6,13 @@
  */
 package org.hibernate.orm.test.envers.entities.customtype;
 
+import jakarta.persistence.ColumnResult;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.SqlResultSetMapping;
 
 import org.hibernate.envers.Audited;
 
@@ -19,6 +21,13 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 @Audited
+@SqlResultSetMapping(
+		name = "e1_e2",
+		columns = {
+				@ColumnResult( name = "enum1", type = String.class ),
+				@ColumnResult( name = "enum2", type = Integer.class )
+		}
+)
 public class EnumTypeEntity {
 	public static enum E1 {X, Y}
 

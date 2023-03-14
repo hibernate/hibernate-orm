@@ -7,25 +7,30 @@
 package org.hibernate.orm.test.annotations.enumerated;
 
 import java.sql.Types;
+
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.type.ConvertedBasicType;
+import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
+import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.assertj.core.api.Assert;
+import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.core.Is.is;
@@ -34,29 +39,16 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Steve Ebersole
  */
-public class EnumeratedSmokeTest extends BaseUnitTestCase {
-	private StandardServiceRegistry ssr;
-
-	@Before
-	public void prepare() {
-		ssr = new StandardServiceRegistryBuilder().build();
-	}
-
-	@After
-	public void release() {
-		if ( ssr != null ) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
-	}
-
+@ServiceRegistry
+public class EnumeratedSmokeTest {
 	/**
 	 * I personally have been unable to repeoduce the bug as reported in HHH-10402.  This test
 	 * is equivalent to what the reporters say happens, but these tests pass fine.
 	 */
 	@Test
-	@TestForIssue( jiraKey = "HHH-10402" )
-	public void testEnumeratedTypeResolutions() {
-		final MetadataImplementor mappings = (MetadataImplementor) new MetadataSources( ssr )
+	@JiraKey( "HHH-10402" )
+	public void testEnumeratedTypeResolutions(ServiceRegistryScope serviceRegistryScope) {
+		final MetadataImplementor mappings = (MetadataImplementor) new MetadataSources( serviceRegistryScope.getRegistry() )
 				.addAnnotatedClass( EntityWithEnumeratedAttributes.class )
 				.buildMetadata();
 		mappings.orderColumns( false );
@@ -72,20 +64,20 @@ public class EnumeratedSmokeTest extends BaseUnitTestCase {
 	}
 
 	private void validateEnumMapping(JdbcTypeRegistry jdbcRegistry, Property property, EnumType expectedJpaEnumType) {
-		assertThat( property.getType(), instanceOf( CustomType.class ) );
-		final CustomType<Object> customType = (CustomType<Object>) property.getType();
-		assertThat( customType.getUserType(), instanceOf( org.hibernate.type.EnumType.class ) );
-		final org.hibernate.type.EnumType hibernateMappingEnumType = (org.hibernate.type.EnumType) customType.getUserType();
-		assertThat( hibernateMappingEnumType.isOrdinal(), is(expectedJpaEnumType==EnumType.ORDINAL) );
-		final int expectedJdbcTypeCode = jdbcRegistry.getDescriptor(
-				expectedJpaEnumType == EnumType.ORDINAL ?
-						Types.TINYINT :
-						Types.VARCHAR
-		).getJdbcTypeCode();
-		assertThat(
-				hibernateMappingEnumType.getSqlType(),
-				is( expectedJdbcTypeCode )
-		);
+		final ConvertedBasicType<?> propertyType = (ConvertedBasicType<?>) property.getType();
+		final EnumValueConverter<?, ?> valueConverter = (EnumValueConverter<?, ?>) propertyType.getValueConverter();
+		final JdbcMapping jdbcMapping = propertyType.getJdbcMapping();
+		final JdbcType jdbcType = jdbcMapping.getJdbcType();
+
+		assert expectedJpaEnumType != null;
+		if ( expectedJpaEnumType == EnumType.ORDINAL ) {
+			Assertions.assertThat( valueConverter ).isInstanceOf( OrdinalEnumValueConverter.class );
+			Assertions.assertThat( jdbcType.isInteger() ).isTrue();
+		}
+		else {
+			Assertions.assertThat( valueConverter ).isInstanceOf( NamedEnumValueConverter.class );
+			Assertions.assertThat( jdbcType.isString() ).isTrue();
+		}
 	}
 
 	@Entity

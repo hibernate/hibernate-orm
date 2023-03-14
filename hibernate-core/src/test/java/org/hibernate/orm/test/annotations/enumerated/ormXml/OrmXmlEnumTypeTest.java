@@ -6,9 +6,12 @@
  */
 package org.hibernate.orm.test.annotations.enumerated.ormXml;
 
+import java.sql.Types;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
@@ -19,6 +22,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 /**
@@ -39,9 +43,9 @@ public class OrmXmlEnumTypeTest extends BaseUnitTestCase {
 			Type bindingPropertyType = metadata.getEntityBinding( BookWithOrmEnum.class.getName() )
 					.getProperty( "bindingStringEnum" )
 					.getType();
-			CustomType<Object> customType = ExtraAssertions.assertTyping( CustomType.class, bindingPropertyType );
-			EnumType enumType = ExtraAssertions.assertTyping( EnumType.class, customType.getUserType() );
-			assertFalse( enumType.isOrdinal() );
+
+			ConvertedBasicType<?> enumMapping = ExtraAssertions.assertTyping( ConvertedBasicType.class, bindingPropertyType );
+			assertEquals( Types.VARCHAR, enumMapping.getJdbcType().getJdbcTypeCode() );
 		}
 		finally {
 			ServiceRegistryBuilder.destroy( ssr );

@@ -675,8 +675,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Created new entity instance [%s] : %s",
 					getSimpleConcreteImplName(),
-					toLoggableString( getNavigablePath(), entityIdentifier),
-					instance
+					toLoggableString( getNavigablePath(), entityIdentifier ),
+					System.identityHashCode( instance )
 			);
 		}
 		return instance;

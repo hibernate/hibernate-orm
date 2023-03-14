@@ -20,6 +20,7 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.model.process.internal.EnumeratedValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
@@ -485,8 +486,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					column,
 					ownerName,
 					propertyName,
-					getDialect(),
-					getTypeConfiguration()
+					getBuildingContext()
 			);
 		}
 	}
@@ -569,7 +569,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 		};
 
-
 		// Name could refer to:
 		//		1) a named converter - HBM support for JPA's AttributeConverter via its `type="..."` XML attribute
 		//		2) a "named composed" mapping - like (1), this is mainly to support envers since it tells
@@ -587,6 +586,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					converterCreationContext,
 					context
 			);
+		}
+
+		if ( name.startsWith( EnumeratedValueResolution.PREFIX ) ) {
+			return EnumeratedValueResolution.fromName( name, stdIndicators, context );
 		}
 
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {

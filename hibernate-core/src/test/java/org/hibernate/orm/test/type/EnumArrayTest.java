@@ -41,6 +41,7 @@ import static org.junit.Assert.assertThat;
  * @author Christian Beikov
  */
 @SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
+@SkipForDialect( value = OracleDialect.class, jiraKey = "HHH-16333", comment = "converters not handled properly" )
 public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override

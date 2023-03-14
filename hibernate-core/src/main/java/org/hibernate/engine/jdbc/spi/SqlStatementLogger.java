@@ -112,19 +112,22 @@ public class SqlStatementLogger {
 	 */
 	@AllowSysOut
 	public void logStatement(String statement, Formatter formatter) {
-		if ( logToStdout || LOG.isDebugEnabled() ) {
-			try {
-				if ( format ) {
-					statement = formatter.format( statement );
-				}
-				if ( highlight ) {
-					statement = FormatStyle.HIGHLIGHT.getFormatter().format( statement );
-				}
+		if ( !logToStdout && !LOG.isDebugEnabled() ) {
+			return;
+		}
+
+		try {
+			if ( format ) {
+				statement = formatter.format( statement );
 			}
-			catch (RuntimeException ex) {
-				LOG.warn( "Couldn't format statement", ex );
+			if ( highlight ) {
+				statement = FormatStyle.HIGHLIGHT.getFormatter().format( statement );
 			}
 		}
+		catch (RuntimeException ex) {
+			LOG.warn( "Couldn't format statement", ex );
+		}
+
 		LOG.debug( statement );
 		if ( logToStdout ) {
 			String prefix = highlight ? "\u001b[35m[Hibernate]\u001b[0m " : "Hibernate: ";

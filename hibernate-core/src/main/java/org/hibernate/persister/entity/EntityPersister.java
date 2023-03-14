@@ -17,6 +17,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -1001,6 +1002,14 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	@Override
 	default EntityMappingType getEntityMappingType() {
 		return this;
+	}
+
+	@Override
+	default void addToCacheKey(
+			MutableCacheKeyBuilder cacheKey,
+			Object value,
+			SharedSessionContractImplementor session) {
+		getIdentifierMapping().addToCacheKey( cacheKey, value, session );
 	}
 
 	BytecodeEnhancementMetadata getInstrumentationMetadata();

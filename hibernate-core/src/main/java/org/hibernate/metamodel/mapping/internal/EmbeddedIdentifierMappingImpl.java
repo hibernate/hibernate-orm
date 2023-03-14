@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -157,18 +158,5 @@ public class EmbeddedIdentifierMappingImpl
 				valuesConsumer,
 				session
 		);
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
-		final Object[] result = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
-		embeddableTypeDescriptor.forEachAttributeMapping(
-				(i, mapping) -> {
-					Object o = mapping.getPropertyAccess().getGetter().get( value );
-					result[i] = mapping.disassemble( o, session );
-				}
-		);
-		return result;
 	}
 }

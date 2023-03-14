@@ -177,12 +177,43 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 		@Override
 		public Serializable disassemble(J value, SharedSessionContract session) {
-			return userType.disassemble( value );
+			final Serializable disassembled = userType.disassemble( value );
+			// Since UserType#disassemble is an optional operation,
+			// we have to handle the fact that it could produce a null value,
+			// in which case we will try to use a converter for disassembling,
+			// or if that doesn't exist, simply use the domain value as is
+			if ( disassembled == null && value != null ) {
+				final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
+				if ( valueConverter == null ) {
+					return (Serializable) value;
+				}
+				else {
+					return valueConverter.getRelationalJavaType().getMutabilityPlan().disassemble(
+							valueConverter.toRelationalValue( value ),
+							session
+					);
+				}
+			}
+			return disassembled;
 		}
 
 		@Override
 		public J assemble(Serializable cached, SharedSessionContract session) {
-			return userType.assemble( cached , session);
+			final J assembled = userType.assemble( cached, null );
+			// Since UserType#assemble is an optional operation,
+			// we have to handle the fact that it could produce a null value,
+			// in which case we will try to use a converter for assembling,
+			// or if that doesn't exist, simply use the relational value as is
+			if ( assembled == null && cached != null ) {
+				final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
+				if ( valueConverter == null ) {
+					return (J) cached;
+				}
+				else {
+					return valueConverter.toDomainValue( cached );
+				}
+			}
+			return assembled;
 		}
 	}
 }

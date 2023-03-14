@@ -6,9 +6,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.io.Serializable;
 import java.util.function.BiConsumer;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -209,8 +209,13 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Serializable discriminator = metaType.disassemble( value, session, value );
-		return discriminator;
+		return metaType.disassemble( value, session, value );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		cacheKey.addValue( metaType.disassemble( value, session, value ) );
+		cacheKey.addHashCode( metaType.getHashCode( value ) );
 	}
 
 	@Override

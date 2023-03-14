@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.UnsavedValueFactory;
@@ -380,6 +381,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return idType.disassemble( value, session );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		idType.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
@@ -601,6 +602,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return targetSide.getModelPart().disassemble( value, session );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		targetSide.getModelPart().addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

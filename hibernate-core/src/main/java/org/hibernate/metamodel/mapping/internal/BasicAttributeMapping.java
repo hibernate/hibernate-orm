@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchStyle;
@@ -391,11 +392,6 @@ public class BasicAttributeMapping
 				creationState,
 				coerceResultType
 		);
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return jdbcMapping.convertToRelationalValue( value );
 	}
 
 	@Override

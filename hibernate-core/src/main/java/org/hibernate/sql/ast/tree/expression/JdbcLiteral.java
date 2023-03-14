@@ -6,11 +6,13 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -27,6 +29,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
  * Represents a literal in the SQL AST.  This form accepts a {@link JdbcMapping} and acts
@@ -116,6 +119,15 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		final Serializable disassemble = ( (MutabilityPlan<Object>) jdbcMapping.getJdbcJavaType().getMutabilityPlan() )
+				.disassemble( value, session );
+		final int hashCode = jdbcMapping.getJavaTypeDescriptor().extractHashCode( value );
+		cacheKey.addValue( disassemble );
+		cacheKey.addHashCode( hashCode );
 	}
 
 	@Override

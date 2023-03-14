@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -549,6 +550,11 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return delegate.disassemble( value, session );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		delegate.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

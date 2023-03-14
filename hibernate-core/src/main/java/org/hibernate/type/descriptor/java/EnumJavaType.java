@@ -37,9 +37,10 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		final JdbcTypeRegistry registry = context.getTypeConfiguration().getJdbcTypeRegistry();
 		final EnumType type = context.getEnumeratedType();
 		switch ( type == null ? ORDINAL : type ) {
-			case ORDINAL:
+			case ORDINAL: {
 				return registry.getDescriptor( hasManyValues() ? SMALLINT : TINYINT );
-			case STRING:
+			}
+			case STRING: {
 				if ( context.getColumnLength() == 1 ) {
 					return context.isNationalized()
 							? registry.getDescriptor( NCHAR )
@@ -48,8 +49,10 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 				return context.isNationalized()
 						? registry.getDescriptor( NVARCHAR )
 						: registry.getDescriptor( VARCHAR );
-			default:
+			}
+			default: {
 				throw new AssertionFailure("unknown EnumType");
+			}
 		}
 	}
 

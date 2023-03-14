@@ -49,7 +49,10 @@ import org.jboss.logging.Logger;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link ConvertedBasicType} instead
  */
+@Deprecated(since="6.2", forRemoval=true)
 public class EnumType<T extends Enum<T>>
 		implements EnhancedUserType<T>, DynamicParameterizedType, LoggableUserType, TypeConfigurationAware, Serializable {
 	private static final Logger LOG = CoreLogging.logger( EnumType.class );

@@ -63,6 +63,7 @@ public class EntityOfBasics {
 	private Date theTimestamp;
 	private Instant theInstant;
 	private Gender gender;
+	private Gender singleCharGender;
 	private Gender convertedGender;
 	private Gender ordinalGender;
 	private Duration theDuration;
@@ -146,6 +147,16 @@ public class EntityOfBasics {
 
 	public void setGender(Gender gender) {
 		this.gender = gender;
+	}
+
+	@Enumerated( EnumType.STRING )
+	@Column( length = 1 )
+	public Gender getSingleCharGender() {
+		return singleCharGender;
+	}
+
+	public void setSingleCharGender(Gender singleCharGender) {
+		this.singleCharGender = singleCharGender;
 	}
 
 	@Convert( converter = GenderConverter.class )

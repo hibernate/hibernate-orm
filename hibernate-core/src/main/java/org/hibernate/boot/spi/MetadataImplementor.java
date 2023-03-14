@@ -17,6 +17,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -56,4 +57,6 @@ public interface MetadataImplementor extends Metadata {
 	void initSessionFactory(SessionFactoryImplementor sessionFactoryImplementor);
 
 	void visitRegisteredComponents(Consumer<Component> consumer);
+
+	Set<ConvertedBasicType<? extends Enum<?>>> getEnumMappings();
 }

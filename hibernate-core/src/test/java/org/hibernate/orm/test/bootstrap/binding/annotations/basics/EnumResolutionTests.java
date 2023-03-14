@@ -8,12 +8,6 @@ package org.hibernate.orm.test.bootstrap.binding.annotations.basics;
 
 import java.sql.Types;
 import java.util.function.Consumer;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.mapping.BasicValue;
@@ -24,18 +18,22 @@ import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
 import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.assertj.core.api.Assertions;
 
 import static jakarta.persistence.EnumType.ORDINAL;
 import static jakarta.persistence.EnumType.STRING;
@@ -128,9 +126,6 @@ public class EnumResolutionTests {
 					//noinspection rawtypes
 					final Class converterType = ( (JpaAttributeConverter) converter ).getConverterBean().getBeanClass();
 					assertThat( converterType, equalTo( ConverterImpl.class ) );
-				},
-				(legacyResolution) -> {
-					assertThat( legacyResolution, instanceOf( ConvertedBasicTypeImpl.class ) );
 				}
 		);
 	}
@@ -150,6 +145,22 @@ public class EnumResolutionTests {
 		);
 	}
 
+	@Test
+	public void testSingleCharEnumResolution(DomainModelScope scope) {
+		final PersistentClass entityBinding = scope
+				.getDomainModel()
+				.getEntityBinding( EntityWithEnums.class.getName() );
+
+		verifyEnumResolution(
+				entityBinding.getProperty( "singleCharEnum" ),
+				Types.CHAR,
+				Character.class,
+				(converter) -> {
+					Assertions.assertThat( converter.getRelationalJavaType().getJavaTypeClass() ).isEqualTo( Character.class );
+				}
+		);
+	}
+
 	@SuppressWarnings("rawtypes")
 	private void verifyEnumResolution(
 			Property property,
@@ -164,13 +175,6 @@ public class EnumResolutionTests {
 				valueConverter -> {
 					assertThat( valueConverter, notNullValue() );
 					assertThat( valueConverter, instanceOf( converterClass ) );
-				},
-				legacyResolvedType -> {
-					assertThat( legacyResolvedType, instanceOf( CustomType.class ) );
-					final UserType rawEnumUserType = ( (CustomType<Object>) legacyResolvedType ).getUserType();
-					assertThat( rawEnumUserType, instanceOf( EnumType.class ) );
-					final EnumType rawEnumEnumType = (EnumType) rawEnumUserType;
-					assertThat( rawEnumEnumType.isOrdinal(), is( isOrdinal ) );
 				}
 		);
 	}
@@ -180,11 +184,11 @@ public class EnumResolutionTests {
 			Property property,
 			int jdbcCode,
 			Class<?> javaType,
-			Consumer<BasicValueConverter> converterChecker,
-			Consumer<BasicType> legacyTypeChecker) {
+			Consumer<BasicValueConverter> converterChecker) {
 		final BasicValue.Resolution<?> resolution = ( (BasicValue) property.getValue() ).resolve();
 		final TypeConfiguration typeConfiguration = ( (BasicValue) property.getValue() ).getTypeConfiguration();
 		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcCode );
+
 		// verify the interpretations used for reading
 		assertThat( resolution.getJdbcType(), is( jdbcType ) );
 		assertThat( resolution.getRelationalJavaType().getJavaTypeClass(), equalTo( javaType ) );
@@ -195,9 +199,6 @@ public class EnumResolutionTests {
 		assertThat( jdbcMapping.getJdbcJavaType(), equalTo( resolution.getRelationalJavaType() ) );
 
 		converterChecker.accept( resolution.getValueConverter() );
-
-		// verify the (legacy) interpretations used for writing
-		legacyTypeChecker.accept( resolution.getLegacyResolvedBasicType() );
 	}
 
 	@Entity( name = "EntityWithEnums" )
@@ -224,6 +225,10 @@ public class EnumResolutionTests {
 		@Enumerated( ORDINAL )
 		@JdbcTypeCode( Types.SMALLINT )
 		private Values explicitEnum;
+
+		@Enumerated( STRING )
+		@Column( length = 1 )
+		private Values singleCharEnum;
 	}
 
 	enum Values { FIRST, SECOND }

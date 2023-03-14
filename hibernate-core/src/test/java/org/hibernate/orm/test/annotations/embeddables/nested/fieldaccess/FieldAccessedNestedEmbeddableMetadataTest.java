@@ -19,11 +19,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
@@ -54,8 +51,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 			assertEquals( (Long) 500L, selectable.getLength() );
 			Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
 			SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
-			CustomType<Object> currencyType = (CustomType<Object>) currencyMetadata.getType();
-			int[] currencySqlTypes = currencyType.getSqlTypeCodes( metadata );
+			int[] currencySqlTypes = currencyMetadata.getType().getSqlTypeCodes( metadata );
 			assertEquals( 1, currencySqlTypes.length );
 			assertJdbcTypeCode(
 					typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARCHAR ).getJdbcTypeCode(),

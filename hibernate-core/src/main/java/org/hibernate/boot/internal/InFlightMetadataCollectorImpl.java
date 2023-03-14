@@ -8,6 +8,7 @@ package org.hibernate.boot.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -105,6 +106,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -145,6 +147,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
 	private final Map<String, String> imports = new HashMap<>();
+	private Set<ConvertedBasicType<? extends Enum<?>>> enumMappings;
 
 	private final TypeDefinitionRegistry typeDefRegistry = new TypeDefinitionRegistryStandardImpl();
 
@@ -487,6 +490,19 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 
 		return collectionTypeRegistrations.get( classification );
+	}
+
+	@Override
+	public <E extends Enum<E>> void registerEnumMapping(ConvertedBasicType<E> enumMapping) {
+		if ( enumMappings == null ) {
+			enumMappings = new HashSet<>();
+		}
+		enumMappings.add( enumMapping );
+	}
+
+	@Override
+	public Set<ConvertedBasicType<? extends Enum<?>>> getEnumMappings() {
+		return enumMappings == null ? Collections.emptySet() : enumMappings;
 	}
 
 	private CollectionTypeRegistrationDescriptor toDescriptor(CollectionTypeRegistration registrationAnnotation) {
@@ -2330,6 +2346,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 					sqlResultSetMappingMap,
 					namedEntityGraphMap,
 					sqlFunctionMap,
+					enumMappings,
 					getDatabase(),
 					bootstrapContext
 			);

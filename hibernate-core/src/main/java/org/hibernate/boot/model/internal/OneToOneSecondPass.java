@@ -32,6 +32,7 @@ import org.hibernate.type.ForeignKeyDirection;
 
 import jakarta.persistence.ForeignKey;
 
+import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindForeignKeyNameAndDefinition;
@@ -152,6 +153,7 @@ public class OneToOneSecondPass implements SecondPass {
 					+ "' of the target entity type '" + oneToOne.getReferencedEntityName()
 					+ "' which is not a '@OneToOne' or '@ManyToOne' association" );
 		}
+		checkMappedByType( mappedBy, targetProperty.getValue(), oneToOne.getPropertyName(), propertyHolder );
 	}
 
 	private void bindTargetManyToOne(

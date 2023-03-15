@@ -397,15 +397,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				columnPosition += columnSpan;
 			}
 			else if ( subtype instanceof CollectionType ) {
-				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner()
-						.getEntityName() );
-
 				attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
-						entityPersister,
+						this,
 						propertyAccess,
 						compositeType.getCascadeStyle( attributeIndex ),
 						compositeType.getFetchMode( attributeIndex ),
@@ -422,7 +419,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
-						entityPersister,
+						this,
 						entityPersister,
 						(EntityType) subtype,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),

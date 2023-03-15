@@ -16,6 +16,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -41,6 +42,10 @@ import org.jboss.logging.Logger;
  */
 public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private static final Logger log = Logger.getLogger( JdbcEnvironmentImpl.class );
+
+	public static boolean isMultiTenancyEnabled(ServiceRegistry serviceRegistry) {
+		return serviceRegistry.getService( MultiTenantConnectionProvider.class ) != null;
+	}
 
 	private final Dialect dialect;
 

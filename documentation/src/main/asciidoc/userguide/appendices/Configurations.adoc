@@ -790,10 +790,7 @@ The default behavior is to allow access unless the `Session` is bootstrapped via
 [[configurations-multi-tenancy]]
 === Multi-tenancy settings
 
-`*hibernate.multiTenancy*` (e.g. `NONE` (default value), `SCHEMA`, `DATABASE`, and `DISCRIMINATOR` (not implemented yet))::
-The multi-tenancy strategy in use.
-
-`*hibernate.multi_tenant_connection_provider*` (e.g. `true` or `false` (default value))::
+`*hibernate.multi_tenant_connection_provider*`::
 Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] implementation to use. As `MultiTenantConnectionProvider` is also a service, can be configured directly through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[`StandardServiceRegistryBuilder`].
 
 `*hibernate.tenant_identifier_resolver*`::

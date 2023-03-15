@@ -1,7 +1,10 @@
 package org.hibernate.test.lazyload;
 
+import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -32,6 +35,7 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
                 BusinessEntity.class,
                 SalesOrder.class,
                 SalesOrderDetail.class,
+                SalesOrderDetailText.class,
                 Item.class,
                 ItemVendorInfo.class,
                 SerialNumber.class,
@@ -302,6 +306,50 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
                 assertThat(pod.getSerialNumbers()).hasSize(1);
             }
         });
+
+        // set up nested sales order detail for update test
+        doInJPA(this::entityManagerFactory, entityManager -> {
+
+            SalesOrder salesOrder = new SalesOrder(2L);
+            entityManager.persist(salesOrder);
+
+            Item item1 = new Item(1L);
+            item1.setVersion(1);
+
+            SalesOrderDetail salesOrderDetail = new SalesOrderDetail(2L, salesOrder, item1);
+            entityManager.persist(salesOrderDetail);
+
+            SalesOrderDetail salesOrderDetailChild = new SalesOrderDetail(3L, salesOrder, item1);
+            salesOrderDetailChild.setParent(salesOrderDetail);
+
+        });
+
+        // test update with nested init
+        doInJPA(this::entityManagerFactory, entityManager -> {
+
+            SalesOrderDetail sodInDb = entityManager.find(SalesOrderDetail.class, 2L);
+
+            SalesOrder salesOrder = new SalesOrder(2L);
+            Item item1 = new Item(1L);
+            item1.setVersion(1);
+
+            SalesOrderDetail salesOrderDetail = new SalesOrderDetail(2L, salesOrder, item1);
+            salesOrderDetail.setQuantity(BigDecimal.ONE);
+            salesOrderDetail = entityManager.merge(salesOrderDetail);
+
+            entityManager.flush();
+
+            entityManager.detach(salesOrderDetail);
+
+            salesOrderDetail = entityManager.merge(salesOrderDetail);
+
+            Hibernate.initialize(salesOrderDetail.getSalesOrderDetailTexts());
+
+            for(SalesOrderDetail sod : salesOrderDetail.children) {
+                Hibernate.initialize(sod.getSalesOrderDetailTexts());
+            }
+
+        });
     }
 
     private void verifyReachableByIndexing(Item item, Vendor vendor, int infoByItemSize, int infoByVendorSize) {
@@ -391,7 +439,11 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
     public static class SalesOrderDetail extends BusinessEntity {
 
         Item item;
+        BigDecimal quantity;
         SalesOrder salesOrder;
+        private SalesOrderDetail parent;
+        Set<SalesOrderDetail> children;
+        Set<SalesOrderDetailText> salesOrderDetailTexts;
 
         public SalesOrderDetail() {
 
@@ -428,6 +480,14 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
             this.item = item;
         }
 
+        public BigDecimal getQuantity() {
+            return quantity;
+        }
+
+        public void setQuantity(BigDecimal quantity) {
+            this.quantity = quantity;
+        }
+
         @OneToMany(mappedBy = "salesOrderDetail")
         public Set<SerialNumber> getSerialNumbers() {
             return serialNumbers;
@@ -435,6 +495,60 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
 
         public void setSerialNumbers(Set<SerialNumber> serialNumbers) {
             this.serialNumbers = serialNumbers;
+        }
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        //@IndexedEmbedded(includeDepth = 1)
+        public SalesOrderDetail getParent() {
+            return parent;
+        }
+
+        public void setParent(SalesOrderDetail parent) {
+            this.parent = parent;
+        }
+
+        @OneToMany(mappedBy = "parent")
+        public Set<SalesOrderDetail> getChildren() {
+            return children;
+        }
+
+        public void setChildren(Set<SalesOrderDetail> salesOrderDetail) {
+            this.children = salesOrderDetail;
+        }
+
+        @OneToMany(mappedBy = "salesOrderDetail")
+        @LazyCollection(LazyCollectionOption.EXTRA)
+        public Set<SalesOrderDetailText> getSalesOrderDetailTexts() {
+            return this.salesOrderDetailTexts;
+        }
+
+        public void setSalesOrderDetailTexts(
+                Set<SalesOrderDetailText> SalesOrderDetailTexts) {
+            this.salesOrderDetailTexts = SalesOrderDetailTexts;
+        }
+    }
+
+    @Entity
+    public class SalesOrderDetailText extends BusinessEntity {
+
+        private SalesOrderDetail salesOrderDetail;
+        private String text;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        public SalesOrderDetail getSalesOrderDetail() {
+            return this.salesOrderDetail;
+        }
+
+        public void setSalesOrderDetail(SalesOrderDetail salesOrderDetail) {
+            this.salesOrderDetail = salesOrderDetail;
+        }
+
+        public String getText() {
+            return this.text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
         }
 
     }

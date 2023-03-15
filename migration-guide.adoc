@@ -1081,4 +1081,28 @@ use these and not their deprecated subclasses:
 * `org.hibernate.community.dialect.TeradataDialect`
 * `org.hibernate.community.dialect.TimesTenDialect`
 
+[[multitenancy]]
+== Multitenancy simplification
+
+link:{userGuideBase}#multitenacy[Multitenancy in Hibernate ORM] has been simplified.
+Hibernate will now infer whether multitenancy is enabled or not automatically:
+
+* If a link:{userGuideBase}#multitenacy-hibernate-MultiTenantConnectionProvider[`MultiTenantConnectionProvider`]
+is configured, Hibernate ORM will assume either link:{userGuideBase}#multitenacy-separate-database[database-]
+or link:{userGuideBase}#multitenacy-separate-schema[schema-based]
+multitenancy (there is no difference between those two as far as Hibernate ORM is concerned).
+* If an entity property is annotated with the new `@TenantId` annotation,
+Hibernate ORM will assume link:{userGuideBase}#multitenacy-hibernate-TenantId[discriminator-based multitenancy]
+(which is a new feature).
+
+To migrate:
+
+* Remove any reference to the configuration property `hibernate.multiTenancy` (`AvailableSettings.MULTI_TENANT`)
+or to `MultiTenancyStrategy` from your application: they are no longer necessary.
+`hibernate.multiTenancy` will be ignored
+and `AvailableSettings.MULTI_TENANT`/`MultiTenancyStrategy` will lead to compilation errors since they have been removed.
+* If your application was somehow achieving discriminator-based multitenancy through custom code (e.g. custom filters),
+consider relying on the new `@TenantId` annotation
+and link:{userGuideBase}#multitenacy-hibernate-session-configuration[setting the session's tenant ID] instead.
+
 // todo (6.0) - surely there are more than this...

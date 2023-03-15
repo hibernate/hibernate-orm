@@ -84,7 +84,8 @@ public interface Initializer {
 		if ( entityInitializer != null ) {
 			final EntityPersister concreteDescriptor = entityInitializer.getConcreteDescriptor();
 			if ( concreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
-				final EntityPersister declaringType = (EntityPersister) referencedModelPart.getDeclaringType();
+				final EntityPersister declaringType = (EntityPersister) referencedModelPart.getDeclaringType()
+						.findContainingEntityMapping();
 				if ( concreteDescriptor != declaringType ) {
 					return declaringType.getSubclassEntityNames().contains( concreteDescriptor.getEntityName() );
 				}

@@ -153,6 +153,7 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFrom
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
+import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
 import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
@@ -171,7 +172,6 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Base class for stateful binders responsible for producing mapping model objects of type {@link Collection}.
@@ -1554,15 +1554,20 @@ public abstract class CollectionBinder {
 	}
 
 	private boolean isReversePropertyInJoin(XClass elementType, PersistentClass persistentClass) {
-		if ( persistentClass != null && isUnownedCollection()) {
+		if ( persistentClass != null && isUnownedCollection() ) {
+			final Property mappedByProperty;
 			try {
-				return persistentClass.getJoinNumber( persistentClass.getRecursiveProperty( mappedBy ) ) != 0;
+				mappedByProperty = persistentClass.getRecursiveProperty( mappedBy );
 			}
 			catch (MappingException e) {
-				throw new AnnotationException( "Collection '" + safeCollectionRole()
-						+ "' is 'mappedBy' a property named '" + mappedBy
-						+ "' which does not exist in the target entity '" + elementType.getName() + "'" );
+				throw new AnnotationException(
+						"Collection '" + safeCollectionRole()
+								+ "' is 'mappedBy' a property named '" + mappedBy
+								+ "' which does not exist in the target entity '" + elementType.getName() + "'"
+				);
 			}
+			checkMappedByType( mappedBy, mappedByProperty.getValue(), propertyName, propertyHolder );
+			return persistentClass.getJoinNumber( mappedByProperty ) != 0;
 		}
 		else {
 			return false;

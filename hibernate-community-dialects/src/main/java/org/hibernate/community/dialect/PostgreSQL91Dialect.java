@@ -4,7 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
+
+import org.hibernate.dialect.DatabaseVersion;
 
 /**
  * An SQL dialect for Postgres 9.1 and later,
@@ -15,7 +17,7 @@ package org.hibernate.dialect;
  * @deprecated use {@code PostgreSQLDialect(910)}
  */
 @Deprecated
-public class PostgreSQL91Dialect extends PostgreSQLDialect {
+public class PostgreSQL91Dialect extends PostgreSQLLegacyDialect {
 
 	public PostgreSQL91Dialect() {
 		super( DatabaseVersion.make( 9, 1 ) );

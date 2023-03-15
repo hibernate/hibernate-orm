@@ -8,7 +8,6 @@ package org.hibernate.community.dialect.unit.lockhint;
 
 import org.hibernate.community.dialect.SybaseASELegacyDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.orm.test.dialect.unit.lockhint.AbstractLockHintTest;
 
 /**

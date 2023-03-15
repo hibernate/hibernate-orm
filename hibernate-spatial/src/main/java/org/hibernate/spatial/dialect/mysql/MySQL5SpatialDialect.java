@@ -6,7 +6,8 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
-import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.spatial.SpatialDialect;
 
 /**
@@ -16,5 +17,9 @@ import org.hibernate.spatial.SpatialDialect;
  * @deprecated Spatial Dialects are no longer needed
  */
 @Deprecated
-public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialect {
+public class MySQL5SpatialDialect extends MySQLDialect implements SpatialDialect {
+
+	public MySQL5SpatialDialect() {
+		super( DatabaseVersion.make( 5 ) );
+	}
 }

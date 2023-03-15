@@ -7,7 +7,8 @@
 package org.hibernate.spatial.dialect.oracle;
 
 
-import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.spatial.SpatialDialect;
 
 /**
@@ -18,6 +19,10 @@ import org.hibernate.spatial.SpatialDialect;
  * @deprecated A SpatialDialect is no longer required. Use the standard Dialect for this database.
  */
 @Deprecated
-public class OracleSpatial10gDialect extends Oracle10gDialect implements SpatialDialect {
+public class OracleSpatial10gDialect extends OracleDialect implements SpatialDialect {
+
+	public OracleSpatial10gDialect() {
+		super( DatabaseVersion.make( 10 ) );
+	}
 
 }

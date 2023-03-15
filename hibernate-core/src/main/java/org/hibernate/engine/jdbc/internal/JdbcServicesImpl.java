@@ -48,7 +48,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
 
-		this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
+		this.multiTenancyEnabled = serviceRegistry.getService( MultiTenantConnectionProvider.class ) != null;
 
 		final boolean showSQL = ConfigurationHelper.getBoolean( Environment.SHOW_SQL, configValues, false );
 		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );

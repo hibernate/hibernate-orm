@@ -147,7 +147,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		if ( useJdbcMetadata ) {
-			final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess( configurationValues, registry );
+			final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess( registry );
 			try {
 				final Connection connection = jdbcConnectionAccess.obtainConnection();
 				try {
@@ -278,8 +278,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return o != null && ( !(o instanceof String) || !((String) o).isEmpty() );
 	}
 
-	private JdbcConnectionAccess buildJdbcConnectionAccess(Map<?,?> configValues, ServiceRegistryImplementor registry) {
-		if ( !configValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER ) ) {
+	private JdbcConnectionAccess buildJdbcConnectionAccess(ServiceRegistryImplementor registry) {
+		boolean multiTenancyEnabled = registry.getService( MultiTenantConnectionProvider.class ) != null;
+		if ( !multiTenancyEnabled ) {
 			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}

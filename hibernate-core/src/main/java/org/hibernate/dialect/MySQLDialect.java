@@ -862,11 +862,6 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsUnionAll() {
-		return true;
-	}
-
-	@Override
 	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
 		return SelectItemReferenceStrategy.POSITION;
 	}

@@ -4,7 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
+
+import org.hibernate.dialect.DatabaseVersion;
 
 /**
  * An SQL dialect for MySQL 5.5.x specific features.
@@ -14,7 +16,7 @@ package org.hibernate.dialect;
  * @deprecated use {@code MySQLDialect(550)}
  */
 @Deprecated
-public class MySQL55Dialect extends MySQLDialect {
+public class MySQL55Dialect extends MySQLLegacyDialect {
 
 	public MySQL55Dialect() {
 		super( DatabaseVersion.make( 5, 5 ) );

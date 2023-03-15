@@ -278,7 +278,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * passed to the constructor, and by the {@link #getVersion()} property.
  * <p>
  * Programs using Hibernate should migrate away from the use of versioned
- * dialect classes like, for example, {@link PostgreSQL95Dialect}. These
+ * dialect classes like, for example, {@link MySQL8Dialect}. These
  * classes are now deprecated and will be removed in a future release.
  * <p>
  * A custom {@code Dialect} may be specified using the configuration

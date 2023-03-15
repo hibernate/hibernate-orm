@@ -1071,4 +1071,34 @@ public class BinderHelper {
 	public static boolean isDefault(XClass clazz, MetadataBuildingContext context) {
 		return context.getBootstrapContext().getReflectionManager().equals( clazz, void.class );
 	}
+
+	public static void checkMappedByType(
+			String mappedBy,
+			Value targetValue,
+			String propertyName,
+			PropertyHolder propertyHolder) {
+		final ToOne toOne;
+		if ( targetValue instanceof Collection ) {
+			toOne = (ToOne) ( (Collection) targetValue ).getElement();
+		}
+		else {
+			toOne = (ToOne) targetValue;
+		}
+		final String referencedEntityName = toOne.getReferencedEntityName();
+		PersistentClass referencedClass = propertyHolder.getPersistentClass();
+		while ( referencedClass != null ) {
+			if ( referencedClass.getEntityName().equals( referencedEntityName ) ) {
+				return;
+			}
+			else {
+				referencedClass = referencedClass.getSuperclass();
+			}
+		}
+		throw new AnnotationException(
+				"Association '" + qualify( propertyHolder.getPath(), propertyName )
+						+ "' is 'mappedBy' a property named '" + mappedBy
+						+ "' which references the wrong entity type '" + referencedEntityName
+						+ "', expected '" + propertyHolder.getEntityName() + "'"
+		);
+	}
 }

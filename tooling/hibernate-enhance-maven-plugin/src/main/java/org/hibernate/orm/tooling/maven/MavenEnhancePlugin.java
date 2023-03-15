@@ -82,6 +82,9 @@ public class MavenEnhancePlugin extends AbstractMojo {
 	@Parameter(property = "enableExtendedEnhancement", defaultValue = "false")
 	private boolean enableExtendedEnhancement;
 
+	@Parameter(property = "addSuppressFBWarnings", defaultValue = "false")
+	private boolean addSuppressFBWarnings;
+
 	private boolean shouldApply() {
 		return enableLazyInitialization || enableDirtyTracking || enableAssociationManagement || enableExtendedEnhancement;
 	}
@@ -132,6 +135,11 @@ public class MavenEnhancePlugin extends AbstractMojo {
 			@Override
 			public boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor) {
 				return enableLazyInitialization;
+			}
+
+			@Override
+			public boolean addSuppressFBWarnings(UnloadedClass classDescriptor) {
+				return addSuppressFBWarnings;
 			}
 
 			@Override

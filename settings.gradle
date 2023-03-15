@@ -159,6 +159,9 @@ dependencyResolutionManagement {
             alias( "jbossTxSpi" ).to( "org.jboss", "jboss-transaction-spi" ).version( "8.0.0.Final" )
             alias( "wildFlyTxnClient" ).to( "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).version( "2.0.0.Final" )
             alias( "weld" ).to( "org.jboss.weld.se", "weld-se-shaded" ).version( "4.0.1.SP1" )
+
+            alias( "archunitJUnit4" ).to( "com.tngtech.archunit", "archunit-junit4" ).version( "1.0.1" )
+
         }
         dbLibs {
             String h2Version = settings.ext.find( "gradle.libs.versions.h2" )

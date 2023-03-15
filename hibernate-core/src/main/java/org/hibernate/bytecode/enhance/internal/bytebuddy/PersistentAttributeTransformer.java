@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.anyOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -86,6 +87,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 	private final TypeDescription managedCtClass;
 
+	private final List<Annotation> optInAnnotations;
+
 	private final ByteBuddyEnhancementContext enhancementContext;
 
 	private final TypePool classPool;
@@ -93,20 +96,23 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	private final AnnotatedFieldDescription[] enhancedFields;
 
 	private PersistentAttributeTransformer(
-			TypeDescription managedCtClass,
-			ByteBuddyEnhancementContext enhancementContext,
-			TypePool classPool,
-			AnnotatedFieldDescription[] enhancedFields) {
+		TypeDescription managedCtClass,
+		List<Annotation> optInAnnotations,
+		ByteBuddyEnhancementContext enhancementContext,
+		TypePool classPool,
+		AnnotatedFieldDescription[] enhancedFields) {
 		this.managedCtClass = managedCtClass;
+		this.optInAnnotations = optInAnnotations;
 		this.enhancementContext = enhancementContext;
 		this.classPool = classPool;
 		this.enhancedFields = enhancedFields;
 	}
 
 	public static PersistentAttributeTransformer collectPersistentFields(
-			TypeDescription managedCtClass,
-			ByteBuddyEnhancementContext enhancementContext,
-			TypePool classPool) {
+		TypeDescription managedCtClass,
+		List<Annotation> optInAnnotations,
+		ByteBuddyEnhancementContext enhancementContext,
+		TypePool classPool) {
 		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 		// HHH-10646 Add fields inherited from @MappedSuperclass
 		// HHH-10981 There is no need to do it for @MappedSuperclass
@@ -133,7 +139,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 					Arrays.toString( orderedFields )
 			);
 		}
-		return new PersistentAttributeTransformer( managedCtClass, enhancementContext, classPool, orderedFields );
+		return new PersistentAttributeTransformer( managedCtClass, optInAnnotations, enhancementContext, classPool, orderedFields );
 	}
 
 	private static Collection<AnnotatedFieldDescription> collectInheritPersistentFields(
@@ -260,7 +266,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 							enhancedField.getType().asErasure(),
 							Visibility.PUBLIC
 					)
-					.intercept( fieldReader( enhancedField ) );
+					.intercept( fieldReader( enhancedField ) )
+					.annotateMethod( optInAnnotations );
 			// Final fields will only be written to from the constructor,
 			// so there's no point trying to replace final field writes with a method call.
 			if ( !enhancedField.getFieldDescription().isFinal() ) {
@@ -271,7 +278,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 								Visibility.PUBLIC
 						)
 						.withParameters( enhancedField.getType().asErasure() )
-						.intercept( fieldWriter( enhancedField ) );
+						.intercept( fieldWriter( enhancedField ) )
+						.annotateMethod( optInAnnotations );
 			}
 
 			if ( !compositeOwner
@@ -289,7 +297,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 				builder = builder.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, Visibility.PUBLIC )
 						.withParameters( String.class )
-						.intercept( Advice.to( CodeTemplates.CompositeOwnerDirtyCheckingHandler.class ).wrap( StubMethod.INSTANCE ) );
+						.intercept( Advice.to( CodeTemplates.CompositeOwnerDirtyCheckingHandler.class ).wrap( StubMethod.INSTANCE ) )
+						.annotateMethod( optInAnnotations );
 			}
 		}
 

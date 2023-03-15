@@ -57,6 +57,11 @@ public class EnhancementContextWrapper implements EnhancementContext {
 	}
 
 	@Override
+	public boolean addSuppressFBWarnings(UnloadedClass classDescriptor) {
+		return wrappedContext.addSuppressFBWarnings( classDescriptor );
+	}
+
+	@Override
 	public boolean isPersistentField(UnloadedField ctField) {
 		return wrappedContext.isPersistentField( ctField );
 	}

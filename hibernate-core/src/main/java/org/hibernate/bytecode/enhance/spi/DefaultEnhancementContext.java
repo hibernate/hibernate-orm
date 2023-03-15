@@ -87,6 +87,11 @@ public class DefaultEnhancementContext implements EnhancementContext {
 		return true;
 	}
 
+	@Override
+	public boolean addSuppressFBWarnings(UnloadedClass classDescriptor) {
+		return true;
+	}
+
 	/**
 	 * @return true
 	 */

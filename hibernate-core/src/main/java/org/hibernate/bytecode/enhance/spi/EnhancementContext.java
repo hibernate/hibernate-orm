@@ -101,6 +101,15 @@ public interface EnhancementContext {
 	@Deprecated(forRemoval = true)
 	boolean hasLazyLoadableAttributes(UnloadedClass classDescriptor);
 
+	/**
+	 * Should we add edu.umd.cs.findbugs.annotations.SuppressFBWarnings annotation?
+	 * <a href="https://spotbugs.readthedocs.io">SpotBugs</a>
+	 *
+	 * @param classDescriptor The descriptor of the class to check.
+	 * @return true indicates that we should add the annotation.
+	 */
+	boolean addSuppressFBWarnings(UnloadedClass classDescriptor);
+
 	// todo : may be better to invert these 2 such that the context is asked for an ordered list of persistent fields for an entity/composite
 
 	/**

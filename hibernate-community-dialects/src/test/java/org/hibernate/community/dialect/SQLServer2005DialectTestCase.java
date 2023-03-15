@@ -11,7 +11,6 @@ import java.util.Locale;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.query.spi.Limit;
 
 import org.hibernate.testing.TestForIssue;

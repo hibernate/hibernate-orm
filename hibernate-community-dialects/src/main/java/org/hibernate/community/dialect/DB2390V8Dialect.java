@@ -4,16 +4,20 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
+
 
 /**
- * @deprecated use {@code MariaDBDialect(1000)}
+ * An SQL dialect for DB2/390 version 8.
+ *
+ * @author Tobias Sternvik
+ *
+ * @deprecated use {@code DB2390Dialect(8)}
  */
 @Deprecated
-public class MariaDB10Dialect extends MariaDBDialect {
+public class DB2390V8Dialect extends DB2390Dialect {
 
-	public MariaDB10Dialect() {
-		super( DatabaseVersion.make( 10 ) );
+	public DB2390V8Dialect() {
+		super(8);
 	}
-
 }

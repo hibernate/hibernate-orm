@@ -42,7 +42,7 @@ public class OrderByComplianceTests {
 		}
 		catch (OrderByComplianceViolation exception) {
 			assertThat( exception.getMessage() ).isEqualTo(
-					"`@OrderBy` expression (last_name) is not a domain-model reference " +
+					"@OrderBy expression (last_name) is not a domain-model reference, " +
 							"which violates the Jakarta Persistence specification - column reference (last_name)"
 			);
 		}

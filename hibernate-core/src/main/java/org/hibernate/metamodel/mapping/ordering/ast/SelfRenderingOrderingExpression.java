@@ -66,4 +66,8 @@ public class SelfRenderingOrderingExpression extends SelfRenderingSqlFragmentExp
 		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
+	@Override
+	public String toDescriptiveText() {
+		return "unknown";
+	}
 }

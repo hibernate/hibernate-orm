@@ -21,6 +21,27 @@ public final class ExceptionHelper {
 		ExceptionHelper.<RuntimeException>doThrow0(e);
 	}
 
+	public static Throwable getRootCause(Throwable error) {
+		Throwable toProcess = error;
+		while ( toProcess.getCause() != null ) {
+			toProcess = toProcess.getCause();
+		}
+		return toProcess;
+	}
+
+	public static <T extends Throwable> T combine(T throwable, T otherThrowable) {
+		T toThrow = throwable;
+		if ( otherThrowable != null ) {
+			if ( toThrow != null ) {
+				toThrow.addSuppressed( otherThrowable );
+			}
+			else {
+				toThrow = otherThrowable;
+			}
+		}
+		return toThrow;
+	}
+
 	@SuppressWarnings("unchecked")
 	private static <T extends Throwable> void doThrow0(Throwable e) throws T {
 		throw (T) e;

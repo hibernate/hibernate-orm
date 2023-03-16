@@ -11,6 +11,9 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Optional;
+
+import org.hibernate.internal.util.ExceptionHelper;
 
 public class AggregatedClassLoader extends ClassLoader {
 	private final ClassLoader[] individualClassLoaders;
@@ -196,18 +199,21 @@ public class AggregatedClassLoader extends ClassLoader {
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
 		final Iterator<ClassLoader> clIterator = newClassLoaderIterator();
+		Throwable t = null;
 		while ( clIterator.hasNext() ) {
 			final ClassLoader classLoader = clIterator.next();
 			try {
 				return classLoader.loadClass( name );
 			}
-			catch (Exception ignore) {
+			catch (Exception ex) {
+				ExceptionHelper.combine( ( t == null ? t = new Throwable() : t ), ex );
 			}
-			catch (LinkageError ignore) {
+			catch (LinkageError le) {
+				ExceptionHelper.combine( ( t == null ? t = new Throwable() : t ), le );
 			}
 		}
 
-		throw new ClassNotFoundException( "Could not load requested class : " + name );
+		throw new ClassNotFoundException( "Could not load requested class : " + name, ( t != null && t.getSuppressed().length > 0 ? t : null ) );
 	}
 
 	private static ClassLoader locateSystemClassLoader() {

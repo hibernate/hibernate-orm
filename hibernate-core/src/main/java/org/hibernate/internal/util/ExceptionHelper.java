@@ -29,6 +29,19 @@ public final class ExceptionHelper {
 		return toProcess;
 	}
 
+	public static <T extends Throwable> T combine(T throwable, T otherThrowable) {
+		T toThrow = throwable;
+		if ( otherThrowable != null ) {
+			if ( toThrow != null ) {
+				toThrow.addSuppressed( otherThrowable );
+			}
+			else {
+				toThrow = otherThrowable;
+			}
+		}
+		return toThrow;
+	}
+
 	@SuppressWarnings("unchecked")
 	private static <T extends Throwable> void doThrow0(Throwable e) throws T {
 		throw (T) e;

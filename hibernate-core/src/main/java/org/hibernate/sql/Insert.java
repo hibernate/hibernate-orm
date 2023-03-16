@@ -38,8 +38,8 @@ public class Insert {
 
 	public Insert(SessionFactoryImplementor sessionFactory) {
 		this(
-				sessionFactory.getJdbcServices().getDialect(),
-				sessionFactory.getServiceRegistry().getService( ParameterMarkerStrategy.class )
+				sessionFactory.getFastSessionServices().dialect,
+				sessionFactory.getFastSessionServices().parameterMarkerStrategy
 		);
 	}
 

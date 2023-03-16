@@ -32,7 +32,7 @@ public class Update implements RestrictionRenderingContext {
 	private int parameterCount;
 
 	public Update(SessionFactoryImplementor factory) {
-		this( factory.getServiceRegistry().getService( ParameterMarkerStrategy.class ) );
+		this( factory.getFastSessionServices().parameterMarkerStrategy );
 	}
 
 	public Update(ParameterMarkerStrategy parameterMarkerStrategy) {

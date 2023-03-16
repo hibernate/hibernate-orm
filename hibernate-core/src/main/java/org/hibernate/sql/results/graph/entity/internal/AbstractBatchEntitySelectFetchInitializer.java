@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -130,8 +131,16 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 		);
 	}
 
-	protected static int getPropertyIndex(EntityInitializer entityInitializer, String propertyName) {
-		return entityInitializer.getConcreteDescriptor().findAttributeMapping( propertyName ).getStateArrayPosition();
+	protected AttributeMapping getParentEntityAttribute(String attributeName) {
+		final AttributeMapping parentAttribute = firstEntityInitializer.getConcreteDescriptor()
+				.findAttributeMapping( attributeName );
+		if ( parentAttribute != null && parentAttribute.getDeclaringType() == referencedModelPart.getDeclaringType()
+				.findContainingEntityMapping() ) {
+			// These checks are needed to avoid setting the instance using the wrong (child's) model part or
+			// setting it multiple times in case parent and child share the same attribute name for the association.
+			return parentAttribute;
+		}
+		return null;
 	}
 
 	@Override

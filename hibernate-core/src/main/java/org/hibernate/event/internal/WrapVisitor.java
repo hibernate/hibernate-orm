@@ -12,6 +12,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -111,25 +112,27 @@ public class WrapVisitor extends ProxyVisitor {
 					}
 					else if ( attributeInterceptor != null
 							&& ((LazyAttributeLoadingInterceptor)attributeInterceptor).isAttributeLoaded( persister.getAttributeMapping().getAttributeName() ) ) {
-						// the collection has not been initialized and new collection values have been assigned,
-						// we need to be sure to delete all the collection elements before inserting the new ones
-						final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) mappingMetamodel.getEntityDescriptor( entity.getClass() );
-						final Object key = entityDescriptor.getCollectionKey(
-								persister,
-								entity,
-								persistenceContext.getEntry( entity ),
-								session
-						);
-						final PersistentCollection<?> collectionInstance = persister.getCollectionSemantics().instantiateWrapper(
-								key,
-								persister,
-								session
-						);
-						collectionInstance.setOwner( entity );
-						persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
+						final EntityEntry entry = persistenceContext.getEntry( entity );
+						if ( entry.isExistsInDatabase() ) {
+							// the collection has not been initialized and new collection values have been assigned,
+							// we need to be sure to delete all the collection elements before inserting the new ones
+							final AbstractEntityPersister entityDescriptor =
+									(AbstractEntityPersister) persister.getOwnerEntityPersister();
+							final Object key = entityDescriptor.getCollectionKey(
+									persister,
+									entity,
+									entry,
+									session
+							);
+							final PersistentCollection<?> collectionInstance = persister.getCollectionSemantics()
+									.instantiateWrapper( key, persister, session );
+							collectionInstance.setOwner( entity );
+							persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
 
-						final CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
-						collectionEntry.setDoremove( true );
+							final CollectionEntry collectionEntry = persistenceContext
+									.getCollectionEntry( collectionInstance );
+							collectionEntry.setDoremove( true );
+						}
 					}
 				}
 

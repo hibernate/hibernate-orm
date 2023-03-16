@@ -8,6 +8,7 @@ package org.hibernate.boot.spi;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.service.JavaServiceLoadable;
 
 /**
  * An extension point for integrators that wish to hook into the process of how a {@link Metadata} is built. Intended as
@@ -16,6 +17,7 @@ import org.hibernate.boot.MetadataSources;
  *
  * @author Gunnar Morling
  */
+@JavaServiceLoadable
 public interface MetadataBuilderFactory {
 
 	/**

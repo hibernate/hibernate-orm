@@ -10,6 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -29,6 +30,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  * @since 4.0
  */
+@JavaServiceLoadable
 public interface Integrator {
 
 	/**

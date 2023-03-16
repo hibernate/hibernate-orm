@@ -71,7 +71,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 				throw new OrderByComplianceViolation(
 						String.format(
 								Locale.ROOT,
-								"`@OrderBy` expression (%s) is not a domain-model reference, which violates the Jakarta Persistence specification - %s",
+								"@OrderBy expression (%s) is not a domain-model reference, which violates the Jakarta Persistence specification - %s",
 								parsedSpec.expression().getText(),
 								orderingExpression.toDescriptiveText()
 						)

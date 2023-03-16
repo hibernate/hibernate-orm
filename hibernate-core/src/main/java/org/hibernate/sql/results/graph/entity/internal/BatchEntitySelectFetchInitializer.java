@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -24,7 +25,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
-	private final Map<EntityKey, List<ParentInfo>> toBatchLoad = new HashMap<>();
+	private Map<EntityKey, List<ParentInfo>> toBatchLoad;
 
 	public BatchEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
@@ -37,25 +38,19 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 
 	@Override
 	protected void registerResolutionListener() {
-		final List<ParentInfo> parents = getParentInfos();
-		parentAccess.registerResolutionListener(
-				o ->
-						parents.add(
-								new ParentInfo(
-										o,
-										getPropertyIndex( firstEntityInitializer, referencedModelPart.getPartName() )
-								)
-						)
-		);
+		parentAccess.registerResolutionListener( parentInstance -> {
+			final AttributeMapping parentAttribute = getParentEntityAttribute( referencedModelPart.getAttributeName() );
+			if ( parentAttribute != null ) {
+				getParentInfos().add( new ParentInfo( parentInstance, parentAttribute.getStateArrayPosition() ) );
+			}
+		} );
 	}
 
 	private List<ParentInfo> getParentInfos() {
-		List<ParentInfo> objects = toBatchLoad.get( entityKey );
-		if ( objects == null ) {
-			objects = new ArrayList<>();
-			toBatchLoad.put( entityKey, objects );
+		if ( toBatchLoad == null ) {
+			toBatchLoad = new HashMap<>();
 		}
-		return objects;
+		return toBatchLoad.computeIfAbsent( entityKey, key -> new ArrayList<>() );
 	}
 
 	@Override
@@ -75,26 +70,28 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 
 	@Override
 	public void endLoading(ExecutionContext context) {
-		toBatchLoad.forEach(
-				(entityKey, parentInfos) -> {
-					final SharedSessionContractImplementor session = context.getSession();
-					final Object instance = loadInstance( entityKey, referencedModelPart, session );
-					for ( ParentInfo parentInfo : parentInfos ) {
-						final Object parentInstance = parentInfo.parentInstance;
-						setInstance(
-								firstEntityInitializer,
-								referencedModelPart,
-								referencedModelPart.getPartName(),
-								parentInfo.propertyIndex,
-								session,
-								instance,
-								parentInstance,
-								session.getPersistenceContext().getEntry( parentInstance )
-						);
+		if ( toBatchLoad != null ) {
+			toBatchLoad.forEach(
+					(entityKey, parentInfos) -> {
+						final SharedSessionContractImplementor session = context.getSession();
+						final Object instance = loadInstance( entityKey, referencedModelPart, session );
+						for ( ParentInfo parentInfo : parentInfos ) {
+							final Object parentInstance = parentInfo.parentInstance;
+							setInstance(
+									firstEntityInitializer,
+									referencedModelPart,
+									referencedModelPart.getPartName(),
+									parentInfo.propertyIndex,
+									session,
+									instance,
+									parentInstance,
+									session.getPersistenceContext().getEntry( parentInstance )
+							);
+						}
 					}
-				}
-		);
-		toBatchLoad.clear();
+			);
+			toBatchLoad.clear();
+		}
 		parentAccess = null;
 	}
 

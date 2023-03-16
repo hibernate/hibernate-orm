@@ -6,9 +6,12 @@
  */
 package org.hibernate.service.spi;
 
+import org.hibernate.service.JavaServiceLoadable;
+
 /**
  * @author Steve Ebersole
  */
+@JavaServiceLoadable
 public interface SessionFactoryServiceContributor {
 	/**
 	 * Contribute services to the indicated registry builder.

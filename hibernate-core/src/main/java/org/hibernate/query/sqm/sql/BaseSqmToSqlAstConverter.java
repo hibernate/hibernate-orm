@@ -89,6 +89,7 @@ import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.query.sqm.sql.internal.DiscriminatorPathInterpretation;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -150,7 +151,6 @@ import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation;
-import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
@@ -4092,7 +4092,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Expression visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath sqmPath) {
+	public Expression visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath<?> sqmPath) {
 		return withTreatRestriction(
 				prepareReusablePath(
 						sqmPath,
@@ -4150,14 +4150,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> sqmPath) {
+	public Object visitDiscriminatorPath(DiscriminatorSqmPath sqmPath) {
 		return prepareReusablePath(
 				sqmPath,
 				() -> {
-					if ( sqmPath instanceof DiscriminatorSqmPath ) {
-						registerTypeUsage( (DiscriminatorSqmPath) sqmPath );
-					}
-					return sqmPath.interpret( this, this, jpaQueryComplianceEnabled );
+					registerTypeUsage( sqmPath );
+					return DiscriminatorPathInterpretation.from( sqmPath, this );
 				}
 		);
 	}
@@ -4845,7 +4843,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// as that would register a type usage for the table group that we don't want here
 		final DiscriminatorSqmPath discriminatorSqmPath = (DiscriminatorSqmPath) lhs.type();
 		registerTypeUsage( discriminatorSqmPath );
-		final Expression typeExpression = discriminatorSqmPath.interpret( this, this, jpaQueryComplianceEnabled );
+		final Expression typeExpression = DiscriminatorPathInterpretation.from( discriminatorSqmPath, this );
 		if ( subclassEntityNames.size() == 1 ) {
 			return new ComparisonPredicate(
 					typeExpression,
@@ -6470,7 +6468,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 
 	@Override
-	public Expression visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {
+	public Expression visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue<?> expression) {
 		final BasicType<?> domainType = expression.getDomainType();
 		return new QueryLiteral<>(
 				domainType.convertToRelationalValue( expression.getEntityValue().getJavaType() ),

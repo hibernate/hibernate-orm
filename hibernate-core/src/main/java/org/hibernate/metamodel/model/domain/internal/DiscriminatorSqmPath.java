@@ -8,26 +8,18 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.sql.internal.DiscriminatorPathInterpretation;
-import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
-import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * SqmPath specialization for an entity discriminator
@@ -35,7 +27,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpretingSqmPath {
+public class DiscriminatorSqmPath extends AbstractSqmPath {
 	private final EntityDomainType entityDomainType;
 	private final EntityMappingType entityDescriptor;
 
@@ -49,6 +41,14 @@ public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpr
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		this.entityDomainType = entityDomainType;
 		this.entityDescriptor = entityDescriptor;
+	}
+
+	public EntityDomainType getEntityDomainType() {
+		return entityDomainType;
+	}
+
+	public EntityMappingType getEntityDescriptor() {
+		return entityDescriptor;
 	}
 
 	@Override
@@ -69,27 +69,7 @@ public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpr
 			return walker.visitEntityTypeLiteralExpression( new SqmLiteralEntityType( entityDomainType, nodeBuilder() ) );
 		}
 
-		return walker.visitSelfInterpretingSqmPath( this );
-	}
-
-	@Override
-	public SqmPathInterpretation<?> interpret(
-			SqlAstCreationState sqlAstCreationState,
-			SemanticQueryWalker sqmWalker,
-			boolean jpaQueryComplianceEnabled) {
-		assert entityDescriptor.hasSubclasses();
-
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( getNavigablePath().getParent() );
-		final ModelPartContainer modelPart = tableGroup.getModelPart();
-		final EntityMappingType entityMapping;
-		if ( modelPart instanceof EntityValuedModelPart ) {
-			entityMapping = ( (EntityValuedModelPart) modelPart ).getEntityMappingType();
-		}
-		else {
-			entityMapping = (EntityMappingType) ( (PluralAttributeMapping) modelPart ).getElementDescriptor().getPartMappingType();
-		}
-
-		return new DiscriminatorPathInterpretation( getNavigablePath(), entityMapping, tableGroup, sqlAstCreationState );
+		return walker.visitDiscriminatorPath( this );
 	}
 
 	@Override

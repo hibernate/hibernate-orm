@@ -85,8 +85,10 @@ import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
@@ -153,6 +155,10 @@ public class DerbyDialect extends Dialect {
 			case CLOB:
 			case NCLOB:
 				return "clob";
+
+			case TIME:
+			case TIME_WITH_TIMEZONE:
+				return "time";
 
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:

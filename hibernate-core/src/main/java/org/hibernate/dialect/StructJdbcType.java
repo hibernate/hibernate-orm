@@ -374,6 +374,8 @@ public class StructJdbcType implements AggregateJdbcType {
 				if ( rawJdbcValue != null ) {
 					final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
 					switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+						case SqlTypes.TIME_WITH_TIMEZONE:
+						case SqlTypes.TIME_UTC:
 						case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 						case SqlTypes.TIMESTAMP_UTC:
 							// Only transform the raw jdbc value if it could be a TIMESTAMPTZ

@@ -137,8 +137,10 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.POINT;
+import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
@@ -254,6 +256,9 @@ public abstract class AbstractHANADialect extends Dialect {
 			case DOUBLE:
 				return "double";
 			//no explicit precision
+			case TIME:
+			case TIME_WITH_TIMEZONE:
+				return "time";
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp";
@@ -1196,19 +1201,19 @@ public abstract class AbstractHANADialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NANOSECOND:
-//				if ( temporalType == TemporalType.TIME ) {
-//					return "nano100_between(cast(?3 as timestamp), cast(?2 as timestamp))*100";
-//				}
-//				else {
-				return "nano100_between(?2,?3)*100";
-//				}
+				if ( fromTemporalType == TemporalType.TIME && toTemporalType == TemporalType.TIME ) {
+					return "seconds_between(?2,?3)*1000000000";
+				}
+				else {
+					return "nano100_between(?2,?3)*100";
+				}
 			case NATIVE:
-//				if ( temporalType == TemporalType.TIME ) {
-//					return "nano100_between(cast(?3 as timestamp), cast(?2 as timestamp))";
-//				}
-//				else {
-				return "nano100_between(?2,?3)";
-//				}
+				if ( fromTemporalType == TemporalType.TIME && toTemporalType == TemporalType.TIME ) {
+					return "seconds_between(?2,?3)*10000000";
+				}
+				else {
+					return "nano100_between(?2,?3)";
+				}
 			case QUARTER:
 				return "months_between(?2,?3)/3";
 			case WEEK:

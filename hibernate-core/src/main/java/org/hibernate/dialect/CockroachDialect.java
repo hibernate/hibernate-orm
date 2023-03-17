@@ -46,6 +46,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -58,7 +59,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
-import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -76,7 +77,9 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
+import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
+import static org.hibernate.query.sqm.TemporalUnit.YEAR;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -94,9 +97,11 @@ import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_UTC;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
@@ -212,6 +217,10 @@ public class CockroachDialect extends Dialect {
 			case BLOB:
 				return "bytes";
 
+			// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
+//			case TIME_UTC:
+//				return columnType( TIME_WITH_TIMEZONE );
+
 			case TIMESTAMP_UTC:
 				return columnType( TIMESTAMP_WITH_TIMEZONE );
 
@@ -284,6 +293,12 @@ public class CockroachDialect extends Dialect {
 						break;
 				}
 				break;
+			case TIME:
+				// The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
+				if ( "timetz".equals( columnTypeName ) ) {
+					jdbcTypeCode = TIME_UTC;
+				}
+				break;
 			case TIMESTAMP:
 				// The PostgreSQL JDBC driver reports TIMESTAMP for timestamptz, but we use it only for mapping Instant
 				if ( "timestamptz".equals( columnTypeName ) ) {
@@ -339,7 +354,7 @@ public class CockroachDialect extends Dialect {
 	protected void contributeCockroachTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
@@ -422,7 +437,13 @@ public class CockroachDialect extends Dialect {
 
 		functionContributions.getFunctionRegistry().register(
 				"format",
-				new FormatFunction( "experimental_strftime", functionContributions.getTypeConfiguration() )
+				new FormatFunction(
+						"experimental_strftime",
+						false,
+						true,
+						false,
+						functionContributions.getTypeConfiguration()
+				)
 		);
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "string" );
@@ -756,30 +777,46 @@ public class CockroachDialect extends Dialect {
 		if ( unit == null ) {
 			return "(?3-?2)";
 		}
-		switch (unit) {
-			case YEAR:
-				return "(extract(year from ?3)-extract(year from ?2))";
-			case QUARTER:
-				return "(extract(year from ?3)*4-extract(year from ?2)*4+extract(month from ?3)//3-extract(month from ?2)//3)";
-			case MONTH:
-				return "(extract(year from ?3)*12-extract(year from ?2)*12+extract(month from ?3)-extract(month from ?2))";
-		}
-		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP ) {
+		if ( toTemporalType == TemporalType.DATE && fromTemporalType == TemporalType.DATE ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
-			return "(?3-?2)" + DAY.conversionFactor( unit, this );
+			switch ( unit ) {
+				case YEAR:
+				case MONTH:
+				case QUARTER:
+					// age only supports timestamptz, so we have to cast the date expressions
+					return "extract(" + translateDurationField( unit ) + " from age(cast(?3 as timestamptz),cast(?2 as timestamptz)))";
+				default:
+					return "(?3-?2)" + DAY.conversionFactor( unit, this );
+			}
 		}
 		else {
 			switch (unit) {
-				case WEEK:
-					return "extract_duration(hour from ?3-?2)/168";
+				case YEAR:
+					return "extract(year from ?3-?2)";
+				case QUARTER:
+					return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
+				case MONTH:
+					return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+				case WEEK: //week is not supported by extract() when the argument is a duration
+					return "(extract(day from ?3-?2)/7)";
 				case DAY:
-					return "extract_duration(hour from ?3-?2)/24";
+					return "extract(day from ?3-?2)";
+				//in order to avoid multiple calls to extract(),
+				//we use extract(epoch from x - y) * factor for
+				//all the following units:
+
+				// Note that CockroachDB also has an extract_duration function which returns an int,
+				// but we don't use that here because it is deprecated since v20
+				case HOUR:
+				case MINUTE:
+				case SECOND:
 				case NANOSECOND:
-					return "extract_duration(microsecond from ?3-?2)*1e3";
+				case NATIVE:
+					return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
 				default:
-					return "extract_duration(?1 from ?3-?2)";
+					throw new SemanticException( "unrecognized field: " + unit );
 			}
 		}
 	}

@@ -776,6 +776,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				return TemporalType.TIMESTAMP;
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
+			case SqlTypes.TIME_UTC:
 				return TemporalType.TIME;
 			case SqlTypes.DATE:
 				return TemporalType.DATE;

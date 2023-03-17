@@ -100,6 +100,7 @@ import static org.hibernate.type.SqlTypes.SQLXML;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
@@ -179,6 +180,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				return "time";
 			case TIMESTAMP:
 				return "datetime2($p)";
+			case TIME_WITH_TIMEZONE:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "datetimeoffset($p)";
 			default:

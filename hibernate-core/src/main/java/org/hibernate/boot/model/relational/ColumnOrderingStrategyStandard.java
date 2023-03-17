@@ -195,6 +195,7 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 				return (int) length;
 			case DATE:
 			case TIME:
+			case TIME_UTC:
 			case TIME_WITH_TIMEZONE:
 				return 4;
 			case TIMESTAMP:

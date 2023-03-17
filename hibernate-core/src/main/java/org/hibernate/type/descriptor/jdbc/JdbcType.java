@@ -26,6 +26,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.type.SqlTypes.*;
+
 /**
  * Descriptor for the SQL/JDBC side of a value mapping. A {@code JdbcType} is
  * always coupled with a {@link JavaType} to describe the typing aspects of an
@@ -193,32 +195,32 @@ public interface JdbcType extends Serializable {
 
 	default boolean isInteger() {
 		int typeCode = getDdlTypeCode();
-		return SqlTypes.isIntegral(typeCode)
-			|| typeCode == Types.BIT; //HIGHLY DUBIOUS!
+		return isIntegral(typeCode)
+			|| typeCode == BIT; //HIGHLY DUBIOUS!
 	}
 
 	default boolean isFloat() {
-		return SqlTypes.isFloatOrRealOrDouble( getDdlTypeCode() );
+		return isFloatOrRealOrDouble( getDdlTypeCode() );
 	}
 
 	default boolean isDecimal() {
-		return SqlTypes.isNumericOrDecimal( getDdlTypeCode() );
+		return isNumericOrDecimal( getDdlTypeCode() );
 	}
 
 	default boolean isNumber() {
-		return SqlTypes.isNumericType( getDdlTypeCode() );
+		return isNumericType( getDdlTypeCode() );
 	}
 
 	default boolean isBinary() {
-		return SqlTypes.isBinaryType( getDdlTypeCode() );
+		return isBinaryType( getDdlTypeCode() );
 	}
 
 	default boolean isString() {
-		return SqlTypes.isCharacterOrClobType( getDdlTypeCode() );
+		return isCharacterOrClobType( getDdlTypeCode() );
 	}
 
 	default boolean isTemporal() {
-		return SqlTypes.isTemporalType( getDdlTypeCode() );
+		return isTemporalType( getDdlTypeCode() );
 	}
 
 	default boolean isLob() {
@@ -227,9 +229,9 @@ public interface JdbcType extends Serializable {
 
 	static boolean isLob(int jdbcTypeCode) {
 		switch ( jdbcTypeCode ) {
-			case SqlTypes.BLOB:
-			case SqlTypes.CLOB:
-			case SqlTypes.NCLOB: {
+			case BLOB:
+			case CLOB:
+			case NCLOB: {
 				return true;
 			}
 		}
@@ -242,11 +244,11 @@ public interface JdbcType extends Serializable {
 
 	static boolean isNationalized(int jdbcTypeCode) {
 		switch ( jdbcTypeCode ) {
-			case SqlTypes.NCHAR:
-			case SqlTypes.NVARCHAR:
-			case SqlTypes.LONGNVARCHAR:
-			case SqlTypes.LONG32NVARCHAR:
-			case SqlTypes.NCLOB: {
+			case NCHAR:
+			case NVARCHAR:
+			case LONGNVARCHAR:
+			case LONG32NVARCHAR:
+			case NCLOB: {
 				return true;
 			}
 		}
@@ -254,7 +256,7 @@ public interface JdbcType extends Serializable {
 	}
 
 	default boolean isInterval() {
-		return SqlTypes.isIntervalType( getDdlTypeCode() );
+		return isIntervalType( getDdlTypeCode() );
 	}
 
 	default CastType getCastType() {
@@ -263,40 +265,42 @@ public interface JdbcType extends Serializable {
 
 	static CastType getCastType(int typeCode) {
 		switch ( typeCode ) {
-			case Types.INTEGER:
-			case Types.TINYINT:
-			case Types.SMALLINT:
+			case INTEGER:
+			case TINYINT:
+			case SMALLINT:
 				return CastType.INTEGER;
-			case Types.BIGINT:
+			case BIGINT:
 				return CastType.LONG;
-			case Types.FLOAT:
-			case Types.REAL:
+			case FLOAT:
+			case REAL:
 				return CastType.FLOAT;
-			case Types.DOUBLE:
+			case DOUBLE:
 				return CastType.DOUBLE;
-			case Types.CHAR:
-			case Types.NCHAR:
-			case Types.VARCHAR:
-			case Types.NVARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.LONGNVARCHAR:
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
 				return CastType.STRING;
-			case Types.CLOB:
+			case CLOB:
 				return CastType.CLOB;
-			case Types.BOOLEAN:
+			case BOOLEAN:
 				return CastType.BOOLEAN;
-			case Types.DECIMAL:
-			case Types.NUMERIC:
+			case DECIMAL:
+			case NUMERIC:
 				return CastType.FIXED;
-			case Types.DATE:
+			case DATE:
 				return CastType.DATE;
-			case Types.TIME:
+			case TIME:
+			case TIME_UTC:
+			case TIME_WITH_TIMEZONE:
 				return CastType.TIME;
-			case Types.TIMESTAMP:
+			case TIMESTAMP:
 				return CastType.TIMESTAMP;
-			case Types.TIMESTAMP_WITH_TIMEZONE:
+			case TIMESTAMP_WITH_TIMEZONE:
 				return CastType.OFFSET_TIMESTAMP;
-			case Types.NULL:
+			case NULL:
 				return CastType.NULL;
 			default:
 				return CastType.OTHER;

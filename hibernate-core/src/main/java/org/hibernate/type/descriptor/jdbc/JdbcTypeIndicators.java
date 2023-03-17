@@ -194,6 +194,28 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * @return the SQL column type used for storing times under the
+	 *         given {@linkplain  TimeZoneStorageStrategy storage strategy}
+	 *
+	 * @see SqlTypes#TIME_WITH_TIMEZONE
+	 * @see SqlTypes#TIME
+	 * @see SqlTypes#TIME_UTC
+	 */
+	static int getZonedTimeSqlType(TimeZoneStorageStrategy storageStrategy) {
+		switch ( storageStrategy ) {
+			case NATIVE:
+				return SqlTypes.TIME_WITH_TIMEZONE;
+			case COLUMN:
+			case NORMALIZE:
+				return SqlTypes.TIME;
+			case NORMALIZE_UTC:
+				return SqlTypes.TIME_UTC;
+			default:
+				throw new AssertionFailure( "unknown time zone storage strategy" );
+		}
+	}
+
+	/**
 	 * @return the SQL column type used for storing datetimes under the
 	 *         given {@linkplain  TimeZoneStorageStrategy storage strategy}
 	 *
@@ -221,6 +243,18 @@ public interface JdbcTypeIndicators {
 	 *         default {@linkplain  TimeZoneStorageStrategy storage strategy}
 	 *
 	 * @see SqlTypes#TIME_WITH_TIMEZONE
+	 * @see SqlTypes#TIME
+	 * @see SqlTypes#TIME_UTC
+	 */
+	default int getDefaultZonedTimeSqlType() {
+		return getZonedTimeSqlType( getDefaultTimeZoneStorageStrategy() );
+	}
+
+	/**
+	 * @return the SQL column type used for storing datetimes under the
+	 *         default {@linkplain  TimeZoneStorageStrategy storage strategy}
+	 *
+	 * @see SqlTypes#TIME_WITH_TIMEZONE
 	 * @see SqlTypes#TIMESTAMP
 	 * @see SqlTypes#TIMESTAMP_UTC
 	 */
@@ -228,7 +262,7 @@ public interface JdbcTypeIndicators {
 		final TemporalType temporalPrecision = getTemporalPrecision();
 		switch ( temporalPrecision == null ? TemporalType.TIMESTAMP : temporalPrecision ) {
 			case TIME:
-				return Types.TIME;
+				return getZonedTimeSqlType( getDefaultTimeZoneStorageStrategy() );
 			case DATE:
 				return Types.DATE;
 			case TIMESTAMP:

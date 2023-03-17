@@ -164,6 +164,7 @@ public class JsonHelper {
 					break;
 				case SqlTypes.TIME:
 				case SqlTypes.TIME_WITH_TIMEZONE:
+				case SqlTypes.TIME_UTC:
 					appender.append( '"' );
 					JdbcTimeJavaType.INSTANCE.appendEncodedString(
 							appender,
@@ -798,6 +799,7 @@ public class JsonHelper {
 				);
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
+			case SqlTypes.TIME_UTC:
 				return jdbcMapping.getJdbcJavaType().wrap(
 						JdbcTimeJavaType.INSTANCE.fromEncodedString(
 								string,

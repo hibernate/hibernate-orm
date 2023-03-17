@@ -3,6 +3,72 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.0.CR4 (March 17, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32142
+
+** Bug
+    * [HHH-16322] - Merge of entities having a collection with orphanRemoval true fails when bytecode enhancement is enabled
+    * [HHH-16310] - Fix regressions in documentation and support for MultiTenantConnectionProvider
+    * [HHH-16297] - Removing an element from a collection of elements removes the whole collection
+    * [HHH-16280] - Fix Jackson XML mapper support for Oracle Array data types
+    * [HHH-16279] - Hibernate ORM with hibernate.hbm2ddl.import_files_sql_extractor = multi-line fails to process import.sql containing only comments
+    * [HHH-16263] - Unable to Join Tables with Superclasses - JoinColumn Occours Out of Order
+    * [HHH-16258] - NPE with SubselectFetch and inheritance
+    * [HHH-16252] - SQL syntax error on drop constraint
+    * [HHH-16247] - Criteria Query with Object-Typed Embedded Parameter throws AssertionError
+    * [HHH-16240] - ClassCastException when inserting an Entity with @CreationTimestamp in a StatelessSession
+    * [HHH-16238] - Add support for multiple generic embeddable properties in MappedSuperclass
+    * [HHH-16237] - versionUpdateGroup is null for Enity extending another Entity when only ElementCollection is updated.
+    * [HHH-16234] -  NPE when enabling DEBUG on orm.results.loading in Hibernate 6.1.7
+    * [HHH-16215] - Composite primary key @IdClass attribute mapping is borrowed from the first OneToMany backref and cannot be set
+    * [HHH-16213] - Right join wrongly added to subquery when using FetchMode.SUBSELECT and is null predicate
+    * [HHH-16211] - Error with like predicate's escape literal and converted char array property
+    * [HHH-16210] - Join fetching nested @OneToMany collections causes result multiplication
+    * [HHH-16191] - Since Hibernate ORM 6.x the FetchType.EAGER called from native queries raises error
+    * [HHH-16189] - Hibernate 6, wrong order by and group by generated
+    * [HHH-16188] - Exception when find by field of generic @EmbeddedId with @MappedSuperclass
+    * [HHH-16180] - AssertionError when using using native query on table with InheritanceStrategy.JOINED
+    * [HHH-16179] - Session.find should not apply filters
+    * [HHH-16166] - ClassCastException, mixing mapping types for same field name on different entities
+    * [HHH-16126] - TransientObjectException when loading versioned entity from second-level cache
+    * [HHH-16019] - @Where not consistently applied across association boundaries
+    * [HHH-16015] - Merge operation throws a NPE: Cannot invoke org.hibernate.property.access.spi.Setter.set(Object, Object) when using CompositeUserType
+    * [HHH-15972] - entitygraph load error when Inheritance JOINED is used in 6.1.6
+    * [HHH-15885] - Hibernate 6 OrderBy in the wrong orders
+    * [HHH-15802] - SubQuery with "in" results in java.lang.ClassCastException: class org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl cannot be cast to class org.hibernate.metamodel.mapping.EntityValuedModelPart
+    * [HHH-15766] - UNION query doesn't preserve the original parenthesis, and so it fails on PostgreSQL
+    * [HHH-15664] - Documentation states that native database array types are unsupported
+    * [HHH-15108] - AggregateClassLoader.findClass() drops all exceptions
+    * [HHH-13627] - Updated items do not get invalidated when cachemode is set to CacheMode.GET
+
+** Deprecation
+    * [HHH-16264] - Deprecate `hibernate.use_entity_where_clause_for_collections`
+
+** Improvement
+    * [HHH-16323] - Ensure new service ParameterMarkerStrategy can be looked up efficiently
+    * [HHH-16320] - Support H2's native json DDL type using custom 'format json' write expressions
+    * [HHH-16313] - Throw an appropriate error when a mappedBy property references the wrong entity type
+    * [HHH-16311] - Migrate away from UserType for enum handling
+    * [HHH-16307] - Finish Gradle plugin DSL
+    * [HHH-16290] - Mark `o.h.persister.entity` and `o.h.persister.collection` as internal
+    * [HHH-16284] - Rename JdbcParameterRender to ParameterMarkerStrategy
+    * [HHH-16276] - More readable exception for non-compliant @OrderBy expressions
+    * [HHH-16273] - Support for Dialect native ParameterMarkerStrategy
+    * [HHH-16265] - Remove `@Where#applyInToManyFetch`
+    * [HHH-16257] - Add `@JavaServiceLoadable` to document Services or strategies that are loadable as Java services
+    * [HHH-16256] - JdbcParameterRenderer to have an impact on write operations
+    * [HHH-16198] - Fix splitting of SqlAstCreationState
+
+** New Feature
+    * [HHH-16282] - Make it possible for Hibernate Reactive to plug in some custom initializers
+    * [HHH-16260] - JdbcParameterRenderer not called with dynamic filters
+
+** Task
+    * [HHH-16330] - Various micro upgrades of Jakarta EE10 APIs and references used by integration tests
+
+
 Changes in 6.2.0.CR3 (March 01, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

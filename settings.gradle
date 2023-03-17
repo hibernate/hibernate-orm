@@ -84,7 +84,7 @@ dependencyResolutionManagement {
 
             alias( "jackson" ).to ( "com.fasterxml.jackson.core", "jackson-databind" ).version( "2.14.1" )
             alias( "jacksonXml" ).to ( "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).version( "2.14.1" )
-            alias( "validator" ).to( "org.hibernate.validator", "hibernate-validator" ).version( "7.0.4.Final" )
+            alias( "validator" ).to( "org.hibernate.validator", "hibernate-validator" ).version( "8.0.0.Final" )
 
             alias( "ant" ).to( "org.apache.ant", "ant" ).version( "1.8.2" )
 

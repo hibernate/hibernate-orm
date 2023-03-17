@@ -87,7 +87,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public JdbcLiteralFormatter getJdbcLiteralFormatter() {
+	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
 	}
 

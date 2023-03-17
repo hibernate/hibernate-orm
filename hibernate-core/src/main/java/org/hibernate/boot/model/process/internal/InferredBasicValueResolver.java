@@ -374,8 +374,8 @@ public class InferredBasicValueResolver {
 			BasicJavaType<N> explicitJavaType,
 			JdbcType explicitJdbcType,
 			MetadataBuildingContext context) {
-		final JavaType<N> relationalJavaType = ordinalJavaType( explicitJavaType, context );
 		final JdbcType jdbcType = ordinalJdbcType( explicitJdbcType, enumJavaType, context );
+		final JavaType<N> relationalJavaType = ordinalJavaType( explicitJavaType, jdbcType, context );
 
 		return new EnumeratedValueResolution<>(
 				jdbcType,
@@ -395,6 +395,7 @@ public class InferredBasicValueResolver {
 
 	private static <N extends Number> JavaType<N> ordinalJavaType(
 			JavaType<N> explicitJavaType,
+			JdbcType jdbcType,
 			MetadataBuildingContext context) {
 		if ( explicitJavaType != null ) {
 			if ( !Integer.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
@@ -407,7 +408,11 @@ public class InferredBasicValueResolver {
 			return explicitJavaType;
 		}
 		else {
-			return context.getMetadataCollector().getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Integer.class );
+			return jdbcType.getJdbcRecommendedJavaTypeMapping(
+					null,
+					null,
+					context.getMetadataCollector().getTypeConfiguration()
+			);
 		}
 	}
 

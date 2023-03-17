@@ -53,7 +53,7 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -106,10 +106,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			case Types.DECIMAL:
 				if ( precision == 19 && scale == 0 ) {
 					return jdbcTypeRegistry.getDescriptor( Types.BIGINT );
-				}
-			case Types.TINYINT:
-				if ( jtdsDriver ) {
-					return jdbcTypeRegistry.getDescriptor( Types.SMALLINT );
 				}
 		}
 		return super.resolveSqlTypeDescriptor(
@@ -173,7 +169,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		if ( jtdsDriver ) {
-			jdbcTypeRegistry.addDescriptor( Types.TINYINT, SmallIntJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
 			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );

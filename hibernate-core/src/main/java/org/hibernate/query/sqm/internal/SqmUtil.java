@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -292,8 +292,8 @@ public class SqmUtil {
 					if ( domainParamBinding.getType() instanceof JdbcMapping ) {
 						jdbcMapping = (JdbcMapping) domainParamBinding.getType();
 					}
-					else if ( domainParamBinding.getBindType() instanceof BasicValuedModelPart ) {
-						jdbcMapping = ( (BasicValuedModelPart) domainParamBinding.getType() ).getJdbcMapping();
+					else if ( domainParamBinding.getBindType() instanceof BasicValuedMapping ) {
+						jdbcMapping = ( (BasicValuedMapping) domainParamBinding.getType() ).getJdbcMapping();
 					}
 					else {
 						jdbcMapping = null;

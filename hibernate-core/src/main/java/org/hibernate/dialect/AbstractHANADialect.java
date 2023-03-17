@@ -113,7 +113,7 @@ import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -1044,7 +1044,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( Types.NCLOB, this.nClobTypeDescriptor );
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, this.blobTypeDescriptor );
 		// tinyint is unsigned on HANA
-		jdbcTypeRegistry.addDescriptor( Types.TINYINT, SmallIntJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
 		if ( isUseUnicodeStringTypes() ) {
 			jdbcTypeRegistry.addDescriptor( Types.VARCHAR, NVarcharJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( Types.CHAR, NCharJdbcType.INSTANCE );

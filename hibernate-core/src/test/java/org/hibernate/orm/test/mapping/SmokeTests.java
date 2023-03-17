@@ -8,17 +8,6 @@ package org.hibernate.orm.test.mapping;
 
 import java.sql.Statement;
 import java.sql.Types;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -42,12 +31,25 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isOneOf;
 
 /**
  * @author Steve Ebersole
@@ -98,7 +100,10 @@ public class SmokeTests {
 					valueConverter.getDomainJavaType().getJavaTypeClass(),
 					equalTo( genderAttrMapping.getJavaType().getJavaTypeClass() )
 			);
-			assertThat( valueConverter.getRelationalJavaType().getJavaTypeClass(), equalTo( Integer.class ) );
+			assertThat(
+					valueConverter.getRelationalJavaType().getJavaTypeClass(),
+					isOneOf( Byte.class, Short.class, Integer.class )
+			);
 
 			assertThat(
 					jdbcTypeRegistry.getDescriptor( valueConverter.getJdbcTypeCode() ),

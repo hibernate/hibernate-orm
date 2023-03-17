@@ -91,7 +91,7 @@ dependencyResolutionManagement {
             alias( "geolatte" ).to( "org.geolatte", "geolatte-geom" ).versionRef( "geolatte" )
 
             alias( "jcache" ).to( "javax.cache", "cache-api" ).version( "1.0.0" )
-            alias( "ehcache3" ).to( "org.ehcache:ehcache:3.10.0-alpha0" )
+            alias( "ehcache3" ).to( "org.ehcache:ehcache:3.10.8" )
 
             alias( "agroal" ).to( "io.agroal", "agroal-api" ).versionRef( "agroal" )
             alias( "agroalPool" ).to( "io.agroal", "agroal-pool" ).versionRef( "agroal" )

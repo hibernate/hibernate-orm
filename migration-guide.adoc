@@ -108,7 +108,11 @@ Now, columns of type `number` with scale 0 are interpreted as `int` or `bigint` 
 [[database-versions]]
 == Removal of support for legacy database versions
 
-This version introduces the concept of minimum supported database version for most of the database dialects that Hibernate supports. This implies that the legacy code for versions that are no longer supported by their vendors, has been removed from the hibernate-core module. It is, however, still available in the hibernate-community-dialects module.
+This version introduces the concept of minimum supported database version for most of the database dialects that Hibernate supports.
+This implies that the legacy code for versions that are no longer supported by their vendors, has been removed from the hibernate-core module.
+It is, however, still available in the hibernate-community-dialects module, just under a different package,
+namely `org.hibernate.community.dialect` instead of `org.hibernate.dialect`.
+Note that this also includes version specific dialects like `PostgreSQL81Dialect`, `MariaDB102Dialect` etc.
 
 The minimum supported dialect versions are as follows:
 

@@ -55,7 +55,7 @@ public class EnumeratedValueResolution<E extends Enum<E>,R> implements BasicValu
 		final String externalizableName = createName( valueConverter );
 		this.jdbcMapping = new ConvertedBasicTypeImpl<>( externalizableName, jdbcType, valueConverter );
 
-		context.getMetadataCollector().registerEnumMapping( jdbcMapping );
+		// todo (enum) : register database objects if needed
 	}
 
 	private String createName(EnumValueConverter<E, R> valueConverter) {

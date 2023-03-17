@@ -49,7 +49,7 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.ConvertedBasicType;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
@@ -582,12 +582,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			}
 		}
 
-		final Set<ConvertedBasicType<? extends Enum<?>>> enumMappings = bootMetamodel.getEnumMappings();
-		if ( enumMappings != null ) {
-			enumMappings.forEach( (mapping) -> {
-				final Class<? extends Enum<?>> enumJavaClass = mapping.getValueConverter()
-						.getDomainJavaType()
-						.getJavaTypeClass();
+		typeConfiguration.getJavaTypeRegistry().forEachDescriptor( (descriptor) -> {
+			if ( descriptor instanceof EnumJavaType ) {
+				final EnumJavaType<? extends Enum<?>> enumJavaType = (EnumJavaType<? extends Enum<?>>) descriptor;
+				final Class<? extends Enum<?>> enumJavaClass = enumJavaType.getJavaTypeClass();
 				final Enum<?>[] enumConstants = enumJavaClass.getEnumConstants();
 				for ( Enum<?> enumConstant : enumConstants ) {
 					allowedEnumLiteralTexts
@@ -599,8 +597,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 							.computeIfAbsent( simpleQualifiedName, (s) -> new HashMap<>() )
 							.put( enumJavaClass, enumConstant );
 				}
-			} );
-		}
+			}
+		} );
 
 		applyNamedEntityGraphs( namedEntityGraphDefinitions );
 	}

@@ -33,7 +33,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -254,10 +253,5 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	@Override
 	public Set<String> getContributors() {
 		return delegate.getContributors();
-	}
-
-	@Override
-	public Set<ConvertedBasicType<? extends Enum<?>>> getEnumMappings() {
-		return delegate().getEnumMappings();
 	}
 }

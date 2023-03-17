@@ -70,7 +70,6 @@ import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
@@ -104,7 +103,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
-	private final Set<ConvertedBasicType<? extends Enum<?>>> enumMappings;
 	private final Database database;
 
 	public MetadataImpl(
@@ -125,7 +123,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
 			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
-			Set<ConvertedBasicType<? extends Enum<?>>> enumMappings,
 			Database database,
 			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
@@ -145,7 +142,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.sqlResultSetMappingMap = sqlResultSetMappingMap;
 		this.namedEntityGraphMap = namedEntityGraphMap;
 		this.sqlFunctionMap = sqlFunctionMap;
-		this.enumMappings = enumMappings;
 		this.database = database;
 		this.bootstrapContext = bootstrapContext;
 	}
@@ -324,11 +320,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 		return sqlFunctionMap;
-	}
-
-	@Override
-	public Set<ConvertedBasicType<? extends Enum<?>>> getEnumMappings() {
-		return enumMappings;
 	}
 
 	@Override

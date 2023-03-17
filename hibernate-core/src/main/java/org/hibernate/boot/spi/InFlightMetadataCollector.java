@@ -49,7 +49,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.CompositeUserType;
@@ -339,8 +338,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation);
 	void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor);
 	CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification);
-
-	<E extends Enum<E>> void registerEnumMapping(ConvertedBasicType<E> jdbcMapping);
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

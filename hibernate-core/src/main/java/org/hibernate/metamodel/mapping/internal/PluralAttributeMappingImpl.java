@@ -467,26 +467,21 @@ public class PluralAttributeMappingImpl
 	private Fetch createSelectEagerCollectionFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
-			DomainResultCreationState creationState, SqlAstCreationState sqlAstCreationState) {
+			DomainResultCreationState creationState,
+			SqlAstCreationState sqlAstCreationState) {
+		final DomainResult<?> collectionKeyDomainResult;
 		if ( referencedPropertyName != null ) {
-			resolveCollectionTableGroup(
-					fetchParent,
-					fetchablePath,
-					creationState,
-					sqlAstCreationState
-			);
-
-			final DomainResult<?> collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
+			collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
 					fetchablePath,
 					sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
 					fetchParent,
 					creationState
 			);
-
-			return new SelectEagerCollectionFetch( fetchablePath, this, collectionKeyDomainResult, fetchParent );
-
 		}
-		return new SelectEagerCollectionFetch( fetchablePath, this, null, fetchParent );
+		else {
+			collectionKeyDomainResult = null;
+		}
+		return new SelectEagerCollectionFetch( fetchablePath, this, collectionKeyDomainResult, fetchParent );
 	}
 
 	private TableGroup resolveCollectionTableGroup(

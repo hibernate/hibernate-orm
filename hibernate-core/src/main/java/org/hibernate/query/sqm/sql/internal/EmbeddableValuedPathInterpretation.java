@@ -13,12 +13,16 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -39,7 +43,8 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter converter,
 			SemanticQueryWalker<?> sqmWalker,
-			boolean jpaQueryComplianceEnabled) {
+			boolean jpaQueryComplianceEnabled,
+			Clause currentClause) {
 		TableGroup tableGroup = converter.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
 
 		EntityMappingType treatTarget = null;
@@ -61,10 +66,24 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 			}
 		}
 
-		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) tableGroup.getModelPart().findSubPart(
-				sqmPath.getReferencedPathSource().getPathName(),
-				treatTarget
-		);
+		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		final EmbeddableValuedModelPart mapping;
+		// In the select, group by, order by and having clause we have to make sure we render the column of the target table,
+		// never the FK column, if the lhs is a SqmFrom i.e. something explicitly queried/joined.
+		if ( ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
+				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
+				&& modelPart.getPartMappingType() instanceof ManagedMappingType ) {
+			mapping = (EmbeddableValuedModelPart) ( (ManagedMappingType) modelPart.getPartMappingType() ).findSubPart(
+					sqmPath.getReferencedPathSource().getPathName(),
+					treatTarget
+			);
+		}
+		else {
+			mapping = (EmbeddableValuedModelPart) modelPart.findSubPart(
+					sqmPath.getReferencedPathSource().getPathName(),
+					treatTarget
+			);
+		}
 
 		return new EmbeddableValuedPathInterpretation<>(
 				mapping.toSqlExpression(

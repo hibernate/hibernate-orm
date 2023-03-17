@@ -1049,38 +1049,32 @@ include::{extrasdir}/collections-map-bidirectional-example.sql[]
 When discussing arrays, it is important to understand the distinction between SQL array types and Java arrays that are mapped as part of the application's domain model.
 
 Not all databases implement the SQL-99 ARRAY type and, for this reason,
-Hibernate doesn't support native database array types.
+the SQL type used by Hibernate for arrays varies depending on the database support.
 
-Hibernate does support the mapping of arrays in the Java domain model - conceptually the same as mapping a List.
-However, it is important to realize that it is impossible for Hibernate to offer lazy-loading for arrays of entities and, for this reason,
-it is strongly recommended to map a "collection" of entities using a List rather than an array.
+NOTE: It is impossible for Hibernate to offer lazy-loading for arrays of entities and, for this reason,
+it is strongly recommended to map a "collection" of entities using a List or Set rather than an array.
 
-[[collections-array-binary]]
-==== Arrays as binary
+[[collections-array-as-basic]]
+==== [[collections-array-binary]] Arrays as basic value type
 
-By default, Hibernate will choose a BINARY type, as supported by the current `Dialect`.
+By default, Hibernate will choose a type for the array based on `Dialect.getPreferredSqlTypeCodeForArray()`.
+Prior to Hibernate 6.1, the default was to always use the BINARY type, as supported by the current `Dialect`,
+but now, Hibernate will leverage the native array data types if possible.
 
-[[collections-array-binary-example]]
-.Arrays stored as binary
+[[collections-array-binary-example]] To force the BINARY type, the persistent attribute has to be annotated with `@JdbcTypeCode(SqlTypes.VARBINARY)`.
+
+[[collections-array-as-basic-example]]
+.Arrays stored as SQL array
 ====
 [source,java]
 ----
-include::{example-dir-collection-doc}/ArrayTest.java[tags=collections-array-binary-example,indent=0]
+include::{example-dir-collection-doc}/ArrayTest.java[tags=collections-array-as-basic-example,indent=0]
 ----
 
 [source,sql]
 ----
-include::{extrasdir}/collections-array-binary-example.sql[]
+include::{extrasdir}/collections-array-as-basic-example.sql[]
 ----
-====
-
-[NOTE]
-====
-If you want to map arrays such as `String[]` or `int[]` to database-specific array types like PostgreSQL `integer[]` or `text[]`,
-you need to write a custom Hibernate Type.
-
-Check out https://vladmihalcea.com/how-to-map-java-and-sql-arrays-with-jpa-and-hibernate/[this article] for an example of how to write
-such a custom Hibernate Type.
 ====
 
 [[collections-as-basic]]
@@ -1090,10 +1084,24 @@ Notice how all the previous examples explicitly mark the collection attribute as
 `@OneToMany` or `@ManyToMany`.
 
 Attributes of collection or array type without any of those annotations are considered basic types and by
-default mapped to the database as VARBINARY.
+default mapped like basic arrays as depicted in the <<collections-array-as-basic,previous section>>.
 
-Such mappings are not normal and beyond the scope of this documentation.  The best way to map such a situation
-is using an <<basic-jpa-convert,AttributeConverter>>.
+[[collections-as-basic-example]]
+.Collections stored as SQL array
+====
+[source,java]
+----
+include::{example-dir-collection-doc}/CollectionTest.java[tags=collections-as-basic-example,indent=0]
+----
+
+[source,sql]
+----
+include::{extrasdir}/collections-array-as-basic-example.sql[]
+----
+====
+
+Prior to Hibernate 6.1, it was common to use an <<basic-jpa-convert,AttributeConverter>> to map the elements
+into e.g. a comma separated list which is still a viable option. Just note that it is not required anymore.
 
 [[ex-collections-comma-delimited-list]]
 .Comma delimited collection

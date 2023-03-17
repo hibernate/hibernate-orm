@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableSt
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -1079,7 +1080,10 @@ public interface AvailableSettings {
 	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
-	 * Specifies a {@linkplain java.util.TimeZone time zone} that should be passed to
+	 * Specifies the {@linkplain java.util.TimeZone time zone} to use in the JDBC driver,
+	 * which is supposed to match the database timezone.
+	 * <p>
+	 * This is the timezone what will be passed to
 	 * {@link java.sql.PreparedStatement#setTimestamp(int, java.sql.Timestamp, java.util.Calendar)}
 	 * {@link java.sql.PreparedStatement#setTime(int, java.sql.Time, java.util.Calendar)},
 	 * {@link java.sql.ResultSet#getTimestamp(int, Calendar)}, and
@@ -2789,13 +2793,15 @@ public interface AvailableSettings {
 	String TIMEZONE_DEFAULT_STORAGE = "hibernate.timezone.default_storage";
 
 	/**
-	 * Controls whether to use JDBC parameter markers (`?`) or dialect native markers.
+	 * Controls whether to use JDBC markers (`?`) or dialect native markers for parameters
+	 * within {@linkplain java.sql.PreparedStatement preparable} SQL statements.
 	 *
-	 * @implNote By default ({@code true}), dialect native markers are used, if any; disable
-	 * ({@code false}) to use the standard JDBC parameter markers (`?`) instead
+	 * @implNote {@code False} by default, indicating standard JDBC parameter markers (`?`)
+	 * are used.  Set to {@code true} to use the Dialect's native markers, if any.  For
+	 * Dialects without native markers, the standard JDBC strategy is used.
 	 *
-	 * @see org.hibernate.sql.ast.spi.JdbcParameterRenderer
-	 * @see org.hibernate.dialect.Dialect#getNativeParameterRenderer()
+	 * @see ParameterMarkerStrategy
+	 * @see org.hibernate.dialect.Dialect#getNativeParameterMarkerStrategy()
 	 *
 	 * @since 6.2
 	 */

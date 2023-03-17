@@ -183,14 +183,14 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 		}
 	}
 
-	private EntityInitializer getParentEntityInitializer(FetchParentAccess parentAccess) {
+	protected EntityInitializer getParentEntityInitializer(FetchParentAccess parentAccess) {
 		if ( parentAccess != null ) {
 			return parentAccess.findFirstEntityInitializer();
 		}
 		return null;
 	}
 
-	private static boolean isEnhancedForLazyLoading(EntityInitializer parentEntityIntialiazer) {
+	protected static boolean isEnhancedForLazyLoading(EntityInitializer parentEntityIntialiazer) {
 		return parentEntityIntialiazer != null && parentEntityIntialiazer.getEntityDescriptor()
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
@@ -217,6 +217,10 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 	@Override
 	public Object getEntityInstance() {
 		return entityInstance;
+	}
+
+	protected void setEntityInstance(Object entityInstance) {
+		this.entityInstance = entityInstance;
 	}
 
 	@Override
@@ -259,4 +263,19 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 		return "EntityDelayedFetchInitializer(" + LoggingHelper.toLoggableString( navigablePath ) + ")";
 	}
 
+	protected Object getIdentifier() {
+		return identifier;
+	}
+
+	protected void setIdentifier(Object identifier) {
+		this.identifier = identifier;
+	}
+
+	protected boolean isSelectByUniqueKey() {
+		return selectByUniqueKey;
+	}
+
+	protected DomainResultAssembler<?> getIdentifierAssembler() {
+		return identifierAssembler;
+	}
 }

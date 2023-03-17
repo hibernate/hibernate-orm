@@ -7,6 +7,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.service.JavaServiceLoadable;
 
 /**
  * An extension point for integrators that wish to hook into the process of how a SessionFactory
@@ -15,6 +16,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
  *
  * @author Steve Ebersole
  */
+@JavaServiceLoadable
 public interface SessionFactoryBuilderFactory {
 	/**
 	 * The contract method. Return the {@link SessionFactoryBuilder}. May return {@code null}

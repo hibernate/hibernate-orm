@@ -89,6 +89,10 @@ import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.query.sqm.sql.internal.DiscriminatorPathInterpretation;
+import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
+import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -147,7 +151,6 @@ import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation;
-import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
@@ -389,8 +392,6 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
@@ -885,7 +886,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.get( versionMapping.getPartName() ),
 				this,
 				this,
-				jpaQueryComplianceEnabled ).getColumnReferences();
+				jpaQueryComplianceEnabled,
+				Clause.SET
+		).getColumnReferences();
 		assert targetColumnReferences.size() == 1;
 
 		final ColumnReference versionColumn = targetColumnReferences.get( 0 );
@@ -1330,7 +1333,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							.get( versionAttributeName ),
 					this,
 					this,
-					jpaQueryComplianceEnabled
+					jpaQueryComplianceEnabled,
+					getCurrentClauseStack().getCurrent()
 			);
 			final List<ColumnReference> targetColumnReferences = versionPath.getColumnReferences();
 			assert targetColumnReferences.size() == 1;
@@ -3959,7 +3963,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						sqmPath,
 						this,
 						this,
-						jpaQueryComplianceEnabled
+						jpaQueryComplianceEnabled,
+						getCurrentClauseStack().getCurrent()
 				)
 		);
 		Expression result = path;
@@ -4057,7 +4062,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return withTreatRestriction(
 				prepareReusablePath(
 						sqmPath,
-						() -> EmbeddableValuedPathInterpretation.from( sqmPath, this, this, jpaQueryComplianceEnabled )
+						() -> EmbeddableValuedPathInterpretation.from(
+								sqmPath,
+								this,
+								this,
+								jpaQueryComplianceEnabled,
+								getCurrentClauseStack().getCurrent()
+						)
 				),
 				sqmPath
 		);
@@ -4091,7 +4102,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Expression visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath sqmPath) {
+	public Expression visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath<?> sqmPath) {
 		return withTreatRestriction(
 				prepareReusablePath(
 						sqmPath,
@@ -4149,14 +4160,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> sqmPath) {
+	public Object visitDiscriminatorPath(DiscriminatorSqmPath sqmPath) {
 		return prepareReusablePath(
 				sqmPath,
 				() -> {
-					if ( sqmPath instanceof DiscriminatorSqmPath ) {
-						registerTypeUsage( (DiscriminatorSqmPath) sqmPath );
-					}
-					return sqmPath.interpret( this, this, jpaQueryComplianceEnabled );
+					registerTypeUsage( sqmPath );
+					return DiscriminatorPathInterpretation.from( sqmPath, this );
 				}
 		);
 	}
@@ -4844,7 +4853,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// as that would register a type usage for the table group that we don't want here
 		final DiscriminatorSqmPath discriminatorSqmPath = (DiscriminatorSqmPath) lhs.type();
 		registerTypeUsage( discriminatorSqmPath );
-		final Expression typeExpression = discriminatorSqmPath.interpret( this, this, jpaQueryComplianceEnabled );
+		final Expression typeExpression = DiscriminatorPathInterpretation.from( discriminatorSqmPath, this );
 		if ( subclassEntityNames.size() == 1 ) {
 			return new ComparisonPredicate(
 					typeExpression,
@@ -6469,7 +6478,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 
 	@Override
-	public Expression visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {
+	public Expression visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue<?> expression) {
 		final BasicType<?> domainType = expression.getDomainType();
 		return new QueryLiteral<>(
 				domainType.convertToRelationalValue( expression.getEntityValue().getJavaType() ),
@@ -7283,7 +7292,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					fetchable,
 					fetchTiming,
 					joined,
-					explicitFetch,
 					alias
 			);
 
@@ -7335,6 +7343,55 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
+		if ( fetchParent instanceof EagerCollectionFetch ) {
+			final EagerCollectionFetch collectionFetch = (EagerCollectionFetch) fetchParent;
+			final PluralAttributeMapping pluralAttributeMapping = collectionFetch.getFetchedMapping();
+			final NavigablePath fetchablePath = collectionFetch.getNavigablePath();
+
+			final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
+
+			// Base restrictions have already been applied if this is an explicit fetch
+			if ( getFromClauseIndex().findFetchedJoinByPath( fetchablePath ) == null ) {
+				final Restrictable restrictable = pluralAttributeMapping
+						.getCollectionDescriptor()
+						.getCollectionType()
+						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
+				restrictable.applyBaseRestrictions(
+						(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
+						tableGroup,
+						true,
+						getLoadQueryInfluencers().getEnabledFilters(),
+						null,
+						this
+				);
+			}
+
+			pluralAttributeMapping.applyBaseManyToManyRestrictions(
+					(predicate) -> {
+						final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( collectionFetch.getFetchParent().getNavigablePath() );
+						TableGroupJoin pluralTableGroupJoin = null;
+						for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+							if ( nestedTableGroupJoin.getNavigablePath() == fetchablePath ) {
+								pluralTableGroupJoin = nestedTableGroupJoin;
+								break;
+							}
+						}
+
+						assert pluralTableGroupJoin != null;
+						pluralTableGroupJoin.applyPredicate( predicate );
+					},
+					tableGroup,
+					true,
+					getLoadQueryInfluencers().getEnabledFilters(),
+					null,
+					this
+			);
+
+			if ( currentQuerySpec().isRoot() ) {
+				assert tableGroup.getModelPart() == pluralAttributeMapping;
+				applyOrdering( tableGroup, pluralAttributeMapping );
+			}
+		}
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		final int keySize = referencedMappingContainer.getNumberOfKeyFetchables();
 		final int size = referencedMappingContainer.getNumberOfFetchables();
@@ -7381,7 +7438,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			Fetchable fetchable,
 			FetchTiming fetchTiming,
 			boolean joined,
-			boolean explicitFetch,
 			String alias) {
 		// fetch has access to its parent in addition to the parent having its fetches.
 		//
@@ -7390,7 +7446,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// "initializing" state as part of AfterLoadAction
 
 		try {
-			final Fetch fetch = fetchParent.generateFetchableFetch(
+			return fetchParent.generateFetchableFetch(
 					fetchable,
 					fetchablePath,
 					fetchTiming,
@@ -7398,57 +7454,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					alias,
 					this
 			);
-
-			if ( fetchable instanceof PluralAttributeMapping
-					&& fetch.getTiming() == FetchTiming.IMMEDIATE
-					&& joined ) {
-				final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
-				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-
-				// Base restrictions have already been applied if this is an explicit fetch
-				if ( !explicitFetch ) {
-					final Restrictable restrictable = pluralAttributeMapping
-							.getCollectionDescriptor()
-							.getCollectionType()
-							.getAssociatedJoinable( getCreationContext().getSessionFactory() );
-					restrictable.applyBaseRestrictions(
-							(predicate) -> addCollectionFilterPredicate( tableGroup.getNavigablePath(), predicate ),
-							tableGroup,
-							true,
-							getLoadQueryInfluencers().getEnabledFilters(),
-							null,
-							this
-					);
-				}
-
-				pluralAttributeMapping.applyBaseManyToManyRestrictions(
-						(predicate) -> {
-							final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
-							TableGroupJoin pluralTableGroupJoin = null;
-							for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-								if ( nestedTableGroupJoin.getNavigablePath() == fetchablePath ) {
-									pluralTableGroupJoin = nestedTableGroupJoin;
-									break;
-								}
-							}
-
-							assert pluralTableGroupJoin != null;
-							pluralTableGroupJoin.applyPredicate( predicate );
-						},
-						tableGroup,
-						true,
-						getLoadQueryInfluencers().getEnabledFilters(),
-						null,
-						this
-				);
-
-				if ( currentQuerySpec().isRoot() ) {
-					assert tableGroup.getModelPart() == pluralAttributeMapping;
-					applyOrdering( tableGroup, pluralAttributeMapping );
-				}
-			}
-
-			return fetch;
 		}
 		catch (RuntimeException e) {
 			throw new HibernateException(

@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.transaction.jta.platform.spi;
 
+import org.hibernate.service.JavaServiceLoadable;
+
 /**
  * A {@link java.util.ServiceLoader}-style provider of {@link JtaPlatform}
  * instances. Used when an explicit {@code JtaPlatform} is not provided.
@@ -15,6 +17,7 @@ package org.hibernate.engine.transaction.jta.platform.spi;
  *
  * @author Steve Ebersole
  */
+@JavaServiceLoadable
 public interface JtaPlatformProvider {
 	/**
 	 * Retrieve the JtaPlatform provided by this environment.

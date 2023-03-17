@@ -718,7 +718,7 @@ public class MappingModelCreationHelper {
 			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
 		}
 		else {
-			fkTargetPart = declaringType.findAttributeMapping( lhsPropertyName );
+			fkTargetPart = declaringType.findContainingEntityMapping().findAttributeMapping( lhsPropertyName );
 		}
 
 		if ( keyType instanceof BasicType ) {
@@ -1337,6 +1337,7 @@ public class MappingModelCreationHelper {
 					basicElement.isColumnInsertable( 0 ),
 					basicElement.isColumnUpdateable( 0 ),
 					basicElement.isPartitionKey(),
+					true, // element collection does not support null elements
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);

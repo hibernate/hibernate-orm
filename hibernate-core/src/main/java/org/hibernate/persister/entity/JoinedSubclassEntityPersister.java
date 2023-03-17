@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -96,6 +97,7 @@ import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINA
  *
  * @author Gavin King
  */
+@Internal
 public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private static final Logger log = Logger.getLogger( JoinedSubclassEntityPersister.class );
 

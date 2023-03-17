@@ -7,6 +7,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.service.JavaServiceLoadable;
 
 /**
  * A bootstrap process hook for contributing sources to {@link MetadataSources}.
@@ -15,6 +16,7 @@ import org.hibernate.boot.MetadataSources;
  *
  * @since 5.0
  */
+@JavaServiceLoadable
 public interface MetadataSourcesContributor {
 	/**
 	 * Perform the process of contributing to the {@link MetadataSources}.

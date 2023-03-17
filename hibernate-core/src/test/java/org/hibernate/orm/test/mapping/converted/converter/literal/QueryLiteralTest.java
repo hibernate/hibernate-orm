@@ -18,10 +18,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.query.Query;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 
-import org.hibernate.testing.orm.ExceptionHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;

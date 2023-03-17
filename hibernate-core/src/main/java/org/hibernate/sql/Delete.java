@@ -5,16 +5,14 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql;
+
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * A SQL {@code DELETE} statement.
@@ -22,24 +20,20 @@ import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
  * @author Gavin King
  */
 @Internal
-public class Delete {
-
+public class Delete implements RestrictionRenderingContext {
 	protected String tableName;
 	protected String comment;
+	protected final List<Restriction> restrictions = new ArrayList<>();
 
-	protected final List<String> whereFragments = new ArrayList<>();
-
-	private final JdbcParameterRenderer jdbcParameterRenderer;
-	private final boolean standardParamRendering;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
 	private int parameterCount;
 
 	public Delete(SessionFactoryImplementor factory) {
-		this( factory.getServiceRegistry().getService( JdbcParameterRenderer.class ) );
+		this( factory.getFastSessionServices().parameterMarkerStrategy );
 	}
 
-	public Delete(JdbcParameterRenderer jdbcParameterRenderer) {
-		this.jdbcParameterRenderer = jdbcParameterRenderer;
-		this.standardParamRendering = JdbcParameterRenderer.isStandardRenderer( jdbcParameterRenderer );
+	public Delete(ParameterMarkerStrategy parameterMarkerStrategy) {
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	public Delete setTableName(String tableName) {
@@ -54,8 +48,7 @@ public class Delete {
 
 	@SuppressWarnings("UnusedReturnValue")
 	public Delete addColumnRestriction(String columnName) {
-		final String paramMarker = jdbcParameterRenderer.renderJdbcParameter( ++parameterCount, null );
-		this.whereFragments.add( columnName + "=" + paramMarker );
+		restrictions.add( new ComparisonRestriction( columnName ) );
 		return this;
 	}
 
@@ -71,17 +64,14 @@ public class Delete {
 	}
 
 	@SuppressWarnings("UnusedReturnValue")
-	public Delete addColumnNullnessRestriction(String columnName) {
-		addColumnNullnessRestriction( columnName, false );
+	public Delete addColumnIsNullRestriction(String columnName) {
+		restrictions.add( new NullnessRestriction( columnName ) );
 		return this;
 	}
 
 	@SuppressWarnings("UnusedReturnValue")
-	public Delete addColumnNullnessRestriction(String columnName, boolean negate) {
-		final String fragment = negate
-				? columnName + " is not null"
-				: columnName + " is null";
-		whereFragments.add( fragment );
+	public Delete addColumnIsNotNullRestriction(String columnName) {
+		restrictions.add( new NullnessRestriction( columnName, false ) );
 		return this;
 	}
 
@@ -102,25 +92,29 @@ public class Delete {
 		return buf.toString();
 	}
 
-	private void applyRestrictions(StringBuilder buf) {
-		if ( whereFragments.isEmpty() ) {
-			return;
-		}
-
-		buf.append( " where " );
-
-		for ( int i = 0; i < whereFragments.size(); i++ ) {
-			if ( i > 0 ) {
-				buf.append( " and " );
-			}
-			buf.append( whereFragments.get(i) );
-		}
-	}
-
 	private void applyComment(StringBuilder buf) {
 		if ( comment != null ) {
 			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
 		}
 	}
 
+	private void applyRestrictions(StringBuilder buf) {
+		if ( restrictions.isEmpty() ) {
+			return;
+		}
+
+		buf.append( " where " );
+
+		for ( int i = 0; i < restrictions.size(); i++ ) {
+			if ( i > 0 ) {
+				buf.append( " and " );
+			}
+			restrictions.get( i ).render( buf, this );
+		}
+	}
+
+	@Override
+	public String makeParameterMarker() {
+		return parameterMarkerStrategy.createMarker( ++parameterCount, null );
+	}
 }

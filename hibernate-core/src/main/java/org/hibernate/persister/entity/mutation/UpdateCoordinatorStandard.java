@@ -34,12 +34,12 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -1564,7 +1564,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private MutationOperationGroup buildVersionUpdateGroup() {
 		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
-		if ( versionMapping == null || entityPersister().getSuperMappingType() != null ) {
+		if ( versionMapping == null ) {
 			return null;
 		}
 		else {
@@ -1590,7 +1590,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			return new MutationOperationGroupSingle( MutationType.UPDATE, entityPersister(), jdbcMutation );
 		}
-
 	}
 
 	private void addPartitionRestriction(TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder) {

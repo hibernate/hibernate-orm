@@ -21,7 +21,6 @@ import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -139,7 +138,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName) {
-		final PersistentAttribute<? super J, ?> attribute = managedType.findAttribute( attributeName );
+		final PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
 		if ( attribute == null ) {
 			return null;
 		}

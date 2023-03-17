@@ -111,7 +111,7 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 
 			genTask.injectSourceSet( ormDsl.getSourceSet() );
 
-			genTask.getGenerationOutputDirectory().set( ormDsl.getJpaMetamodel().getGenerationOutputDirectory() );
+			genTask.getGenerationOutputDirectory().convention( ormDsl.getJpaMetamodel().getGenerationOutputDirectory() );
 
 			genTask.getApplyGeneratedAnnotation().convention( ormDsl.getJpaMetamodel().getApplyGeneratedAnnotation() );
 			genTask.getSuppressions().convention( ormDsl.getJpaMetamodel().getSuppressions() );

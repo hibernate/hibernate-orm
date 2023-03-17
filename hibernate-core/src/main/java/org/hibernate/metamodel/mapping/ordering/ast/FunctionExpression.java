@@ -120,4 +120,9 @@ public class FunctionExpression implements OrderingExpression, FunctionRendering
 		}
 		sqlAppender.appendSql( ')' );
 	}
+
+	@Override
+	public String toDescriptiveText() {
+		return "function (" + name + ")";
+	}
 }

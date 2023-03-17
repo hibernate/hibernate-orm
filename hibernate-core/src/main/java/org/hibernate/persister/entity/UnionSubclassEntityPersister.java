@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -39,6 +40,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
@@ -76,6 +78,7 @@ import static org.hibernate.jdbc.Expectations.appropriateExpectation;
  *
  * @author Gavin King
  */
+@Internal
 public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	// the class hierarchy structure

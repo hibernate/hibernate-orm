@@ -9,32 +9,32 @@ package org.hibernate.sql;
 import org.hibernate.Internal;
 
 /**
- * Nullness restriction - is [not] null
+ * Nullness restriction - IS (NOT)? NULL
  *
  * @author Steve Ebersole
  */
 @Internal
 public class NullnessRestriction implements Restriction {
 	private final String columnName;
-	private final boolean negated;
+	private final boolean affirmative;
 
 	public NullnessRestriction(String columnName) {
-		this( columnName, false );
+		this( columnName, true );
 	}
 
-	public NullnessRestriction(String columnName, boolean negated) {
+	public NullnessRestriction(String columnName, boolean affirmative) {
 		this.columnName = columnName;
-		this.negated = negated;
+		this.affirmative = affirmative;
 	}
 
 	@Override
 	public void render(StringBuilder sqlBuffer, RestrictionRenderingContext context) {
 		sqlBuffer.append( columnName );
-		if ( negated ) {
-			sqlBuffer.append( " is not null" );
+		if ( affirmative ) {
+			sqlBuffer.append( " is null" );
 		}
 		else {
-			sqlBuffer.append( " is null" );
+			sqlBuffer.append( " is not null" );
 		}
 	}
 }

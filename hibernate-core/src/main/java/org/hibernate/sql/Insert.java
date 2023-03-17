@@ -16,9 +16,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
-import static org.hibernate.sql.ast.spi.JdbcParameterRenderer.isStandardRenderer;
 
 /**
  * A SQL {@code INSERT} statement.
@@ -34,21 +33,19 @@ public class Insert {
 	protected Map<String,String> columns = new LinkedHashMap<>();
 
 	private final Dialect dialect;
-	private final JdbcParameterRenderer jdbcParameterRenderer;
-	private final boolean standardParamRendering;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
 	private int parameterCount;
 
 	public Insert(SessionFactoryImplementor sessionFactory) {
 		this(
-				sessionFactory.getJdbcServices().getDialect(),
-				sessionFactory.getServiceRegistry().getService( JdbcParameterRenderer.class )
+				sessionFactory.getFastSessionServices().dialect,
+				sessionFactory.getFastSessionServices().parameterMarkerStrategy
 		);
 	}
 
-	public Insert(Dialect dialect, JdbcParameterRenderer jdbcParameterRenderer) {
+	public Insert(Dialect dialect, ParameterMarkerStrategy parameterMarkerStrategy) {
 		this.dialect = dialect;
-		this.jdbcParameterRenderer = jdbcParameterRenderer;
-		this.standardParamRendering = isStandardRenderer( jdbcParameterRenderer );
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	protected Dialect getDialect() {
@@ -179,8 +176,8 @@ public class Insert {
 	}
 
 	private String normalizeExpressionFragment(String rhs) {
-		return rhs.equals( "?" ) && !standardParamRendering
-				? jdbcParameterRenderer.renderJdbcParameter( ++parameterCount, null )
+		return rhs.equals( "?" )
+				? parameterMarkerStrategy.createMarker( ++parameterCount, null )
 				: rhs;
 	}
 }

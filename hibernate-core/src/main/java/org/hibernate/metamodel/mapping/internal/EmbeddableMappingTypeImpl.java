@@ -45,7 +45,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -497,14 +496,12 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				columnPosition += columnSpan;
 			}
 			else if ( subtype instanceof CollectionType ) {
-				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
-
 				attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
-						entityPersister,
+						this,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex),
 						compositeType.getFetchMode( attributeIndex ),
@@ -520,7 +517,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
-						entityPersister,
+						this,
 						entityPersister,
 						(EntityType) subtype,
 						getRepresentationStrategy().resolvePropertyAccess( bootPropertyDescriptor ),

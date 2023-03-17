@@ -13,6 +13,11 @@ import java.sql.SQLException;
 /**
  * Contract for binding values to a JDBC {@link PreparedStatement}.
  *
+ * @apiNote Binders, as well as {@linkplain ValueExtractor extractors}, should never apply
+ * {@linkplain org.hibernate.type.descriptor.converter.spi.BasicValueConverter conversions}.
+ * Instead, callers of the binder are expected to coordinate between the binding and
+ * conversion.
+ *
  * @author Steve Ebersole
  */
 public interface ValueBinder<X> {

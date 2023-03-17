@@ -13,18 +13,21 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -43,7 +46,8 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			SqmBasicValuedSimplePath<T> sqmPath,
 			SqlAstCreationState sqlAstCreationState,
 			SemanticQueryWalker sqmWalker,
-			boolean jpaQueryComplianceEnabled) {
+			boolean jpaQueryComplianceEnabled,
+			Clause currentClause) {
 		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 		final TableGroup tableGroup = fromClauseAccess.getTableGroup( sqmPath.getNavigablePath().getParent() );
 
@@ -68,10 +72,24 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			}
 		}
 
-		final BasicValuedModelPart mapping = (BasicValuedModelPart) tableGroup.getModelPart().findSubPart(
-				sqmPath.getReferencedPathSource().getPathName(),
-				treatTarget
-		);
+		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		final BasicValuedModelPart mapping;
+		// In the select, group by, order by and having clause we have to make sure we render the column of the target table,
+		// never the FK column, if the lhs is a SqmFrom i.e. something explicitly queried/joined.
+		if ( ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
+				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
+				&& modelPart.getPartMappingType() instanceof ManagedMappingType ) {
+			mapping = (BasicValuedModelPart) ( (ManagedMappingType) modelPart.getPartMappingType() ).findSubPart(
+					sqmPath.getReferencedPathSource().getPathName(),
+					treatTarget
+			);
+		}
+		else {
+			mapping = (BasicValuedModelPart) modelPart.findSubPart(
+					sqmPath.getReferencedPathSource().getPathName(),
+					treatTarget
+			);
+		}
 
 		if ( mapping == null ) {
 			if ( jpaQueryComplianceEnabled ) {

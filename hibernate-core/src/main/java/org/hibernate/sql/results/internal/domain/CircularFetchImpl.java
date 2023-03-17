@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal.domain;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
@@ -59,7 +60,18 @@ public class CircularFetchImpl implements BiDirectionalFetch {
 		this.referencedNavigablePath = referencedNavigablePath;
 		this.fetchable = fetchable;
 		this.keyResult = keyResult;
+	}
 
+	protected CircularFetchImpl(CircularFetchImpl original) {
+		this.referencedModelPart = original.referencedModelPart;
+		this.entityMappingType = original.entityMappingType;
+		this.timing = original.timing;
+		this.fetchParent = original.fetchParent;
+		this.navigablePath = original.navigablePath;
+		this.selectByUniqueKey = original.selectByUniqueKey;
+		this.referencedNavigablePath = original.referencedNavigablePath;
+		this.fetchable = original.fetchable;
+		this.keyResult = original.keyResult;
 	}
 
 	@Override
@@ -95,28 +107,7 @@ public class CircularFetchImpl implements BiDirectionalFetch {
 		final Initializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				referencedModelPart,
-				() -> {
-					if ( timing == FetchTiming.IMMEDIATE ) {
-						return EntitySelectFetchInitializerBuilder.createInitializer(
-								parentAccess,
-								fetchable,
-								entityMappingType.getEntityPersister(),
-								keyResult,
-								getNavigablePath(),
-								selectByUniqueKey,
-								creationState
-						);
-					}
-					else {
-						return new EntityDelayedFetchInitializer(
-								parentAccess,
-								getReferencedPath(),
-								fetchable,
-								selectByUniqueKey,
-								keyResult.createResultAssembler( parentAccess, creationState )
-						);
-					}
-				}
+				() -> initializerFactory( parentAccess, creationState )
 		);
 
 		return new BiDirectionalFetchAssembler(
@@ -125,39 +116,96 @@ public class CircularFetchImpl implements BiDirectionalFetch {
 		);
 	}
 
-
-
-	@Override
-	public FetchTiming getTiming() {
-		return timing;
+	protected Initializer initializerFactory(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		if ( timing == FetchTiming.IMMEDIATE ) {
+			return buildEntitySelectFetchInitializer(
+					parentAccess,
+					fetchable,
+					entityMappingType.getEntityPersister(),
+					keyResult,
+					getNavigablePath(),
+					selectByUniqueKey,
+					creationState
+			);
+		}
+		else {
+			return buildEntityDelayedFetchInitializer(
+					parentAccess,
+					getReferencedPath(),
+					fetchable,
+					selectByUniqueKey,
+					keyResult.createResultAssembler( parentAccess, creationState )
+			);
+		}
 	}
 
-	@Override
-	public boolean hasTableGroup() {
-		return true;
+	protected Initializer buildEntitySelectFetchInitializer(
+			FetchParentAccess parentAccess,
+			ToOneAttributeMapping fetchable,
+			EntityPersister entityPersister,
+			DomainResult<?> keyResult,
+			NavigablePath navigablePath,
+			boolean selectByUniqueKey,
+			AssemblerCreationState creationState) {
+		return EntitySelectFetchInitializerBuilder
+				.createInitializer(
+						parentAccess,
+						this.fetchable,
+						entityPersister,
+						keyResult,
+						navigablePath,
+						selectByUniqueKey,
+						creationState
+				);
 	}
 
-	private static class BiDirectionalFetchAssembler implements DomainResultAssembler {
-		private EntityInitializer initializer;
-		private JavaType assembledJavaType;
+	protected Initializer buildEntityDelayedFetchInitializer(
+			FetchParentAccess parentAccess,
+			NavigablePath referencedPath,
+			ToOneAttributeMapping fetchable,
+			boolean selectByUniqueKey,
+			DomainResultAssembler<?> resultAssembler) {
+			return new EntityDelayedFetchInitializer(
+					parentAccess,
+					referencedPath,
+					fetchable,
+					selectByUniqueKey,
+					resultAssembler
+			);
+		}
 
-		public BiDirectionalFetchAssembler(
-				EntityInitializer initializer,
-				JavaType assembledJavaType) {
-			this.initializer = initializer;
-			this.assembledJavaType = assembledJavaType;
+
+		@Override
+		public FetchTiming getTiming ( ) {
+			return timing;
 		}
 
 		@Override
-		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
-			initializer.resolveInstance( rowProcessingState );
-			return initializer.getInitializedInstance();
+		public boolean hasTableGroup ( ) {
+			return true;
 		}
 
-		@Override
-		public JavaType getAssembledJavaType() {
-			return assembledJavaType;
+		private static class BiDirectionalFetchAssembler implements DomainResultAssembler {
+			private EntityInitializer initializer;
+			private JavaType assembledJavaType;
+
+			public BiDirectionalFetchAssembler(
+					EntityInitializer initializer,
+					JavaType assembledJavaType) {
+				this.initializer = initializer;
+				this.assembledJavaType = assembledJavaType;
+			}
+
+			@Override
+			public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+				initializer.resolveInstance( rowProcessingState );
+				return initializer.getInitializedInstance();
+			}
+
+			@Override
+			public JavaType getAssembledJavaType() {
+				return assembledJavaType;
+			}
 		}
+
 	}
-
-}

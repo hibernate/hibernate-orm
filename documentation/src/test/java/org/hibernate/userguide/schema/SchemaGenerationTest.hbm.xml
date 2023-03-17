@@ -20,6 +20,6 @@
             LANGUAGE plpgsql;
         </create>
         <drop></drop>
-        <dialect-scope name="org.hibernate.dialect.PostgreSQL95Dialect" />
+        <dialect-scope name="org.hibernate.dialect.PostgreSQLDialect" />
     </database-object>
 </hibernate-mapping>

@@ -270,13 +270,23 @@ Assuming `hibernate.globally_quoted_identifiers` is `true`, this allows the glob
 Specifies whether to automatically quote any names that are deemed keywords.
 
 ==== Time zone storage
-`*hibernate.timezone.default_storage*` (e.g. `COLUMN`, `NATIVE`, `AUTO` or `NORMALIZE` (default value))::
+`*hibernate.timezone.default_storage*` (e.g. `COLUMN`, `NATIVE`, `NORMALIZE`, `NORMALIZE_UTC`, `AUTO` or `DEFAULT` (default value))::
 Global setting for configuring the default storage for the time zone information for time zone based types.
 +
-`NORMALIZE`::: Does not store the time zone information, and instead normalizes timestamps to UTC
-`COLUMN`::: Stores the time zone information in a separate column; works in conjunction with `@TimeZoneColumn`
-`NATIVE`::: Stores the time zone information by using the `with time zone` type. Error if `Dialect#getTimeZoneSupport()` is not `NATIVE`
+`NORMALIZE`:::
+Legacy behavior (Hibernate ORM 5).
++
+Does not store the time zone information, and instead:
++
+* when persisting to the database, normalizes JDBC timestamps to the
+<<jdbc-time-zone,JDBC timezone>> or to the JVM default time zone if not set.
+* when reading back from the database, sets the offset or zone
+of `OffsetDateTime`/`ZonedDateTime` values to the JVM default time zone.
+`NORMALIZE_UTC`::: Does not store the time zone information, and instead normalizes timestamps to UTC.
+`COLUMN`::: Stores the time zone information in a separate column; works in conjunction with `@TimeZoneColumn`.
+`NATIVE`::: Stores the time zone information by using the `with time zone` type. Error if `Dialect#getTimeZoneSupport()` is not `NATIVE`.
 `AUTO`::: Stores the time zone information either with `NATIVE` if `Dialect#getTimeZoneSupport()` is `NATIVE`, otherwise uses the `COLUMN` strategy.
+`DEFAULT`::: Stores the time zone information either with `NATIVE` if `Dialect#getTimeZoneSupport()` is `NATIVE`, otherwise uses the `NORMALIZE_UTC` strategy.
 +
 The default value is given by the {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
 meaning that time zone information is not stored by default, but timestamps are normalized instead.
@@ -374,7 +384,9 @@ Enable nationalized character support on all string / clob based attribute ( str
 `*hibernate.jdbc.lob.non_contextual_creation*` (e.g. `true` or `false` (default value))::
 Should we not use contextual LOB creation (aka based on `java.sql.Connection#createBlob()` et al)? The default value for HANA, H2, and PostgreSQL is `true`.
 
-`*hibernate.jdbc.time_zone*` (e.g. A `java.util.TimeZone`, a `java.time.ZoneId` or a `String` representation of a `ZoneId`)::
+[[jdbc-time-zone]]`*hibernate.jdbc.time_zone*` (e.g. A `java.util.TimeZone`, a `java.time.ZoneId` or a `String` representation of a `ZoneId`)::
+The timezone to use in the JDBC driver, which is supposed to match the database timezone.
++
 Unless specified, the JDBC Driver uses the default JVM time zone. If a different time zone is configured via this setting, the JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[PreparedStatement#setTimestamp] is going to use a `Calendar` instance according to the specified time zone.
 
 `*hibernate.dialect.oracle.prefer_long_raw*` (e.g. `true` or `false` (default value))::
@@ -790,10 +802,7 @@ The default behavior is to allow access unless the `Session` is bootstrapped via
 [[configurations-multi-tenancy]]
 === Multi-tenancy settings
 
-`*hibernate.multiTenancy*` (e.g. `NONE` (default value), `SCHEMA`, `DATABASE`, and `DISCRIMINATOR` (not implemented yet))::
-The multi-tenancy strategy in use.
-
-`*hibernate.multi_tenant_connection_provider*` (e.g. `true` or `false` (default value))::
+`*hibernate.multi_tenant_connection_provider*`::
 Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] implementation to use. As `MultiTenantConnectionProvider` is also a service, can be configured directly through the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[`StandardServiceRegistryBuilder`].
 
 `*hibernate.tenant_identifier_resolver*`::

@@ -6,6 +6,7 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -14,6 +15,7 @@ import org.hibernate.tuple.NonIdentifierAttribute;
 /**
  * Operations for searching an array of property values for modified elements.
  */
+@Internal
 class DirtyHelper {
 	/**
 	 * Determine if any of the given field values are dirty, returning an array containing

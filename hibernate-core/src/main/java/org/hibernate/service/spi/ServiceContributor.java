@@ -7,6 +7,7 @@
 package org.hibernate.service.spi;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.service.JavaServiceLoadable;
 
 /**
  * Contract for contributing services.
@@ -16,6 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
  *
  * @author Steve Ebersole
  */
+@JavaServiceLoadable
 public interface ServiceContributor {
 	/**
 	 * Contribute services to the indicated registry builder.

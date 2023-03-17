@@ -8,6 +8,7 @@ package org.hibernate.persister.entity;
 
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -16,7 +17,10 @@ import org.hibernate.type.Type;
  * and may be an element of a one-to-many association.
  *
  * @author Gavin King
+ *
+ * @deprecated Use {@link EntityMappingType}
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface OuterJoinLoadable extends Loadable, Joinable {
 
 	/**

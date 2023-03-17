@@ -93,6 +93,7 @@ import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
@@ -189,6 +190,7 @@ public class DB2Dialect extends Dialect {
 				return "clob";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp($p)";
+			case TIME:
 			case TIME_WITH_TIMEZONE:
 				return "time";
 			case BINARY:
@@ -408,9 +410,37 @@ public class DB2Dialect extends Dialect {
 		if ( getDB2Version().isBefore( 11 ) ) {
 			return timestampdiffPatternV10( unit, fromTemporalType, toTemporalType );
 		}
-		StringBuilder pattern = new StringBuilder();
-		boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
-		boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
+		final StringBuilder pattern = new StringBuilder();
+		final String fromExpression;
+		final String toExpression;
+		if ( unit.isDateUnit() ) {
+			fromExpression = "?2";
+			toExpression = "?3";
+		}
+		else {
+			switch ( fromTemporalType ) {
+				case DATE:
+					fromExpression = "cast(?2 as timestamp)";
+					break;
+				case TIME:
+					fromExpression = "timestamp('1970-01-01',?2)";
+					break;
+				default:
+					fromExpression = "?2";
+					break;
+			}
+			switch ( toTemporalType ) {
+				case DATE:
+					toExpression = "cast(?3 as timestamp)";
+					break;
+				case TIME:
+					toExpression = "timestamp('1970-01-01',?3)";
+					break;
+				default:
+					toExpression = "?3";
+					break;
+			}
+		}
 		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:
@@ -426,26 +456,24 @@ public class DB2Dialect extends Dialect {
 			default:
 				pattern.append( "?1s_between(" );
 		}
-		if ( castTo ) {
-			pattern.append( "cast(?3 as timestamp)" );
-		}
-		else {
-			pattern.append( "?3" );
-		}
+		pattern.append( toExpression );
 		pattern.append( ',' );
-		if ( castFrom ) {
-			pattern.append( "cast(?2 as timestamp)" );
-		}
-		else {
-			pattern.append( "?2" );
-		}
+		pattern.append( fromExpression );
 		pattern.append( ')' );
 		switch ( unit ) {
 			case NATIVE:
-				pattern.append( "+(microsecond(?3)-microsecond(?2))/1e6)" );
+				pattern.append( "+(microsecond(");
+				pattern.append( toExpression );
+				pattern.append(")-microsecond(");
+				pattern.append( fromExpression );
+				pattern.append("))/1e6)" );
 				break;
 			case NANOSECOND:
-				pattern.append( "*1e9+(microsecond(?3)-microsecond(?2))*1e3)" );
+				pattern.append( "*1e9+(microsecond(");
+				pattern.append( toExpression );
+				pattern.append(")-microsecond(");
+				pattern.append( fromExpression );
+				pattern.append("))*1e3)" );
 				break;
 			case MONTH:
 				pattern.append( ')' );
@@ -458,10 +486,36 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public static String timestampdiffPatternV10(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		final boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
-		final boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
-		final String fromExpression = castFrom ? "cast(?2 as timestamp)" : "?2";
-		final String toExpression = castTo ? "cast(?3 as timestamp)" : "?3";
+		final String fromExpression;
+		final String toExpression;
+		if ( unit.isDateUnit() ) {
+			if ( fromTemporalType == TemporalType.TIME ) {
+				fromExpression = "timestamp('1970-01-01',?2)";
+			}
+			else {
+				fromExpression = "?2";
+			}
+			if ( toTemporalType == TemporalType.TIME ) {
+				toExpression = "timestamp('1970-01-01',?3)";
+			}
+			else {
+				toExpression = "?3";
+			}
+		}
+		else {
+			if ( fromTemporalType == TemporalType.DATE ) {
+				fromExpression = "cast(?2 as timestamp)";
+			}
+			else {
+				fromExpression = "?2";
+			}
+			if ( toTemporalType == TemporalType.DATE ) {
+				toExpression = "cast(?3 as timestamp)";
+			}
+			else {
+				toExpression = "?3";
+			}
+		}
 		switch ( unit ) {
 			case NATIVE:
 				return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))+(microsecond(t2)-microsecond(t1))/1e6 " +
@@ -498,19 +552,24 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final StringBuilder pattern = new StringBuilder();
-		final boolean castTo;
+		final String timestampExpression;
 		if ( unit.isDateUnit() ) {
-			castTo = temporalType == TemporalType.TIME;
+			if ( temporalType == TemporalType.TIME ) {
+				timestampExpression = "timestamp('1970-01-01',?3)";
+			}
+			else {
+				timestampExpression = "?3";
+			}
 		}
 		else {
-			castTo = temporalType == TemporalType.DATE;
+			if ( temporalType == TemporalType.DATE ) {
+				timestampExpression = "cast(?3 as timestamp)";
+			}
+			else {
+				timestampExpression = "?3";
+			}
 		}
-		if (castTo) {
-			pattern.append("cast(?3 as timestamp)");
-		}
-		else {
-			pattern.append("?3");
-		}
+		pattern.append(timestampExpression);
 		pattern.append("+(");
 		// DB2 supports temporal arithmetic. See https://www.ibm.com/support/knowledgecenter/en/SSEPGG_9.7.0/com.ibm.db2.luw.sql.ref.doc/doc/r0023457.html
 		switch (unit) {

@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetTime;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
@@ -31,6 +32,7 @@ import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
 /**
  * @author Steve Ebersole
@@ -117,7 +119,12 @@ public class SqmExpressionHelper {
 
 	public static SqmExpression<?> getActualExpression(SqmExpression<?> expression) {
 		if ( isCompositeTemporal( expression ) ) {
-			return ( (SqmPath<?>) expression ).get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+			if ( expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class ) {
+				return ( (SqmPath<?>) expression ).get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME );
+			}
+			else {
+				return ( (SqmPath<?>) expression ).get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+			}
 		}
 		else {
 			return expression;
@@ -127,18 +134,24 @@ public class SqmExpressionHelper {
 	public static SqmExpression<?> getOffsetAdjustedExpression(SqmExpression<?> expression) {
 		if ( isCompositeTemporal( expression ) ) {
 			final SqmPath<?> compositePath = (SqmPath<?>) expression;
-			final SqmPath<Object> instantPath = compositePath.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
-			final NodeBuilder nodeBuilder = instantPath.nodeBuilder();
+			final SqmPath<Object> temporalPath;
+			if ( expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class ) {
+				temporalPath = compositePath.get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME );
+			}
+			else {
+				temporalPath = compositePath.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+			}
+			final NodeBuilder nodeBuilder = temporalPath.nodeBuilder();
 			return new SqmBinaryArithmetic<>(
 					BinaryArithmeticOperator.ADD,
-					instantPath,
+					temporalPath,
 					new SqmToDuration<>(
 							compositePath.get( AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ),
 							new SqmDurationUnit<>( TemporalUnit.SECOND, nodeBuilder.getIntegerType(), nodeBuilder ),
 							nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( Duration.class ),
 							nodeBuilder
 					),
-					instantPath.getNodeType(),
+					temporalPath.getNodeType(),
 					nodeBuilder
 			);
 		}

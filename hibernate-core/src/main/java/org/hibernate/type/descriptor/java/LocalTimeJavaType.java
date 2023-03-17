@@ -16,6 +16,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -23,6 +24,7 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -81,7 +83,12 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
-			return (X) Time.valueOf( value );
+			final Time time = Time.valueOf( value );
+			if ( value.getNano() == 0 ) {
+				return (X) time;
+			}
+			// Preserve milliseconds, which java.sql.Time supports
+			return (X) new Time( time.getTime() + DateTimeUtils.roundToPrecision( value.getNano(), 3 ) );
 		}
 
 		// Oracle documentation says to set the Date to January 1, 1970 when convert from
@@ -122,6 +129,16 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 			return (LocalTime) value;
 		}
 
+		if (value instanceof Time) {
+			final Time time = (Time) value;
+			final LocalTime localTime = time.toLocalTime();
+			final long millis = time.getTime() % 1000;
+			if ( millis == 0 ) {
+				return localTime;
+			}
+			return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
+		}
+
 		if (value instanceof Timestamp) {
 			final Timestamp ts = (Timestamp) value;
 			return LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ).toLocalTime();
@@ -158,7 +175,7 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return 0;
+		return dialect.getDefaultTimestampPrecision();
 	}
 
 }

@@ -16,6 +16,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -23,6 +24,7 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -49,8 +51,9 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 	}
 
 	@Override
-	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getJdbcType( Types.TIME );
+	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
+		return stdIndicators.getTypeConfiguration().getJdbcTypeRegistry()
+				.getDescriptor( stdIndicators.getDefaultZonedTimeSqlType() );
 	}
 
 	@Override
@@ -87,13 +90,22 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 			return (X) offsetTime.withOffsetSameInstant( getCurrentSystemOffset() ).toLocalTime();
 		}
 
+		if ( OffsetDateTime.class.isAssignableFrom( type ) ) {
+			return (X) offsetTime.atDate( LocalDate.EPOCH );
+		}
+
 		// for legacy types, we assume that the JDBC timezone is passed to JDBC
 		// (since PS.setTime() and friends do accept a timezone passed as a Calendar)
 
 		final OffsetTime jdbcOffsetTime = offsetTime.withOffsetSameInstant( getCurrentJdbcOffset(options) );
 
 		if ( Time.class.isAssignableFrom( type ) ) {
-			return (X) Time.valueOf( jdbcOffsetTime.toLocalTime() );
+			final Time time = Time.valueOf( jdbcOffsetTime.toLocalTime() );
+			if ( jdbcOffsetTime.getNano() == 0 ) {
+				return (X) time;
+			}
+			// Preserve milliseconds, which java.sql.Time supports
+			return (X) new Time( time.getTime() + DateTimeUtils.roundToPrecision( jdbcOffsetTime.getNano(), 3 ) );
 		}
 
 		final OffsetDateTime jdbcOffsetDateTime = jdbcOffsetTime.atDate( LocalDate.EPOCH );
@@ -145,6 +157,10 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 			return ((LocalTime) value).atOffset( getCurrentSystemOffset() );
 		}
 
+		if ( value instanceof OffsetDateTime ) {
+			return ( (OffsetDateTime) value ).toOffsetTime();
+		}
+
 		/*
 		 * Also, in order to fix HHH-13357, and to be consistent with the conversion to Time (see above),
 		 * we set the offset to the current offset of the JVM (OffsetDateTime.now().getOffset()).
@@ -165,8 +181,14 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 
 		if (value instanceof Time) {
 			final Time time = (Time) value;
-			return time.toLocalTime().atOffset( getCurrentJdbcOffset(options) )
+			final OffsetTime offsetTime = time.toLocalTime()
+					.atOffset( getCurrentJdbcOffset( options) )
 					.withOffsetSameInstant( getCurrentSystemOffset() );
+			final long millis = time.getTime() % 1000;
+			if ( millis == 0 ) {
+				return offsetTime;
+			}
+			return offsetTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
 		}
 
 		if (value instanceof Timestamp) {
@@ -217,7 +239,7 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return 0;
+		return dialect.getDefaultTimestampPrecision();
 	}
 
 }

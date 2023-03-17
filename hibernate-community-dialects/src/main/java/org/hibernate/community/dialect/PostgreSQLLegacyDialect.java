@@ -91,7 +91,7 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
-import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -130,9 +130,11 @@ import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.SQLXML;
 import static org.hibernate.type.SqlTypes.STRUCT;
+import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_UTC;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
@@ -208,6 +210,10 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			case VARBINARY:
 			case LONG32VARBINARY:
 				return "bytea";
+
+			// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
+//			case TIME_UTC:
+//				return columnType( TIME_WITH_TIMEZONE );
 
 			case TIMESTAMP_UTC:
 				return columnType( TIMESTAMP_WITH_TIMEZONE );
@@ -321,6 +327,12 @@ public class PostgreSQLLegacyDialect extends Dialect {
 					case "geography":
 						jdbcTypeCode = GEOGRAPHY;
 						break;
+				}
+				break;
+			case TIME:
+				// The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
+				if ( "timetz".equals( columnTypeName ) ) {
+					jdbcTypeCode = TIME_UTC;
 				}
 				break;
 			case TIMESTAMP:
@@ -443,36 +455,31 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		if ( unit == null ) {
 			return "(?3-?2)";
 		}
-		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP && unit == DAY ) {
+		if ( toTemporalType == TemporalType.DATE && fromTemporalType == TemporalType.DATE ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
-			return "(?3-?2)";
-		}
-		else {
-			StringBuilder pattern = new StringBuilder();
 			switch ( unit ) {
 				case YEAR:
-					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
-					break;
-				case QUARTER:
-					pattern.append( "(" );
-					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
-					pattern.append( "+" );
-					extractField( pattern, QUARTER, fromTemporalType, toTemporalType, unit );
-					pattern.append( ")" );
-					break;
 				case MONTH:
-					pattern.append( "(" );
-					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
-					pattern.append( "+" );
-					extractField( pattern, MONTH, fromTemporalType, toTemporalType, unit );
-					pattern.append( ")" );
-					break;
+				case QUARTER:
+					return "extract(" + translateDurationField( unit ) + " from age(?3,?2))";
+				default:
+					return "(?3-?2)" + DAY.conversionFactor( unit, this );
+			}
+		}
+		else {
+			switch ( unit ) {
+				case YEAR:
+					return "extract(year from ?3-?2)";
+				case QUARTER:
+					return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)/3)";
+				case MONTH:
+					return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
 				case WEEK: //week is not supported by extract() when the argument is a duration
+					return "(extract(day from ?3-?2)/7)";
 				case DAY:
-					extractField( pattern, DAY, fromTemporalType, toTemporalType, unit );
-					break;
+					return "extract(day from ?3-?2)";
 				//in order to avoid multiple calls to extract(),
 				//we use extract(epoch from x - y) * factor for
 				//all the following units:
@@ -481,15 +488,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				case SECOND:
 				case NANOSECOND:
 				case NATIVE:
-					extractField( pattern, EPOCH, fromTemporalType, toTemporalType, unit );
-					break;
+					return "extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
 				default:
 					throw new SemanticException( "unrecognized field: " + unit );
 			}
-			return pattern.toString();
 		}
 	}
 
+	@Deprecated
 	protected void extractField(
 			StringBuilder pattern,
 			TemporalUnit unit,
@@ -499,7 +505,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		pattern.append( "extract(" );
 		pattern.append( translateDurationField( unit ) );
 		pattern.append( " from " );
-		if ( toTimestamp != TemporalType.TIMESTAMP && fromTimestamp != TemporalType.TIMESTAMP ) {
+		if ( toTimestamp == TemporalType.DATE && fromTimestamp == TemporalType.DATE ) {
 			// special case subtraction of two
 			// dates results in an integer not
 			// an Interval
@@ -1325,7 +1331,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		// dialect uses oid for Blobs, byte arrays cannot be used.
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.BLOB_BINDING );
 		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
-		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
@@ -1411,23 +1417,13 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	// disabled foreign key constraints still prevent 'truncate table'
 	// (these would help if we used 'delete' instead of 'truncate')
 
-//	@Override
-//	public String getDisableConstraintsStatement() {
-//		return "set constraints all deferred";
-//	}
-//
-//	@Override
-//	public String getEnableConstraintsStatement() {
-//		return "set constraints all immediate";
-//	}
-//
-//	@Override
-//	public String getDisableConstraintStatement(String tableName, String name) {
-//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
-//	}
-//
-//	@Override
-//	public String getEnableConstraintStatement(String tableName, String name) {
-//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
-//	}
+	@Override
+	public String rowId(String rowId) {
+		return "ctid";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return OTHER;
+	}
 }

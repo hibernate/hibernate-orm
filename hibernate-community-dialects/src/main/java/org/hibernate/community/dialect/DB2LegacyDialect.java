@@ -11,7 +11,11 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
@@ -96,11 +100,16 @@ import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
  * A {@linkplain Dialect SQL dialect} for DB2.
@@ -187,6 +196,7 @@ public class DB2LegacyDialect extends Dialect {
 				return "clob";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp($p)";
+			case TIME:
 			case TIME_WITH_TIMEZONE:
 				return "time";
 			case BINARY:
@@ -416,9 +426,37 @@ public class DB2LegacyDialect extends Dialect {
 		if ( getDB2Version().isBefore( 11 ) ) {
 			return DB2Dialect.timestampdiffPatternV10( unit, fromTemporalType, toTemporalType );
 		}
-		StringBuilder pattern = new StringBuilder();
-		boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
-		boolean castTo = toTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
+		final StringBuilder pattern = new StringBuilder();
+		final String fromExpression;
+		final String toExpression;
+		if ( unit.isDateUnit() ) {
+			fromExpression = "?2";
+			toExpression = "?3";
+		}
+		else {
+			switch ( fromTemporalType ) {
+				case DATE:
+					fromExpression = "cast(?2 as timestamp)";
+					break;
+				case TIME:
+					fromExpression = "timestamp('1970-01-01',?2)";
+					break;
+				default:
+					fromExpression = "?2";
+					break;
+			}
+			switch ( toTemporalType ) {
+				case DATE:
+					toExpression = "cast(?3 as timestamp)";
+					break;
+				case TIME:
+					toExpression = "timestamp('1970-01-01',?3)";
+					break;
+				default:
+					toExpression = "?3";
+					break;
+			}
+		}
 		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:
@@ -434,26 +472,24 @@ public class DB2LegacyDialect extends Dialect {
 			default:
 				pattern.append( "?1s_between(" );
 		}
-		if ( castTo ) {
-			pattern.append( "cast(?3 as timestamp)" );
-		}
-		else {
-			pattern.append( "?3" );
-		}
+		pattern.append( toExpression );
 		pattern.append( ',' );
-		if ( castFrom ) {
-			pattern.append( "cast(?2 as timestamp)" );
-		}
-		else {
-			pattern.append( "?2" );
-		}
+		pattern.append( fromExpression );
 		pattern.append( ')' );
 		switch ( unit ) {
 			case NATIVE:
-				pattern.append( "+(microsecond(?3)-microsecond(?2))/1e6)" );
+				pattern.append( "+(microsecond(");
+				pattern.append( toExpression );
+				pattern.append(")-microsecond(");
+				pattern.append( fromExpression );
+				pattern.append("))/1e6)" );
 				break;
 			case NANOSECOND:
-				pattern.append( "*1e9+(microsecond(?3)-microsecond(?2))*1e3)" );
+				pattern.append( "*1e9+(microsecond(");
+				pattern.append( toExpression );
+				pattern.append(")-microsecond(");
+				pattern.append( fromExpression );
+				pattern.append("))*1e3)" );
 				break;
 			case MONTH:
 				pattern.append( ')' );
@@ -468,19 +504,24 @@ public class DB2LegacyDialect extends Dialect {
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final StringBuilder pattern = new StringBuilder();
-		final boolean castTo;
+		final String timestampExpression;
 		if ( unit.isDateUnit() ) {
-			castTo = temporalType == TemporalType.TIME;
+			if ( temporalType == TemporalType.TIME ) {
+				timestampExpression = "timestamp('1970-01-01',?3)";
+			}
+			else {
+				timestampExpression = "?3";
+			}
 		}
 		else {
-			castTo = temporalType == TemporalType.DATE;
+			if ( temporalType == TemporalType.DATE ) {
+				timestampExpression = "cast(?3 as timestamp)";
+			}
+			else {
+				timestampExpression = "?3";
+			}
 		}
-		if (castTo) {
-			pattern.append("cast(?3 as timestamp)");
-		}
-		else {
-			pattern.append("?3");
-		}
+		pattern.append(timestampExpression);
 		pattern.append("+(");
 		// DB2 supports temporal arithmetic. See https://www.ibm.com/support/knowledgecenter/en/SSEPGG_9.7.0/com.ibm.db2.luw.sql.ref.doc/doc/r0023457.html
 		switch (unit) {
@@ -501,6 +542,83 @@ public class DB2LegacyDialect extends Dialect {
 				pattern.append("?2) ?1s");
 		}
 		return pattern.toString();
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				appender.appendSql( "time '" );
+				appendAsLocalTime( appender, temporalAccessor );
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp '" );
+				appendAsTimestampWithNanos( appender, temporalAccessor, false, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, date );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				appender.appendSql( "time '" );
+				appendAsLocalTime( appender, date );
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp '" );
+				appendAsTimestampWithNanos( appender, date, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date '" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( '\'' );
+				break;
+			case TIME:
+				appender.appendSql( "time '" );
+				appendAsLocalTime( appender, calendar );
+				appender.appendSql( '\'' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "timestamp '" );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+				appender.appendSql( '\'' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
@@ -894,6 +1012,12 @@ public class DB2LegacyDialect extends Dialect {
 				return "dayofweek(?2)";
 			case QUARTER:
 				return "quarter(?2)";
+			case EPOCH:
+				if ( getDB2Version().isBefore( 11 ) ) {
+					return timestampdiffPattern( TemporalUnit.SECOND, TemporalType.TIMESTAMP, TemporalType.TIMESTAMP )
+							.replace( "?2", "'1970-01-01 00:00:00'" )
+							.replace( "?3", "?2" );
+				}
 		}
 		return super.extractPattern( unit );
 	}
@@ -938,5 +1062,21 @@ public class DB2LegacyDialect extends Dialect {
 	@Override
 	public String getCreateUserDefinedTypeExtensionsString() {
 		return " instantiable mode db2sql";
+	}
+
+	/**
+	 * The more "standard" syntax is {@code rid_bit(alias)} but here we use {@code alias.rowid}.
+	 * <p>
+	 * There is also an alternative {@code rid()} of type {@code bigint}, but it cannot be used
+	 * with partitioning.
+	 */
+	@Override
+	public String rowId(String rowId) {
+		return "rowid";
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return VARBINARY;
 	}
 }

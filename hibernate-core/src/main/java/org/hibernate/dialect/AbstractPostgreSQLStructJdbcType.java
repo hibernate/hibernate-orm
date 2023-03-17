@@ -322,6 +322,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 								break;
 							case SqlTypes.TIME:
 							case SqlTypes.TIME_WITH_TIMEZONE:
+							case SqlTypes.TIME_UTC:
 								values[column] = fromRawObject(
 										jdbcMapping,
 										parseTime(
@@ -804,6 +805,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 			case SqlTypes.DATE:
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
+			case SqlTypes.TIME_UTC:
 			case SqlTypes.TIMESTAMP:
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 			case SqlTypes.TIMESTAMP_UTC:
@@ -940,6 +942,8 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 				}
 				break;
 			case SqlTypes.TIME:
+			case SqlTypes.TIME_WITH_TIMEZONE:
+			case SqlTypes.TIME_UTC:
 				if ( value instanceof java.util.Date ) {
 					appendAsTime( appender, (java.util.Date) value, jdbcTimeZone );
 				}

@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
@@ -48,6 +49,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -64,6 +66,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 	private final String nativeFunctionName;
 	private final boolean reversedArguments;
 	private final boolean concatPattern;
+	private final boolean supportsTime;
 
 	public FormatFunction(String nativeFunctionName, TypeConfiguration typeConfiguration) {
 		this( nativeFunctionName, false, true, typeConfiguration );
@@ -73,6 +76,15 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			String nativeFunctionName,
 			boolean reversedArguments,
 			boolean concatPattern,
+			TypeConfiguration typeConfiguration) {
+		this( nativeFunctionName, reversedArguments, concatPattern, true, typeConfiguration );
+	}
+
+	public FormatFunction(
+			String nativeFunctionName,
+			boolean reversedArguments,
+			boolean concatPattern,
+			boolean supportsTime,
 			TypeConfiguration typeConfiguration) {
 		super(
 				"format",
@@ -84,6 +96,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		this.nativeFunctionName = nativeFunctionName;
 		this.reversedArguments = reversedArguments;
 		this.concatPattern = concatPattern;
+		this.supportsTime = supportsTime;
 	}
 
 	@Override
@@ -98,14 +111,37 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		if ( reversedArguments ) {
 			format.accept( walker );
 			sqlAppender.append( ',' );
+			if ( !supportsTime && isTimeTemporal( expression ) ) {
+				sqlAppender.append( "date'1970-01-01'+" );
+			}
 			expression.accept( walker );
 		}
 		else {
+			if ( !supportsTime && isTimeTemporal( expression ) ) {
+				sqlAppender.append( "date'1970-01-01'+" );
+			}
 			expression.accept( walker );
 			sqlAppender.append( ',' );
 			format.accept( walker );
 		}
 		sqlAppender.append( ')' );
+	}
+
+	private boolean isTimeTemporal(SqlAstNode expression) {
+		if ( expression instanceof Expression ) {
+			final JdbcMappingContainer expressionType = ( (Expression) expression ).getExpressionType();
+			if ( expressionType.getJdbcTypeCount() == 1 ) {
+				switch ( expressionType.getSingleJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
+					case SqlTypes.TIME:
+					case SqlTypes.TIME_WITH_TIMEZONE:
+					case SqlTypes.TIME_UTC:
+						return true;
+					default:
+						break;
+				}
+			}
+		}
+		return false;
 	}
 
 	@Override

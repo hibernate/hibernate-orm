@@ -11,8 +11,13 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.type.descriptor.DateTimeUtils;
+
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,11 +30,15 @@ import jakarta.persistence.TypedQuery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(
-		annotatedClasses = LocalTimeTest.TestEntity.class
+		annotatedClasses = LocalTimeTest.TestEntity.class,
+		properties = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE")
 )
 public class LocalTimeTest {
 
-	private static final LocalTime LOCAL_TIME = LocalTime.now();
+	private static final LocalTime LOCAL_TIME = DateTimeUtils.roundToDefaultPrecision(
+			LocalTime.now(),
+			DialectContext.getDialect()
+	);
 
 	private static final OffsetTime OFFSET_TIME = OffsetTime.of( LOCAL_TIME, ZoneOffset.ofHours( 2 ) );
 

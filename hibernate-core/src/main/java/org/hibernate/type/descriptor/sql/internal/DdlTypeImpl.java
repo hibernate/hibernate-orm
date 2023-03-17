@@ -56,7 +56,7 @@ public class DdlTypeImpl implements DdlType {
 		final int paren = typeNamePattern.indexOf( '(' );
 		if ( paren > 0 ) {
 			final int parenEnd = typeNamePattern.lastIndexOf( ')' );
-			return parenEnd == typeNamePattern.length()
+			return parenEnd + 1 == typeNamePattern.length()
 					? typeNamePattern.substring( 0, paren )
 					: ( typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 ) );
 		}

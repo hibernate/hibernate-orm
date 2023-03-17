@@ -26,6 +26,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -40,6 +43,12 @@ import org.junit.runners.Parameterized;
  * Tests for storage of OffsetTime properties.
  */
 public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetTimeTest.EntityWithOffsetTime> {
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure(configuration);
+		configuration.setProperty( AvailableSettings.TIMEZONE_DEFAULT_STORAGE, TimeZoneStorageType.NORMALIZE.toString() );
+	}
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {
 		public ParametersBuilder add(int hour, int minute, int second, int nanosecond, String offset, ZoneId defaultTimeZone) {

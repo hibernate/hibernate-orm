@@ -37,6 +37,7 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 
 /**
  * SQL Dialect for Sybase/SQL Anywhere
@@ -65,6 +66,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 				return "time";
 			case TIMESTAMP:
 				return "timestamp";
+			case TIME_WITH_TIMEZONE:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp with time zone";
 

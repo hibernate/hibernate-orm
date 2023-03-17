@@ -37,7 +37,9 @@ import jakarta.persistence.TemporalType;
 
 import java.util.List;
 
+import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 
 /**
  * An SQL dialect for DB2 for z/OS, previously known as known as Db2 UDB for z/OS and Db2 UDB for z/OS and OS/390.
@@ -74,9 +76,13 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		if ( sqlTypeCode == TIMESTAMP_WITH_TIMEZONE && getVersion().isAfter( 10 ) ) {
-			// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
-			return "timestamp with time zone";
+		if ( getVersion().isAfter( 10 ) ) {
+			switch ( sqlTypeCode ) {
+				case TIME_WITH_TIMEZONE:
+				case TIMESTAMP_WITH_TIMEZONE:
+					// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
+					return "timestamp with time zone";
+			}
 		}
 		return super.columnType( sqlTypeCode );
 	}
@@ -160,14 +166,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		StringBuilder pattern = new StringBuilder();
-		final boolean castTo;
-		if ( unit.isDateUnit() ) {
-			castTo = temporalType == TemporalType.TIME;
-		}
-		else {
-			castTo = temporalType == TemporalType.DATE;
-		}
+		final StringBuilder pattern = new StringBuilder();
 		pattern.append("add_");
 		switch (unit) {
 			case NATIVE:
@@ -185,12 +184,24 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 				pattern.append("?1");
 		}
 		pattern.append("s(");
-		if (castTo) {
-			pattern.append("cast(?3 as timestamp)");
+		final String timestampExpression;
+		if ( unit.isDateUnit() ) {
+			if ( temporalType == TemporalType.TIME ) {
+				timestampExpression = "timestamp('1970-01-01',?3)";
+			}
+			else {
+				timestampExpression = "?3";
+			}
 		}
 		else {
-			pattern.append("?3");
+			if ( temporalType == TemporalType.DATE ) {
+				timestampExpression = "cast(?3 as timestamp)";
+			}
+			else {
+				timestampExpression = "?3";
+			}
 		}
+		pattern.append(timestampExpression);
 		pattern.append(",");
 		switch (unit) {
 			case NANOSECOND:
@@ -218,5 +229,24 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 				return new DB2zLegacySqlAstTranslator<>( sessionFactory, statement, getVersion() );
 			}
 		};
+	}
+
+	// I speculate that this is a correct implementation of rowids for DB2 for z/OS,
+	// just on the basis of the DB2 docs, but I currently have no way to test it
+	// Note that the implementation inherited from DB2Dialect for LUW will not work!
+
+	@Override
+	public String rowId(String rowId) {
+		return rowId.isEmpty() ? "rowid_" : rowId;
+	}
+
+	@Override
+	public int rowIdSqlType() {
+		return ROWID;
+	}
+
+	@Override
+	public String getRowIdColumnString(String rowId) {
+		return rowId( rowId ) + " rowid not null generated always";
 	}
 }

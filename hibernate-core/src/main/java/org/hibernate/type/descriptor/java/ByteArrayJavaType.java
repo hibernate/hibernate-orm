@@ -15,6 +15,7 @@ import java.util.Arrays;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -24,6 +25,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 	public static final ByteArrayJavaType INSTANCE = new ByteArrayJavaType();
+	private static final Byte[] EMPTY_BYTE_ARRAY = new Byte[0];
 
 	@SuppressWarnings("unchecked")
 	public ByteArrayJavaType() {
@@ -117,6 +119,30 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 				throw new HibernateException( "Unable to access lob stream", e );
 			}
 		}
+		if ( value instanceof java.sql.Array ) {
+			try {
+				//noinspection unchecked
+				value = (X) ( (java.sql.Array) value ).getArray();
+				if ( value instanceof Byte[] ) {
+					return (Byte[]) value;
+				}
+				else if ( value instanceof Object[] ) {
+					final Object[] array = (Object[]) value;
+					if ( array.length == 0 ) {
+						return EMPTY_BYTE_ARRAY;
+					}
+					final Byte[] bytes = new Byte[array.length];
+					for ( int i = 0; i < array.length; i++ ) {
+						bytes[i] = ByteJavaType.INSTANCE.wrap( array[i], options );
+					}
+					return bytes;
+				}
+			}
+			catch ( SQLException ex ) {
+				// This basically shouldn't happen unless you've lost connection to the database.
+				throw new HibernateException( ex );
+			}
+		}
 
 		throw unknownWrap( value.getClass() );
 	}
@@ -125,21 +151,16 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( bytes == null ) {
 			return null;
 		}
-		final Byte[] result = new Byte[bytes.length];
-		for ( int i = 0; i < bytes.length; i++ ) {
-			result[i] = bytes[i];
-		}
-		return result;
+		// Since a Byte[] can contain nulls but a byte[] can't, we have to serialize/deserialize the content
+		return (Byte[]) SerializationHelper.deserialize( bytes );
 	}
 
 	private byte[] unwrapBytes(Byte[] bytes) {
 		if ( bytes == null ) {
 			return null;
 		}
-		final byte[] result = new byte[bytes.length];
-		for ( int i = 0; i < bytes.length; i++ ) {
-			result[i] = bytes[i];
-		}
-		return result;
+
+		// Since a Byte[] can contain nulls but a byte[] can't, we have to serialize/deserialize the content
+		return SerializationHelper.serialize( bytes );
 	}
 }

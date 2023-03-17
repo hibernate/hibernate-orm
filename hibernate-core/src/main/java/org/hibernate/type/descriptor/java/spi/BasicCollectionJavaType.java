@@ -22,7 +22,6 @@ import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
@@ -30,7 +29,10 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicCollectionType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.converter.internal.CollectionConverter;
+import org.hibernate.type.ConvertedBasicCollectionType;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.AbstractJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -110,22 +112,47 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			// Register the collection type as that will be resolved in the next step
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( collectionJavaType );
 		}
-		return typeConfiguration.standardBasicTypeForJavaType(
-				collectionJavaType.getJavaType(),
-				javaType -> {
-					JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
-					if ( arrayJdbcType instanceof ArrayJdbcType ) {
-						arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
-								typeConfiguration,
-								dialect,
-								elementType,
-								columnTypeInformation
-						);
+		final BasicValueConverter<E, ?> valueConverter = elementType.getValueConverter();
+		if ( valueConverter == null ) {
+			return typeConfiguration.standardBasicTypeForJavaType(
+					collectionJavaType.getJavaType(),
+					javaType -> {
+						JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
+						if ( arrayJdbcType instanceof ArrayJdbcType ) {
+							arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
+									typeConfiguration,
+									dialect,
+									elementType,
+									columnTypeInformation
+							);
+						}
+						//noinspection unchecked,rawtypes
+						return new BasicCollectionType( elementType, arrayJdbcType, collectionJavaType );
 					}
-					//noinspection unchecked,rawtypes
-					return new BasicCollectionType( elementType, arrayJdbcType, collectionJavaType );
-				}
-		);
+			);
+		}
+		else {
+			final JavaType<Object> relationalJavaType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
+					Array.newInstance( valueConverter.getRelationalJavaType().getJavaTypeClass(), 0 ).getClass()
+			);
+
+			JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
+			if ( arrayJdbcType instanceof ArrayJdbcType ) {
+				arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
+						typeConfiguration,
+						dialect,
+						elementType,
+						columnTypeInformation
+				);
+			}
+			//noinspection unchecked,rawtypes
+			return new ConvertedBasicCollectionType<>(
+					elementType,
+					arrayJdbcType,
+					collectionJavaType,
+					new CollectionConverter( valueConverter, collectionJavaType, relationalJavaType )
+			);
+		}
 	}
 
 	@Override

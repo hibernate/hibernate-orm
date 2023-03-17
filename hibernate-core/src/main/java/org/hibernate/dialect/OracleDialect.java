@@ -529,86 +529,84 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		StringBuilder pattern = new StringBuilder();
-		boolean timestamp = toTemporalType == TemporalType.TIMESTAMP || fromTemporalType == TemporalType.TIMESTAMP;
-		switch (unit) {
+		final StringBuilder pattern = new StringBuilder();
+		final boolean hasTimePart = toTemporalType != TemporalType.DATE || fromTemporalType != TemporalType.DATE;
+		switch ( unit ) {
 			case YEAR:
-				extractField(pattern, YEAR, unit);
+				extractField( pattern, YEAR, unit );
 				break;
 			case QUARTER:
 			case MONTH:
-				pattern.append("(");
-				extractField(pattern, YEAR, unit);
-				pattern.append("+");
-				extractField(pattern, MONTH, unit);
-				pattern.append(")");
+				pattern.append( "(" );
+				extractField( pattern, YEAR, unit );
+				pattern.append( "+" );
+				extractField( pattern, MONTH, unit );
+				pattern.append( ")" );
 				break;
 			case WEEK:
 			case DAY:
-				extractField(pattern, DAY, unit);
+				extractField( pattern, DAY, unit );
 				break;
 			case HOUR:
-				pattern.append("(");
-				extractField(pattern, DAY, unit);
-				if (timestamp) {
-					pattern.append("+");
-					extractField(pattern, HOUR, unit);
+				pattern.append( "(" );
+				extractField( pattern, DAY, unit );
+				if ( hasTimePart ) {
+					pattern.append( "+" );
+					extractField( pattern, HOUR, unit );
 				}
-				pattern.append(")");
+				pattern.append( ")" );
 				break;
 			case MINUTE:
-				pattern.append("(");
-				extractField(pattern, DAY, unit);
-				if (timestamp) {
-					pattern.append("+");
-					extractField(pattern, HOUR, unit);
-					pattern.append("+");
-					extractField(pattern, MINUTE, unit);
+				pattern.append( "(" );
+				extractField( pattern, DAY, unit );
+				if ( hasTimePart ) {
+					pattern.append( "+" );
+					extractField( pattern, HOUR, unit );
+					pattern.append( "+" );
+					extractField( pattern, MINUTE, unit );
 				}
-				pattern.append(")");
+				pattern.append( ")" );
 				break;
 			case NATIVE:
 			case NANOSECOND:
 			case SECOND:
-				pattern.append("(");
-				extractField(pattern, DAY, unit);
-				if (timestamp) {
-					pattern.append("+");
-					extractField(pattern, HOUR, unit);
-					pattern.append("+");
-					extractField(pattern, MINUTE, unit);
-					pattern.append("+");
-					extractField(pattern, SECOND, unit);
+				pattern.append( "(" );
+				extractField( pattern, DAY, unit );
+				if ( hasTimePart ) {
+					pattern.append( "+" );
+					extractField( pattern, HOUR, unit );
+					pattern.append( "+" );
+					extractField( pattern, MINUTE, unit );
+					pattern.append( "+" );
+					extractField( pattern, SECOND, unit );
 				}
-				pattern.append(")");
+				pattern.append( ")" );
 				break;
 			default:
-				throw new SemanticException("unrecognized field: " + unit);
+				throw new SemanticException( "unrecognized field: " + unit );
 		}
 		return pattern.toString();
 	}
 
-	private void extractField(
-			StringBuilder pattern,
-			TemporalUnit unit, TemporalUnit toUnit) {
-		pattern.append("extract(");
-		pattern.append( translateExtractField(unit) );
-		pattern.append(" from (?3-?2) ");
-		switch (unit) {
+	private void extractField(StringBuilder pattern, TemporalUnit unit, TemporalUnit toUnit) {
+		pattern.append( "extract(" );
+		pattern.append( translateExtractField( unit ) );
+		pattern.append( " from (?3-?2) " );
+		switch ( unit ) {
 			case YEAR:
 			case MONTH:
-				pattern.append("year to month");
+				pattern.append( "year to month" );
 				break;
 			case DAY:
 			case HOUR:
 			case MINUTE:
 			case SECOND:
-				pattern.append("day to second");
+				pattern.append( "day to second" );
 				break;
 			default:
-				throw new SemanticException(unit + " is not a legal field");
+				throw new SemanticException( unit + " is not a legal field" );
 		}
-		pattern.append(")");
+		pattern.append( ")" );
 		pattern.append( unit.conversionFactor( toUnit, this ) );
 	}
 
@@ -637,8 +635,9 @@ public class OracleDialect extends Dialect {
 				return "number($p,$s)";
 
 			case DATE:
-			case TIME:
 				return "date";
+			case TIME:
+				return "timestamp($p)";
 				// the only difference between date and timestamp
 				// on Oracle is that date has no fractional seconds
 			case TIME_WITH_TIMEZONE:

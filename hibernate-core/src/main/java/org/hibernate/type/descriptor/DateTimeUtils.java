@@ -456,12 +456,17 @@ public final class DateTimeUtils {
 		if ( defaultTimestampPrecision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
 			return temporal;
 		}
-		final int precisionMask = pow10( 9 - defaultTimestampPrecision );
-		final int nano = temporal.get( ChronoField.NANO_OF_SECOND );
-		final int nanosToRound = nano % precisionMask;
-		final int finalNano = nano - nanosToRound + ( nanosToRound >= ( precisionMask >> 1 ) ? precisionMask : 0 );
 		//noinspection unchecked
-		return (T) temporal.with( ChronoField.NANO_OF_SECOND, finalNano );
+		return (T) temporal.with(
+				ChronoField.NANO_OF_SECOND,
+				roundToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), defaultTimestampPrecision )
+		);
+	}
+
+	public static long roundToPrecision(int nano, int precision) {
+		final int precisionMask = pow10( 9 - precision );
+		final int nanosToRound = nano % precisionMask;
+		return nano - nanosToRound + ( nanosToRound >= ( precisionMask >> 1 ) ? precisionMask : 0 );
 	}
 
 	private static int pow10(int exponent) {

@@ -19,6 +19,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -38,6 +39,8 @@ import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_UTC;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
@@ -117,6 +120,8 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										aggregateParentReadExpression + "." + column + ".date()"
 								);
 							case TIME:
+							case TIME_WITH_TIMEZONE:
+							case TIME_UTC:
 								return template.replace(
 										placeholder,
 										"to_timestamp(" + aggregateParentReadExpression + "." + column + ".string(),'hh24:mi:ss')"

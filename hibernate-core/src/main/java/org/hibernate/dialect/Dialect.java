@@ -178,14 +178,16 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
-import org.hibernate.type.descriptor.jdbc.InstantAsTimestampJdbcType;
-import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsJdbcTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -229,6 +231,7 @@ import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_UTC;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
@@ -404,6 +407,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		ddlTypeRegistry.addDescriptor( simpleSqlType( DATE ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( TIME ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( TIME_WITH_TIMEZONE ) );
+		ddlTypeRegistry.addDescriptor( simpleSqlType( TIME_UTC ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( TIMESTAMP ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( TIMESTAMP_WITH_TIMEZONE ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( TIMESTAMP_UTC ) );
@@ -534,17 +538,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			case DATE:
 				return "date";
 			case TIME:
-				return "time";
+				return "time($p)";
 			case TIME_WITH_TIMEZONE:
 				// type included here for completeness but note that
 				// very few databases support it, and the general
 				// advice is to caution against its use (for reasons,
 				// check the comments in the Postgres documentation).
-				return "time with time zone";
+				return "time($p) with time zone";
 			case TIMESTAMP:
 				return "timestamp($p)";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp($p) with time zone";
+			case TIME_UTC:
+				return getTimeZoneSupport() == TimeZoneSupport.NATIVE
+						? columnType( TIME_WITH_TIMEZONE )
+						: columnType( TIME );
 			case TIMESTAMP_UTC:
 				return getTimeZoneSupport() == TimeZoneSupport.NATIVE
 						? columnType( TIMESTAMP_WITH_TIMEZONE )
@@ -1555,10 +1563,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 
 		if ( getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
-			jdbcTypeRegistry.addDescriptor( InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
 		}
 		else {
-			jdbcTypeRegistry.addDescriptor( InstantAsTimestampJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( TimestampUtcAsJdbcTimestampJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( TimeUtcAsJdbcTimeJdbcType.INSTANCE );
 		}
 
 		if ( supportsStandardArrays() ) {
@@ -4899,6 +4909,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						precision = (int) ceil( precision * LOG_BASE2OF10 );
 					}
 					break;
+				case SqlTypes.TIME:
+				case SqlTypes.TIME_WITH_TIMEZONE:
+				case SqlTypes.TIME_UTC:
 				case SqlTypes.TIMESTAMP:
 				case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 				case SqlTypes.TIMESTAMP_UTC:

@@ -13,6 +13,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
@@ -22,6 +23,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -127,9 +129,15 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( LocalTime.class.isAssignableFrom( type ) ) {
-			return value instanceof java.sql.Time
-					? ( (java.sql.Time) value ).toLocalTime()
-					: new java.sql.Time( value.getTime() ).toLocalTime();
+			final Time time = value instanceof java.sql.Time
+					? ( (java.sql.Time) value )
+					: new java.sql.Time( value.getTime() );
+			final LocalTime localTime = time.toLocalTime();
+			final long millis = time.getTime() % 1000;
+			if ( millis == 0 ) {
+				return localTime;
+			}
+			return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
 		}
 
 		if ( Time.class.isAssignableFrom( type ) ) {
@@ -174,7 +182,13 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 		}
 
 		if ( value instanceof LocalTime ) {
-			return Time.valueOf( (LocalTime) value );
+			final LocalTime localTime = (LocalTime) value;
+			final Time time = Time.valueOf( localTime );
+			if ( localTime.getNano() == 0 ) {
+				return time;
+			}
+			// Preserve milliseconds, which java.sql.Time supports
+			return new Time( time.getTime() + DateTimeUtils.roundToPrecision( localTime.getNano(), 3 ) );
 		}
 
 		if ( value instanceof Date ) {
@@ -250,8 +264,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		//seconds (currently ignored since Dialects don't parameterize time type by precision)
-		return 0;
+		return dialect.getDefaultTimestampPrecision();
 	}
 
 	@Override

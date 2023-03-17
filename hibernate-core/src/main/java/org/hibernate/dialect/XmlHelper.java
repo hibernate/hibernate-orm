@@ -160,6 +160,7 @@ public class XmlHelper {
 				);
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
+			case SqlTypes.TIME_UTC:
 				return fromRawObject(
 						jdbcMapping,
 						JdbcTimeJavaType.INSTANCE.fromEncodedString(
@@ -598,6 +599,7 @@ public class XmlHelper {
 				break;
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
+			case SqlTypes.TIME_UTC:
 				JdbcTimeJavaType.INSTANCE.appendEncodedString(
 						appender,
 						jdbcJavaType.unwrap( value, java.sql.Time.class, options )

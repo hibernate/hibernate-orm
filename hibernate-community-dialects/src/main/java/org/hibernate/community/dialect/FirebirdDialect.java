@@ -150,7 +150,7 @@ public class FirebirdDialect extends Dialect {
 			case TIMESTAMP:
 				return "timestamp";
 			case TIME_WITH_TIMEZONE:
-				return getVersion().isBefore( 4, 0 ) ? "time" : super.columnType( sqlTypeCode );
+				return getVersion().isBefore( 4, 0 ) ? "time" : "time with time zone";
 			case TIMESTAMP_WITH_TIMEZONE:
 				return getVersion().isBefore( 4, 0 ) ? "timestamp" : "timestamp with time zone";
 			case BINARY:

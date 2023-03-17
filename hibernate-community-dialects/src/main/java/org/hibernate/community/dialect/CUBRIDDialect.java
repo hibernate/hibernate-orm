@@ -54,6 +54,7 @@ import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
@@ -83,6 +84,7 @@ public class CUBRIDDialect extends Dialect {
 			//(always 3, millisecond precision)
 			case TIMESTAMP:
 				return "datetime";
+			case TIME_WITH_TIMEZONE:
 			case TIMESTAMP_WITH_TIMEZONE:
 				return "datetimetz";
 			default:

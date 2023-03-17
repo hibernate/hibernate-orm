@@ -50,6 +50,20 @@ To get the old behavior, annotate the column with `@Column(definition = "clob")`
 
 This change was done because `blob` and `json` are way more efficient and because we don't expect wide usage of `SqlTypes.JSON` yet.
 
+[[ddl-json-h2]]
+=== JSON mapping changes on H2
+
+On H2 1.4.200+, the type code `SqlTypes.JSON` now by default refers to the DDL type `json`, whereas before it was using `clob`.
+Due to this change, schema validation errors could occur on existing databases.
+
+The migration to `json` requires a migration expression like `cast(old as json)`.
+Note that this change in behavior is backwards compatible and you do not need to change your schema,
+unless you are running into schema validation errors and want to fix them.
+
+To get the old behavior, annotate the column with `@Column(definition = "clob")`.
+
+This change was done because the native `json` type is more efficient and because we don't expect wide usage of `SqlTypes.JSON` yet.
+
 [[ddl-implicit-datatype-enum]]
 === Datatype for enums
 

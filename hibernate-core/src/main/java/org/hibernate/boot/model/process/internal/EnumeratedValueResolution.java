@@ -31,8 +31,10 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.EnumType;
 
+import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
  * Resolution for {@linkplain Enum enum} mappings using {@link jakarta.persistence.Enumerated},
@@ -138,20 +140,20 @@ public class EnumeratedValueResolution<E extends Enum<E>,R> implements BasicValu
 		if ( style == EnumType.ORDINAL ) {
 			jdbcType = jdbcTypeRegistry.getDescriptor( enumJavaType.hasManyValues() ? SMALLINT : TINYINT );
 
-			final JavaType<Integer> jdbcJavaType = javaTypeRegistry.getDescriptor( Integer.class );
+			final JavaType<Integer> jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping(
+					jdbcTypeIndicators.getColumnPrecision(),
+					jdbcTypeIndicators.getColumnScale(),
+					typeConfiguration
+			);
 			converter = new OrdinalEnumValueConverter<>( enumJavaType, jdbcType, jdbcJavaType );
 		}
 		else if ( style == EnumType.STRING ) {
-			//noinspection rawtypes
-			final JavaType jdbcJavaType;
-			if ( jdbcTypeIndicators.getColumnLength() == 1 ) {
-				jdbcJavaType = javaTypeRegistry.getDescriptor( Character.class );
-			}
-			else {
-				jdbcJavaType = javaTypeRegistry.getDescriptor( String.class );
-			}
-			jdbcType = jdbcJavaType.getRecommendedJdbcType( jdbcTypeIndicators );
-			//noinspection unchecked,rawtypes
+			jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeIndicators.getColumnLength() == 1 ? CHAR : VARCHAR );
+			final JavaType<String> jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping(
+					jdbcTypeIndicators.getColumnPrecision(),
+					jdbcTypeIndicators.getColumnScale(),
+					typeConfiguration
+			);
 			converter = new NamedEnumValueConverter<>( enumJavaType, jdbcType, jdbcJavaType );
 		}
 		else {

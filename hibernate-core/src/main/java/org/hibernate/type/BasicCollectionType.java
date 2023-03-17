@@ -25,7 +25,10 @@ public class BasicCollectionType<C extends Collection<E>, E>
 	private final BasicType<E> baseDescriptor;
 	private final String name;
 
-	public BasicCollectionType(BasicType<E> baseDescriptor, JdbcType arrayJdbcType, BasicCollectionJavaType<C, E> collectionTypeDescriptor) {
+	public BasicCollectionType(
+			BasicType<E> baseDescriptor,
+			JdbcType arrayJdbcType,
+			BasicCollectionJavaType<C, E> collectionTypeDescriptor) {
 		super( arrayJdbcType, collectionTypeDescriptor );
 		this.baseDescriptor = baseDescriptor;
 		this.name = determineName( collectionTypeDescriptor, baseDescriptor );

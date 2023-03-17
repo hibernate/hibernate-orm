@@ -14,8 +14,6 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,7 +39,6 @@ import static org.junit.Assert.assertThat;
  * @author Christian Beikov
  */
 @SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
-@SkipForDialect( value = OracleDialect.class, jiraKey = "HHH-16333", comment = "converters not handled properly" )
 public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
@@ -135,12 +132,13 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private Object nativeEnumArray(MyEnum... enums) {
-		final DdlTypeRegistry ddlTypeRegistry = sessionFactory().getTypeConfiguration().getDdlTypeRegistry();
-		final String tinyintType = ddlTypeRegistry.getDescriptor( SqlTypes.TINYINT ).getRawTypeName();
-		final String smallintType = ddlTypeRegistry.getDescriptor( SqlTypes.SMALLINT ).getRawTypeName();
-		// We have to bind a Short[] if the DDL type is smallint to align with the Hibernate mapping,
-		// but also if the dialect supports arrays natively, because then a Short[] can be coerced to a Byte[]
-		if ( tinyintType.equals( smallintType ) || getDialect().supportsStandardArrays() ) {
+		// We also have to pass a Short[] for Oracle because that serializes to XML by default
+		if ( getDialect().supportsStandardArrays() || getDialect() instanceof OracleDialect ) {
+			// For native queries we must bind a Short[] instead of Byte[] even if we can use the "tinyint array" DDL type.
+			// This is because the JavaType we have registered for Byte[] does not implement BasicPluralJavaType.
+			// We can't make it implement that though, because that would be backwards incompatible,
+			// leading to Byte[] uses in the domain being treated as "tinyint array" or "smallint array" instead of varbinary.
+			// Luckily, JDBC drivers that support standard arrays are capable to coerce a Short[] to Byte[]
 			final Short[] array = new Short[enums.length];
 			for ( int i = 0; i < enums.length; i++ ) {
 				array[i] = enums[i] == null ? null : (short) enums[i].ordinal();

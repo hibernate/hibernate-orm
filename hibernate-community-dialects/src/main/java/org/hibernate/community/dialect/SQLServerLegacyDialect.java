@@ -65,7 +65,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -268,7 +268,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 		typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
 				Types.TINYINT,
-				SmallIntJdbcType.INSTANCE
+				TinyIntAsSmallIntJdbcType.INSTANCE
 		);
 		typeContributions.contributeJdbcType( XmlJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( UUIDJdbcType.INSTANCE );

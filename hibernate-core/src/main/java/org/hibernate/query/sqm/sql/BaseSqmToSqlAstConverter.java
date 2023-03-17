@@ -4948,10 +4948,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final Object value = literal.getLiteralValue();
 				final Object sqlLiteralValue;
 				// For converted query literals, we support both, the domain and relational java type
-				if ( value == null || valueConverter.getDomainJavaType().getJavaTypeClass().isInstance( value ) ) {
+				if ( value == null || valueConverter.getDomainJavaType().isInstance( value ) ) {
 					sqlLiteralValue = valueConverter.toRelationalValue( value );
 				}
-				else if ( valueConverter.getRelationalJavaType().getJavaTypeClass().isInstance( value ) ) {
+				else if ( valueConverter.getRelationalJavaType().isInstance( value ) ) {
 					sqlLiteralValue = value;
 				}
 				else if ( basicValuedMapping instanceof EntityDiscriminatorMapping ) {
@@ -4961,6 +4961,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqlLiteralValue = valueConverter.getRelationalJavaType().wrap(
 							value,
 							creationContext.getSessionFactory().getWrapperOptions()
+					);
+				}
+				// In HQL, number literals might not match the relational java type exactly,
+				// so we allow coercion between the number types
+				else if ( Number.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )
+						&& value instanceof Number ) {
+					sqlLiteralValue = valueConverter.getRelationalJavaType().coerce(
+							value,
+							creationContext.getSessionFactory()::getTypeConfiguration
 					);
 				}
 				else {

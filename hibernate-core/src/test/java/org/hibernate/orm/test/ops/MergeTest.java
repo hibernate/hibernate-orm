@@ -823,7 +823,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@AfterEach
-	private void cleanup(SessionFactoryScope scope) {
+	public void cleanup(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from NumberedNode where parent is not null" ).executeUpdate();

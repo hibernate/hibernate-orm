@@ -8,7 +8,12 @@ package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -26,7 +31,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class DiscriminatorPathInterpretation extends AbstractSqmPathInterpretation implements DomainResultProducer {
+public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpretation<T> {
 	private final Expression expression;
 
 	public DiscriminatorPathInterpretation(
@@ -38,6 +43,25 @@ public class DiscriminatorPathInterpretation extends AbstractSqmPathInterpretati
 
 		final JdbcMapping jdbcMappingToUse = mapping.getDiscriminatorMapping().getJdbcMapping();
 		expression = getDiscriminatorMapping().resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, sqlAstCreationState );
+	}
+
+	public static SqmPathInterpretation<?> from(
+			DiscriminatorSqmPath path,
+			SqmToSqlAstConverter converter) {
+		assert path.getEntityDescriptor().hasSubclasses();
+
+		final NavigablePath navigablePath = path.getNavigablePath();
+		final TableGroup tableGroup = converter.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
+		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		final EntityMappingType entityMapping;
+		if ( modelPart instanceof EntityValuedModelPart ) {
+			entityMapping = ( (EntityValuedModelPart) modelPart ).getEntityMappingType();
+		}
+		else {
+			entityMapping = (EntityMappingType) ( (PluralAttributeMapping) modelPart ).getElementDescriptor().getPartMappingType();
+		}
+
+		return new DiscriminatorPathInterpretation<>( navigablePath, entityMapping, tableGroup, converter );
 	}
 
 	public EntityDiscriminatorMapping getDiscriminatorMapping() {
@@ -59,7 +83,7 @@ public class DiscriminatorPathInterpretation extends AbstractSqmPathInterpretati
 	}
 
 	@Override
-	public DomainResult<Class<?>> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		return getDiscriminatorMapping().createDomainResult( getNavigablePath(), getTableGroup(), resultVariable, creationState );
 	}
 

@@ -17,6 +17,7 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
@@ -46,6 +47,9 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	@Override
 	public TraversalResult traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
 		assert !(fetchable instanceof CollectionPart);
+		if ( fetchable instanceof NonAggregatedIdentifierMapping ) {
+			return new TraversalResult( currentGraphContext, new FetchStrategy( FetchTiming.IMMEDIATE, true ) );
+		}
 
 		final GraphImplementor previousContextRoot = currentGraphContext;
 		AttributeNodeImplementor attributeNode = null;
@@ -54,18 +58,17 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 		}
 
 		currentGraphContext = null;
-		FetchTiming fetchTiming = null;
-		boolean joined = false;
+		FetchStrategy fetchStrategy = null;
 
 		if ( attributeNode != null ) {
-			fetchTiming = FetchTiming.IMMEDIATE;
-			joined = true;
+
+			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
 
 			final Map<Class<?>, SubGraphImplementor> subgraphMap;
 			final Class<?> subgraphMapKey;
 
 			if ( fetchable instanceof PluralAttributeMapping ) {
-				PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 
 				if ( exploreKeySubgraph ) {
 					subgraphMap = attributeNode.getKeySubGraphMap();
@@ -85,17 +88,10 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 				currentGraphContext = subgraphMap.get( subgraphMapKey );
 			}
 		}
-		if ( fetchTiming == null ) {
-			if ( graphSemantic == GraphSemantic.FETCH ) {
-				fetchTiming = FetchTiming.DELAYED;
-				joined = false;
-			}
-			else {
-				fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-				joined = fetchable.getMappedFetchOptions().getStyle() == FetchStyle.JOIN;
-			}
+		if ( fetchStrategy == null && graphSemantic == GraphSemantic.FETCH ) {
+			fetchStrategy = new FetchStrategy( FetchTiming.DELAYED, false );
 		}
-		return new TraversalResult( previousContextRoot, fetchTiming, joined );
+		return new TraversalResult( previousContextRoot, fetchStrategy );
 	}
 
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {

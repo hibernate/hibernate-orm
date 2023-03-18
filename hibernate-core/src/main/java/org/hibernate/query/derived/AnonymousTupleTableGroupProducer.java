@@ -42,8 +42,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -376,9 +374,12 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
@@ -389,10 +390,12 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}

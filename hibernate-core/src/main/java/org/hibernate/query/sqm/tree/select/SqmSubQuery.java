@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteContainer;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaExpression;
@@ -51,6 +52,7 @@ import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.Tuple;
@@ -83,6 +85,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 			NodeBuilder builder) {
 		super( queryPart, resultType, builder );
 		this.parent = parent;
+		applyInferableType( resultType );
 	}
 
 	public SqmSubQuery(
@@ -94,6 +97,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		super( builder, cteStatements, resultType );
 		this.parent = parent;
 		setQueryPart( queryPart );
+		applyInferableType( resultType );
 	}
 
 	public SqmSubQuery(
@@ -102,6 +106,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 			NodeBuilder builder) {
 		super( resultType, builder );
 		this.parent = parent;
+		applyInferableType( resultType );
 	}
 
 	public SqmSubQuery(
@@ -197,6 +202,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		}
 		//noinspection unchecked
 		querySpec.setSelection( (JpaSelection<T>) expression );
+//		applyInferableType( (Class<T>) querySpec.getSelection().getJavaType() );
 		return this;
 	}
 
@@ -205,34 +211,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	public SqmSubQuery<T> multiselect(Selection<?>... selections) {
 		validateComplianceMultiselect();
 
-		final Selection<? extends T> resultSelection;
-		Class<T> resultType = getResultType();
-		if ( resultType == null || resultType == Object.class ) {
-			switch ( selections.length ) {
-				case 0: {
-					throw new IllegalArgumentException(
-							"empty selections passed to criteria query typed as Object"
-					);
-				}
-				case 1: {
-					resultSelection = ( Selection<? extends T> ) selections[0];
-					break;
-				}
-				default: {
-					setResultType( (Class<T>) Object[].class );
-					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
-				}
-			}
-		}
-		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
-		}
-		else if ( resultType.isArray() ) {
-			resultSelection = nodeBuilder().array( resultType, selections );
-		}
-		else {
-			resultSelection = nodeBuilder().construct( resultType, selections );
-		}
+		final Selection<? extends T> resultSelection = getResultSelection( selections );
+
 		final SqmQuerySpec<T> querySpec = getQuerySpec();
 		if ( querySpec.getSelectClause() == null ) {
 			querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder() ) );
@@ -601,6 +581,18 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		//noinspection unchecked
 		this.expressibleType = (SqmExpressible<T>) type;
 		setResultType( type == null ? null : expressibleType.getExpressibleJavaType().getJavaTypeClass() );
+	}
+
+	private void applyInferableType(Class<T> type) {
+		final EntityDomainType<T> entityDescriptor = nodeBuilder().getSessionFactory().getRuntimeMetamodels()
+				.getJpaMetamodel()
+				.findEntityType( type );
+		if ( entityDescriptor != null ) {
+			this.expressibleType = entityDescriptor;
+		}
+		else {
+			this.expressibleType = nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type );
+		}
 	}
 
 	@Override

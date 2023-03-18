@@ -35,7 +35,7 @@ public class SqmCreationHelper {
 		return lhs.append( base, determineAlias( alias ) );
 	}
 
-	private static String determineAlias(String alias) {
+	public static String determineAlias(String alias) {
 		// Make sure we always create a unique alias, otherwise we might use a wrong table group for the same join
 		if ( alias == null ) {
 			return Long.toString( System.nanoTime() );

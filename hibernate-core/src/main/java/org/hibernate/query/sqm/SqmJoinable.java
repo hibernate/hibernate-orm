@@ -7,10 +7,12 @@
 package org.hibernate.query.sqm;
 
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * Specialization for attributes that that can be used in creating SQM joins
@@ -29,4 +31,8 @@ public interface SqmJoinable<O, E> {
 			SqmCreationState creationState);
 
 	String getName();
+
+	default NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
+		return SqmCreationHelper.buildSubNavigablePath( parent, getName(), alias );
+	}
 }

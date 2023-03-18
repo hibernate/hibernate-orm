@@ -12,6 +12,7 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -22,7 +23,7 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> {
 
 	protected AnyDiscriminatorSqmPath(
 			NavigablePath navigablePath,
-			AnyDiscriminatorSqmPathSource referencedPathSource,
+			SqmPathSource referencedPathSource,
 			SqmPath lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );

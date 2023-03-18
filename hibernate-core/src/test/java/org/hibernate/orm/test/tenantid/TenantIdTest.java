@@ -10,6 +10,7 @@ import org.hibernate.PropertyValueException;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -18,18 +19,24 @@ import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.type.descriptor.DateTimeUtils;
+
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SessionFactory
-@DomainModel(annotatedClasses = { Account.class, Client.class })
+@DomainModel(annotatedClasses = { Account.class, Client.class, Record.class })
 @ServiceRegistry(
         settings = {
-                @Setting(name = HBM2DDL_DATABASE_ACTION, value = "create-drop")
+                @Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
         }
 )
 public class TenantIdTest implements SessionFactoryProducer {
@@ -77,7 +84,7 @@ public class TenantIdTest implements SessionFactoryProducer {
 
         currentTenant = "yours";
         scope.inTransaction( session -> {
-            assertNull( session.find(Account.class, acc.id) );
+            assertNotNull( session.find(Account.class, acc.id) );
             assertEquals( 0, session.createQuery("from Account").getResultList().size() );
             session.disableFilter(TenantIdBinder.FILTER_NAME);
             assertNotNull( session.find(Account.class, acc.id) );
@@ -122,6 +129,35 @@ public class TenantIdTest implements SessionFactoryProducer {
             assertEquals( "mine", acc.tenantId );
             assertEquals( "Steve", acc.client.name );
             assertEquals( "mine", acc.client.tenantId );
+        } );
+    }
+
+    @Test
+    @SkipForDialect(dialectClass = SybaseASEDialect.class,
+            reason = "low timestamp precision on Sybase")
+    public void testEmbeddedTenantId(SessionFactoryScope scope) {
+        currentTenant = "mine";
+        Record record = new Record();
+        scope.inTransaction( s -> s.persist( record ) );
+        assertEquals( "mine", record.state.tenantId );
+        assertNotNull( record.state.updated );
+        // Round the temporal to avoid issues when the VM produces nanosecond precision timestamps
+        record.state.updated = DateTimeUtils.roundToDefaultPrecision(
+                record.state.updated,
+                scope.getSessionFactory().getJdbcServices().getDialect()
+        );
+        scope.inTransaction( s -> {
+            Record r = s.find( Record.class, record.id );
+            assertEquals( "mine", r.state.tenantId );
+            assertEquals( record.state.updated, r.state.updated );
+            assertEquals( false, r.state.deleted );
+            r.state.deleted = true;
+        } );
+        scope.inTransaction( s -> {
+            Record r = s.find( Record.class, record.id );
+            assertEquals( "mine", r.state.tenantId );
+            assertNotEquals( record.state.updated, r.state.updated );
+            assertEquals( true, r.state.deleted );
         } );
     }
 }

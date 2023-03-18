@@ -198,12 +198,19 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		consumer.accept( offset, this );
-		return 1;
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, domainValue, this );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -317,11 +324,13 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return type.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+		return type.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 }

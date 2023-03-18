@@ -19,16 +19,17 @@ import org.hibernate.sql.ast.spi.SqlAppender;
  * @author Christian Beikov
  */
 public class LiteralAsParameter<T> implements SelfRenderingExpression {
-
 	private final Literal literal;
+	private final String parameterMarker;
 
-	public LiteralAsParameter(Literal literal) {
+	public LiteralAsParameter(Literal literal, String parameterMarker) {
 		this.literal = literal;
+		this.parameterMarker = parameterMarker;
 	}
 
 	@Override
 	public void renderToSql(SqlAppender sqlAppender, SqlAstTranslator<?> walker, SessionFactoryImplementor sessionFactory) {
-		sqlAppender.appendSql( "?" );
+		sqlAppender.append( parameterMarker );
 	}
 
 	@Override

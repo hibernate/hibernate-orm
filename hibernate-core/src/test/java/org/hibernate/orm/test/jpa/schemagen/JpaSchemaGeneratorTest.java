@@ -49,7 +49,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlLoadScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE, getLoadSqlScript() );
 		doTest( settings );
 	}
@@ -59,7 +59,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlLoadScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		settings.put( AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE, getResourceUrlString( getLoadSqlScript() ) );
 		doTest( settings );
 	}
@@ -68,9 +68,9 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlCreateScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE, getCreateSqlScript() );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, getCreateSqlScript() );
 		doTest( settings );
 	}
 
@@ -78,9 +78,9 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlCreateScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_CREATE_SCRIPT_SOURCE, getResourceUrlString( getCreateSqlScript() ) );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE, getResourceUrlString( getCreateSqlScript() ) );
 		doTest( settings );
 	}
 
@@ -89,9 +89,9 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlDropScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DROP_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop" );
-		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, getDropSqlScript() );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE, getDropSqlScript() );
 		doTest( settings );
 	}
 
@@ -99,9 +99,9 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@TestForIssue(jiraKey = "HHH-8271")
 	public void testSqlDropScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
-		settings.put( AvailableSettings.HBM2DDL_DROP_SOURCE, "metadata-then-script" );
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop" );
-		settings.put( AvailableSettings.HBM2DDL_DROP_SCRIPT_SOURCE, getResourceUrlString( getDropSqlScript() ) );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE, getResourceUrlString( getDropSqlScript() ) );
 		doTest( settings );
 	}
 

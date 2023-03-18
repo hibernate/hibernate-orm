@@ -21,7 +21,6 @@ import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -102,7 +101,6 @@ public class MultiNaturalIdLoadingBatcher {
 			if ( bindValue != null ) {
 				offset += jdbcParamBindings.registerParametersForEachJdbcValue(
 						bindValue,
-						Clause.IRRELEVANT,
 						offset,
 						entityDescriptor.getNaturalIdMapping(),
 						jdbcParameters,
@@ -124,7 +122,6 @@ public class MultiNaturalIdLoadingBatcher {
 				// pad the remaining parameters with null
 				offset += jdbcParamBindings.registerParametersForEachJdbcValue(
 						null,
-						Clause.IRRELEVANT,
 						offset,
 						entityDescriptor.getNaturalIdMapping(),
 						jdbcParameters,

@@ -17,6 +17,7 @@ import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.Remove;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -146,6 +147,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.spi.NavigablePath;
@@ -159,6 +161,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
+import static org.hibernate.cfg.AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
@@ -193,6 +196,28 @@ public class ModelBinder {
 		};
 		this.implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 		this.relationalObjectBinder = new RelationalObjectBinder( context );
+	}
+
+	/**
+	 * @deprecated Interprets the setting {@value AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS},
+	 * which itself is deprecated
+	 */
+	@SuppressWarnings("removal")
+	@Remove
+	@Deprecated( since = "6.2" )
+	public static boolean useEntityWhereClauseForCollections(MetadataBuildingContext buildingContext) {
+		final Object explicitSetting = buildingContext
+				.getBuildingOptions()
+				.getServiceRegistry()
+				.getService( ConfigurationService.class )
+				.getSettings()
+				.get( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
+		if ( explicitSetting != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSettingNoReplacement( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
+			return ConfigurationHelper.toBoolean( explicitSetting, true );
+		}
+
+		return true;
 	}
 
 	public void bindEntityHierarchy(EntityHierarchySourceImpl hierarchySource) {
@@ -2362,13 +2387,18 @@ public class ModelBinder {
 
 		try {
 			final Class<?> typeJavaType = classLoaderService.classForName( typeName );
-			final String beanName = typeName + ":" + TypeDefinition.NAME_COUNTER.getAndIncrement();
-
-			final ManagedBeanRegistry beanRegistry = bootstrapContext
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class );
-			final ManagedBean<?> bean = beanRegistry.getBean( beanName, typeJavaType );
-			final Object typeInstance = bean.getBeanInstance();
+			final Object typeInstance;
+			if ( metadataBuildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+				typeInstance = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( typeJavaType );
+			}
+			else {
+				final ManagedBeanRegistry beanRegistry = bootstrapContext
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class );
+				final String beanName = typeName + ":" + TypeDefinition.NAME_COUNTER.getAndIncrement();
+				final ManagedBean<?> bean = beanRegistry.getBean( beanName, typeJavaType );
+				typeInstance = bean.getBeanInstance();
+			}
 
 			if ( typeInstance instanceof ParameterizedType ) {
 				if ( parameters != null ) {
@@ -2596,15 +2626,22 @@ public class ModelBinder {
 			log.debugf( "Binding component [%s]", role );
 			if ( StringHelper.isNotEmpty( explicitComponentClassName ) ) {
 				try {
-					final Class<Object> componentClass = sourceDocument.getBootstrapContext().getClassLoaderAccess()
+					final Class<Object> componentClass = sourceDocument.getBootstrapContext()
+							.getClassLoaderAccess()
 							.classForName( explicitComponentClassName );
 					if ( CompositeUserType.class.isAssignableFrom( componentClass ) ) {
 						componentBinding.setTypeName( explicitComponentClassName );
-						CompositeUserType<?> compositeUserType = (CompositeUserType<?>) sourceDocument.getBootstrapContext()
-								.getServiceRegistry()
-								.getService( ManagedBeanRegistry.class )
-								.getBean( componentClass )
-								.getBeanInstance();
+						CompositeUserType<?> compositeUserType;
+						if ( sourceDocument.getBuildingOptions().disallowExtensionsInCdi() ) {
+							compositeUserType = (CompositeUserType<?>) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( componentClass );
+						}
+						else {
+							compositeUserType = (CompositeUserType<?>) sourceDocument.getBootstrapContext()
+									.getServiceRegistry()
+									.getService( ManagedBeanRegistry.class )
+									.getBean( componentClass )
+									.getBeanInstance();
+						}
 						explicitComponentClassName = compositeUserType.embeddable().getName();
 					}
 				}
@@ -3407,7 +3444,7 @@ public class ModelBinder {
 
 				final PersistentClass referencedEntityBinding = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
-				if ( useEntityWhereClauseForCollections() ) {
+				if ( useEntityWhereClauseForCollections( metadataBuildingContext ) ) {
 					// For a one-to-many association, there are 2 possible sources of "where" clauses that apply
 					// to the associated entity table:
 					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
@@ -3477,7 +3514,7 @@ public class ModelBinder {
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 
-				if ( useEntityWhereClauseForCollections() ) {
+				if ( useEntityWhereClauseForCollections( metadataBuildingContext ) ) {
 					// For a many-to-many association, there are 2 possible sources of "where" clauses that apply
 					// to the associated entity table (not the join table):
 					// 1) from the associated entity mapping; i.e., <class name="..." ... where="..." .../>
@@ -3593,18 +3630,6 @@ public class ModelBinder {
 			}
 			return entityBinding;
 		}
-	}
-
-	private boolean useEntityWhereClauseForCollections() {
-		return ConfigurationHelper.getBoolean(
-				AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
-				metadataBuildingContext
-						.getBuildingOptions()
-						.getServiceRegistry()
-						.getService( ConfigurationService.class )
-						.getSettings(),
-				true
-		);
 	}
 
 	private class PluralAttributeListSecondPass extends AbstractPluralAttributeSecondPass {

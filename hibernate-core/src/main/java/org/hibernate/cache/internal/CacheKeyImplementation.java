@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.Internal;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -31,7 +30,7 @@ public final class CacheKeyImplementation implements Serializable {
 	private final String tenantId;
 	private final int hashCode;
 
-	//because of object alignmnet, we had "free space" in this key:
+	//because of object alignment, we had "free space" in this key:
 	//this field isn't strictly necessary but convenient: watch for
 	//class layout changes.
 	private final boolean requiresDeepEquals;
@@ -54,12 +53,31 @@ public final class CacheKeyImplementation implements Serializable {
 			final Type type,
 			final String entityOrRoleName,
 			final String tenantId) {
+		this( disassembledKey, entityOrRoleName, tenantId, calculateHashCode( id, type, tenantId ) );
+	}
+
+	/**
+	 * Construct a new key for a collection or entity instance.
+	 * Note that an entity name should always be the root entity
+	 * name, not a subclass entity name.
+	 *
+	 * @param id The identifier associated with the cached data
+	 * @param entityOrRoleName The entity or collection-role name.
+	 * @param tenantId The tenant identifier associated with this data.
+	 * @param hashCode the pre-calculated hash code
+	 */
+	@Internal
+	public CacheKeyImplementation(
+			final Object id,
+			final String entityOrRoleName,
+			final String tenantId,
+			final int hashCode) {
 		assert entityOrRoleName != null;
-		this.id = disassembledKey;
+		this.id = id;
 		this.entityOrRoleName = entityOrRoleName;
 		this.tenantId = tenantId; //might actually be null
-		this.hashCode = calculateHashCode( id, type, tenantId );
-		this.requiresDeepEquals = disassembledKey.getClass().isArray();
+		this.hashCode = hashCode;
+		this.requiresDeepEquals = id.getClass().isArray();
 	}
 
 	private static int calculateHashCode(Object id, Type type, String tenantId) {
@@ -70,6 +88,16 @@ public final class CacheKeyImplementation implements Serializable {
 
 	public Object getId() {
 		return id;
+	}
+
+	@Internal
+	public String getEntityOrRoleName() {
+		return entityOrRoleName;
+	}
+
+	@Internal
+	public String getTenantId() {
+		return tenantId;
 	}
 
 	@Override

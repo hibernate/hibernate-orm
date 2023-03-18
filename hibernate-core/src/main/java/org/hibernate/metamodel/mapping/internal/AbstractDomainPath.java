@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
 import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -26,8 +27,10 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -258,11 +261,33 @@ public abstract class AbstractDomainPath implements DomainPath {
 				}
 			}
 		}
+
+		final SelectClause selectClause = ast.getSelectClause();
+
+		if ( selectClause.isDistinct() && selectClauseDoesNotContainOrderExpression( expression, selectClause ) ) {
+			final int valuesArrayPosition = selectClause.getSqlSelections().size();
+			SqlSelection sqlSelection = new SqlSelectionImpl(
+					valuesArrayPosition + 1,
+					valuesArrayPosition,
+					expression
+			);
+			selectClause.addSqlSelection( sqlSelection );
+		}
+
 		final Expression sortExpression = OrderingExpression.applyCollation(
 				expression,
 				collation,
 				creationState
 		);
 		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
+	}
+
+	private static boolean selectClauseDoesNotContainOrderExpression(Expression expression, SelectClause selectClause) {
+		for ( SqlSelection sqlSelection : selectClause.getSqlSelections() ) {
+			if ( sqlSelection.getExpression().equals( expression ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

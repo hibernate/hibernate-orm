@@ -32,18 +32,19 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderContainer;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStandard;
+import org.hibernate.query.results.dynamic.DynamicFetchBuilderContainer;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
 
 
 /**
@@ -154,7 +155,8 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		if ( !queryHadAliases ) {
 			return this.resultSetMapping;
 		}
-		final ResultSetMappingImpl resultSetMapping = new ResultSetMappingImpl( null );
+
+		final ResultSetMapping resultSetMapping = resolveResultSetMapping( null, false, factory );
 		final Set<String> visited = new HashSet<>();
 		this.resultSetMapping.visitResultBuilders(
 				(i, resultBuilder) -> {
@@ -204,7 +206,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private void applyFetchBuilder(
-			ResultSetMappingImpl resultSetMapping,
+			ResultSetMapping resultSetMapping,
 			DynamicFetchBuilderLegacy fetchBuilder,
 			Set<String> visited) {
 		if ( !visited.add( fetchBuilder.getTableAlias() ) ) {
@@ -321,7 +323,12 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			resultBuilderEntity.addProperty( loadable.getIdentifierPropertyName(), identifierAliases );
 		}
 
-		for ( String propertyName : loadable.getPropertyNames() ) {
+		final String[] propertyNames = loadable.getPropertyNames();
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			if ( !loadable.isPropertySelectable( i ) ) {
+				continue;
+			}
+			final String propertyName = propertyNames[i];
 			final String[] columnAliases = loadable.getSubclassPropertyColumnAliases( propertyName, suffix );
 			final Type propertyType = loadable.getPropertyType( propertyName );
 			addFetchBuilder(

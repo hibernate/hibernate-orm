@@ -23,6 +23,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
@@ -60,6 +61,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 							getNavigablePath(),
 							lhsTableGroup,
 							null,
+							null,
 							SqlAstJoinType.INNER,
 							true,
 							false,
@@ -68,10 +70,18 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 					lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 					return tableGroupJoin.getJoinedGroup();
 				}
-
 		);
 
 		afterInitialize( this, creationState );
+	}
+
+	// For Hibernate Reactive
+	protected EmbeddableFetchImpl(EmbeddableFetchImpl original) {
+		super( original.getFetchContainer(), original.getNavigablePath() );
+		fetchParent = original.fetchParent;
+		fetchTiming = original.fetchTiming;
+		tableGroup = original.tableGroup;
+		hasTableGroup = original.hasTableGroup;
 	}
 
 	@Override
@@ -132,16 +142,19 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 		final EmbeddableInitializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),
-				() -> new EmbeddableFetchInitializer(
-						parentAccess,
-						this,
-						creationState
-				)
+				() -> buildEmbeddableFetchInitializer( parentAccess, this, creationState )
 		).asEmbeddableInitializer();
 
 		assert initializer != null;
 
 		return new EmbeddableAssembler( initializer );
+	}
+
+	protected Initializer buildEmbeddableFetchInitializer(
+			FetchParentAccess parentAccess,
+				EmbeddableResultGraphNode embeddableFetch,
+			AssemblerCreationState creationState) {
+		return new EmbeddableFetchInitializer( parentAccess, this, creationState );
 	}
 
 	@Override

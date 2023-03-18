@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.hibernate.boot.model.naming.Identifier;
@@ -18,6 +19,7 @@ import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.CoreLogging;
@@ -27,22 +29,24 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Contributable;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
-import org.hibernate.generator.Generator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 
 /**
  * @author Steve Ebersole
@@ -198,58 +202,95 @@ public class TemporaryTable implements Exportable, Contributable {
 						);
 					}
 
-					entityDescriptor.visitSubTypeAttributeMappings(
-							attribute -> {
-								if ( attribute instanceof PluralAttributeMapping ) {
-									final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
-
-									if ( pluralAttribute.getSeparateCollectionTable() != null ) {
-										// Ensure that the FK target columns are available
-										ForeignKeyDescriptor keyDescriptor = pluralAttribute.getKeyDescriptor();
-										if ( keyDescriptor == null ) {
-											// This is expected to happen when processing a
-											// PostInitCallbackEntry because the callbacks
-											// are not ordered. The exception is caught in
-											// MappingModelCreationProcess.executePostInitCallbacks()
-											// and the callback is re-queued.
-											throw new IllegalStateException( "Not yet ready: " + pluralAttribute );
-										}
-										final ModelPart fkTarget = keyDescriptor.getTargetPart();
-										if ( !fkTarget.isEntityIdentifierMapping() ) {
-											final Value value = entityBinding.getSubclassProperty( pluralAttribute.getAttributeName() )
-													.getValue();
-											final Iterator<Selectable> columnIterator =
-													( (Collection) value ).getKey().getColumnIterator();
-											fkTarget.forEachSelectable(
-													(columnIndex, selection) -> {
-														final Selectable selectable = columnIterator.next();
-														if ( selectable instanceof Column ) {
-															final Column column = (Column) selectable;
-															columns.add(
-																	new TemporaryTableColumn(
-																			temporaryTable,
-																			column.getText( dialect ),
-																			selection.getJdbcMapping(),
-																			column.getSqlType(
-																					runtimeModelCreationContext.getMetadata()
-																			),
-																			column.getColumnSize(
-																					dialect,
-																					runtimeModelCreationContext.getMetadata()
-																			),
-																			column.isNullable()
-																	)
-															);
-														}
-													}
-											);
-										}
-									}
-								}
+					visitPluralAttributes( entityDescriptor, (pluralAttribute, attributeName) -> {
+						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+							// Ensure that the FK target columns are available
+							final ForeignKeyDescriptor keyDescriptor = pluralAttribute.getKeyDescriptor();
+							if ( keyDescriptor == null ) {
+								// This is expected to happen when processing a
+								// PostInitCallbackEntry because the callbacks
+								// are not ordered. The exception is caught in
+								// MappingModelCreationProcess.executePostInitCallbacks()
+								// and the callback is re-queued.
+								throw new IllegalStateException( "Not yet ready: " + pluralAttribute );
 							}
-					);
+							final ModelPart fkTarget = keyDescriptor.getTargetPart();
+							if ( !fkTarget.isEntityIdentifierMapping() ) {
+								final PersistentClass declaringClass = runtimeModelCreationContext.getBootModel()
+										.getEntityBinding( pluralAttribute.findContainingEntityMapping().getEntityName() );
+								final Property property = findPropertyByName( declaringClass, attributeName );
+								assert property != null;
+								final Iterator<Selectable> columnIterator = ( (Collection) property.getValue() ).getKey().getColumnIterator();
+								fkTarget.forEachSelectable(
+										(columnIndex, selection) -> {
+											final Selectable selectable = columnIterator.next();
+											if ( selectable instanceof Column ) {
+												final Column column = (Column) selectable;
+												columns.add(
+														new TemporaryTableColumn(
+																temporaryTable,
+																column.getText( dialect ),
+																selection.getJdbcMapping(),
+																column.getSqlType(
+																		runtimeModelCreationContext.getMetadata()
+																),
+																column.getColumnSize(
+																		dialect,
+																		runtimeModelCreationContext.getMetadata()
+																),
+																column.isNullable()
+														)
+												);
+											}
+										}
+								);
+							}
+						}
+					} );
 					return columns;
 				}
+		);
+	}
+
+	private static void visitPluralAttributes(
+			EntityMappingType entityDescriptor,
+			BiConsumer<PluralAttributeMapping, String> consumer) {
+		entityDescriptor.visitSubTypeAttributeMappings(
+				attribute -> {
+					if ( attribute instanceof PluralAttributeMapping ) {
+						consumer.accept( (PluralAttributeMapping) attribute, attribute.getAttributeName() );
+					}
+					else if ( attribute instanceof EmbeddedAttributeMapping ) {
+						visitPluralAttributes(
+								(EmbeddedAttributeMapping) attribute,
+								attribute.getAttributeName(),
+								consumer
+						);
+					}
+				}
+		);
+	}
+
+	private static void visitPluralAttributes(
+			EmbeddedAttributeMapping attributeMapping,
+			String attributeName,
+			BiConsumer<PluralAttributeMapping, String> consumer) {
+		attributeMapping.visitSubParts(
+				modelPart -> {
+					if ( modelPart instanceof PluralAttributeMapping ) {
+						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) modelPart;
+						consumer.accept( pluralAttribute, attributeName + "." + pluralAttribute.getAttributeName() );
+					}
+					else if ( modelPart instanceof EmbeddedAttributeMapping ) {
+						final EmbeddedAttributeMapping embeddedAttribute = (EmbeddedAttributeMapping) modelPart;
+						visitPluralAttributes(
+								embeddedAttribute,
+								attributeName + "." + embeddedAttribute.getAttributeName(),
+								consumer
+						);
+					}
+				},
+				null
 		);
 	}
 
@@ -356,8 +397,9 @@ public class TemporaryTable implements Exportable, Contributable {
 					entityDescriptor.visitSubTypeAttributeMappings(
 							attribute -> {
 								if ( !( attribute instanceof PluralAttributeMapping ) ) {
-									final SimpleValue value = (SimpleValue) entityBinding.getSubclassProperty( attribute.getAttributeName() )
-											.getValue();
+									final PersistentClass declaringClass = runtimeModelCreationContext.getBootModel()
+											.getEntityBinding( attribute.findContainingEntityMapping().getEntityName() );
+									final SimpleValue value = (SimpleValue) declaringClass.getProperty( attribute.getAttributeName() ).getValue();
 									final Iterator<Selectable> columnIterator = value.getConstraintColumnIterator();
 									attribute.forEachSelectable(
 											(columnIndex, selection) -> {

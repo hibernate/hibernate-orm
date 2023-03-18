@@ -251,6 +251,11 @@ public class BasicAttributeMapping
 	}
 
 	@Override
+	public String getWriteExpression() {
+		return customWriteExpression;
+	}
+
+	@Override
 	public String getColumnDefinition() {
 		return columnDefinition;
 	}
@@ -355,6 +360,7 @@ public class BasicAttributeMapping
 		// Lazy property. A valuesArrayPosition of -1 will lead to
 		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
+		boolean coerceResultType = false;
 		if ( fetchTiming == FetchTiming.DELAYED
 				&& !( fetchParent instanceof EmbeddableResultGraphNode )
 				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
@@ -370,6 +376,10 @@ public class BasicAttributeMapping
 
 			final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, true, fetchParent, creationState );
 			valuesArrayPosition = sqlSelection.getValuesArrayPosition();
+			if ( sqlSelection.getExpressionType() != null) {
+				// if the expression type is different that the expected type coerce the value
+				coerceResultType = sqlSelection.getExpressionType().getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType();
+			}
 		}
 
 		return new BasicFetch<>(
@@ -378,7 +388,8 @@ public class BasicAttributeMapping
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				coerceResultType
 		);
 	}
 
@@ -388,12 +399,14 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
@@ -410,7 +423,14 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( disassemble( domainValue, session ), this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), this );
+		return getJdbcTypeCount();
 	}
 }

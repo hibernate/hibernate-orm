@@ -23,9 +23,10 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 
 	public AnyDiscriminatorSqmPathSource(
 			String localPathName,
+			SqmPathSource<D> pathModel,
 			SimpleDomainType<D> domainType,
 			BindableType jpaBindableType) {
-		super( localPathName, domainType, jpaBindableType );
+		super( localPathName, pathModel, domainType, jpaBindableType );
 	}
 
 	@Override
@@ -37,7 +38,7 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 		else {
 			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() );
 		}
-		return new AnyDiscriminatorSqmPath( navigablePath, this, lhs, lhs.nodeBuilder() );
+		return new AnyDiscriminatorSqmPath( navigablePath, pathModel, lhs, lhs.nodeBuilder() );
 	}
 
 	@Override

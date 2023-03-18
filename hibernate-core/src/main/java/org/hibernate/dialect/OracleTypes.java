@@ -10,5 +10,6 @@ package org.hibernate.dialect;
  * The Oracle specific JDBC type code.
  */
 public class OracleTypes {
+	public static final int CURSOR = -10;
 	public static final int JSON = 2016;
 }

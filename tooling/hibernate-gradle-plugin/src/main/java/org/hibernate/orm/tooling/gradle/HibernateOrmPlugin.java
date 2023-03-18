@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.tooling.gradle;
 
+import java.lang.reflect.Method;
 import java.util.Set;
 
 import org.gradle.api.Action;
@@ -69,21 +70,26 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 
 			for ( String language : languages ) {
 				final String languageCompileTaskName = sourceSet.getCompileTaskName( language );
-				final AbstractCompile languageCompileTask = (AbstractCompile) project.getTasks().findByName( languageCompileTaskName );
+				final Task languageCompileTask = project.getTasks().findByName( languageCompileTaskName );
 				if ( languageCompileTask == null ) {
 					continue;
 				}
 
 				//noinspection Convert2Lambda
-				languageCompileTask.doLast( new Action<>() {
+				languageCompileTask.doLast(new Action<>() {
 					@Override
 					public void execute(Task t) {
-						final DirectoryProperty classesDirectory = languageCompileTask.getDestinationDirectory();
-						final ClassLoader classLoader = Helper.toClassLoader( sourceSet, project );
-
-						EnhancementHelper.enhance( classesDirectory, classLoader, ormDsl, project );
+						try {
+							final Method getDestinationDirectory = languageCompileTask.getClass().getMethod("getDestinationDirectory");
+							final DirectoryProperty classesDirectory = (DirectoryProperty) getDestinationDirectory.invoke(languageCompileTask);
+							final ClassLoader classLoader = Helper.toClassLoader(sourceSet, project);
+							EnhancementHelper.enhance(classesDirectory, classLoader, ormDsl, project);
+						}
+						catch (Exception e) {
+							throw new RuntimeException(e);
+						}
 					}
-				} );
+				});
 			}
 		} );
 	}
@@ -105,7 +111,7 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 
 			genTask.injectSourceSet( ormDsl.getSourceSet() );
 
-			genTask.getGenerationOutputDirectory().set( ormDsl.getJpaMetamodel().getGenerationOutputDirectory() );
+			genTask.getGenerationOutputDirectory().convention( ormDsl.getJpaMetamodel().getGenerationOutputDirectory() );
 
 			genTask.getApplyGeneratedAnnotation().convention( ormDsl.getJpaMetamodel().getApplyGeneratedAnnotation() );
 			genTask.getSuppressions().convention( ormDsl.getJpaMetamodel().getSuppressions() );

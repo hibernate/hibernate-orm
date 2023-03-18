@@ -7,6 +7,7 @@
 package org.hibernate.action.internal;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -195,7 +196,7 @@ public class EntityUpdateAction extends EntityAction {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final SharedSessionContractImplementor session = getSession();
-			if ( persister.isCacheInvalidationRequired() || entry.getStatus() != Status.MANAGED ) {
+			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
 				persister.getCacheAccessStrategy().remove( session, ck );
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
@@ -213,6 +214,13 @@ public class EntityUpdateAction extends EntityAction {
 				}
 			}
 		}
+	}
+
+	private static boolean isCacheInvalidationRequired(
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		// the cache has to be invalidated when CacheMode is equal to GET or IGNORE
+		return persister.isCacheInvalidationRequired() || session.getCacheMode() == CacheMode.GET || session.getCacheMode() == CacheMode.IGNORE;
 	}
 
 	private void handleGeneratedProperties(EntityEntry entry) {

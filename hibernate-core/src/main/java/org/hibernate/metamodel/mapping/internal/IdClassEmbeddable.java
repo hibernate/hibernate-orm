@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
@@ -15,7 +14,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -24,20 +22,13 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping.IdentifierValueMapper;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
@@ -45,7 +36,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -64,9 +54,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 //	private final IdClassEmbedded embedded;
 	private final EmbeddableValuedModelPart embedded;
 
-	private final MutableAttributeMappingList attributeMappings;
-	private SelectableMappings selectableMappings;
-
 	public IdClassEmbeddable(
 			Component idClassSource,
 			RootClass bootEntityDescriptor,
@@ -76,7 +63,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			String[] idColumns,
 			VirtualIdEmbeddable virtualIdEmbeddable,
 			MappingModelCreationProcess creationProcess) {
-		super( creationProcess );
+		super( new MutableAttributeMappingList( idClassSource.getPropertySpan() ) );
 
 		this.navigableRole = idMapping.getNavigableRole().append( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 		this.idMapping = idMapping;
@@ -87,8 +74,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
 
 		this.representationStrategy = new IdClassRepresentationStrategy( this );
-
-		this.attributeMappings = new MutableAttributeMappingList( idClassSource.getPropertySpan() );
 
 		final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 				null,
@@ -138,15 +123,13 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			SelectableMappings selectableMappings,
 			IdClassEmbeddable inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
-		super( creationProcess );
-
+		super( new MutableAttributeMappingList( inverseMappingType.attributeMappings.size() ) );
 
 		this.navigableRole = inverseMappingType.getNavigableRole();
 		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;;
 		this.virtualIdEmbeddable = (VirtualIdEmbeddable) valueMapping.getEmbeddableTypeDescriptor();
 		this.javaType = inverseMappingType.javaType;
 		this.representationStrategy = new IdClassRepresentationStrategy( this );
-		this.attributeMappings = new MutableAttributeMappingList( inverseMappingType.attributeMappings.size() );
 		this.embedded = valueMapping;
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
@@ -285,15 +268,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		return embedded;
 	}
 
-	@Override
-	public int getNumberOfAttributeMappings() {
-		return attributeMappings.size();
-	}
-
-	@Override
-	public AttributeMapping getAttributeMapping(int position) {
-		return attributeMappings.get( position );
-	}
 
 	@Override
 	public boolean isCreateEmptyCompositesEnabled() {
@@ -301,41 +275,10 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		return false;
 	}
 
-	@Override
-	public SingularAttributeMapping findAttributeMapping(String name) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributeMappings.getSingularAttributeMapping( i );
-			if ( attribute.getAttributeName().equals( name ) ) {
-				return attribute;
-			}
-		}
-		return null;
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	public AttributeMappingsList getAttributeMappings() {
-		return attributeMappings;
-	}
 
 	@Override
 	public void forEachAttributeMapping(Consumer<? super AttributeMapping> action) {
 		forEachAttribute( (index, attribute) -> action.accept( attribute ) );
-	}
-
-	@Override
-	public void forEachAttributeMapping(final IndexedConsumer<? super AttributeMapping> consumer) {
-		this.attributeMappings.indexedForEach( consumer );
-	}
-
-	@Override
-	public int getNumberOfFetchables() {
-		return getNumberOfAttributeMappings();
-	}
-
-	@Override
-	public Fetchable getFetchable(int position) {
-		return attributeMappings.get( position );
 	}
 
 	@Override
@@ -344,84 +287,22 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	@Override
-	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
-		attributeMappings.forEach( consumer );
-	}
-
-	@Override
-	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributeMappings.getSingularAttributeMapping( i );
-			if ( attribute.getAttributeName().equals( name ) ) {
-				return attribute;
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			consumer.accept( i, attributeMappings.get( i ) );
-		}
-	}
-
-	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		attributeMappings.forEach( (attribute) -> {
-			final Object attributeValue = attribute.getValue( domainValue );
-			attribute.breakDownJdbcValues( attributeValue, valueConsumer, session );
-		} );
-	}
-
-	@Override
-	public SelectableMapping getSelectable(int columnIndex) {
-		return selectableMappings.getSelectable( columnIndex );
-	}
-
-	@Override
-	public int forEachSelectable(SelectableConsumer consumer) {
-		return selectableMappings.forEachSelectable( 0, consumer );
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return selectableMappings.forEachSelectable( offset, consumer );
-	}
-
-	@Override
-	public int getJdbcTypeCount() {
-		return selectableMappings.getJdbcTypeCount();
-	}
-
-	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return selectableMappings.getJdbcMappings();
-	}
-
-	@Override
-	public JdbcMapping getJdbcMapping(int index) {
-		return selectableMappings.getSelectable( index ).getJdbcMapping();
-	}
-
-	@Override
-	public int forEachJdbcValue(
-			Object value,
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
-
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			if ( attributeMapping instanceof PluralAttributeMapping ) {
-				continue;
-			}
-			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			span += attributeMapping.forEachJdbcValue( o, span + offset, valuesConsumer, session );
+			final AttributeMapping attribute = attributeMappings.get( i );
+			final Object attributeValue = attribute.getValue( domainValue );
+			span +=  attribute.breakDownJdbcValues( attributeValue, offset + span, x, y, valueConsumer, session );
 		}
 		return span;
 	}
+
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
@@ -437,21 +318,16 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		return selectableMappings.forEachSelectable(
-				offset,
-				(index, selectable) -> action.accept( index, selectable.getJdbcMapping() )
-		);
-	}
 
 	@Override
 	public <T> DomainResult<T> createDomainResult(NavigablePath navigablePath, TableGroup tableGroup, String resultVariable, DomainResultCreationState creationState) {
@@ -516,25 +392,4 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		);
 	}
 
-	private boolean initColumnMappings() {
-		this.selectableMappings = SelectableMappingsImpl.from( this );
-		return true;
-	}
-
-	private void addAttribute(AttributeMapping attributeMapping) {
-		addAttribute( (SingularAttributeMapping) attributeMapping );
-	}
-
-	private void addAttribute(SingularAttributeMapping attributeMapping) {
-		// check if we've already seen this attribute...
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping previous = attributeMappings.get( i );
-			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
-				attributeMappings.setAttributeMapping( i, attributeMapping );
-				return;
-			}
-		}
-
-		attributeMappings.add( attributeMapping );
-	}
 }

@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -34,7 +35,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -316,17 +316,21 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			);
 		}
 
+		final JavaType<?> javaType = selectableMapping.getJdbcMapping().getJdbcJavaType();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping ),
-				selectableMapping.getJdbcMapping().getJdbcJavaType(),
+				javaType,
 				fetchParent,
 				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 
+		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				selectableMapping.getJdbcMapping()
+				selectableMapping.getJdbcMapping(),
+				// if the expression type is different that the expected type coerce the value
+				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != javaType
 		);
 	}
 
@@ -334,18 +338,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public Predicate generateJoinPredicate(
 			TableReference targetSideReference,
 			TableReference keySideReference,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		return new ComparisonPredicate(
-				new ColumnReference(
-						targetSideReference,
-						targetSide.getModelPart()
-				),
+				new ColumnReference( targetSideReference, targetSide.getModelPart() ),
 				ComparisonOperator.EQUAL,
-				new ColumnReference(
-						keySideReference,
-						keySide.getModelPart()
-				)
+				new ColumnReference( keySideReference, keySide.getModelPart() )
 		);
 	}
 
@@ -353,8 +350,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public Predicate generateJoinPredicate(
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
 				targetSide.getModelPart().getContainingTableExpression(),
@@ -366,12 +362,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				false
 		);
 
-		return generateJoinPredicate(
-				lhsTableReference,
-				rhsTableKeyReference,
-				sqlExpressionResolver,
-				creationContext
-		);
+		return generateJoinPredicate( lhsTableReference, rhsTableKeyReference, creationState );
 	}
 
 	@Override
@@ -449,18 +440,27 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, getJdbcMapping() );
-		return 1;
+		valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( disassemble( domainValue, session ), keySide.getModelPart() );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, disassemble( domainValue, session ), keySide.getModelPart() );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -514,12 +514,14 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, disassemble( value, session ), targetSide.getModelPart().getJdbcMapping() );
+		valuesConsumer.consume( offset, x, y, disassemble( value, session ), targetSide.getModelPart().getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 

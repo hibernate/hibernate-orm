@@ -75,6 +75,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -94,6 +95,7 @@ import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
+import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -248,6 +250,9 @@ public class H2LegacyDialect extends Dialect {
 			if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 			}
+			if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+			}
 		}
 	}
 
@@ -264,6 +269,9 @@ public class H2LegacyDialect extends Dialect {
 		}
 		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
+		}
+		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
 		}
 	}
 
@@ -309,8 +317,7 @@ public class H2LegacyDialect extends Dialect {
 		if ( useLocalTime ) {
 			functionFactory.localtimeLocaltimestamp();
 		}
-		functionFactory.trunc();
-//		functionFactory.truncate();
+		functionFactory.trunc_dateTrunc();
 		functionFactory.dateTrunc();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
@@ -392,6 +399,9 @@ public class H2LegacyDialect extends Dialect {
 			case OTHER:
 				if ( "GEOMETRY".equals( columnTypeName ) ) {
 					return jdbcTypeRegistry.getDescriptor( GEOMETRY );
+				}
+				else if ( "JSON".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( JSON );
 				}
 				break;
 		}

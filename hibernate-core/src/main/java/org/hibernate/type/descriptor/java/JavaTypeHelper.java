@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 
 /**
  * @author Steve Ebersole
@@ -22,5 +23,13 @@ public class JavaTypeHelper {
 		throw new HibernateException(
 				"Unknown wrap conversion requested: " + valueType.getName() + " to " + sourceType.getName() + " : `" + jtd.getClass().getName() + "` (" + jtd.getJavaTypeClass().getName() + ")"
 		);
+	}
+
+	public static boolean isTemporal(JavaType<?> javaType) {
+		return javaType != null && javaType.isTemporalType();
+	}
+
+	public static boolean isUnknown(JavaType<?> javaType) {
+		return javaType.getClass() == UnknownBasicJavaType.class;
 	}
 }

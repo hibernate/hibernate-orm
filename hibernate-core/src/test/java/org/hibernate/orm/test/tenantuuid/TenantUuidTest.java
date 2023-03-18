@@ -23,14 +23,17 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SessionFactory
 @DomainModel(annotatedClasses = { Account.class, Client.class })
 @ServiceRegistry(
         settings = {
-                @Setting(name = HBM2DDL_DATABASE_ACTION, value = "create-drop")
+                @Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
         }
 )
 public class TenantUuidTest implements SessionFactoryProducer {
@@ -81,7 +84,7 @@ public class TenantUuidTest implements SessionFactoryProducer {
 
         currentTenant = yours;
         scope.inTransaction( session -> {
-            assertNull( session.find(Account.class, acc.id) );
+            assertNotNull( session.find(Account.class, acc.id) );
             assertEquals( 0, session.createQuery("from Account").getResultList().size() );
             session.disableFilter(TenantIdBinder.FILTER_NAME);
             assertNotNull( session.find(Account.class, acc.id) );

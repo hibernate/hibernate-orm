@@ -27,7 +27,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
-import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -122,9 +122,9 @@ public class CockroachDialect extends Dialect {
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 21, 1 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 21, 1 );
 
-	private final PostgreSQLDriverKind driverKind;
+	protected final PostgreSQLDriverKind driverKind;
 
 	public CockroachDialect() {
 		this( MINIMUM_VERSION );
@@ -244,16 +244,16 @@ public class CockroachDialect extends Dialect {
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-			// The following DDL types require that the PGobject class is usable/visible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-			// Prefer jsonb if possible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-		}
+		// The following DDL types require that the PGobject class is usable/visible,
+		// or that a special JDBC type implementation exists, that supports wrapping read/write expressions
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+
+		// Prefer jsonb if possible
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
 	}
 
 	@Override
@@ -333,17 +333,31 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
+		contributeCockroachTypes( typeContributions, serviceRegistry );
+	}
 
+	protected void contributeCockroachTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
 			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+			}
+		}
+		else {
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
 		}
 
 		// Force Blob binding to byte[] for CockroachDB
@@ -416,7 +430,11 @@ public class CockroachDialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 
 		functionContributions.getFunctionRegistry().register(
-				"trunc", new PostgreSQLTruncRoundFunction( "trunc", getVersion().isSameOrAfter( 22, 2 ) )
+				"trunc",
+				new PostgreSQLTruncFunction(
+						getVersion().isSameOrAfter( 22, 2 ),
+						functionContributions.getTypeConfiguration()
+				)
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}

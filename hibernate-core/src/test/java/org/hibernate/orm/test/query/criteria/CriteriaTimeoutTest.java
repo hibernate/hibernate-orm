@@ -13,7 +13,8 @@
  */
 package org.hibernate.orm.test.query.criteria;
 
-import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
@@ -24,6 +25,7 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProviderSettingProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -31,6 +33,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,9 +47,7 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
@@ -58,7 +59,7 @@ import static org.mockito.Mockito.verify;
 		settingProviders = {
 				@SettingProvider(
 						settingName = AvailableSettings.CONNECTION_PROVIDER,
-						provider = CriteriaTimeoutTest.SpyConnectionProviderSettingProvider.class)
+						provider = PreparedStatementSpyConnectionProviderSettingProvider.class)
 		}
 )
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
@@ -150,13 +151,16 @@ public class CriteriaTimeoutTest {
 
 	private void verifyQuerySetTimeoutWasCalled() {
 		try {
-			verify(
-					connectionProvider.getPreparedStatements().get( 0 ),
-					times( 1 )
-			).setQueryTimeout( 123 );
+			List<Object[]> setQueryTimeoutCalls = connectionProvider.spyContext.getCalls(
+					Statement.class.getMethod( "setQueryTimeout", int.class ),
+					connectionProvider.getPreparedStatements().get( 0 )
+			);
+			assertEquals( 2, setQueryTimeoutCalls.size() );
+			assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
+			assertEquals( 0, setQueryTimeoutCalls.get( 1 )[0] );
 		}
-		catch (SQLException e) {
-			fail( "should not have thrown exception" );
+		catch (Exception ex) {
+			Assert.fail( "should not have thrown exception" );
 		}
 	}
 
@@ -182,11 +186,4 @@ public class CriteriaTimeoutTest {
 		}
 	}
 
-	public static class SpyConnectionProviderSettingProvider
-			implements SettingProvider.Provider<PreparedStatementSpyConnectionProvider> {
-		@Override
-		public PreparedStatementSpyConnectionProvider getSetting() {
-			return new PreparedStatementSpyConnectionProvider( true, false );
-		}
-	}
 }

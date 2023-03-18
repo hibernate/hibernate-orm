@@ -43,6 +43,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
 
@@ -77,11 +78,12 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private String[] instantiatorPropertyNames;
 
 	// cache the status of the type
-	private volatile Type type;
+	private volatile CompositeType type;
 
 	private AggregateColumn aggregateColumn;
 	private AggregateColumn parentAggregateColumn;
 	private String structName;
+	private String[] structColumnNames;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
 	private transient List<Selectable> cachedSelectables;
 	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
@@ -369,12 +371,12 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public Type getType() throws MappingException {
+	public CompositeType getType() throws MappingException {
 		// Resolve the type of the value once and for all as this operation generates a proxy class
 		// for each invocation.
 		// Unfortunately, there's no better way of doing that as none of the classes are immutable and
 		// we can't know for sure the current state of the property or the value.
-		Type localType = type;
+		CompositeType localType = type;
 
 		if ( localType == null ) {
 			synchronized ( this ) {
@@ -807,4 +809,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.instantiatorPropertyNames = instantiatorPropertyNames;
 	}
 
+	public String[] getStructColumnNames() {
+		return structColumnNames;
+	}
+
+	public void setStructColumnNames(String[] structColumnNames) {
+		this.structColumnNames = structColumnNames;
+	}
 }

@@ -147,12 +147,23 @@ public class SqlAstQueryPartProcessingStateImpl
 
 		final SelectClause selectClause = ( (QuerySpec) queryPart ).getSelectClause();
 		final int valuesArrayPosition = selectClause.getSqlSelections().size();
-		final SqlSelection sqlSelection = expression.createSqlSelection(
-				valuesArrayPosition + 1,
-				valuesArrayPosition,
-				javaType,
-				typeConfiguration
-		);
+		final SqlSelection sqlSelection;
+		if ( isTopLevel() ) {
+			sqlSelection = expression.createDomainResultSqlSelection(
+					valuesArrayPosition + 1,
+					valuesArrayPosition,
+					javaType,
+					typeConfiguration
+			);
+		}
+		else {
+			sqlSelection = expression.createSqlSelection(
+					valuesArrayPosition + 1,
+					valuesArrayPosition,
+					javaType,
+					typeConfiguration
+			);
+		}
 
 		selectClause.addSqlSelection( sqlSelection );
 

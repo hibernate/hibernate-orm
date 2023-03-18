@@ -94,6 +94,7 @@ import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
+import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
 import org.hibernate.query.sqm.internal.SqmQueryPartCreationProcessingStateStandardImpl;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -573,10 +574,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				if ( subCtx instanceof HqlParser.AssignmentContext ) {
 					final HqlParser.AssignmentContext assignmentContext = (HqlParser.AssignmentContext) subCtx;
 					//noinspection unchecked
-					updateStatement.applyAssignment(
-							(SqmPath<Object>) consumeDomainPath( (HqlParser.SimplePathContext) assignmentContext.getChild( 0 ) ),
-							(SqmExpression<?>) assignmentContext.getChild( 2 ).accept( this )
-					);
+					final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( (HqlParser.SimplePathContext) assignmentContext.getChild( 0 ) );
+					final Class<?> targetPathJavaType = targetPath.getJavaType();
+					final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
+					final ParseTree rightSide = assignmentContext.getChild( 2 );
+					final HqlParser.ExpressionContext expressionContext;
+					final Map<Class<?>, Enum<?>> possibleEnumValues;
+					final SqmExpression<?> value;
+					if ( isEnum && rightSide.getChild( 0 ) instanceof HqlParser.ExpressionContext
+							&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) rightSide.getChild( 0 ) ) ) != null ) {
+						value = resolveEnumShorthandLiteral(
+								expressionContext,
+								possibleEnumValues,
+								targetPathJavaType
+						);
+					}
+					else {
+						value = (SqmExpression<?>) rightSide.accept( this );
+					}
+					updateStatement.applyAssignment( targetPath, value );
 				}
 			}
 
@@ -2448,6 +2464,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				break;
 			}
 		}
+		( (SqmCriteriaNodeBuilder) creationContext.getNodeBuilder() ).assertComparable( left, right );
 		return new SqmComparisonPredicate(
 				left,
 				comparisonOperator,
@@ -3468,9 +3485,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private static LocalTime localTime(HqlParser.TimeContext ctx) {
 		final int hour = Integer.parseInt( ctx.hour().getText() );
 		final int minute = Integer.parseInt( ctx.minute().getText() );
-		if ( ctx.second() != null ) {
-			final String secondText = ctx.second().getText();
-			final int index = secondText.indexOf( '.');
+		final HqlParser.SecondContext secondContext = ctx.second();
+		if ( secondContext != null ) {
+			final String secondText = secondContext.getText();
+			final int index = secondText.indexOf( '.' );
 			if ( index < 0 ) {
 				return LocalTime.of(
 						hour,
@@ -3479,11 +3497,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 			else {
+				final String secondFractions = secondText.substring( index + 1 );
 				return LocalTime.of(
 						hour,
 						minute,
 						Integer.parseInt( secondText.substring( 0, index ) ),
-						Integer.parseInt( secondText.substring( index + 1 ) )
+						Integer.parseInt( secondFractions ) * (int) Math.pow( 10, 9 - secondFractions.length() )
 				);
 			}
 		}
@@ -4199,6 +4218,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						resolveExpressibleTypeBasic( Integer.class ),
 						nodeBuilder
 				);
+			case HqlParser.EPOCH:
+				return new SqmExtractUnit<>(
+						TemporalUnit.EPOCH,
+						resolveExpressibleTypeBasic( Long.class ),
+						nodeBuilder
+				);
 		}
 		throw new ParsingException( "Unsupported datetime field [" + ctx.getText() + "]" );
 	}
@@ -4301,6 +4326,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("extract").generateSqmExpression(
 				asList( extractFieldExpression, expressionToExtract ),
 				extractFieldExpression.getType(),
+				creationContext.getQueryEngine(),
+				creationContext.getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public Object visitTruncFunction(HqlParser.TruncFunctionContext ctx) {
+		final SqmExpression<?> expression = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
+		final SqmTypedNode<?> secondArg;
+		if ( ctx.getChildCount() == 6 ) {
+			secondArg = (SqmTypedNode<?>) ctx.getChild( 4 ).accept( this );
+		}
+		else {
+			secondArg = null;
+		}
+
+		return getFunctionDescriptor( "trunc" ).generateSqmExpression(
+				secondArg == null ? singletonList( expression ) : asList( expression, secondArg ),
+				null,
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);

@@ -118,7 +118,7 @@ public class EntityManagerFactoryExtension
 
 		if ( emfAnn.exportSchema() ) {
 			pui.getProperties().setProperty(
-					AvailableSettings.HBM2DDL_DATABASE_ACTION,
+					AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
 					Action.CREATE_DROP.getExternalHbm2ddlName()
 			);
 		}
@@ -251,7 +251,7 @@ public class EntityManagerFactoryExtension
 		}
 
 		final HashMap<String,Object> settings = new HashMap<>( baseProperties );
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
 
 		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();
 

@@ -10,13 +10,10 @@ import java.util.ArrayList;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.sql.model.ast.builder.ColumnValueBindingBuilder;
 
 @Internal
 public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implements ModelPart.JdbcValueConsumer {
@@ -40,7 +37,7 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 	}
 
 	@Override
-	public void consume(Object value, SelectableMapping jdbcValueMapping) {
+	public void consume(int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
 		final ColumnValueBinding columnValueBinding = createValueBinding(
 				jdbcValueMapping.getSelectionExpression(),
 				value == null ? null : jdbcValueMapping.getWriteExpression(),
@@ -53,16 +50,6 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 		add( createValueBinding( column.getSelectionExpression(), null, column.getJdbcMapping() ) );
 	}
 
-	public void addRestriction(SelectableMapping column) {
-		add(
-				createValueBinding(
-						column.getSelectionExpression(),
-						column.getWriteExpression(),
-						column.getJdbcMapping()
-				)
-		);
-	}
-
 	public void addRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
 		add( createValueBinding( columnName, columnWriteFragment, jdbcMapping ) );
 	}
@@ -71,41 +58,14 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 			String columnName,
 			String customWriteExpression,
 			JdbcMapping jdbcMapping) {
-		final ColumnReference columnReference = new ColumnReference( mutatingTable, columnName, jdbcMapping );
-		final ColumnWriteFragment columnWriteFragment;
-		if ( customWriteExpression == null ) {
-			columnWriteFragment = null;
-		}
-		else if ( customWriteExpression.contains( "?" ) ) {
-			final JdbcType jdbcType = jdbcMapping.getJdbcType();
-			final EmbeddableMappingType aggregateMappingType = jdbcType instanceof AggregateJdbcType
-					? ( (AggregateJdbcType) jdbcType ).getEmbeddableMappingType()
-					: null;
-			if ( aggregateMappingType != null && !aggregateMappingType.shouldBindAggregateMapping() ) {
-				final ColumnValueParameterList parameters = new ColumnValueParameterList(
-						mutatingTable,
-						parameterUsage,
-						aggregateMappingType.getJdbcTypeCount()
-				);
-				aggregateMappingType.forEachSelectable( parameters );
-				this.parameters.addAll( parameters );
-
-				columnWriteFragment = new ColumnWriteFragment(
-						customWriteExpression,
-						parameters,
-						jdbcMapping
-				);
-			}
-			else {
-				final ColumnValueParameter parameter = new ColumnValueParameter( columnReference, parameterUsage );
-				parameters.add( parameter );
-				columnWriteFragment = new ColumnWriteFragment( customWriteExpression, parameter, jdbcMapping );
-			}
-		}
-		else {
-			columnWriteFragment = new ColumnWriteFragment( customWriteExpression, jdbcMapping );
-		}
-		return new ColumnValueBinding( columnReference, columnWriteFragment ) ;
+		return ColumnValueBindingBuilder.createValueBinding(
+				columnName,
+				customWriteExpression,
+				jdbcMapping,
+				mutatingTable,
+				parameterUsage,
+				parameters::apply
+		);
 	}
 
 	@Override

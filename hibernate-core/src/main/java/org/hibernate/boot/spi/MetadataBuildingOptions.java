@@ -8,8 +8,6 @@ package org.hibernate.boot.spi;
 
 import java.util.List;
 
-import jakarta.persistence.SharedCacheMode;
-
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -26,6 +24,8 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.SharedCacheMode;
 
 /**
  * Describes the options used while building the {@link org.hibernate.boot.Metadata}
@@ -231,4 +231,9 @@ public interface MetadataBuildingOptions {
 	default boolean isXmlMappingEnabled() {
 		return true;
 	}
+
+	/**
+	 * Check to see if extensions can be hosted in CDI
+	 */
+	boolean disallowExtensionsInCdi();
 }

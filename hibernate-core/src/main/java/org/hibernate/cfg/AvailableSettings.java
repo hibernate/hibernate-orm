@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.Remove;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
@@ -28,6 +29,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableSt
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -308,7 +310,7 @@ public interface AvailableSettings {
 	 * Setting that controls whether we seek out JPA "static metamodel" classes
 	 * and populate them, either:<ul>
 	 *     <li>
-	 *         <b>enabled</b> -Do the population
+	 *         <b>enabled</b> - Do the population
 	 *     </li>
 	 *     <li>
 	 *         <b>disabled</b> - Do not do the population
@@ -1078,7 +1080,10 @@ public interface AvailableSettings {
 	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
-	 * Specifies a {@linkplain java.util.TimeZone time zone} that should be passed to
+	 * Specifies the {@linkplain java.util.TimeZone time zone} to use in the JDBC driver,
+	 * which is supposed to match the database timezone.
+	 * <p>
+	 * This is the timezone what will be passed to
 	 * {@link java.sql.PreparedStatement#setTimestamp(int, java.sql.Timestamp, java.util.Calendar)}
 	 * {@link java.sql.PreparedStatement#setTime(int, java.sql.Time, java.util.Calendar)},
 	 * {@link java.sql.ResultSet#getTimestamp(int, Calendar)}, and
@@ -1308,6 +1313,16 @@ public interface AvailableSettings {
 	 */
 	String DELAY_CDI_ACCESS = "hibernate.delay_cdi_access";
 
+	/**
+	 * Controls whether Hibernate can try to create beans other than converters
+	 * and listeners using CDI.  Only meaningful when a CDI {@link #BEAN_CONTAINER container}
+	 * is used.
+	 *
+	 * By default, Hibernate will only attempt to create converter and listener beans using CDI.
+	 *
+	 * @since 6.2
+	 */
+	String ALLOW_EXTENSIONS_IN_CDI = "hibernate.cdi.extensions";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1410,7 +1425,7 @@ public interface AvailableSettings {
 	 *     <li>a {@link Class} implementing {@link org.hibernate.cache.spi.CacheKeysFactory},
 	 *     <li>the name of a class implementing {@link org.hibernate.cache.spi.CacheKeysFactory},
 	 *     <li>{@code "default"} as a short name for {@link org.hibernate.cache.internal.DefaultCacheKeysFactory}, or
-	 *     <li>'{@code "simple"} as a short name for {@link org.hibernate.cache.internal.SimpleCacheKeysFactory}.
+	 *     <li>{@code "simple"} as a short name for {@link org.hibernate.cache.internal.SimpleCacheKeysFactory}.
 	 * </ul>
 	 *
 	 * @since 5.2
@@ -1628,68 +1643,35 @@ public interface AvailableSettings {
 	String HBM2DDL_CONNECTION = "javax.persistence.schema-generation-connection";
 
 	/**
-	 * Specifies whether schema generation commands for schema creation are to be determined based
-	 * on object/relational mapping metadata, DDL scripts, or a combination of the two. See
-	 * {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
-	 * <p>
-	 * If no value is specified, a default is inferred as follows:
-	 * <ul>
-	 *     <li>if source scripts are specified via {@value #HBM2DDL_CREATE_SCRIPT_SOURCE}, then
-	 *         {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
-	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
-	 *         assumed.
-	 * </ul>
-	 *
+	 * @deprecated  Migrate to {@link #JAKARTA_HBM2DDL_CREATE_SOURCE} instead
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
+	@Deprecated
 	String HBM2DDL_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**
-	 * Specifies whether schema generation commands for schema dropping are to be determined
-	 * based on object/relational mapping metadata, DDL scripts, or a combination of the two.
-	 * See {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
-	 * <p>
-	 * If no value is specified, a default is inferred as follows:
-	 * <ul>
-	 *     <li>if source scripts are specified via {@value #HBM2DDL_DROP_SCRIPT_SOURCE}, then
-	 *         {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
-	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
-	 *         assumed.
-	 * </ul>
-	 *
+	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_DROP_SOURCE}.
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
+	@Deprecated
 	String HBM2DDL_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
 
 	/**
-	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading
-	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
-	 * <p>
-	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.
-	 * This setting is now preferred.
-	 *
-	 * @see #HBM2DDL_CREATE_SOURCE
-	 * @see #HBM2DDL_IMPORT_FILES
+	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}
 	 */
+	@Deprecated
 	String HBM2DDL_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
 
 	/**
-	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading
-	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
-	 *
-	 * @see #HBM2DDL_DROP_SOURCE
+	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}
 	 */
+	@Deprecated
 	String HBM2DDL_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
 
 	/**
-	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema creation
-	 * commands should be written to DDL script file, {@value #HBM2DDL_SCRIPTS_CREATE_TARGET}
-	 * specifies either a {@link java.io.Writer} configured for output of the DDL script or a
-	 * string specifying the file URL for the DDL script.
-	 *
-	 * @see #HBM2DDL_SCRIPTS_ACTION
+	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET}
 	 */
-	@SuppressWarnings("JavaDoc")
+	@Deprecated
 	String HBM2DDL_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
 
 	/**
@@ -1705,14 +1687,9 @@ public interface AvailableSettings {
 	String HBM2DDL_SCRIPTS_CREATE_APPEND = "hibernate.hbm2ddl.schema-generation.script.append";
 
 	/**
-	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema drop commands
-	 * should be written to DDL script file, {@value #HBM2DDL_SCRIPTS_DROP_TARGET} specifies either a
-	 * {@link java.io.Writer} configured for output of the DDL script or a string specifying the file
-	 * URL for the DDL script.
-	 *
-	 * @see #HBM2DDL_SCRIPTS_ACTION
+	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET}
 	 */
-	@SuppressWarnings("JavaDoc")
+	@Deprecated
 	String HBM2DDL_SCRIPTS_DROP_TARGET = "javax.persistence.schema-generation.scripts.drop-target";
 
 	/**
@@ -1725,7 +1702,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * The default value is {@code /import.sql}.
 	 * <p>
-	 * The JPA-standard setting {@link #HBM2DDL_CREATE_SCRIPT_SOURCE} is now preferred.
+	 * The JPA-standard setting {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE} is now preferred.
 	 */
 	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
 
@@ -1738,8 +1715,8 @@ public interface AvailableSettings {
 
 	/**
 	 * The {@link org.hibernate.tool.schema.spi.SqlScriptCommandExtractor} implementation
-	 * to use for parsing source/import files specified by {@link #HBM2DDL_CREATE_SCRIPT_SOURCE},
-	 * {@link #HBM2DDL_DROP_SCRIPT_SOURCE} or {@link #HBM2DDL_IMPORT_FILES}. Either:
+	 * to use for parsing source/import files specified by {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE},
+	 * {@link #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE} or {@link #HBM2DDL_IMPORT_FILES}. Either:
 	 * <ul>
 	 * <li>an instance of {@link org.hibernate.tool.schema.spi.SqlScriptCommandExtractor},
 	 * <li>a {@link Class} object representing a class that implements {@code SqlScriptCommandExtractor},
@@ -1893,7 +1870,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #HBM2DDL_CREATE_SCRIPT_SOURCE},
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_CREATE_SOURCE},
 	 *     then {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
 	 *     assumed.
@@ -1910,7 +1887,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #HBM2DDL_DROP_SCRIPT_SOURCE}, then
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}, then
 	 *     {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "metadata"}
 	 *     is assumed.
@@ -1927,7 +1904,7 @@ public interface AvailableSettings {
 	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.
 	 * This setting is now preferred.
 	 *
-	 * @see #HBM2DDL_CREATE_SOURCE
+	 * @see #JAKARTA_HBM2DDL_CREATE_SOURCE
 	 * @see #HBM2DDL_IMPORT_FILES
 	 */
 	String JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE = "jakarta.persistence.schema-generation.create-script-source";
@@ -1936,7 +1913,7 @@ public interface AvailableSettings {
 	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading
 	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
 	 *
-	 * @see #HBM2DDL_DROP_SOURCE
+	 * @see #JAKARTA_HBM2DDL_DROP_SOURCE
 	 */
 	String JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE = "jakarta.persistence.schema-generation.drop-script-source";
 
@@ -2049,25 +2026,19 @@ public interface AvailableSettings {
 	 * The {@link org.hibernate.annotations.Where} annotation specifies a restriction
 	 * on the table rows which are visible as entity class instances or collection
 	 * elements.
-	 * <p>
-	 * This setting controls whether the restriction is applied when loading a
-	 * {@link jakarta.persistence.OneToMany one-to-many} or
-	 * {@link jakarta.persistence.ManyToMany many-to-many} association whose target
-	 * type defines the restriction.
-	 * <p>
-	 * By default, the restriction is applied. When this setting is disabled, the
-	 * restriction is not applied.
-	 * <p>
-	 * The setting has no effect on a collection of {@link jakarta.persistence.Embeddable
-	 * embeddable} values containing a {@link jakarta.persistence.ManyToOne many-to-one}
-	 * association to the entity.
-	 * <p>
-	 * This behavior may now be controlled in a safer and more granular way using
-	 * {@link org.hibernate.annotations.Where#applyInToManyFetch}, and so the use
-	 * of this configuration property is no longer recommended.
+	 * <p/>
+	 * This setting controls whether the restriction applied to an entity should
+	 * be applied to association fetches (one-to-one, many-to-one, one-to-many and many-to-many)
+	 * targeting the entity.
 	 *
-	 * @see org.hibernate.annotations.Where#applyInToManyFetch
+	 * @apiNote The setting is very misnamed - it applies across all entity associations, not just collections.
+	 *
+	 * @implSpec Enabled ({@code true}) by default, meaning the restriction is applied. When this setting
+	 * is disabled ({@code false}), the restriction is not applied.
+	 *
+	 * @deprecated Originally added as a backwards compatibility flag
 	 */
+	@Remove @Deprecated( forRemoval = true, since = "6.2" )
 	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
 
 	/**
@@ -2820,6 +2791,23 @@ public interface AvailableSettings {
 	 * @since 6.0
 	 */
 	String TIMEZONE_DEFAULT_STORAGE = "hibernate.timezone.default_storage";
+
+	/**
+	 * Controls whether to use JDBC markers (`?`) or dialect native markers for parameters
+	 * within {@linkplain java.sql.PreparedStatement preparable} SQL statements.
+	 *
+	 * @implNote {@code False} by default, indicating standard JDBC parameter markers (`?`)
+	 * are used.  Set to {@code true} to use the Dialect's native markers, if any.  For
+	 * Dialects without native markers, the standard JDBC strategy is used.
+	 *
+	 * @see ParameterMarkerStrategy
+	 * @see org.hibernate.dialect.Dialect#getNativeParameterMarkerStrategy()
+	 *
+	 * @since 6.2
+	 */
+	@Incubating
+	String DIALECT_NATIVE_PARAM_MARKERS = "hibernate.dialect.native_param_markers";
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Java (javax) Persistence defined settings

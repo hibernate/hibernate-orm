@@ -123,29 +123,10 @@ public class SqmJpaCriteriaParameterWrapper<T>
 		jpaCriteriaParameter.appendHqlString( sb );
 	}
 
-//	@Override
-//	public Expression toSqlExpression(
-//			Clause clause,
-//			SqmToSqlAstConverter walker,
-//			SqlAstCreationState sqlAstCreationState) {
-//
-//		final MappingModelExpressible mappingModelExpressible = DomainModelHelper.resolveMappingModelExpressible(
-//				jpaCriteriaParameter,
-//				sqlAstCreationState
-//		);
-//
-//		final List<JdbcMapping> jdbcMappings = mappingModelExpressible.getJdbcMappings(
-//				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
-//		);
-//
-//		if ( jdbcMappings.size() == 1 ) {
-//			return new JdbcParameterImpl( jdbcMappings.get( 0 ) );
-//		}
-//
-//		final SqlTuple.Builder tupleBuilder = new SqlTuple.Builder( mappingModelExpressible );
-//		for ( JdbcMapping jdbcMapping : jdbcMappings ) {
-//			tupleBuilder.addSubExpression( new JdbcParameterImpl( jdbcMapping ) );
-//		}
-//		return tupleBuilder.buildTuple();
-//	}
+	@Override
+	public int compareTo(SqmParameter anotherParameter) {
+		return anotherParameter instanceof SqmJpaCriteriaParameterWrapper ?
+				getJpaCriteriaParameter().compareTo( ( (SqmJpaCriteriaParameterWrapper<?>) anotherParameter ).getJpaCriteriaParameter() )
+				: 1;
+	}
 }

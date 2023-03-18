@@ -187,7 +187,7 @@ public class DynamicResultBuilderEntityStandard
 		final NavigablePath elementNavigablePath;
 		if ( fetchable instanceof PluralAttributeMapping ) {
 			collectionTableGroup = fromClauseAccess.getTableGroup( navigablePath );
-			elementNavigablePath = navigablePath.append( fetchable.getPartName() );
+			elementNavigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}
 		else {
 			collectionTableGroup = null;
@@ -198,8 +198,7 @@ public class DynamicResultBuilderEntityStandard
 				np -> {
 					final TableReference tableReference = entityMapping.createPrimaryTableReference(
 							new SqlAliasBaseConstant( tableAlias ),
-							creationState.getSqlExpressionResolver(),
-							creationState.getCreationContext()
+							creationState
 					);
 
 					if ( lockMode != null ) {

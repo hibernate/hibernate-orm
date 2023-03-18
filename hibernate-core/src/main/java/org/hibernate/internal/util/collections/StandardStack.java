@@ -73,6 +73,14 @@ public final class StandardStack<T> implements Stack<T> {
 	}
 
 	@Override
+	public T peek(int offsetFromTop) {
+		if ( isEmpty() ) {
+			return null;
+		}
+		return elements[top - offsetFromTop - 1];
+	}
+
+	@Override
 	public T getRoot() {
 		if ( isEmpty() ) {
 			return null;

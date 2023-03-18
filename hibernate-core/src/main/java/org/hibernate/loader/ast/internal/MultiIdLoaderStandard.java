@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
@@ -35,7 +34,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -264,7 +262,6 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 			offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 					id,
-					Clause.WHERE,
 					offset,
 					entityDescriptor.getIdentifierMapping(),
 					jdbcParameters,

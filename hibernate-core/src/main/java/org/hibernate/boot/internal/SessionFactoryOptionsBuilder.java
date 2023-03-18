@@ -41,6 +41,7 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
@@ -352,7 +353,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.checkNullability = configurationService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
 		this.initializeLazyStateOutsideTransactions = configurationService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
-		this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
+		this.multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
 		this.currentTenantIdentifierResolver = strategySelector.resolveStrategy(
 				CurrentTenantIdentifierResolver.class,
 				configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )

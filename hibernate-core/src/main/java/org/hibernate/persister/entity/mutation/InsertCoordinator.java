@@ -19,12 +19,15 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
@@ -32,9 +35,6 @@ import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import static org.hibernate.generator.EventType.INSERT;
@@ -54,10 +54,16 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	public InsertCoordinator(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
-		insertBatchKey = new BasicBatchKey(
-				entityPersister.getEntityName() + "#INSERT",
-				null
-		);
+		if ( entityPersister.hasInsertGeneratedProperties() ) {
+			// disable batching in case of insert generated properties
+			insertBatchKey = null;
+		}
+		else {
+			insertBatchKey = new BasicBatchKey(
+					entityPersister.getEntityName() + "#INSERT",
+					null
+			);
+		}
 
 		if ( entityPersister.getEntityMetamodel().isDynamicInsert() ) {
 			// the entity specified dynamic-insert - skip generating the
@@ -215,7 +221,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		} );
 	}
 
-	private static void breakDownJdbcValue(
+	protected void breakDownJdbcValue(
 			Object id,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
@@ -235,7 +241,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		);
 	}
 
-	private void decomposeAttribute(
+	protected void decomposeAttribute(
 			Object value,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
@@ -243,9 +249,12 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		if ( !(mapping instanceof PluralAttributeMapping) ) {
 			mapping.decompose(
 					value,
-					(jdbcValue, selectableMapping) -> {
+					0,
+					jdbcValueBindings,
+					null,
+					(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
 						if ( selectableMapping.isInsertable() ) {
-							jdbcValueBindings.bindValue(
+							bindings.bindValue(
 									jdbcValue,
 									entityPersister().physicalTableNameForMutation( selectableMapping ),
 									selectableMapping.getSelectionExpression(),

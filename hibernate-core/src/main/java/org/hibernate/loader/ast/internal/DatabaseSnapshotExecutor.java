@@ -12,16 +12,15 @@ import java.util.List;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.sql.FromClauseIndex;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -77,6 +76,7 @@ class DatabaseSnapshotExecutor {
 				LockOptions.NONE,
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
+				LoadQueryInfluencers.NONE,
 				sessionFactory
 		);
 
@@ -86,9 +86,9 @@ class DatabaseSnapshotExecutor {
 				true,
 				rootPath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				state,
-				sessionFactory
+				state
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -165,7 +165,6 @@ class DatabaseSnapshotExecutor {
 
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				id,
-				Clause.WHERE,
 				entityDescriptor.getIdentifierMapping(),
 				jdbcParameters,
 				session

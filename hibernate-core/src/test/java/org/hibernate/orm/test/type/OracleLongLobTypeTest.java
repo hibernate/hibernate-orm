@@ -18,10 +18,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle12cDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
@@ -42,26 +39,6 @@ import static org.junit.Assert.assertSame;
  * @author Steve Ebersole
  */
 public class OracleLongLobTypeTest extends BaseUnitTestCase {
-	@Test
-	public void testOracle8() {
-		check( Oracle8iDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
-		check( Oracle8iDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
-		check( Oracle8iDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
-	}
-
-	@Test
-	public void testOracle9() {
-		check( Oracle9iDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
-		check( Oracle9iDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
-		check( Oracle9iDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
-	}
-
-	@Test
-	public void testOracle10() {
-		check( Oracle10gDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
-		check( Oracle10gDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
-		check( Oracle10gDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
-	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10345" )

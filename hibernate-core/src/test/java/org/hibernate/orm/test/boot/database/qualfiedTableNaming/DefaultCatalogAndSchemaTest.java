@@ -35,7 +35,9 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -59,6 +61,7 @@ import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.CustomParameterized;
@@ -85,7 +88,7 @@ import jakarta.persistence.TableGenerator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(CustomParameterized.class)
-@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922", "HHH-15212" })
+@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922", "HHH-15212", "HHH-16177" })
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class DefaultCatalogAndSchemaTest {
 
@@ -93,6 +96,8 @@ public class DefaultCatalogAndSchemaTest {
 
 	private static final String EXPLICIT_CATALOG = "someExplicitCatalog";
 	private static final String EXPLICIT_SCHEMA = "someExplicitSchema";
+	private static final String IMPLICIT_FILE_LEVEL_CATALOG = "someImplicitFileLevelCatalog";
+	private static final String IMPLICIT_FILE_LEVEL_SCHEMA = "someImplicitFileLevelSchema";
 
 	// Yes this is invalid SQL, and in most cases it simply wouldn't work because of missing columns,
 	// but in this case we don't care: we just want to check catalog/schema substitution.
@@ -280,6 +285,7 @@ public class DefaultCatalogAndSchemaTest {
 		settings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, "true" );
 		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
 			settings.put(
 					AvailableSettings.CONNECTION_PROVIDER,
@@ -303,24 +309,40 @@ public class DefaultCatalogAndSchemaTest {
 	@Test
 	public void createSchema_fromSessionFactory() {
 		String script = generateScriptFromSessionFactory( "create" );
+		verifyDDLCreateCatalogOrSchema( script );
+		verifyDDLQualifiers( script );
+	}
+
+	@Test
+	@SkipForDialect(value = { SQLServerDialect.class, SybaseDialect.class },
+			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
+					+ " which results in nasty errors when generating an update script"
+					+ " and some catalogs don't exist.")
+	public void updateSchema_fromSessionFactory() {
+		String script = generateScriptFromSessionFactory( "update" );
+		verifyDDLCreateCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
 	public void dropSchema_fromSessionFactory() {
 		String script = generateScriptFromSessionFactory( "drop" );
+		verifyDDLDropCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
 	public void createSchema_fromMetadata() {
 		String script = generateScriptFromMetadata( SchemaExport.Action.CREATE );
+		verifyDDLCreateCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
 	@Test
 	public void dropSchema_fromMetadata() {
 		String script = generateScriptFromMetadata( SchemaExport.Action.DROP );
+		verifyDDLDropCatalogOrSchema( script );
 		verifyDDLQualifiers( script );
 	}
 
@@ -500,6 +522,46 @@ public class DefaultCatalogAndSchemaTest {
 		return expectedType.cast( persister.getIdentifierGenerator() );
 	}
 
+	private void verifyDDLCreateCatalogOrSchema(String sql) {
+		Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+
+		if ( sessionFactory.getJdbcServices().getDialect().canCreateCatalog() ) {
+			assertThat( sql ).contains( dialect.getCreateCatalogCommand( EXPLICIT_CATALOG ) );
+			assertThat( sql ).contains( dialect.getCreateCatalogCommand( IMPLICIT_FILE_LEVEL_CATALOG ) );
+			if ( expectedDefaultCatalog != null ) {
+				assertThat( sql ).contains( dialect.getCreateCatalogCommand( expectedDefaultCatalog ) );
+			}
+		}
+
+		if ( sessionFactory.getJdbcServices().getDialect().canCreateSchema() ) {
+			assertThat( sql ).contains( dialect.getCreateSchemaCommand( EXPLICIT_SCHEMA ) );
+			assertThat( sql ).contains( dialect.getCreateSchemaCommand( IMPLICIT_FILE_LEVEL_SCHEMA ) );
+			if ( expectedDefaultSchema != null ) {
+				assertThat( sql ).contains( dialect.getCreateSchemaCommand( expectedDefaultSchema ) );
+			}
+		}
+	}
+
+	private void verifyDDLDropCatalogOrSchema(String sql) {
+		Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+
+		if ( sessionFactory.getJdbcServices().getDialect().canCreateCatalog() ) {
+			assertThat( sql ).contains( dialect.getDropCatalogCommand( EXPLICIT_CATALOG ) );
+			assertThat( sql ).contains( dialect.getDropCatalogCommand( IMPLICIT_FILE_LEVEL_CATALOG ) );
+			if ( expectedDefaultCatalog != null ) {
+				assertThat( sql ).contains( dialect.getDropCatalogCommand( expectedDefaultCatalog ) );
+			}
+		}
+
+		if ( sessionFactory.getJdbcServices().getDialect().canCreateSchema() ) {
+			assertThat( sql ).contains( dialect.getDropSchemaCommand( EXPLICIT_SCHEMA ) );
+			assertThat( sql ).contains( dialect.getDropSchemaCommand( IMPLICIT_FILE_LEVEL_SCHEMA ) );
+			if ( expectedDefaultSchema != null ) {
+				assertThat( sql ).contains( dialect.getDropSchemaCommand( expectedDefaultSchema ) );
+			}
+		}
+	}
+
 	private void verifyDDLQualifiers(String sql) {
 		// Here, to simplify assertions, we assume:
 		// - that all entity types have a table name identical to the entity name
@@ -609,7 +671,7 @@ public class DefaultCatalogAndSchemaTest {
 	}
 
 	private ExpectedQualifier expectedImplicitFileLevelQualifier() {
-		return expectedQualifier( "someImplicitFileLevelCatalog", "someImplicitFileLevelSchema" );
+		return expectedQualifier( IMPLICIT_FILE_LEVEL_CATALOG, IMPLICIT_FILE_LEVEL_SCHEMA );
 	}
 
 	private ExpectedQualifier expectedQualifier(String catalog, String schema) {
@@ -626,9 +688,9 @@ public class DefaultCatalogAndSchemaTest {
 				serviceRegistry.getService( ConfigurationService.class ).getSettings()
 		);
 		StringWriter writer = new StringWriter();
-		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, action );
-		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
-		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, action );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, writer );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 
 		SchemaManagementToolCoordinator.process(
 				metadata, serviceRegistry, settings, DelayedDropRegistryNotAvailableImpl.INSTANCE );

@@ -21,6 +21,7 @@ import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -290,7 +291,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	private void setExplicitTemporalPrecision(TemporalType temporalTypePrecision) {
-		if ( bindType == null || determineJavaType( bindType ) instanceof TemporalJavaType<?> ) {
+		if ( bindType == null || JavaTypeHelper.isTemporal( determineJavaType( bindType ) ) ) {
 			this.bindType = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 					temporalTypePrecision,
 					bindType,

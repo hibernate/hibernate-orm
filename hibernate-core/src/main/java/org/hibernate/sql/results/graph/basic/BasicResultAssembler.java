@@ -26,8 +26,8 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 		return new BasicResultAssembler<>( selection.getValuesArrayPosition(), javaType );
 	}
 
-	private final int valuesArrayPosition;
-	private final JavaType<J> assembledJavaType;
+	protected final int valuesArrayPosition;
+	protected final JavaType<J> assembledJavaType;
 	private final BasicValueConverter<J,?> valueConverter;
 
 	public BasicResultAssembler(

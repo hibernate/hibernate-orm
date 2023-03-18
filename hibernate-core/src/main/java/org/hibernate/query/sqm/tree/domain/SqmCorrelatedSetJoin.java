@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -107,5 +108,10 @@ public class SqmCorrelatedSetJoin<O, T> extends SqmSetJoin<O, T> implements SqmC
 				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
 				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
 		);
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitCorrelatedSetJoin( this );
 	}
 }

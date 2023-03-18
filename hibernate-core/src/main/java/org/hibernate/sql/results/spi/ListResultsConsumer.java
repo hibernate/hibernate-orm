@@ -153,6 +153,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		final QueryOptions queryOptions = rowProcessingState.getQueryOptions();
 		RuntimeException ex = null;
 		try {
+			persistenceContext.beforeLoad();
 			persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 
 			final JavaType<R> domainResultJavaType = resolveDomainResultJavaType(
@@ -201,6 +202,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 
 			try {
+				rowReader.finishUp( jdbcValuesSourceProcessingState );
 				jdbcValuesSourceProcessingState.finishUp();
 			}
 			finally {
@@ -220,8 +222,8 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		}
 		finally {
 			try {
-				rowReader.finishUp( jdbcValuesSourceProcessingState );
 				jdbcValues.finishUp( session );
+				persistenceContext.afterLoad();
 				persistenceContext.initializeNonLazyCollections();
 			}
 			catch (RuntimeException e) {

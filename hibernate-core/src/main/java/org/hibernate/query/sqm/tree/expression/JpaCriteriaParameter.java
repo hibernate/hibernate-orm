@@ -164,4 +164,11 @@ public class JpaCriteriaParameter<T>
 		}
 		return Objects.hash( name );
 	}
+
+	@Override
+	public int compareTo(SqmParameter anotherParameter) {
+		return anotherParameter instanceof JpaCriteriaParameter
+				? Integer.compare( hashCode(), anotherParameter.hashCode() )
+				: 1;
+	}
 }

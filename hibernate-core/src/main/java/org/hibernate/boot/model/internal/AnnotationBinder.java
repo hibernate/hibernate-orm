@@ -12,14 +12,30 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import jakarta.persistence.*;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.CollectionTypeRegistration;
+import org.hibernate.annotations.CollectionTypeRegistrations;
+import org.hibernate.annotations.CompositeTypeRegistration;
+import org.hibernate.annotations.CompositeTypeRegistrations;
+import org.hibernate.annotations.ConverterRegistration;
+import org.hibernate.annotations.ConverterRegistrations;
+import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
+import org.hibernate.annotations.EmbeddableInstantiatorRegistrations;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfiles;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.GenericGenerators;
+import org.hibernate.annotations.Imported;
+import org.hibernate.annotations.JavaTypeRegistration;
+import org.hibernate.annotations.JavaTypeRegistrations;
+import org.hibernate.annotations.JdbcTypeRegistration;
+import org.hibernate.annotations.JdbcTypeRegistrations;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.TypeRegistration;
+import org.hibernate.annotations.TypeRegistrations;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -37,11 +53,12 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -51,10 +68,28 @@ import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStoredProcedureQueries;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.SequenceGenerators;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.TableGenerators;
+
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
-import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -459,7 +494,15 @@ public final class AnnotationBinder {
 			ManagedBeanRegistry managedBeanRegistry,
 			JdbcTypeRegistration annotation) {
 		final Class<? extends JdbcType> jdbcTypeClass = annotation.value();
-		final JdbcType jdbcType = managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
+
+		final JdbcType jdbcType;
+		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+			jdbcType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass );
+		}
+		else {
+			jdbcType = managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
+		}
+
 		final int typeCode = annotation.registrationCode() == Integer.MIN_VALUE
 				? jdbcType.getDefaultSqlTypeCode()
 				: annotation.registrationCode();
@@ -470,9 +513,16 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context,
 			ManagedBeanRegistry managedBeanRegistry,
 			JavaTypeRegistration annotation) {
-		final Class<? extends BasicJavaType<?>> jtdClass = annotation.descriptorClass();
-		final BasicJavaType<?> jtd = managedBeanRegistry.getBean( jtdClass ).getBeanInstance();
-		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), jtd );
+		final Class<? extends BasicJavaType<?>> javaTypeClass = annotation.descriptorClass();
+
+		final BasicJavaType<?> javaType;
+		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+			javaType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
+		}
+		else {
+			javaType = managedBeanRegistry.getBean( javaTypeClass ).getBeanInstance();
+		}
+		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), javaType );
 	}
 
 	private static void bindEmbeddableInstantiatorRegistrations(
@@ -700,11 +750,18 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static JdbcMapping resolveUserType(Class<UserType<?>> type, MetadataBuildingContext context) {
-		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
-		final ManagedBean<UserType<?>> bean = beanRegistry.getBean( type );
-		return new CustomType<>( bean.getBeanInstance(), context.getBootstrapContext().getTypeConfiguration() );
+	private static JdbcMapping resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
+		final UserType<?> userType;
+		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+			userType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
+		}
+		else {
+			final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
+			final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+			userType = beanRegistry.getBean( userTypeClass ).getBeanInstance();
+		}
+
+		return new CustomType<>( userType, context.getBootstrapContext().getTypeConfiguration() );
 	}
 
 	private static JdbcMapping resolveAttributeConverter(Class<AttributeConverter<?, ?>> type, MetadataBuildingContext context) {
@@ -747,18 +804,21 @@ public final class AnnotationBinder {
 	}
 
 	private static JavaType<?> getJavaType(
-			Class<JavaType<?>> type,
+			Class<JavaType<?>> javaTypeClass,
 			MetadataBuildingContext context,
 			TypeConfiguration typeConfiguration) {
-		final JavaType<?> registeredJtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
+		final JavaType<?> registeredJtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( javaTypeClass );
 		if ( registeredJtd != null ) {
 			return registeredJtd;
 		}
-		else {
-			final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-			final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
-			return beanRegistry.getBean(type).getBeanInstance();
+
+		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
 		}
+
+		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
+		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+		return beanRegistry.getBean(javaTypeClass).getBeanInstance();
 	}
 
 	public static void bindFetchProfilesForClass(XClass annotatedClass, MetadataBuildingContext context) {

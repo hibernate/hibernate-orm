@@ -64,7 +64,7 @@ import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
@@ -607,6 +607,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
+		private final boolean allowExtensionsInCdi;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -618,7 +619,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
 			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
-			this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
+			this.multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
 
 			this.xmlMappingEnabled = configService.getSetting(
 					AvailableSettings.XML_MAPPING_ENABLED,
@@ -762,6 +763,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					AvailableSettings.HBM2DDL_CHARSET_NAME,
 					String.class,
 					null
+			);
+
+			allowExtensionsInCdi = configService.getSetting(
+					AvailableSettings.ALLOW_EXTENSIONS_IN_CDI,
+					StandardConverters.BOOLEAN,
+					false
 			);
 		}
 
@@ -949,6 +956,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean isXmlMappingEnabled() {
 			return xmlMappingEnabled;
+		}
+
+		@Override
+		public boolean disallowExtensionsInCdi() {
+			return allowExtensionsInCdi;
 		}
 
 		/**

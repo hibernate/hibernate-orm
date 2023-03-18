@@ -1,0 +1,86 @@
+= Mapping foreign-keys
+
+
+The relational model:
+
+```
+orders (
+    id (PK),
+    customer_fk,
+    ...
+)
+
+customers (
+    id (PK),
+    ...
+)
+
+FK "customer_orders" : orders.cust_fk -> customers.id
+```
+
+So we have a foreign-key between `orders` and `customers` where:
+
+key-side:: `orders.customer_fk`
+target-side:: `customers.id`
+
+
+Assuming bi-directionality, we have 2 `Association` refs:
+
+* `Order#customer` which models the key-side of the FK,
+* `Customer#orders` which models the target-side
+
+
+
+There is a single `ForeignKeyDescriptor` instance for this FK in our metamodel, with 2 Sides:
+
+```
+ForeignKeyDescriptor (
+    name : "customer_orders",
+    keySide (
+        nature: KEY,
+        column(s) : `orders.customer_fk`,
+        keyModelPart : BasicType(...),
+        ...
+    ),
+    targetSide (
+        nature: TARGET,
+        column(s) : `customer.id`,
+        keyModelPart : BasicType(...),
+        ...
+    )
+)
+```
+
+So this gives us all the information we need.  We just need to model that within the `Association` contract:
+
+```
+ManyToOne (
+    name: `Order#customer`,
+    foreignKeyDescriptor : FKD(customer_orders),
+    side : FKD(customer_orders)#keySide
+)
+
+OneToMany (
+    name: `Customer#orders`,
+    foreignKeyDescriptor : FKD(customer_orders),
+    side : FKD(customer_orders)#targetSide
+)
+```
+
+
+When rendering one of these associations into SQL, we have all of the information we need.  Let's
+assume we are processing HQL like `from Order join fetch customer`.  We know:
+
+1. We be "coming from" the `Order` side, meaning the LHS will be `Order` and the RHS will be `Order#customer`
+2. `Order#customer` knows that it models the Side(KEY) of the FKD(customer_orders).
+
+Further, `Order#customer` also knows that the "other side" is, well, the other Side (here, the TARGET) modeled on the FKD.
+
+All of this allows us to properly render join predicate.
+
+
+If we come from the other side: `from Customer join fetch orders`, similar situation:
+
+1. Here we are "coming from" the Customer side, meaning the LHS will be `Customer` and RHS is `Customer#orders`.
+2. `Customer#orders` knows it is the `Side(TARGET)` of the FKD(customer_orders).
+

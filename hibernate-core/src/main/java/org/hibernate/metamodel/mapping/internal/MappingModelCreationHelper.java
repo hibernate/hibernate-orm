@@ -61,6 +61,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -199,7 +200,7 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		final SimpleValue value = (SimpleValue) bootProperty.getValue();
 		final BasicValue.Resolution<?> resolution = ( (Resolvable) value ).resolve();
-		SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
+		final SimpleAttributeMetadata attributeMetadata = new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
 
 		final FetchTiming fetchTiming;
 		final FetchStyle fetchStyle;
@@ -369,6 +370,7 @@ public class MappingModelCreationHelper {
 				bootProperty.isInsertable(),
 				bootProperty.isUpdateable(),
 				bootProperty.isOptimisticLocked(),
+				bootProperty.isSelectable(),
 				cascadeStyle
 		);
 	}
@@ -415,7 +417,7 @@ public class MappingModelCreationHelper {
 
 	@SuppressWarnings("rawtypes")
 	public static AttributeMetadata getAttributeMetadata(PropertyAccess propertyAccess) {
-		return new SimpleAttributeMetadata( propertyAccess, ImmutableMutabilityPlan.INSTANCE, false, true, false, false, null);// todo (6.0) : not sure if CascadeStyle=null is correct
+		return new SimpleAttributeMetadata( propertyAccess, ImmutableMutabilityPlan.INSTANCE, false, true, false, false, true, null);// todo (6.0) : not sure if CascadeStyle=null is correct
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -604,6 +606,7 @@ public class MappingModelCreationHelper {
 				bootProperty.isInsertable(),
 				bootProperty.isUpdateable(),
 				bootProperty.isOptimisticLocked(),
+				bootProperty.isSelectable(),
 				cascadeStyle
 		);
 
@@ -715,7 +718,7 @@ public class MappingModelCreationHelper {
 			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
 		}
 		else {
-			fkTargetPart = declaringType.findAttributeMapping( lhsPropertyName );
+			fkTargetPart = declaringType.findContainingEntityMapping().findAttributeMapping( lhsPropertyName );
 		}
 
 		if ( keyType instanceof BasicType ) {
@@ -1334,6 +1337,7 @@ public class MappingModelCreationHelper {
 					basicElement.isColumnInsertable( 0 ),
 					basicElement.isColumnUpdateable( 0 ),
 					basicElement.isPartitionKey(),
+					true, // element collection does not support null elements
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
@@ -1596,6 +1600,15 @@ public class MappingModelCreationHelper {
 					|| value instanceof OneToOne && value.isNullable()
 					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
+				if ( lazy ) {
+					if ( MappingModelCreationLogger.DEBUG_ENABLED ) {
+						MappingModelCreationLogger.LOGGER.debugf(
+								"Forcing FetchTiming.IMMEDIATE for to-one association : %s.%s",
+								declaringType.getNavigableRole(),
+								bootProperty.getName()
+						);
+					}
+				}
 			}
 			else {
 				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );

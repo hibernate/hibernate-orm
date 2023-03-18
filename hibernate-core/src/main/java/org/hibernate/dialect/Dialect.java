@@ -40,7 +40,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import jakarta.persistence.GenerationType;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.Length;
@@ -138,16 +137,19 @@ import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsert
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.internal.TableUpsert;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -192,6 +194,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
@@ -259,8 +262,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * <ul>
  *     <li>{@link #columnType(int)} to define a mapping from SQL
  *     {@linkplain SqlTypes type codes} to database column types, and
- *     <li>{@link #initializeFunctionRegistry(FunctionContributions)} to register
- *     mappings for standard HQL functions with the
+ *     <li>{@link #initializeFunctionRegistry(FunctionContributions)} to
+ *     register mappings for standard HQL functions with the
  *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
  * </ul>
  * <p>
@@ -275,7 +278,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * passed to the constructor, and by the {@link #getVersion()} property.
  * <p>
  * Programs using Hibernate should migrate away from the use of versioned
- * dialect classes like, for example, {@link PostgreSQL95Dialect}. These
+ * dialect classes like, for example, {@link MySQL8Dialect}. These
  * classes are now deprecated and will be removed in a future release.
  * <p>
  * A custom {@code Dialect} may be specified using the configuration
@@ -766,7 +769,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	@Override
-	public final void contributeFunctions(FunctionContributions functionContributions) {
+	public void contributeFunctions(FunctionContributions functionContributions) {
 		initializeFunctionRegistry( functionContributions );
 	}
 
@@ -1485,7 +1488,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @see #initDefaultProperties()
 	 */
-	public final Properties getDefaultProperties() {
+	public Properties getDefaultProperties() {
 		return properties;
 	}
 
@@ -1522,7 +1525,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	// database type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public final void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		contributeTypes( typeContributions, serviceRegistry );
 	}
 
@@ -2492,7 +2495,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * The {@link SqmMultiTableMutationStrategy} to use when not specified by
 	 * {@link org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableMutationStrategy}.
 	 *
-	 * @see org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper#resolveStrategy
+	 * @see SqmMultiTableMutationStrategyProvider#createMutationStrategy
 	 */
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
@@ -2512,7 +2515,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * The {@link SqmMultiTableInsertStrategy} to use when not specified by
 	 * {@link org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableInsertStrategy}.
 	 *
-	 * @see org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper#resolveInsertStrategy
+	 * @see SqmMultiTableMutationStrategyProvider#createInsertStrategy
 	 */
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType entityDescriptor,
@@ -3047,7 +3050,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see #openQuote()
 	 * @see #closeQuote()
 	 */
-	public final String quote(String name) {
+	public String quote(String name) {
 		if ( name == null ) {
 			return null;
 		}
@@ -4705,13 +4708,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Create a {@link MutationOperation} for an "upsert".
+	 * Create a {@link MutationOperation} for a updating an optional table
 	 */
-	public MutationOperation createUpsertOperation(
+	public MutationOperation createOptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
-			TableUpsert tableUpsert,
+			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		return new OptionalTableUpdateOperation( mutationTarget, tableUpsert, factory );
+		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
 	/**
@@ -4809,6 +4812,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getTruncateTableStatement(String tableName) {
 		return "truncate table " + tableName;
+	}
+
+	/**
+	 * Support for native parameter markers.
+	 * <p/>
+	 * This is generally dependent on both the database and the driver.
+	 *
+	 * @return May return {@code null} to indicate that the JDBC
+	 * {@linkplain ParameterMarkerStrategyStandard standard} strategy should be used
+	 */
+	public ParameterMarkerStrategy getNativeParameterMarkerStrategy() {
+		return null;
 	}
 
 	/**

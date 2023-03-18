@@ -368,6 +368,8 @@ public class DerbyDialect extends Dialect {
 				return "(({fn timestampdiff(sql_tsi_day,date(char(year(?2),4)||'-01-01'),{fn timestampadd(sql_tsi_day,{fn timestampdiff(sql_tsi_day,{d '1753-01-01'},?2)}/7*7,{d '1753-01-04'})})}+7)/7)";
 			case QUARTER:
 				return "((month(?2)+2)/3)";
+			case EPOCH:
+				return "{fn timestampdiff(sql_tsi_second,{ts '1970-01-01 00:00:00'},?2)}";
 			default:
 				return "?1(?2)";
 		}

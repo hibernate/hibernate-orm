@@ -7,6 +7,8 @@
 package org.hibernate.persister.entity;
 
 
+import org.hibernate.metamodel.mapping.EntityMappingType;
+
 /**
  * Contract for things that can be locked via a {@link org.hibernate.dialect.lock.LockingStrategy}.
  * <p>
@@ -16,7 +18,10 @@ package org.hibernate.persister.entity;
  *
  * @author Steve Ebersole
  * @since 3.2
+ *
+ * @deprecated Use {@link EntityMappingType}
  */
+@Deprecated(since = "6", forRemoval = true)
 public interface Lockable extends EntityPersister {
 	/**
 	 * Locks are always applied to the "root table".

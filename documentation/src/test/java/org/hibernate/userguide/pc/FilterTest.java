@@ -110,7 +110,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             Account account2 = entityManager.find(Account.class, 2L);
 
             assertNotNull(account1);
-            assertNull(account2);
+            assertNotNull(account2);
         });
 
         doInJPA(this::entityManagerFactory, entityManager -> {
@@ -146,7 +146,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
             Account account = entityManager.find(Account.class, 2L);
 
-            assertNull(account);
+            assertFalse( account.isActive() );
             //end::pc-filter-entity-example[]
         });
 

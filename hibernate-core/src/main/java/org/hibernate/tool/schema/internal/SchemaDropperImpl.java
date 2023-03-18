@@ -247,7 +247,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		);
 		dropAuxiliaryObjectsAfterTables( metadata, options, dialect, formatter, context, targets );
 		dropUserDefinedTypes( metadata, options, dialect, formatter, context, targets );
-		dropSchemasAndCatalogs( metadata, options, dialect, formatter, targets );
+		dropSchemasAndCatalogs( metadata, options, dialect, formatter, context, targets );
 	}
 
 	private void dropConstraintsTablesSequences(
@@ -422,6 +422,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			ExecutionOptions options,
 			Dialect dialect,
 			Formatter formatter,
+			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		boolean tryToDropCatalogs = options.shouldManageNamespaces() && dialect.canCreateCatalog();
 		boolean tryToDropSchemas = options.shouldManageNamespaces() && dialect.canCreateSchema();
@@ -429,13 +430,20 @@ public class SchemaDropperImpl implements SchemaDropper {
 			final Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
-					if ( tryToDropSchemas && namespace.getPhysicalName().getSchema() != null ) {
-						final String schemaName = namespace.getPhysicalName().getSchema().render( dialect );
-						applySqlStrings( dialect.getDropSchemaCommand( schemaName ), formatter, options, targets);
+					Namespace.Name logicalName = namespace.getName();
+					Namespace.Name physicalName = namespace.getPhysicalName();
+
+					if ( tryToDropSchemas ) {
+						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.getSchema() );
+						if ( schemaPhysicalName != null ) {
+							final String schemaName = schemaPhysicalName.render( dialect );
+							applySqlStrings( dialect.getDropSchemaCommand( schemaName ), formatter, options, targets);
+						}
 					}
+
 					if (tryToDropCatalogs) {
-						final Identifier catalogLogicalName = namespace.getName().getCatalog();
-						final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+						final Identifier catalogLogicalName = logicalName.getCatalog();
+						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.getCatalog() );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 							final String catalogName = catalogPhysicalName.render( dialect );
 							applySqlStrings( dialect.getDropCatalogCommand( catalogName ), formatter, options, targets );

@@ -52,14 +52,19 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		return false;
+		return this == o;
 	}
 
 	@Override
 	public int hashCode() {
 		return System.identityHashCode( this );
+	}
+
+	@Override
+	public int compareTo(SqmParameter anotherParameter) {
+		if ( this == anotherParameter ) {
+			return 0;
+		}
+		return 1;
 	}
 }

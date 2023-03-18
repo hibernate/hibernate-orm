@@ -15,12 +15,13 @@ import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -43,16 +44,12 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.entity.AttributeMappingsList;
-import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -239,27 +236,22 @@ public class AnonymousTupleEntityValuedModelPart
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
+			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 
 		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
@@ -270,9 +262,8 @@ public class AnonymousTupleEntityValuedModelPart
 		lazyTableGroup.setTableGroupInitializerCallback(
 				createTableGroupInitializerCallback(
 						lhs,
-						sqlExpressionResolver,
-						sessionFactory,
-						tableGroupJoin::applyPredicate
+						tableGroupJoin::applyPredicate,
+						creationState
 				)
 		);
 		return tableGroupJoin;
@@ -280,9 +271,8 @@ public class AnonymousTupleEntityValuedModelPart
 
 	private Consumer<TableGroup> createTableGroupInitializerCallback(
 			TableGroup lhs,
-			SqlExpressionResolver sqlExpressionResolver,
-			SessionFactoryImplementor sessionFactory,
-			Consumer<Predicate> predicateConsumer) {
+			Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState) {
 		// -----------------
 		// Collect the selectable mappings for the FK key side and target side
 		// As we will "resolve" the derived column references for these mappings
@@ -290,6 +280,8 @@ public class AnonymousTupleEntityValuedModelPart
 
 		final List<SelectableMapping> keyMappings;
 		final List<SelectableMapping> targetMappings;
+
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
 		if ( delegate instanceof OneToManyCollectionPart ) {
 			final OneToManyCollectionPart oneToMany = (OneToManyCollectionPart) delegate;
@@ -407,13 +399,11 @@ public class AnonymousTupleEntityValuedModelPart
 			boolean fetched,
 			String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final EntityMappingType entityMappingType = delegate.getEntityMappingType();
 		final TableReference primaryTableReference = entityMappingType.createPrimaryTableReference(
 				sqlAliasBase,
-				sqlExpressionResolver,
-				creationContext
+				creationState
 		);
 
 		return new StandardTableGroup(
@@ -430,10 +420,9 @@ public class AnonymousTupleEntityValuedModelPart
 						tableExpression,
 						sqlAliasBase,
 						primaryTableReference,
-						sqlExpressionResolver,
-						creationContext
+						creationState
 				),
-				creationContext.getSessionFactory()
+				creationState.getCreationContext().getSessionFactory()
 		);
 	}
 
@@ -442,14 +431,17 @@ public class AnonymousTupleEntityValuedModelPart
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
+				explicitSqlAliasBase,
+				explicitSourceAlias,
+				this,
+				creationState.getSqlAliasBaseGenerator()
+		);
 		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
 		final EntityPersister entityPersister = delegate.getEntityMappingType().getEntityPersister();
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
@@ -462,8 +454,7 @@ public class AnonymousTupleEntityValuedModelPart
 						fetched,
 						null,
 						sqlAliasBase,
-						sqlExpressionResolver,
-						creationContext
+						creationState
 				),
 				(np, tableExpression) -> {
 					if ( !tableExpression.isEmpty() && !entityPersister.containsTableReference( tableExpression ) ) {
@@ -485,18 +476,13 @@ public class AnonymousTupleEntityValuedModelPart
 				this,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationContext.getSessionFactory(),
+				creationState.getCreationContext().getSessionFactory(),
 				lhs
 		);
 
 		if ( predicateConsumer != null ) {
 			lazyTableGroup.setTableGroupInitializerCallback(
-					createTableGroupInitializerCallback(
-							lhs,
-							sqlExpressionResolver,
-							creationContext.getSessionFactory(),
-							predicateConsumer
-					)
+					createTableGroupInitializerCallback( lhs, predicateConsumer, creationState )
 			);
 		}
 
@@ -550,11 +536,14 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
-		delegate.breakDownJdbcValues( domainValue, valueConsumer, session );
+		return delegate.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
@@ -563,21 +552,25 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return delegate.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+		return delegate.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
 			SharedSessionContractImplementor session) {
-		return delegate.forEachJdbcValue( value, offset, consumer, session );
+		return delegate.forEachJdbcValue( value, offset, x, y, consumer, session );
 	}
 
 	@Override

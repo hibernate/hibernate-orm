@@ -30,8 +30,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -100,9 +99,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.keySide = new EmbeddedForeignKeyDescriptorSide( Nature.KEY, keyMappingType );
 		final List<String> columns = new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
 		keySelectableMappings.forEachSelectable(
-				(columnIndex, selection) -> {
-					columns.add( selection.getSelectionExpression() );
-				}
+				(columnIndex, selection) -> columns.add( selection.getSelectionExpression() )
 		);
 		this.associationKey = new AssociationKey( keyTable, columns );
 		this.hasConstraint = hasConstraint;
@@ -324,12 +321,14 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		else {
 			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME );
 		}
-		final TableGroup fkTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+
+		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				resultNavigablePath,
 				np -> {
 					final TableGroupJoin tableGroupJoin = modelPart.createTableGroupJoin(
 							resultNavigablePath,
 							tableGroup,
+							null,
 							null,
 							SqlAstJoinType.INNER,
 							true,
@@ -361,8 +360,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	public Predicate generateJoinPredicate(
 			TableGroup targetSideTableGroup,
 			TableGroup keySideTableGroup,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
 				targetTable,
@@ -374,33 +372,21 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				false
 		);
 
-		return generateJoinPredicate(
-				lhsTableReference,
-				rhsTableKeyReference,
-				sqlExpressionResolver,
-				creationContext
-		);
+		return generateJoinPredicate( lhsTableReference, rhsTableKeyReference, creationState );
 	}
 
 	@Override
 	public Predicate generateJoinPredicate(
 			TableReference targetSideReference,
 			TableReference keySideReference,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 		targetSelectableMappings.forEachSelectable(
 				(i, selection) -> {
 					final ComparisonPredicate comparisonPredicate = new ComparisonPredicate(
-							new ColumnReference(
-									targetSideReference,
-									selection
-							),
+							new ColumnReference( targetSideReference, selection ),
 							ComparisonOperator.EQUAL,
-							new ColumnReference(
-									keySideReference,
-									keySelectableMappings.getSelectable( i )
-							)
+							new ColumnReference( keySideReference, keySelectableMappings.getSelectable( i ) )
 					);
 					predicate.add( comparisonPredicate );
 				}
@@ -532,23 +518,39 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
-			keySelectableMappings.forEachSelectable( (index, selectable) -> {
-				valueConsumer.consume( null, selectable );
-			} );
+			final int jdbcTypeCount = keySelectableMappings.getJdbcTypeCount();
+			for ( int i = 0; i < jdbcTypeCount; i++ ) {
+				valueConsumer.consume( offset + i, x, y, null, keySelectableMappings.getSelectable( i ) );
+			}
+			return jdbcTypeCount;
 		}
 		else if ( domainValue instanceof Object[] ) {
 			final Object[] values = (Object[]) domainValue;
-			keySelectableMappings.forEachSelectable( (index, selectable) -> {
-				valueConsumer.consume( values[ index ], selectable );
-			} );
+			final int jdbcTypeCount = keySelectableMappings.getJdbcTypeCount();
+			for ( int i = 0; i < jdbcTypeCount; i++ ) {
+				valueConsumer.consume( offset + i, x, y, values[i], keySelectableMappings.getSelectable( i ) );
+			}
+			return jdbcTypeCount;
 		}
 		else {
 			final MutableInteger columnPosition = new MutableInteger();
-			keySide.getModelPart().breakDownJdbcValues(
+			return keySide.getModelPart().breakDownJdbcValues(
 					domainValue,
-					(jdbcValue, jdbcValueMapping) -> valueConsumer.consume(
+					offset,
+					x,
+					y,
+					(valueIndex, arg1, arg2, jdbcValue, jdbcValueMapping) -> valueConsumer.consume(
+							offset,
+							arg1,
+							arg2,
 							jdbcValue,
 							keySelectableMappings.getSelectable( columnPosition.getAndIncrement() )
 					),
@@ -586,12 +588,14 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return targetSide.getModelPart().forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+		return targetSide.getModelPart().forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override

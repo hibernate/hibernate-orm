@@ -15,7 +15,7 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 
 /**
- * JdbcMutation implementation for MERGE/UPSERT handling
+ * JdbcMutation implementation for UPSERT handling
  *
  * @author Steve Ebersole
  */

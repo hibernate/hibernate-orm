@@ -6,9 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,8 +13,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.Duration;
 
-import org.hibernate.HibernateException;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -30,61 +25,15 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
+import org.postgresql.util.PGInterval;
+
 /**
  * @author Christian Beikov
  */
 public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
-
-	public static final PostgreSQLIntervalSecondJdbcType INSTANCE = new PostgreSQLIntervalSecondJdbcType();
-	private static final Class<?> PG_INTERVAL_CLASS;
-	private static final Constructor<Object> PG_INTERVAL_CONSTRUCTOR;
-	private static final Method PG_INTERVAL_GET_DAYS;
-	private static final Method PG_INTERVAL_GET_HOURS;
-	private static final Method PG_INTERVAL_GET_MINUTES;
-	private static final Method PG_INTERVAL_GET_SECONDS;
-	private static final Method PG_INTERVAL_GET_MICRO_SECONDS;
 	private static final long SECONDS_PER_DAY = 86400;
 	private static final long SECONDS_PER_HOUR = 3600;
 	private static final long SECONDS_PER_MINUTE = 60;
-
-	static {
-		Constructor<Object> constructor;
-		Class<?> pgIntervalClass;
-		Method pgIntervalGetDays;
-		Method pgIntervalGetHours;
-		Method pgIntervalGetMinutes;
-		Method pgIntervalGetSeconds;
-		Method pgIntervalGetMicroSeconds;
-		try {
-			pgIntervalClass = ReflectHelper.classForName(
-					"org.postgresql.util.PGInterval",
-					PostgreSQLIntervalSecondJdbcType.class
-			);
-			constructor = (Constructor<Object>) pgIntervalClass.getConstructor(
-					int.class,
-					int.class,
-					int.class,
-					int.class,
-					int.class,
-					double.class
-			);
-			pgIntervalGetDays = pgIntervalClass.getDeclaredMethod( "getDays" );
-			pgIntervalGetHours = pgIntervalClass.getDeclaredMethod( "getHours" );
-			pgIntervalGetMinutes = pgIntervalClass.getDeclaredMethod( "getMinutes" );
-			pgIntervalGetSeconds = pgIntervalClass.getDeclaredMethod( "getWholeSeconds" );
-			pgIntervalGetMicroSeconds = pgIntervalClass.getDeclaredMethod( "getMicroSeconds" );
-		}
-		catch (Exception e) {
-			throw new RuntimeException( "Could not initialize PostgreSQLPGObjectJdbcType", e );
-		}
-		PG_INTERVAL_CLASS = pgIntervalClass;
-		PG_INTERVAL_CONSTRUCTOR = constructor;
-		PG_INTERVAL_GET_DAYS = pgIntervalGetDays;
-		PG_INTERVAL_GET_HOURS = pgIntervalGetHours;
-		PG_INTERVAL_GET_MINUTES = pgIntervalGetMinutes;
-		PG_INTERVAL_GET_SECONDS = pgIntervalGetSeconds;
-		PG_INTERVAL_GET_MICRO_SECONDS = pgIntervalGetMicroSeconds;
-	}
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -161,19 +110,14 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 				double seconds = ( (double) ( secondsLong - minutesLong * 60 ) )
 						+ ( (double) d.getNano() ) / 1_000_000_000d;
 
-				try {
-					return PG_INTERVAL_CONSTRUCTOR.newInstance(
-							0,// years
-							0, // months
-							days,
-							hours,
-							minutes,
-							seconds
-					);
-				}
-				catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-					throw new IllegalArgumentException( e );
-				}
+				return new PGInterval(
+						0,// years
+						0, // months
+						days,
+						hours,
+						minutes,
+						seconds
+				);
 			}
 		};
 	}
@@ -198,19 +142,15 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 			}
 
 			private Object getValue(Object value) {
-				if ( PG_INTERVAL_CLASS.isInstance( value ) ) {
-					try {
-						final long seconds = (int) PG_INTERVAL_GET_SECONDS.invoke( value )
-								+ SECONDS_PER_DAY * (int) PG_INTERVAL_GET_DAYS.invoke( value )
-								+ SECONDS_PER_HOUR * (int) PG_INTERVAL_GET_HOURS.invoke( value )
-								+ SECONDS_PER_MINUTE * (int) PG_INTERVAL_GET_MINUTES.invoke( value );
-						final long nanos = 1000L * (int) PG_INTERVAL_GET_MICRO_SECONDS.invoke( value );
+				if ( value instanceof PGInterval ) {
+					final PGInterval interval = (PGInterval) value;
+					final long seconds = ( (long) interval.getSeconds() )
+							+ SECONDS_PER_DAY * ( (long) interval.getDays() )
+							+ SECONDS_PER_HOUR * ( (long) interval.getHours() )
+							+ SECONDS_PER_MINUTE * ( (long) interval.getMinutes() );
+					final long nanos = 1000L * ( (long) interval.getMicroSeconds() );
 
-						return Duration.ofSeconds( seconds, nanos );
-					}
-					catch (Exception e) {
-						throw new HibernateException( "Couldn't create Duration from interval", e );
-					}
+					return Duration.ofSeconds( seconds, nanos );
 				}
 				return value;
 			}

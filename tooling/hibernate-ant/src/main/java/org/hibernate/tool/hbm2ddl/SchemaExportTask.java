@@ -235,15 +235,15 @@ public class SchemaExportTask extends MatchingTask {
 			}
 
 			if ( exportType.doCreate() ) {
-				ssrBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, scriptTarget );
+				ssrBuilder.applySetting( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, scriptTarget );
 			}
 			if ( exportType.doDrop() ) {
-				ssrBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, scriptTarget );
+				ssrBuilder.applySetting( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, scriptTarget );
 			}
 		}
 
 		if ( output.doExport() ) {
-			ssrBuilder.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, exportType.getAction() );
+			ssrBuilder.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, exportType.getAction() );
 		}
 
 

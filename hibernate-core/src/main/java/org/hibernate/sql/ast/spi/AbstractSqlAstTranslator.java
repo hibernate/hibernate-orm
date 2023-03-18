@@ -84,6 +84,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
@@ -95,6 +96,7 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -102,7 +104,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -149,6 +150,8 @@ import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate.FilterFragmentParameter;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate.FilterFragmentPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -192,7 +195,8 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -200,6 +204,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
@@ -266,8 +271,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private final List<JdbcParameterBinder> parameterBinders = new ArrayList<>();
 	private final JdbcParametersImpl jdbcParameters = new JdbcParametersImpl();
+	private JdbcParameterBindings jdbcParameterBindings;
+	private Map<JdbcParameter, JdbcParameterBinding> appliedParameterBindings = Collections.emptyMap();
+	private SqlAstNodeRenderingMode parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
 
-	private final Set<FilterJdbcParameter> filterJdbcParameters = new HashSet<>();
 
 	private final Stack<Clause> clauseStack = new StandardStack<>( Clause.class );
 	private final Stack<QueryPart> queryPartStack = new StandardStack<>( QueryPart.class );
@@ -300,15 +308,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private transient BasicType<String> stringType;
 	private transient BasicType<Boolean> booleanType;
 
-	private SqlAstNodeRenderingMode parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
-
-	private Map<JdbcParameter, JdbcParameterBinding> appliedParameterBindings = Collections.emptyMap();
-	private JdbcParameterBindings jdbcParameterBindings;
 	private LockOptions lockOptions;
 	private Limit limit;
 	private JdbcParameter offsetParameter;
 	private JdbcParameter limitParameter;
 	private ForUpdateClause forUpdate;
+
+	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+		this.sessionFactory = sessionFactory;
+		this.dialect = sessionFactory.getJdbcServices().getDialect();
+		this.statementStack.push( statement );
+		this.parameterMarkerStrategy = sessionFactory.getServiceRegistry().getService( ParameterMarkerStrategy.class );
+	}
 
 	private static Clause matchWithClause(Clause clause) {
 		if ( clause == Clause.WITH ) {
@@ -319,12 +330,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	public Dialect getDialect() {
 		return dialect;
-	}
-
-	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		this.sessionFactory = sessionFactory;
-		this.dialect = sessionFactory.getJdbcServices().getDialect();
-		this.statementStack.push( statement );
 	}
 
 	@Override
@@ -451,10 +456,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-		return filterJdbcParameters;
-	}
-
 	@SuppressWarnings("unused")
 	protected SqlAppender getSqlAppender() {
 		return this;
@@ -497,7 +498,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public boolean supportsFilterClause() {
-		// By default we report false because not many dialects support this
+		// By default, we report false because not many dialects support this
 		return false;
 	}
 
@@ -782,15 +783,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				throw new IllegalArgumentException( "Unexpected statement - " + statement );
 			}
 
-			if ( jdbcParameterBindings != null && CollectionHelper.isNotEmpty( getFilterJdbcParameters() ) ) {
-				for ( FilterJdbcParameter filterJdbcParameter : getFilterJdbcParameters() ) {
-					jdbcParameterBindings.addBinding(
-							filterJdbcParameter.getParameter(),
-							filterJdbcParameter.getBinding()
-					);
-				}
-			}
-
 			//noinspection unchecked
 			return (T) jdbcOperation;
 		}
@@ -806,7 +798,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				getFilterJdbcParameters(),
 				getAppliedParameterBindings()
 		);
 	}
@@ -818,7 +809,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				getFilterJdbcParameters(),
 				getAppliedParameterBindings()
 		);
 	}
@@ -843,12 +833,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return new JdbcOperationQuerySelect(
 				getSql(),
 				getParameterBinders(),
-				new JdbcValuesMappingProducerStandard(
-						selectStatement.getQuerySpec().getSelectClause().getSqlSelections(),
-						selectStatement.getDomainResultDescriptors()
-				),
+				buildJdbcValuesMappingProducer( selectStatement ),
 				getAffectedTableNames(),
-				getFilterJdbcParameters(),
 				rowsToSkip = getRowsToSkip( selectStatement, getJdbcParameterBindings() ),
 				getMaxRows( selectStatement, getJdbcParameterBindings(), rowsToSkip ),
 				getAppliedParameterBindings(),
@@ -856,6 +842,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getOffsetParameter(),
 				getLimitParameter()
 		);
+	}
+
+	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
+		final JdbcValuesMappingProducerProvider producerProvider = getSessionFactory()
+				.getServiceRegistry()
+				.getService( JdbcValuesMappingProducerProvider.class );
+		return producerProvider.buildMappingProducer( selectStatement, getSessionFactory() );
 	}
 
 	protected int getRowsToSkip(SelectStatement sqlAstSelect, JdbcParameterBindings jdbcParameterBindings) {
@@ -1977,7 +1970,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								currentCteStatement.getCycleMarkColumn().getColumnExpression(),
 								false,
 								null,
-								null,
 								currentCteStatement.getCycleMarkColumn().getJdbcMapping()
 						);
 						if ( currentCteStatement.getCycleValue().getJdbcMapping() == getBooleanType()
@@ -2020,7 +2012,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						depthColumnName,
 						false,
 						null,
-						null,
 						integerType
 				);
 				visitColumnReference( depthColumnReference );
@@ -2051,7 +2042,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								recursiveTableReference,
 								currentCteStatement.getSearchColumn().getColumnExpression(),
 								false,
-								null,
 								null,
 								currentCteStatement.getSearchColumn().getJdbcMapping()
 						)
@@ -2164,7 +2154,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						depthColumnName,
 						false,
 						null,
-						null,
 						integerType
 				);
 				visitColumnReference( depthColumnReference );
@@ -2207,7 +2196,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								recursiveTableReference,
 								currentCteStatement.getSearchColumn().getColumnExpression(),
 								false,
-								null,
 								null,
 								currentCteStatement.getSearchColumn().getJdbcMapping()
 						)
@@ -2352,7 +2340,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					recursiveTableReference,
 					cyclePathColumnName,
 					false,
-					null,
 					null,
 					stringType
 			);
@@ -2499,7 +2486,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					recursiveTableReference,
 					cyclePathColumnName,
 					false,
-					null,
 					null,
 					stringType
 			);
@@ -2919,7 +2905,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 											"c" + i,
 											false,
 											null,
-											null,
 											getIntegerType()
 									)
 							)
@@ -2992,9 +2977,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			String queryGroupAlias = null;
 			if ( currentQueryPart instanceof QueryGroup ) {
-				// We always need query wrapping if we are in a query group and this query spec has a fetch clause
-				// because of order by precedence in SQL
-				if ( querySpec.hasOffsetOrFetchClause() ) {
+				// We always need query wrapping if we are in a query group and this query spec has a fetch or order by
+				// clause, because of order by precedence in SQL
+				if ( querySpec.hasOffsetOrFetchClause() || querySpec.hasSortSpecifications() ) {
 					queryGroupAlias = "";
 					// If the parent is a query group with a fetch clause we must use a select wrapper,
 					// or if the database does not support simple query grouping, we must use a select wrapper
@@ -3143,7 +3128,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				(String) null,
 				"c" + index,
 				false,
-				null,
 				null,
 				expression.getExpressionType().getSingleJdbcMapping()
 		);
@@ -5090,8 +5074,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
 		if ( literalFormatter == null ) {
 			parameterBinders.add( literal );
-
-			final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal );
+			final String marker = parameterMarkerStrategy.createMarker( parameterBinders.size(), literal.getJdbcMapping().getJdbcType() );
+			final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal, marker );
 			if ( castParameter ) {
 				renderCasted( jdbcParameter );
 			}
@@ -5608,7 +5592,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								columnName,
 								false,
 								null,
-								null,
 								null
 						)
 				);
@@ -5677,7 +5660,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 									subTableGroup.getPrimaryTableReference(),
 									columnName,
 									false,
-									null,
 									null,
 									null
 							)
@@ -5802,7 +5784,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							tableReference,
 							"sort_col_" + i,
 							false,
-							null,
 							null,
 							null
 					);
@@ -6184,21 +6165,45 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitParameter(JdbcParameter jdbcParameter) {
 		switch ( getParameterRenderingMode() ) {
 			case NO_UNTYPED:
-			case NO_PLAIN_PARAMETER:
+			case NO_PLAIN_PARAMETER: {
 				renderCasted( jdbcParameter );
 				break;
+			}
 			case INLINE_PARAMETERS:
-			case INLINE_ALL_PARAMETERS:
+			case INLINE_ALL_PARAMETERS: {
 				renderExpressionAsLiteral( jdbcParameter, jdbcParameterBindings );
 				break;
+			}
 			case DEFAULT:
-			default:
-				appendSql( PARAM_MARKER );
-
-				parameterBinders.add( jdbcParameter.getParameterBinder() );
-				jdbcParameters.addParameter( jdbcParameter );
+			default: {
+				visitParameterAsParameter( jdbcParameter );
 				break;
+			}
 		}
+	}
+
+	protected void visitParameterAsParameter(JdbcParameter jdbcParameter) {
+		renderParameterAsParameter( jdbcParameter );
+		parameterBinders.add( jdbcParameter.getParameterBinder() );
+		jdbcParameters.addParameter( jdbcParameter );
+	}
+
+	protected final void renderParameterAsParameter(JdbcParameter jdbcParameter) {
+		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		assert jdbcType != null;
+		renderParameterAsParameter( parameterBinders.size() + 1, jdbcParameter );
+	}
+
+	/**
+	 * Renders a parameter marker for the given position
+	 * @param jdbcParameter
+	 * @param position
+	 */
+	protected void renderParameterAsParameter(int position, JdbcParameter jdbcParameter) {
+		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		assert jdbcType != null;
+		final String parameterMarker = parameterMarkerStrategy.createMarker( position, jdbcType );
+		jdbcType.appendWriteExpression( parameterMarker, this, dialect );
 	}
 
 	@Override
@@ -6642,21 +6647,70 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitFilterPredicate(FilterPredicate filterPredicate) {
-		visitJunction( filterPredicate.getFragments() );
-
-		final List<FilterJdbcParameter> parameters = filterPredicate.getParameters();
-		if ( parameters != null ) {
-			for ( FilterJdbcParameter filterJdbcParameter : parameters ) {
-				parameterBinders.add( filterJdbcParameter.getBinder() );
-				jdbcParameters.addParameter( filterJdbcParameter.getParameter() );
-				filterJdbcParameters.add( filterJdbcParameter );
+		// visits each fragment with " and " between them
+		final List<FilterFragmentPredicate> filters = filterPredicate.getFragments();
+		for ( int i = 0; i < filters.size(); i++ ) {
+			final FilterFragmentPredicate filter = filters.get( i );
+			visitFilterFragmentPredicate( filter );
+			if ( i + 1 < filters.size() ) {
+				appendSql( " and " );
 			}
 		}
 	}
 
 	@Override
-	public void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate fragmentPredicate) {
-		appendSql( fragmentPredicate.getSqlFragment() );
+	public void visitFilterFragmentPredicate(FilterFragmentPredicate filter) {
+		// process a specific filter
+		final String sqlFragment = filter.getSqlFragment();
+
+		if ( filter.getParameters() == null ) {
+			sqlBuffer.append( sqlFragment );
+			return;
+		}
+
+		int lastEnd = 0;
+		for ( int p = 0; p < filter.getParameters().size(); p++ ) {
+			final FilterFragmentParameter parameter = filter.getParameters().get( p );
+			lastEnd = processFilterParameter( parameter, sqlFragment, lastEnd );
+		}
+
+		if ( lastEnd < sqlFragment.length() ) {
+			appendSql( sqlFragment.substring( lastEnd ) );
+		}
+	}
+
+	private int processFilterParameter(FilterFragmentParameter parameter, String sqlFragment, int startPosition) {
+		final String marker = ":" + parameter.getFilterName() + "." + parameter.getParameterName();
+		final int markerStart = sqlFragment.indexOf( marker, startPosition );
+
+		appendSql( sqlFragment.substring( startPosition, markerStart ) );
+
+		final Object value = parameter.getValue();
+		final JdbcMapping valueMapping = parameter.getValueMapping();
+
+		if ( value instanceof Iterable
+				&& !valueMapping.getJavaTypeDescriptor().isInstance( value ) ) {
+			processIterableFilterParameterValue( valueMapping, ( (Iterable<?>) value ).iterator() );
+		}
+		else {
+			processSingularFilterParameterValue( valueMapping, value );
+		}
+
+		return markerStart + marker.length();
+	}
+
+	private void processSingularFilterParameterValue(JdbcMapping valueMapping, Object value) {
+		visitParameterAsParameter( new FilterJdbcParameter( valueMapping, value ) );
+	}
+
+	private void processIterableFilterParameterValue(JdbcMapping valueMapping, Iterator<?> iterator) {
+		while ( iterator.hasNext() ) {
+			final Object element = iterator.next();
+			processSingularFilterParameterValue( valueMapping, element );
+			if ( iterator.hasNext() ) {
+				appendSql( "," );
+			}
+		}
 	}
 
 	@Override
@@ -7969,7 +8023,39 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitColumnWriteFragment(ColumnWriteFragment columnWriteFragment) {
-		sqlBuffer.append( columnWriteFragment.getFragment() );
+		// if there are no parameters or if we are using the standard parameter renderer
+		//		- the rendering is pretty simple
+		if ( CollectionHelper.isEmpty( columnWriteFragment.getParameters() )
+				|| ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+			simpleColumnWriteFragmentRendering( columnWriteFragment );
+			return;
+		}
+
+		// otherwise, render the fragment using the custom parameter renderer
+		final String sqlFragment = columnWriteFragment.getFragment();
+		int lastEnd = 0;
+
+		for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
+			final int markerStart = sqlFragment.indexOf( "?", lastEnd );
+
+			// append the part of the fragment from the last-end position (start of string for first pass)
+			// to the index of the parameter marker
+			appendSql( sqlFragment.substring( lastEnd, markerStart ) );
+
+			// render the parameter marker and register the parameter handling
+			visitParameterAsParameter( parameter );
+
+			lastEnd = markerStart + 1;
+		}
+
+		if ( lastEnd < sqlFragment.length() ) {
+			appendSql( sqlFragment.substring( lastEnd ) );
+		}
+	}
+
+	protected void simpleColumnWriteFragmentRendering(ColumnWriteFragment columnWriteFragment) {
+		appendSql( columnWriteFragment.getFragment() );
+
 		for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
 			parameterBinders.add( parameter.getParameterBinder() );
 			jdbcParameters.addParameter( parameter );

@@ -158,7 +158,7 @@ public class MimerSQLDialect extends Dialect {
 		functionFactory.soundex();
 		functionFactory.octetLength();
 		functionFactory.bitLength();
-		functionFactory.truncate();
+		functionFactory.trunc_truncate();
 		functionFactory.repeat();
 		functionFactory.pad_repeat();
 		functionFactory.dayofweekmonthyear();

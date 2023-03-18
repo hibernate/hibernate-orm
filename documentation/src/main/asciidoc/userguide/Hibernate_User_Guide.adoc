@@ -3,6 +3,8 @@ Vlad Mihalcea, Steve Ebersole, Andrea Boriero, Gunnar Morling, Gail Badner, Chri
 :toc2:
 :toclevels: 3
 :sectanchors:
+:root-project-dir: ../../../../../../..
+
 
 include::Preface.adoc[]
 
@@ -42,5 +44,6 @@ include::appendices/Legacy_DomainModel.adoc[]
 include::appendices/LegacyBasicTypeResolution.adoc[]
 include::appendices/Legacy_Native_Queries.adoc[]
 
+include::ConfigPropertyList.adoc[]
 include::Bibliography.adoc[]
 

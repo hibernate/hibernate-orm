@@ -7,10 +7,8 @@
 package org.hibernate.cache.internal;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 import org.hibernate.Internal;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -25,7 +23,7 @@ import org.hibernate.type.Type;
  * @since 6.2
  */
 @Internal
-final class BasicCacheKeyImplementation implements Serializable {
+public final class BasicCacheKeyImplementation implements Serializable {
 
 	final Serializable id;
 	private final String entityOrRoleName;
@@ -44,11 +42,26 @@ final class BasicCacheKeyImplementation implements Serializable {
 			final Serializable disassembledKey,
 			final Type type,
 			final String entityOrRoleName) {
-		assert disassembledKey != null;
+		this( disassembledKey, entityOrRoleName, calculateHashCode( originalId, type ) );
+	}
+
+	/**
+	 * Being an internal contract the arguments are not being checked.
+	 * @param originalId
+	 * @param disassembledKey this must be the "disassembled" form of an ID
+	 * @param type
+	 * @param entityOrRoleName
+	 */
+	@Internal
+	public BasicCacheKeyImplementation(
+			final Serializable id,
+			final String entityOrRoleName,
+			final int hashCode) {
+		assert id != null;
 		assert entityOrRoleName != null;
-		this.id = disassembledKey;
+		this.id = id;
 		this.entityOrRoleName = entityOrRoleName;
-		this.hashCode = calculateHashCode( originalId, type );
+		this.hashCode = hashCode;
 	}
 
 	private static int calculateHashCode(Object disassembledKey, Type type) {
@@ -57,6 +70,11 @@ final class BasicCacheKeyImplementation implements Serializable {
 
 	public Object getId() {
 		return id;
+	}
+
+	@Internal
+	public String getEntityOrRoleName() {
+		return entityOrRoleName;
 	}
 
 	@Override

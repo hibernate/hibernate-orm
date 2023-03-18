@@ -157,6 +157,11 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 	}
 
+	// For tests
+	public boolean isJdbcMetadataAccessible() {
+		return jdbcMetadataAccessible;
+	}
+
 	public static class Builder {
 		private final JdbcEnvironment jdbcEnvironment;
 		private final boolean jdbcMetadataIsAccessible;

@@ -19,7 +19,8 @@ ext {
                         'jdbc.user'  : 'sa',
                         'jdbc.pass'  : '',
                         'jdbc.url'   : 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000',
-                        'connection.init_sql' : ''
+                        'connection.init_sql' : '',
+                        'hibernate.dialect.native_param_markers' : 'true'
                 ],
                 hsqldb : [
                         'db.dialect' : 'org.hibernate.dialect.HSQLDialect',

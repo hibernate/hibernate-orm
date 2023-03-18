@@ -17,6 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.env.internal.ExtractedDatabaseMetaDataImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -27,14 +28,18 @@ import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSessionBuilder;
 
 /**
@@ -62,6 +67,9 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 
 		serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings( settings )
+				// Make sure to continue configuring the MultiTenantConnectionProvider by adding a service,
+				// rather than by setting 'hibernate.multi_tenant_connection_provider':
+				// that's important to reproduce the regression we test in 'testJdbcMetadataAccessible'.
 				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
 				.build();
 
@@ -139,6 +147,14 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		if ( acmeProvider != null ) {
 			acmeProvider.stop();
 		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-16310")
+	public void testJdbcMetadataAccessible() {
+		assertThat( ( (ExtractedDatabaseMetaDataImpl) sessionFactory.getJdbcServices().getJdbcEnvironment()
+				.getExtractedDatabaseMetaData() ).isJdbcMetadataAccessible() )
+				.isTrue();
 	}
 
 	@Test

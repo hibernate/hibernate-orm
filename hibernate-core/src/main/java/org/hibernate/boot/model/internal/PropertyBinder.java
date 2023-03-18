@@ -8,6 +8,7 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyNotFoundException;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.CompositeType;
@@ -317,13 +319,7 @@ public class PropertyBinder {
 							inheritanceStatePerClass,
 							buildingContext
 					);
-					if ( superclass != null ) {
-						superclass.setDeclaredIdentifierProperty(property);
-					}
-					else {
-						//we know the property is on the actual entity
-						rootClass.setDeclaredIdentifierProperty( property );
-					}
+					setDeclaredIdentifier( rootClass, superclass, property );
 				}
 			}
 		}
@@ -340,6 +336,21 @@ public class PropertyBinder {
 		}
 
 		return property;
+	}
+
+	private void setDeclaredIdentifier(RootClass rootClass, MappedSuperclass superclass, Property prop) {
+		if ( superclass == null ) {
+			rootClass.setDeclaredIdentifierProperty( prop );
+			return;
+		}
+		final Class<?> type = buildingContext.getBootstrapContext().getReflectionManager().toClass( declaringClass );
+		ClassPropertyHolder.prepareActualPropertyForSuperclass(
+				prop,
+				type,
+				false,
+				buildingContext,
+				superclass::setDeclaredIdentifierProperty
+		);
 	}
 
 	private Component getOrCreateCompositeId(RootClass rootClass) {

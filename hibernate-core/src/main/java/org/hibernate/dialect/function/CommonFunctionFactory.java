@@ -259,122 +259,66 @@ public class CommonFunctionFactory {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// basic math functions
+	// numeric and datetime truncation
+
+	private void trunc(
+			String truncPattern,
+			String twoArgTruncPattern,
+			TruncFunction.DatetimeTrunc datetimeTrunc,
+			String toDateFunction) {
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction( truncPattern, twoArgTruncPattern, datetimeTrunc, toDateFunction, typeConfiguration )
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	private void trunc(TruncFunction.DatetimeTrunc datetimeTrunc) {
+		trunc( "trunc(?1)", "trunc(?1,?2)", datetimeTrunc, null );
+	}
 
 	public void trunc() {
-		functionRegistry.namedDescriptorBuilder( "trunc" )
-				.setReturnTypeResolver( useArgType( 1 ) )
-				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(NUMERIC, INTEGER)
-				.setArgumentListSignature( "(NUMERIC number[, INTEGER places])" )
-				.register();
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+		trunc( null );
+	}
+
+	public void trunc_dateTrunc() {
+		trunc( TruncFunction.DatetimeTrunc.DATE_TRUNC );
+	}
+
+	public void trunc_dateTrunc_trunc() {
+		trunc( TruncFunction.DatetimeTrunc.TRUNC );
 	}
 
 	/**
 	 * MySQL
 	 */
 	public void trunc_truncate() {
-		functionRegistry.registerUnaryBinaryPattern(
-				"trunc",
-				"truncate(?1,0)",
-				"truncate(?1,?2)",
-				NUMERIC, INTEGER,
-				typeConfiguration
-		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+		trunc( "truncate(?1,0)", "truncate(?1,?2)", TruncFunction.DatetimeTrunc.FORMAT, "str_to_date" );
 	}
 
 	/**
-	 * SQL Server
+	 * SQL Server >= 16
 	 */
-	public void trunc_round() {
-		functionRegistry.registerUnaryBinaryPattern(
-				"trunc",
-				"round(?1,0,1)",
-				"round(?1,?2,1)",
-				NUMERIC, INTEGER,
-				typeConfiguration
-		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
-	}
-
-	/**
-	 * Sybase
-	 */
-	public void trunc_floorPower() {
-		functionRegistry.registerUnaryBinaryPattern(
-				"trunc",
-				"sign(?1)*floor(abs(?1))",
-				"sign(?1)*floor(abs(?1)*power(10,?2))/power(10,?2)",
-				NUMERIC, INTEGER,
-				typeConfiguration
-		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
-	}
-
-	/**
-	 * PostgreSQL (only works if the second arg is constant, as it almost always is)
-	 */
-	public void trunc_truncFloor() {
-		functionRegistry.registerUnaryBinaryPattern(
-				"trunc",
-				"trunc(?1)",
-				"sign(?1)*floor(abs(?1)*1e?2)/1e?2",
-				NUMERIC, INTEGER,
-				typeConfiguration
-		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	public void trunc_round_datetrunc() {
+		trunc( "round(?1,0,1)", "round(?1,?2,1)", TruncFunction.DatetimeTrunc.DATETRUNC, "convert" );
 	}
 
 	/**
 	 * Derby (only works if the second arg is constant, as it almost always is)
 	 */
 	public void trunc_floor() {
-		functionRegistry.registerUnaryBinaryPattern(
-				"trunc",
-				"sign(?1)*floor(abs(?1))",
-				"sign(?1)*floor(abs(?1)*1e?2)/1e?2",
-				NUMERIC, INTEGER,
-				typeConfiguration
-		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
-	}
-
-	public void truncate() {
-		functionRegistry.namedDescriptorBuilder( "truncate" )
-				.setExactArgumentCount( 2 ) //some databases allow 1 arg but in these it's a synonym for trunc()
-				.setParameterTypes(NUMERIC, INTEGER)
-				.setInvariantType(doubleType)
-				.setArgumentListSignature( "(NUMERIC number, INTEGER places)" )
-				.register();
-	}
-
-	/**
-	 * SQL Server
-	 */
-	public void truncate_round() {
-		functionRegistry.patternDescriptorBuilder( "truncate", "round(?1,?2,1)" )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, INTEGER)
-				.setInvariantType(doubleType)
-				.setArgumentListSignature( "(NUMERIC number, INTEGER places)" )
-				.register();
+		trunc( "sign(?1)*floor(abs(?1))", "sign(?1)*floor(abs(?1)*1e?2)/1e?2", null, null );
 	}
 
 	/**
 	 * SAP HANA
 	 */
 	public void trunc_roundMode() {
-		functionRegistry.registerUnaryBinaryPattern(
-				"trunc",
-				"round(?1,0,round_down)",
-				"round(?1,?2,round_down)",
-				NUMERIC, INTEGER,
-				typeConfiguration
-		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+		trunc( "round(?1,0,round_down)", "round(?1,?2,round_down)", TruncFunction.DatetimeTrunc.FORMAT, "to_timestamp" );
 	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// basic math functions
 
 	/**
 	 * Returns double between 0.0 and 1.0. First call may specify a seed value.
@@ -2268,7 +2212,6 @@ public class CommonFunctionFactory {
 				NUMERIC, INTEGER,
 				typeConfiguration
 		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	/**
@@ -2558,22 +2501,27 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * H2, DB2 and PostgreSQL native date_trunc() function
+	 */
 	public void dateTrunc() {
-		functionRegistry.patternDescriptorBuilder( "date_trunc", "date_trunc('?1',?2)" )
-				.setInvariantType(timestampType)
+		functionRegistry.patternDescriptorBuilder( "date_trunc", "date_trunc(?1,?2)" )
+				.setReturnTypeResolver( useArgType( 2 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
-				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
+				.setParameterTypes( STRING, TEMPORAL )
+				.setArgumentListSignature( "(STRING field, TEMPORAL datetime)" )
 				.register();
 	}
 
-	public void dateTrunc_trunc() {
-		functionRegistry.patternDescriptorBuilder( "date_trunc", "trunc(?2,'?1')" )
-				.setInvariantType(timestampType)
+	/**
+	 * SQLServer native datetrunc() function
+	 */
+	public void dateTrunc_datetrunc() {
+		functionRegistry.patternDescriptorBuilder( "datetrunc", "datetrunc(?1,?2)" )
+				.setReturnTypeResolver( useArgType( 2 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
+				.setParameterTypes( TEMPORAL_UNIT, TEMPORAL )
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
 				.register();
 	}
-
 }

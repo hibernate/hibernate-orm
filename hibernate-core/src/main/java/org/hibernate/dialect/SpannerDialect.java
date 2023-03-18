@@ -52,6 +52,7 @@ import org.hibernate.type.StandardBasicTypes;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -393,7 +394,7 @@ public class SpannerDialect extends Dialect {
 				.setExactArgumentCount( 3 )
 				.register();
 		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "date_trunc" )
-				.setInvariantType( dateType )
+				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
 				.register();
 		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "date_from_unix_date" )

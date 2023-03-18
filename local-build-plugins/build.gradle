@@ -21,6 +21,7 @@ dependencies {
 	implementation 'jakarta.json.bind:jakarta.json.bind-api:2.0.0'
 	implementation 'jakarta.json:jakarta.json-api:2.0.1'
 	implementation 'org.eclipse:yasson:2.0.4'
+	implementation 'org.jsoup:jsoup:1.15.3'
 }
 
 tasks.compileJava {
@@ -62,6 +63,10 @@ gradlePlugin {
 		envProject {
 			id = 'org.hibernate.orm.build.env-project'
 			implementationClass = 'org.hibernate.orm.env.EnvironmentProjectPlugin'
+		}
+		configPropertiesCollectorPlugin {
+			id = 'org.hibernate.orm.build.properties'
+			implementationClass = 'org.hibernate.orm.properties.ConfigPropertyCollectorPlugin'
 		}
 	}
 }

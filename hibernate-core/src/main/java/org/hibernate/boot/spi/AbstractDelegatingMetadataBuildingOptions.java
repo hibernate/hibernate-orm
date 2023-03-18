@@ -7,7 +7,7 @@
 package org.hibernate.boot.spi;
 
 import java.util.List;
-import jakarta.persistence.SharedCacheMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
@@ -20,6 +20,8 @@ import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.SharedCacheMode;
 
 /**
  * Convenience base class for custom implementors of {@link MetadataBuildingOptions} using delegation.
@@ -169,4 +171,8 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 		return delegate.isXmlMappingEnabled();
 	}
 
+	@Override
+	public boolean disallowExtensionsInCdi() {
+		return delegate.disallowExtensionsInCdi();
+	}
 }

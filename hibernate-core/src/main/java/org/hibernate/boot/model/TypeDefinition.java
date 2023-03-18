@@ -20,11 +20,10 @@ import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -32,6 +31,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -146,7 +146,7 @@ public class TypeDefinition implements Serializable {
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
 			final Object typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
-					name, typeImplementorClass, instanceProducer );
+					context.getBuildingOptions(), name, typeImplementorClass, instanceProducer );
 
 			if ( typeInstance instanceof TypeConfigurationAware ) {
 				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
@@ -279,16 +279,19 @@ public class TypeDefinition implements Serializable {
 		);
 	}
 
-	private static Object instantiateType(StandardServiceRegistry serviceRegistry,
-			String name, Class<?> typeImplementorClass,
+	private static Object instantiateType(
+			StandardServiceRegistry serviceRegistry,
+			MetadataBuildingOptions buildingOptions,
+			String name,
+			Class<?> typeImplementorClass,
 			BeanInstanceProducer instanceProducer) {
-		if ( Helper.shouldIgnoreBeanContainer( serviceRegistry ) ) {
+		if ( buildingOptions.disallowExtensionsInCdi() ) {
 			return name != null
 					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
 					: instanceProducer.produceBeanInstance( typeImplementorClass );
 		}
 		else {
-			ManagedBeanRegistry beanRegistry = serviceRegistry.getService(ManagedBeanRegistry.class);
+			final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
 			final ManagedBean<?> typeBean = name != null
 					? beanRegistry.getBean( name, typeImplementorClass, instanceProducer )
 					: beanRegistry.getBean( typeImplementorClass, instanceProducer );

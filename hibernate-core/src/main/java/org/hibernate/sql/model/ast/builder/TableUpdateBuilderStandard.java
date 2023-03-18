@@ -13,13 +13,12 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateNoSet;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.model.internal.TableUpsert;
 
 /**
  * Standard TableUpdateBuilder implementation
@@ -62,7 +61,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 		}
 
 		if ( getMutatingTable().getTableMapping().isOptional() ) {
-			return (RestrictedTableMutation<O>) new TableUpsert(
+			return (RestrictedTableMutation<O>) new OptionalTableUpdate(
 					getMutatingTable(),
 					getMutationTarget(),
 					valueBindings,

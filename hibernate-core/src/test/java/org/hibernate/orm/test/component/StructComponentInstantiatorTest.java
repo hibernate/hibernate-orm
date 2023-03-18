@@ -238,7 +238,6 @@ public class StructComponentInstantiatorTest extends BaseSessionFactoryFunctiona
 
 		@Id
 		private Long id;
-		@Struct(name = "my_point_type")
 		private Point thePoint;
 
 		public RecordStructHolder() {
@@ -268,6 +267,7 @@ public class StructComponentInstantiatorTest extends BaseSessionFactoryFunctiona
 	}
 
 	@Embeddable
+	@Struct(name = "my_point_type", attributes = { "y", "x", "z" })
 	public static class Point {
 
 		private final String y;

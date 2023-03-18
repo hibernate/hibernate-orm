@@ -18,12 +18,11 @@ import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -45,6 +44,8 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.type.SqlTypes;
 
 /**
@@ -52,7 +53,7 @@ import org.hibernate.type.SqlTypes;
  *
  * @author Christian Beikov
  */
-public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithUpsert<T> {
 
 	public OracleSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
@@ -335,10 +336,24 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
+	protected boolean supportsSimpleQueryGrouping() {
+		return supportsOffsetFetchClause();
+	}
+
+	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			if ( supportsOffsetFetchClause() ) {
-				renderOffsetFetchClause( queryPart, true );
+				if ( getQueryPartStack().depth() > 1 && queryPart.hasSortSpecifications()
+						&& getQueryPartStack().peek( 1 ) instanceof QueryGroup
+						&& ( queryPart.isRoot() && !hasLimit() || !queryPart.hasOffsetOrFetchClause() ) ) {
+					// If the current query part has a query group parent, no offset/fetch clause, but an order by clause,
+					// then we must render "offset 0 rows" as that is needed for the SQL to be valid
+					appendSql( " offset 0 rows" );
+				}
+				else {
+					renderOffsetFetchClause( queryPart, true );
+				}
 			}
 			else {
 				assertRowsOnlyFetchClauseType( queryPart );
@@ -541,5 +556,43 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
 		aggregateColumnWriteExpression.appendWriteExpression( this, this );
+	}
+
+	@Override
+	protected void renderMergeTargetAlias() {
+		appendSql( " t" );
+	}
+
+	@Override
+	protected void renderMergeSourceAlias() {
+		appendSql( " s" );
+	}
+
+	protected void renderMergeSource(OptionalTableUpdate optionalTableUpdate) {
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
+
+		appendSql( "(select " );
+
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
+			renderCasted( keyBinding.getValueExpression() );
+			appendSql( " " );
+			appendSql( keyBinding.getColumnReference().getColumnExpression() );
+		}
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			appendSql( ", " );
+			final ColumnValueBinding valueBinding = valueBindings.get( i );
+			renderCasted( valueBinding.getValueExpression() );
+			appendSql( " " );
+			appendSql( valueBinding.getColumnReference().getColumnExpression() );
+		}
+
+		appendSql( " from dual)" );
+
+		renderMergeSourceAlias();
 	}
 }

@@ -291,9 +291,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		}
 
+		final SharedSessionContractImplementor session = executionContext.getSession();
+
 		final boolean stats;
 		long startTime = 0;
-		final StatisticsImplementor statistics = executionContext.getSession().getFactory().getStatistics();
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( executionContext.hasQueryExecutionToBeAddedToStatistics()
 				&& jdbcValues instanceof JdbcValuesResultSetImpl ) {
 			stats = statistics.isStatisticsEnabled();
@@ -359,7 +361,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final T result = resultsConsumer.consume(
 				jdbcValues,
-				executionContext.getSession(),
+				session,
 				processingOptions,
 				valuesProcessingState,
 				rowProcessingState,
@@ -473,13 +475,13 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			final JdbcValuesMetadata metadataForCache;
 			final JdbcValuesMapping jdbcValuesMapping;
 			if ( queryResultsCacheKey == null ) {
-				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, factory );
+				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, session.getLoadQueryInfluencers(), factory );
 				metadataForCache = null;
 			}
 			else {
 				// If we need to put the values into the cache, we need to be able to capture the JdbcValuesMetadata
 				final CapturingJdbcValuesMetadata capturingMetadata = new CapturingJdbcValuesMetadata( resultSetAccess );
-				jdbcValuesMapping = mappingProducer.resolve( capturingMetadata, factory );
+				jdbcValuesMapping = mappingProducer.resolve( capturingMetadata, session.getLoadQueryInfluencers(), factory );
 				metadataForCache = capturingMetadata.resolveMetadataForCache();
 			}
 
@@ -496,10 +498,10 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		else {
 			final JdbcValuesMapping jdbcValuesMapping;
 			if ( cachedResults.isEmpty() || !( cachedResults.get( 0 ) instanceof JdbcValuesMetadata ) ) {
-				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, factory );
+				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, session.getLoadQueryInfluencers(), factory );
 			}
 			else {
-				jdbcValuesMapping = mappingProducer.resolve( (JdbcValuesMetadata) cachedResults.get( 0 ), factory );
+				jdbcValuesMapping = mappingProducer.resolve( (JdbcValuesMetadata) cachedResults.get( 0 ), session.getLoadQueryInfluencers(), factory );
 			}
 			return new JdbcValuesCacheHit( cachedResults, jdbcValuesMapping );
 		}

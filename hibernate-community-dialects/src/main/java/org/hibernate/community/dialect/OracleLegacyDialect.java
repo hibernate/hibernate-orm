@@ -23,12 +23,11 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.OracleArrayJdbcType;
 import org.hibernate.dialect.OracleBooleanJdbcType;
+import org.hibernate.dialect.OracleJdbcHelper;
 import org.hibernate.dialect.OracleJsonJdbcType;
+import org.hibernate.dialect.OracleReflectionStructJdbcType;
 import org.hibernate.dialect.OracleTypes;
-import org.hibernate.dialect.OracleStructJdbcType;
-import org.hibernate.dialect.OracleTypesHelper;
 import org.hibernate.dialect.OracleXmlJdbcType;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.RowLockStrategy;
@@ -38,6 +37,7 @@ import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
 import org.hibernate.dialect.function.NvlCoalesceEmulation;
+import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
@@ -93,6 +93,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
@@ -185,7 +186,6 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.cosh();
 		functionFactory.sinh();
 		functionFactory.tanh();
-		functionFactory.trunc();
 		functionFactory.log();
 		functionFactory.log10_log();
 		functionFactory.soundex();
@@ -255,6 +255,11 @@ public class OracleLegacyDialect extends Dialect {
 				"mode",
 				new ModeStatsModeEmulation( typeConfiguration )
 		);
+		functionContributions.getFunctionRegistry().register(
+				"trunc",
+				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}
 
 	@Override
@@ -772,7 +777,12 @@ public class OracleLegacyDialect extends Dialect {
 
 		typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
-		typeContributions.contributeJdbcType( OracleStructJdbcType.INSTANCE );
+		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
+			typeContributions.contributeJdbcType( OracleJdbcHelper.getStructJdbcType( serviceRegistry ) );
+		}
+		else {
+			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );
+		}
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			// account for Oracle's deprecated support for LONGVARBINARY
@@ -797,7 +807,12 @@ public class OracleLegacyDialect extends Dialect {
 			}
 		}
 
-		typeContributions.contributeJdbcType( OracleArrayJdbcType.INSTANCE );
+		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
+			typeContributions.contributeJdbcType( OracleJdbcHelper.getArrayJdbcType( serviceRegistry ) );
+		}
+		else {
+			typeContributions.contributeJdbcType( ArrayJdbcType.INSTANCE );
+		}
 		// Oracle requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );
@@ -979,7 +994,7 @@ public class OracleLegacyDialect extends Dialect {
 	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		//	register the type of the out param - an Oracle specific type
-		statement.registerOutParameter( col, OracleTypesHelper.INSTANCE.getOracleCursorTypeSqlType() );
+		statement.registerOutParameter( col, OracleTypes.CURSOR );
 		col++;
 		return col;
 	}
@@ -1366,7 +1381,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
-		statement.registerOutParameter( name, OracleTypesHelper.INSTANCE.getOracleCursorTypeSqlType() );
+		statement.registerOutParameter( name, OracleTypes.CURSOR );
 		return 1;
 	}
 

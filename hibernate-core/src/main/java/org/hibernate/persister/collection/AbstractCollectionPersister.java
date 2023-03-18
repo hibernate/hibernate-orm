@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -23,6 +22,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -144,6 +144,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  * @see BasicCollectionPersister
  * @see OneToManyPersister
  */
+@Internal
 public abstract class AbstractCollectionPersister
 		implements SQLLoadableCollection, PluralAttributeMappingImpl.Aware, CollectionMutationTarget, CollectionMetadata {
 
@@ -191,7 +192,6 @@ public abstract class AbstractCollectionPersister
 	protected final String[] elementFormulas;
 	protected final boolean[] elementColumnIsGettable;
 	protected final boolean[] elementColumnIsSettable;
-	protected final boolean[] elementColumnIsInPrimaryKey;
 	protected final String[] indexColumnAliases;
 	protected final String[] elementColumnAliases;
 	protected final String[] keyColumnAliases;
@@ -374,9 +374,7 @@ public abstract class AbstractCollectionPersister
 		elementFormulas = new String[elementSpan];
 		elementColumnIsSettable = new boolean[elementSpan];
 		elementColumnIsGettable = new boolean[elementSpan];
-		elementColumnIsInPrimaryKey = new boolean[elementSpan];
 		boolean isPureFormula = true;
-		boolean hasNotNullableColumns = false;
 		boolean oneToMany = collectionBootDescriptor.isOneToMany();
 		boolean[] columnInsertability = null;
 		if ( !oneToMany ) {
@@ -397,7 +395,7 @@ public abstract class AbstractCollectionPersister
 			else {
 				Column col = (Column) selectable;
 				elementColumnNames[j] = col.getQuotedName( dialect );
-				elementColumnWriters[j] = col.getWriteExpr();
+				elementColumnWriters[j] = col.getWriteExpr( elementBootDescriptor.getSelectableType( factory, j ), dialect );
 				elementColumnReaders[j] = col.getReadExpr( dialect );
 				elementColumnReaderTemplates[j] = col.getTemplate(
 						dialect,
@@ -413,22 +411,11 @@ public abstract class AbstractCollectionPersister
 					// Preserves legacy non-@ElementCollection behavior
 					elementColumnIsSettable[j] = true;
 				}
-				elementColumnIsInPrimaryKey[j] = !col.isNullable();
-				if ( !col.isNullable() ) {
-					hasNotNullableColumns = true;
-				}
 				isPureFormula = false;
 			}
 			j++;
 		}
 		elementIsPureFormula = isPureFormula;
-
-		// workaround, for backward compatibility of sets with no
-		// not-null columns, assume all columns are used in the
-		// row locator SQL
-		if ( !hasNotNullableColumns ) {
-			Arrays.fill( elementColumnIsInPrimaryKey, true );
-		}
 
 		// INDEX AND ROW SELECT
 
@@ -927,6 +914,7 @@ public abstract class AbstractCollectionPersister
 				LockOptions.NONE,
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
+				LoadQueryInfluencers.NONE,
 				getFactory()
 		);
 
@@ -935,11 +923,9 @@ public abstract class AbstractCollectionPersister
 				true,
 				entityPath,
 				null,
-				() -> p -> {},
 				new SqlAliasBaseConstant( alias ),
-				sqlAstCreationState.getSqlExpressionResolver(),
-				sqlAstCreationState.getFromClauseAccess(),
-				getFactory()
+				() -> p -> {},
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -1021,9 +1007,9 @@ public abstract class AbstractCollectionPersister
 		String selectValue = isIntegerIndexed ?
 				"max(" + getIndexColumnNames()[0] + ") + 1" : // lists, arrays
 				"count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
-		return new SimpleSelect( dialect )
+		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
-				.addCondition( getKeyColumnNames(), "=?" )
+				.addRestriction( getKeyColumnNames() )
 				.addWhereToken( sqlWhereString )
 				.addColumn( selectValue )
 				.toStatementString();
@@ -1033,11 +1019,11 @@ public abstract class AbstractCollectionPersister
 		if ( !hasIndex() ) {
 			return null;
 		}
-		return new SimpleSelect( dialect )
+		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
-				.addCondition( getKeyColumnNames(), "=?" )
-				.addCondition( getIndexColumnNames(), "=?" )
-				.addCondition( indexFormulas, "=?" )
+				.addRestriction( getKeyColumnNames() )
+				.addRestriction( getIndexColumnNames() )
+				.addRestriction( indexFormulas )
 				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();
@@ -1045,11 +1031,11 @@ public abstract class AbstractCollectionPersister
 
 
 	protected String generateDetectRowByElementString() {
-		return new SimpleSelect( dialect )
+		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
-				.addCondition( getKeyColumnNames(), "=?" )
-				.addCondition( getElementColumnNames(), "=?" )
-				.addCondition( elementFormulas, "=?" )
+				.addRestriction( getKeyColumnNames() )
+				.addRestriction( getElementColumnNames() )
+				.addRestriction( elementFormulas )
 				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();

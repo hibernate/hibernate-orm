@@ -5,12 +5,14 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * A SQL {@code DELETE} statement.
@@ -18,18 +20,20 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  */
 @Internal
-public class Delete {
-
+public class Delete implements RestrictionRenderingContext {
 	protected String tableName;
-	protected String versionColumnName;
-	protected String where;
 	protected String comment;
+	protected final List<Restriction> restrictions = new ArrayList<>();
 
-	protected Map<String,String> primaryKeyColumns = new LinkedHashMap<>();
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
+	private int parameterCount;
 
-	public Delete setComment(String comment) {
-		this.comment = comment;
-		return this;
+	public Delete(SessionFactoryImplementor factory) {
+		this( factory.getFastSessionServices().parameterMarkerStrategy );
+	}
+
+	public Delete(ParameterMarkerStrategy parameterMarkerStrategy) {
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	public Delete setTableName(String tableName) {
@@ -37,93 +41,80 @@ public class Delete {
 		return this;
 	}
 
-	public String toStatementString() {
-		StringBuilder buf = new StringBuilder( tableName.length() + 10 );
-		if ( comment!=null ) {
-			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
-		}
-		buf.append( "delete from " ).append(tableName);
-		if ( where != null || !primaryKeyColumns.isEmpty() || versionColumnName != null ) {
-			buf.append( " where " );
-		}
-		boolean conditionsAppended = false;
-		Iterator<Map.Entry<String,String>> iter = primaryKeyColumns.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry<String,String> e = iter.next();
-			buf.append( e.getKey() ).append( '=' ).append( e.getValue() );
-			if ( iter.hasNext() ) {
-				buf.append( " and " );
+	public Delete setComment(String comment) {
+		this.comment = comment;
+		return this;
+	}
+
+	@SuppressWarnings("UnusedReturnValue")
+	public Delete addColumnRestriction(String columnName) {
+		restrictions.add( new ComparisonRestriction( columnName ) );
+		return this;
+	}
+
+	@SuppressWarnings("UnusedReturnValue")
+	public Delete addColumnRestriction(String... columnNames) {
+		for ( int i = 0; i < columnNames.length; i++ ) {
+			if ( columnNames[i] == null ) {
+				continue;
 			}
-			conditionsAppended = true;
-		}
-		if ( where!=null ) {
-			if ( conditionsAppended ) {
-				buf.append( " and " );
-			}
-			buf.append( where );
-			conditionsAppended = true;
-		}
-		if ( versionColumnName!=null ) {
-			if ( conditionsAppended ) {
-				buf.append( " and " );
-			}
-			buf.append( versionColumnName ).append( "=?" );
-		}
-		return buf.toString();
-	}
-
-	public Delete setWhere(String where) {
-		this.where=where;
-		return this;
-	}
-
-	public Delete addWhereFragment(String fragment) {
-		if ( where == null ) {
-			where = fragment;
-		}
-		else {
-			where += ( " and " + fragment );
+			addColumnRestriction( columnNames[i] );
 		}
 		return this;
 	}
 
-	public Delete setPrimaryKeyColumnNames(String[] columnNames) {
-		this.primaryKeyColumns.clear();
-		addPrimaryKeyColumns(columnNames);
-		return this;
-	}	
-
-	public Delete addPrimaryKeyColumns(String[] columnNames) {
-		for ( String columnName : columnNames ) {
-			addPrimaryKeyColumn( columnName, "?" );
-		}
+	@SuppressWarnings("UnusedReturnValue")
+	public Delete addColumnIsNullRestriction(String columnName) {
+		restrictions.add( new NullnessRestriction( columnName ) );
 		return this;
 	}
-	
-	public Delete addPrimaryKeyColumns(String[] columnNames, boolean[] includeColumns, String[] valueExpressions) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			if( includeColumns[i] ) {
-				addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
-			}
-		}
-		return this;
-	}
-	
-	public Delete addPrimaryKeyColumns(String[] columnNames, String[] valueExpressions) {
-		for ( int i=0; i<columnNames.length; i++ ) {
-			addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
-		}
-		return this;
-	}	
 
-	public Delete addPrimaryKeyColumn(String columnName, String valueExpression) {
-		this.primaryKeyColumns.put(columnName, valueExpression);
+	@SuppressWarnings("UnusedReturnValue")
+	public Delete addColumnIsNotNullRestriction(String columnName) {
+		restrictions.add( new NullnessRestriction( columnName, false ) );
 		return this;
 	}
 
 	public Delete setVersionColumnName(String versionColumnName) {
-		this.versionColumnName = versionColumnName;
+		if ( versionColumnName != null ) {
+			addColumnRestriction( versionColumnName );
+		}
 		return this;
 	}
 
+	public String toStatementString() {
+		final StringBuilder buf = new StringBuilder( tableName.length() + 10 );
+
+		applyComment( buf );
+		buf.append( "delete from " ).append( tableName );
+		applyRestrictions( buf );
+
+		return buf.toString();
+	}
+
+	private void applyComment(StringBuilder buf) {
+		if ( comment != null ) {
+			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
+		}
+	}
+
+	private void applyRestrictions(StringBuilder buf) {
+		if ( restrictions.isEmpty() ) {
+			return;
+		}
+
+		buf.append( " where " );
+
+		for ( int i = 0; i < restrictions.size(); i++ ) {
+			if ( i > 0 ) {
+				buf.append( " and " );
+			}
+			restrictions.get( i ).render( buf, this );
+		}
+	}
+
+	@Override
+	public String makeParameterMarker() {
+		return parameterMarkerStrategy.createMarker( ++parameterCount, null );
+	}
 }

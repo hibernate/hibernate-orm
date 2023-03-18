@@ -273,6 +273,7 @@ public class MetadataContext {
 
 					applyIdMetadata( safeMapping, jpaMapping );
 					applyVersionAttribute( safeMapping, jpaMapping );
+					applyGenericEmbeddableProperties( safeMapping, jpaMapping );
 
 					for ( Property property : safeMapping.getDeclaredProperties() ) {
 						if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
@@ -419,14 +420,26 @@ public class MetadataContext {
 	private void applyIdMetadata(PersistentClass persistentClass, IdentifiableDomainType<?> identifiableType) {
 		if ( persistentClass.hasIdentifierProperty() ) {
 			final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
+			//noinspection rawtypes
+			final AttributeContainer attributeContainer = (AttributeContainer) identifiableType;
 			if ( declaredIdentifierProperty != null ) {
 				final SingularPersistentAttribute<?, Object> idAttribute = attributeFactory.buildIdAttribute(
 						identifiableType,
 						declaredIdentifierProperty
 				);
-
-				//noinspection unchecked rawtypes
-				( ( AttributeContainer) identifiableType ).getInFlightAccess().applyIdAttribute( idAttribute );
+				//noinspection unchecked
+				attributeContainer.getInFlightAccess().applyIdAttribute( idAttribute );
+			}
+			else if ( persistentClass.getIdentifier() instanceof Component
+					&& persistentClass.getIdentifierProperty() != getSuperclassIdentifier( persistentClass ) ) {
+				// If the identifier is a generic component, we have to call buildIdAttribute anyway,
+				// as this will create and register the EmbeddableType for the subtype
+				final SingularPersistentAttribute<?, Object> concreteEmbeddable = attributeFactory.buildIdAttribute(
+						identifiableType,
+						persistentClass.getIdentifierProperty()
+				);
+				//noinspection unchecked
+				attributeContainer.getInFlightAccess().addConcreteEmbeddableAttribute( concreteEmbeddable );
 			}
 		}
 		else {
@@ -474,6 +487,34 @@ public class MetadataContext {
 			//noinspection unchecked
 			container.getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes, idClassType );
 		}
+	}
+
+	private Property getSuperclassIdentifier(PersistentClass persistentClass) {
+		final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
+		if ( declaredIdentifierProperty != null ) {
+			return declaredIdentifierProperty;
+		}
+		if ( persistentClass.getSuperMappedSuperclass() != null ) {
+			return getSuperclassIdentifier( persistentClass.getSuperMappedSuperclass() );
+		}
+		else if ( persistentClass.getSuperclass() != null ) {
+			return getSuperclassIdentifier( persistentClass.getSuperclass() );
+		}
+		return null;
+	}
+
+	private Property getSuperclassIdentifier(MappedSuperclass persistentClass) {
+		final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
+		if ( declaredIdentifierProperty != null ) {
+			return declaredIdentifierProperty;
+		}
+		if ( persistentClass.getSuperMappedSuperclass() != null ) {
+			return getSuperclassIdentifier( persistentClass.getSuperMappedSuperclass() );
+		}
+		else if ( persistentClass.getSuperPersistentClass() != null ) {
+			return getSuperclassIdentifier( persistentClass.getSuperPersistentClass() );
+		}
+		return null;
 	}
 
 	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component idClassComponent) {
@@ -530,6 +571,43 @@ public class MetadataContext {
 					attributeFactory.buildVersionAttribute( jpaMappingType, declaredVersion )
 			);
 		}
+	}
+
+	private <X> void applyGenericEmbeddableProperties(
+			PersistentClass persistentClass,
+			EntityDomainType<X> entityType) {
+		MappedSuperclass mappedSuperclass = getMappedSuperclass( persistentClass );
+		while ( mappedSuperclass != null ) {
+			for ( Property superclassProperty : mappedSuperclass.getDeclaredProperties() ) {
+				if ( superclassProperty.isGeneric() && superclassProperty.isComposite() ) {
+					final Property property = persistentClass.getProperty( superclassProperty.getName() );
+					final SingularPersistentAttribute<X, ?> attribute = (SingularPersistentAttribute<X, ?>) attributeFactory.buildAttribute(
+							entityType,
+							property
+					);
+					//noinspection unchecked rawtypes
+					( (AttributeContainer) entityType ).getInFlightAccess().addConcreteEmbeddableAttribute( attribute );
+				}
+			}
+			mappedSuperclass = getMappedSuperclass( mappedSuperclass );
+		}
+	}
+
+	private MappedSuperclass getMappedSuperclass(PersistentClass persistentClass) {
+		while ( persistentClass != null ) {
+			final MappedSuperclass mappedSuperclass = persistentClass.getSuperMappedSuperclass();
+			if ( mappedSuperclass != null ) {
+				return mappedSuperclass;
+			}
+			persistentClass = persistentClass.getSuperclass();
+		}
+		return null;
+	}
+
+	private MappedSuperclass getMappedSuperclass(MappedSuperclass mappedSuperclass) {
+		return mappedSuperclass.getSuperMappedSuperclass() != null
+				? mappedSuperclass.getSuperMappedSuperclass()
+				: getMappedSuperclass( mappedSuperclass.getSuperPersistentClass() );
 	}
 
 	private <X> Set<SingularPersistentAttribute<? super X, ?>> buildIdClassAttributes(

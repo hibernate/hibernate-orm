@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -185,8 +186,15 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, this );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		valueConsumer.consume( offset, x, y, domainValue, this );
+		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -375,12 +383,14 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return idType.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+		return idType.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
@@ -399,13 +409,16 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		assert tableGroup != null;
 
 		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, false, fetchParent, creationState );
+		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
 				fetchablePath,
 				this,
 				FetchTiming.IMMEDIATE,
-				creationState
+				creationState,
+				// if the expression type is different that the expected type coerce the value
+				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType()
 		);
 	}
 

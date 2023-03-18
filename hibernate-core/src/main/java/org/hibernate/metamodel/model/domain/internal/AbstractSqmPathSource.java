@@ -15,14 +15,17 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	private final String localPathName;
+	protected final SqmPathSource<J> pathModel;
 	private final DomainType<J> domainType;
 	private final BindableType jpaBindableType;
 
 	public AbstractSqmPathSource(
 			String localPathName,
+			SqmPathSource<J> pathModel,
 			DomainType<J> domainType,
 			BindableType jpaBindableType) {
 		this.localPathName = localPathName;
+		this.pathModel = pathModel == null ? this : pathModel;
 		this.domainType = domainType;
 		this.jpaBindableType = jpaBindableType;
 	}

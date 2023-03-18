@@ -251,8 +251,8 @@ public class IngresDialect extends Dialect {
 		functionFactory.octetLength();
 		functionFactory.repeat();
 		functionFactory.trim2();
-		functionFactory.trunc();
-//		functionFactory.truncate();
+		functionFactory.dateTrunc();
+		functionFactory.trunc_dateTrunc();
 		functionFactory.initcap();
 		functionFactory.yearMonthDay();
 		functionFactory.hourMinuteSecond();
@@ -269,7 +269,6 @@ public class IngresDialect extends Dialect {
 		functionFactory.sysdate();
 		functionFactory.position();
 		functionFactory.format_dateFormat();
-		functionFactory.dateTrunc();
 		functionFactory.bitLength_pattern( "octet_length(hex(?1))*4" );
 
 		final BasicType<Integer> integerType = functionContributions.getTypeConfiguration().getBasicTypeRegistry()

@@ -224,7 +224,7 @@ public class NotFoundExceptionLogicalOneToOneTest {
 			final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			assertThat( coins ).hasSize( 1 );
 
-			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Coin " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " Currency " );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( " join " );
@@ -333,7 +333,7 @@ public class NotFoundExceptionLogicalOneToOneTest {
 			this.name = name;
 		}
 
-		@OneToOne(fetch = FetchType.LAZY)
+		@OneToOne(fetch = FetchType.EAGER)
 		@NotFound(action = NotFoundAction.EXCEPTION)
 		public Currency getCurrency() {
 			return currency;

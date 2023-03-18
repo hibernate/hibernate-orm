@@ -64,9 +64,9 @@ public class EntityResultImpl implements EntityResult {
 									true,
 									navigablePath,
 									null,
+									null,
 									() -> p -> {},
-									sqlAstCreationState,
-									sqlAstCreationState.getCreationContext().getSessionFactory()
+									sqlAstCreationState
 							);
 				}
 		);

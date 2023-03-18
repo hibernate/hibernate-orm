@@ -9,9 +9,8 @@ package org.hibernate.query.sqm.spi;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
+import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -127,10 +126,6 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
-	}
-
-	public Object visitStatement(SqmStatement<?> sqmStatement) {
-		return sqmStatement.accept( this );
 	}
 
 	@Override
@@ -369,7 +364,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> path) {
+	public Object visitDiscriminatorPath(DiscriminatorSqmPath path) {
 		return path;
 	}
 
@@ -611,12 +606,12 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath expression) {
+	public Object visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath<?> expression) {
 		return expression;
 	}
 
 	@Override
-	public Object visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression) {
+	public Object visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue<?> expression) {
 		return expression;
 	}
 

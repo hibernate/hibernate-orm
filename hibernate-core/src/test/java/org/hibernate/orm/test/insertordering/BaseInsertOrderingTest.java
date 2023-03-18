@@ -1,8 +1,8 @@
 package org.hibernate.orm.test.insertordering;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.sql.Types;
+import java.util.List;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -14,18 +14,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterAll;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * @author Nathan Xu
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
 abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 
 	static class Batch {
@@ -43,8 +38,6 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	private final PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider(
-			true,
-			false
 	);
 
 	@Override
@@ -55,6 +48,7 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 				.get( AvailableSettings.CONNECTION_PROVIDER );
 		this.connectionProvider.setConnectionProvider( connectionProvider );
 		builer.applySetting( AvailableSettings.CONNECTION_PROVIDER, this.connectionProvider );
+		builer.applySetting( AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, false );
 		builer.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
@@ -80,10 +74,18 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 		for ( Batch expectedBatch : expectedBatches ) {
 			PreparedStatement preparedStatement = connectionProvider.getPreparedStatement( expectedBatch.sql );
 			try {
-				verify( preparedStatement, times( expectedBatch.size ) ).addBatch();
-				verify( preparedStatement, times( 1 ) ).executeBatch();
+				List<Object[]> addBatchCalls = connectionProvider.spyContext.getCalls(
+						PreparedStatement.class.getMethod( "addBatch" ),
+						preparedStatement
+				);
+				List<Object[]> executeBatchCalls = connectionProvider.spyContext.getCalls(
+						PreparedStatement.class.getMethod( "executeBatch" ),
+						preparedStatement
+				);
+				assertThat( addBatchCalls.size() ).isEqualTo( expectedBatch.size );
+				assertThat( executeBatchCalls.size() ).isEqualTo( 1 );
 			}
-			catch (SQLException e) {
+			catch (Exception e) {
 				throw new RuntimeException( e );
 			}
 		}

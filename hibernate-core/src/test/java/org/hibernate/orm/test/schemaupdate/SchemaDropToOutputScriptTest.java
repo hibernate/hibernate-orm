@@ -76,8 +76,8 @@ public class SchemaDropToOutputScriptTest {
 	private void createServiceRegistryAndMetadata(String append) {
 		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.FORMAT_SQL, "false" )
-				.applySetting( Environment.HBM2DDL_SCRIPTS_ACTION, "drop" )
-				.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, output.getAbsolutePath() );
+				.applySetting( Environment.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop" )
+				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, output.getAbsolutePath() );
 
 		if ( append != null ) {
 			standardServiceRegistryBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_APPEND, append );

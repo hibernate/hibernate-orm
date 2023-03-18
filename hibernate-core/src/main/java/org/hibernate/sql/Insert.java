@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.sql;
-import java.util.HashMap;
+
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,7 +14,10 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
 
 /**
  * A SQL {@code INSERT} statement.
@@ -23,16 +26,26 @@ import org.hibernate.generator.OnExecutionGenerator;
  */
 @Internal
 public class Insert {
-	private final Dialect dialect;
 
 	protected String tableName;
 	protected String comment;
 
 	protected Map<String,String> columns = new LinkedHashMap<>();
-	protected Map<String,String> lobColumns;
 
-	public Insert(Dialect dialect) {
+	private final Dialect dialect;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
+	private int parameterCount;
+
+	public Insert(SessionFactoryImplementor sessionFactory) {
+		this(
+				sessionFactory.getFastSessionServices().dialect,
+				sessionFactory.getFastSessionServices().parameterMarkerStrategy
+		);
+	}
+
+	public Insert(Dialect dialect, ParameterMarkerStrategy parameterMarkerStrategy) {
 		this.dialect = dialect;
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	protected Dialect getDialect() {
@@ -82,14 +95,6 @@ public class Insert {
 		return this;
 	}
 
-	public void addLobColumn(String columnName, String valueExpression) {
-		assert dialect.forceLobAsLastValue();
-		if ( lobColumns == null ) {
-			lobColumns = new HashMap<>();
-		}
-		lobColumns.put( columnName, valueExpression );
-	}
-
 	public Insert addIdentityColumn(String columnName) {
 		final IdentityColumnSupport identityColumnSupport = dialect.getIdentityColumnSupport();
 		if ( identityColumnSupport.hasIdentityInsertKeyword() ) {
@@ -117,14 +122,15 @@ public class Insert {
 	}
 
 	public String toStatementString() {
-		StringBuilder buf = new StringBuilder( columns.size()*15 + tableName.length() + 10 );
+		final StringBuilder buf = new StringBuilder( columns.size()*15 + tableName.length() + 10 );
+
 		if ( comment != null ) {
 			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
 		}
 
-		buf.append("insert into ").append(tableName);
+		buf.append( "insert into " ).append( tableName );
 
-		if ( columns.size()==0 && lobColumns == null ) {
+		if ( columns.isEmpty() ) {
 			if ( dialect.supportsNoColumnsInsert() ) {
 				buf.append( ' ' ).append( dialect.getNoColumnsInsertString() );
 			}
@@ -140,51 +146,38 @@ public class Insert {
 		}
 		else {
 			buf.append( " (" );
-			renderColumnsClause( buf );
+			renderInsertionSpec( buf );
 			buf.append( ") values (" );
-			renderValuesClause( buf );
-			buf.append(')');
+			renderRowValues( buf );
+			buf.append( ')' );
 		}
 		return buf.toString();
 	}
 
-	private void renderColumnsClause(StringBuilder buf) {
+
+	private void renderInsertionSpec(StringBuilder buf) {
 		final Iterator<String> itr = columns.keySet().iterator();
 		while ( itr.hasNext() ) {
 			buf.append( itr.next() );
-			if ( itr.hasNext() || lobColumns != null ) {
+			if ( itr.hasNext() ) {
 				buf.append( ", " );
-			}
-		}
-
-		if ( lobColumns != null ) {
-			final Iterator<String> columnsAtEndItr = lobColumns.keySet().iterator();
-			while ( columnsAtEndItr.hasNext() ) {
-				buf.append( columnsAtEndItr.next() );
-				if ( columnsAtEndItr.hasNext() ) {
-					buf.append( ", " );
-				}
 			}
 		}
 	}
 
-	private void renderValuesClause(StringBuilder buf) {
+	private void renderRowValues(StringBuilder buf) {
 		final Iterator<String> itr = columns.values().iterator();
 		while ( itr.hasNext() ) {
-			buf.append( itr.next() );
-			if ( itr.hasNext() || lobColumns != null ) {
+			buf.append( normalizeExpressionFragment( itr.next() ) );
+			if ( itr.hasNext() ) {
 				buf.append( ", " );
 			}
 		}
+	}
 
-		if ( lobColumns != null ) {
-			final Iterator<String> columnsAtEndItr = lobColumns.values().iterator();
-			while ( columnsAtEndItr.hasNext() ) {
-				buf.append( columnsAtEndItr.next() );
-				if ( columnsAtEndItr.hasNext() ) {
-					buf.append( ", " );
-				}
-			}
-		}
+	private String normalizeExpressionFragment(String rhs) {
+		return rhs.equals( "?" )
+				? parameterMarkerStrategy.createMarker( ++parameterCount, null )
+				: rhs;
 	}
 }

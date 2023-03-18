@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.internal;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -510,7 +511,8 @@ public class QuerySqmImpl<R>
 		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
 
 		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
-		final boolean containsCollectionFetches = sqmStatement.containsCollectionFetches();
+		final boolean containsCollectionFetches = sqmStatement.containsCollectionFetches() || AppliedGraphs.containsCollectionFetches(
+				getQueryOptions() );
 		final boolean hasLimit = hasLimit( sqmStatement, getQueryOptions() );
 		final boolean needsDistinct = containsCollectionFetches
 				&& ( sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) || hasLimit );
@@ -533,6 +535,9 @@ public class QuerySqmImpl<R>
 				}
 				else {
 					toIndex = resultSize;
+				}
+				if ( first > resultSize ) {
+					return new ArrayList<>(0);
 				}
 				return list.subList( first, toIndex > resultSize ? resultSize : toIndex );
 			}
@@ -1128,8 +1133,8 @@ public class QuerySqmImpl<R>
 			return new NamedCriteriaQueryMementoImpl(
 					name,
 					sqmStatement,
-					getFirstResult(),
-					getMaxResults(),
+					getQueryOptions().getLimit().getFirstRow(),
+					getQueryOptions().getLimit().getMaxRows(),
 					isCacheable(),
 					getCacheRegion(),
 					getCacheMode(),
@@ -1147,8 +1152,8 @@ public class QuerySqmImpl<R>
 		return new NamedHqlQueryMementoImpl(
 				name,
 				getQueryString(),
-				getFirstResult(),
-				getMaxResults(),
+				getQueryOptions().getLimit().getFirstRow(),
+				getQueryOptions().getLimit().getMaxRows(),
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),

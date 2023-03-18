@@ -110,8 +110,8 @@ public class SchemaScriptFileGenerationFailureTest {
 
 	private Map getConfig() {
 		final Map<Object, Object> config = Environment.getProperties();
-		config.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
-		config.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
+		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, writer );
+		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" );
 		ArrayList<Class> classes = new ArrayList<>();
 

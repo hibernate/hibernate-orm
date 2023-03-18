@@ -35,7 +35,7 @@ public class SchemaCreateHelper {
 
 	public static void create(Metadata metadata, ServiceRegistry serviceRegistry) {
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				serviceRegistry,
@@ -46,7 +46,7 @@ public class SchemaCreateHelper {
 
 	public static void createOnly(Metadata metadata, ServiceRegistry serviceRegistry) {
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_ONLY );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_ONLY );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				serviceRegistry,
@@ -60,8 +60,8 @@ public class SchemaCreateHelper {
 			StandardServiceRegistry serviceRegistry,
 			Connection connection) {
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE );
-		settings.put( AvailableSettings.HBM2DDL_CONNECTION, connection );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE );
+		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CONNECTION, connection );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				serviceRegistry,

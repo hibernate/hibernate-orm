@@ -67,7 +67,6 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 						// because these ordering fragments are only ever part of the order-by clause, there
 						//		is no need for the JdbcMapping
 						null,
-						null,
 						null
 				)
 		);
@@ -134,4 +133,8 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		return null;
 	}
 
+	@Override
+	public String toDescriptiveText() {
+		return "column reference (" + columnExpression + ")";
+	}
 }

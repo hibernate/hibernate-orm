@@ -22,11 +22,8 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -82,12 +79,18 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 	}
 
 	@Override
-	public void breakDownJdbcValues(
+	public <X, Y> int breakDownJdbcValues(
 			Object domainValue,
-			JdbcValueConsumer valueConsumer,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
-		getAssociatedEntityMappingType().getIdentifierMapping().breakDownJdbcValues(
+		return getAssociatedEntityMappingType().getIdentifierMapping().breakDownJdbcValues(
 				disassemble( domainValue, session ),
+				offset,
+				x,
+				y,
 				valueConsumer,
 				session
 		);
@@ -145,17 +148,15 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 	@Override
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
-			TableGroup collectionTableGroup,
+			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-		final TableGroup elementTableGroup = ( (OneToManyTableGroup) collectionTableGroup ).getElementTableGroup();
+		final TableGroup elementTableGroup = ( (OneToManyTableGroup) lhs ).getElementTableGroup();
 
 		// INDEX is implied if mapKeyPropertyName is not null
 		if ( mapKeyPropertyName != null ) {
@@ -170,14 +171,12 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 						elementTableGroup,
 						null,
 						null,
+						null,
 						fetched,
 						addsPredicate,
-						aliasBaseGenerator,
-						sqlExpressionResolver,
-						fromClauseAccess,
-						creationContext
+						creationState
 				);
-				fromClauseAccess.registerTableGroup( mapKeyPropertyPath, tableGroupJoin.getJoinedGroup() );
+				creationState.getFromClauseAccess().registerTableGroup( mapKeyPropertyPath, tableGroupJoin.getJoinedGroup() );
 				return tableGroupJoin;
 			}
 		}
@@ -190,21 +189,18 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		return createTableGroupInternal(
 				true,
 				navigablePath,
 				fetched,
 				explicitSourceAlias,
-				aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() ),
-				sqlExpressionResolver,
-				creationContext
+				creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() ),
+				creationState
 		);
 	}
 
@@ -214,9 +210,15 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			boolean fetched,
 			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		return createTableGroupInternal( canUseInnerJoins, append, fetched, sourceAlias, sqlAliasBase, sqlExpressionResolver, creationContext );
+			SqlAstCreationState creationState) {
+		return createTableGroupInternal(
+				canUseInnerJoins,
+				append,
+				fetched,
+				sourceAlias,
+				sqlAliasBase,
+				creationState
+		);
 	}
 
 

@@ -123,10 +123,17 @@ public interface ModelPart extends MappingModelExpressible {
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer);
 
+	/**
+	 * A short hand form of {@link #forEachSelectable(int, SelectableConsumer)}, that passes 0 as offset.
+	 */
 	default int forEachSelectable(SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );
 	}
 
+	/**
+	 * Visits each selectable mapping with the selectable index offset by the given value.
+	 * Returns the amount of jdbc types that have been visited.
+	 */
 	default int forEachSelectable(int offset, SelectableConsumer consumer) {
 		return 0;
 	}
@@ -135,21 +142,56 @@ public interface ModelPart extends MappingModelExpressible {
 		return null;
 	}
 
-	@FunctionalInterface
-	interface JdbcValueConsumer {
-		void consume(Object value, SelectableMapping jdbcValueMapping);
-
+	/**
+	 * A short hand form of {@link #breakDownJdbcValues(Object, int, Object, Object, JdbcValueBiConsumer, SharedSessionContractImplementor)},
+	 * that passes 0 as offset and null for the two values {@code X} and {@code Y}.
+	 */
+	default int breakDownJdbcValues(
+			Object domainValue,
+			JdbcValueConsumer valueConsumer,
+			SharedSessionContractImplementor session) {
+		return breakDownJdbcValues( domainValue, 0, null, null, valueConsumer, session );
 	}
 
-	void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session);
+	/**
+	 * Breaks down the domain value to its constituent JDBC values.
+	 *
+	 * Think of it as breaking the multi-dimensional array into a visitable flat array.
+	 * Additionally, it passes through the values {@code X} and {@code Y} to the consumer.
+	 * Returns the amount of jdbc types that have been visited.
+	 */
+	<X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session);
 
-	@FunctionalInterface
-	interface IndexedJdbcValueConsumer {
-		void consume(int valueIndex, Object value, SelectableMapping jdbcValueMapping);
+	/**
+	 * A short hand form of {@link #decompose(Object, int, Object, Object, JdbcValueBiConsumer, SharedSessionContractImplementor)},
+	 * that passes 0 as offset and null for the two values {@code X} and {@code Y}.
+	 */
+	default int decompose(
+			Object domainValue,
+			JdbcValueConsumer valueConsumer,
+			SharedSessionContractImplementor session) {
+		return decompose( domainValue, 0, null, null, valueConsumer, session );
 	}
 
-	default void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		breakDownJdbcValues( domainValue, valueConsumer, session );
+	/**
+	 * Similar to {@link #breakDownJdbcValues(Object, int, Object, Object, JdbcValueBiConsumer, SharedSessionContractImplementor)},
+	 * but this method is supposed to be used for decomposing values for assignment expressions.
+	 * Returns the amount of jdbc types that have been visited.
+	 */
+	default <X, Y> int decompose(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		return breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	EntityMappingType findContainingEntityMapping();
@@ -157,5 +199,32 @@ public interface ModelPart extends MappingModelExpressible {
 	default boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {
 		// NOTE : deepEquals to account for arrays (compound natural-id)
 		return Objects.deepEquals( one, other );
+	}
+
+	/**
+	 * Functional interface for consuming the JDBC values.
+	 */
+	@FunctionalInterface
+	interface JdbcValueConsumer extends JdbcValueBiConsumer<Object, Object> {
+		@Override
+		default void consume(int valueIndex, Object x, Object y, Object value, SelectableMapping jdbcValueMapping) {
+			consume( valueIndex, value, jdbcValueMapping );
+		}
+
+		/**
+		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
+		 */
+		void consume(int valueIndex, Object value, SelectableMapping jdbcValueMapping);
+	}
+
+	/**
+	 * Functional interface for consuming the JDBC values, along with two values of type {@code X} and {@code Y}.
+	 */
+	@FunctionalInterface
+	interface JdbcValueBiConsumer<X, Y> {
+		/**
+		 * Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in
+		 */
+		void consume(int valueIndex, X x, Y y, Object value, SelectableMapping jdbcValueMapping);
 	}
 }

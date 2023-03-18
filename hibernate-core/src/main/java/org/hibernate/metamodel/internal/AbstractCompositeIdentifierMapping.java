@@ -16,24 +16,21 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -129,13 +126,11 @@ public abstract class AbstractCompositeIdentifierMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType;
 		if ( requestedJoinType == null ) {
 			joinType = SqlAstJoinType.INNER;
@@ -147,13 +142,11 @@ public abstract class AbstractCompositeIdentifierMapping
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 
 		return new TableGroupJoin( navigablePath, joinType, tableGroup, null );
@@ -164,13 +157,11 @@ public abstract class AbstractCompositeIdentifierMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			SqlAliasBase explicitSqlAliasBase,
+			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
@@ -187,10 +178,12 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
 		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
@@ -209,12 +202,14 @@ public abstract class AbstractCompositeIdentifierMapping
 				span += fkDescriptor.forEachJdbcValue(
 						identifier,
 						span + offset,
+						x,
+						y,
 						valuesConsumer,
 						session
 				);
 			}
 			else {
-				span += attributeMapping.forEachJdbcValue( o, span + offset, valuesConsumer, session );
+				span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
 			}
 		}
 		return span;

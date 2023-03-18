@@ -34,10 +34,8 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -266,21 +264,27 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		if ( value != null ) {
 			if ( value.getClass().isArray() ) {
 				final Object[] values = (Object[]) value;
 				valuesConsumer.consume(
 						offset,
+						x,
+						y,
 						values[0],
 						discriminatorMapping.getDiscriminatorPart().getJdbcMapping()
 				);
 				valuesConsumer.consume(
 						offset + 1,
+						x,
+						y,
 						values[1],
 						discriminatorMapping.getKeyPart().getJdbcMapping()
 				);
@@ -294,6 +298,8 @@ public class DiscriminatedAssociationAttributeMapping
 				final Object disassembledDiscriminator = discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session );
 				valuesConsumer.consume(
 						offset,
+						x,
+						y,
 						disassembledDiscriminator,
 						discriminatorMapping.getDiscriminatorPart().getJdbcMapping()
 				);
@@ -303,6 +309,8 @@ public class DiscriminatedAssociationAttributeMapping
 				final Object disassembledKey = discriminatorMapping.getKeyPart().disassemble( identifier, session );
 				valuesConsumer.consume(
 						offset + 1,
+						x,
+						y,
 						disassembledKey,
 						discriminatorMapping.getKeyPart().getJdbcMapping()
 				);
@@ -313,13 +321,25 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		discriminatorMapping.breakDownJdbcValues( domainValue, valueConsumer, session );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		return discriminatorMapping.breakDownJdbcValues( offset, x, y, domainValue, valueConsumer, session );
 	}
 
 	@Override
-	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		discriminatorMapping.decompose( domainValue, valueConsumer, session );
+	public <X, Y> int decompose(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		return discriminatorMapping.decompose( offset, x, y, domainValue, valueConsumer, session );
 	}
 
 	@Override
@@ -421,25 +441,21 @@ public class DiscriminatedAssociationAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = Objects.requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 
 		return new TableGroupJoin( navigablePath, joinType, tableGroup );
@@ -450,19 +466,12 @@ public class DiscriminatedAssociationAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			SqlAliasBase explicitSqlAliasBase,
+			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		return new StandardVirtualTableGroup(
-				navigablePath,
-				this,
-				lhs,
-				fetched
-		);
+			SqlAstCreationState creationState) {
+		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
 	@Override

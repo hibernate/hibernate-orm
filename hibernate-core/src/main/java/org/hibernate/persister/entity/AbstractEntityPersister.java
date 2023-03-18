@@ -142,7 +142,6 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
@@ -150,6 +149,8 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
@@ -199,7 +200,7 @@ import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
-import org.hibernate.persister.internal.ImmutableAttributeMappingList;
+import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -210,21 +211,20 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -257,7 +257,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -309,6 +308,7 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  *
  * @author Gavin King
  */
+@Internal
 public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, ClassMetadata, UniqueKeyLoadable,
 				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable,
@@ -372,7 +372,6 @@ public abstract class AbstractEntityPersister
 	private final String[][] propertyColumnWriters;
 	private final boolean[][] propertyColumnUpdateable;
 	private final boolean[][] propertyColumnInsertable;
-	private final boolean[] propertySelectable;
 
 	private final List<Integer> lobProperties;
 
@@ -621,7 +620,6 @@ public abstract class AbstractEntityPersister
 		propertyColumnNames = new String[hydrateSpan][];
 		propertyColumnFormulaTemplates = new String[hydrateSpan][];
 		propertyColumnWriters = new String[hydrateSpan][];
-		propertySelectable = new boolean[hydrateSpan];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
 
@@ -662,7 +660,7 @@ public abstract class AbstractEntityPersister
 				else {
 					final Column column = (Column) selectable;
 					colNames[k] = column.getQuotedName( dialect );
-					colWriters[k] = column.getWriteExpr();
+					colWriters[k] = column.getWriteExpr( prop.getValue().getSelectableType( factory, k ), dialect );
 				}
 			}
 			propertyColumnNames[i] = colNames;
@@ -692,8 +690,6 @@ public abstract class AbstractEntityPersister
 
 			propertyColumnUpdateable[i] = prop.getValue().getColumnUpdateability();
 			propertyColumnInsertable[i] = prop.getValue().getColumnInsertability();
-
-			propertySelectable[i] = prop.isSelectable();
 
 			if ( prop.isLob() && dialect.forceLobAsLastValue() ) {
 				lobPropertiesLocalCollector.add( i );
@@ -1000,6 +996,16 @@ public abstract class AbstractEntityPersister
 		return sqlVersionSelectString;
 	}
 
+	@Internal
+	public GeneratedValuesProcessor getInsertGeneratedValuesProcessor() {
+		return insertGeneratedValuesProcessor;
+	}
+
+	@Internal
+	public GeneratedValuesProcessor getUpdateGeneratedValuesProcessor() {
+		return updateGeneratedValuesProcessor;
+	}
+
 	@Override
 	public boolean hasRowId() {
 		return rowIdName != null;
@@ -1247,19 +1253,16 @@ public abstract class AbstractEntityPersister
 	@Override
 	public TableReference createPrimaryTableReference(
 			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState sqlAstCreationState) {
 		return new NamedTableReference( getTableName(), sqlAliasBase.generateNewAlias() );
 	}
-
 
 	@Override
 	public TableReferenceJoin createTableReferenceJoin(
 			String joinTableExpression,
 			SqlAliasBase sqlAliasBase,
 			TableReference lhs,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		for ( int i = 1; i < getSubclassTableSpan(); i++ ) {
 			final String subclassTableName = getSubclassTableName( i );
 			if ( subclassTableName.equals( joinTableExpression ) ) {
@@ -1269,7 +1272,7 @@ public abstract class AbstractEntityPersister
 						sqlAliasBase,
 						shouldInnerJoinSubclassTable( i, emptySet() ),
 						getSubclassTableKeyColumns( i ),
-						sqlExpressionResolver
+						creationState
 				);
 			}
 		}
@@ -1283,7 +1286,7 @@ public abstract class AbstractEntityPersister
 			SqlAliasBase sqlAliasBase,
 			boolean innerJoin,
 			String[] targetColumns,
-			SqlExpressionResolver sqlExpressionResolver) {
+			SqlAstCreationState creationState) {
 		final NamedTableReference joinedTableReference = new NamedTableReference(
 				joinTableExpression,
 				sqlAliasBase.generateNewAlias(),
@@ -1298,7 +1301,7 @@ public abstract class AbstractEntityPersister
 						joinedTableReference,
 						getKeyColumnNames(),
 						targetColumns,
-						sqlExpressionResolver
+						creationState
 				)
 		);
 	}
@@ -1308,7 +1311,7 @@ public abstract class AbstractEntityPersister
 			TableReference joinedTableReference,
 			String[] pkColumnNames,
 			String[] fkColumnNames,
-			SqlExpressionResolver sqlExpressionResolver) {
+			SqlAstCreationState creationState) {
 		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
 
 		final Junction conjunction = new Junction( Junction.Nature.CONJUNCTION );
@@ -1319,26 +1322,24 @@ public abstract class AbstractEntityPersister
 		identifierMapping.forEachSelectable(
 				(columnIndex, selection) -> {
 					final String rootPkColumnName = pkColumnNames[ columnIndex ];
-					final Expression pkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+					final Expression pkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
 							createColumnReferenceKey( rootTableReference, rootPkColumnName ),
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableReference.getIdentificationVariable(),
 									rootPkColumnName,
 									false,
 									null,
-									null,
 									selection.getJdbcMapping()
 							)
 					);
 
 					final String fkColumnName = fkColumnNames[ columnIndex ];
-					final Expression fkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
+					final Expression fkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
 							createColumnReferenceKey( joinedTableReference, fkColumnName ),
 							sqlAstProcessingState -> new ColumnReference(
 									joinedTableReference.getIdentificationVariable(),
 									fkColumnName,
 									false,
-									null,
 									null,
 									selection.getJdbcMapping()
 							)
@@ -1677,6 +1678,7 @@ public abstract class AbstractEntityPersister
 				LockOptions.NONE,
 				this::fetchProcessor,
 				true,
+				LoadQueryInfluencers.NONE,
 				getFactory()
 		);
 
@@ -1685,11 +1687,9 @@ public abstract class AbstractEntityPersister
 				true,
 				entityPath,
 				null,
-				() -> p -> {},
 				new SqlAliasBaseConstant( alias ),
-				sqlAstCreationState.getSqlExpressionResolver(),
-				sqlAstCreationState.getFromClauseAccess(),
-				getFactory()
+				() -> p -> {},
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -1811,7 +1811,7 @@ public abstract class AbstractEntityPersister
 					throw new AssertionFailure("fetchTiming was null");
 				}
 
-				if ( isSelectable( fetchParent, fetchable ) ) {
+				if ( fetchable.isSelectable() ) {
 					final Fetch fetch = fetchParent.generateFetchableFetch(
 							fetchable,
 							fetchParent.resolveNavigablePath( fetchable ),
@@ -1828,22 +1828,12 @@ public abstract class AbstractEntityPersister
 		return fetches.build();
 	}
 
-	private boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
-		if ( fetchParent instanceof EmbeddableResultGraphNode ) {
-			return true;
-		}
-		else {
-			final AttributeMapping attributeMapping = fetchable.asAttributeMapping();
-			if ( attributeMapping != null ) {
-				final int propertyNumber = attributeMapping.getStateArrayPosition();
-//				final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-//				return !isSubclassTableSequentialSelect( tableNumber ) && propertySelectable[propertyNumber];
-				return propertySelectable[propertyNumber];
-			}
-			else {
-				return true;
-			}
-		}
+	/**
+	 * @deprecated use {@link Fetchable#isSelectable()} instead.
+	 */
+	@Deprecated
+	public boolean isSelectable(FetchParent fetchParent, Fetchable fetchable) {
+		return fetchable.isSelectable();
 	}
 
 	@Override
@@ -1893,8 +1883,7 @@ public abstract class AbstractEntityPersister
 	 * Generate the SQL that selects the version number by id
 	 */
 	public String generateSelectVersionString() {
-		final SimpleSelect select = new SimpleSelect( getFactory().getJdbcServices().getDialect() )
-				.setTableName( getVersionedTableName() );
+		final SimpleSelect select = new SimpleSelect( getFactory() ).setTableName( getVersionedTableName() );
 		if ( isVersioned() ) {
 			select.addColumn( getVersionColumnName(), VERSION_COLUMN_ALIAS );
 		}
@@ -1904,7 +1893,7 @@ public abstract class AbstractEntityPersister
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( "get version " + getEntityName() );
 		}
-		return select.addCondition( rootTableKeyColumnNames, "=?" ).toStatementString();
+		return select.addRestriction( rootTableKeyColumnNames ).toStatementString();
 	}
 
 	private GeneratedValuesProcessor createGeneratedValuesProcessor(EventType timing) {
@@ -2724,12 +2713,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String getSelectByUniqueKeyString(String[] propertyNames) {
-		final SimpleSelect select =
-				new SimpleSelect( getFactory().getJdbcServices().getDialect() )
-						.setTableName( getTableName(0) )
-						.addColumns( getKeyColumns(0) );
+		final SimpleSelect select = new SimpleSelect( getFactory() )
+				.setTableName( getTableName(0) )
+				.addColumns( getKeyColumns(0) );
 		for ( int i = 0; i < propertyNames.length; i++ ) {
-			select.addCondition( getPropertyColumnNames( propertyNames[i] ), "= ?" );
+			select.addRestriction( getPropertyColumnNames( propertyNames[i] ) );
 		}
 		return select.toStatementString();
 	}
@@ -2946,12 +2934,15 @@ public abstract class AbstractEntityPersister
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver expressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-
+			SqlAstCreationState creationState) {
+		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
+				explicitSqlAliasBase,
+				explicitSourceAlias,
+				this,
+				creationState.getSqlAliasBaseGenerator()
+		);
 		final TableReference rootTableReference = new NamedTableReference(
 				needsDiscriminator() ? getRootTableName() : getTableName(),
 				sqlAliasBase.generateNewAlias()
@@ -2987,7 +2978,7 @@ public abstract class AbstractEntityPersister
 															? getRootTableKeyColumnNames()
 															: getKeyColumnNames(),
 													getSubclassTableKeyColumns( i ),
-													expressionResolver
+													creationState
 											)
 							);
 						}
@@ -2999,7 +2990,7 @@ public abstract class AbstractEntityPersister
 
 		if ( additionalPredicateCollectorAccess != null && needsDiscriminator() ) {
 			final String alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-			final Predicate discriminatorPredicate = createDiscriminatorPredicate( alias, tableGroup, expressionResolver );
+			final Predicate discriminatorPredicate = createDiscriminatorPredicate( alias, tableGroup, creationState );
 			additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
 		}
 
@@ -3013,15 +3004,14 @@ public abstract class AbstractEntityPersister
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
 		if ( needsDiscriminator() ) {
-			final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
-			predicateConsumer.accept( createDiscriminatorPredicate( alias, tableGroup, expressionResolver ) );
+			predicateConsumer.accept( createDiscriminatorPredicate( alias, tableGroup, creationState ) );
 		}
 	}
 
 	private Predicate createDiscriminatorPredicate(
 			String alias,
 			TableGroup tableGroup,
-			SqlExpressionResolver expressionResolver) {
+			SqlAstCreationState creationState) {
 		final SqlExpressionResolver.ColumnReferenceKey columnReferenceKey;
 		final String discriminatorExpression;
 		if ( isDiscriminatorFormula() ) {
@@ -3040,13 +3030,12 @@ public abstract class AbstractEntityPersister
 		}
 
 		final BasicType<?> discriminatorType = (BasicType<?>) getDiscriminatorMapping().getJdbcMapping();
-		final Expression sqlExpression = expressionResolver.resolveSqlExpression(
+		final Expression sqlExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
 				columnReferenceKey,
 				sqlAstProcessingState -> new ColumnReference(
 						alias,
 						discriminatorExpression,
 						isDiscriminatorFormula(),
-						null,
 						null,
 						discriminatorType.getJdbcMapping()
 				)
@@ -4143,6 +4132,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean isPropertySelectable(int propertyNumber) {
+		return getAttributeMapping( propertyNumber ).getAttributeMetadata().isSelectable();
+	}
+
+	@Override
 	public final Class<?> getMappedClass() {
 		return this.getMappedJavaType().getJavaTypeClass();
 	}
@@ -4447,7 +4441,7 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getNaturalIdentifierProperties();
 	}
 
-	private void verifyHasNaturalId() {
+	protected void verifyHasNaturalId() {
 		if ( ! hasNaturalIdentifier() ) {
 			throw new HibernateException( "Entity does not define a natural id : " + getEntityName() );
 		}
@@ -4868,7 +4862,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private NaturalIdMapping generateNaturalIdMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	protected NaturalIdMapping generateNaturalIdMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		//noinspection AssertWithSideEffects
 		assert bootEntityDescriptor.hasNaturalId();
 
@@ -4919,19 +4913,17 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		// we need the boot model so we can have access to the Table
-		final RootClass rootClass = (RootClass) creationProcess.getCreationContext()
-				.getBootModel().getEntityBinding( entityMappingDescriptor.getRootEntityName() );
-		return SqmMutationStrategyHelper.resolveStrategy( rootClass, entityMappingDescriptor, creationProcess );
+		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
+		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+				.createMutationStrategy( entityMappingDescriptor, creationProcess );
 	}
 
 	protected static SqmMultiTableInsertStrategy interpretSqmMultiTableInsertStrategy(
 			AbstractEntityPersister entityMappingDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		// we need the boot model so we can have access to the Table
-		final RootClass rootClass = (RootClass) creationProcess.getCreationContext()
-				.getBootModel().getEntityBinding( entityMappingDescriptor.getRootEntityName() );
-		return SqmMutationStrategyHelper.resolveInsertStrategy( rootClass, entityMappingDescriptor, creationProcess );
+		final ServiceRegistry serviceRegistry = creationProcess.getCreationContext().getServiceRegistry();
+		return serviceRegistry.getService( SqmMultiTableMutationStrategyProvider.class )
+				.createInsertStrategy( entityMappingDescriptor, creationProcess );
 	}
 
 	@Override
@@ -5252,7 +5244,7 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private AttributeMapping generateNonIdAttributeMapping(
+	protected AttributeMapping generateNonIdAttributeMapping(
 			NonIdentifierAttribute tupleAttrDefinition,
 			Property bootProperty,
 			int stateArrayPosition,
@@ -5286,7 +5278,7 @@ public abstract class AbstractEntityPersister
 					null,
 					false,
 					null,
-					null,
+					"?",
 					column.getSqlType(),
 					column.getLength(),
 					column.getPrecision(),
@@ -5315,7 +5307,7 @@ public abstract class AbstractEntityPersister
 				attrColumnExpression = attrColumnNames[0];
 				isAttrColumnExpressionFormula = false;
 				customReadExpr = null;
-				customWriteExpr = null;
+				customWriteExpr = "?";
 				Column column = value.getColumns().get( 0 );
 				columnDefinition = column.getSqlType();
 				length = column.getLength();
@@ -5341,7 +5333,7 @@ public abstract class AbstractEntityPersister
 							creationContext.getTypeConfiguration(),
 							creationContext.getFunctionRegistry()
 					);
-					customWriteExpr = selectable.getCustomWriteExpression();
+					customWriteExpr = selectable.getWriteExpr( (JdbcMapping) attrType, creationContext.getDialect() );
 					Column column = value.getColumns().get( 0 );
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
@@ -5403,7 +5395,8 @@ public abstract class AbstractEntityPersister
 					bootProperty.isOptional(),
 					bootProperty.isInsertable(),
 					bootProperty.isUpdateable(),
-					bootProperty.isOptimisticLocked()
+					bootProperty.isOptimisticLocked(),
+					bootProperty.isSelectable()
 			);
 
 			return new DiscriminatedAssociationAttributeMapping(
@@ -5828,25 +5821,29 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(
+	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return getIdentifierMapping()
-				.forEachDisassembledJdbcValue( value, offset, valuesConsumer, session );
+				.forEachDisassembledJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcValue(
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer consumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> consumer,
 			SharedSessionContractImplementor session) {
 		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
 		final Object identifier = value == null ? null
 				: identifierMapping.disassemble( identifierMapping.getIdentifier( value ), session );
-		return identifierMapping.forEachDisassembledJdbcValue( identifier, offset, consumer, session );
+		return identifierMapping.forEachDisassembledJdbcValue( identifier, offset, x, y, consumer, session );
 	}
 
 	@Override
@@ -6014,9 +6011,9 @@ public abstract class AbstractEntityPersister
 	@Deprecated(forRemoval = true)
 	@Remove
 	public String generateDeleteString(int j) {
-		final Delete delete = new Delete()
+		final Delete delete = new Delete( getFactory() )
 				.setTableName( getTableName( j ) )
-				.addPrimaryKeyColumns( getKeyColumns( j ) );
+				.addColumnRestriction( getKeyColumns( j ) );
 		if ( j == 0 ) {
 			delete.setVersionColumnName( getVersionColumnName() );
 		}
@@ -6112,9 +6109,9 @@ public abstract class AbstractEntityPersister
 		int span = getTableSpan();
 		String[] deleteStrings = new String[span];
 		for ( int j = span - 1; j >= 0; j-- ) {
-			final Delete delete = new Delete()
+			final Delete delete = new Delete( getFactory() )
 					.setTableName( getTableName( j ) )
-					.addPrimaryKeyColumns( getKeyColumns( j ) );
+					.addColumnRestriction( getKeyColumns( j ) );
 			if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 				delete.setComment( "delete " + getEntityName() + " [" + j + "]" );
 			}
@@ -6129,10 +6126,10 @@ public abstract class AbstractEntityPersister
 					boolean[] propertyNullness = types[i].toColumnNullness( loadedState[i], getFactory() );
 					for ( int k = 0; k < propertyNullness.length; k++ ) {
 						if ( propertyNullness[k] ) {
-							delete.addWhereFragment( propertyColumnNames[k] + " = ?" );
+							delete.addColumnRestriction( propertyColumnNames[k] );
 						}
 						else {
-							delete.addWhereFragment( propertyColumnNames[k] + " is null" );
+							delete.addColumnIsNullRestriction( propertyColumnNames[k] );
 						}
 					}
 				}

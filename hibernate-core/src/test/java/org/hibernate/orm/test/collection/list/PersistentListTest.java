@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.sql.ComparisonRestriction;
 import org.hibernate.sql.SimpleSelect;
 
 import org.hibernate.testing.TestForIssue;
@@ -72,11 +73,11 @@ public class PersistentListTest {
 					session2.doWork(
 							connection -> {
 								final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
-								SimpleSelect select = new SimpleSelect( sessionFactory.getJdbcServices().getDialect() )
+								SimpleSelect select = new SimpleSelect( sessionFactory )
 										.setTableName( queryableCollection.getTableName() )
 										.addColumn( "NAME" )
 										.addColumn( "LIST_INDEX" )
-										.addCondition( "NAME", "<>", "?" );
+										.addRestriction( "NAME", ComparisonRestriction.Operator.NE, "?" );
 								PreparedStatement preparedStatement = ( (SessionImplementor) session2 ).getJdbcCoordinator()
 										.getStatementPreparer()
 										.prepareStatement( select.toStatementString() );
@@ -133,7 +134,7 @@ public class PersistentListTest {
 					session2.doWork(
 							connection -> {
 								final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
-								SimpleSelect select = new SimpleSelect( sessionFactory.getJdbcServices().getDialect() )
+								SimpleSelect select = new SimpleSelect( sessionFactory )
 										.setTableName( queryableCollection.getTableName() )
 										.addColumn( "order_id" )
 										.addColumn( "INDX" )

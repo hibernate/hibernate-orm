@@ -45,7 +45,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 
 	@Override @Deprecated
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
-		InsertSelectIdentityInsert insert = new InsertSelectIdentityInsert( dialect );
+		InsertSelectIdentityInsert insert = new InsertSelectIdentityInsert( persister.getFactory() );
 		insert.addGeneratedColumns( persister.getRootTableKeyColumnNames(), (OnExecutionGenerator) persister.getGenerator() );
 		return insert;
 	}

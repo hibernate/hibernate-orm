@@ -105,7 +105,6 @@ asciidoctorj {
 	options logDocuments: true
 }
 
-
 // Topical Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {task->
@@ -159,6 +158,10 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {task->
     description = 'Renders the User Guides in HTML format using Asciidoctor.'
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task
+
+	dependsOn ':hibernate-core:collectConfigProperties'
+	dependsOn ':hibernate-envers:collectConfigProperties'
+	dependsOn ':hibernate-jcache:collectConfigProperties'
 
     sourceDir = file( 'src/main/asciidoc/userguide' )
     sources {

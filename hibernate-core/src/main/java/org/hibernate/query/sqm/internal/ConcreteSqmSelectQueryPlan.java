@@ -18,10 +18,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.graph.spi.AppliedGraph;
-import org.hibernate.graph.spi.AttributeNodeImplementor;
-import org.hibernate.graph.spi.GraphImplementor;
-import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -91,7 +87,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		this.rowTransformer = determineRowTransformer( sqm, resultType, tupleMetadata, queryOptions );
 
 		final ListResultsConsumer.UniqueSemantic uniqueSemantic;
-		if ( sqm.producesUniqueResults() && !containsCollectionFetches( queryOptions ) ) {
+		if ( sqm.producesUniqueResults() && !AppliedGraphs.containsCollectionFetches( queryOptions ) ) {
 			uniqueSemantic = ListResultsConsumer.UniqueSemantic.NONE;
 		}
 		else {
@@ -167,25 +163,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			JdbcOperationQuerySelect jdbcSelect,
 			SubselectFetch.RegistrationHandler subSelectFetchKeyHandler) {
 		return new MySqmJdbcExecutionContextAdapter( executionContext, jdbcSelect, subSelectFetchKeyHandler, hql );
-	}
-
-	private static boolean containsCollectionFetches(QueryOptions queryOptions) {
-		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
-		return appliedGraph != null && appliedGraph.getGraph() != null && containsCollectionFetches( appliedGraph.getGraph() );
-	}
-
-	private static boolean containsCollectionFetches(GraphImplementor<?> graph) {
-		for ( AttributeNodeImplementor<?> attributeNodeImplementor : graph.getAttributeNodeImplementors() ) {
-			if ( attributeNodeImplementor.getAttributeDescriptor().isCollection() ) {
-				return true;
-			}
-			for ( SubGraphImplementor<?> subGraph : attributeNodeImplementor.getSubGraphMap().values() ) {
-				if ( containsCollectionFetches( subGraph ) ) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -327,7 +304,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	private JdbcParameterBindings createJdbcParameterBindings(CacheableSqmInterpretation sqmInterpretation, DomainQueryExecutionContext executionContext) {
 		final SharedSessionContractImplementor session = executionContext.getSession();
-		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
+		return SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				sqmInterpretation.getJdbcParamsXref(),
@@ -342,8 +319,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				},
 				session
 		);
-		sqmInterpretation.getJdbcSelect().bindFilterJdbcParameters( jdbcParameterBindings );
-		return jdbcParameterBindings;
 	}
 
 	private static CacheableSqmInterpretation buildCacheableSqmInterpretation(
@@ -366,7 +341,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				true
 		);
 
-//			tableGroupAccess = sqmConverter.getFromClauseAccess();
 		final SqmTranslation<SelectStatement> sqmInterpretation = sqmConverter.translate();
 		final FromClauseAccess tableGroupAccess = sqmConverter.getFromClauseAccess();
 

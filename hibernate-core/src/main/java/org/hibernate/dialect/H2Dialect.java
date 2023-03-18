@@ -57,15 +57,18 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.internal.TableUpsert;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -86,6 +89,7 @@ import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
+import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -119,6 +123,8 @@ public class H2Dialect extends Dialect {
 	private final String querySequenceString;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
+	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
+
 	public H2Dialect(DialectResolutionInfo info) {
 		this( parseVersion( info ) );
 		registerKeywords( info );
@@ -146,6 +152,10 @@ public class H2Dialect extends Dialect {
 				? SequenceInformationExtractorLegacyImpl.INSTANCE
 				: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 		this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+
+		this.optionalTableUpdateStrategy = version.isSameOrAfter( 1, 4, 200 )
+				? H2Dialect::usingMerge
+				: H2Dialect::withoutMerge;
 	}
 
 	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
@@ -221,6 +231,9 @@ public class H2Dialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 		}
+		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		}
 	}
 
 	@Override
@@ -234,6 +247,9 @@ public class H2Dialect extends Dialect {
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
+		}
+		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
 		}
 	}
 
@@ -279,8 +295,7 @@ public class H2Dialect extends Dialect {
 		if ( useLocalTime ) {
 			functionFactory.localtimeLocaltimestamp();
 		}
-		functionFactory.trunc();
-//		functionFactory.truncate();
+		functionFactory.trunc_dateTrunc();
 		functionFactory.dateTrunc();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
@@ -362,6 +377,9 @@ public class H2Dialect extends Dialect {
 			case OTHER:
 				if ( "GEOMETRY".equals( columnTypeName ) ) {
 					return jdbcTypeRegistry.getDescriptor( GEOMETRY );
+				}
+				else if ( "JSON".equals( columnTypeName ) ) {
+					return jdbcTypeRegistry.getDescriptor( JSON );
 				}
 				break;
 		}
@@ -871,12 +889,51 @@ public class H2Dialect extends Dialect {
 		return BIGINT;
 	}
 
+	@FunctionalInterface
+	private interface OptionalTableUpdateStrategy {
+		MutationOperation buildMutationOperation(
+				EntityMutationTarget mutationTarget,
+				OptionalTableUpdate optionalTableUpdate,
+				SessionFactoryImplementor factory);
+	}
+
 	@Override
-	public MutationOperation createUpsertOperation(
+	public MutationOperation createOptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
-			TableUpsert tableUpsert,
+			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, tableUpsert );
-		return translator.visitUpsert( tableUpsert );
+		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	private static MutationOperation usingMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, optionalTableUpdate );
+		return translator.createMergeOperation( optionalTableUpdate );
+	}
+
+	private static MutationOperation withoutMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	@Override
+	public ParameterMarkerStrategy getNativeParameterMarkerStrategy() {
+		return OrdinalParameterMarkerStrategy.INSTANCE;
+	}
+
+	public static class OrdinalParameterMarkerStrategy implements ParameterMarkerStrategy {
+		/**
+		 * Singleton access
+		 */
+		public static final OrdinalParameterMarkerStrategy INSTANCE = new OrdinalParameterMarkerStrategy();
+
+		@Override
+		public String createMarker(int position, JdbcType jdbcType) {
+			return "?" + position;
+		}
 	}
 }

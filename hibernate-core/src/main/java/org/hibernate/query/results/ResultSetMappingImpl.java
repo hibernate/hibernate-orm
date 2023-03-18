@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
@@ -83,6 +84,16 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			}
 			this.legacyFetchBuilders = legacyFetchBuilders;
 		}
+	}
+
+	@Override
+	public String getMappingIdentifier(){
+		return mappingIdentifier;
+	}
+
+	@Override
+	public boolean isDynamic() {
+		return isDynamic;
 	}
 
 	@Override
@@ -156,10 +167,6 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		}
 	}
 
-	public String getMappingIdentifier(){
-		return mappingIdentifier;
-	}
-
 	@Override
 	public void addAffectedTableNames(Set<String> affectedTableNames, SessionFactoryImplementor sessionFactory) {
 		if ( StringHelper.isEmpty( mappingIdentifier ) ) {
@@ -179,6 +186,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	@Override
 	public JdbcValuesMapping resolve(
 			JdbcValuesMetadata jdbcResultsMetadata,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 
 		final int numberOfResults;
@@ -199,6 +207,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				jdbcResultsMetadata,
 				legacyFetchBuilders,
 				sqlSelections::add,
+				loadQueryInfluencers,
 				sessionFactory
 		);
 

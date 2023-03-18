@@ -72,12 +72,14 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 	}
 
 	@Override
-	default int forEachJdbcValue(
+	default <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return getEmbeddableTypeDescriptor().forEachJdbcValue( value, offset, valuesConsumer, session );
+		return getEmbeddableTypeDescriptor().forEachJdbcValue( value, offset, x, y, valuesConsumer, session );
 	}
 
 	@Override
@@ -91,14 +93,18 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 	}
 
 	@Override
-	default int forEachDisassembledJdbcValue(
+	default <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
-			JdbcValuesConsumer valuesConsumer,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return getEmbeddableTypeDescriptor().forEachDisassembledJdbcValue(
 				value,
 				offset,
+				x,
+				y,
 				valuesConsumer,
 				session
 		);

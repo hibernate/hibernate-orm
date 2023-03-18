@@ -1,9 +1,10 @@
 [[identifiers]]
 === Identifiers
-:projectRootDir: ../../../../../../..
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/identifier
-:sourcedir-associations: ../../../../../test/java/org/hibernate/userguide/associations
-:coreTestsDir: {projectRootDir}/hibernate-core/src/test/java
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-identifier: {documentation-project-dir}/src/test/java/org/hibernate/userguide/mapping/identifier
+:example-dir-associations: {documentation-project-dir}/src/test/java/org/hibernate/userguide/associations
+:core-test-base: {root-project-dir}/hibernate-core/src/test/java
 :jpaJavadocUrl: https://javadoc.io/doc/jakarta.persistence/jakarta.persistence-api/latest/jakarta.persistence
 :extrasdir: extras
 
@@ -58,7 +59,7 @@ assign the value to the identifier attribute prior to persisting the entity.
 ====
 [source,java]
 ----
-include::{sourcedir}/AssignedIdentifierTest.java[tag=identifiers-simple-assigned-mapping-example, indent=0]
+include::{example-dir-identifier}/AssignedIdentifierTest.java[tag=identifiers-simple-assigned-mapping-example, indent=0]
 ----
 ====
 
@@ -74,7 +75,7 @@ annotated with `jakarta.persistence.GeneratedValue`
 ====
 [source,java]
 ----
-include::{sourcedir}/GeneratedIdentifierTest.java[tag=identifiers-simple-generated-mapping-example, indent=0]
+include::{example-dir-identifier}/GeneratedIdentifierTest.java[tag=identifiers-simple-generated-mapping-example, indent=0]
 ----
 ====
 
@@ -126,7 +127,7 @@ the identifier, and then exposing an attribute of that embeddable type on the en
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddedIdTest.java[tag=identifiers-basic-embeddedid-mapping-example, indent=0]
+include::{example-dir-identifier}/EmbeddedIdTest.java[tag=identifiers-basic-embeddedid-mapping-example, indent=0]
 ----
 ====
 
@@ -137,7 +138,7 @@ As mentioned before, EmbeddedIds can even contain `@ManyToOne` attributes:
 ====
 [source,java]
 ----
-include::{sourcedir}/EmbeddedIdManyToOneTest.java[tag=identifiers-basic-embeddedid-manytoone-mapping-example, indent=0]
+include::{example-dir-identifier}/EmbeddedIdManyToOneTest.java[tag=identifiers-basic-embeddedid-manytoone-mapping-example, indent=0]
 ----
 ====
 
@@ -160,7 +161,7 @@ attribute making up the composition.  The IdClass is used as the representation 
 ====
 [source,java]
 ----
-include::{sourcedir}/IdClassTest.java[tag=identifiers-basic-idclass-mapping-example, indent=0]
+include::{example-dir-identifier}/IdClassTest.java[tag=identifiers-basic-idclass-mapping-example, indent=0]
 ----
 ====
 
@@ -171,7 +172,7 @@ Non-aggregated composite identifiers can also contain ManyToOne attributes as we
 ====
 [source,java]
 ----
-include::{sourcedir}/IdClassManyToOneTest.java[tag=identifiers-basic-idclass-manytoone-mapping-example, indent=0]
+include::{example-dir-identifier}/IdClassManyToOneTest.java[tag=identifiers-basic-idclass-manytoone-mapping-example, indent=0]
 ----
 ====
 
@@ -182,7 +183,7 @@ With non-aggregated composite identifiers, Hibernate also supports "partial" gen
 ====
 [source,java]
 ----
-include::{sourcedir}/IdClassGeneratedValueTest.java[tag=identifiers-basic-idclass-generatedvalue-mapping-example, indent=0]
+include::{example-dir-identifier}/IdClassGeneratedValueTest.java[tag=identifiers-basic-idclass-generatedvalue-mapping-example, indent=0]
 ----
 ====
 
@@ -206,7 +207,7 @@ In the following example, the `Book` entity identifier is formed of two `@ManyTo
 ====
 [source,java]
 ----
-include::{sourcedir}/IdManyToOneTest.java[tag=identifiers-composite-id-mapping-example, indent=0]
+include::{example-dir-identifier}/IdManyToOneTest.java[tag=identifiers-composite-id-mapping-example, indent=0]
 ----
 ====
 
@@ -218,7 +219,7 @@ To query this entity, an instance of the entity itself must be supplied to the p
 ====
 [source,java]
 ----
-include::{sourcedir}/IdManyToOneTest.java[tag=identifiers-composite-id-fetching-example, indent=0]
+include::{example-dir-identifier}/IdManyToOneTest.java[tag=identifiers-composite-id-fetching-example, indent=0]
 ----
 ====
 
@@ -240,12 +241,12 @@ Assuming we have the following `EventId` composite identifier and an `Event` ent
 ====
 [source,java]
 ----
-include::{sourcedir}/composite/Event.java[tag=identifiers-composite-generated-mapping-example, indent=0]
+include::{example-dir-identifier}/composite/Event.java[tag=identifiers-composite-generated-mapping-example, indent=0]
 ----
 
 [source,java]
 ----
-include::{sourcedir}/composite/EventId.java[tag=identifiers-composite-generated-mapping-example, indent=0]
+include::{example-dir-identifier}/composite/EventId.java[tag=identifiers-composite-generated-mapping-example, indent=0]
 ----
 ====
 
@@ -260,7 +261,7 @@ you need to do that as follows:
 ====
 [source,java]
 ----
-include::{sourcedir}/composite/EmbeddedIdInMemoryGeneratedValueTest.java[tag=identifiers-composite-generated-in-memory-example, indent=0]
+include::{example-dir-identifier}/composite/EmbeddedIdInMemoryGeneratedValueTest.java[tag=identifiers-composite-generated-in-memory-example, indent=0]
 ----
 ====
 
@@ -278,7 +279,7 @@ you could to do it as illustrated by the following example.
 ====
 [source,java]
 ----
-include::{sourcedir}/composite/EmbeddedIdDatabaseGeneratedValueTest.java[tag=identifiers-composite-generated-database-example, indent=0]
+include::{example-dir-identifier}/composite/EmbeddedIdDatabaseGeneratedValueTest.java[tag=identifiers-composite-generated-database-example, indent=0]
 ----
 ====
 
@@ -334,7 +335,7 @@ id generation behavior (versus say choosing between SEQUENCE and IDENTITY).
 ====
 [source,java]
 ----
-include::{sourcedir}/SequenceGeneratorUnnamedTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
+include::{example-dir-identifier}/SequenceGeneratorUnnamedTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 
@@ -357,7 +358,7 @@ To specify the sequence name explicitly, the simplest form is to specify `@Gener
 ====
 [source,java]
 ----
-include::{sourcedir}/SequenceGeneratorAnnotationNameTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
+include::{example-dir-identifier}/SequenceGeneratorAnnotationNameTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 
@@ -370,7 +371,7 @@ For more advanced configuration, Jakarta Persistence defines the `@SequenceGener
 ====
 [source,java]
 ----
-include::{sourcedir}/SequenceGeneratorNamedTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
+include::{example-dir-identifier}/SequenceGeneratorNamedTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 
@@ -383,7 +384,7 @@ configurations as well.
 ====
 [source,java]
 ----
-include::{sourcedir}/SequenceGeneratorConfiguredTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
+include::{example-dir-identifier}/SequenceGeneratorConfiguredTest.java[tag=identifiers-generators-sequence-mapping-example, indent=0]
 ----
 ====
 
@@ -450,7 +451,7 @@ The basic idea is that a given table-generator table (`hibernate_sequences` for 
 ====
 [source,java]
 ----
-include::{sourcedir}/TableGeneratorUnnamedTest.java[tag=identifiers-generators-table-mapping-example, indent=0]
+include::{example-dir-identifier}/TableGeneratorUnnamedTest.java[tag=identifiers-generators-table-mapping-example, indent=0]
 ----
 
 [source,sql]
@@ -471,7 +472,7 @@ However, you can configure the table identifier generator using the {jpaJavadocU
 ====
 [source,java]
 ----
-include::{sourcedir}/TableGeneratorConfiguredTest.java[tag=identifiers-generators-table-mapping-example, indent=0]
+include::{example-dir-identifier}/TableGeneratorConfiguredTest.java[tag=identifiers-generators-table-mapping-example, indent=0]
 ----
 
 [source,sql]
@@ -487,7 +488,7 @@ Now, when inserting 3 `Product` entities, Hibernate generates the following stat
 ====
 [source,java]
 ----
-include::{sourcedir}/TableGeneratorConfiguredTest.java[tag=identifiers-generators-table-persist-example, indent=0]
+include::{example-dir-identifier}/TableGeneratorConfiguredTest.java[tag=identifiers-generators-table-persist-example, indent=0]
 ----
 
 [source,sql]
@@ -515,7 +516,7 @@ Hibernate does ship with an alternative strategy which is a RFC 4122 version 1 (
 ====
 [source,java]
 ----
-include::{sourcedir}/UuidGeneratedValueTest.java[tag=identifiers-generators-uuid-mapping-example, indent=0]
+include::{example-dir-identifier}/UuidGeneratedValueTest.java[tag=identifiers-generators-uuid-mapping-example, indent=0]
 ----
 ====
 
@@ -527,7 +528,7 @@ Here we choose the RFC 4122 version 1 compliant strategy named `org.hibernate.id
 ====
 [source,java]
 ----
-include::{sourcedir}/UuidCustomGeneratedValueTest.java[tag=identifiers-generators-custom-uuid-mapping-example, indent=0]
+include::{example-dir-identifier}/UuidCustomGeneratedValueTest.java[tag=identifiers-generators-custom-uuid-mapping-example, indent=0]
 ----
 ====
 
@@ -577,9 +578,9 @@ and type-safe definition and configuration of custom `org.hibernate.id.Identifie
 ====
 [source,java]
 ----
-include::{coreTestsDir}/org/hibernate/orm/test/id/custom/CustomSequenceGenerator.java[tag=identifiers-IdGeneratorType-example, indent=0]
+include::{core-test-base}/org/hibernate/orm/test/id/custom/CustomSequenceGenerator.java[tag=identifiers-IdGeneratorType-example, indent=0]
 
-include::{coreTestsDir}/org/hibernate/orm/test/id/custom/Sequence.java[tag=identifiers-IdGeneratorType-example, indent=0]
+include::{core-test-base}/org/hibernate/orm/test/id/custom/Sequence.java[tag=identifiers-IdGeneratorType-example, indent=0]
 ----
 ====
 
@@ -613,7 +614,7 @@ for identifier generators.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-mapping-example]
+include::{example-dir-identifier}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-mapping-example]
 ----
 ====
 
@@ -624,7 +625,7 @@ Now, when saving 5 `Person` entities and flushing the Persistence Context after 
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-persist-example]
+include::{example-dir-identifier}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-persist-example]
 ----
 
 [source, SQL, indent=0]
@@ -646,7 +647,7 @@ Java Persistence 2.0 added support for derived identifiers which allow an entity
 ====
 [source,java]
 ----
-include::{sourcedir-associations}/OneToOneMapsIdTest.java[tag=identifiers-derived-mapsid, indent=0]
+include::{example-dir-associations}/OneToOneMapsIdTest.java[tag=identifiers-derived-mapsid, indent=0]
 ----
 ====
 
@@ -658,7 +659,7 @@ The value of the `PersonDetails` entity identifier is "derived" from the identif
 ====
 [source,java]
 ----
-include::{sourcedir-associations}/OneToOneMapsIdTest.java[tag=identifiers-derived-mapsid-persist-example, indent=0]
+include::{example-dir-associations}/OneToOneMapsIdTest.java[tag=identifiers-derived-mapsid-persist-example, indent=0]
 ----
 ====
 
@@ -671,7 +672,7 @@ The previous example can also be mapped using `@PrimaryKeyJoinColumn`.
 ====
 [source,java]
 ----
-include::{sourcedir-associations}/OneToOnePrimaryKeyJoinColumnTest.java[tag=identifiers-derived-primarykeyjoincolumn, indent=0]
+include::{example-dir-associations}/OneToOnePrimaryKeyJoinColumnTest.java[tag=identifiers-derived-primarykeyjoincolumn, indent=0]
 ----
 ====
 
@@ -691,7 +692,7 @@ then Hibernate can use the `ROWID` pseudo-column for CRUD operations.
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/RowIdTest.java[tag=identifiers-rowid-mapping]
+include::{example-dir-identifier}/RowIdTest.java[tag=identifiers-rowid-mapping]
 ----
 ====
 
@@ -702,7 +703,7 @@ Now, when fetching an entity and modifying it, Hibernate uses the `ROWID` pseudo
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/RowIdTest.java[tag=identifiers-rowid-example]
+include::{example-dir-identifier}/RowIdTest.java[tag=identifiers-rowid-example]
 ----
 
 [source, SQL, indent=0]

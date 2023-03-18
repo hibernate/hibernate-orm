@@ -15,6 +15,7 @@ import java.util.function.Function;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -28,6 +29,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
+import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
@@ -64,11 +66,13 @@ import static org.hibernate.query.results.ResultsHelper.attributeName;
 public class DomainResultCreationStateImpl
 		implements DomainResultCreationState, SqlAstCreationState, SqlAstProcessingState, SqlExpressionResolver {
 
+	private static final String DISCRIMINATOR_ALIAS = "clazz_";
 	private final String stateIdentifier;
 	private final FromClauseAccessImpl fromClauseAccess;
 
 	private final JdbcValuesMetadata jdbcResultsMetadata;
 	private final Consumer<SqlSelection> sqlSelectionConsumer;
+	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final Map<ColumnReferenceKey, ResultSetMappingSqlSelection> sqlSelectionMap = new HashMap<>();
 	private boolean allowPositionalSelections = true;
 
@@ -89,10 +93,12 @@ public class DomainResultCreationStateImpl
 			JdbcValuesMetadata jdbcResultsMetadata,
 			Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders,
 			Consumer<SqlSelection> sqlSelectionConsumer,
+			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 		this.stateIdentifier = stateIdentifier;
 		this.jdbcResultsMetadata = jdbcResultsMetadata;
 		this.sqlSelectionConsumer = sqlSelectionConsumer;
+		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.fromClauseAccess = new FromClauseAccessImpl();
 		this.sqlAliasBaseManager = new SqlAliasBaseManager();
 
@@ -242,6 +248,11 @@ public class DomainResultCreationStateImpl
 		return sqlAliasBaseManager;
 	}
 
+	@Override
+	public LoadQueryInfluencers getLoadQueryInfluencers() {
+		return loadQueryInfluencers;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlAstProcessingState
@@ -287,6 +298,26 @@ public class DomainResultCreationStateImpl
 			final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection(
 					valuesArrayPosition,
 					columnReference.getJdbcMapping()
+			);
+
+			sqlSelectionMap.put( key, sqlSelection );
+			sqlSelectionConsumer.accept( sqlSelection );
+
+			return sqlSelection;
+		}
+		else if ( created instanceof CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression ) {
+			final int valuesArrayPosition;
+			if ( nestingFetchParent != null ) {
+				valuesArrayPosition = nestingFetchParent.getReferencedMappingType().getSelectableIndex( DISCRIMINATOR_ALIAS );
+			}
+			else {
+				final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( DISCRIMINATOR_ALIAS );
+				valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+			}
+
+			final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection(
+					valuesArrayPosition,
+					created.getExpressionType().getSingleJdbcMapping()
 			);
 
 			sqlSelectionMap.put( key, sqlSelection );
@@ -428,6 +459,9 @@ public class DomainResultCreationStateImpl
 
 	private Consumer<Fetchable> createFetchableConsumer(FetchParent fetchParent, ImmutableFetchList.Builder fetches) {
 		return fetchable -> {
+			if ( !fetchable.isSelectable() ) {
+				return;
+			}
 			final String fetchableName = fetchable.getFetchableName();
 			Map.Entry<String, NavigablePath> currentEntry;
 			if ( relativePathStack.isEmpty() ) {

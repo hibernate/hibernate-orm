@@ -54,7 +54,7 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 
 	@Override @Deprecated
 	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
-		return new IdentifierGeneratingInsert( dialect );
+		return new IdentifierGeneratingInsert( persister.getFactory() );
 	}
 
 	@Override

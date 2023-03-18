@@ -64,6 +64,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -661,29 +662,14 @@ public class MetadataBuildingProcess {
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.POINT, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOGRAPHY, SqlTypes.GEOMETRY );
 
-		jdbcTypeRegistry.addDescriptorIfAbsent( JsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.VARCHAR_INSTANCE );
 
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_BLOB, SqlTypes.BLOB );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_CLOB, SqlTypes.CLOB );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.MATERIALIZED_NCLOB, SqlTypes.NCLOB );
 
 		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-		// Fallback to the biggest varchar DdlType when json is requested
-		ddlTypeRegistry.addDescriptorIfAbsent(
-				new DdlTypeImpl(
-						SqlTypes.JSON,
-						ddlTypeRegistry.getTypeName( SqlTypes.VARCHAR, null, null, null ),
-						dialect
-				)
-		);
-		ddlTypeRegistry.addDescriptorIfAbsent(
-				new DdlTypeImpl(
-						SqlTypes.SQLXML,
-						ddlTypeRegistry.getTypeName( SqlTypes.VARCHAR, null, null, null ),
-						dialect
-				)
-		);
 		// Fallback to the geometry DdlType when geography is requested
 		final DdlType geometryType = ddlTypeRegistry.getDescriptor( SqlTypes.GEOMETRY );
 		if ( geometryType != null ) {

@@ -30,12 +30,12 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PgJdbcHelper;
+import org.hibernate.dialect.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.PostgreSQLCastingJsonJdbcType;
 import org.hibernate.dialect.PostgreSQLDriverKind;
-import org.hibernate.dialect.PostgreSQLInetJdbcType;
-import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
-import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
-import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
-import org.hibernate.dialect.PostgreSQLStructJdbcType;
+import org.hibernate.dialect.PostgreSQLStructCastingJdbcType;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
@@ -44,6 +44,7 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
@@ -151,7 +152,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 
-	private final PostgreSQLDriverKind driverKind;
+	protected final PostgreSQLDriverKind driverKind;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	public PostgreSQLLegacyDialect() {
@@ -253,21 +254,18 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		}
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-			// The following DDL types require that the PGobject class is usable/visible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-			if ( getVersion().isSameOrAfter( 9, 2 ) ) {
-				// Prefer jsonb if possible
-				if ( getVersion().isSameOrAfter( 9, 4 ) ) {
-					ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-				}
-				else {
-					ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-				}
+		if ( getVersion().isSameOrAfter( 9, 2 ) ) {
+			// Prefer jsonb if possible
+			if ( getVersion().isSameOrAfter( 9, 4 ) ) {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+			}
+			else {
+				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 			}
 		}
 	}
@@ -539,8 +537,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
-		functionFactory.round_roundFloor(); //Postgres round(x,n) does not accept double
-		functionFactory.trunc_truncFloor();
 		functionFactory.cot();
 		functionFactory.radians();
 		functionFactory.degrees();
@@ -569,7 +565,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.concat_pipeOperator( "convert_from(lo_get(?1),pg_client_encoding())" );
 		functionFactory.localtimeLocaltimestamp();
-		functionFactory.dateTrunc();
 		functionFactory.length_characterLength_pattern( "length(lo_get(?1),pg_client_encoding())" );
 		functionFactory.bitLength_pattern( "bit_length(?1)", "length(lo_get(?1))*8" );
 		functionFactory.octetLength_pattern( "octet_length(?1)", "length(lo_get(?1))" );
@@ -611,9 +606,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				"round", new PostgreSQLTruncRoundFunction( "round", true )
 		);
 		functionContributions.getFunctionRegistry().register(
-				"trunc", new PostgreSQLTruncRoundFunction( "trunc", true )
+				"trunc",
+				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+		functionFactory.dateTrunc();
 	}
 
 	/**
@@ -1311,8 +1308,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.contributeTypes(typeContributions, serviceRegistry);
+		super.contributeTypes( typeContributions, serviceRegistry );
+		contributePostgreSQLTypes( typeContributions, serviceRegistry );
+	}
 
+	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
@@ -1329,18 +1329,53 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructJdbcType.INSTANCE );
+			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getStructJdbcType( serviceRegistry ) );
+			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 			}
 
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 				// HHH-9562
 				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
-					if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
+						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
+						}
+						else {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+						}
+					}
+					else {
+						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonJdbcType( serviceRegistry ) );
+						}
+						else {
+							jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+						}
+					}
+				}
+			}
+		}
+		else {
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
+
+			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
+					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+					}
+					else {
+						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
 					}
 				}
 			}

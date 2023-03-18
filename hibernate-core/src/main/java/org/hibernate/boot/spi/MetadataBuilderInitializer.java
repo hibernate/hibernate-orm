@@ -8,6 +8,7 @@ package org.hibernate.boot.spi;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.service.JavaServiceLoadable;
 
 /**
  * Contract for contributing to the initialization of {@link MetadataBuilder}.
@@ -20,6 +21,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
  *
  * @since 5.0
  */
+@JavaServiceLoadable
 public interface MetadataBuilderInitializer {
 	void contribute(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry);
 }

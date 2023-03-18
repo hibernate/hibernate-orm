@@ -35,8 +35,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
- * A mapping model object representing a property or field of an {@link PersistentClass entity}
- * or {@link Component embeddable class}.
+ * A mapping model object representing a property or field of an {@linkplain PersistentClass entity}
+ * or {@linkplain Component embeddable class}.
  *
  * @author Gavin King
  */
@@ -57,6 +57,7 @@ public class Property implements Serializable, MetaAttributable {
 	private java.util.Map metaAttributes;
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
+	private boolean isGeneric;
 	private boolean lob;
 	private java.util.List<CallbackDefinition> callbackDefinitions;
 	private String returnedClassName;
@@ -417,6 +418,14 @@ public class Property implements Serializable, MetaAttributable {
 		this.naturalIdentifier = naturalIdentifier;
 	}
 
+	public boolean isGeneric() {
+		return isGeneric;
+	}
+
+	public void setGeneric(boolean generic) {
+		this.isGeneric = generic;
+	}
+
 	public boolean isLob() {
 		return lob;
 	}
@@ -473,6 +482,7 @@ public class Property implements Serializable, MetaAttributable {
 		property.setMetaAttributes( getMetaAttributes() );
 		property.setPersistentClass( getPersistentClass() );
 		property.setNaturalIdentifier( isNaturalIdentifier() );
+		property.setGeneric( isGeneric() );
 		property.setLob( isLob() );
 		property.addCallbackDefinitions( getCallbackDefinitions() );
 		property.setReturnedClassName( getReturnedClassName() );

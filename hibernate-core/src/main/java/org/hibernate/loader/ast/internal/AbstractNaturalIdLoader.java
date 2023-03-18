@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
@@ -30,7 +31,6 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
@@ -156,6 +156,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				lockOptions,
 				fetchProcessor,
 				true,
+				LoadQueryInfluencers.NONE,
 				sessionFactory
 		);
 
@@ -163,9 +164,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				true,
 				entityPath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState,
-				sessionFactory
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -316,7 +317,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
 				id,
-				Clause.WHERE,
 				entityDescriptor().getIdentifierMapping(),
 				jdbcParameters,
 				session

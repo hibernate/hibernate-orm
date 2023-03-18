@@ -28,8 +28,9 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -51,6 +52,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
@@ -64,10 +66,14 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
@@ -132,29 +138,41 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Gavin King
  */
 public class PostgreSQLDialect extends Dialect {
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
-	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
 
-	private final PostgreSQLDriverKind driverKind;
+	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+
+	protected final PostgreSQLDriverKind driverKind;
+	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
+	private final ParameterMarkerStrategy parameterRenderer;
 
 	public PostgreSQLDialect() {
 		this( MINIMUM_VERSION );
 	}
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
-		super(info);
-		driverKind = PostgreSQLDriverKind.determineKind( info );
+		this( info, PostgreSQLDriverKind.determineKind( info ) );
 	}
 
 	public PostgreSQLDialect(DatabaseVersion version) {
-		super(version);
-		driverKind = PostgreSQLDriverKind.PG_JDBC;
+		this( version, PostgreSQLDriverKind.PG_JDBC );
 	}
 
 	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
-		super(version);
+		super( version );
+
 		this.driverKind = driverKind;
+		this.optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
+		this.parameterRenderer = driverKind == PostgreSQLDriverKind.VERT_X
+				? NativeParameterMarkers.INSTANCE
+				: super.getNativeParameterMarkerStrategy();
+	}
+
+	private static OptionalTableUpdateStrategy determineOptionalTableUpdateStrategy(DatabaseVersion version) {
+		return version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) )
+				? PostgreSQLDialect::usingMerge
+				: PostgreSQLDialect::withoutMerge;
 	}
 
 	@Override
@@ -245,16 +263,13 @@ public class PostgreSQLDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-			// The following DDL types require that the PGobject class is usable/visible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-			// Prefer jsonb if possible
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-		}
+		// Prefer jsonb if possible
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
 	}
 
 	@Override
@@ -552,7 +567,6 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.concat_pipeOperator( "convert_from(lo_get(?1),pg_client_encoding())" );
 		functionFactory.localtimeLocaltimestamp();
-		functionFactory.dateTrunc();
 		functionFactory.length_characterLength_pattern( "length(lo_get(?1),pg_client_encoding())" );
 		functionFactory.bitLength_pattern( "bit_length(?1)", "length(lo_get(?1))*8" );
 		functionFactory.octetLength_pattern( "octet_length(?1)", "length(lo_get(?1))" );
@@ -592,9 +606,11 @@ public class PostgreSQLDialect extends Dialect {
 				"round", new PostgreSQLTruncRoundFunction( "round", true )
 		);
 		functionContributions.getFunctionRegistry().register(
-				"trunc", new PostgreSQLTruncRoundFunction( "trunc", true )
+				"trunc",
+				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+		functionFactory.dateTrunc();
 	}
 
 	/**
@@ -1296,7 +1312,15 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
+		contributePostgreSQLTypes(typeContributions, serviceRegistry);
+	}
 
+	/**
+	 * Allow for extension points to override this only
+	 * @param typeContributions
+	 * @param serviceRegistry
+	 */
+	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
@@ -1313,17 +1337,27 @@ public class PostgreSQLDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructJdbcType.INSTANCE );
-			}
-
 			// HHH-9562
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getStructJdbcType( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
 			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+			}
+		}
+		else {
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
 		}
 
 		// PostgreSQL requires a custom binder for binding untyped nulls as VARBINARY
@@ -1366,23 +1400,52 @@ public class PostgreSQLDialect extends Dialect {
 		return OTHER;
 	}
 
-	//	@Override
-//	public String getDisableConstraintsStatement() {
-//		return "set constraints all deferred";
-//	}
-//
-//	@Override
-//	public String getEnableConstraintsStatement() {
-//		return "set constraints all immediate";
-//	}
-//
-//	@Override
-//	public String getDisableConstraintStatement(String tableName, String name) {
-//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
-//	}
-//
-//	@Override
-//	public String getEnableConstraintStatement(String tableName, String name) {
-//		return "alter table " + tableName + " alter constraint " + name + " deferrable";
-//	}
+
+	@FunctionalInterface
+	private interface OptionalTableUpdateStrategy {
+		MutationOperation buildMutationOperation(
+				EntityMutationTarget mutationTarget,
+				OptionalTableUpdate optionalTableUpdate,
+				SessionFactoryImplementor factory);
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	private static MutationOperation usingMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		final PostgreSQLSqlAstTranslator<?> translator = new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate );
+		return translator.createMergeOperation( optionalTableUpdate );
+	}
+
+	private static MutationOperation withoutMerge(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+	}
+
+	@Override
+	public ParameterMarkerStrategy getNativeParameterMarkerStrategy() {
+		return parameterRenderer;
+	}
+
+	private static class NativeParameterMarkers implements ParameterMarkerStrategy {
+		/**
+		 * Singleton access
+		 */
+		public static final NativeParameterMarkers INSTANCE = new NativeParameterMarkers();
+
+		@Override
+		public String createMarker(int position, JdbcType jdbcType) {
+			return "$" + position;
+		}
+	}
 }

@@ -13,7 +13,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -34,8 +33,6 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	private ServiceRegistryImplementor serviceRegistry;
 	private JdbcEnvironment jdbcEnvironment;
 
-	private boolean multiTenancyEnabled;
-
 	private SqlStatementLogger sqlStatementLogger;
 
 	@Override
@@ -47,8 +44,6 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	public void configure(Map<String, Object> configValues) {
 		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
-
-		this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
 
 		final boolean showSQL = ConfigurationHelper.getBoolean( Environment.SHOW_SQL, configValues, false );
 		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );
@@ -65,7 +60,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public JdbcConnectionAccess getBootstrapJdbcConnectionAccess() {
-		return JdbcEnvironmentInitiator.buildBootstrapJdbcConnectionAccess( multiTenancyEnabled, serviceRegistry );
+		return JdbcEnvironmentInitiator.buildBootstrapJdbcConnectionAccess( serviceRegistry );
 	}
 
 	@Override

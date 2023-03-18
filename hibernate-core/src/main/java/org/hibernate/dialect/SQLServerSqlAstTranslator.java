@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -36,6 +35,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.type.SqlTypes;
 
 /**
@@ -43,7 +43,7 @@ import org.hibernate.type.SqlTypes;
  *
  * @author Christian Beikov
  */
-public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
 	private static final String UNION_ALL = " union all ";
 
@@ -302,6 +302,12 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else if ( offsetFetchClauseMode == OffsetFetchClauseMode.EMULATED ) {
 			renderTopClause( querySpec, isRowsOnlyFetchClauseType( querySpec ), true );
 		}
+		else if ( getQueryPartStack().depth() > 1 && querySpec.hasSortSpecifications()
+				&& getQueryPartStack().peek( 1 ) instanceof QueryGroup ) {
+			// If the current query spec has a query group parent, no offset/fetch clause, but an order by clause,
+			// then we must render "top 100 percent" as that is needed for the SQL to be valid
+			appendSql( "top 100 percent " );
+		}
 		super.visitSqlSelections( selectClause );
 	}
 
@@ -439,5 +445,10 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		STANDARD,
 		TOP_ONLY,
 		EMULATED;
+	}
+
+	protected void renderMergeStatement(OptionalTableUpdate optionalTableUpdate) {
+		super.renderMergeStatement( optionalTableUpdate );
+		appendSql( ";" );
 	}
 }

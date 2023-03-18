@@ -33,7 +33,6 @@ import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentDat
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
-import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.strategy.AuditStrategy;
@@ -46,6 +45,7 @@ import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.sql.ComparisonRestriction;
 import org.hibernate.sql.Update;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
@@ -562,7 +562,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final String revEndColumnName = rootAuditEntity.findAttributeMapping( revEndAttributeName )
 				.getSelectable( 0 )
 				.getSelectionExpression();
-		context.addColumn( revEndColumnName );
+		context.addAssignment( revEndColumnName );
 		context.bind( revisionNumber, revisionEntity.getIdentifierMapping() );
 
 		if ( configuration.isRevisionEndTimestampEnabled() ) {
@@ -570,22 +570,22 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			final String revEndTimestampAttributeName = configuration.getRevisionEndTimestampFieldName();
 			final AttributeMapping revEndTimestampAttributeMapping = rootAuditEntity.findAttributeMapping( revEndTimestampAttributeName );
 			// Apply optional "[, REVEND_TSTMP = ?]" portion of the SQL
-			context.addColumn( revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression() );
+			context.addAssignment( revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression() );
 			context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampAttributeMapping );
 		}
 
 		// Apply "WHERE (entity_id) = ?"
-		context.addPrimaryKeyColumns( rootEntity.getIdentifierColumnNames() );
+		context.addRestriction( rootEntity.getIdentifierColumnNames() );
 		context.bind( id, rootEntity.getIdentifierMapping() );
 
 		// Apply "AND REV <> ?"
 		// todo (PropertyMapping) : need to be able to handle paths
 		final String path = configuration.getRevisionNumberPath();
-		context.addWhereColumn( rootAuditEntity.toColumns( path )[ 0 ], " <> ?" );
+		context.addRestriction( rootAuditEntity.toColumns( path )[ 0 ], ComparisonRestriction.Operator.NE, "?" );
 		context.bind( revisionNumber, rootAuditEntity.getPropertyType( path ) );
 
 		// Apply "AND REVEND is null"
-		context.addWhereColumn( revEndColumnName, " is null" );
+		context.addColumnIsNullRestriction( revEndColumnName );
 
 		return context;
 	}
@@ -624,23 +624,23 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		final String revEndTimestampAttributeName = configuration.getRevisionEndTimestampFieldName();
 		final AttributeMapping revEndTimestampAttributeMapping = auditEntity.findAttributeMapping( revEndTimestampAttributeName );
 		final String revEndTimestampColumnName = revEndTimestampAttributeMapping.getSelectable( 0 ).getSelectionExpression();
-		context.addColumn( revEndTimestampColumnName );
+		context.addAssignment( revEndTimestampColumnName );
 		context.bind( getRevEndTimestampValue( configuration, revisionTimestamp ), revEndTimestampAttributeMapping );
 
 		// Apply "WHERE (entity_id) = ? AND REV <> ?" portion of the SQL
 		final Number revisionNumber = getRevisionNumber( configuration, revision );
 
 		// Apply "WHERE (entity_id) = ?"
-		context.addPrimaryKeyColumns( entity.getIdentifierColumnNames() );
+		context.addRestriction( entity.getIdentifierColumnNames() );
 		context.bind( id, entity.getIdentifierType() );
 
 		// Apply "AND REV <> ?"
 		// todo (PropertyMapping) : need to be able to handle paths
-		context.addWhereColumn( configuration.getRevisionFieldName(), " <> ?" );
+		context.addRestriction( configuration.getRevisionFieldName(), ComparisonRestriction.Operator.NE, "?" );
 		context.bind( revisionNumber, auditEntity.getPropertyType( configuration.getRevisionNumberPath() ) );
 
 		// Apply "AND REVEND_TSTMP is null"
-		context.addWhereColumn( revEndTimestampColumnName, " is null" );
+		context.addColumnIsNullRestriction( revEndTimestampColumnName );
 
 		return context;
 	}
@@ -665,7 +665,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		private final List<QueryParameterBinding> bindings = new ArrayList<>( 0 );
 
 		public UpdateContext(SessionFactoryImplementor sessionFactory) {
-			super ( sessionFactory.getJdbcServices().getDialect() );
+			super ( sessionFactory );
 		}
 
 		public List<QueryParameterBinding> getBindings() {
@@ -714,34 +714,45 @@ public class ValidityAuditStrategy implements AuditStrategy {
 				int index,
 				PreparedStatement statement,
 				SessionImplementor session) {
-			final MutableInteger position = new MutableInteger( index );
-			modelPart.breakDownJdbcValues(
-					value,
-					(jdbcValue, jdbcValueMapping) -> {
-						try {
-							//noinspection unchecked
-							jdbcValueMapping.getJdbcMapping().getJdbcValueBinder().bind(
-									statement,
-									jdbcValue,
-									position.getAndIncrease(),
-									session
-							);
-						}
-						catch (SQLException e) {
-							throw session.getJdbcServices().getSqlExceptionHelper().convert(
-									e,
-									String.format(
-											Locale.ROOT,
-											"Error binding JDBC value relative to `%s`",
-											modelPart.getNavigableRole().getFullPath()
-									)
-							);
-						}
-					},
-					session
-			);
+			try {
+				return modelPart.breakDownJdbcValues(
+						value,
+						index,
+						statement,
+						session,
+						(valueIndex, preparedStatement, sessionImplementor, jdbcValue, jdbcValueMapping) -> {
+							try {
+								//noinspection unchecked
+								jdbcValueMapping.getJdbcMapping().getJdbcValueBinder().bind(
+										preparedStatement,
+										jdbcValue,
+										valueIndex,
+										sessionImplementor
+								);
+							}
+							catch (SQLException e) {
+								throw new NestedRuntimeException( e );
+							}
+						},
+						session
+				);
+			}
+			catch (NestedRuntimeException e) {
+				throw session.getJdbcServices().getSqlExceptionHelper().convert(
+						(SQLException) e.getCause(),
+						String.format(
+								Locale.ROOT,
+								"Error binding JDBC value relative to `%s`",
+								modelPart.getNavigableRole().getFullPath()
+						)
+				);
+			}
+		}
 
-			return modelPart.getJdbcTypeCount();
+		static class NestedRuntimeException extends RuntimeException {
+			public NestedRuntimeException(SQLException cause) {
+				super( cause );
+			}
 		}
 	}
 }

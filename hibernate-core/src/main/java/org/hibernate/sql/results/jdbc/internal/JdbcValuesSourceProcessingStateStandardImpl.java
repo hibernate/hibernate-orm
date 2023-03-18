@@ -15,7 +15,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
@@ -40,7 +39,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSourceProcessingState {
-	private static final Logger log = Logger.getLogger( JdbcValuesSourceProcessingStateStandardImpl.class );
 
 	private final ExecutionContext executionContext;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
@@ -163,13 +161,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	@Override
 	public void finishUp() {
-		// for arrays, we should end the collection load beforeQuery resolving the entities, since the
-		// actual array instances are not instantiated during loading
-		finishLoadingArrays();
-
-		// now finish loading the entities (2-phase load)
-		performTwoPhaseLoad();
-
 		// now we can finalize loading collections
 		finishLoadingCollections();
 
@@ -205,22 +196,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 				}
 		);
 		loadingEntityMap = null;
-	}
-
-	private void finishLoadingArrays() {
-		if ( arrayInitializers != null ) {
-			for ( CollectionInitializer collectionInitializer : arrayInitializers ) {
-				collectionInitializer.endLoading( executionContext );
-			}
-		}
-	}
-
-
-	private void performTwoPhaseLoad() {
-		if ( loadingEntityMap == null ) {
-			return;
-		}
-		log.tracev( "Total objects hydrated: {0}", loadingEntityMap.size() );
 	}
 
 	@SuppressWarnings("SimplifiableIfStatement")

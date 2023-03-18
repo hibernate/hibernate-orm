@@ -18,8 +18,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -128,13 +126,11 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		assert jdbcParameters.size() % jdbcTypeCount == 0;
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcTypeCount );
-		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		int offset = 0;
 		while ( offset < jdbcParameters.size() ) {
 			offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 					restrictedValue,
-					Clause.WHERE,
 					offset,
 					restrictivePart,
 					jdbcParameters,

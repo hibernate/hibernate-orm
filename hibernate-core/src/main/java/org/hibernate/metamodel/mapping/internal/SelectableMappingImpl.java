@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -57,7 +56,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		this.selectionExpression = selectionExpression.intern();
 		this.selectablePath = selectablePath == null ? new SelectablePath( selectionExpression ) : selectablePath;
 		this.customReadExpression = customReadExpression == null ? null : customReadExpression.intern();
-		this.customWriteExpression = customWriteExpression == null ? null : customWriteExpression.intern();
+		this.customWriteExpression = customWriteExpression == null || isFormula ? null : customWriteExpression.intern();
 		this.nullable = nullable;
 		this.insertable = insertable;
 		this.updateable = updateable;
@@ -92,6 +91,32 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	public static SelectableMapping from(
 			final String containingTableExpression,
 			final Selectable selectable,
+			final JdbcMapping jdbcMapping,
+			final TypeConfiguration typeConfiguration,
+			boolean insertable,
+			boolean updateable,
+			boolean partitioned,
+			boolean forceNotNullable,
+			final Dialect dialect,
+			final SqmFunctionRegistry sqmFunctionRegistry) {
+		return from(
+				containingTableExpression,
+				selectable,
+				null,
+				jdbcMapping,
+				typeConfiguration,
+				insertable,
+				updateable,
+				partitioned,
+				forceNotNullable,
+				dialect,
+				sqmFunctionRegistry
+		);
+	}
+
+	public static SelectableMapping from(
+			final String containingTableExpression,
+			final Selectable selectable,
 			final SelectablePath parentPath,
 			final JdbcMapping jdbcMapping,
 			final TypeConfiguration typeConfiguration,
@@ -104,14 +129,12 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				containingTableExpression,
 				selectable,
 				parentPath,
-				selectable instanceof Column
-						? ( (Column) selectable ).getQuotedName( dialect )
-						: selectable.getText(),
 				jdbcMapping,
 				typeConfiguration,
 				insertable,
 				updateable,
 				partitioned,
+				false,
 				dialect,
 				sqmFunctionRegistry
 		);
@@ -121,12 +144,12 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			final String containingTableExpression,
 			final Selectable selectable,
 			final SelectablePath parentPath,
-			final String selectableName,
 			final JdbcMapping jdbcMapping,
 			final TypeConfiguration typeConfiguration,
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,
+			boolean forceNotNullable,
 			final Dialect dialect,
 			final SqmFunctionRegistry sqmFunctionRegistry) {
 		final String columnExpression;
@@ -134,6 +157,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		final Long length;
 		final Integer precision;
 		final Integer scale;
+		final String selectableName;
 		final boolean isNullable;
 		if ( selectable.isFormula() ) {
 			columnExpression = selectable.getTemplate( dialect, typeConfiguration, sqmFunctionRegistry );
@@ -142,6 +166,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			precision = null;
 			scale = null;
 			isNullable = true;
+			selectableName = selectable.getText();
 		}
 		else {
 			Column column = (Column) selectable;
@@ -151,7 +176,8 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			precision = column.getPrecision();
 			scale = column.getScale();
 
-			isNullable = column.isNullable();
+			isNullable = forceNotNullable ? false : column.isNullable();
+			selectableName = column.getQuotedName( dialect );
 		}
 		return new SelectableMappingImpl(
 				containingTableExpression,
@@ -160,7 +186,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 						? null
 						: parentPath.append( selectableName ),
 				selectable.getCustomReadExpression(),
-				selectable.getCustomWriteExpression(),
+				selectable.getWriteExpr( jdbcMapping, dialect ),
 				columnDefinition,
 				length,
 				precision,
@@ -211,6 +237,11 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 
 	@Override
 	public String getCustomWriteExpression() {
+		return customWriteExpression;
+	}
+
+	@Override
+	public String getWriteExpression() {
 		return customWriteExpression;
 	}
 

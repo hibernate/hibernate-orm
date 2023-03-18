@@ -9,6 +9,7 @@ package org.hibernate.boot.model.process.spi;
 import java.util.Collection;
 import java.util.Map;
 
+import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 
@@ -40,7 +41,7 @@ public interface ManagedResources {
 	 *
 	 * @return The list of entity/component classes known by Class reference.
 	 */
-	Collection<Class> getAnnotatedClassReferences();
+	Collection<Class<?>> getAnnotatedClassReferences();
 
 	/**
 	 * Informational access to any entity and component classes in the user domain model known by name.
@@ -64,7 +65,7 @@ public interface ManagedResources {
 	 *
 	 * @return The list of bindings for all known XML mapping files.
 	 */
-	Collection<Binding> getXmlMappingBindings();
+	Collection<Binding<BindableMappingDescriptor>> getXmlMappingBindings();
 
 	Map<String,Class<?>> getExtraQueryImports();
 }

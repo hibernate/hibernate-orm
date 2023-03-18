@@ -20,6 +20,7 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.model.process.internal.EnumeratedValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
@@ -38,7 +39,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -46,6 +47,7 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -478,13 +480,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					jdbcType,
 					resolvedJavaType,
 					this::determineReflectedJavaType,
+					explicitMutabilityPlanAccess,
 					this,
 					getTable(),
 					column,
 					ownerName,
 					propertyName,
-					getDialect(),
-					getTypeConfiguration()
+					getBuildingContext()
 			);
 		}
 	}
@@ -567,7 +569,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 		};
 
-
 		// Name could refer to:
 		//		1) a named converter - HBM support for JPA's AttributeConverter via its `type="..."` XML attribute
 		//		2) a "named composed" mapping - like (1), this is mainly to support envers since it tells
@@ -585,6 +586,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					converterCreationContext,
 					context
 			);
+		}
+
+		if ( name.startsWith( EnumeratedValueResolution.PREFIX ) ) {
+			return EnumeratedValueResolution.fromName( name, stdIndicators, context );
 		}
 
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
@@ -793,18 +798,25 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				properties.putAll( explicitLocalTypeParams );
 			}
 
-			final ManagedBean<T> typeBean;
-			if ( properties.isEmpty() ) {
-				typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-						.getBean( explicitCustomType, instanceProducer );
+			final T typeInstance;
+			if ( getBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
+				typeInstance = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType );
 			}
 			else {
-				final String name = explicitCustomType.getName() + COUNTER++;
-				typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-						.getBean( name, explicitCustomType, instanceProducer );
-			}
+				final boolean hasParameters = CollectionHelper.isNotEmpty( properties );
 
-			final T typeInstance = typeBean.getBeanInstance();
+				final ManagedBean<T> typeBean;
+				if ( hasParameters ) {
+					final String name = explicitCustomType.getName() + COUNTER++;
+					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
+							.getBean( name, explicitCustomType, instanceProducer );
+				}
+				else {
+					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
+							.getBean( explicitCustomType, instanceProducer );
+				}
+				typeInstance = typeBean.getBeanInstance();
+			}
 
 			if ( typeInstance instanceof TypeConfigurationAware ) {
 				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( getTypeConfiguration() );

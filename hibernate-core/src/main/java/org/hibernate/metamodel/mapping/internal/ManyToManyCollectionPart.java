@@ -42,11 +42,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -137,8 +134,13 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		fkTargetModelPart.breakDownJdbcValues( domainValue, valueConsumer, session );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+		return fkTargetModelPart.breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
@@ -158,9 +160,18 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	}
 
 	@Override
-	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		foreignKey.getKeyPart().decompose(
+	public <X, Y> int decompose(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		return foreignKey.getKeyPart().decompose(
 				foreignKey.getAssociationKeyFromSide( domainValue, foreignKey.getTargetSide(), session ),
+				offset,
+				x,
+				y,
 				valueConsumer,
 				session
 		);
@@ -209,28 +220,24 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	@Override
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
-			TableGroup collectionTableGroup,
+			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 
 		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
-				collectionTableGroup,
+				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 
 		final TableGroupJoin join = new TableGroupJoin(
@@ -245,9 +252,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			join.applyPredicate(
 					foreignKey.generateJoinPredicate(
 							partTableGroup.getPrimaryTableReference(),
-							collectionTableGroup.resolveTableReference( foreignKey.getKeyTable() ),
-							sqlExpressionResolver,
-							creationContext
+							lhs.resolveTableReference( foreignKey.getKeyTable() ),
+							creationState
 					)
 			);
 		} );
@@ -260,16 +266,19 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 		final boolean canUseInnerJoin = joinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
+		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
+				explicitSqlAliasBase,
+				explicitSourceAlias,
+				this,
+				creationState.getSqlAliasBaseGenerator()
+		);
 
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
@@ -281,8 +290,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 						fetched,
 						null,
 						sqlAliasBase,
-						sqlExpressionResolver,
-						creationContext
+						creationState
 				),
 				(np, tableExpression) -> {
 					if ( ! foreignKey.getKeyTable().equals( tableExpression ) ) {
@@ -305,7 +313,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				this,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationContext.getSessionFactory(),
+				creationState.getCreationContext().getSessionFactory(),
 				lhs
 		);
 
@@ -320,8 +328,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 							foreignKey.generateJoinPredicate(
 									tableGroup.getPrimaryTableReference(),
 									keySideTableReference,
-									sqlExpressionResolver,
-									creationContext
+									creationState
 							)
 					)
 			);

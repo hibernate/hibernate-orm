@@ -60,9 +60,9 @@ public class OneToOneJoinTableUniquenessTest extends BaseCoreFunctionalTestCase 
 			fail( e.getMessage() );
 		}
 		String value = output.toPath().toString();
-		configuration.setProperty( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, value );
-		configuration.setProperty( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "create" );
-		configuration.setProperty( AvailableSettings.HBM2DDL_DATABASE_ACTION, "create-drop" );
+		configuration.setProperty( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, value );
+		configuration.setProperty( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "create" );
+		configuration.setProperty( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
 		configuration.setProperty( AvailableSettings.FORMAT_SQL, "false" );
 	}
 

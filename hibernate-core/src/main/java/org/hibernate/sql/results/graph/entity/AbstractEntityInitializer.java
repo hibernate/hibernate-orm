@@ -26,7 +26,6 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
@@ -51,6 +50,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
@@ -96,9 +96,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	// per-row state
 	private EntityPersister concreteDescriptor;
 	private EntityKey entityKey;
+	private Object version;
 	private Object entityInstance;
 	private Object entityInstanceForNotify;
-	private boolean missing;
+	protected boolean missing;
 	boolean isInitialized;
 	private boolean isOwningInitializer;
 	private Object[] resolvedEntityState;
@@ -212,8 +213,16 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return navigablePath;
 	}
 
+	protected DomainResultAssembler<?> getIdentifierAssembler() {
+		return identifierAssembler;
+	}
+
 	protected boolean isMissing() {
 		return missing;
+	}
+
+	protected void setMissing(boolean missing) {
+		this.missing = missing;
 	}
 
 	protected abstract boolean isEntityReturn();
@@ -379,6 +388,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
 		if ( !missing && !isInitialized ) {
+			if ( shouldSkipResolveInstance( rowProcessingState ) ) {
+				missing = true;
+				return;
+			}
 			// Special case map proxy to avoid stack overflows
 			// We know that a map proxy will always be of "the right type" so just use that object
 			final LoadingEntityEntry existingLoadingEntry =
@@ -395,7 +408,81 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private void resolveEntityInstance(
+	protected boolean shouldSkipResolveInstance(RowProcessingState rowProcessingState) {
+		if ( navigablePath.getParent() != null ) {
+			Initializer parentInitializer = rowProcessingState.resolveInitializer( navigablePath.getParent() );
+			if ( parentInitializer != null ) {
+				ModelPart modelPart = referencedModelPart;
+				NavigablePath currentNavigablePath = navigablePath;
+				// Walk back initializers until we find an EntityInitializer
+				while ( parentInitializer != null && !parentInitializer.isEntityInitializer() ) {
+					modelPart = parentInitializer.getInitializedPart();
+					currentNavigablePath = currentNavigablePath.getParent();
+					parentInitializer = rowProcessingState.resolveInitializer( currentNavigablePath.getParent() );
+				}
+				if ( parentInitializer != null && parentInitializer.asEntityInitializer()
+						.getEntityDescriptor()
+						.getEntityMetamodel()
+						.isPolymorphic() ) {
+					parentInitializer.resolveKey( rowProcessingState );
+					return isReferencedModelPartInConcreteParent(
+							modelPart,
+							currentNavigablePath,
+							parentInitializer
+					);
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean isReferencedModelPartInConcreteParent(
+			ModelPart modelPart,
+			NavigablePath partNavigablePath,
+			Initializer parentInitializer) {
+		final EntityPersister parentConcreteDescriptor = parentInitializer.asEntityInitializer()
+				.getConcreteDescriptor();
+		if ( parentConcreteDescriptor != null && parentConcreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
+			final ModelPart concreteModelPart = parentConcreteDescriptor.findByPath( partNavigablePath.getLocalName() );
+			if ( concreteModelPart == null
+					|| !modelPart.getJavaType().getJavaTypeClass()
+					.isAssignableFrom( concreteModelPart.getJavaType().getJavaTypeClass() ) ) {
+		/*
+			Given:
+
+			class Message{
+
+				@ManyToOne
+				Address address;
+			}
+
+			@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+			class Address{
+			}
+
+			class AddressA extends Address {
+				@OneToOne(mappedBy = "addressA")
+				UserA userA;
+			}
+
+			class AddressB extends Address{
+			@OneToOne(mappedBy = "addressB")
+				UserB userB;
+			}
+
+			when we try to initialize the messages of Message.address,
+			there will be one EntityJoinedFetchInitializer for UserA and one for UserB so
+			when resolving AddressA we have to skip resolving the EntityJoinedFetchInitializer of UserB
+			and for AddressB skip resolving the EntityJoinedFetchInitializer of UserA
+
+		 */
+				return true;
+			}
+		}
+		return false;
+	}
+
+	protected void resolveEntityInstance(
 			RowProcessingState rowProcessingState,
 			LoadingEntityEntry existingLoadingEntry,
 			Object entityIdentifier) {
@@ -533,6 +620,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
+	protected boolean isOwningInitializer() {
+		return isOwningInitializer;
+	}
+
 	private Object resolveInstance(
 			Object entityIdentifier,
 			LoadingEntityEntry existingLoadingEntry,
@@ -555,7 +646,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private Object resolveEntityInstance(Object entityIdentifier, RowProcessingState rowProcessingState) {
+	protected Object resolveEntityInstance(Object entityIdentifier, RowProcessingState rowProcessingState) {
 		final Object resolved = resolveToOptionalInstance( rowProcessingState );
 		if ( resolved != null ) {
 			registerLoadingEntity( rowProcessingState, resolved );
@@ -578,14 +669,14 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private Object instantiateEntity(Object entityIdentifier, SharedSessionContractImplementor session) {
+	protected Object instantiateEntity(Object entityIdentifier, SharedSessionContractImplementor session) {
 		final Object instance = session.instantiate( concreteDescriptor.getEntityName(), entityKey.getIdentifier() );
 		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Created new entity instance [%s] : %s",
 					getSimpleConcreteImplName(),
-					toLoggableString( getNavigablePath(), entityIdentifier),
-					instance
+					toLoggableString( getNavigablePath(), entityIdentifier ),
+					System.identityHashCode( instance )
 			);
 		}
 		return instance;
@@ -635,9 +726,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			preLoad( rowProcessingState );
 
 			final LazyInitializer lazyInitializer = extractLazyInitializer( entityInstance );
+			final SharedSessionContractImplementor session = rowProcessingState.getSession();
+			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			if ( lazyInitializer != null ) {
-				final SharedSessionContractImplementor session = rowProcessingState.getSession();
-				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 				Object instance = persistenceContext.getEntity( entityKey );
 				if ( instance == null ) {
 					instance = resolveInstance(
@@ -651,8 +742,42 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				entityInstanceForNotify = instance;
 			}
 			else {
-				initializeEntity( entityInstance, rowProcessingState );
-				entityInstanceForNotify = entityInstance;
+				if ( entityDescriptor.canReadFromCache() ) {
+					/*
+						@Cache
+						class Child {
+
+							@ManyToOne
+							private Parent parent;
+						}
+
+						@Cache
+						class Parent {
+							@OneToOne
+							private Parent parent;
+
+						}
+
+						when the query "select c from Child c" is executed and the second level cache (2LC) contains
+						an instance of Child and Parent
+						then when the EntitySelectFetchInitializer#initializeInstance() is executed before the EntityResultInitializer one
+						the persistence context will contain the instances retrieved form the 2LC
+					 */
+					final Object entity = persistenceContext.getEntity( entityKey );
+					if ( entity != null ) {
+						entityInstance = entity;
+						registerLoadingEntity( rowProcessingState, entityInstance );
+						initializeEntityInstance( entityInstance, rowProcessingState );
+					}
+					else {
+						initializeEntity( entityInstance, rowProcessingState );
+					}
+					entityInstanceForNotify = entityInstance;
+				}
+				else {
+					initializeEntity( entityInstance, rowProcessingState );
+					entityInstanceForNotify = entityInstance;
+				}
 			}
 
 			notifyResolutionListeners( entityInstanceForNotify );
@@ -668,7 +793,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private boolean consistentInstance(Object toInitialize, RowProcessingState rowProcessingState) {
+	protected boolean consistentInstance(Object toInitialize, RowProcessingState rowProcessingState) {
 		final PersistenceContext persistenceContextInternal =
 				rowProcessingState.getSession().getPersistenceContextInternal();
 		// Only call PersistenceContext#getEntity within the assert expression, as it is costly
@@ -711,7 +836,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		// Also register possible unique key entries
 		registerPossibleUniqueKeyEntries( toInitialize, session );
 
-		final Object version = versionAssembler != null ? versionAssembler.assemble( rowProcessingState ) : null;
+		version = versionAssembler != null ? versionAssembler.assemble( rowProcessingState ) : null;
 		final Object rowId = rowIdAssembler != null ? rowIdAssembler.assemble( rowProcessingState ) : null;
 
 		// from the perspective of Hibernate, an entity is read locked as soon as it is read
@@ -730,8 +855,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				concreteDescriptor,
 				false
 		);
-
-		updateCaches( toInitialize, rowProcessingState, session, persistenceContext, entityIdentifier, version );
 
 		registerNaturalIdResolution( persistenceContext, entityIdentifier );
 
@@ -755,7 +878,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private void updateCaches(
+	protected void updateCaches(
 			Object toInitialize,
 			RowProcessingState rowProcessingState,
 			SharedSessionContractImplementor session,
@@ -769,7 +892,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private void registerNaturalIdResolution(PersistenceContext persistenceContext, Object entityIdentifier) {
+	protected void registerNaturalIdResolution(PersistenceContext persistenceContext, Object entityIdentifier) {
 		if ( entityDescriptor.getNaturalIdMapping() != null ) {
 			final Object naturalId =
 					entityDescriptor.getNaturalIdMapping().extractNaturalIdFromEntityState( resolvedEntityState );
@@ -778,7 +901,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private void takeSnapshot(
+	protected void takeSnapshot(
 			RowProcessingState rowProcessingState,
 			SharedSessionContractImplementor session,
 			PersistenceContext persistenceContext,
@@ -878,7 +1001,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private void registerPossibleUniqueKeyEntries(Object toInitialize, SharedSessionContractImplementor session) {
+	protected void registerPossibleUniqueKeyEntries(Object toInitialize, SharedSessionContractImplementor session) {
 		for ( Type propertyType : concreteDescriptor.getPropertyTypes() ) {
 			if ( propertyType instanceof AssociationType ) {
 				final AssociationType associationType = (AssociationType) propertyType;
@@ -908,7 +1031,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private Object[] extractConcreteTypeStateValues(RowProcessingState rowProcessingState) {
+	protected Object[] extractConcreteTypeStateValues(RowProcessingState rowProcessingState) {
 		final Object[] values = new Object[concreteDescriptor.getNumberOfAttributeMappings()];
 		final DomainResultAssembler<?>[] concreteAssemblers = assemblers[concreteDescriptor.getSubclassId()];
 		for ( int i = 0; i < values.length; i++ ) {
@@ -918,7 +1041,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return values;
 	}
 
-	private boolean skipInitialization(Object toInitialize, RowProcessingState rowProcessingState) {
+	protected boolean skipInitialization(Object toInitialize, RowProcessingState rowProcessingState) {
 		final EntityEntry entry =
 				rowProcessingState.getSession().getPersistenceContextInternal().getEntry( toInitialize );
 		if ( entry == null ) {
@@ -962,7 +1085,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return readOnly == null ? persistenceContext.isDefaultReadOnly() : readOnly;
 	}
 
-	private void preLoad(RowProcessingState rowProcessingState) {
+	protected void preLoad(RowProcessingState rowProcessingState) {
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
 		if ( session.isEventSource() ) {
 			final PreLoadEvent preLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState().getPreLoadEvent();
@@ -986,17 +1109,66 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return isInitialized;
 	}
 
+	protected void setEntityInitialized(boolean isInitialized) {
+		this.isInitialized = isInitialized;
+	}
+
+	protected void setEntityInstanceForNotify(Object entityInstanceForNotify) {
+		this.entityInstanceForNotify = entityInstanceForNotify;
+	}
+
+	protected Object getEntityInstanceForNotify() {
+		return entityInstanceForNotify;
+	}
+
+	protected void setResolvedEntityState(Object[] resolvedEntityState) {
+		this.resolvedEntityState = resolvedEntityState;
+	}
+
+	protected Object[] getResolvedEntityState() {
+		return resolvedEntityState;
+	}
+
 	@Override
 	public EntityPersister getConcreteDescriptor() {
 		return concreteDescriptor == null ? entityDescriptor : concreteDescriptor;
 	}
 
+	protected DomainResultAssembler<?> getVersionAssembler() {
+		return versionAssembler;
+	}
+
+	protected DomainResultAssembler<Object> getRowIdAssembler() {
+		return rowIdAssembler;
+	}
+
+	protected LockMode getLockMode() {
+		return lockMode;
+	}
+
+	protected DomainResultAssembler<?>[][] getAssemblers() {
+		return assemblers;
+	}
+
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
+		final SharedSessionContractImplementor session = rowProcessingState.getSession();
+		if ( resolvedEntityState != null ) {
+			updateCaches(
+					entityInstanceForNotify,
+					rowProcessingState,
+					session,
+					session.getPersistenceContext(),
+					entityKey.getIdentifier(),
+					version
+			);
+		}
+
 		// reset row state
 		isOwningInitializer = false;
 		concreteDescriptor = null;
 		entityKey = null;
+		version = null;
 		entityInstance = null;
 		entityInstanceForNotify = null;
 		missing = false;

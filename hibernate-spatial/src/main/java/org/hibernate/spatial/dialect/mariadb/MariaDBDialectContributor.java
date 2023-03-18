@@ -24,7 +24,7 @@ public class MariaDBDialectContributor implements ContributorImplementor {
 		this.serviceRegistry = serviceRegistry;
 	}
 
-	public void contributeJdbcTypes(TypeContributions typeContributions) {
+	public void contributeJdbcTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		HSMessageLogger.SPATIAL_MSG_LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		typeContributions.contributeJdbcType( MySQLGeometryJdbcType.INSTANCE );
 	}

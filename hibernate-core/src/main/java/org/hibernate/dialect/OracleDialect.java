@@ -24,6 +24,7 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
+import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
@@ -50,6 +51,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
@@ -70,6 +72,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
@@ -77,11 +81,12 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -146,6 +151,13 @@ public class OracleDialect extends Dialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
+
+	private static final String yqmSelect =
+		"( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') + ( LEAST( EXTRACT( DAY FROM %2$s ), EXTRACT( DAY FROM LAST_DAY( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') ) ) ) - 1 ) )";
+
+	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
+	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
+	private static final String ADD_MONTH_EXPRESSION = String.format( yqmSelect, "?2", "?3" );
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 2 );
 
@@ -212,7 +224,6 @@ public class OracleDialect extends Dialect {
 		functionFactory.cosh();
 		functionFactory.sinh();
 		functionFactory.tanh();
-		functionFactory.trunc();
 		functionFactory.log();
 		functionFactory.log10_log();
 		functionFactory.soundex();
@@ -226,7 +237,6 @@ public class OracleDialect extends Dialect {
 		functionFactory.bitand();
 		functionFactory.lastDay();
 		functionFactory.toCharNumberDateTimestamp();
-		functionFactory.dateTrunc_trunc();
 		functionFactory.ceiling_ceil();
 		functionFactory.concat_pipeOperator();
 		functionFactory.rownumRowid();
@@ -278,6 +288,11 @@ public class OracleDialect extends Dialect {
 				"mode",
 				new ModeStatsModeEmulation( typeConfiguration )
 		);
+		functionContributions.getFunctionRegistry().register(
+				"trunc",
+				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}
 
 	@Override
@@ -470,6 +485,8 @@ public class OracleDialect extends Dialect {
 				return "to_number(to_char(?2,'MI'))";
 			case SECOND:
 				return "to_number(to_char(?2,'SS'))";
+			case EPOCH:
+				return "trunc((cast(?2 at time zone 'UTC' as date) - date '1970-1-1')*86400)";
 			default:
 				return super.extractPattern(unit);
 		}
@@ -477,63 +494,36 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+
 		StringBuilder pattern = new StringBuilder();
-		pattern.append("(?3+");
 		switch ( unit ) {
 			case YEAR:
+				pattern.append( ADD_YEAR_EXPRESSION );
+				break;
 			case QUARTER:
+				pattern.append( ADD_QUARTER_EXPRESSION );
+				break;
 			case MONTH:
-				pattern.append("numtoyminterval");
+				pattern.append( ADD_MONTH_EXPRESSION );
 				break;
 			case WEEK:
+				pattern.append("(?3+numtodsinterval((?2)*7,'day'))");
+				break;
 			case DAY:
 			case HOUR:
 			case MINUTE:
 			case SECOND:
+				pattern.append("(?3+numtodsinterval(?2,'?1'))");
+				break;
 			case NANOSECOND:
+				pattern.append("(?3+numtodsinterval((?2)/1e9,'second'))");
+				break;
 			case NATIVE:
-				pattern.append("numtodsinterval");
+				pattern.append("(?3+numtodsinterval(?2,'second'))");
 				break;
 			default:
 				throw new SemanticException(unit + " is not a legal field");
 		}
-		pattern.append("(");
-		switch ( unit ) {
-			case NANOSECOND:
-			case QUARTER:
-			case WEEK:
-				pattern.append("(");
-				break;
-		}
-		pattern.append("?2");
-		switch ( unit ) {
-			case QUARTER:
-				pattern.append(")*3");
-				break;
-			case WEEK:
-				pattern.append(")*7");
-				break;
-			case NANOSECOND:
-				pattern.append(")/1e9");
-				break;
-		}
-		pattern.append(",'");
-		switch ( unit ) {
-			case QUARTER:
-				pattern.append("month");
-				break;
-			case WEEK:
-				pattern.append("day");
-				break;
-			case NANOSECOND:
-			case NATIVE:
-				pattern.append("second");
-				break;
-			default:
-				pattern.append("?1");
-		}
-		pattern.append("')");
-		pattern.append(")");
 		return pattern.toString();
 	}
 
@@ -793,7 +783,12 @@ public class OracleDialect extends Dialect {
 
 		typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
-		typeContributions.contributeJdbcType( OracleStructJdbcType.INSTANCE );
+		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
+			typeContributions.contributeJdbcType( OracleJdbcHelper.getStructJdbcType( serviceRegistry ) );
+		}
+		else {
+			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );
+		}
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			// account for Oracle's deprecated support for LONGVARBINARY
@@ -818,7 +813,12 @@ public class OracleDialect extends Dialect {
 			}
 		}
 
-		typeContributions.contributeJdbcType( OracleArrayJdbcType.INSTANCE );
+		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
+			typeContributions.contributeJdbcType( OracleJdbcHelper.getArrayJdbcType( serviceRegistry ) );
+		}
+		else {
+			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );
+		}
 		// Oracle requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );
@@ -987,7 +987,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		//	register the type of the out param - an Oracle specific type
-		statement.registerOutParameter( col, OracleTypesHelper.INSTANCE.getOracleCursorTypeSqlType() );
+		statement.registerOutParameter( col, OracleTypes.CURSOR );
 		col++;
 		return col;
 	}
@@ -1272,7 +1272,7 @@ public class OracleDialect extends Dialect {
 		// offset we need to use the ANSI syntax
 		if ( precision == TemporalType.TIMESTAMP && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 			appender.appendSql( "timestamp '" );
-			appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+			appendAsTimestampWithNanos( appender, temporalAccessor, true, jdbcTimeZone, false );
 			appender.appendSql( '\'' );
 		}
 		else {
@@ -1385,7 +1385,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
-		statement.registerOutParameter( name, OracleTypesHelper.INSTANCE.getOracleCursorTypeSqlType() );
+		statement.registerOutParameter( name, OracleTypes.CURSOR );
 		return 1;
 	}
 
@@ -1440,5 +1440,14 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String rowId(String rowId) {
 		return "rowid";
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		final OracleSqlAstTranslator<?> translator = new OracleSqlAstTranslator<>( factory, optionalTableUpdate );
+		return translator.createMergeOperation( optionalTableUpdate );
 	}
 }

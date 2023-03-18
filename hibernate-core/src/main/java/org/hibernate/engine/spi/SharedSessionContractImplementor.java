@@ -209,18 +209,6 @@ public interface SharedSessionContractImplementor
 	void markForRollbackOnly();
 
 	/**
-	 * A "timestamp" at or before the start of the current transaction.
-	 *
-	 * @apiNote This "timestamp" need not be related to timestamp in the Java Date/millisecond
-	 * sense.  It just needs to be an incrementing value.  See
-	 * {@link CacheTransactionSynchronization#getCurrentTransactionStartTimestamp()}
-	 *
-	 * @deprecated no longer supported, will be removed soon.
-	 */
-	@Deprecated(forRemoval = true)
-	long getTransactionStartTimestamp();
-
-	/**
 	 * The current {@link CacheTransactionSynchronization} associated
 	 * with this session. This may be {@code null} if the session is not
 	 * currently associated with an active transaction.
@@ -340,6 +328,16 @@ public interface SharedSessionContractImplementor
 	 * is already associated with this session.
 	 */
 	String bestGuessEntityName(Object object);
+
+	/**
+	 * Obtain the best estimate of the entity name of the given entity
+	 * instance, which is not involved in an association, by also
+	 * considering information held in the proxy, and whether the object
+	 * is already associated with this session.
+	 */
+	default String bestGuessEntityName(Object object, EntityEntry entry) {
+		return bestGuessEntityName( object );
+	}
 
 	/**
 	 * Obtain an estimate of the entity name of the given entity instance,

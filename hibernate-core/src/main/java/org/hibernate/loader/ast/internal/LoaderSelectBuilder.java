@@ -6,8 +6,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,6 +29,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -249,7 +250,6 @@ public class LoaderSelectBuilder {
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
-	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 	private boolean hasCollectionJoinFetches;
 	private String currentBagRole;
 
@@ -381,6 +381,7 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				this::visitFetches,
 				forceIdentifierSelection,
+				loadQueryInfluencers,
 				creationContext
 		);
 
@@ -388,9 +389,9 @@ public class LoaderSelectBuilder {
 				true,
 				rootNavigablePath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState,
-				creationContext
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -407,6 +408,7 @@ public class LoaderSelectBuilder {
 					final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 							navigablePath,
 							rootTableGroup,
+							null,
 							null,
 							SqlAstJoinType.LEFT,
 							true,
@@ -474,20 +476,10 @@ public class LoaderSelectBuilder {
 		if ( loadable instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
 			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
-			applyOrdering( rootTableGroup, pluralAttributeMapping );
+			applyOrdering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 		}
 		else {
 			applyFiltering( rootQuerySpec, rootTableGroup, (Restrictable) loadable, sqlAstCreationState );
-		}
-
-		if ( orderByFragments != null ) {
-			orderByFragments.forEach(
-					entry -> entry.getKey().apply(
-							rootQuerySpec,
-							entry.getValue(),
-							sqlAstCreationState
-					)
-			);
 		}
 
 		return new SelectStatement( rootQuerySpec, domainResults );
@@ -636,27 +628,38 @@ public class LoaderSelectBuilder {
 				querySpec::applyPredicate,
 				tableGroup,
 				true,
-				loadQueryInfluencers.getEnabledFilters(),
+				// HHH-16179 Session.find should not apply filters
+				Collections.emptyMap(),//loadQueryInfluencers.getEnabledFilters(),
 				null,
 				astCreationState
 		);
 	}
 
-	private void applyOrdering(TableGroup tableGroup, PluralAttributeMapping pluralAttributeMapping) {
+	private void applyOrdering(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			PluralAttributeMapping pluralAttributeMapping,
+			SqlAstCreationState astCreationState) {
 		if ( pluralAttributeMapping.getOrderByFragment() != null ) {
-			applyOrdering( tableGroup, pluralAttributeMapping.getOrderByFragment() );
+			applyOrdering( querySpec, tableGroup, pluralAttributeMapping.getOrderByFragment(), astCreationState );
 		}
 
 		if ( pluralAttributeMapping.getManyToManyOrderByFragment() != null ) {
-			applyOrdering( tableGroup, pluralAttributeMapping.getManyToManyOrderByFragment() );
+			applyOrdering(
+					querySpec,
+					tableGroup,
+					pluralAttributeMapping.getManyToManyOrderByFragment(),
+					astCreationState
+			);
 		}
 	}
 
-	private void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
-		if ( orderByFragments == null ) {
-			orderByFragments = new ArrayList<>();
-		}
-		orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
+	private void applyOrdering(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			OrderByFragment orderByFragment,
+			SqlAstCreationState astCreationState) {
+		orderByFragment.apply( querySpec, tableGroup, astCreationState );
 	}
 
 	private ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
@@ -686,6 +689,10 @@ public class LoaderSelectBuilder {
 			LoaderSqlAstCreationState creationState,
 			ImmutableFetchList.Builder fetches) {
 		return (fetchable, isKeyFetchable) -> {
+			if ( !fetchable.isSelectable() ) {
+				return;
+			}
+
 			final NavigablePath fetchablePath;
 
 			if ( isKeyFetchable ) {
@@ -739,9 +746,12 @@ public class LoaderSelectBuilder {
 				// 'entity graph' takes precedence over 'fetch profile'
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
-					fetchTiming = traversalResult.getFetchTiming();
-					joined = traversalResult.isJoined();
-					explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
+					EntityGraphTraversalState.FetchStrategy fetchStrategy = traversalResult.getFetchStrategy();
+					if ( fetchStrategy != null ) {
+						fetchTiming = fetchStrategy.getFetchTiming();
+						joined = fetchStrategy.isJoined();
+						explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
+					}
 				}
 				else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 					// There is no point in checking the fetch profile if it can't affect this fetchable
@@ -784,7 +794,8 @@ public class LoaderSelectBuilder {
 			final String bagRole;
 			if ( isFetchablePluralAttributeMapping
 					&& ( (PluralAttributeMapping) fetchable ).getMappedType()
-					.getCollectionSemantics() instanceof BagSemantics ) {
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.BAG ) {
 				bagRole = fetchable.getNavigableRole().getNavigableName();
 			}
 			else {
@@ -792,7 +803,7 @@ public class LoaderSelectBuilder {
 			}
 
 			if ( joined && previousBagRole != null && bagRole != null ) {
-				// Avoid join fetching multiple bags
+				// Avoid join fetching multiple bags to prevent result multiplication
 				joined = false;
 			}
 
@@ -836,6 +847,7 @@ public class LoaderSelectBuilder {
 					// For non-join fetches, we reset the currentBagRole and set it to the previous value in the finally block
 					currentBagRole = null;
 				}
+
 				final Fetch fetch = fetchParent.generateFetchableFetch(
 						fetchable,
 						fetchablePath,
@@ -859,6 +871,7 @@ public class LoaderSelectBuilder {
 								creationState
 						);
 						applyOrdering(
+								querySpec,
 								fetchablePath,
 								pluralAttributeMapping,
 								creationState
@@ -906,6 +919,7 @@ public class LoaderSelectBuilder {
 	}
 
 	private void applyOrdering(
+			QuerySpec querySpec,
 			NavigablePath navigablePath,
 			PluralAttributeMapping pluralAttributeMapping,
 			LoaderSqlAstCreationState sqlAstCreationState) {
@@ -914,7 +928,7 @@ public class LoaderSelectBuilder {
 		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( navigablePath );
 		assert tableGroup != null;
 
-		applyOrdering( tableGroup, pluralAttributeMapping );
+		applyOrdering( querySpec, tableGroup, pluralAttributeMapping, sqlAstCreationState );
 	}
 
 	private SelectStatement generateSelect(SubselectFetch subselect) {
@@ -956,6 +970,7 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				this::visitFetches,
 				numberOfKeysToLoad > 1,
+				loadQueryInfluencers,
 				creationContext
 		);
 
@@ -963,9 +978,9 @@ public class LoaderSelectBuilder {
 				true,
 				rootNavigablePath,
 				null,
+				null,
 				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState,
-				creationContext
+				sqlAstCreationState
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -983,7 +998,7 @@ public class LoaderSelectBuilder {
 
 		// NOTE : no need to check - we are explicitly processing a plural-attribute
 		applyFiltering( rootQuerySpec, rootTableGroup, attributeMapping, sqlAstCreationState );
-		applyOrdering( rootTableGroup, attributeMapping );
+		applyOrdering( rootQuerySpec, rootTableGroup, attributeMapping, sqlAstCreationState );
 
 		// register the jdbc-parameters
 		// todo (6.0) : analyzing the call paths, it seems like `jdbcParameterConsumer`

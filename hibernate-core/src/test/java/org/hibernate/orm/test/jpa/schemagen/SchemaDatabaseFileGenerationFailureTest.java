@@ -118,8 +118,8 @@ public class SchemaDatabaseFileGenerationFailureTest {
 
 	private Map getConfig() {
 		final Map<Object, Object> config = Environment.getProperties();
-		config.put( AvailableSettings.HBM2DDL_CONNECTION, connection );
-		config.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, "drop" );
+		config.put( AvailableSettings.JAKARTA_HBM2DDL_CONNECTION, connection );
+		config.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, true );
 		ArrayList<Class> classes = new ArrayList<>();
 

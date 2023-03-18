@@ -22,7 +22,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.EventType;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -348,7 +347,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 											columnReference.getColumnExpression(),
 											false,
 											null,
-											null,
 											columnReference.getJdbcMapping()
 									)
 							)
@@ -368,7 +366,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					(String) null,
 					TemporaryTable.ENTITY_TABLE_IDENTITY_COLUMN,
 					false,
-					null,
 					null,
 					identifierMapping.getJdbcMapping()
 			);
@@ -453,7 +450,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 									sessionUidColumn.getColumnName(),
 									false,
 									null,
-									null,
 									sessionUidColumn.getJdbcMapping()
 							),
 							ComparisonOperator.EQUAL,
@@ -469,7 +465,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 											(String) null,
 											rowNumberColumn.getColumnName(),
 											false,
-											null,
 											null,
 											rowNumberColumn.getJdbcMapping()
 									),
@@ -529,7 +524,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 								keyColumns[0],
 								false,
 								null,
-								null,
 								identifierMapping.getJdbcMapping()
 						)
 				);
@@ -541,7 +535,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 										updatingTableReference.getIdentificationVariable(),
 										idColumnReference.getColumnExpression(),
 										false,
-										null,
 										null,
 										idColumnReference.getJdbcMapping()
 								)
@@ -598,7 +591,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 									(String) null,
 									TemporaryTable.ENTITY_TABLE_IDENTITY_COLUMN,
 									false,
-									null,
 									null,
 									identifierMapping.getJdbcMapping()
 							),
@@ -706,7 +698,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 											columnReference.getColumnExpression(),
 											false,
 											null,
-											null,
 											columnReference.getJdbcMapping()
 									)
 							)
@@ -739,7 +730,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							dmlTargetTableReference.getIdentificationVariable(),
 							targetKeyColumnName,
 							false,
-							null,
 							null,
 							identifierMapping.getJdbcMapping()
 					)

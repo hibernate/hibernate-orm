@@ -78,15 +78,16 @@ public interface Initializer {
 	default boolean isAttributeAssignableToConcreteDescriptor(
 			FetchParentAccess parentAccess,
 			AttributeMapping referencedModelPart) {
-		if ( parentAccess != null && parentAccess.isEntityInitializer() ) {
-			final EntityPersister concreteDescriptor = parentAccess.findFirstEntityInitializer()
-					.getConcreteDescriptor();
+		final EntityInitializer entityInitializer = parentAccess == null ?
+				null :
+				parentAccess.findFirstEntityInitializer();
+		if ( entityInitializer != null ) {
+			final EntityPersister concreteDescriptor = entityInitializer.getConcreteDescriptor();
 			if ( concreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
-				final EntityPersister declaringType = (EntityPersister) referencedModelPart.getDeclaringType();
+				final EntityPersister declaringType = (EntityPersister) referencedModelPart.getDeclaringType()
+						.findContainingEntityMapping();
 				if ( concreteDescriptor != declaringType ) {
-					if ( !declaringType.getSubclassEntityNames().contains( concreteDescriptor.getEntityName() ) ) {
-						return false;
-					}
+					return declaringType.getSubclassEntityNames().contains( concreteDescriptor.getEntityName() );
 				}
 			}
 		}

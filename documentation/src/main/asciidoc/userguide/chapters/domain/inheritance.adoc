@@ -1,6 +1,8 @@
 [[entity-inheritance]]
 === Inheritance
-:sourcedir: ../../../../../test/java/org/hibernate/userguide/inheritance
+:root-project-dir: ../../../../../../..
+:documentation-project-dir: {root-project-dir}/documentation
+:example-dir-inheritance: {documentation-project-dir}/src/test/java/org/hibernate/userguide/inheritance
 :extrasdir: extras/inheritance
 
 Although relational database systems don't provide support for inheritance, Hibernate provides several strategies to leverage this object-oriented trait onto domain model entities:
@@ -24,7 +26,7 @@ When using `MappedSuperclass`, the inheritance is visible in the domain model on
 ====
 [source,java]
 ----
-include::{sourcedir}/MappedSuperclassTest.java[tags=entity-inheritance-mapped-superclass-example,indent=0]
+include::{example-dir-inheritance}/MappedSuperclassTest.java[tags=entity-inheritance-mapped-superclass-example,indent=0]
 ----
 
 [source,sql]
@@ -56,7 +58,7 @@ When omitting an explicit inheritance strategy (e.g. `@Inheritance`), Jakarta Pe
 ====
 [source,java]
 ----
-include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-example,indent=0]
+include::{example-dir-inheritance}/SingleTableTest.java[tags=entity-inheritance-single-table-example,indent=0]
 ----
 
 [source,sql]
@@ -73,7 +75,7 @@ If this is not specified, the `DTYPE` column is used as a discriminator, storing
 ====
 [source,java]
 ----
-include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-persist-example,indent=0]
+include::{example-dir-inheritance}/SingleTableTest.java[tags=entity-inheritance-single-table-persist-example,indent=0]
 ----
 
 [source,sql]
@@ -89,7 +91,7 @@ When using polymorphic queries, only a single table is required to be scanned to
 ====
 [source,java]
 ----
-include::{sourcedir}/SingleTableTest.java[tags=entity-inheritance-single-table-query-example,indent=0]
+include::{example-dir-inheritance}/SingleTableTest.java[tags=entity-inheritance-single-table-query-example,indent=0]
 ----
 
 [source,sql]
@@ -146,7 +148,7 @@ we can take advantage of the Hibernate specific `@DiscriminatorFormula` annotati
 ====
 [source,java]
 ----
-include::{sourcedir}/SingleTableDiscriminatorFormulaTest.java[tags=entity-inheritance-single-table-discriminator-formula-example,indent=0]
+include::{example-dir-inheritance}/SingleTableDiscriminatorFormulaTest.java[tags=entity-inheritance-single-table-discriminator-formula-example,indent=0]
 ----
 
 [source,sql]
@@ -173,7 +175,7 @@ To understand how these two values work, consider the following entity mapping:
 ====
 [source,java]
 ----
-include::{sourcedir}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-example,indent=0]
+include::{example-dir-inheritance}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-example,indent=0]
 ----
 ====
 
@@ -188,7 +190,7 @@ To visualize how it works, consider the following example:
 ====
 [source,java]
 ----
-include::{sourcedir}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-persist-example,indent=0]
+include::{example-dir-inheritance}/DiscriminatorNotNullSingleTableTest.java[tags=entity-inheritance-single-table-discriminator-value-persist-example,indent=0]
 ----
 
 [source,sql]
@@ -215,7 +217,7 @@ Each subclass must, however, declare a table column holding the object identifie
 ====
 [source,java]
 ----
-include::{sourcedir}/JoinTableTest.java[tags=entity-inheritance-joined-table-example,indent=0]
+include::{example-dir-inheritance}/JoinTableTest.java[tags=entity-inheritance-joined-table-example,indent=0]
 ----
 
 [source,sql]
@@ -237,7 +239,7 @@ Also, if `@PrimaryKeyJoinColumn` is not set, the primary key / foreign key colum
 ====
 [source,java]
 ----
-include::{sourcedir}/JoinTablePrimaryKeyJoinColumnTest.java[tags=entity-inheritance-joined-table-primary-key-join-column-example,indent=0]
+include::{example-dir-inheritance}/JoinTablePrimaryKeyJoinColumnTest.java[tags=entity-inheritance-joined-table-primary-key-join-column-example,indent=0]
 ----
 
 [source,sql]
@@ -253,7 +255,7 @@ When using polymorphic queries, the base class table must be joined with all sub
 ====
 [source,java]
 ----
-include::{sourcedir}/JoinTableTest.java[tags=entity-inheritance-joined-table-query-example,indent=0]
+include::{example-dir-inheritance}/JoinTableTest.java[tags=entity-inheritance-joined-table-query-example,indent=0]
 ----
 
 [source,sql]
@@ -283,7 +285,7 @@ However, if you wish to use polymorphic associations (e.g. an association to the
 ====
 [source,java]
 ----
-include::{sourcedir}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-example,indent=0]
+include::{example-dir-inheritance}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-example,indent=0]
 ----
 
 [source,sql]
@@ -298,7 +300,7 @@ When using polymorphic queries, a UNION is required to fetch the base class tabl
 ====
 [source,java]
 ----
-include::{sourcedir}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-query-example,indent=0]
+include::{example-dir-inheritance}/TablePerClassTest.java[tags=entity-inheritance-table-per-class-query-example,indent=0]
 ----
 
 [source,sql]
@@ -310,23 +312,6 @@ include::{extrasdir}/entity-inheritance-table-per-class-query-example.sql[]
 [IMPORTANT]
 ====
 Polymorphic queries require multiple UNION queries, so be aware of the performance implications of a large class hierarchy.
-
-Unfortunately, not all database systems support UNION ALL, in which case, UNION is going to be used instead of UNION ALL.
-
-The following Hibernate dialects support UNION ALL:
-
-- `AbstractHANADialect`
-- `AbstractTransactSQLDialect`
-- `CUBRIDDialect`
-- `DB2Dialect`
-- `H2Dialect`
-- `HSQLDialect`
-- `Ingres9Dialect`
-- `MySQL5Dialect`
-- `Oracle8iDialect`
-- `Oracle9Dialect`
-- `PostgreSQL81Dialect`
-- `RDMSOS2200Dialect`
 ====
 
 [[entity-inheritance-polymorphism]]
@@ -345,7 +330,7 @@ For instance, considering the following `DomainModelEntity` interface:
 ====
 [source,java]
 ----
-include::{sourcedir}/polymorphism/DomainModelEntity.java[tags=entity-inheritance-polymorphism-interface-example,indent=0]
+include::{example-dir-inheritance}/polymorphism/DomainModelEntity.java[tags=entity-inheritance-polymorphism-interface-example,indent=0]
 ----
 ====
 
@@ -359,7 +344,7 @@ and taking the `PolymorphismType.EXPLICIT` setting:
 ====
 [source,java]
 ----
-include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-mapping-example,indent=0]
+include::{example-dir-inheritance}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-mapping-example,indent=0]
 ----
 ====
 
@@ -370,7 +355,7 @@ If we have the following entity objects in our system:
 ====
 [source,java]
 ----
-include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-persist-example,indent=0]
+include::{example-dir-inheritance}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-persist-example,indent=0]
 ----
 ====
 
@@ -384,7 +369,7 @@ or they are not annotated at all with the `@Polymorphism` annotation (implying t
 ====
 [source,java]
 ----
-include::{sourcedir}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-fetch-example,indent=0]
+include::{example-dir-inheritance}/polymorphism/ExplicitPolymorphismTest.java[tags=entity-inheritance-polymorphism-fetch-example,indent=0]
 ----
 ====
 

@@ -14,13 +14,13 @@ import java.util.function.BiFunction;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -105,8 +105,8 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 							navigablePath,
 							null,
 							null,
-							impl.getSqlAstCreationState(),
-							impl.getSqlAstCreationState().getCreationContext()
+							null,
+							impl.getSqlAstCreationState()
 					)
 			);
 

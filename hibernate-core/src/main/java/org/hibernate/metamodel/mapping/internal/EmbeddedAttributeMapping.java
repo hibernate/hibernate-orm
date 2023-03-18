@@ -34,11 +34,8 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -55,10 +52,10 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableResultImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
-import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableFetchImpl;
 
 /**
  * @author Steve Ebersole
@@ -208,13 +205,25 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, valueConsumer, session );
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		return getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
-	public void decompose(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		getEmbeddableTypeDescriptor().decompose( domainValue, valueConsumer, session );
+	public <X, Y> int decompose(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer,
+			SharedSessionContractImplementor session) {
+		return getEmbeddableTypeDescriptor().decompose( domainValue, offset, x, y, valueConsumer, session );
 	}
 
 	@Override
@@ -353,25 +362,21 @@ public class EmbeddedAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
 			SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requestedJoinType == null ? SqlAstJoinType.INNER : requestedJoinType;
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
 				explicitSourceAlias,
+				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
 				null,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				fromClauseAccess,
-				creationContext
+				creationState
 		);
 
 		return new TableGroupJoin( navigablePath, joinType, tableGroup );
@@ -382,19 +387,12 @@ public class EmbeddedAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup lhs,
 			String explicitSourceAlias,
-			SqlAstJoinType requestedJoinType,
+			SqlAliasBase explicitSqlAliasBase,
+			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		return new StandardVirtualTableGroup(
-				navigablePath,
-				this,
-				lhs,
-				fetched
-		);
+			SqlAstCreationState creationState) {
+		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
 	@Override
@@ -436,5 +434,15 @@ public class EmbeddedAttributeMapping
 			parentInjectionAttributePropertyAccess = null;
 		}
 		return parentInjectionAttributePropertyAccess;
+	}
+
+	@Override
+	public EmbeddedAttributeMapping asEmbeddedAttributeMapping() {
+		return this;
+	}
+
+	@Override
+	public boolean isEmbeddedAttributeMapping() {
+		return true;
 	}
 }

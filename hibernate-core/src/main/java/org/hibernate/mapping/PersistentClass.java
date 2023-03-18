@@ -53,7 +53,7 @@ import static org.hibernate.sql.Template.collectColumnNames;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements AttributeContainer, Serializable, Filterable, MetaAttributable, Contributable {
+public abstract class PersistentClass implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable {
 
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
@@ -644,6 +644,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 	}
 
+	@Deprecated(since = "6.2")
 	public Property getSubclassProperty(String propertyName) throws MappingException {
 		final Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null
@@ -1327,5 +1328,76 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public List<CheckConstraint> getCheckConstraints() {
 		return checkConstraints;
+	}
+
+
+	public Table getImplicitTable() {
+		return getTable();
+	}
+
+	@Override
+	public Table findTable(String name) {
+		if ( getTable().getName().equals( name ) ) {
+			return getTable();
+		}
+		final Join secondaryTable = findSecondaryTable( name );
+		if ( secondaryTable != null ) {
+			return secondaryTable.getTable();
+		}
+		return null;
+	}
+
+	@Override
+	public Table getTable(String name) {
+		final Table table = findTable( name );
+		if ( table == null ) {
+			throw new MappingException( "Could not locate Table : " + name );
+		}
+		return table;
+	}
+
+	@Override
+	public Join findSecondaryTable(String name) {
+		for ( int i = 0; i < joins.size(); i++ ) {
+			final Join join = joins.get( i );
+			if ( join.getTable().getNameIdentifier().matches( name ) ) {
+				return join;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public Join getSecondaryTable(String name) {
+		final Join secondaryTable = findSecondaryTable( name );
+		if ( secondaryTable == null ) {
+			throw new MappingException( "Could not locate secondary Table : " + name );
+		}
+		return secondaryTable;
+	}
+
+	@Override
+	public IdentifiableTypeClass getSuperType() {
+		final PersistentClass superPersistentClass = getSuperclass();
+		if ( superPersistentClass != null ) {
+			return superPersistentClass;
+		}
+		return superMappedSuperclass;
+	}
+
+	@Override
+	public List<IdentifiableTypeClass> getSubTypes() {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public void applyProperty(Property property) {
+		if ( property.getValue().getTable().equals( getImplicitTable() ) ) {
+			addProperty( property );
+		}
+		else {
+			final Join secondaryTable = getSecondaryTable( property.getValue().getTable().getName() );
+			secondaryTable.addProperty( property );
+		}
 	}
 }

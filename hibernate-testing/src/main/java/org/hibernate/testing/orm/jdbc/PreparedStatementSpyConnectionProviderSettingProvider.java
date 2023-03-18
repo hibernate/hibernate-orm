@@ -14,6 +14,6 @@ import org.hibernate.testing.orm.junit.SettingProvider;
 public class PreparedStatementSpyConnectionProviderSettingProvider implements SettingProvider.Provider<PreparedStatementSpyConnectionProvider> {
 	@Override
 	public PreparedStatementSpyConnectionProvider getSetting() {
-		return new PreparedStatementSpyConnectionProvider( false, false );
+		return new PreparedStatementSpyConnectionProvider();
 	}
 }

@@ -30,19 +30,18 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.PgJdbcHelper;
+import org.hibernate.dialect.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.PostgreSQLCastingJsonJdbcType;
 import org.hibernate.dialect.PostgreSQLDriverKind;
-import org.hibernate.dialect.PostgreSQLInetJdbcType;
-import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
-import org.hibernate.dialect.PostgreSQLJsonJdbcType;
-import org.hibernate.dialect.PostgreSQLJsonbJdbcType;
-import org.hibernate.dialect.PostgreSQLPGObjectJdbcType;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
-import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
+import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -111,8 +110,8 @@ public class CockroachLegacyDialect extends Dialect {
 
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
-	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 19, 2 );
-	private final PostgreSQLDriverKind driverKind;
+	protected static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 19, 2 );
+	protected final PostgreSQLDriverKind driverKind;
 
 	public CockroachLegacyDialect() {
 		this( DEFAULT_VERSION );
@@ -228,19 +227,17 @@ public class CockroachLegacyDialect extends Dialect {
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-			ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
 
-			// Prefer jsonb if possible
-			if ( getVersion().isSameOrAfter( 20 ) ) {
-				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
-			}
-			else {
-				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-			}
+		// Prefer jsonb if possible
+		if ( getVersion().isSameOrAfter( 20 ) ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+		}
+		else {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 		}
 	}
 
@@ -321,22 +318,46 @@ public class CockroachLegacyDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
+		contributeCockroachTypes( typeContributions, serviceRegistry );
+	}
 
+	protected void contributeCockroachTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( PostgreSQLPGObjectJdbcType.isUsable() ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
+			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
 
 				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
-					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
-					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
 				}
 				else {
-					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonJdbcType( serviceRegistry ) );
 				}
+			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+				if ( getVersion().isSameOrAfter( 20, 0 ) ) {
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+				}
+				else {
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
+				}
+			}
+		}
+		else {
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
+			if ( getVersion().isSameOrAfter( 20, 0 ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSON_INSTANCE );
 			}
 		}
 
@@ -410,7 +431,11 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 
 		functionContributions.getFunctionRegistry().register(
-				"trunc", new PostgreSQLTruncRoundFunction( "trunc", getVersion().isSameOrAfter( 22, 2 ) )
+				"trunc",
+				new PostgreSQLTruncFunction(
+						getVersion().isSameOrAfter( 22, 2 ),
+						functionContributions.getTypeConfiguration()
+				)
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 	}

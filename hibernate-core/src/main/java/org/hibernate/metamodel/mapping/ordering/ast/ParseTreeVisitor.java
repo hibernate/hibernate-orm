@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.sqm.NullPrecedence;
@@ -68,9 +69,12 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 			}
 			else {
 				throw new OrderByComplianceViolation(
-						"`@OrderBy` expression (" + parsedSpec.expression().getText()
-								+ ") resolved to `" + orderingExpression
-								+ "` which is not a domain-model reference which violates the JPA specification"
+						String.format(
+								Locale.ROOT,
+								"@OrderBy expression (%s) is not a domain-model reference, which violates the Jakarta Persistence specification - %s",
+								parsedSpec.expression().getText(),
+								orderingExpression.toDescriptiveText()
+						)
 				);
 			}
 		}

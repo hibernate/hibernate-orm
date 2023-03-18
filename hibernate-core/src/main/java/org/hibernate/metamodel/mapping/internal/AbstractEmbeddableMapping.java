@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
@@ -18,6 +19,9 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -27,22 +31,27 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.internal.MutableAttributeMappingList;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
@@ -58,12 +67,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Base support for EmbeddableMappingType implementations
  */
 public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType {
+	final protected MutableAttributeMappingList attributeMappings;
+	protected SelectableMappings selectableMappings;
 
-	public AbstractEmbeddableMapping(MappingModelCreationProcess creationProcess) {
-		this( creationProcess.getCreationContext() );
-	}
-
-	public AbstractEmbeddableMapping(RuntimeModelCreationContext creationContext) {
+	public AbstractEmbeddableMapping(MutableAttributeMappingList attributeMappings) {
+		this.attributeMappings = attributeMappings;
 	}
 
 	@Override
@@ -126,7 +134,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		void check(String name, Type type) throws IllegalAttributeType;
 	}
 
-	protected static boolean inverseInitializeCallback(
+	protected boolean inverseInitializeCallback(
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			EmbeddableMappingType inverseMappingType,
@@ -209,7 +217,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		return true;
 	}
 
-	protected static boolean finishInitialization(
+	protected boolean finishInitialization(
 			NavigableRole navigableRole,
 			Component bootDescriptor,
 			CompositeType compositeType,
@@ -306,7 +314,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						selectablePath,
 						selectable.isFormula(),
 						selectable.getCustomReadExpression(),
-						selectable.getCustomWriteExpression(),
+						selectable.getWriteExpr( ( (BasicType<?>) subtype ).getJdbcMapping(), dialect ),
 						columnDefinition,
 						length,
 						precision,
@@ -338,6 +346,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						insertable,
 						updateable,
 						includeInOptimisticLocking,
+						true,
 						cascadeStyle
 				);
 
@@ -388,15 +397,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				columnPosition += columnSpan;
 			}
 			else if ( subtype instanceof CollectionType ) {
-				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner()
-						.getEntityName() );
-
 				attributeMapping = MappingModelCreationHelper.buildPluralAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
-						entityPersister,
+						this,
 						propertyAccess,
 						compositeType.getCascadeStyle( attributeIndex ),
 						compositeType.getFetchMode( attributeIndex ),
@@ -413,7 +419,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						attributeIndex,
 						attributeIndex,
 						bootPropertyDescriptor,
-						entityPersister,
+						this,
 						entityPersister,
 						(EntityType) subtype,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
@@ -439,6 +445,215 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		}
 
 		completionCallback.success();
+		return true;
+	}
+
+	@Override
+	public int getNumberOfFetchables() {
+		return getAttributeMappings().size();
+	}
+
+	@Override
+	public Fetchable getFetchable(int position) {
+		return getAttributeMappings().get( position );
+	}
+
+	@Override
+	public void visitFetchables(Consumer<? super Fetchable> consumer, EntityMappingType treatTargetType) {
+		forEachAttributeMapping( consumer );
+	}
+
+	@Override
+	public void visitFetchables(IndexedConsumer<? super Fetchable> indexedConsumer, EntityMappingType treatTargetType) {
+		this.getAttributeMappings().indexedForEach( indexedConsumer );
+	}
+
+	@Override
+	public int getNumberOfAttributeMappings() {
+		return getAttributeMappings().size();
+	}
+
+	@Override
+	public AttributeMapping getAttributeMapping(int position) {
+		return getAttributeMappings().get( position );
+	}
+
+	@Override
+	public AttributeMapping findAttributeMapping(String name) {
+		final AttributeMappingsList attributes = getAttributeMappings();
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			final AttributeMapping attr = attributes.get( i );
+			if ( name.equals( attr.getAttributeName() ) ) {
+				return attr;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public AttributeMappingsList getAttributeMappings() {
+		checkIsReady();
+		return attributeMappings;
+	}
+
+	private void checkIsReady() {
+		if ( selectableMappings == null ) {
+			// This is expected to happen when processing a
+			// PostInitCallbackEntry because the callbacks
+			// are not ordered. The exception is caught in
+			// MappingModelCreationProcess.executePostInitCallbacks()
+			// and the callback is re-queued.
+			throw new IllegalStateException( "Not yet ready" );
+		}
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return getSelectableMappings().getSelectable( columnIndex );
+	}
+
+	@Override
+	public int forEachSelectable(SelectableConsumer consumer) {
+		return getSelectableMappings().forEachSelectable( 0, consumer );
+	}
+
+	@Override
+	public int forEachSelectable(int offset, SelectableConsumer consumer) {
+		return getSelectableMappings().forEachSelectable( offset, consumer );
+	}
+
+	@Override
+	public int getJdbcTypeCount() {
+		return getSelectableMappings().getJdbcTypeCount();
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		return getSelectableMappings().forEachSelectable(
+				offset,
+				(index, selectable) -> action.accept( index, selectable.getJdbcMapping() )
+		);
+	}
+
+	@Override
+	public List<JdbcMapping> getJdbcMappings() {
+		return getSelectableMappings().getJdbcMappings();
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return getSelectable( index ).getJdbcMapping();
+	}
+
+	@Override
+	public void forEachAttributeMapping(final IndexedConsumer<? super AttributeMapping> consumer) {
+		getAttributeMappings().indexedForEach( consumer );
+	}
+
+	@Override
+	public void forEachAttributeMapping(final Consumer<? super AttributeMapping> action) {
+		getAttributeMappings().forEach( action );
+	}
+
+	@Override
+	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+		return findAttributeMapping( name );
+	}
+
+	@Override
+	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
+		final AttributeMappingsList attributes = getAttributeMappings();
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			consumer.accept( i, attributes.get(i) );
+		}
+	}
+
+	@Override
+	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+		forEachAttributeMapping( consumer );
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		final MutableAttributeMappingList attributes = attributeMappings;
+		final int size = attributes.size();
+		final Object[] result = new Object[ size ];
+		for ( int i = 0; i < size; i++ ) {
+			final AttributeMapping attributeMapping = attributes.get( i );
+			final Object o = attributeMapping.getValue( value );
+			result[i] = attributeMapping.disassemble( o, session );
+		}
+
+		return result;
+	}
+
+	@Override
+	public <X, Y> int forEachDisassembledJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		final Object[] values = (Object[]) value;
+		int span = 0;
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping mapping = attributeMappings.get( i );
+			span += mapping.forEachDisassembledJdbcValue( values[i], span + offset, x, y, valuesConsumer, session );
+		}
+		return span;
+	}
+
+	@Override
+	public <X, Y> int forEachJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		int span = 0;
+
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			if ( attributeMapping instanceof PluralAttributeMapping ) {
+				continue;
+			}
+			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+			span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
+		}
+		return span;
+	}
+
+	protected void addAttribute(AttributeMapping attributeMapping) {
+		// check if we've already seen this attribute...
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping previous = attributeMappings.get( i );
+			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
+				attributeMappings.setAttributeMapping( i, attributeMapping );
+				return;
+			}
+		}
+
+		attributeMappings.add( attributeMapping );
+	}
+
+	protected SelectableMappings getSelectableMappings() {
+		checkIsReady();
+		return selectableMappings;
+	}
+
+	protected boolean initColumnMappings() {
+		final int propertySpan = attributeMappings.size();
+		final List<SelectableMapping> selectableMappings = CollectionHelper.arrayList( propertySpan );
+
+		attributeMappings.indexedForEach(
+				(index, attributeMapping) -> attributeMapping.forEachSelectable(
+						(columnIndex, selection) -> selectableMappings.add( selection )
+				)
+		);
+
+		this.selectableMappings = new SelectableMappingsImpl( selectableMappings.toArray( new SelectableMapping[0] ) );
 
 		return true;
 	}

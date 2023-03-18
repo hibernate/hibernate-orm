@@ -45,6 +45,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -57,8 +59,6 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.AttributeMappingsList;
-import org.hibernate.persister.entity.AttributeMappingsMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -193,10 +193,12 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public int forEachDisassembledJdbcValue(
+		public <X, Y> int forEachDisassembledJdbcValue(
 				Object value,
 				int offset,
-				JdbcValuesConsumer valuesConsumer,
+				X x,
+				Y y,
+				JdbcValuesBiConsumer<X, Y> valuesConsumer,
 				SharedSessionContractImplementor session) {
 			return 0;
 		}

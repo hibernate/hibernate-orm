@@ -31,6 +31,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
@@ -48,7 +49,6 @@ import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -386,10 +386,12 @@ public class SqmUtil {
 				parameterType = association.getForeignKeyDescriptor();
 			}
 		}
+		else if ( parameterType instanceof JavaObjectType ) {
+			parameterType = domainParamBinding.getType();
+		}
 
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				bindValue,
-				Clause.IRRELEVANT,
 				parameterType,
 				jdbcParams,
 				session

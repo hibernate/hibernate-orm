@@ -84,6 +84,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
@@ -273,7 +274,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private JdbcParameterBindings jdbcParameterBindings;
 	private Map<JdbcParameter, JdbcParameterBinding> appliedParameterBindings = Collections.emptyMap();
 	private SqlAstNodeRenderingMode parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
-	private final JdbcParameterRenderer jdbcParameterRenderer;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
 
 
 	private final Stack<Clause> clauseStack = new StandardStack<>( Clause.class );
@@ -317,7 +318,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		this.sessionFactory = sessionFactory;
 		this.dialect = sessionFactory.getJdbcServices().getDialect();
 		this.statementStack.push( statement );
-		this.jdbcParameterRenderer = sessionFactory.getServiceRegistry().getService( JdbcParameterRenderer.class );
+		this.parameterMarkerStrategy = sessionFactory.getServiceRegistry().getService( ParameterMarkerStrategy.class );
 	}
 
 	private static Clause matchWithClause(Clause clause) {
@@ -5073,8 +5074,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
 		if ( literalFormatter == null ) {
 			parameterBinders.add( literal );
-
-			final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal );
+			final String marker = parameterMarkerStrategy.createMarker( parameterBinders.size(), literal.getJdbcMapping().getJdbcType() );
+			final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal, marker );
 			if ( castParameter ) {
 				renderCasted( jdbcParameter );
 			}
@@ -6187,14 +6188,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		jdbcParameters.addParameter( jdbcParameter );
 	}
 
-	protected void renderParameterAsParameter(JdbcParameter jdbcParameter) {
-		renderParameterAsParameter( jdbcParameter, parameterBinders.size() + 1 );
-	}
-
-	protected void renderParameterAsParameter(JdbcParameter jdbcParameter, int position) {
+	protected final void renderParameterAsParameter(JdbcParameter jdbcParameter) {
 		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
 		assert jdbcType != null;
-		final String parameterMarker = jdbcParameterRenderer.renderJdbcParameter( position, jdbcType );
+		renderParameterAsParameter( parameterBinders.size() + 1, jdbcParameter );
+	}
+
+	/**
+	 * Renders a parameter marker for the given position
+	 * @param jdbcParameter
+	 * @param position
+	 */
+	protected void renderParameterAsParameter(int position, JdbcParameter jdbcParameter) {
+		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		assert jdbcType != null;
+		final String parameterMarker = parameterMarkerStrategy.createMarker( position, jdbcType );
 		jdbcType.appendWriteExpression( parameterMarker, this, dialect );
 	}
 
@@ -8018,7 +8026,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// if there are no parameters or if we are using the standard parameter renderer
 		//		- the rendering is pretty simple
 		if ( CollectionHelper.isEmpty( columnWriteFragment.getParameters() )
-				|| JdbcParameterRenderer.isStandardRenderer( jdbcParameterRenderer ) ) {
+				|| ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
 			simpleColumnWriteFragmentRendering( columnWriteFragment );
 			return;
 		}
@@ -8034,7 +8042,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// to the index of the parameter marker
 			appendSql( sqlFragment.substring( lastEnd, markerStart ) );
 
-			// render the parameter marker and register it
+			// render the parameter marker and register the parameter handling
 			visitParameterAsParameter( parameter );
 
 			lastEnd = markerStart + 1;

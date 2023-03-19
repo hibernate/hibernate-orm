@@ -9,7 +9,7 @@ package org.hibernate.query.sqm;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
-import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
+import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -232,7 +232,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFkExpression(SqmFkExpression<?> fkExpression);
 
-	T visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> sqmPath);
+	T visitDiscriminatorPath(DiscriminatorSqmPath sqmPath);
 	
 	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path);
 
@@ -310,9 +310,9 @@ public interface SemanticQueryWalker<T> {
 
 	T visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> expression);
 
-	T visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath expression);
+	T visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath<?> expression);
 
-	T visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue expression);
+	T visitAnyDiscriminatorTypeValueExpression(SqmAnyDiscriminatorValue<?> expression);
 
 	T visitParameterizedEntityTypeExpression(SqmParameterizedEntityType<?> expression);
 

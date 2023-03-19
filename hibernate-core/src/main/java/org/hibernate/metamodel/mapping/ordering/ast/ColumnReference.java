@@ -133,4 +133,8 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		return null;
 	}
 
+	@Override
+	public String toDescriptiveText() {
+		return "column reference (" + columnExpression + ")";
+	}
 }

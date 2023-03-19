@@ -21,6 +21,8 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -93,7 +95,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	@Override
 	public ConnectionProvider initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		if ( configurationValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER ) ) {
+		if ( JdbcEnvironmentImpl.isMultiTenancyEnabled( registry ) ) {
 			// nothing to do, but given the separate hierarchies have to handle this here.
 			return null;
 		}

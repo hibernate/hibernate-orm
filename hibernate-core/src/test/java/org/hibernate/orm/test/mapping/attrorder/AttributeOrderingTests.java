@@ -12,11 +12,11 @@ import java.util.function.Consumer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.persister.entity.AttributeMappingsList;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;

@@ -75,7 +75,7 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.JdbcParameterRenderer;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
@@ -193,8 +193,8 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public JdbcParameterRenderer getNativeParameterRenderer() {
-		return wrapped.getNativeParameterRenderer();
+	public ParameterMarkerStrategy getNativeParameterMarkerStrategy() {
+		return wrapped.getNativeParameterMarkerStrategy();
 	}
 
 	@Override

@@ -66,6 +66,20 @@ public class MapIssueTest {
 	}
 
 	@Test
+	public void testMapKeyDeReferenceDoesNotCauseJoin(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select c from MapOwner as o left join o.contents c where key(c).id is not null" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					// Assert 2 joins, collection table and collection element
+					statementInspector.assertNumberOfJoins( 0, 2 );
+				}
+		);
+	}
+
+	@Test
 	public void testMapKeyJoinIsReused(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();

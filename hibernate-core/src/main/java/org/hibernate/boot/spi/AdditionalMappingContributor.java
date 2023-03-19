@@ -8,6 +8,7 @@ package org.hibernate.boot.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.service.JavaServiceLoadable;
 
 /**
  * Contract allowing pluggable contributions of additional mapping objects.
@@ -17,6 +18,7 @@ import org.hibernate.boot.ResourceStreamLocator;
  * @author Steve Ebersole
  */
 @Incubating
+@JavaServiceLoadable
 public interface AdditionalMappingContributor {
 	/**
 	 * The name of this contributor.  May be {@code null}.

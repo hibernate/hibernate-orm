@@ -644,6 +644,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		}
 	}
 
+	@Deprecated(since = "6.2")
 	public Property getSubclassProperty(String propertyName) throws MappingException {
 		final Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null

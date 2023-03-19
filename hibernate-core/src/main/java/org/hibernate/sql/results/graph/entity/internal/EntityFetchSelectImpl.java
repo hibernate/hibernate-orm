@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -37,6 +38,14 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 
 		this.keyResult = keyResult;
 		this.selectByUniqueKey = selectByUniqueKey;
+
+	}
+
+	// For Hibernate Reactive
+	protected EntityFetchSelectImpl(EntityFetchSelectImpl original) {
+		super( original.getNavigablePath(), original.getFetchedMapping(), original.getFetchParent() );
+		this.keyResult = original.keyResult;
+		this.selectByUniqueKey = original.selectByUniqueKey;
 	}
 
 	@Override
@@ -56,18 +65,40 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 		final Initializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				getFetchedMapping(),
-				() ->
-						EntitySelectFetchInitializerBuilder.createInitializer(
-								parentAccess,
-								(ToOneAttributeMapping) getFetchedMapping(),
-								getReferencedMappingContainer().getEntityPersister(),
-								keyResult,
-								getNavigablePath(),
-								selectByUniqueKey,
-								creationState
-						)
+				() -> buildEntitySelectFetchInitializer(
+						parentAccess,
+						(ToOneAttributeMapping) getFetchedMapping(),
+						getReferencedMappingContainer().getEntityPersister(),
+						keyResult,
+						getNavigablePath(),
+						selectByUniqueKey,
+						creationState
+				)
 		);
 
+		return buildEntityAssembler( initializer );
+	}
+
+	protected Initializer buildEntitySelectFetchInitializer(
+			FetchParentAccess parentAccess,
+			ToOneAttributeMapping fetchedMapping,
+			EntityPersister entityPersister,
+			DomainResult<?> keyResult,
+			NavigablePath navigablePath,
+			boolean selectByUniqueKey,
+			AssemblerCreationState creationState) {
+		return EntitySelectFetchInitializerBuilder.createInitializer(
+				parentAccess,
+				fetchedMapping,
+				entityPersister,
+				keyResult,
+				navigablePath,
+				selectByUniqueKey,
+				creationState
+		);
+	}
+
+	protected DomainResultAssembler<?> buildEntityAssembler(Initializer initializer) {
 		return new EntityAssembler( getResultJavaType(), initializer.asEntityInitializer() );
 	}
 }

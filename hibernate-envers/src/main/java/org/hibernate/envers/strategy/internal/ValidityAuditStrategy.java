@@ -45,6 +45,7 @@ import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.sql.ComparisonRestriction;
 import org.hibernate.sql.Update;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
@@ -580,11 +581,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		// Apply "AND REV <> ?"
 		// todo (PropertyMapping) : need to be able to handle paths
 		final String path = configuration.getRevisionNumberPath();
-		context.addRestriction( rootAuditEntity.toColumns( path )[ 0 ], "<>", "?" );
+		context.addRestriction( rootAuditEntity.toColumns( path )[ 0 ], ComparisonRestriction.Operator.NE, "?" );
 		context.bind( revisionNumber, rootAuditEntity.getPropertyType( path ) );
 
 		// Apply "AND REVEND is null"
-		context.addNullnessRestriction( revEndColumnName );
+		context.addColumnIsNullRestriction( revEndColumnName );
 
 		return context;
 	}
@@ -635,11 +636,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		// Apply "AND REV <> ?"
 		// todo (PropertyMapping) : need to be able to handle paths
-		context.addRestriction( configuration.getRevisionFieldName(), "<>", "?" );
+		context.addRestriction( configuration.getRevisionFieldName(), ComparisonRestriction.Operator.NE, "?" );
 		context.bind( revisionNumber, auditEntity.getPropertyType( configuration.getRevisionNumberPath() ) );
 
 		// Apply "AND REVEND_TSTMP is null"
-		context.addNullnessRestriction( revEndTimestampColumnName );
+		context.addColumnIsNullRestriction( revEndTimestampColumnName );
 
 		return context;
 	}

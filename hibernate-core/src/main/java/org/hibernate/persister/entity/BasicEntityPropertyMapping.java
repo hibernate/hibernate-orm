@@ -6,9 +6,15 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.Remove;
+
 /**
  * @author Gavin King
+ *
+ * @deprecated Replaced by {@link org.hibernate.metamodel.mapping.EntityMappingType}
  */
+@Deprecated(since = "6", forRemoval = true)
+@Remove
 public class BasicEntityPropertyMapping extends AbstractPropertyMapping {
 
 	private final AbstractEntityPersister persister;

@@ -66,7 +66,7 @@ dependencyResolutionManagement {
             version( "hikaricp", "3.2.0" )
             version( "proxool", "0.8.3" )
             version( "vibur", "25.0" )
-            version( "micrometer", "1.10.3" )
+            version( "micrometer", "1.10.4" )
 
             alias( "antlr" ).to( "org.antlr", "antlr4" ).versionRef( "antlr")
             alias( "antlrRuntime" ).to( "org.antlr", "antlr4-runtime" ).versionRef( "antlr")
@@ -84,14 +84,15 @@ dependencyResolutionManagement {
 
             alias( "jackson" ).to ( "com.fasterxml.jackson.core", "jackson-databind" ).version( "2.14.1" )
             alias( "jacksonXml" ).to ( "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).version( "2.14.1" )
-            alias( "validator" ).to( "org.hibernate.validator", "hibernate-validator" ).version( "7.0.4.Final" )
+            alias( "jacksonJsr310" ).to( "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310" ).version( "2.14.1" )
+            alias( "validator" ).to( "org.hibernate.validator", "hibernate-validator" ).version( "8.0.0.Final" )
 
             alias( "ant" ).to( "org.apache.ant", "ant" ).version( "1.8.2" )
 
             alias( "geolatte" ).to( "org.geolatte", "geolatte-geom" ).versionRef( "geolatte" )
 
             alias( "jcache" ).to( "javax.cache", "cache-api" ).version( "1.0.0" )
-            alias( "ehcache3" ).to( "org.ehcache:ehcache:3.10.0-alpha0" )
+            alias( "ehcache3" ).to( "org.ehcache:ehcache:3.10.8" )
 
             alias( "agroal" ).to( "io.agroal", "agroal-api" ).versionRef( "agroal" )
             alias( "agroalPool" ).to( "io.agroal", "agroal-pool" ).versionRef( "agroal" )
@@ -103,29 +104,29 @@ dependencyResolutionManagement {
             alias( "micrometer" ).to ( "io.micrometer", "micrometer-core" ).versionRef( "micrometer" )
         }
         jakartaLibs {
-            version( "jaxbRuntime", "4.0.1" )
+            version( "jaxbRuntime", "4.0.2" )
             version( "jsonbRuntime", "3.0.2" )
 
             // `jakartaJpaVersion` comes from the local-build-plugins to allow for command-line overriding of the JPA version to use
             alias( "jpa" ).to( "jakarta.persistence", "jakarta.persistence-api" ).version( "${jakartaJpaVersion}" )
             alias( "jta" ).to( "jakarta.transaction", "jakarta.transaction-api" ).version( "2.0.1")
-            alias( "validation" ).to( "jakarta.validation", "jakarta.validation-api" ).version( "3.0.0" )
+            alias( "validation" ).to( "jakarta.validation", "jakarta.validation-api" ).version( "3.0.2" )
             alias( "jacc" ).to( "jakarta.authorization", "jakarta.authorization-api" ).version( "2.1.0" )
-            alias( "cdi" ).to( "jakarta.enterprise", "jakarta.enterprise.cdi-api" ).version( "4.0.0" )
+            alias( "cdi" ).to( "jakarta.enterprise", "jakarta.enterprise.cdi-api" ).version( "4.0.1" )
             alias( "interceptors" ).to( "jakarta.interceptor", "jakarta.interceptor-api" ).version( "2.1.0" )
             alias( "jsonbApi" ).to( "jakarta.json.bind", "jakarta.json.bind-api" ).version( "3.0.0" )
             alias( "jsonb" ).to( "org.eclipse", "yasson" ).versionRef( "jsonbRuntime" )
-            alias( "inject" ).to( "jakarta.inject", "jakarta.inject-api" ).version( "2.0.0" )
+            alias( "inject" ).to( "jakarta.inject", "jakarta.inject-api" ).version( "2.0.1" )
             alias( "jaxbApi" ).to( "jakarta.xml.bind", "jakarta.xml.bind-api" ).version( "4.0.0" )
             alias( "jaxb" ).to( "org.glassfish.jaxb", "jaxb-runtime" ).versionRef( "jaxbRuntime" )
             alias( "xjc" ).to( "org.glassfish.jaxb", "jaxb-xjc" ).versionRef( "jaxbRuntime" )
-            alias( "el" ).to( "org.glassfish.expressly", "expressly" ).version( "5.0.0-M2" )
+            alias( "el" ).to( "org.glassfish.expressly", "expressly" ).version( "5.0.0" )
         }
         testLibs {
             version( "junit4", "4.13.2" )
-            version( "junit5", "5.8.2" )
+            version( "junit5", "5.9.2" )
             version( "assertj", "3.14.0" )
-            version( "mockito", "5.0.0" )
+            version( "mockito", "5.2.0" )
             version( "byteman", "4.0.20" ) //Compatible with JDK20
             version( "shrinkwrap", "1.2.6" )
             version( "shrinkwrapDescriptors", "2.0.0" )

@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.registry.selector;
 
+import org.hibernate.service.JavaServiceLoadable;
+
 /**
  * Responsible for providing the registrations of one or more strategy selectors.
  * <p>
@@ -20,6 +22,7 @@ package org.hibernate.boot.registry.selector;
  *
  * @author Steve Ebersole
  */
+@JavaServiceLoadable
 public interface StrategyRegistrationProvider {
 	/**
 	 * Get all {@link StrategyRegistration}s announced by this provider.

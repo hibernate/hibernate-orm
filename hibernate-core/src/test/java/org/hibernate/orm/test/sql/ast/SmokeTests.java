@@ -9,6 +9,7 @@ package org.hibernate.orm.test.sql.ast;
 import java.sql.Types;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -39,6 +40,7 @@ import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
@@ -117,9 +119,6 @@ public class SmokeTests {
 	public void testConvertedHqlInterpretation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final JdbcTypeRegistry jdbcTypeRegistry = session.getFactory()
-							.getTypeConfiguration()
-							.getJdbcTypeRegistry();
 					final QueryImplementor<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
 					final SqmQueryImplementor<Gender> hqlQuery = (SqmQueryImplementor<Gender>) query;
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
@@ -167,17 +166,11 @@ public class SmokeTests {
 					final ColumnReference columnReference = (ColumnReference) selectedExpression;
 					assertThat( columnReference.getExpressionText(), is( "s1_0.gender" ) );
 
-					final JdbcMappingContainer selectedExpressible = selectedExpression.getExpressionType();
-					assertThat( selectedExpressible, instanceOf( CustomType.class ) );
-					final CustomType<?> basicType = (CustomType<?>) selectedExpressible;
-					final EnumType<?> enumType = (EnumType<?>) basicType.getUserType();
-					final EnumValueConverter<?, ?> enumConverter = enumType.getEnumValueConverter();
-					assertThat( enumConverter.getRelationalJavaType().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
-					assertThat(
-							basicType.getJdbcType(),
-							is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
-					);
+					final JdbcMapping selectedExpressible = selectedExpression.getExpressionType().getSingleJdbcMapping();
+					assertThat( selectedExpressible.getJdbcType().isInteger(), is( true ) );
 
+					final EnumValueConverter<?, ?> enumConverter = (EnumValueConverter<?, ?>) selectedExpressible.getValueConverter();
+					assertThat( enumConverter.getRelationalJavaType().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
 					final DomainResult<?> domainResult = sqlAst.getDomainResultDescriptors().get( 0 );

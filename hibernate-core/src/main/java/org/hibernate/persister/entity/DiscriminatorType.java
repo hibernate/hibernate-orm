@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -34,10 +35,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
+@Internal
 public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, BasicValueConverter<T, Object> {
 	private final BasicType<Object> underlyingType;
 	private final Loadable persister;

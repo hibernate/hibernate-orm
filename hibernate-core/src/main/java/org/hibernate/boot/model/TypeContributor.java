@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model;
 
+import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -31,6 +32,7 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @see org.hibernate.type.spi.TypeConfiguration
  */
+@JavaServiceLoadable
 public interface TypeContributor {
 	/**
 	 * Contribute types

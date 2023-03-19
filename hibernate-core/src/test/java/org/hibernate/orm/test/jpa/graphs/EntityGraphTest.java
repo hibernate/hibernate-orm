@@ -16,12 +16,16 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Subgraph;
@@ -50,8 +54,10 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Foo.class, Bar.class, Baz.class, Author.class, Book.class, Prize.class,
-				Company.class, Employee.class, Manager.class, Location.class };
+		return new Class[] {
+				Foo.class, Bar.class, Baz.class, Author.class, Book.class, Prize.class,
+				Company.class, Employee.class, Manager.class, Location.class, Animal.class, Dog.class, Cat.class
+		};
 	}
 
 	@Test
@@ -424,6 +430,30 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-15972")
+	public void joinedInheritanceWithAttributeConflictTest() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Dog dog = new Dog();
+		em.persist( dog );
+
+		em.getTransaction().commit();
+		em.clear();
+
+		em.getTransaction().begin();
+		Map<String, Object> properties = new HashMap<>();
+		properties.put( "jakarta.persistence.loadgraph", em.createEntityGraph( Animal.class ) );
+
+		Animal animal = em.find( Animal.class, dog.id, properties );
+		assertTrue( animal instanceof Dog );
+		assertEquals( dog.id, animal.id );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
     @Entity
 	@Table(name = "foo")
     public static class Foo {
@@ -524,6 +554,38 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 		public Author(String name) {
 			this.name = name;
+		}
+	}
+
+	@Entity
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static abstract class Animal {
+		@Id
+		@GeneratedValue
+		public Integer id;
+		public String dtype;
+		public String name;
+	}
+
+	@Entity
+	@DiscriminatorValue("DOG")
+	public static class Dog extends Animal {
+
+		public Integer numberOfLegs;
+
+		public Dog() {
+			dtype = "DOG";
+		}
+	}
+
+	@Entity
+	@DiscriminatorValue("CAT")
+	public static class Cat extends Animal {
+
+		public Integer numberOfLegs;
+
+		public Cat() {
+			dtype = "CAT";
 		}
 	}
 }

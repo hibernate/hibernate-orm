@@ -45,7 +45,7 @@ public class ArrayTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	//tag::collections-array-binary-example[]
+	//tag::collections-array-as-basic-example[]
 	@Entity(name = "Person")
 	public static class Person {
 
@@ -56,7 +56,7 @@ public class ArrayTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::collections-array-binary-example[]
+	//end::collections-array-as-basic-example[]
 
 		public Person() {
 		}
@@ -72,7 +72,7 @@ public class ArrayTest extends BaseEntityManagerFunctionalTestCase {
 		public void setPhones(String[] phones) {
 			this.phones = phones;
 		}
-	//tag::collections-array-binary-example[]
+	//tag::collections-array-as-basic-example[]
 	}
-	//end::collections-array-binary-example[]
+	//end::collections-array-as-basic-example[]
 }

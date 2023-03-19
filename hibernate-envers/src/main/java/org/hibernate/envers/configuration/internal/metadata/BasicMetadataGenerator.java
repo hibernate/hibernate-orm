@@ -16,9 +16,13 @@ import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
 
 /**
  * Generates metadata for basic properties: immutable types (including enums).
@@ -71,7 +75,10 @@ public final class BasicMetadataGenerator {
 			typeDefinition.setParameter( EnumType.NAMED, parameters.getProperty( EnumType.NAMED ) );
 		}
 		else {
-			typeDefinition.setParameter( EnumType.NAMED, "" + !( (EnumType) ( (CustomType<Object>) type ).getUserType() ).isOrdinal() );
+			final ConvertedBasicType<?> convertedType = (ConvertedBasicType<?>) type;
+			final EnumValueConverter<?, ?> valueConverter = (EnumValueConverter<?, ?>) convertedType.getValueConverter();
+			final boolean isNamed = valueConverter instanceof NamedEnumValueConverter;
+			typeDefinition.setParameter( EnumType.NAMED, Boolean.toString( isNamed ) );
 		}
 	}
 
@@ -126,15 +133,10 @@ public final class BasicMetadataGenerator {
 	}
 
 	private boolean isEnumType(Type type, String typeName) {
-		// Check if a custom type implementation is used and it extends the EnumType directly.
-		if ( type instanceof CustomType ) {
-			final CustomType<?> customType = (CustomType<?>) type;
-			if ( customType.getUserType() instanceof EnumType ) {
-				return true;
-			}
+		if ( type instanceof ConvertedBasicType ) {
+			final ConvertedBasicType<?> convertedType = (ConvertedBasicType<?>) type;
+			return convertedType.getValueConverter() instanceof EnumValueConverter;
 		}
-
-		// Check if it is an EnumType without a custom type
-		return EnumType.class.getName().equals( typeName );
+		return false;
 	}
 }

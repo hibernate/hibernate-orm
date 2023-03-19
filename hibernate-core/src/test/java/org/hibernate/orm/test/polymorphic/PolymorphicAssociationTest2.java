@@ -152,7 +152,7 @@ public class PolymorphicAssociationTest2 {
 		private String name;
 
 		@OneToOne(fetch = FetchType.LAZY)
-		private DerivedLevel2 level2Parent;
+		private Level2 level2Parent;
 
 		public Integer getId() {
 			return id;
@@ -170,11 +170,11 @@ public class PolymorphicAssociationTest2 {
 			this.name = name;
 		}
 
-		public DerivedLevel2 getLevel2Parent() {
+		public Level2 getLevel2Parent() {
 			return level2Parent;
 		}
 
-		public void setLevel2Parent(DerivedLevel2 level2Parent) {
+		public void setLevel2Parent(Level2 level2Parent) {
 			this.level2Parent = level2Parent;
 		}
 	}

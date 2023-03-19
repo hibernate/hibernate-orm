@@ -27,6 +27,8 @@ public interface OrderingExpression extends Node {
 
 	SqlAstNode resolve(QuerySpec ast, TableGroup tableGroup, String modelPartName, SqlAstCreationState creationState);
 
+	String toDescriptiveText();
+
 	/**
 	 * Apply the SQL AST sort-specifications associated with this ordering-expression
 	 */

@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -47,11 +45,11 @@ import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
@@ -584,38 +582,25 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			}
 		}
 
-		final Consumer<PersistentAttribute<?, ?>> attributeConsumer = persistentAttribute -> {
-			if ( persistentAttribute.getJavaType() != null && persistentAttribute.getJavaType().isEnum() ) {
-				@SuppressWarnings("unchecked")
-				final Class<Enum<?>> enumClass = (Class<Enum<?>>) persistentAttribute.getJavaType();
-				final Enum<?>[] enumConstants = enumClass.getEnumConstants();
+		typeConfiguration.getJavaTypeRegistry().forEachDescriptor( (descriptor) -> {
+			if ( descriptor instanceof EnumJavaType ) {
+				final EnumJavaType<? extends Enum<?>> enumJavaType = (EnumJavaType<? extends Enum<?>>) descriptor;
+				final Class<? extends Enum<?>> enumJavaClass = enumJavaType.getJavaTypeClass();
+				final Enum<?>[] enumConstants = enumJavaClass.getEnumConstants();
 				for ( Enum<?> enumConstant : enumConstants ) {
-					final String qualifiedEnumLiteral = enumConstant.getDeclaringClass()
-							.getSimpleName() + "." + enumConstant.name();
+					allowedEnumLiteralTexts
+							.computeIfAbsent( enumConstant.name(), (s) -> new HashMap<>() )
+							.put( enumJavaClass, enumConstant );
 
-					this.allowedEnumLiteralTexts.computeIfAbsent(
-							enumConstant.name(),
-							k -> new HashMap<>()
-					).put( enumClass, enumConstant );
-					this.allowedEnumLiteralTexts.computeIfAbsent(
-							qualifiedEnumLiteral,
-							k -> new HashMap<>()
-					).put( enumClass, enumConstant );
+					final String simpleQualifiedName = enumJavaClass.getSimpleName() + "." + enumConstant.name();
+					allowedEnumLiteralTexts
+							.computeIfAbsent( simpleQualifiedName, (s) -> new HashMap<>() )
+							.put( enumJavaClass, enumConstant );
 				}
 			}
-		};
-		domainTypeStream( context ).forEach(
-				managedDomainType -> managedDomainType.visitAttributes( attributeConsumer )
-		);
+		} );
 
 		applyNamedEntityGraphs( namedEntityGraphDefinitions );
-	}
-
-	private static Stream<ManagedDomainType<?>> domainTypeStream(MetadataContext context) {
-		return Stream.concat(
-				context.getIdentifiableTypesByName().values().stream(),
-				context.getEmbeddableTypeSet().stream()
-		);
 	}
 
 	private EntityDomainType<?> locateOrBuildEntityType(

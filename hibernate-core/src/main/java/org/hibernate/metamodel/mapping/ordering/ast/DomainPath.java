@@ -25,4 +25,9 @@ public interface DomainPath extends OrderingExpression, SequencePart {
 	default PluralAttributeMapping getPluralAttribute() {
 		return getLhs().getPluralAttribute();
 	}
+
+	@Override
+	default String toDescriptiveText() {
+		return "domain path (" + getNavigablePath().getFullPath() + ")";
+	}
 }

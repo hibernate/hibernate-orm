@@ -32,7 +32,7 @@ public class JdbcUpdateMutation extends AbstractJdbcMutation {
 
 	@Override
 	public MutationType getMutationType() {
-		return MutationType.INSERT;
+		return MutationType.UPDATE;
 	}
 
 	@Override

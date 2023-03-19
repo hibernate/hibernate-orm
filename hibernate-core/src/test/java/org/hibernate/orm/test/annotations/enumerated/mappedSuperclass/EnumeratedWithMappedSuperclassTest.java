@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 
@@ -73,19 +74,17 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 		final PersistentClass addressLevelBinding = metadata.getEntityBinding( AddressLevel.class.getName() );
 
 		final Property natureProperty = addressLevelBinding.getProperty( "nature" );
-		CustomType<Object> customType = assertTyping( CustomType.class, natureProperty.getType() );
-		EnumType enumType = assertTyping( EnumType.class, customType.getUserType() );
-		assertEquals( Types.VARCHAR, enumType.getSqlType() );
+		//noinspection unchecked
+		ConvertedBasicType<Nature> natureMapping = (ConvertedBasicType<Nature>) natureProperty.getType();
+		assertEquals( Types.VARCHAR, natureMapping.getJdbcType().getJdbcTypeCode() );
 
-		SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory();
-		try {
-            EntityPersister p = sf.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(AddressLevel.class.getName());
-			CustomType<Object> runtimeType = assertTyping( CustomType.class, p.getPropertyType( "nature" ) );
-			EnumType runtimeEnumType = assertTyping( EnumType.class, runtimeType.getUserType() );
-			assertEquals( Types.VARCHAR, runtimeEnumType.getSqlType() );
-		}
-		finally {
-			sf.close();
+		try ( SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory() ) {
+			EntityPersister p = sf.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( AddressLevel.class.getName() );
+			//noinspection unchecked
+			ConvertedBasicType<Nature> runtimeType = (ConvertedBasicType<Nature>) p.getPropertyType( "nature" );
+			assertEquals( Types.VARCHAR, runtimeType.getJdbcType().getJdbcTypeCode() );
 		}
 	}
 

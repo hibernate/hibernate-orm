@@ -14,9 +14,10 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.AttributeMappingsList;
 import org.hibernate.sql.model.ModelMutationLogging;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -27,7 +28,6 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.internal.MutationOperationGroupNone;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.internal.MutationOperationGroupStandard;
-import org.hibernate.generator.OnExecutionGenerator;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 

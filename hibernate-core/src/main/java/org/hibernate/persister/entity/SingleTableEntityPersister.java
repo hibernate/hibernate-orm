@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -68,6 +69,7 @@ import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
  *
  * @author Gavin King
  */
+@Internal
 public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	// the class hierarchy structure

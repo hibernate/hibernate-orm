@@ -66,6 +66,7 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -171,6 +172,7 @@ public final class FastSessionServices {
 	public final EntityCopyObserverFactory entityCopyObserverFactory;
 	public final BatchBuilder batchBuilder;
 	public final Dialect dialect;
+	public final ParameterMarkerStrategy parameterMarkerStrategy;
 
 	//Private fields:
 	private final CacheStoreMode defaultCacheStoreMode;
@@ -232,6 +234,7 @@ public final class FastSessionServices {
 		this.defaultTimeZoneStorageStrategy = sessionFactoryOptions.getDefaultTimeZoneStorageStrategy();
 		this.defaultJdbcBatchSize = sessionFactoryOptions.getJdbcBatchSize();
 		this.requiresMultiTenantConnectionProvider = sessionFactory.getSessionFactoryOptions().isMultiTenancyEnabled();
+		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
 
 		//Some "hot" services:
 		this.connectionProvider = requiresMultiTenantConnectionProvider

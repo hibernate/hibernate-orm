@@ -12,9 +12,8 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.type.ConvertedBasicType;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
@@ -23,7 +22,6 @@ import org.hibernate.testing.junit4.ExtraAssertions;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 /**
  * @author Steve Ebersole
@@ -44,8 +42,14 @@ public class OrmXmlEnumTypeTest extends BaseUnitTestCase {
 					.getProperty( "bindingStringEnum" )
 					.getType();
 
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
+					.getTypeConfiguration()
+					.getJdbcTypeRegistry();
 			ConvertedBasicType<?> enumMapping = ExtraAssertions.assertTyping( ConvertedBasicType.class, bindingPropertyType );
-			assertEquals( Types.VARCHAR, enumMapping.getJdbcType().getJdbcTypeCode() );
+			assertEquals(
+					jdbcTypeRegistry.getDescriptor( Types.VARCHAR ),
+					jdbcTypeRegistry.getDescriptor( enumMapping.getJdbcType().getJdbcTypeCode() )
+			);
 		}
 		finally {
 			ServiceRegistryBuilder.destroy( ssr );

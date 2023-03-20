@@ -1540,8 +1540,7 @@ public abstract class CollectionBinder {
 	 * return true if it's a Fk, false if it's an association table
 	 */
 	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
-		final PersistentClass persistentClass = persistentClasses.get( getElementType().getName() );
-		if ( noAssociationTable( persistentClass ) ) {
+		if ( noAssociationTable( persistentClasses ) ) {
 			//this is a foreign key
 			bindOneToManySecondPass( persistentClasses );
 			return true;
@@ -1553,7 +1552,10 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private boolean isReversePropertyInJoin(XClass elementType, PersistentClass persistentClass) {
+	private boolean isReversePropertyInJoin(
+			XClass elementType,
+			PersistentClass persistentClass,
+			Map<String, PersistentClass> persistentClasses) {
 		if ( persistentClass != null && isUnownedCollection() ) {
 			final Property mappedByProperty;
 			try {
@@ -1566,7 +1568,7 @@ public abstract class CollectionBinder {
 								+ "' which does not exist in the target entity '" + elementType.getName() + "'"
 				);
 			}
-			checkMappedByType( mappedBy, mappedByProperty.getValue(), propertyName, propertyHolder );
+			checkMappedByType( mappedBy, mappedByProperty.getValue(), propertyName, propertyHolder, persistentClasses );
 			return persistentClass.getJoinNumber( mappedByProperty ) != 0;
 		}
 		else {
@@ -1574,9 +1576,10 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private boolean noAssociationTable(PersistentClass persistentClass) {
+	private boolean noAssociationTable(Map<String, PersistentClass> persistentClasses) {
+		final PersistentClass persistentClass = persistentClasses.get( getElementType().getName() );
 		return persistentClass != null
-			&& !isReversePropertyInJoin( getElementType(), persistentClass )
+			&& !isReversePropertyInJoin( getElementType(), persistentClass, persistentClasses )
 			&& oneToMany
 			&& !isExplicitAssociationTable
 			&& ( implicitJoinColumn() || explicitForeignJoinColumn() );

@@ -877,7 +877,7 @@ public class BinderHelper {
 			return metadataCollector.getPropertyAnnotatedWithMapsId( mappedClass, isId ? "" : propertyName );
 		}
 	}
-	
+
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> ret = new HashMap<>();
 		for ( SqlFragmentAlias alias : aliases ) {
@@ -887,7 +887,7 @@ public class BinderHelper {
 		}
 		return ret;
 	}
-	
+
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> result = new HashMap<>();
 		for ( SqlFragmentAlias alias : aliases ) {
@@ -1076,7 +1076,8 @@ public class BinderHelper {
 			String mappedBy,
 			Value targetValue,
 			String propertyName,
-			PropertyHolder propertyHolder) {
+			PropertyHolder propertyHolder,
+			Map<String, PersistentClass> persistentClasses) {
 		final ToOne toOne;
 		if ( targetValue instanceof Collection ) {
 			toOne = (ToOne) ( (Collection) targetValue ).getElement();
@@ -1085,13 +1086,14 @@ public class BinderHelper {
 			toOne = (ToOne) targetValue;
 		}
 		final String referencedEntityName = toOne.getReferencedEntityName();
-		PersistentClass referencedClass = propertyHolder.getPersistentClass();
-		while ( referencedClass != null ) {
-			if ( referencedClass.getEntityName().equals( referencedEntityName ) ) {
+		final PersistentClass referencedClass = persistentClasses.get( referencedEntityName );
+		PersistentClass ownerClass = propertyHolder.getPersistentClass();
+		while ( ownerClass != null ) {
+			if ( checkReferencedClass( ownerClass, referencedClass ) ) {
 				return;
 			}
 			else {
-				referencedClass = referencedClass.getSuperclass();
+				ownerClass = getSuperPersistentClass( ownerClass );
 			}
 		}
 		throw new AnnotationException(
@@ -1100,5 +1102,32 @@ public class BinderHelper {
 						+ "' which references the wrong entity type '" + referencedEntityName
 						+ "', expected '" + propertyHolder.getEntityName() + "'"
 		);
+	}
+
+	private static boolean checkReferencedClass(PersistentClass ownerClass, PersistentClass referencedClass) {
+		while ( referencedClass != null ) {
+			// Allow different entity types as long as they map to the same table
+			if ( ownerClass.getTable() == referencedClass.getTable() ) {
+				return true;
+			}
+			referencedClass = getSuperPersistentClass( referencedClass );
+		}
+		return false;
+	}
+
+	private static PersistentClass getSuperPersistentClass(PersistentClass persistentClass) {
+		return persistentClass.getSuperclass() != null ? persistentClass.getSuperclass()
+				: getSuperPersistentClass( persistentClass.getSuperMappedSuperclass() );
+	}
+
+	private static PersistentClass getSuperPersistentClass(MappedSuperclass mappedSuperclass) {
+		if ( mappedSuperclass != null ) {
+			final PersistentClass superClass = mappedSuperclass.getSuperPersistentClass();
+			if ( superClass != null ) {
+				return superClass;
+			}
+			return getSuperPersistentClass( mappedSuperclass.getSuperMappedSuperclass() );
+		}
+		return null;
 	}
 }

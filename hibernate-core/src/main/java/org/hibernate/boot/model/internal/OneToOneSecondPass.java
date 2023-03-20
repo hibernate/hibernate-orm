@@ -153,7 +153,13 @@ public class OneToOneSecondPass implements SecondPass {
 					+ "' of the target entity type '" + oneToOne.getReferencedEntityName()
 					+ "' which is not a '@OneToOne' or '@ManyToOne' association" );
 		}
-		checkMappedByType( mappedBy, targetProperty.getValue(), oneToOne.getPropertyName(), propertyHolder );
+		checkMappedByType(
+				mappedBy,
+				targetProperty.getValue(),
+				oneToOne.getPropertyName(),
+				propertyHolder,
+				persistentClasses
+		);
 	}
 
 	private void bindTargetManyToOne(

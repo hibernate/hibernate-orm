@@ -2,10 +2,13 @@ package org.hibernate.orm.test.hql;
 
 import java.util.List;
 
+import org.hibernate.dialect.H2Dialect;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +25,7 @@ import jakarta.persistence.Tuple;
 				NestedSubqueryTest.PostComment.class
 		}
 )
+@SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 1, reason = "It seems that selecting two columns in a subquery with the same name doesn't work for H2 1.x even with aliasing at table alias level")
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-15731")
 public class NestedSubqueryTest {

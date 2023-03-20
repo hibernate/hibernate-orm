@@ -6,8 +6,8 @@ import java.util.List;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.runner.RunWith;
 
 import jakarta.persistence.Entity;
@@ -21,8 +21,10 @@ import static jakarta.persistence.CascadeType.MERGE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @RunWith(BytecodeEnhancerRunner.class)
-@TestForIssue( jiraKey = "HHH-16322")
+@TestForIssue(jiraKey = "HHH-16322")
 public class MergeUnsavedEntitiesTest extends BaseCoreFunctionalTestCase {
+
+	public static final String CHILD_NAME = "first child";
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -32,23 +34,13 @@ public class MergeUnsavedEntitiesTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
-	@AfterEach
-	public void tearDown() {
-		inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Child" ).executeUpdate();
-					session.createMutationQuery( "delete from Parent" ).executeUpdate();
-				}
-		);
-	}
-
 	@Test
 	public void testMerge() {
 		inTransaction(
 				session -> {
 					Parent parent = new Parent( 1l, 2l );
 					parent = session.merge( parent );
-					Child child = new Child( 2l, "first child" );
+					Child child = new Child( 2l, CHILD_NAME );
 					child = session.merge( child );
 					parent.addChild( child );
 					parent.getId();
@@ -59,6 +51,8 @@ public class MergeUnsavedEntitiesTest extends BaseCoreFunctionalTestCase {
 				session -> {
 					Parent parent = session.find( Parent.class, 1l );
 					assertThat( parent.getChildren().size() ).isEqualTo( 1 );
+					Child child = parent.getChildren().get( 0 );
+					assertThat( child.getName() ).isEqualTo( CHILD_NAME );
 				}
 		);
 
@@ -72,20 +66,16 @@ public class MergeUnsavedEntitiesTest extends BaseCoreFunctionalTestCase {
 		inTransaction(
 				session -> {
 					Parent parent = session.find( Parent.class, 1l );
-					parent.setChildren( new ArrayList<>() );
-					session.merge( parent );
-				}
-		);
+					assertThat( parent.getChildren().size() ).isEqualTo( 1 );
+					Child child = parent.getChildren().get( 0 );
 
-		inTransaction(
-				session -> {
-					Parent parent = session.find( Parent.class, 1l );
-					assertThat( parent.getChildren().size() ).isEqualTo( 0 );
+					assertThat( child.getName() ).isEqualTo( CHILD_NAME );
+
 				}
 		);
 	}
 
-	@Entity(name = "parent")
+	@Entity(name = "Parent")
 	@Table(name = "parent")
 	public static class Parent {
 		@Id
@@ -139,7 +129,7 @@ public class MergeUnsavedEntitiesTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Child")
 	@Table(name = "child")
 	public static class Child {
 
@@ -175,6 +165,9 @@ public class MergeUnsavedEntitiesTest extends BaseCoreFunctionalTestCase {
 			this.parent = parent;
 		}
 
+		public String getName() {
+			return name;
+		}
 	}
 
 }

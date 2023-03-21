@@ -69,8 +69,8 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-
 import org.hibernate.type.spi.TypeConfiguration;
+
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
@@ -1236,9 +1236,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						notNullColumnNames,
 						discriminatorValues,
 						discriminatorAbstract,
-						subclassNameByTableName,
-						(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType(),
-						buildDiscriminatorValueMappings( modelCreationProcess ),
+						resolveDiscriminatorType(),
 						modelCreationProcess
 				);
 			}

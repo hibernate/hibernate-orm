@@ -15,6 +15,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
+import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.List;
@@ -245,10 +246,12 @@ public class AttributeFactory {
 						.getJavaTypeRegistry()
 						.resolveDescriptor( anyType.getReturnedClass() );
 				return (DomainType<Y>) new AnyMappingDomainTypeImpl(
+						(Any) typeContext.getHibernateValue(),
 						anyType,
 						(JavaType<Class>) baseJtd,
 						context.getTypeConfiguration(),
-						context.getMetamodel()
+						context.getMetamodel(),
+						context.getRuntimeModelCreationContext().getSessionFactory()
 				);
 			}
 			case EMBEDDABLE: {

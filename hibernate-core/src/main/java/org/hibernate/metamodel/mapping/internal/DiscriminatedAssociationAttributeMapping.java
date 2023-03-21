@@ -23,6 +23,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -102,7 +103,7 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public BasicValuedModelPart getDiscriminatorPart() {
+	public DiscriminatorMapping getDiscriminatorMapping() {
 		return discriminatorMapping.getDiscriminatorPart();
 	}
 
@@ -500,5 +501,10 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public String getSqlAliasStem() {
 		return getAttributeName();
+	}
+
+	@Override
+	public void applyDiscriminator(Consumer<Predicate> predicateConsumer, String alias, TableGroup tableGroup, SqlAstCreationState creationState) {
+		throw new UnsupportedOperationException();
 	}
 }

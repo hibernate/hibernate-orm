@@ -6,17 +6,18 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Map;
-
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.persister.entity.DiscriminatorType;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.type.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -42,9 +43,9 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			Integer precision,
 			Integer scale,
 			DiscriminatorType<?> discriminatorType,
-			Map<Object, DiscriminatorValueDetails> valueMappings,
 			MappingModelCreationProcess creationProcess) {
-		super( entityDescriptor, discriminatorType, valueMappings, creationProcess );
+		//noinspection unchecked
+		super( entityDescriptor, (DiscriminatorType<Object>) discriminatorType, (BasicType<Object>) discriminatorType.getUnderlyingJdbcMapping() );
 		this.tableExpression = tableExpression;
 		this.isPhysical = isPhysical;
 		this.columnDefinition = columnDefinition;
@@ -59,6 +60,16 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			columnName = columnExpression;
 			columnFormula = null;
 		}
+	}
+
+	@Override
+	public DiscriminatorType getMappedType() {
+		return (DiscriminatorType) super.getMappedType();
+	}
+
+	@Override
+	public DiscriminatorConverter<?, ?> getValueConverter() {
+		return getMappedType().getValueConverter();
 	}
 
 	@Override

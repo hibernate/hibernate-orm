@@ -28,7 +28,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
  *
  * @author Steve Ebersole
  */
-public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValuedModelPart, FetchOptions {
+public interface EntityDiscriminatorMapping extends DiscriminatorMapping, FetchOptions {
 	String ROLE_NAME = "{discriminator}";
 	String LEGACY_HQL_ROLE_NAME = "class";
 
@@ -62,35 +62,6 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 	 * Returns {@code null} if there is no match.
 	 */
 	DiscriminatorValueDetails resolveDiscriminatorValue(Object value);
-
-	/**
-	 * Details for a particular discriminator value.
-	 *
-	 * @apiNote For {@linkplain jakarta.persistence.InheritanceType#JOINED joined}
-	 * {@linkplain jakarta.persistence.InheritanceType#TABLE_PER_CLASS union} inheritance,
-	 * the discriminator also effectively indicates a specific table.  That table can be
-	 * found via {@linkplain EntityMappingType#getMappedTableDetails()} for the
-	 * {@linkplain #getIndicatedEntity() indicated entity}
-	 *
-	 * @see jakarta.persistence.DiscriminatorValue
-	 */
-	interface DiscriminatorValueDetails {
-		/**
-		 * The discriminator value
-		 */
-		Object getValue();
-
-		/**
-		 * The SQL literal representation of the discriminator value.  E.g.
-		 * for Strings, this would be the fully SQL-quoted form.
-		 */
-		Object getSqlLiteralValue();
-
-		/**
-		 * The concrete entity-type mapped to this discriminator value
-		 */
-		EntityMappingType getIndicatedEntity();
-	}
 
 	/**
 	 * Create the appropriate SQL expression for this discriminator

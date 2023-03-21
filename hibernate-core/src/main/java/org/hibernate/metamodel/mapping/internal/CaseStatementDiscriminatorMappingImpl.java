@@ -11,9 +11,9 @@ import java.util.Map;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -32,6 +32,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.type.BasicType;
 
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -51,9 +52,9 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			boolean[] discriminatorAbstract,
 			Map<String,String> subEntityNameByTableName,
 			DiscriminatorType<?> incomingDiscriminatorType,
-			Map<Object, DiscriminatorValueDetails> valueMappings,
 			MappingModelCreationProcess creationProcess) {
-		super( entityDescriptor, incomingDiscriminatorType, valueMappings, creationProcess );
+		//noinspection unchecked
+		super( entityDescriptor, (DiscriminatorType<Object>) incomingDiscriminatorType, (BasicType<Object>) incomingDiscriminatorType.getUnderlyingJdbcMapping() );
 
 		for ( int i = 0; i < discriminatorValues.length; i++ ) {
 			if ( !discriminatorAbstract[i] ) {

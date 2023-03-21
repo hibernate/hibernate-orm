@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.metamodel.mapping.internal.AnyDiscriminatorPart;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -21,8 +22,15 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  *
  * @author Steve Ebersole
  */
-public interface DiscriminatedAssociationModelPart extends Fetchable, FetchableContainer, TableGroupJoinProducer {
-	BasicValuedModelPart getDiscriminatorPart();
+public interface DiscriminatedAssociationModelPart extends Discriminatable, Fetchable, FetchableContainer, TableGroupJoinProducer {
+	/**
+	 * @deprecated Use {@link #getDiscriminatorMapping} instead.
+	 */
+	@Deprecated( since = "6.2", forRemoval = true )
+	default BasicValuedModelPart getDiscriminatorPart() {
+		return getDiscriminatorMapping();
+	}
+
 	BasicValuedModelPart getKeyPart();
 
 	EntityMappingType resolveDiscriminatorValue(Object discriminatorValue);

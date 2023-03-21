@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -14,14 +15,14 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -37,7 +38,8 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.type.MetaType;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -45,7 +47,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions, SelectableMapping {
+public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions {
 	public static final String ROLE_NAME = EntityDiscriminatorMapping.ROLE_NAME;
 
 	private final NavigableRole navigableRole;
@@ -61,7 +63,9 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	private final boolean insertable;
 	private final boolean updateable;
 	private final boolean partitioned;
-	private final MetaType metaType;
+
+	private final BasicType<?> underlyingJdbcMapping;
+	private final DiscriminatorConverter<?,?> valueConverter;
 
 	public AnyDiscriminatorPart(
 			NavigableRole partRole,
@@ -75,7 +79,9 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,
-			MetaType metaType) {
+			BasicType<?> underlyingJdbcMapping,
+			Map<Object,String> valueToEntityNameMap,
+			SessionFactoryImplementor sessionFactory) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
 		this.table = table;
@@ -87,15 +93,23 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 		this.insertable = insertable;
 		this.updateable = updateable;
 		this.partitioned = partitioned;
-		this.metaType = metaType;
+
+		this.underlyingJdbcMapping = underlyingJdbcMapping;
+		this.valueConverter = DiscriminatorConverter.fromValueMappings(
+				partRole,
+				ClassJavaType.INSTANCE,
+				underlyingJdbcMapping,
+				valueToEntityNameMap,
+				sessionFactory
+		);
 	}
 
-	public MetaType getMetaType() {
-		return metaType;
+	public DiscriminatorConverter<?,?> getValueConverter() {
+		return valueConverter;
 	}
 
 	public JdbcMapping jdbcMapping() {
-		return (JdbcMapping) metaType.getBaseType();
+		return underlyingJdbcMapping;
 	}
 
 	@Override
@@ -209,13 +223,13 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return metaType.disassemble( value, session, value );
+		return underlyingJdbcMapping.disassemble( value, session, value );
 	}
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
-		cacheKey.addValue( metaType.disassemble( value, session, value ) );
-		cacheKey.addHashCode( metaType.getHashCode( value ) );
+		cacheKey.addValue( underlyingJdbcMapping.disassemble( value, session, value ) );
+		cacheKey.addHashCode( underlyingJdbcMapping.getHashCode( value ) );
 	}
 
 	@Override

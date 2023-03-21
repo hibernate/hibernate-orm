@@ -43,7 +43,7 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 		else {
 			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
 		}
-		return new DiscriminatorSqmPath( navigablePath, pathModel, lhs, entityDomainType, entityMapping, lhs.nodeBuilder() );
+		return new EntityDiscriminatorSqmPath( navigablePath, pathModel, lhs, entityDomainType, entityMapping, lhs.nodeBuilder() );
 	}
 
 	@Override

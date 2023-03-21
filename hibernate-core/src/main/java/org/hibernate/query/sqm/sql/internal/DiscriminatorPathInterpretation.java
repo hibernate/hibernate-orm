@@ -6,16 +6,17 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
+import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -36,6 +37,17 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 
 	public DiscriminatorPathInterpretation(
 			NavigablePath navigablePath,
+			DiscriminatorMapping mapping,
+			TableGroup tableGroup,
+			SqlAstCreationState sqlAstCreationState) {
+		super( navigablePath, mapping, tableGroup );
+
+		final JdbcMapping jdbcMappingToUse = mapping.getJdbcMapping();
+		expression = getDiscriminatorMapping().resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, sqlAstCreationState );
+	}
+
+	public DiscriminatorPathInterpretation(
+			NavigablePath navigablePath,
 			EntityMappingType mapping,
 			TableGroup tableGroup,
 			SqlAstCreationState sqlAstCreationState) {
@@ -46,7 +58,7 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 	}
 
 	public static SqmPathInterpretation<?> from(
-			DiscriminatorSqmPath path,
+			EntityDiscriminatorSqmPath path,
 			SqmToSqlAstConverter converter) {
 		assert path.getEntityDescriptor().hasSubclasses();
 

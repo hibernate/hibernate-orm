@@ -70,6 +70,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
+import org.hibernate.metamodel.mapping.DiscriminatorType;
+
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
@@ -1238,7 +1240,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						discriminatorAbstract,
 						subclassNameByTableName,
 						(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType(),
-						buildDiscriminatorValueMappings( modelCreationProcess ),
 						modelCreationProcess
 				);
 			}

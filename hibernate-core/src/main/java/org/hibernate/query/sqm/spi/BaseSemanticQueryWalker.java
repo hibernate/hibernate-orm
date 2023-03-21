@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.spi;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
-import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
+import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
@@ -364,7 +364,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitDiscriminatorPath(DiscriminatorSqmPath path) {
+	public Object visitDiscriminatorPath(EntityDiscriminatorSqmPath path) {
 		return path;
 	}
 

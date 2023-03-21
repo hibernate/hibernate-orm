@@ -25,7 +25,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -154,9 +153,10 @@ import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
@@ -176,11 +176,13 @@ import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor;
+import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -190,7 +192,6 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -200,7 +201,6 @@ import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
-import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -271,7 +271,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
@@ -299,7 +299,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.toSmallLi
 import static org.hibernate.metamodel.RepresentationMode.POJO;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
-import static org.hibernate.persister.entity.DiscriminatorHelper.discriminatorLiteral;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -2208,8 +2207,33 @@ public abstract class AbstractEntityPersister
 
 	private DiscriminatorMetadata buildTypeDiscriminatorMetadata() {
 		return () -> {
-			final BasicType<?> type = getDiscriminatorType();
-			return type == null ? null : new DiscriminatorType<>( type, AbstractEntityPersister.this );
+			final BasicType<?> underlingJdbcMapping = getDiscriminatorType();
+			if ( underlingJdbcMapping == null ) {
+				return null;
+			}
+
+			final JavaTypeRegistry javaTypeRegistry = factory.getTypeConfiguration().getJavaTypeRegistry();
+
+			final JavaType<Object> domainJavaType;
+			if ( representationStrategy.getMode() == POJO
+					&& getEntityName().equals( getJavaType().getJavaTypeClass().getName() ) ) {
+				domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
+			}
+			else {
+				domainJavaType = javaTypeRegistry.resolveDescriptor( String.class );
+			}
+
+			//noinspection rawtypes
+			final DiscriminatorConverter converter = DiscriminatorConverter.fromValueMappings(
+					getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME ),
+					domainJavaType,
+					underlingJdbcMapping,
+					getSubclassByDiscriminatorValue(),
+					factory
+			);
+
+			//noinspection unchecked,rawtypes
+			return new DiscriminatorTypeImpl( underlingJdbcMapping, converter );
 		};
 	}
 
@@ -5005,7 +5029,6 @@ public abstract class AbstractEntityPersister
 					isPhysicalDiscriminator(),
 					columnDefinition, length, precision, scale,
 					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType(),
-					buildDiscriminatorValueMappings( modelCreationProcess ),
 					modelCreationProcess
 			);
 		}
@@ -5013,27 +5036,6 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public abstract BasicType<?> getDiscriminatorType();
-
-	protected Map<Object, DiscriminatorValueDetails> buildDiscriminatorValueMappings(
-			MappingModelCreationProcess modelCreationProcess) {
-		final MappingMetamodelImplementor mappingModel =
-				modelCreationProcess.getCreationContext().getDomainModel();
-		//noinspection unchecked
-		final JdbcLiteralFormatter<Object> jdbcLiteralFormatter =
-				(JdbcLiteralFormatter<Object>) getDiscriminatorType().getJdbcLiteralFormatter();
-		final Dialect dialect = modelCreationProcess.getCreationContext().getDialect();
-
-		final Map<Object, DiscriminatorValueDetails> valueMappings = new ConcurrentHashMap<>();
-		getSubclassByDiscriminatorValue().forEach( (value, entityName) -> {
-			final DiscriminatorValueDetailsImpl valueMapping = new DiscriminatorValueDetailsImpl(
-					value,
-					discriminatorLiteral( jdbcLiteralFormatter, dialect, value ),
-					mappingModel.findEntityDescriptor( entityName )
-			);
-			valueMappings.put( value, valueMapping );
-		} );
-		return valueMappings;
-	}
 
 	protected EntityVersionMapping generateVersionMapping(
 			Supplier<?> templateInstanceCreator,

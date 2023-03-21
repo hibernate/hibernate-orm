@@ -16,6 +16,8 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  * Things that have a discriminator associated with it.
  */
 public interface Discriminatable {
+	DiscriminatorMapping getDiscriminatorMapping();
+
 	/**
 	 * Apply the discriminator as a predicate via the {@code predicateConsumer}
 	 */

@@ -6,18 +6,14 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.PathException;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.spi.NavigablePath;
 
@@ -27,11 +23,11 @@ import org.hibernate.spi.NavigablePath;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class DiscriminatorSqmPath extends AbstractSqmPath {
+public class EntityDiscriminatorSqmPath extends AbstractSqmPath implements org.hibernate.metamodel.model.domain.DiscriminatorSqmPath {
 	private final EntityDomainType entityDomainType;
 	private final EntityMappingType entityDescriptor;
 
-	protected DiscriminatorSqmPath(
+	protected EntityDiscriminatorSqmPath(
 			NavigablePath navigablePath,
 			SqmPathSource referencedPathSource,
 			SqmPath<?> lhs,
@@ -52,14 +48,19 @@ public class DiscriminatorSqmPath extends AbstractSqmPath {
 	}
 
 	@Override
-	public DiscriminatorSqmPath copy(SqmCopyContext context) {
-		final DiscriminatorSqmPath existing = context.getCopy( this );
+	public DiscriminatorSqmPathSource getExpressible() {
+		return (DiscriminatorSqmPathSource) getNodeType();
+	}
+
+	@Override
+	public EntityDiscriminatorSqmPath copy(SqmCopyContext context) {
+		final EntityDiscriminatorSqmPath existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		return context.registerCopy(
 				this,
-				(DiscriminatorSqmPath) getLhs().copy( context ).type()
+				(EntityDiscriminatorSqmPath) getLhs().copy( context ).type()
 		);
 	}
 
@@ -70,27 +71,5 @@ public class DiscriminatorSqmPath extends AbstractSqmPath {
 		}
 
 		return walker.visitDiscriminatorPath( this );
-	}
-
-	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "type(" );
-		getLhs().appendHqlString( sb );
-		sb.append( ')' );
-	}
-
-	@Override
-	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
-		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
-	}
-
-	@Override
-	public SqmTreatedPath treatAs(Class treatJavaType) throws PathException {
-		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
-	}
-
-	@Override
-	public SqmTreatedPath treatAs(EntityDomainType treatTarget) throws PathException {
-		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 }

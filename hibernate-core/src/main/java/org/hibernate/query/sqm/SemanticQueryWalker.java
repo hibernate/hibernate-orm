@@ -9,7 +9,7 @@ package org.hibernate.query.sqm;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
-import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
+import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -232,7 +232,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFkExpression(SqmFkExpression<?> fkExpression);
 
-	T visitDiscriminatorPath(DiscriminatorSqmPath sqmPath);
+	T visitDiscriminatorPath(EntityDiscriminatorSqmPath sqmPath);
 	
 	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path);
 

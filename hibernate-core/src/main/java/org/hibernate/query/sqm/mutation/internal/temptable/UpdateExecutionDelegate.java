@@ -205,7 +205,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		}
 	}
 
-	private TableReference resolveTableReference(
+	protected TableReference resolveTableReference(
 			ColumnReference columnReference,
 			Map<String, TableReference> tableReferenceByAlias) {
 		final TableReference tableReferenceByQualifier = tableReferenceByAlias.get( columnReference.getQualifier() );
@@ -216,7 +216,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
 	}
 
-	private NamedTableReference resolveUnionTableReference(
+	protected NamedTableReference resolveUnionTableReference(
 			TableReference tableReference,
 			String tableExpression) {
 		if ( tableReference instanceof UnionTableReference ) {
@@ -284,7 +284,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		}
 	}
 
-	private boolean isTableOptional(String tableExpression) {
+	protected boolean isTableOptional(String tableExpression) {
 		final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
 		for ( int i = 0; i < entityPersister.getTableSpan(); i++ ) {
 			if ( tableExpression.equals( entityPersister.getTableName( i ) )
@@ -371,7 +371,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		);
 	}
 
-	private QuerySpec createExistsSubQuerySpec(String targetTableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier, QuerySpec idTableSubQuery) {
+	protected QuerySpec createExistsSubQuerySpec(String targetTableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier, QuerySpec idTableSubQuery) {
 		final NamedTableReference existsTableReference = new NamedTableReference(
 				targetTableExpression,
 				"dml_"
@@ -411,7 +411,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		return existsSubQuerySpec;
 	}
 
-	private static QuerySpec makeInsertSourceSelectQuerySpec(QuerySpec idTableSubQuery) {
+	protected static QuerySpec makeInsertSourceSelectQuerySpec(QuerySpec idTableSubQuery) {
 		final QuerySpec idTableQuerySpec = new QuerySpec( true );
 		for ( TableGroup root : idTableSubQuery.getFromClause().getRoots() ) {
 			idTableQuerySpec.getFromClause().addRoot( root );
@@ -448,7 +448,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		return updateCount;
 	}
 
-	private Expression resolveMutatingTableKeyExpression(String tableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
+	protected Expression resolveMutatingTableKeyExpression(String tableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
 		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( entityDescriptor );
 
 		tableKeyColumnVisitationSupplier.get().accept(
@@ -461,7 +461,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		return keyColumnCollector.buildKeyExpression();
 	}
 
-	private Expression asExpression(SelectClause selectClause) {
+	protected Expression asExpression(SelectClause selectClause) {
 		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
 		if ( sqlSelections.size() == 1 ) {
 			return sqlSelections.get( 0 ).getExpression();
@@ -471,5 +471,47 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			expressions.add( sqlSelection.getExpression() );
 		}
 		return new SqlTuple( expressions, null );
+	}
+
+	// FOr Hibernate Reactive
+
+	protected TemporaryTable getIdTable() {
+		return idTable;
+	}
+
+	protected Predicate getSuppliedPredicate() {
+		return suppliedPredicate;
+	}
+
+	protected MultiTableSqmMutationConverter getSqmConverter() {
+		return sqmConverter;
+	}
+
+	protected Function<SharedSessionContractImplementor, String> getSessionUidAccess() {
+		return sessionUidAccess;
+	}
+
+	protected JdbcParameterBindings getJdbcParameterBindings() {
+		return jdbcParameterBindings;
+	}
+
+	protected EntityMappingType getEntityDescriptor() {
+		return entityDescriptor;
+	}
+
+	protected AfterUseAction getAfterUseAction() {
+		return afterUseAction;
+	}
+
+	protected TableGroup getUpdatingTableGroup() {
+		return updatingTableGroup;
+	}
+
+	protected Map<TableReference, List<Assignment>> getAssignmentsByTable() {
+		return assignmentsByTable;
+	}
+
+	protected SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
 	}
 }

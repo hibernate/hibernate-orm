@@ -12,6 +12,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -114,8 +115,6 @@ public class WrapVisitor extends ProxyVisitor {
 							&& ((LazyAttributeLoadingInterceptor)attributeInterceptor).isAttributeLoaded( persister.getAttributeMapping().getAttributeName() ) ) {
 						final EntityEntry entry = persistenceContext.getEntry( entity );
 						if ( entry.isExistsInDatabase() ) {
-							// the collection has not been initialized and new collection values have been assigned,
-							// we need to be sure to delete all the collection elements before inserting the new ones
 							final AbstractEntityPersister entityDescriptor =
 									(AbstractEntityPersister) persister.getOwnerEntityPersister();
 							final Object key = entityDescriptor.getCollectionKey(
@@ -124,14 +123,23 @@ public class WrapVisitor extends ProxyVisitor {
 									entry,
 									session
 							);
-							final PersistentCollection<?> collectionInstance = persister.getCollectionSemantics()
-									.instantiateWrapper( key, persister, session );
-							collectionInstance.setOwner( entity );
-							persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
+							PersistentCollection<?> collectionInstance = persistenceContext.getCollection(
+									new CollectionKey( persister, key )
+							);
 
-							final CollectionEntry collectionEntry = persistenceContext
-									.getCollectionEntry( collectionInstance );
-							collectionEntry.setDoremove( true );
+							if ( collectionInstance == null ) {
+								// the collection has not been initialized and new collection values have been assigned,
+								// we need to be sure to delete all the collection elements before inserting the new ones
+								collectionInstance = persister.getCollectionSemantics().instantiateWrapper(
+										key,
+										persister,
+										session
+								);
+								persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
+								final CollectionEntry collectionEntry = persistenceContext.getCollectionEntry(
+										collectionInstance );
+								collectionEntry.setDoremove( true );
+							}
 						}
 					}
 				}

@@ -93,6 +93,37 @@ was setting `hibernate.jdbc.time_zone` to a non-UTC timezone.
 
 To revert to Hibernate ORM 5's behavior, set the configuration property `hibernate.timezone.default_storage` to `NORMALIZE`.
 
+[[byte-and-character-array-mapping-changes]]
+== Byte[]/Character[] mapping changes
+
+The mappings for the wrapper array types `Byte[]` and `Character[]` have changed.
+
+Prior to Hibernate 6.2, a `Byte[]` in the domain model was always just blindly converted to a `byte[]`,
+possibly running into a `NullPointerException` if the `Byte[]` contains a `null` array element.
+Similarly, `Character[]` was blindly converted to `char[]`, potentially running into the same `NullPointerException` problem.
+
+Since disallowing `null` elements defeats the purpose of choosing the wrapper array type in the first place,
+the Hibernate team concluded that changing the mapping for these types is fine,
+because there can not be any reasonable real world uses of `Byte[]` and `Character[]`.
+
+Another motivation for fixing this is that array handling code currently has to special case the element types
+`Byte` and `Character`, and that binding SQL arrays of these types is not possible for native queries.
+
+Starting with Hibernate 6.2, `Byte[]` and `Character[]` will be treated like other arrays.
+See the link:{docsBase}/6.1/migration-guide/migration-guide.html#basic-arraycollection-mapping[6.1 Migration guide] for
+details about the default DDL mapping.
+
+A possible migration could involve the following steps in a migration script:
+
+* Execute `alter table tbl rename column array_col to array_col_old` to have the old format available
+* Execute `alter table tbl add column array_col DATATYPE array` to add the column like the new mapping expects it to be
+* Run the query `select t.primary_key, t.array_col_old from table t` to extract `byte[]` or `String`
+* For every result, load the Hibernate entity by primary key and set the field value to transformed result `Byte[]` or `Character[]`
+* Finally, drop the old column `alter table tbl drop column array_col_old`
+
+Alternatively, to revert to pre-6.2 behavior, annotate your array property with `@JavaType(ByteArrayJavaType.class)`
+or `@JavaType(CharacterArrayJavaType.class)` or simply change the domain model type to `byte[]` and `char[]` respectively.
+
 [[ddl-check]]
 === Check constraints for boolean and enum mappings
 Check constraints now correctly generated for boolean and enum mappings

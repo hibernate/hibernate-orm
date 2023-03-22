@@ -21,6 +21,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -91,6 +92,12 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 	protected void resolveInstance(RowProcessingState rowProcessingState, boolean isEager) {
 		if ( collectionKey != null ) {
+			if ( parentAccess != null ) {
+				final EntityInitializer parentEntityInitializer = parentAccess.findFirstEntityInitializer();
+				if ( parentEntityInitializer != null && parentEntityInitializer.isEntityInitialized() ) {
+					return;
+				}
+			}
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			final FetchParentAccess fetchParentAccess = parentAccess.findFirstEntityDescriptorAccess();

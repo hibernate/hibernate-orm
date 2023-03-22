@@ -14,6 +14,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.HibernateError;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -49,13 +50,9 @@ public class InVmGenerationsWithMultipleAnnotationsTests {
 			assertThat( saved.lastUpdatedOn ).isNotNull();
 
 			saved.name = "changed";
-			// Let's sleep a millisecond to make sure we actually generate a different timestamp
-			try {
-				Thread.sleep( 1L );
-			}
-			catch (InterruptedException e) {
-				// Ignore
-			}
+
+			//We need to wait a little to make sure the timestamps produced are different
+			waitALittle();
 
 			// then changing
 			final AuditedEntity merged = scope.fromTransaction( session, (s) -> {
@@ -111,6 +108,15 @@ public class InVmGenerationsWithMultipleAnnotationsTests {
 		public AuditedEntity(Integer id, String name) {
 			this.id = id;
 			this.name = name;
+		}
+	}
+
+	private static void waitALittle() {
+		try {
+			Thread.sleep( 10 );
+		}
+		catch (InterruptedException e) {
+			throw new HibernateError( "Unexpected wakeup from test sleep" );
 		}
 	}
 }

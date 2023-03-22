@@ -1016,7 +1016,7 @@ public class ModelBinder {
 		}
 		if ( versionAttributeSource.getSource().equals("db") ) {
 			property.setValueGeneratorCreator(
-					context -> new SourceGeneration( SourceType.DB, property.getType().getReturnedClass() ) );
+					context -> new SourceGeneration( SourceType.DB, property.getType().getReturnedClass(), context ) );
 		}
 
 		rootEntityDescriptor.setVersion( property );

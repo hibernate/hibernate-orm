@@ -6,10 +6,13 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 /**
  * Executable JDBC command
@@ -48,6 +51,11 @@ public class JdbcOperationQueryMutationNative implements JdbcOperationQueryMutat
 	@Override
 	public boolean dependsOnParameterBindings() {
 		return false;
+	}
+
+	@Override
+	public Map<JdbcParameter, JdbcParameterBinding> getAppliedParameters() {
+		return Collections.emptyMap();
 	}
 
 	@Override

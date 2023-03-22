@@ -123,8 +123,8 @@ public class JavaTypeBaseline {
 		target.addBaselineDescriptor( ClobJavaType.INSTANCE );
 		target.addBaselineDescriptor( NClobJavaType.INSTANCE );
 
-		target.addBaselineDescriptor( ByteArrayJavaType.INSTANCE );
-		target.addBaselineDescriptor( CharacterArrayJavaType.INSTANCE );
+//		target.addBaselineDescriptor( ByteArrayJavaType.INSTANCE );
+//		target.addBaselineDescriptor( CharacterArrayJavaType.INSTANCE );
 		target.addBaselineDescriptor( PrimitiveByteArrayJavaType.INSTANCE );
 		target.addBaselineDescriptor( PrimitiveCharacterArrayJavaType.INSTANCE );
 

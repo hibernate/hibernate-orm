@@ -198,7 +198,7 @@ public class InferredBasicValueResolver {
 					registeredType = registeredElementType == null ? null : containerJtd.resolveType(
 							typeConfiguration,
 							dialect,
-							registeredElementType,
+							resolveSqlTypeIndicators( stdIndicators, registeredElementType, elementJtd ),
 							columnTypeInformation
 					);
 					if ( registeredType != null ) {

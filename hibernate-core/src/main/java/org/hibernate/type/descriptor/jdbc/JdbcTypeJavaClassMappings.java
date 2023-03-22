@@ -147,8 +147,8 @@ public class JdbcTypeJavaClassMappings {
 		// additional "common sense" registrations
 		workMap.put( Character.class, SqlTypes.CHAR );
 		workMap.put( char[].class, SqlTypes.VARCHAR );
-		workMap.put( Character[].class, SqlTypes.VARCHAR );
-		workMap.put( Byte[].class, SqlTypes.VARBINARY );
+//		workMap.put( Character[].class, SqlTypes.VARCHAR );
+//		workMap.put( Byte[].class, SqlTypes.VARBINARY );
 		workMap.put( java.util.Date.class, SqlTypes.TIMESTAMP );
 		workMap.put( Calendar.class, SqlTypes.TIMESTAMP );
 

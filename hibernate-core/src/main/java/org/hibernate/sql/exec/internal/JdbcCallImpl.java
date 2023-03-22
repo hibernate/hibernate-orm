@@ -9,17 +9,20 @@ package org.hibernate.sql.exec.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
@@ -115,6 +118,11 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 	@Override
 	public boolean dependsOnParameterBindings() {
 		return false;
+	}
+
+	@Override
+	public Map<JdbcParameter, JdbcParameterBinding> getAppliedParameters() {
+		return Collections.emptyMap();
 	}
 
 	@Override

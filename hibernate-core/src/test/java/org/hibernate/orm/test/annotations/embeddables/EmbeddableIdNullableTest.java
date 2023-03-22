@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Query;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -25,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-16356")
 @ServiceRegistry(settings = @Setting( name = AvailableSettings.ID_NULLABLE, value = "true"))
+@RequiresDialect(H2Dialect.class)
 public class EmbeddableIdNullableTest {
 
     @Test

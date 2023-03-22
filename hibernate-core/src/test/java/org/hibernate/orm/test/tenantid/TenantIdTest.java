@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.tenantid;
 
+import org.hibernate.HibernateError;
 import org.hibernate.PropertyValueException;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -141,11 +142,10 @@ public class TenantIdTest implements SessionFactoryProducer {
         scope.inTransaction( s -> s.persist( record ) );
         assertEquals( "mine", record.state.tenantId );
         assertNotNull( record.state.updated );
-        // Round the temporal to avoid issues when the VM produces nanosecond precision timestamps
-        record.state.updated = DateTimeUtils.roundToDefaultPrecision(
-                record.state.updated,
-                scope.getSessionFactory().getJdbcServices().getDialect()
-        );
+
+        //We need to wait a little to make sure the timestamps produced are different
+        waitALittle();
+
         scope.inTransaction( s -> {
             Record r = s.find( Record.class, record.id );
             assertEquals( "mine", r.state.tenantId );
@@ -159,5 +159,14 @@ public class TenantIdTest implements SessionFactoryProducer {
             assertNotEquals( record.state.updated, r.state.updated );
             assertEquals( true, r.state.deleted );
         } );
+    }
+
+    private static void waitALittle() {
+        try {
+            Thread.sleep( 10 );
+        }
+        catch (InterruptedException e) {
+            throw new HibernateError( "Unexpected wakeup from test sleep" );
+        }
     }
 }

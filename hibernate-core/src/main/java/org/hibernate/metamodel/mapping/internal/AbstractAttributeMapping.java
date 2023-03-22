@@ -27,6 +27,11 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 		this.declaringType = declaringType;
 	}
 
+	// For Hibernate Reactive
+	protected AbstractAttributeMapping(AbstractAttributeMapping original) {
+		this( original.name, original.fetchableIndex, original.declaringType );
+	}
+
 	@Override
 	public ManagedMappingType getDeclaringType() {
 		return declaringType;

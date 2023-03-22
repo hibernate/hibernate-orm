@@ -5420,7 +5420,7 @@ public abstract class AbstractEntityPersister
 				dependantValue = ( (DependantValue) bootProperty.getValue() );
 			}
 
-			return MappingModelCreationHelper.buildEmbeddedAttributeMapping(
+			return buildEmbeddedAttributeMapping(
 					attrName,
 					stateArrayPosition,
 					fetchableIndex,
@@ -5437,7 +5437,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof CollectionType ) {
-			return MappingModelCreationHelper.buildPluralAttributeMapping(
+			return buildPluralAttributeMapping(
 					attrName,
 					stateArrayPosition,
 					fetchableIndex,
@@ -5450,7 +5450,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof EntityType ) {
-			return MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+			return buildSingularAssociationAttributeMapping(
 					attrName,
 					getNavigableRole().append( attrName ),
 					stateArrayPosition,
@@ -5468,6 +5468,90 @@ public abstract class AbstractEntityPersister
 		// todo (6.0) : for now ignore any non basic-typed attributes
 
 		return null;
+	}
+
+	// For Hibernate Reactive
+	protected EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			DependantValue dependantValue,
+			int dependantColumnIndex,
+			ManagedMappingType declaringType,
+			CompositeType attrType,
+			String tableExpression,
+			String[] rootTableKeyColumnNames,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		return MappingModelCreationHelper.buildEmbeddedAttributeMapping(
+				attrName,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				dependantValue,
+				dependantColumnIndex,
+				declaringType,
+				attrType,
+				tableExpression,
+				rootTableKeyColumnNames,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess
+		);
+	}
+
+	// For Hibernate Reactive
+	protected AttributeMapping buildSingularAssociationAttributeMapping(
+			String attrName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			EntityPersister declaringEntityPersister,
+			EntityType attrType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		return MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+				attrName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				declaringType,
+				declaringEntityPersister,
+				attrType,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess
+		);
+	}
+
+	// For Hibernate Reactive
+	protected AttributeMapping buildPluralAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			FetchMode fetchMode,
+			MappingModelCreationProcess creationProcess) {
+		return MappingModelCreationHelper.buildPluralAttributeMapping(
+				attrName,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				declaringType,
+				propertyAccess,
+				cascadeStyle,
+				fetchMode,
+				creationProcess
+		);
 	}
 
 	@Override

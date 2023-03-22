@@ -190,16 +190,49 @@ public class PluralAttributeMappingImpl
 			}
 		};
 
+		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
+	}
+
+	// For Hibernate Reactive
+	protected PluralAttributeMappingImpl(PluralAttributeMappingImpl original) {
+		super( original );
+		this.propertyAccess = original.propertyAccess;
+		this.attributeMetadata = original.attributeMetadata;
+		this.collectionMappingType = original.collectionMappingType;
+		this.stateArrayPosition = original.stateArrayPosition;
+		this.elementDescriptor = original.elementDescriptor;
+		this.indexDescriptor = original.indexDescriptor;
+		this.identifierDescriptor = original.identifierDescriptor;
+		this.fetchTiming = original.fetchTiming;
+		this.fetchStyle = original.fetchStyle;
+		this.collectionDescriptor = original.collectionDescriptor;
+		this.referencedPropertyName = original.referencedPropertyName;
+		this.mapKeyPropertyName = original.mapKeyPropertyName;
+		this.bidirectionalAttributeName = original.bidirectionalAttributeName;
+		this.sqlAliasStem = original.sqlAliasStem;
+		this.separateCollectionTable = original.separateCollectionTable;
+		this.indexMetadata = original.indexMetadata;
+		this.fkDescriptor = original.fkDescriptor;
+		this.orderByFragment = original.orderByFragment;
+		this.manyToManyOrderByFragment = original.manyToManyOrderByFragment;
+		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
+	}
+
+	private static void injectAttributeMapping(
+			CollectionPart elementDescriptor,
+			CollectionPart indexDescriptor,
+			CollectionPersister collectionDescriptor,
+			PluralAttributeMapping mapping) {
 		if ( collectionDescriptor instanceof Aware ) {
-			( (Aware) collectionDescriptor ).injectAttributeMapping( this );
+			( (Aware) collectionDescriptor ).injectAttributeMapping( mapping );
 		}
 
 		if ( elementDescriptor instanceof Aware ) {
-			( (Aware) elementDescriptor ).injectAttributeMapping( this );
+			( (Aware) elementDescriptor ).injectAttributeMapping( mapping );
 		}
 
 		if ( indexDescriptor instanceof Aware ) {
-			( (Aware) indexDescriptor ).injectAttributeMapping( this );
+			( (Aware) indexDescriptor ).injectAttributeMapping( mapping );
 		}
 	}
 
@@ -405,7 +438,7 @@ public class PluralAttributeMappingImpl
 							sqlAstCreationState
 					);
 
-					return new EagerCollectionFetch(
+					return buildEagerCollectionFetch(
 							fetchablePath,
 							this,
 							collectionTableGroup,
@@ -441,6 +474,40 @@ public class PluralAttributeMappingImpl
 				creationState.removeVisitedAssociationKey( fkDescriptor.getAssociationKey() );
 			}
 		}
+	}
+
+	// For Hibernate Reactive
+	protected Fetch buildDelayedCollectionFetch(
+			NavigablePath fetchedPath,
+			PluralAttributeMapping fetchedAttribute,
+			FetchParent fetchParent,
+			DomainResult<?> collectionKeyResult) {
+		return new DelayedCollectionFetch( fetchedPath, fetchedAttribute, fetchParent, collectionKeyResult );
+	}
+
+	// For Hibernate Reactive
+	protected Fetch buildSelectEagerCollectionFetch(
+			NavigablePath fetchedPath,
+			PluralAttributeMapping fetchedAttribute,
+			DomainResult<?> collectionKeyDomainResult,
+			FetchParent fetchParent) {
+		return new SelectEagerCollectionFetch( fetchedPath, fetchedAttribute, collectionKeyDomainResult, fetchParent );
+	}
+
+	// For Hibernate Reactive
+	protected Fetch buildEagerCollectionFetch(
+			NavigablePath fetchedPath,
+			PluralAttributeMapping fetchedAttribute,
+			TableGroup collectionTableGroup,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState) {
+		return new EagerCollectionFetch(
+				fetchedPath,
+				fetchedAttribute,
+				collectionTableGroup,
+				fetchParent,
+				creationState
+		);
 	}
 
 	@Override
@@ -481,7 +548,7 @@ public class PluralAttributeMappingImpl
 		else {
 			collectionKeyDomainResult = null;
 		}
-		return new SelectEagerCollectionFetch( fetchablePath, this, collectionKeyDomainResult, fetchParent );
+		return buildSelectEagerCollectionFetch( fetchablePath, this, collectionKeyDomainResult, fetchParent );
 	}
 
 	private TableGroup resolveCollectionTableGroup(
@@ -531,7 +598,7 @@ public class PluralAttributeMappingImpl
 					creationState
 			);
 		}
-		return new DelayedCollectionFetch(
+		return buildDelayedCollectionFetch(
 				fetchablePath,
 				this,
 				fetchParent,

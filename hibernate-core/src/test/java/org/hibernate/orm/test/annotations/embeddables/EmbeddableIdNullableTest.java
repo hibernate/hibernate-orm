@@ -4,8 +4,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Query;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -27,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-16356")
 @ServiceRegistry(settings = @Setting( name = AvailableSettings.ID_NULLABLE, value = "true"))
-@RequiresDialect(H2Dialect.class)
 public class EmbeddableIdNullableTest {
 
     @Test
@@ -35,7 +32,7 @@ public class EmbeddableIdNullableTest {
         scope.inTransaction(
                 session -> {
                     // Select the entity from the database using a null id component
-                    Query query = session.createNativeQuery("SELECT 123L AS id, NULL AS name", Product.class);
+                    Query query = session.createNativeQuery("SELECT 123 AS id, NULL AS name", Product.class);
                     List<Product> results = query.getResultList();
 
                     assertThat( results.size() ).isEqualTo(1);

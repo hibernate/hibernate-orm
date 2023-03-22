@@ -28,6 +28,10 @@ public class ClockHelper {
 	private static final Clock TICK_0 = Clock.tick( TICK_9, Duration.ofNanos( 1000000000L ) );
 
 	public static Clock forPrecision(Integer precision, SharedSessionContractImplementor session) {
+		return forPrecision( precision, session, 9 );
+	}
+
+	public static Clock forPrecision(Integer precision, SharedSessionContractImplementor session, int maxPrecision) {
 		final int resolvedPrecision;
 		if ( precision == null ) {
 			resolvedPrecision = session.getJdbcServices().getDialect().getDefaultTimestampPrecision();
@@ -35,7 +39,11 @@ public class ClockHelper {
 		else {
 			resolvedPrecision = precision;
 		}
-		switch ( resolvedPrecision ) {
+		return forPrecision( resolvedPrecision, maxPrecision );
+	}
+
+	public static Clock forPrecision(int resolvedPrecision, int maxPrecision) {
+		switch ( Math.min( resolvedPrecision, maxPrecision ) ) {
 			case 0:
 				return TICK_0;
 			case 1:

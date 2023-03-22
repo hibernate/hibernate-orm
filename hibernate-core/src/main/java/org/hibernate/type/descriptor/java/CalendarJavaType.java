@@ -179,6 +179,6 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 
 	@Override
 	public Calendar seed(Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
-		return GregorianCalendar.from( ZonedDateTime.now( ClockHelper.forPrecision( precision, session ) ) );
+		return GregorianCalendar.from( ZonedDateTime.now( ClockHelper.forPrecision( precision, session, 3 ) ) );
 	}
 }

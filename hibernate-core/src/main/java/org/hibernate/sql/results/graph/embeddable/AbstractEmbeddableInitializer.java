@@ -8,8 +8,11 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import java.util.List;
 
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
@@ -60,6 +63,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private final EmbeddableRepresentationStrategy representationStrategy;
 	private final FetchParentAccess fetchParentAccess;
 	private final boolean createEmptyCompositesEnabled;
+	private final boolean idNullable;
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final List<DomainResultAssembler<?>> assemblers;
@@ -102,6 +106,13 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				&& embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 
 		sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
+
+		idNullable = ConfigurationHelper.getBoolean(
+				Environment.ID_NULLABLE,
+				sessionFactory.getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
+				false
+		);
+
 		initializeAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
 	}
 
@@ -325,7 +336,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			if ( contributorValue != null ) {
 				stateAllNull = false;
 			}
-			else if ( isKey ) {
+			else if ( !idNullable && isKey ) {
 				// If this is a foreign key and there is a null part, the whole thing has to be turned into null
 				stateAllNull = true;
 				break;

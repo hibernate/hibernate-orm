@@ -192,8 +192,8 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to pass along any discovered {@link jakarta.validation.ValidatorFactory}.
-	 * 
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyValidatorFactory(Object) 
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyValidatorFactory(Object)
 	 */
 	String JAKARTA_VALIDATION_FACTORY = "jakarta.persistence.validation.factory";
 
@@ -264,8 +264,8 @@ public interface AvailableSettings {
 	 * This setting is used to configure access to the {@code BeanManager},
 	 * either directly, or via
 	 * {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
-	 * 
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyBeanManager(Object) 
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyBeanManager(Object)
 	 */
 	String JAKARTA_CDI_BEAN_MANAGER = "jakarta.persistence.bean.manager";
 
@@ -970,7 +970,7 @@ public interface AvailableSettings {
 	 *
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 * @see org.hibernate.internal.SessionFactoryRegistry
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String) 
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
 	 */
 	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
 
@@ -985,7 +985,7 @@ public interface AvailableSettings {
 	 * not want JNDI to be used.
 	 *
 	 * @see #SESSION_FACTORY_NAME
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNameAsJndiName(boolean) 
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNameAsJndiName(boolean)
 	 */
 	String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
 
@@ -1106,16 +1106,16 @@ public interface AvailableSettings {
 	/**
 	 * When enabled, specifies that the {@link org.hibernate.Session} should be
 	 * closed automatically at the end of each transaction.
-	 * 
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutoClosing(boolean) 
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutoClosing(boolean)
 	 */
 	String AUTO_CLOSE_SESSION = "hibernate.transaction.auto_close_session";
 
 	/**
 	 * When enabled, specifies that automatic flushing should occur during the JTA
 	 * {@link jakarta.transaction.Synchronization#beforeCompletion()} callback.
-	 * 
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutoFlushing(boolean) 
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutoFlushing(boolean)
 	 */
 	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
 
@@ -2080,8 +2080,8 @@ public interface AvailableSettings {
 	 * applied; the same instance will be passed to each {@code Session}. If there
 	 * should be a separate instance of {@code Interceptor} for each {@code Session},
 	 * use {@link #SESSION_SCOPED_INTERCEPTOR} instead.
-	 * 
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyInterceptor(Interceptor) 
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyInterceptor(Interceptor)
 	 *
 	 * @since 5.0
 	 */
@@ -2105,7 +2105,7 @@ public interface AvailableSettings {
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(Class)
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(Supplier)
-	 * 
+	 *
 	 * @since 5.2
 	 */
 	String SESSION_SCOPED_INTERCEPTOR = "hibernate.session_factory.session_scoped_interceptor";
@@ -2226,8 +2226,8 @@ public interface AvailableSettings {
 	/**
 	 * When enabled, specifies that {@linkplain org.hibernate.stat.Statistics statistics}
 	 * should be collected.
-	 * 
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatisticsSupport(boolean) 
+	 *
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatisticsSupport(boolean)
 	 */
 	String GENERATE_STATISTICS = "hibernate.generate_statistics";
 
@@ -3212,4 +3212,15 @@ public interface AvailableSettings {
 	 * and the database will drop the temporary tables automatically.
 	 */
 	String BULK_ID_STRATEGY_LOCAL_TEMPORARY_DROP_TABLES = LocalTemporaryTableStrategy.DROP_ID_TABLES;
+
+	/**
+	 * Specifies whether nullable components are allowed in composite IDs when using Hibernate.
+	 * <p>
+	 * When this property is set to {@code false} (the default value), Hibernate requires that all components of a
+	 * composite ID have non-null values.
+	 * <p>
+	 * When this property is set to {@code true}, Hibernate allows nullable components in composite IDs.
+	 */
+	String ID_NULLABLE = "hibernate.id.nullable";
+
 }

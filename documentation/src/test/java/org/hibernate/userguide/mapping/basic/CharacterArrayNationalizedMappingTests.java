@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
@@ -18,6 +19,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -28,7 +32,10 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isOneOf;
 
 /**
  * @see CharacterArrayMappingTests
@@ -59,6 +66,27 @@ public class CharacterArrayNationalizedMappingTests {
 		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperNVarchar");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
+			if ( dialect.supportsStandardArrays() ) {
+				assertThat( jdbcMapping.getJdbcType(), instanceOf( ArrayJdbcType.class ) );
+				assertThat(
+						( (ArrayJdbcType) jdbcMapping.getJdbcType() ).getElementJdbcType(),
+						is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getCharVariantCode() ) )
+				);
+			}
+			else {
+				assertThat(
+						jdbcMapping.getJdbcType(),
+						isOneOf(
+								jdbcTypeRegistry.getDescriptor( SqlTypes.ARRAY ),
+								jdbcTypeRegistry.getDescriptor( SqlTypes.SQLXML )
+						)
+				);
+			}
+		}
+
+		{
+			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperNVarcharOld");
+			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
 			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode())));
 		}
 
@@ -88,6 +116,9 @@ public class CharacterArrayNationalizedMappingTests {
 		char[] primitiveNVarchar;
 		@Nationalized
 		Character[] wrapperNVarchar;
+		@Nationalized
+		@JavaType( CharacterArrayJavaType.class )
+		Character[] wrapperNVarcharOld;
 
 		// mapped as NCLOB
 		@Lob
@@ -95,6 +126,7 @@ public class CharacterArrayNationalizedMappingTests {
 		char[] primitiveNClob;
 		@Lob
 		@Nationalized
+		@JavaType( CharacterArrayJavaType.class )
 		Character[] wrapperNClob;
 		//end::basic-nchararray-example[]
 	}

@@ -14,6 +14,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -114,22 +115,24 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		}
 		final BasicValueConverter<E, ?> valueConverter = elementType.getValueConverter();
 		if ( valueConverter == null ) {
-			return typeConfiguration.standardBasicTypeForJavaType(
-					collectionJavaType.getJavaType(),
-					javaType -> {
-						JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
-						if ( arrayJdbcType instanceof ArrayJdbcType ) {
-							arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
-									typeConfiguration,
-									dialect,
-									elementType,
-									columnTypeInformation
-							);
-						}
-						//noinspection unchecked,rawtypes
-						return new BasicCollectionType( elementType, arrayJdbcType, collectionJavaType );
-					}
-			);
+			final Function<JavaType<Object>, BasicType<Object>> creator = javaType -> {
+				JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
+				if ( arrayJdbcType instanceof ArrayJdbcType ) {
+					arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
+							typeConfiguration,
+							dialect,
+							elementType,
+							columnTypeInformation
+					);
+				}
+				//noinspection unchecked,rawtypes
+				return new BasicCollectionType( elementType, arrayJdbcType, collectionJavaType );
+			};
+			if ( typeConfiguration.getBasicTypeRegistry().getRegisteredType( elementType.getName() ) == elementType ) {
+				return typeConfiguration.standardBasicTypeForJavaType( collectionJavaType.getJavaType(), creator );
+			}
+			//noinspection unchecked
+			return creator.apply( (JavaType<Object>) (JavaType<?>) collectionJavaType );
 		}
 		else {
 			final JavaType<Object> relationalJavaType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor(

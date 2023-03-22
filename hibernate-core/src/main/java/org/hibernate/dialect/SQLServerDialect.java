@@ -73,6 +73,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
@@ -273,6 +274,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
+
+		// Need to bind as java.sql.Timestamp because reading OffsetDateTime from a "datetime2" column fails
+		typeContributions.contributeJdbcType( TimestampUtcAsJdbcTimestampJdbcType.INSTANCE );
 
 		typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
 				Types.TINYINT,

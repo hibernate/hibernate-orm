@@ -446,6 +446,9 @@ public class MappingModelCreationHelper {
 		);
 	}
 
+	/**
+	 * For Hibernate Reactive
+	 */
 	@SuppressWarnings("rawtypes")
 	public static PluralAttributeMapping buildPluralAttributeMapping(
 			String attrName,
@@ -457,7 +460,6 @@ public class MappingModelCreationHelper {
 			CascadeStyle cascadeStyle,
 			FetchMode fetchMode,
 			MappingModelCreationProcess creationProcess,
-			// For Hibernate Reactive
 			Function<PluralAttributeMappingImpl, PluralAttributeMappingImpl> mappingConverter) {
 
 		final Collection bootValueMapping = (Collection) bootProperty.getValue();
@@ -1583,7 +1585,9 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	public static ToOneAttributeMapping buildSingularAssociationAttributeMapping(
 			String attrName,
 			NavigableRole navigableRole,

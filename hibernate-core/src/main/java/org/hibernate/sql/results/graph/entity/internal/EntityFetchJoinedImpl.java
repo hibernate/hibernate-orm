@@ -79,7 +79,9 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 		this.entityResult.afterInitialize( this, creationState );
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected EntityFetchJoinedImpl(EntityFetchJoinedImpl original ) {
 		super( original.getFetchParent(), original.getReferencedModePart(), original.getNavigablePath() );
 		this.entityResult = original.entityResult;
@@ -109,7 +111,9 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 		).asEntityInitializer();
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected Initializer buildEntityJoinedFetchInitializer(
 			EntityResultGraphNode resultDescriptor,
 			EntityValuedFetchable referencedFetchable,

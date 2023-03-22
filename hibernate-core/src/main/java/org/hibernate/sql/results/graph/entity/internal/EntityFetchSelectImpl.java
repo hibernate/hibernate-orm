@@ -41,7 +41,9 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected EntityFetchSelectImpl(EntityFetchSelectImpl original) {
 		super( original.getNavigablePath(), original.getFetchedMapping(), original.getFetchParent() );
 		this.keyResult = original.keyResult;

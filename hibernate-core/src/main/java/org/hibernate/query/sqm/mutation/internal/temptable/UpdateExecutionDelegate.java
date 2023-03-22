@@ -473,7 +473,9 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		return new SqlTuple( expressions, null );
 	}
 
-	// FOr Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 
 	protected TemporaryTable getIdTable() {
 		return idTable;

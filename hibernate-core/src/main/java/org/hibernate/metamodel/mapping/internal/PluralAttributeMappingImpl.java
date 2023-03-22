@@ -193,7 +193,9 @@ public class PluralAttributeMappingImpl
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected PluralAttributeMappingImpl(PluralAttributeMappingImpl original) {
 		super( original );
 		this.propertyAccess = original.propertyAccess;
@@ -476,7 +478,9 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected Fetch buildDelayedCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
@@ -485,7 +489,9 @@ public class PluralAttributeMappingImpl
 		return new DelayedCollectionFetch( fetchedPath, fetchedAttribute, fetchParent, collectionKeyResult );
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected Fetch buildSelectEagerCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
@@ -494,7 +500,9 @@ public class PluralAttributeMappingImpl
 		return new SelectEagerCollectionFetch( fetchedPath, fetchedAttribute, collectionKeyDomainResult, fetchParent );
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected Fetch buildEagerCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,

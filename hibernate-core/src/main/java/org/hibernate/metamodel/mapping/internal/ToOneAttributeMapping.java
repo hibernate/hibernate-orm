@@ -157,7 +157,9 @@ public class ToOneAttributeMapping
 	private String identifyingColumnsTableExpression;
 	private boolean canUseParentTableGroup;
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected ToOneAttributeMapping(ToOneAttributeMapping original) {
 		super( original );
 		navigableRole = original.navigableRole;
@@ -1233,7 +1235,9 @@ public class ToOneAttributeMapping
 		}
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected EntityFetch buildEntityDelayedFetch(
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchedAttribute,
@@ -1243,7 +1247,9 @@ public class ToOneAttributeMapping
 		return new EntityDelayedFetchImpl( fetchParent, fetchedAttribute, navigablePath, keyResult, selectByUniqueKey );
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected EntityFetch buildEntityFetchSelect(
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchedAttribute,
@@ -1261,7 +1267,9 @@ public class ToOneAttributeMapping
 		);
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected EntityFetch buildEntityFetchJoined(
 			FetchParent fetchParent,
 			ToOneAttributeMapping toOneMapping,

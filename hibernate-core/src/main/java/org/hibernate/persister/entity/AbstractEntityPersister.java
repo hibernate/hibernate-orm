@@ -1011,13 +1011,17 @@ public abstract class AbstractEntityPersister
 		return rowIdName != null;
 	}
 
-	//used by Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	@SuppressWarnings("unused")
 	public boolean[][] getPropertyColumnUpdateable() {
 		return propertyColumnUpdateable;
 	}
 
-	//used by Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	@SuppressWarnings("unused")
 	public boolean[][] getPropertyColumnInsertable() {
 		return propertyColumnInsertable;
@@ -1580,7 +1584,9 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
-	// called by Hibernate Reactive
+	/**
+	 * Called by Hibernate Reactive
+	 */
 	protected boolean initializeLazyProperty(
 			final String fieldName,
 			final Object entity,
@@ -2557,7 +2563,9 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	// used by Hibernate Reactive
+	/**
+	 * Called by Hibernate Reactive
+	 */
 	@SuppressWarnings("unused")
 	protected String[][] getLazyPropertyColumnAliases() {
 		return lazyPropertyColumnAliases;
@@ -5470,7 +5478,9 @@ public abstract class AbstractEntityPersister
 		return null;
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
 			String attrName,
 			int stateArrayPosition,
@@ -5502,7 +5512,9 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected AttributeMapping buildSingularAssociationAttributeMapping(
 			String attrName,
 			NavigableRole navigableRole,
@@ -5530,7 +5542,9 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected AttributeMapping buildPluralAttributeMapping(
 			String attrName,
 			int stateArrayPosition,

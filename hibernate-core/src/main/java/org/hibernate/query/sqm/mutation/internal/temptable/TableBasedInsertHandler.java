@@ -337,7 +337,9 @@ public class TableBasedInsertHandler implements InsertHandler {
 		);
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected ExecutionDelegate buildExecutionDelegate(
 			SqmInsertStatement<?> sqmInsert,
 			MultiTableSqmMutationConverter sqmConverter,

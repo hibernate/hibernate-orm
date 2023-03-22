@@ -77,12 +77,6 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 		if ( javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class ) {
 			return (String) value;
 		}
-		else if ( javaType.getJavaTypeClass().isArray() ) {
-			if ( javaType.getJavaTypeClass().getComponentType().isEnum() ) {
-				// for enum arrays we need to explicitly pass Byte[] as the writer type
-				return writeValueAsString( value, javaType, Byte[].class );
-			}
-		}
 		return writeValueAsString( value, javaType, javaType.getJavaType() );
 	}
 

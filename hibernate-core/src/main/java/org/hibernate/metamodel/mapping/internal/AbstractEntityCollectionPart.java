@@ -84,7 +84,9 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		);
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected AbstractEntityCollectionPart(AbstractEntityCollectionPart original) {
 		this.navigableRole = original.navigableRole;
 		this.nature = original.nature;
@@ -220,7 +222,9 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		return fetch;
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected EagerCollectionFetch buildEagerCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
@@ -236,7 +240,9 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		);
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected EntityFetch buildEntityFetchJoined(
 			FetchParent fetchParent,
 			AbstractEntityCollectionPart abstractEntityCollectionPart,

@@ -75,7 +75,9 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 		afterInitialize( this, creationState );
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected EmbeddableFetchImpl(EmbeddableFetchImpl original) {
 		super( original.getFetchContainer(), original.getNavigablePath() );
 		fetchParent = original.fetchParent;

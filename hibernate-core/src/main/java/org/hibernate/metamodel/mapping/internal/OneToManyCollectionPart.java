@@ -73,6 +73,9 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		}
 	}
 
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected OneToManyCollectionPart(OneToManyCollectionPart original) {
 		super( original );
 		this.mapKeyPropertyName = original.mapKeyPropertyName;

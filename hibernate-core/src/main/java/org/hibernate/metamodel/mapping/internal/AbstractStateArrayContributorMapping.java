@@ -57,7 +57,9 @@ public abstract class AbstractStateArrayContributorMapping
 		);
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected AbstractStateArrayContributorMapping(AbstractStateArrayContributorMapping original) {
 		super( original );
 		this.attributeMetadata = original.attributeMetadata;

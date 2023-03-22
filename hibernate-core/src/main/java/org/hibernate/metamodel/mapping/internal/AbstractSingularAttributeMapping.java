@@ -49,7 +49,9 @@ public abstract class AbstractSingularAttributeMapping
 		this.propertyAccess = propertyAccess;
 	}
 
-	// For Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	protected AbstractSingularAttributeMapping( AbstractSingularAttributeMapping original ) {
 		super( original );
 		this.propertyAccess = original.propertyAccess;

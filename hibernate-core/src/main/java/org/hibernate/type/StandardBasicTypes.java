@@ -777,7 +777,7 @@ public final class StandardBasicTypes {
 				BINARY_WRAPPER,
 				"org.hibernate.type.WrapperBinaryType",
 				basicTypeRegistry,
-				"binary_wrapper", "wrapper-binary", "Byte[]", Byte[].class.getName()
+				"binary_wrapper", "wrapper-binary"//, "Byte[]", Byte[].class.getName()
 		);
 
 		handle(
@@ -905,7 +905,7 @@ public final class StandardBasicTypes {
 				CHARACTER_ARRAY,
 				"org.hibernate.type.CharacterArrayType",
 				basicTypeRegistry,
-				"wrapper-characters", Character[].class.getName(), "Character[]"
+				"wrapper-characters"//, Character[].class.getName(), "Character[]"
 		);
 
 		handle(

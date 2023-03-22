@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
@@ -71,21 +72,22 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		//noinspection unchecked
 		final BasicValueConverter<Object, Object> valueConverter = (BasicValueConverter<Object, Object>) elementType.getValueConverter();
 		if ( valueConverter == null ) {
-			return typeConfiguration.standardBasicTypeForJavaType(
-					arrayJavaType.getJavaType(),
-					javaType -> {
-						JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
-						if ( arrayJdbcType instanceof ArrayJdbcType ) {
-							arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
-									typeConfiguration,
-									dialect,
-									elementType,
-									columnTypeInformation
-							);
-						}
-						return new BasicArrayType<>( elementType, arrayJdbcType, javaType );
-					}
-			);
+			final Function<JavaType<T[]>, BasicType<T[]>> creator = javaType -> {
+				JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
+				if ( arrayJdbcType instanceof ArrayJdbcType ) {
+					arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
+							typeConfiguration,
+							dialect,
+							elementType,
+							columnTypeInformation
+					);
+				}
+				return new BasicArrayType<>( elementType, arrayJdbcType, javaType );
+			};
+			if ( typeConfiguration.getBasicTypeRegistry().getRegisteredType( elementType.getName() ) == elementType ) {
+				return typeConfiguration.standardBasicTypeForJavaType( arrayJavaType.getJavaType(), creator );
+			}
+			return creator.apply( arrayJavaType );
 		}
 		else {
 			final JavaType<Object> relationalJavaType = typeConfiguration.getJavaTypeRegistry().getDescriptor(

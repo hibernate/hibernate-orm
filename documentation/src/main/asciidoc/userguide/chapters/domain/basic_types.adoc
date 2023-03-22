@@ -689,7 +689,11 @@ See <<basic-nationalized>> for details on mapping strings using nationalized cha
 [[basic-chararray]]
 ==== Character arrays
 
-By default, Hibernate maps `Character[]` and `char[]` to the `VARCHAR` JDBC type.
+By default, Hibernate maps `char[]` to the `VARCHAR` JDBC type.
+Since `Character[]` can contain null elements, it is mapped as <<basic-mapping-array,basic array type>> instead.
+Prior to Hibernate 6.2, also `Character[]` mapped to `VARCHAR`, yet disallowed `null` elements.
+To continue mapping `Character[]` to the `VARCHAR` JDBC type, or for LOBs mapping to the `CLOB` JDBC type,
+it is necessary to annotate the persistent attribute with `@JavaType( CharacterArrayJavaType.class )`.
 
 [[basic-string-example-implicit]]
 .Mapping Character
@@ -872,8 +876,11 @@ include::{example-dir-basic-mapping}/basic/NClobCharArrayTest.java[tags=basic-nc
 [[basic-bytearray]]
 ==== Byte array
 
-By default, Hibernate maps values of type `byte[]` and `Byte[]` to the JDBC type
-`VARBINARY`.
+By default, Hibernate maps `byte[]` to the `VARBINARY` JDBC type.
+Since `Byte[]` can contain null elements, it is mapped as <<basic-mapping-array,basic array type>> instead.
+Prior to Hibernate 6.2, also `Byte[]` mapped to `VARBINARY`, yet disallowed `null` elements.
+To continue mapping `Byte[]` to the `VARBINARY` JDBC type, or for LOBs mapping to the `BLOB` JDBC type,
+it is necessary to annotate the persistent attribute with `@JavaType( ByteArrayJavaType.class )`.
 
 [[basic-bytearray-example]]
 .Mapping arrays of bytes

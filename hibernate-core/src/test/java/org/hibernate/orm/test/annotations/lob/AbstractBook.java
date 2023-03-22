@@ -5,6 +5,9 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.annotations.lob;
+import org.hibernate.annotations.JavaType;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Lob;
 import jakarta.persistence.MappedSuperclass;
@@ -40,6 +43,7 @@ public class AbstractBook {
 
 	@Lob
 	@Column(name = "fld_code")
+	@JavaType( CharacterArrayJavaType.class )
 	public Character[] getCode() {
 		return code;
 	}

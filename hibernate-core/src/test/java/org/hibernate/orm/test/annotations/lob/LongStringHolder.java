@@ -11,7 +11,9 @@ package org.hibernate.orm.test.annotations.lob;
 
 import java.sql.Types;
 
+import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -60,6 +62,7 @@ public class LongStringHolder {
 	}
 
 	@JdbcTypeCode( Types.LONGVARCHAR )
+	@JavaType( CharacterArrayJavaType.class )
 	public Character[] getWhatEver() {
 		return whatEver;
 	}

@@ -157,32 +157,29 @@ public class ToOneAttributeMapping
 	private String identifyingColumnsTableExpression;
 	private boolean canUseParentTableGroup;
 
-	protected ToOneAttributeMapping(ToOneAttributeMapping delegate) {
-		super(
-				delegate.getAttributeName(),
-				delegate.getStateArrayPosition(),
-				delegate.getFetchableKey(),
-				delegate.getAttributeMetadata(),
-				delegate.getMappedFetchOptions(),
-				delegate.getDeclaringType(),
-				delegate.getPropertyAccess()
-		);
-		navigableRole = delegate.navigableRole;
-		isInternalLoadNullable = delegate.isInternalLoadNullable;
-		notFoundAction = delegate.notFoundAction;
-		unwrapProxy = delegate.unwrapProxy;
-		isOptional = delegate.isOptional;
-		entityMappingType = delegate.entityMappingType;
-		referencedPropertyName = delegate.referencedPropertyName;
-		targetKeyPropertyName = delegate.targetKeyPropertyName;
-		cardinality = delegate.cardinality;
-		bidirectionalAttributePath = delegate.bidirectionalAttributePath;
-		declaringTableGroupProducer = delegate.declaringTableGroupProducer;
-		isKeyTableNullable = delegate.isKeyTableNullable;
-		sqlAliasStem = delegate.sqlAliasStem;
-		targetKeyPropertyNames = delegate.targetKeyPropertyNames;
-		isNullable = delegate.isNullable;
-		foreignKeyDescriptor = delegate.foreignKeyDescriptor;
+	// For Hibernate Reactive
+	protected ToOneAttributeMapping(ToOneAttributeMapping original) {
+		super( original );
+		navigableRole = original.navigableRole;
+		isInternalLoadNullable = original.isInternalLoadNullable;
+		notFoundAction = original.notFoundAction;
+		unwrapProxy = original.unwrapProxy;
+		isOptional = original.isOptional;
+		entityMappingType = original.entityMappingType;
+		referencedPropertyName = original.referencedPropertyName;
+		targetKeyPropertyName = original.targetKeyPropertyName;
+		cardinality = original.cardinality;
+		bidirectionalAttributePath = original.bidirectionalAttributePath;
+		declaringTableGroupProducer = original.declaringTableGroupProducer;
+		isKeyTableNullable = original.isKeyTableNullable;
+		sqlAliasStem = original.sqlAliasStem;
+		targetKeyPropertyNames = original.targetKeyPropertyNames;
+		isNullable = original.isNullable;
+		foreignKeyDescriptor = original.foreignKeyDescriptor;
+		sideNature = original.sideNature;
+		identifyingColumnsTableExpression = original.identifyingColumnsTableExpression;
+		canUseParentTableGroup = original.canUseParentTableGroup;
+
 	}
 
 	public ToOneAttributeMapping(
@@ -1186,7 +1183,7 @@ public class ToOneAttributeMapping
 				final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 				final TableGroup tableGroup = fromClauseAccess.getTableGroup( referencedNavigablePath );
 				fromClauseAccess.registerTableGroup( fetchablePath, tableGroup );
-				return new EntityFetchJoinedImpl(
+				return buildEntityFetchJoined(
 						fetchParent,
 						this,
 						tableGroup,
@@ -1216,7 +1213,7 @@ public class ToOneAttributeMapping
 					creationState
 			);
 			if ( fetchTiming == FetchTiming.IMMEDIATE ) {
-				return new EntityFetchSelectImpl(
+				return buildEntityFetchSelect(
 						fetchParent,
 						this,
 						fetchablePath,
@@ -1226,7 +1223,7 @@ public class ToOneAttributeMapping
 				);
 			}
 
-			return new EntityDelayedFetchImpl(
+			return buildEntityDelayedFetch(
 					fetchParent,
 					this,
 					fetchablePath,
@@ -1234,6 +1231,52 @@ public class ToOneAttributeMapping
 					isSelectByUniqueKey( sideNature )
 			);
 		}
+	}
+
+	// For Hibernate Reactive
+	protected EntityFetch buildEntityDelayedFetch(
+			FetchParent fetchParent,
+			ToOneAttributeMapping fetchedAttribute,
+			NavigablePath navigablePath,
+			DomainResult<?> keyResult,
+			boolean selectByUniqueKey) {
+		return new EntityDelayedFetchImpl( fetchParent, fetchedAttribute, navigablePath, keyResult, selectByUniqueKey );
+	}
+
+	// For Hibernate Reactive
+	protected EntityFetch buildEntityFetchSelect(
+			FetchParent fetchParent,
+			ToOneAttributeMapping fetchedAttribute,
+			NavigablePath navigablePath,
+			DomainResult<?> keyResult,
+			boolean selectByUniqueKey,
+			@SuppressWarnings("unused") DomainResultCreationState creationState) {
+		return new EntityFetchSelectImpl(
+				fetchParent,
+				fetchedAttribute,
+				navigablePath,
+				keyResult,
+				selectByUniqueKey,
+				creationState
+		);
+	}
+
+	// For Hibernate Reactive
+	protected EntityFetch buildEntityFetchJoined(
+			FetchParent fetchParent,
+			ToOneAttributeMapping toOneMapping,
+			TableGroup tableGroup,
+			DomainResult<?> keyResult,
+			NavigablePath navigablePath,
+			DomainResultCreationState creationState) {
+		return new EntityFetchJoinedImpl(
+				fetchParent,
+				toOneMapping,
+				tableGroup,
+				keyResult,
+				navigablePath,
+				creationState
+		);
 	}
 
 	private NavigablePath getReferencedNavigablePath(
@@ -1385,7 +1428,7 @@ public class ToOneAttributeMapping
 							);
 						}
 
-						return new EntityFetchJoinedImpl(
+						return buildEntityFetchJoined(
 								fetchParent,
 								this,
 								tableGroup,
@@ -1443,7 +1486,7 @@ public class ToOneAttributeMapping
 
 		// Consider all associations annotated with @NotFound as EAGER
 		if ( fetchTiming == FetchTiming.IMMEDIATE || hasNotFoundAction() ) {
-			return new EntityFetchSelectImpl(
+			return buildEntityFetchSelect(
 					fetchParent,
 					this,
 					fetchablePath,
@@ -1453,7 +1496,7 @@ public class ToOneAttributeMapping
 			);
 		}
 
-		return new EntityDelayedFetchImpl(
+		return buildEntityDelayedFetch(
 				fetchParent,
 				this,
 				fetchablePath,

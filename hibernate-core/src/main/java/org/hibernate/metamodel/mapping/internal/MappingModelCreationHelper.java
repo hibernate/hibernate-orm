@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.function.Function;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -431,6 +432,33 @@ public class MappingModelCreationHelper {
 			CascadeStyle cascadeStyle,
 			FetchMode fetchMode,
 			MappingModelCreationProcess creationProcess) {
+		return buildPluralAttributeMapping(
+				attrName,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				declaringType,
+				propertyAccess,
+				cascadeStyle,
+				fetchMode,
+				creationProcess,
+				Function.identity()
+		);
+	}
+
+	@SuppressWarnings("rawtypes")
+	public static PluralAttributeMapping buildPluralAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			FetchMode fetchMode,
+			MappingModelCreationProcess creationProcess,
+			// For Hibernate Reactive
+			Function<PluralAttributeMappingImpl, PluralAttributeMappingImpl> mappingConverter) {
 
 		final Collection bootValueMapping = (Collection) bootProperty.getValue();
 
@@ -625,28 +653,33 @@ public class MappingModelCreationHelper {
 				sessionFactory
 		);
 
-		final PluralAttributeMappingImpl pluralAttributeMapping = new PluralAttributeMappingImpl(
-				attrName,
-				bootValueMapping,
-				propertyAccess,
-				attributeMetadata,
-				collectionMappingType,
-				stateArrayPosition,
-				fetchableIndex,
-				elementDescriptor,
-				indexDescriptor,
-				identifierDescriptor,
-				timing,
-				style,
-				cascadeStyle,
-				declaringType,
-				collectionDescriptor
-		);
+		final PluralAttributeMappingImpl pluralAttributeMapping = mappingConverter
+				.apply( new PluralAttributeMappingImpl(
+						attrName,
+						bootValueMapping,
+						propertyAccess,
+						attributeMetadata,
+						collectionMappingType,
+						stateArrayPosition,
+						fetchableIndex,
+						elementDescriptor,
+						indexDescriptor,
+						identifierDescriptor,
+						timing,
+						style,
+						cascadeStyle,
+						declaringType,
+						collectionDescriptor
+				) );
 
 		creationProcess.registerInitializationCallback(
 				"PluralAttributeMapping(" + bootValueMapping.getRole() + ")#finishInitialization",
 				() -> {
-					pluralAttributeMapping.finishInitialization( bootProperty, bootValueMapping, creationProcess );
+					pluralAttributeMapping.finishInitialization(
+							bootProperty,
+							bootValueMapping,
+							creationProcess
+					);
 					return true;
 				}
 		);
@@ -1550,6 +1583,7 @@ public class MappingModelCreationHelper {
 		}
 	}
 
+	// For Hibernate Reactive
 	public static ToOneAttributeMapping buildSingularAssociationAttributeMapping(
 			String attrName,
 			NavigableRole navigableRole,
@@ -1562,6 +1596,35 @@ public class MappingModelCreationHelper {
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess) {
+		return buildSingularAssociationAttributeMapping(
+				attrName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				declaringType,
+				declaringEntityPersister,
+				attrType,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess,
+				Function.identity()
+		);
+	}
+
+	public static ToOneAttributeMapping buildSingularAssociationAttributeMapping(
+			String attrName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			EntityPersister declaringEntityPersister,
+			EntityType attrType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess,
+			Function<ToOneAttributeMapping, ToOneAttributeMapping> mappingConverter) {
 		if ( bootProperty.getValue() instanceof ToOne ) {
 			final ToOne value = (ToOne) bootProperty.getValue();
 			final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
@@ -1614,7 +1677,7 @@ public class MappingModelCreationHelper {
 				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
 			}
 
-			final ToOneAttributeMapping attributeMapping = new ToOneAttributeMapping(
+			final ToOneAttributeMapping attributeMapping = mappingConverter.apply( new ToOneAttributeMapping(
 					attrName,
 					navigableRole,
 					stateArrayPosition,
@@ -1627,7 +1690,7 @@ public class MappingModelCreationHelper {
 					declaringType,
 					declaringEntityPersister,
 					propertyAccess
-			);
+			) );
 
 			creationProcess.registerForeignKeyPostInitCallbacks(
 					"To-one key - " + navigableRole,

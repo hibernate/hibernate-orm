@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -41,7 +42,6 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
 import org.hibernate.spi.NavigablePath;
@@ -563,18 +563,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	private boolean isExistingEntityInitialized(Object existingEntity) {
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
-		if ( lazyInitializer != null ) {
-			return !lazyInitializer.isUninitialized();
-		}
-		else if ( isPersistentAttributeInterceptable( existingEntity ) ) {
-			final PersistentAttributeInterceptor persistentAttributeInterceptor =
-					asPersistentAttributeInterceptable( entityInstance ).$$_hibernate_getInterceptor();
-			return persistentAttributeInterceptor != null
-				&& !( persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor );
-		}
-
-		return true;
+		return Hibernate.isInitialized( existingEntity );
 	}
 
 	/**

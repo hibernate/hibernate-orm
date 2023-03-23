@@ -2615,7 +2615,9 @@ public abstract class CollectionBinder {
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value,
 			boolean unique) {
-		if ( isUnownedCollection() ) {
+		// This method is also called for entity valued map keys, so we must consider
+		// the mappedBy of the join columns instead of the collection's one
+		if ( joinColumns.hasMappedBy() ) {
 			bindUnownedManyToManyInverseForeignKey( targetEntity, joinColumns, value );
 		}
 		else {

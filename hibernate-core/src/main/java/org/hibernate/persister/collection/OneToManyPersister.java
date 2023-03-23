@@ -41,18 +41,23 @@ import org.hibernate.persister.collection.mutation.CollectionTableMapping;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorTablePerSubclass;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorTablePerSubclass;
 import org.hibernate.persister.collection.mutation.OperationProducer;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
 import org.hibernate.persister.collection.mutation.RemoveCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.RemoveCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.RemoveCoordinatorTablePerSubclass;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorOneToMany;
+import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTablePerSubclass;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -446,6 +451,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 
+		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
+				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
+			return new InsertRowsCoordinatorTablePerSubclass( this, rowMutationOperations );
+		}
 		return new InsertRowsCoordinatorStandard( this, rowMutationOperations );
 	}
 
@@ -460,6 +469,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			return new UpdateRowsCoordinatorNoOp( this );
 		}
 
+		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
+				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
+			return new UpdateRowsCoordinatorTablePerSubclass( this, rowMutationOperations, getFactory() );
+		}
 		return new UpdateRowsCoordinatorOneToMany( this, getRowMutationOperations(), getFactory() );
 	}
 
@@ -474,6 +487,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 
+
+		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
+				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
+			return new DeleteRowsCoordinatorTablePerSubclass( this, rowMutationOperations, false );
+		}
 		return new DeleteRowsCoordinatorStandard(
 				this,
 				rowMutationOperations,
@@ -493,6 +511,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			return new RemoveCoordinatorNoOp( this );
 		}
 
+		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
+				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
+			return new RemoveCoordinatorTablePerSubclass( this, this::buildDeleteAllOperation );
+		}
 		return new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation );
 	}
 
@@ -645,7 +667,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		final EntityCollectionPart elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
 		final EntityMappingType elementType = elementDescriptor.getAssociatedEntityMappingType();
-		assert tableReference.getTableName().equals( elementType.getIdentifierMapping().getContainingTableExpression() );
+		assert elementType.containsTableReference( tableReference.getTableName() );
 		updateBuilder.addKeyRestrictionsLeniently( elementType.getIdentifierMapping() );
 		return (TableUpdate<JdbcMutationOperation>) updateBuilder.buildMutation();
 	}

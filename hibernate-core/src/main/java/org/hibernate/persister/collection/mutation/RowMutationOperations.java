@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
@@ -104,6 +105,15 @@ public class RowMutationOperations {
 		return local;
 	}
 
+	public JdbcMutationOperation getInsertRowOperation(TableMapping tableMapping) {
+		if ( !hasInsertRow() ) {
+			return null;
+		}
+
+		final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );
+		return insertRowOperationProducer.createOperation( tableReference );
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// update row
@@ -158,6 +168,15 @@ public class RowMutationOperations {
 		}
 
 		return local;
+	}
+
+	public JdbcMutationOperation getDeleteRowOperation(TableMapping tableMapping) {
+		if ( !hasInsertRow() ) {
+			return null;
+		}
+
+		final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );
+		return deleteRowOperationProducer.createOperation( tableReference );
 	}
 
 

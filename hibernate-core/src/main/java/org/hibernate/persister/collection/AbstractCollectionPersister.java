@@ -242,7 +242,7 @@ public abstract class AbstractCollectionPersister
 	private final String manyToManyWhereString;
 	private final String manyToManyWhereTemplate;
 
-	private final Serializable[] spaces;
+	private final String[] spaces;
 
 	private final Map<String,String[]> collectionPropertyColumnAliases = new HashMap<>();
 
@@ -304,7 +304,6 @@ public abstract class AbstractCollectionPersister
 
 		int spacesSize = 1 + collectionBootDescriptor.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
-		spaces[0] = qualifiedTableName;
 		Iterator<String> tables = collectionBootDescriptor.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = tables.next();
@@ -363,6 +362,8 @@ public abstract class AbstractCollectionPersister
 		else {
 			elementPersister = null;
 		}
+		// Defer this after the element persister was determined, because it is needed in OneToManyPersister#getTableName()
+		spaces[0] = getTableName();
 
 		int elementSpan = elementBootDescriptor.getColumnSpan();
 		elementColumnAliases = new String[elementSpan];
@@ -602,7 +603,7 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 
-		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, qualifiedTableName );
+		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, getTableName(), getCollectionSpaces() );
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
@@ -1330,7 +1331,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public Serializable[] getCollectionSpaces() {
+	public String[] getCollectionSpaces() {
 		return spaces;
 	}
 
@@ -1631,9 +1632,11 @@ public abstract class AbstractCollectionPersister
 
 	private static CollectionTableMapping buildCollectionTableMapping(
 			Collection collectionBootDescriptor,
-			String qualifiedTableName) {
+			String qualifiedTableName,
+			String[] spaces) {
 		return new CollectionTableMapping(
 				qualifiedTableName,
+				spaces,
 				!collectionBootDescriptor.isOneToMany(),
 				collectionBootDescriptor.isInverse(),
 				new MutationDetails(

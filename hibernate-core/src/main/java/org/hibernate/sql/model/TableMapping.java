@@ -23,6 +23,10 @@ public interface TableMapping extends TableDetails {
 	 */
 	String getTableName();
 
+	default boolean containsTableName(String tableName) {
+		return getTableName().equals( tableName );
+	}
+
 	/**
 	 * The position of the table relative to others for the {@link MutationTarget}
 	 */

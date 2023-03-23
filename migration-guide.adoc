@@ -36,9 +36,6 @@ If the target database does not support time zone types natively, Hibernate beha
 
 To retain backwards compatibility, configure the setting `hibernate.timezone.default_storage` to `NORMALIZE`.
 
-[[ddl-changes]]
-== DDL type changes
-
 [[ddl-uuid-mariadv]]
 === UUID mapping changes on MariaDB
 

@@ -13,9 +13,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.JavaType;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
+import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -127,6 +129,7 @@ public class ByteArrayIdTest {
 	@Table(name = "DemoEntity")
 	public static class DemoEntity {
 		@Id
+		@JavaType( ByteArrayJavaType.class )
 		public Byte[] id;
 		public String name;
 	}

@@ -39,7 +39,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  *
  * @author Steve Ebersole
  */
-public class MutationExecutorStandard extends AbstractMutationExecutor {
+public class MutationExecutorStandard extends AbstractMutationExecutor implements JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
 	private final MutationOperationGroup mutationOperationGroup;
 
 	/**
@@ -156,7 +156,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 		this.valueBindings = new JdbcValueBindingsImpl(
 				mutationOperationGroup.getMutationType(),
 				mutationOperationGroup.getMutationTarget(),
-				this::findJdbcValueDescriptor,
+				this,
 				session
 		);
 
@@ -174,7 +174,8 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 		return valueBindings;
 	}
 
-	private JdbcValueDescriptor findJdbcValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
+	@Override
+	public JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
 		return mutationOperationGroup.getOperation( tableName ).findValueDescriptor( columnName, usage );
 	}
 

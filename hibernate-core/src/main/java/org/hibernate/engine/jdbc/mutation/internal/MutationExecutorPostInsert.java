@@ -48,7 +48,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  *
  * @author Steve Ebersole
  */
-public class MutationExecutorPostInsert implements MutationExecutor {
+public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
 	protected final EntityMutationTarget mutationTarget;
 	protected final MutationOperationGroup mutationOperationGroup;
 
@@ -66,7 +66,7 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 		this.valueBindings = new JdbcValueBindingsImpl(
 				MutationType.INSERT,
 				mutationTarget,
-				this::findJdbcValueDescriptor,
+				this,
 				session
 		);
 		this.mutationOperationGroup = mutationOperationGroup;
@@ -112,7 +112,8 @@ public class MutationExecutorPostInsert implements MutationExecutor {
 		return valueBindings;
 	}
 
-	private JdbcValueDescriptor findJdbcValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
+	@Override
+	public JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
 		final MutationOperation operation = mutationOperationGroup.getOperation( tableName );
 		if ( operation == null ) {
 			return null;

@@ -11,6 +11,7 @@ import java.util.Locale;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,6 +21,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.ValuesAnalysis;
+import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identityPreparation;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -41,10 +43,10 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  *
  * @author Steve Ebersole
  */
-public class MutationExecutorPostInsertSingleTable implements MutationExecutor {
+public class MutationExecutorPostInsertSingleTable implements MutationExecutor, JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
 	private final EntityMutationTarget mutationTarget;
 	private final SharedSessionContractImplementor session;
-
+	private final PreparableMutationOperation operation;
 	private final PreparedStatementDetails identityInsertStatementDetails;
 
 	private final JdbcValueBindingsImpl valueBindings;
@@ -57,18 +59,21 @@ public class MutationExecutorPostInsertSingleTable implements MutationExecutor {
 
 		assert mutationOperationGroup.getNumberOfOperations() == 1;
 
-		final PreparableMutationOperation operation = mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
+		this.operation = mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
 		this.identityInsertStatementDetails = identityPreparation( operation, session );
 
 		this.valueBindings = new JdbcValueBindingsImpl(
 				MutationType.INSERT,
 				mutationTarget,
-				(tableName, columnName, usage) -> {
-					assert identityInsertStatementDetails.getMutatingTableDetails().getTableName().equals( tableName );
-					return operation.findValueDescriptor( columnName, usage );
-				},
+				this,
 				session
 		);
+	}
+
+	@Override
+	public JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
+		assert identityInsertStatementDetails.getMutatingTableDetails().getTableName().equals( tableName );
+		return operation.findValueDescriptor( columnName, usage );
 	}
 
 	@Override

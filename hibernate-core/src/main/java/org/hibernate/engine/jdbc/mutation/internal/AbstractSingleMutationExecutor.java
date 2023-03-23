@@ -18,7 +18,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSingleMutationExecutor extends AbstractMutationExecutor {
+public abstract class AbstractSingleMutationExecutor extends AbstractMutationExecutor implements JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
 	private final PreparableMutationOperation mutationOperation;
 	private final JdbcValueBindingsImpl valueBindings;
 
@@ -29,7 +29,7 @@ public abstract class AbstractSingleMutationExecutor extends AbstractMutationExe
 		this.valueBindings = new JdbcValueBindingsImpl(
 				mutationOperation.getMutationType(),
 				mutationOperation.getMutationTarget(),
-				this::findJdbcValueDescriptor,
+				this,
 				session
 		);
 	}
@@ -47,8 +47,14 @@ public abstract class AbstractSingleMutationExecutor extends AbstractMutationExe
 		return statementDetails;
 	}
 
-	private JdbcValueDescriptor findJdbcValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
-		assert mutationOperation.getTableDetails().getTableName().equals( tableName )
+	@Override
+	public String resolvePhysicalTableName(String tableName) {
+		return mutationOperation.getTableDetails().getTableName();
+	}
+
+	@Override
+	public JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
+		assert mutationOperation.getTableDetails().containsTableName( tableName )
 				: String.format( Locale.ROOT, "table names did not match : `%s` & `%s`", tableName, mutationOperation.getTableDetails().getTableName()  );
 		return mutationOperation.findValueDescriptor( columnName, usage );
 	}

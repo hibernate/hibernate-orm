@@ -121,6 +121,7 @@ public class MetadataTest {
         assertEquals(House.class, attr.getBindableJavaType());
         final EntityType<House> houseType = scope.getEntityManagerFactory().getMetamodel().entity(House.class);
         assertEquals(houseType.getBindableJavaType(), attr.getBindableJavaType());
+        assertFalse(entityType.getDeclaredSingularAttribute("house2").isOptional());
     }
 
     @Test
@@ -158,7 +159,7 @@ public class MetadataTest {
         assertFalse(fridgeType.hasVersionAttribute());
         assertEquals(Type.PersistenceType.ENTITY, fridgeType.getPersistenceType());
 
-        assertEquals(3, fridgeType.getDeclaredAttributes().size());
+        assertEquals(4, fridgeType.getDeclaredAttributes().size());
 
         final EntityType<House> houseType = scope.getEntityManagerFactory().getMetamodel().entity(House.class);
         assertEquals("House", houseType.getName());
@@ -231,6 +232,7 @@ public class MetadataTest {
         assertFalse(singularAttribute.isId());
         assertFalse(singularAttribute.isOptional());
         assertFalse(entityType.getDeclaredSingularAttribute("brand", String.class).isOptional());
+        assertFalse(entityType.getDeclaredSingularAttribute("height", Integer.class).isOptional());
         assertEquals(Type.PersistenceType.BASIC, singularAttribute.getType().getPersistenceType());
         final Attribute<? super Fridge, ?> attribute = entityType.getDeclaredAttribute("temperature");
         assertNotNull(attribute);

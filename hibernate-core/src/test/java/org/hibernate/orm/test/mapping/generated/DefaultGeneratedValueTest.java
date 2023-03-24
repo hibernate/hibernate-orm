@@ -25,6 +25,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.HibernateError;
 import org.hibernate.Session;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -152,6 +153,9 @@ public class DefaultGeneratedValueTest {
 		assertNotNull( created.vmCreatedSqlTimestamp );
 		assertNotNull( created.updated );
 
+		//We need to wait a little to make sure the timestamps produced are different
+		waitALittle();
+
 		scope.inTransaction( (s) -> {
 			final TheEntity theEntity = s.get( TheEntity.class, 1 );
 			theEntity.lastName = "Smith";
@@ -253,6 +257,15 @@ public class DefaultGeneratedValueTest {
 		@Override
 		public String generateValue(Session session, Object owner) {
 			return "Bob";
+		}
+	}
+
+	private static void waitALittle() {
+		try {
+			Thread.sleep( 10 );
+		}
+		catch (InterruptedException e) {
+			throw new HibernateError( "Unexpected wakeup from test sleep" );
 		}
 	}
 }

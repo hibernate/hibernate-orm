@@ -453,8 +453,13 @@ public class PropertyBinder {
 
 	private void handleOptional(Property property) {
 		if ( this.property != null ) {
-			property.setOptional( !isId && isOptional( this.property ) );
+			property.setOptional( !isId && isOptional( this.property ) && isNullable( property ) );
 		}
+	}
+
+	private static boolean isNullable(Property property) {
+		final Value value = property.getValue();
+		return value instanceof org.hibernate.mapping.OneToMany || value.isNullable();
 	}
 
 	private void handleNaturalId(Property property) {

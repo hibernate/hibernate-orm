@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.jpa.metadata;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 
@@ -21,6 +22,7 @@ import jakarta.persistence.ManyToOne;
 public class JoinedManyToOneOwner {
 	private Long id;
 	private House house;
+	private House house2;
 
 	@Id
 	public Long getId() {
@@ -38,5 +40,15 @@ public class JoinedManyToOneOwner {
 
 	public void setHouse(House house) {
 		this.house = house;
+	}
+
+	@ManyToOne
+	@JoinColumn(name = "house2", nullable = false)
+	public House getHouse2() {
+		return house2;
+	}
+
+	public void setHouse2(House house2) {
+		this.house2 = house2;
 	}
 }

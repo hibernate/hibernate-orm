@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.metadata;
 import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -18,6 +19,7 @@ public class Fridge {
 	private Long id;
 	private String brand;
 	private int temperature;
+	private Integer height;
 	//dimensions
 
 	@Id
@@ -45,6 +47,15 @@ public class Fridge {
 
 	public void setTemperature(int temperature) {
 		this.temperature = temperature;
+	}
+
+	@Column(nullable = false)
+	public Integer getHeight() {
+		return height;
+	}
+
+	public void setHeight(Integer height) {
+		this.height = height;
 	}
 }
 

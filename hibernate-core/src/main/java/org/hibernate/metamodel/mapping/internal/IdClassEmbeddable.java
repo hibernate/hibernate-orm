@@ -6,10 +6,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.io.Serializable;
 import java.util.function.Consumer;
 
-import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.EntityKey;
@@ -286,49 +284,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
 		return idMapping.findContainingEntityMapping();
-	}
-
-	@Override
-	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
-			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
-		int span = 0;
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attribute = attributeMappings.get( i );
-			final Object attributeValue = attribute.getValue( domainValue );
-			span +=  attribute.breakDownJdbcValues( attributeValue, offset + span, x, y, valueConsumer, session );
-		}
-		return span;
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		// todo (6.0) : reduce to-one values to id here?
-		final Object[] result = new Object[ getNumberOfAttributeMappings() ];
-		for ( int i = 0; i < result.length; i++ ) {
-			final AttributeMapping attributeMapping = getAttributeMapping( i );
-			Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			result[i] = attributeMapping.disassemble( o, session );
-		}
-
-		return result;
-	}
-
-	@Override
-	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return;
-		}
-		final Serializable[] result = new Serializable[ getNumberOfAttributeMappings() ];
-		for ( int i = 0; i < result.length; i++ ) {
-			final AttributeMapping attributeMapping = getAttributeMapping( i );
-			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			attributeMapping.addToCacheKey( cacheKey, o, session );
-		}
 	}
 
 	@Override

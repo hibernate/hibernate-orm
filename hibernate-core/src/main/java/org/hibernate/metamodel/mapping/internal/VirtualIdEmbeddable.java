@@ -159,22 +159,6 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 	}
 
 	@Override
-	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
-			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
-		int span = 0;
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attribute = attributeMappings.get( i );
-			final Object attributeValue = attribute.getValue( domainValue );
-			span += attribute.breakDownJdbcValues( attributeValue, offset + span, x, y, valueConsumer, session );
-		}
-		return span;
-	}
-
-	@Override
 	public <X, Y> int decompose(
 			Object domainValue,
 			int offset,

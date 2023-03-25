@@ -89,11 +89,6 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public JavaType<?> getJavaType() {
-		return getPartMappingType().getMappedJavaType();
-	}
-
-	@Override
 	public String getContainingTableExpression() {
 		return tableExpression;
 	}
@@ -188,28 +183,36 @@ public abstract class AbstractCompositeIdentifierMapping
 		int span = 0;
 		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 		final int size = embeddableTypeDescriptor.getNumberOfAttributeMappings();
-		for ( int i = 0; i < size; i++ ) {
-			final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
-			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
-				final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
-				final Object identifier = fkDescriptor.getAssociationKeyFromSide(
-						o,
-						toOneAttributeMapping.getSideNature().inverse(),
-						session
-				);
-				span += fkDescriptor.forEachJdbcValue(
-						identifier,
-						span + offset,
-						x,
-						y,
-						valuesConsumer,
-						session
-				);
+		if ( value == null ) {
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
+				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
-			else {
-				span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
+		}
+		else {
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
+				final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+				if ( attributeMapping instanceof ToOneAttributeMapping ) {
+					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+					final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+					final Object identifier = fkDescriptor.getAssociationKeyFromSide(
+							o,
+							toOneAttributeMapping.getSideNature().inverse(),
+							session
+					);
+					span += fkDescriptor.forEachJdbcValue(
+							identifier,
+							span + offset,
+							x,
+							y,
+							valuesConsumer,
+							session
+					);
+				}
+				else {
+					span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
+				}
 			}
 		}
 		return span;

@@ -326,16 +326,23 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				span += attributes.get( i ).breakDownJdbcValues( null, offset + span, x, y, valueConsumer, session );
 			}
-			return span;
 		}
+		else {
+			assert domainValue instanceof Object[];
 
-		assert domainValue instanceof Object[];
+			final Object[] values = (Object[]) domainValue;
+			assert values.length == attributes.size();
 
-		final Object[] values = (Object[]) domainValue;
-		assert values.length == attributes.size();
-
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			span += attributes.get( i ).breakDownJdbcValues( values[ i ], offset + span, x, y, valueConsumer, session );
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				span += attributes.get( i ).breakDownJdbcValues(
+						values[i],
+						offset + span,
+						x,
+						y,
+						valueConsumer,
+						session
+				);
+			}
 		}
 		return span;
 	}
@@ -379,6 +386,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
 		assert value instanceof Object[];
 
 		final Object[] incoming = (Object[]) value;
@@ -396,13 +406,20 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
-		assert value instanceof Object[];
+		if ( value == null ) {
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				attributes.get( i ).addToCacheKey( cacheKey, null, session );
+			}
+		}
+		else {
+			assert value instanceof Object[];
 
-		final Object[] values = (Object[]) value;
-		assert values.length == attributes.size();
+			final Object[] values = (Object[]) value;
+			assert values.length == attributes.size();
 
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			attributes.get( i ).addToCacheKey( cacheKey, values[i], session );
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				attributes.get( i ).addToCacheKey( cacheKey, values[i], session );
+			}
 		}
 	}
 
@@ -414,14 +431,36 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			Y y,
 			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		assert value instanceof Object[];
-
-		final Object[] incoming = (Object[]) value;
-		assert incoming.length == attributes.size();
 		int span = 0;
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributes.get( i );
-			span += attribute.forEachDisassembledJdbcValue( incoming[ i ], span + offset, x, y, valuesConsumer, session );
+		if ( value == null ) {
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				final SingularAttributeMapping attribute = attributes.get( i );
+				span += attribute.forEachDisassembledJdbcValue(
+						null,
+						span + offset,
+						x,
+						y,
+						valuesConsumer,
+						session
+				);
+			}
+		}
+		else {
+			assert value instanceof Object[];
+
+			final Object[] incoming = (Object[]) value;
+			assert incoming.length == attributes.size();
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				final SingularAttributeMapping attribute = attributes.get( i );
+				span += attribute.forEachDisassembledJdbcValue(
+						incoming[i],
+						span + offset,
+						x,
+						y,
+						valuesConsumer,
+						session
+				);
+			}
 		}
 		return span;
 	}
@@ -434,15 +473,23 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			Y y,
 			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		assert value instanceof Object[];
-
-		final Object[] incoming = (Object[]) value;
-		assert incoming.length == attributes.size();
-
 		int span = 0;
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributes.get( i );
-			span += attribute.forEachJdbcValue( incoming[ i ], span + offset, x, y, valuesConsumer, session );
+		if ( value == null ) {
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				final SingularAttributeMapping attribute = attributes.get( i );
+				span += attribute.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
+			}
+		}
+		else {
+			assert value instanceof Object[];
+
+			final Object[] incoming = (Object[]) value;
+			assert incoming.length == attributes.size();
+
+			for ( int i = 0; i < attributes.size(); i++ ) {
+				final SingularAttributeMapping attribute = attributes.get( i );
+				span += attribute.forEachJdbcValue( incoming[i], span + offset, x, y, valuesConsumer, session );
+			}
 		}
 		return span;
 	}

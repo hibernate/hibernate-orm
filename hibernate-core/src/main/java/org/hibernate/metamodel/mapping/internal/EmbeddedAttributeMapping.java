@@ -185,53 +185,6 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public int compare(Object value1, Object value2) {
-		return super.compare( value1, value2 );
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return getEmbeddableTypeDescriptor().forEachSelectable( offset, consumer );
-	}
-
-	@Override
-	public void forEachInsertable(SelectableConsumer consumer) {
-		getEmbeddableTypeDescriptor().forEachInsertable( 0, consumer );
-	}
-
-	@Override
-	public void forEachUpdatable(SelectableConsumer consumer) {
-		getEmbeddableTypeDescriptor().forEachUpdatable( 0, consumer );
-	}
-
-	@Override
-	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
-			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
-		return getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
-	}
-
-	@Override
-	public <X, Y> int decompose(
-			Object domainValue,
-			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
-		return getEmbeddableTypeDescriptor().decompose( domainValue, offset, x, y, valueConsumer, session );
-	}
-
-	@Override
-	public boolean hasPartitionedSelectionMapping() {
-		return getEmbeddableTypeDescriptor().hasPartitionedSelectionMapping();
-	}
-
-	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -344,20 +297,6 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public ModelPart findSubPart(
-			String name,
-			EntityMappingType treatTargetType) {
-		return getMappedType().findSubPart( name, treatTargetType );
-	}
-
-	@Override
-	public void visitSubParts(
-			Consumer<ModelPart> consumer,
-			EntityMappingType treatTargetType) {
-		getMappedType().visitSubParts( consumer, treatTargetType );
-	}
-
-	@Override
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
@@ -398,21 +337,6 @@ public class EmbeddedAttributeMapping
 	@Override
 	public String getSqlAliasStem() {
 		return getAttributeName();
-	}
-
-	@Override
-	public int getNumberOfFetchables() {
-		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
-	}
-
-	@Override
-	public Fetchable getFetchable(int position) {
-		return getEmbeddableTypeDescriptor().getFetchable( position );
-	}
-
-	@Override
-	public int getSelectableIndex(String selectableName) {
-		return getEmbeddableTypeDescriptor().getSelectableIndex( selectableName );
 	}
 
 	@Override

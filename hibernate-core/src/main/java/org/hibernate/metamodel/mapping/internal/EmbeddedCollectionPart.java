@@ -298,11 +298,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public JavaType<?> getJavaType() {
-		return getEmbeddableTypeDescriptor().getJavaType();
-	}
-
-	@Override
 	public JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
 	}
@@ -318,32 +313,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public int getNumberOfFetchables() {
-		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
-	}
-
-	@Override
-	public Fetchable getFetchable(int position) {
-		return getEmbeddableTypeDescriptor().getFetchable( position );
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		return getEmbeddableTypeDescriptor().forEachSelectable( offset, consumer );
-	}
-
-	@Override
-	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
-			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
-		return getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
-	}
-
-	@Override
 	public FetchStyle getStyle() {
 		return FetchStyle.JOIN;
 	}
@@ -351,11 +320,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
-	}
-
-	@Override
-	public boolean hasPartitionedSelectionMapping() {
-		return getEmbeddableTypeDescriptor().hasPartitionedSelectionMapping();
 	}
 
 }

@@ -34,6 +34,9 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
 		final Object[] disassembled = new Object[components.length];
 		final Object[] array = (Object[]) value;
 		for ( int i = 0; i < components.length; i++ ) {
@@ -45,10 +48,15 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
 		if ( value == null ) {
-			return;
+			for ( int i = 0; i < components.length; i++ ) {
+				components[i].addToCacheKey( cacheKey, null, session );
+			}
 		}
-		for ( int i = 0; i < components.length; i++ ) {
-			components[i].addToCacheKey( cacheKey, value, session );
+		else {
+			final Object[] array = (Object[]) value;
+			for ( int i = 0; i < components.length; i++ ) {
+				components[i].addToCacheKey( cacheKey, array[i], session );
+			}
 		}
 	}
 
@@ -60,10 +68,31 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 			Y y,
 			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		final Object[] values = (Object[]) value;
 		int span = 0;
-		for ( int i = 0; i < components.length; i++ ) {
-			span += components[i].forEachDisassembledJdbcValue( values[i], span + offset, x, y, valuesConsumer, session );
+		if ( value == null ) {
+			for ( int i = 0; i < components.length; i++ ) {
+				span += components[i].forEachDisassembledJdbcValue(
+						null,
+						span + offset,
+						x,
+						y,
+						valuesConsumer,
+						session
+				);
+			}
+		}
+		else {
+			final Object[] values = (Object[]) value;
+			for ( int i = 0; i < components.length; i++ ) {
+				span += components[i].forEachDisassembledJdbcValue(
+						values[i],
+						span + offset,
+						x,
+						y,
+						valuesConsumer,
+						session
+				);
+			}
 		}
 		return span;
 	}
@@ -76,15 +105,27 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 			Y y,
 			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		final Object[] values = (Object[]) value;
 		int span = 0;
-		for ( int i = 0; i < components.length; i++ ) {
-			span += components[i].forEachDisassembledJdbcValue(
-					components[i].disassemble( values[i], session ),
-					span + offset,
-					x, y, valuesConsumer,
-					session
-			);
+		if ( value == null ) {
+			for ( int i = 0; i < components.length; i++ ) {
+				span += components[i].forEachDisassembledJdbcValue(
+						components[i].disassemble( null, session ),
+						span + offset,
+						x, y, valuesConsumer,
+						session
+				);
+			}
+		}
+		else {
+			final Object[] values = (Object[]) value;
+			for ( int i = 0; i < components.length; i++ ) {
+				span += components[i].forEachDisassembledJdbcValue(
+						components[i].disassemble( values[i], session ),
+						span + offset,
+						x, y, valuesConsumer,
+						session
+				);
+			}
 		}
 		return span;
 	}

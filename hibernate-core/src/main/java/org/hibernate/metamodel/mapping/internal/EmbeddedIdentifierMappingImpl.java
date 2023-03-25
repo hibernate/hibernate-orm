@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.io.Serializable;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -110,17 +109,6 @@ public class EmbeddedIdentifierMappingImpl
 		return name;
 	}
 
-
-	@Override
-	public int getNumberOfFetchables() {
-		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
-	}
-
-	@Override
-	public Fetchable getFetchable(int position) {
-		return getEmbeddableTypeDescriptor().getFetchable( position );
-	}
-
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return propertyAccess;
@@ -131,32 +119,4 @@ public class EmbeddedIdentifierMappingImpl
 		return name;
 	}
 
-	@Override
-	public <X, Y> int breakDownJdbcValues(
-			Object domainValue,
-			int offset,
-			X x,
-			Y y,
-			JdbcValueBiConsumer<X, Y> valueConsumer,
-			SharedSessionContractImplementor session) {
-		return getEmbeddableTypeDescriptor().breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
-	}
-
-	@Override
-	public <X, Y> int forEachDisassembledJdbcValue(
-			Object value,
-			int offset,
-			X x,
-			Y y,
-			JdbcValuesBiConsumer<X, Y> valuesConsumer,
-			SharedSessionContractImplementor session) {
-		return getEmbeddableTypeDescriptor().forEachDisassembledJdbcValue(
-				value,
-				offset,
-				x,
-				y,
-				valuesConsumer,
-				session
-		);
-	}
 }

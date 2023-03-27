@@ -320,6 +320,9 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
 		final Serializable[] result = new Serializable[ getNumberOfAttributeMappings() ];
 		for ( int i = 0; i < result.length; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );

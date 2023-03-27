@@ -56,7 +56,13 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 	}
 
 	@Override
-	default void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session){
+	default void addToCacheKey(
+			MutableCacheKeyBuilder cacheKey,
+			Object value,
+			SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
 		final JdbcMapping jdbcMapping = getJdbcMapping();
 		final BasicValueConverter converter = jdbcMapping.getValueConverter();
 		final Serializable disassemble;

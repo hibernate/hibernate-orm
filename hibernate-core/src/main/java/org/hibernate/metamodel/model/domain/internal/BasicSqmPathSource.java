@@ -19,13 +19,16 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 public class BasicSqmPathSource<J>
 		extends AbstractSqmPathSource<J>
 		implements ReturnableType<J> {
+	private final boolean isGeneric;
 
 	public BasicSqmPathSource(
 			String localPathName,
 			SqmPathSource<J> pathModel,
 			BasicDomainType<J> domainType,
-			BindableType jpaBindableType) {
+			BindableType jpaBindableType,
+			boolean isGeneric) {
 		super( localPathName, pathModel, domainType, jpaBindableType );
+		this.isGeneric = isGeneric;
 	}
 
 	@Override
@@ -64,6 +67,11 @@ public class BasicSqmPathSource<J>
 	@Override
 	public Class<J> getJavaType() {
 		return getExpressibleJavaType().getJavaTypeClass();
+	}
+
+	@Override
+	public boolean isGeneric() {
+		return isGeneric;
 	}
 
 	@Override

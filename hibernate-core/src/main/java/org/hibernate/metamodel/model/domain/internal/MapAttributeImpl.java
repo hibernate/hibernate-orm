@@ -31,7 +31,8 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 
 		this.keyPathSource = SqmMappingModelHelper.resolveSqmKeyPathSource(
 				xceBuilder.getListIndexOrMapKeyType(),
-				BindableType.PLURAL_ATTRIBUTE
+				BindableType.PLURAL_ATTRIBUTE,
+				xceBuilder.isGeneric()
 		);
 	}
 
@@ -71,7 +72,9 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 
 	@Override
 	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
-		return pathSource == getElementPathSource() || pathSource == keyPathSource ? null : getElementPathSource();
+		final String pathName = pathSource.getPathName();
+		return pathName.equals( getElementPathSource().getPathName() )
+				|| pathName.equals( keyPathSource.getPathName() ) ? null : getElementPathSource();
 	}
 
 	@Override

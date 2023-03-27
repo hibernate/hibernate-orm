@@ -447,7 +447,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		final EntityTableMapping mutatingTableDetails = (EntityTableMapping) versionUpdateGroup.getSingleOperation().getTableDetails();
 
-		final MutationExecutor mutationExecutor = executor( session, versionUpdateGroup );
+		final MutationExecutor mutationExecutor = executor( session, versionUpdateGroup, false );
 
 		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
 
@@ -703,7 +703,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			UpdateValuesAnalysisImpl valuesAnalysis,
 			SharedSessionContractImplementor session) {
 
-		final MutationExecutor mutationExecutor = executor( session, staticUpdateGroup );
+		final MutationExecutor mutationExecutor = executor( session, staticUpdateGroup, false );
 
 		decomposeForUpdate(
 				id,
@@ -921,7 +921,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// and then execute them
 
-		final MutationExecutor mutationExecutor = executor( session, dynamicUpdateGroup );
+		final MutationExecutor mutationExecutor = executor( session, dynamicUpdateGroup, true );
 
 		decomposeForUpdate(
 				id,
@@ -966,11 +966,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group) {
+	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
 		return session.getSessionFactory()
 				.getServiceRegistry()
 				.getService( MutationExecutorService.class )
-				.createExecutor( ( session.getTransactionCoordinator() != null &&
+				.createExecutor( ( !dynamicUpdate && session.getTransactionCoordinator() != null &&
 										session.getTransactionCoordinator().isTransactionActive() ? () -> batchKey : () -> null ),
 								group, session );
 	}

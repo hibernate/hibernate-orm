@@ -152,7 +152,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 		final TableInclusionChecker tableInclusionChecker = getTableInclusionChecker( insertValuesAnalysis );
 
-		final MutationExecutor mutationExecutor = executor( session, staticInsertGroup );
+		final MutationExecutor mutationExecutor = executor( session, staticInsertGroup, false );
 
 		decomposeForInsert(
 				mutationExecutor,
@@ -271,7 +271,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		final boolean[] insertability = getPropertiesToInsert( values );
 		final MutationOperationGroup insertGroup = generateDynamicInsertSqlGroup( insertability );
 
-		final MutationExecutor mutationExecutor = executor( session, insertGroup );
+		final MutationExecutor mutationExecutor = executor( session, insertGroup, true );
 
 		final InsertValuesAnalysis insertValuesAnalysis = new InsertValuesAnalysis( entityPersister(), values );
 
@@ -301,11 +301,11 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group) {
+	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
 		return session.getFactory()
 				.getServiceRegistry()
 				.getService( MutationExecutorService.class )
-				.createExecutor( ( session.getTransactionCoordinator() != null &&
+				.createExecutor( ( !dynamicUpdate && session.getTransactionCoordinator() != null &&
 									session.getTransactionCoordinator().isTransactionActive() ? () -> batchKey : () -> null ),
 								group, session );
 	}

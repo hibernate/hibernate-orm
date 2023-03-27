@@ -18,6 +18,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
+import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 /**
  * A {@link GenerationTarget} which exports DDL directly to the database.
@@ -61,6 +62,11 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 
 	@Override
 	public void prepare() {
+	}
+
+	@Override
+	public void beforeScript(ScriptSourceInput scriptSource) {
+		log.executingScript( scriptSource.getScriptDescription() );
 	}
 
 	@Override

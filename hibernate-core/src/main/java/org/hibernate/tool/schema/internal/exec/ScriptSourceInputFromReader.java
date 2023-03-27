@@ -27,7 +27,7 @@ public class ScriptSourceInputFromReader extends AbstractScriptSourceInput {
 	}
 
 	@Override
-	protected String getScriptDescription() {
+	public String getScriptDescription() {
 		return "[injected ScriptSourceInputFromReader script]";
 	}
 

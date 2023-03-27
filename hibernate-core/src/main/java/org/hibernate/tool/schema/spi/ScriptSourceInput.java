@@ -18,6 +18,11 @@ import java.util.function.Function;
  * @author Steve Ebersole
  */
 public interface ScriptSourceInput {
+
+	default String getScriptDescription() {
+		return toString();
+	}
+
 	/**
 	 * Allows managed access to the input's Reader, returning a result
 	 */

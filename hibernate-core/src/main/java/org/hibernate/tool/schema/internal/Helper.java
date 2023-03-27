@@ -250,6 +250,9 @@ public class Helper {
 		final List<String> commands = scriptInput.extract(
 				reader -> commandExtractor.extractCommands( reader, dialect )
 		);
+		for ( GenerationTarget target : targets ) {
+			target.beforeScript( scriptInput );
+		}
 		for ( String command : commands ) {
 			applySqlString( command, formatter, options, targets );
 		}

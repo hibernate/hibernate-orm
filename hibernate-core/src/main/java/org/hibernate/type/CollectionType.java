@@ -126,6 +126,11 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
+	public int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+		return compare( x, y );
+	}
+
+	@Override
 	public int getHashCode(Object x) {
 		throw new UnsupportedOperationException( "cannot doAfterTransactionCompletion lookups on collections" );
 	}

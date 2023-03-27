@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -168,5 +169,10 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	default String getSpecializedTypeDeclaration(Dialect dialect) {
 		final BasicValueConverter<T, ?> valueConverter = getValueConverter();
 		return valueConverter == null ? null : valueConverter.getSpecializedTypeDeclaration( getJdbcType(), dialect );
+	}
+
+	@Override
+	default int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+		return compare( x, y );
 	}
 }

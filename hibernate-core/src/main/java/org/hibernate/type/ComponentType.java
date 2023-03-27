@@ -220,6 +220,20 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return 0;
 	}
 
+	@Override
+	public int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+		if ( x == y ) {
+			return 0;
+		}
+		for ( int i = 0; i < propertySpan; i++ ) {
+			int propertyCompare = propertyTypes[i].compare( getPropertyValue( x, i ), getPropertyValue( y, i ), sessionFactory );
+			if ( propertyCompare != 0 ) {
+				return propertyCompare;
+			}
+		}
+		return 0;
+	}
+
 	public boolean isMethodOf(Method method) {
 		return false;
 	}

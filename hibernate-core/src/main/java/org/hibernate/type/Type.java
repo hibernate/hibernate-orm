@@ -218,9 +218,8 @@ public interface Type extends Serializable {
 	 */
 	int compare(Object x, Object y);
 
-	default int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
-		return compare( x, y );
-	}
+	int compare(Object x, Object y, SessionFactoryImplementor sessionFactory);
+
 	/**
 	 * Should the parent be considered dirty, given both the old and current value?
 	 *

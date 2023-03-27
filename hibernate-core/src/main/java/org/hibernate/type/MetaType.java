@@ -76,6 +76,11 @@ public class MetaType extends AbstractType {
 	}
 
 	@Override
+	public int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+		return compare( x, y );
+	}
+
+	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
 			Object value,

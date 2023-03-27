@@ -19,12 +19,10 @@ import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -63,8 +61,10 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
+import static org.hibernate.tool.schema.internal.Helper.applyScript;
+import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
+import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
 
 /**
@@ -179,17 +179,17 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		switch ( sourceDescriptor.getSourceType() ) {
 			case SCRIPT:
-				dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
+				applyScript( options, commandExtractor, dialect, sourceDescriptor.getScriptSourceInput(), formatter, targets );
 				break;
 			case METADATA:
 				dropFromMetadata( metadata, options, inclusionFilter, dialect, formatter, targets );
 				break;
 			case METADATA_THEN_SCRIPT:
 				dropFromMetadata( metadata, options, inclusionFilter, dialect, formatter, targets );
-				dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
+				applyScript( options, commandExtractor, dialect, sourceDescriptor.getScriptSourceInput(), formatter, targets );
 				break;
 			case SCRIPT_THEN_METADATA:
-				dropFromScript( sourceDescriptor.getScriptSourceInput(), commandExtractor, formatter, dialect, options, targets );
+				applyScript( options, commandExtractor, dialect, sourceDescriptor.getScriptSourceInput(), formatter, targets );
 				dropFromMetadata( metadata, options, inclusionFilter, dialect, formatter, targets );
 				break;
 		}
@@ -197,30 +197,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 	private SqlScriptCommandExtractor getCommandExtractor() {
 		return tool.getServiceRegistry().getService(SqlScriptCommandExtractor.class);
-	}
-
-	private void dropFromScript(
-			ScriptSourceInput scriptSourceInput,
-			SqlScriptCommandExtractor commandExtractor,
-			Formatter formatter,
-			Dialect dialect,
-			ExecutionOptions options,
-			GenerationTarget... targets) {
-		final List<String> commands = scriptSourceInput.extract(
-				reader -> commandExtractor.extractCommands( reader, dialect )
-		);
-		for ( String command : commands ) {
-			applySqlString( command, formatter, options, targets );
-		}
-	}
-
-	private static SqlStringGenerationContext createSqlStringGenerationContext(ExecutionOptions options, Metadata metadata) {
-		final Database database = metadata.getDatabase();
-		return SqlStringGenerationContextImpl.fromConfigurationMap(
-				database.getJdbcEnvironment(),
-				database,
-				options.getConfigurationValues()
-		);
 	}
 
 	private void dropFromMetadata(
@@ -494,36 +470,6 @@ public class SchemaDropperImpl implements SchemaDropper {
 			throw new SchemaManagementException( "SQL strings added more than once for: " + exportIdentifier );
 		}
 		exportIdentifiers.add( exportIdentifier );
-	}
-
-	private static void applySqlStrings(
-			String[] sqlStrings,
-			Formatter formatter,
-			ExecutionOptions options,
-			GenerationTarget... targets) {
-		if ( sqlStrings != null ) {
-			for ( String sqlString : sqlStrings ) {
-				applySqlString( sqlString, formatter, options, targets );
-			}
-		}
-	}
-
-	private static void applySqlString(
-			String sqlString,
-			Formatter formatter,
-			ExecutionOptions options,
-			GenerationTarget... targets) {
-		if ( isNotEmpty( sqlString ) ) {
-			final String sqlStringFormatted = formatter.format( sqlString );
-			for ( GenerationTarget target : targets ) {
-				try {
-					target.accept( sqlStringFormatted );
-				}
-				catch (CommandAcceptanceException e) {
-					options.getExceptionHandler().handleException( e );
-				}
-			}
-		}
 	}
 
 	@Override

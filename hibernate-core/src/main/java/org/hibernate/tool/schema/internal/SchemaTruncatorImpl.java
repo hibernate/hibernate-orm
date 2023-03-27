@@ -11,13 +11,11 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.ForeignKey;
@@ -27,7 +25,6 @@ import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputNonExistentImpl;
-import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaFilter;
@@ -46,6 +43,10 @@ import java.util.Set;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CHARSET_NAME;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE;
+import static org.hibernate.tool.schema.internal.Helper.applyScript;
+import static org.hibernate.tool.schema.internal.Helper.applySqlString;
+import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
+import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretScriptSourceSetting;
 
 /**
@@ -121,9 +122,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 			Formatter formatter,
 			GenerationTarget... targets) {
 		final Database database = metadata.getDatabase();
-		SqlStringGenerationContext context = SqlStringGenerationContextImpl.fromConfigurationMap(
-				metadata.getDatabase().getJdbcEnvironment(), database, options.getConfigurationValues() );
-
+		SqlStringGenerationContext context = createSqlStringGenerationContext( options, metadata );
 
 		final Set<String> exportIdentifiers = CollectionHelper.setOfSize( 50 );
 
@@ -281,40 +280,6 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 		exportIdentifiers.add( exportIdentifier );
 	}
 
-	private static void applySqlStrings(
-			String[] sqlStrings,
-			Formatter formatter,
-			ExecutionOptions options,
-			GenerationTarget... targets) {
-		if ( sqlStrings == null ) {
-			return;
-		}
-
-		for ( String sqlString : sqlStrings ) {
-			applySqlString( sqlString, formatter, options, targets );
-		}
-	}
-
-	private static void applySqlString(
-			String sqlString,
-			Formatter formatter,
-			ExecutionOptions options,
-			GenerationTarget... targets) {
-		if ( StringHelper.isEmpty( sqlString ) ) {
-			return;
-		}
-
-		String sqlStringFormatted = formatter.format( sqlString );
-		for ( GenerationTarget target : targets ) {
-			try {
-				target.accept( sqlStringFormatted );
-			}
-			catch (CommandAcceptanceException e) {
-				options.getExceptionHandler().handleException( e );
-			}
-		}
-	}
-
 	//Woooooo, massive copy/paste from SchemaCreatorImpl!
 
 	private void applyImportSources(
@@ -339,12 +304,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 
 		if ( importScriptSetting != null ) {
 			final ScriptSourceInput importScriptInput = interpretScriptSourceSetting( importScriptSetting, classLoaderService, charsetName );
-			final List<String> commands = importScriptInput.extract(
-					reader -> commandExtractor.extractCommands( reader, dialect )
-			);
-			for ( int i = 0; i < commands.size(); i++ ) {
-				applySqlString( commands.get( i ), formatter, options, targets );
-			}
+			applyScript( options, commandExtractor, dialect, importScriptInput, formatter, targets );
 		}
 
 		final String importFiles = ConfigurationHelper.getString(
@@ -360,12 +320,7 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				continue;
 			}
 			final ScriptSourceInput importScriptInput = interpretLegacyImportScriptSetting( resourceName, classLoaderService, charsetName );
-			final List<String> commands = importScriptInput.extract(
-					reader -> commandExtractor.extractCommands( reader, dialect )
-			);
-			for ( int i = 0; i < commands.size(); i++ ) {
-				applySqlString( commands.get( i ), formatter, options, targets );
-			}
+			applyScript( options, commandExtractor, dialect, importScriptInput, formatter, targets );
 		}
 	}
 

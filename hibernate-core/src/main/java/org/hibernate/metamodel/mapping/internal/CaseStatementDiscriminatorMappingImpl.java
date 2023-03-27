@@ -50,7 +50,6 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			String[] notNullColumnNames,
 			String[] discriminatorValues,
 			boolean[] discriminatorAbstract,
-			Map<String,String> subEntityNameByTableName,
 			DiscriminatorType<?> incomingDiscriminatorType,
 			MappingModelCreationProcess creationProcess) {
 		//noinspection unchecked
@@ -59,7 +58,6 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		for ( int i = 0; i < discriminatorValues.length; i++ ) {
 			if ( !discriminatorAbstract[i] ) {
 				final String tableName = tableNames[notNullColumnTableNumbers[i]];
-				final String subEntityName = subEntityNameByTableName.get( tableName );
 				final String oneSubEntityColumn = notNullColumnNames[i];
 				final String discriminatorValue = discriminatorValues[i];
 				tableDiscriminatorDetailsMap.put(
@@ -67,9 +65,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 						new TableDiscriminatorDetails(
 								tableName,
 								oneSubEntityColumn,
-								getUnderlyingJdbcMappingType().getJavaTypeDescriptor()
-										.wrap( discriminatorValue, null ),
-								subEntityName
+								getUnderlyingJdbcMapping().getJavaTypeDescriptor().wrap( discriminatorValue, null )
 						)
 				);
 			}
@@ -203,29 +199,27 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		private final String tableName;
 		private final String checkColumnName;
 		private final Object discriminatorValue;
-		private final String subclassEntityName;
 
-		public TableDiscriminatorDetails(String tableName, String checkColumnName, Object discriminatorValue, String subclassEntityName) {
+		public TableDiscriminatorDetails(
+				String tableName,
+				String checkColumnName,
+				Object discriminatorValue) {
 			this.tableName = tableName;
 			this.checkColumnName = checkColumnName;
 			this.discriminatorValue = discriminatorValue;
-			this.subclassEntityName = subclassEntityName;
-		}
-
-		String getTableExpression() {
-			return tableName;
 		}
 
 		Object getDiscriminatorValue() {
 			return discriminatorValue;
 		}
 
-		String getSubclassEntityName() {
-			return subclassEntityName;
-		}
-
 		String getCheckColumnName() {
 			return checkColumnName;
+		}
+
+		@Override
+		public String toString() {
+			return "TableDiscriminatorDetails(`" + tableName + "." + checkColumnName + "` = " + discriminatorValue + ")";
 		}
 	}
 
@@ -274,7 +268,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 									predicate,
 									new QueryLiteral<>(
 											tableDiscriminatorDetails.getDiscriminatorValue(),
-											getUnderlyingJdbcMappingType()
+											getUnderlyingJdbcMapping()
 									)
 							);
 						}

@@ -198,27 +198,8 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	}
 
 	@Override
-	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		throw new UnsupportedOperationException();
+	public JdbcMapping getUnderlyingJdbcMapping() {
+		return underlyingJdbcMapping;
 	}
 
 	@Override
@@ -341,5 +322,47 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// NOTE : the following are "unsupported" because handling for any-mapping
+	// discriminators into SQL AST is handled by outside code.  Consolidate
+	// with `EntityDiscriminatorMapping` to use these contracts for any-mapping
+	// discriminators as well.
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Expression resolveSqlExpression(
+			NavigablePath navigablePath,
+			JdbcMapping jdbcMappingToUse,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		throw new UnsupportedOperationException();
 	}
 }

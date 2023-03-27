@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -61,8 +62,14 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		return entityDescriptor;
 	}
 
-	public BasicType<?> getUnderlyingJdbcMappingType() {
+	@Override
+	public BasicType<?> getUnderlyingJdbcMapping() {
 		return discriminatorType.getUnderlyingJdbcMapping();
+	}
+
+	@Override
+	public DiscriminatorConverter<?, ?> getValueConverter() {
+		return discriminatorType.getValueConverter();
 	}
 
 

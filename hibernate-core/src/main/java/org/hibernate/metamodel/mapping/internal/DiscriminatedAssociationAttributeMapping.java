@@ -103,11 +103,6 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public BasicValuedModelPart getDiscriminatorPart() {
-		return discriminatorMapping.getDiscriminatorPart();
-	}
-
-	@Override
 	public DiscriminatorMapping getDiscriminatorMapping() {
 		return discriminatorMapping.getDiscriminatorPart();
 	}
@@ -506,5 +501,10 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public String getSqlAliasStem() {
 		return getAttributeName();
+	}
+
+	@Override
+	public void applyDiscriminator(Consumer<Predicate> predicateConsumer, String alias, TableGroup tableGroup, SqlAstCreationState creationState) {
+		throw new UnsupportedOperationException();
 	}
 }

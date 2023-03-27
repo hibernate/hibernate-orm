@@ -10,6 +10,7 @@ import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -61,11 +62,14 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 		}
 	}
 
-
+	@Override
+	public DiscriminatorType getMappedType() {
+		return (DiscriminatorType) super.getMappedType();
+	}
 
 	@Override
 	public DiscriminatorConverter<?, ?> getValueConverter() {
-		return typ;
+		return getMappedType().getValueConverter();
 	}
 
 	@Override

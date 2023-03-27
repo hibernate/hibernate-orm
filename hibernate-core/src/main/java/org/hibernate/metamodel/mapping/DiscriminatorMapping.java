@@ -11,10 +11,16 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Mapping of a discriminator, either for {@linkplain EntityMappingType#getDiscriminatorMapping() entity}- or
- * {@linkplain DiscriminatedAssociationModelPart#getDiscriminatorPart() any}-based discriminators
+ * Mapping of a discriminator, for either {@linkplain EntityMappingType#getDiscriminatorMapping() entity} or
+ * {@linkplain DiscriminatedAssociationModelPart#getDiscriminatorMapping() association} (ANY) discrimination.
+ * <p/>
+ * Represents a composition of <ul>
+ *     <li>a {@linkplain #getValueConverter() converter} between the domain and relational form</li>
+ *     <li>a {@linkplain #getUnderlyingJdbcMapping JDBC mapping} to read and write the relational values</li>
+ * </ul>
  *
  * @author Steve Ebersole
  */
@@ -23,6 +29,24 @@ public interface DiscriminatorMapping extends VirtualModelPart, BasicValuedModel
 	 * Information about the value mappings
 	 */
 	DiscriminatorConverter<?,?> getValueConverter();
+
+	JdbcMapping getUnderlyingJdbcMapping();
+
+	/**
+	 * The domain Java form, which is either {@code JavaType<Class>} (entity class)
+	 * or {@code JavaType<String>} (entity name).
+	 */
+	default JavaType<?> getDomainJavaType() {
+		return getValueConverter().getDomainJavaType();
+	}
+
+	/**
+	 * The relational Java form.  This will typically be some form of integer
+	 * or character value.
+	 */
+	default JavaType<?> getRelationalJavaType() {
+		return getValueConverter().getRelationalJavaType();
+	}
 
 	/**
 	 * Create the appropriate SQL expression for this discriminator

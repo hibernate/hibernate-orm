@@ -2195,46 +2195,49 @@ public abstract class AbstractEntityPersister
 		return ( (PluralAttributeMapping) attributeMapping ).getKeyDescriptor().getKeyTable();
 	}
 
-	private DiscriminatorMetadata discriminatorMetadata;
+	private DiscriminatorType discriminatorType;
+
+
+	protected DiscriminatorType resolveDiscriminatorType() {
+		if ( discriminatorType == null ) {
+			discriminatorType = buildDiscriminatorType();
+		}
+		return discriminatorType;
+	}
+
+	private DiscriminatorType buildDiscriminatorType() {
+		final BasicType<?> underlingJdbcMapping = getDiscriminatorType();
+		if ( underlingJdbcMapping == null ) {
+			return null;
+		}
+
+		final JavaTypeRegistry javaTypeRegistry = factory.getTypeConfiguration().getJavaTypeRegistry();
+
+		final JavaType<Object> domainJavaType;
+		if ( representationStrategy.getMode() == POJO
+				&& getEntityName().equals( getJavaType().getJavaTypeClass().getName() ) ) {
+			domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
+		}
+		else {
+			domainJavaType = javaTypeRegistry.resolveDescriptor( String.class );
+		}
+
+		//noinspection rawtypes
+		final DiscriminatorConverter converter = DiscriminatorConverter.fromValueMappings(
+				getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME ),
+				domainJavaType,
+				underlingJdbcMapping,
+				getSubclassByDiscriminatorValue(),
+				factory
+		);
+
+		//noinspection unchecked,rawtypes
+		return new DiscriminatorTypeImpl( underlingJdbcMapping, converter );
+	}
 
 	@Override
 	public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
-		if ( discriminatorMetadata == null ) {
-			discriminatorMetadata = buildTypeDiscriminatorMetadata();
-		}
-		return discriminatorMetadata;
-	}
-
-	private DiscriminatorMetadata buildTypeDiscriminatorMetadata() {
-		return () -> {
-			final BasicType<?> underlingJdbcMapping = getDiscriminatorType();
-			if ( underlingJdbcMapping == null ) {
-				return null;
-			}
-
-			final JavaTypeRegistry javaTypeRegistry = factory.getTypeConfiguration().getJavaTypeRegistry();
-
-			final JavaType<Object> domainJavaType;
-			if ( representationStrategy.getMode() == POJO
-					&& getEntityName().equals( getJavaType().getJavaTypeClass().getName() ) ) {
-				domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
-			}
-			else {
-				domainJavaType = javaTypeRegistry.resolveDescriptor( String.class );
-			}
-
-			//noinspection rawtypes
-			final DiscriminatorConverter converter = DiscriminatorConverter.fromValueMappings(
-					getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME ),
-					domainJavaType,
-					underlingJdbcMapping,
-					getSubclassByDiscriminatorValue(),
-					factory
-			);
-
-			//noinspection unchecked,rawtypes
-			return new DiscriminatorTypeImpl( underlingJdbcMapping, converter );
-		};
+		return this::buildDiscriminatorType;
 	}
 
 	public static String generateTableAlias(String rootAlias, int tableNumber) {

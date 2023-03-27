@@ -32,6 +32,7 @@ import static org.hibernate.metamodel.internal.AttributeFactory.determineSimpleT
  */
 public class PluralAttributeBuilder<D, C, E, K> {
 	private final JavaType<C> collectionJtd;
+	private boolean isGeneric;
 
 	private final AttributeClassification attributeClassification;
 	private final CollectionClassification collectionClassification;
@@ -46,6 +47,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 
 	public PluralAttributeBuilder(
 			JavaType<C> collectionJtd,
+			boolean isGeneric,
 			AttributeClassification attributeClassification,
 			CollectionClassification collectionClassification,
 			DomainType<E> elementType,
@@ -54,6 +56,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			Property property,
 			Member member) {
 		this.collectionJtd = collectionJtd;
+		this.isGeneric = isGeneric;
 		this.attributeClassification = attributeClassification;
 		this.collectionClassification = collectionClassification;
 		this.elementType = elementType;
@@ -66,6 +69,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <Y, X> PersistentAttribute<X, Y> build(
 			PluralAttributeMetadata<?,Y,?> attributeMetadata,
+			boolean isGeneric,
 			MetadataContext metadataContext) {
 
 		final JavaType<Y> attributeJtd = metadataContext.getTypeConfiguration()
@@ -74,6 +78,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 
 		final PluralAttributeBuilder builder = new PluralAttributeBuilder(
 				attributeJtd,
+				isGeneric,
 				attributeMetadata.getAttributeClassification(),
 				attributeMetadata.getCollectionClassification(),
 				AttributeFactory.determineSimpleType(
@@ -153,6 +158,10 @@ public class PluralAttributeBuilder<D, C, E, K> {
 
 	public JavaType<C> getCollectionJavaType() {
 		return collectionJtd;
+	}
+
+	public boolean isGeneric() {
+		return isGeneric;
 	}
 
 	public DomainType<E> getValueType() {

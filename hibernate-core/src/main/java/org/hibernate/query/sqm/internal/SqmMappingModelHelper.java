@@ -66,19 +66,22 @@ public class SqmMappingModelHelper {
 
 	public static <J> SqmPathSource<J> resolveSqmKeyPathSource(
 			DomainType<J> valueDomainType,
-			Bindable.BindableType jpaBindableType) {
+			Bindable.BindableType jpaBindableType,
+			boolean isGeneric) {
 		return resolveSqmPathSource(
 				CollectionPart.Nature.INDEX.getName(),
 				valueDomainType,
-				jpaBindableType
+				jpaBindableType,
+				isGeneric
 		);
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmPathSource(
 			String name,
 			DomainType<J> valueDomainType,
-			Bindable.BindableType jpaBindableType) {
-		return resolveSqmPathSource( name, null, valueDomainType, jpaBindableType, false );
+			Bindable.BindableType jpaBindableType,
+			boolean isGeneric) {
+		return resolveSqmPathSource( name, null, valueDomainType, jpaBindableType, isGeneric );
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmPathSource(
@@ -93,7 +96,8 @@ public class SqmMappingModelHelper {
 					name,
 					pathModel,
 					(BasicDomainType<J>) valueDomainType,
-					jpaBindableType
+					jpaBindableType,
+					isGeneric
 			);
 		}
 
@@ -121,7 +125,8 @@ public class SqmMappingModelHelper {
 					name,
 					pathModel,
 					(EntityDomainType<J>) valueDomainType,
-					jpaBindableType
+					jpaBindableType,
+					isGeneric
 			);
 		}
 

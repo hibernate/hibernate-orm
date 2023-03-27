@@ -31,7 +31,8 @@ class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> imp
 		//noinspection unchecked
 		this.indexPathSource = (SqmPathSource<Integer>) SqmMappingModelHelper.resolveSqmKeyPathSource(
 				builder.getListIndexOrMapKeyType(),
-				BindableType.PLURAL_ATTRIBUTE
+				BindableType.PLURAL_ATTRIBUTE,
+				false
 		);
 	}
 
@@ -61,7 +62,9 @@ class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> imp
 
 	@Override
 	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
-		return pathSource == getElementPathSource() || pathSource == indexPathSource ? null : getElementPathSource();
+		final String pathName = pathSource.getPathName();
+		return pathName.equals( getElementPathSource().getPathName() )
+				|| pathName.equals( indexPathSource.getPathName() ) ? null : getElementPathSource();
 	}
 
 	@Override

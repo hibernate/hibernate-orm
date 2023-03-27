@@ -45,8 +45,7 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	<S extends T> JpaPath<S> treatAs(EntityDomainType<S> treatJavaType);
 
 	/**
-	 * Get this pat's actual resolved model, e.g. the
-	 * concrete embeddable type for generic embeddables
+	 * Get this path's actual resolved model, i.e. the concrete type for generic attributes.
 	 */
 	SqmPathSource<?> getResolvedModel();
 

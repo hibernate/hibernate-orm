@@ -210,7 +210,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public SingularPersistentAttribute<? super T, ?> findConcreteEmbeddableAttribute(String name) {
+	public PersistentAttribute<? super T, ?> findConcreteGenericAttribute(String name) {
 		return null;
 	}
 
@@ -230,7 +230,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public SingularPersistentAttribute<? super T, ?> findDeclaredConcreteEmbeddableAttribute(String name) {
+	public PersistentAttribute<? super T, ?> findDeclaredConcreteGenericAttribute(String name) {
 		return null;
 	}
 

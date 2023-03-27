@@ -22,18 +22,12 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
  */
 public abstract class AbstractScriptSourceInput implements ScriptSourceInput {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SchemaCreatorImpl.class );
-
-	protected abstract String getScriptDescription();
-
 	protected abstract Reader prepareReader();
 
 	protected abstract void releaseReader(Reader reader);
 
 	@Override
 	public List<String> extract(Function<Reader, List<String>> extractor) {
-		log.executingImportScript( getScriptDescription() );
-
 		final Reader inputReader = prepareReader();
 
 		try {

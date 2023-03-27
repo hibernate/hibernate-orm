@@ -39,7 +39,7 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
 	}
 
 	@Override
-	protected String getScriptDescription() {
+	public String getScriptDescription() {
 		return url.toExternalForm();
 	}
 

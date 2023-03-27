@@ -40,7 +40,7 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 	}
 
 	@Override
-	protected String getScriptDescription() {
+	public String getScriptDescription() {
 		return file.getAbsolutePath();
 	}
 

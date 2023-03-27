@@ -7,11 +7,11 @@
 package org.hibernate.orm.test.mapping.naturalid.compound;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.internal.NaturalIdResolutionsImpl;
-import org.hibernate.stat.NaturalIdStatistics;
-import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.engine.spi.NaturalIdResolutions;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -26,8 +26,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.hibernate.testing.cache.CachingRegionFactory.DEFAULT_ACCESSTYPE;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Sylvain Dusart
@@ -35,21 +34,21 @@ import static org.hibernate.testing.cache.CachingRegionFactory.DEFAULT_ACCESSTYP
 @TestForIssue(jiraKey = "HHH-16218")
 @DomainModel(
 		annotatedClasses = {
-				CompoundNaturalIdCacheTest.EntityWithSimpleNaturalId.class,
-				CompoundNaturalIdCacheTest.EntityWithCompoundNaturalId.class
+				CompoundNaturalIdTest.EntityWithSimpleNaturalId.class,
+				CompoundNaturalIdTest.EntityWithCompoundNaturalId.class
 		}
 )
 @ServiceRegistry(
 		settings = {
-				@Setting(name = DEFAULT_ACCESSTYPE, value = "nonstrict-read-write"),
-				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
+				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "500"),
 				@Setting(name = AvailableSettings.SHOW_SQL, value = "false"),
 		}
 )
-@SessionFactory(generateStatistics = true)
-public class CompoundNaturalIdCacheTest {
+@SessionFactory
+public class CompoundNaturalIdTest {
 
-	private static final int OBJECT_NUMBER = 3;
+	private static final int OBJECT_NUMBER = 2000;
+	private static final int MAX_RESULTS = 2000;
 
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -65,8 +64,6 @@ public class CompoundNaturalIdCacheTest {
 						EntityWithSimpleNaturalId withSimpleNaturalIdEntity = new EntityWithSimpleNaturalId();
 						withSimpleNaturalIdEntity.setName( str );
 						session.persist( withSimpleNaturalIdEntity );
-						NaturalIdResolutionsImpl naturalIdResolutions = (NaturalIdResolutionsImpl) session.getPersistenceContext()
-								.getNaturalIdResolutions();
 					}
 				}
 		);
@@ -74,34 +71,30 @@ public class CompoundNaturalIdCacheTest {
 
 	@Test
 	public void createThenLoadTest(SessionFactoryScope scope) {
-		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
-		statistics.clear();
-		NaturalIdStatistics naturalIdStatistics = statistics.getNaturalIdStatistics( EntityWithCompoundNaturalId.class.getName() );
+		long loadDurationForCompoundNaturalId = loadEntities( EntityWithCompoundNaturalId.class, MAX_RESULTS, scope );
+		long loadDurationForSimpleNaturalId = loadEntities( EntityWithSimpleNaturalId.class, MAX_RESULTS, scope );
 
-		loadEntityWithCompoundNaturalId( "0", "0", scope );
-		assertThat( naturalIdStatistics.getCacheHitCount() ).isEqualTo( 1 );
-
-		loadEntityWithCompoundNaturalId( "1", "1", scope );
-		assertThat( naturalIdStatistics.getCacheHitCount() ).isEqualTo( 2 );
-
-		loadEntityWithCompoundNaturalId( "2", "2", scope );
-		assertThat( naturalIdStatistics.getCacheHitCount() ).isEqualTo( 3 );
-
-	}
-
-	private void loadEntityWithCompoundNaturalId(String firstname, String lastname, SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
-					session.byNaturalId( EntityWithCompoundNaturalId.class )
-							.using( "firstname", firstname )
-							.using( "lastname", lastname )
-							.load();
-				}
+		assertTrue(
+				loadDurationForCompoundNaturalId <= 5 * loadDurationForSimpleNaturalId,
+				"it should not be soo long to load entities with compound naturalId"
 		);
 	}
 
+	private long loadEntities(final Class<?> clazz, final int maxResults, SessionFactoryScope scope) {
+		long start = System.currentTimeMillis();
+		scope.inSession(
+				session -> {
+					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					JpaCriteriaQuery<?> query = cb.createQuery( clazz );
+					query.from( clazz );
+					session.createQuery( query ).setMaxResults( maxResults ).list();
+				}
+		);
+		long duration = System.currentTimeMillis() - start;
+		return duration;
+	}
+
 	@Entity(name = "EntityWithSimpleNaturalId")
-	@NaturalIdCache
 	public static class EntityWithSimpleNaturalId {
 
 		@Id
@@ -129,7 +122,6 @@ public class CompoundNaturalIdCacheTest {
 	}
 
 	@Entity(name = "EntityWithCompoundNaturalId")
-	@NaturalIdCache
 	public static class EntityWithCompoundNaturalId {
 
 		@Id

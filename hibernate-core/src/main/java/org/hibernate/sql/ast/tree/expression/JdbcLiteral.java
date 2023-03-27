@@ -123,6 +123,9 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
 		final Serializable disassemble = ( (MutabilityPlan<Object>) jdbcMapping.getJdbcJavaType().getMutabilityPlan() )
 				.disassemble( value, session );
 		final int hashCode = jdbcMapping.getJavaTypeDescriptor().extractHashCode( value );

@@ -317,6 +317,9 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
 		cacheKey.addValue( value );
 		cacheKey.addHashCode( ( (JavaType) getExpressibleJavaType() ).extractHashCode( value ) );
 	}

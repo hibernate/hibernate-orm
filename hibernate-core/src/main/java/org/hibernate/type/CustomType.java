@@ -220,6 +220,9 @@ public class CustomType<J>
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
 		final Serializable disassembled = getUserType().disassemble( (J) value );
 		// Since UserType#disassemble is an optional operation,
 		// we have to handle the fact that it could produce a null value,

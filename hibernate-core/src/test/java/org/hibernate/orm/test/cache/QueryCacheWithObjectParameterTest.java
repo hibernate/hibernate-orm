@@ -96,6 +96,44 @@ public class QueryCacheWithObjectParameterTest {
 	}
 
 	@Test
+	public void testQueryWithEmbeddableParameterWithANull(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					evictQueryRegion( session );
+					Query<Parent> queryParent = session.createQuery(
+							"from Parent p where p.address = :address",
+							Parent.class
+					);
+					queryParent.setParameter( "address", new Address( "via Milano", null ) );
+					queryParent.setCacheable( true );
+
+					List<Parent> resultList = queryParent.getResultList();
+					assertThat( resultList ).hasSize( 0 );
+
+					CacheRegionStatistics defaultQueryCacheRegionStatistics = getQueryCacheRegionStatistics( session );
+					assertThat( defaultQueryCacheRegionStatistics.getHitCount() ).isEqualTo( 0 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Query<Parent> queryParent = session.createQuery(
+							"from Parent p where p.address = :address",
+							Parent.class
+					);
+					queryParent.setParameter( "address", new Address( "via Milano", null ) );
+					queryParent.setCacheable( true );
+
+					List<Parent> resultList = queryParent.getResultList();
+					assertThat( resultList ).hasSize( 0 );
+
+					CacheRegionStatistics defaultQueryCacheRegionStatistics = getQueryCacheRegionStatistics( session );
+					assertThat( defaultQueryCacheRegionStatistics.getHitCount() ).isEqualTo( 1 );
+				}
+		);
+	}
+
+	@Test
 	public void testQueryCacheHits(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -182,6 +220,56 @@ public class QueryCacheWithObjectParameterTest {
 					queryChildren.setCacheable( true );
 					List<Child> c = queryChildren.getResultList();
 					assertThat( c ).hasSize( 1 );
+
+					CacheRegionStatistics defaultQueryCacheRegionStatistics = getQueryCacheRegionStatistics( session );
+					assertThat( defaultQueryCacheRegionStatistics.getHitCount() ).isEqualTo( 1 );
+				}
+		);
+	}
+
+	@Test
+	public void testQueryCacheHitsNullParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					evictQueryRegion( session );
+					Query<Parent> queryParent = session.createQuery(
+							"from Parent p where p.name = 'John'",
+							Parent.class
+					);
+					List<Parent> p = queryParent.getResultList();
+					assertThat( p ).hasSize( 1 );
+
+					Query<Child> queryChildren = session.createQuery(
+							"from Child c where c.parent.id = ?1",
+							Child.class
+					);
+					queryChildren.setParameter( 1, null );
+					queryChildren.setCacheable( true );
+					List<Child> c = queryChildren.getResultList();
+					assertThat( c ).hasSize( 0 );
+
+					CacheRegionStatistics defaultQueryCacheRegionStatistics = getQueryCacheRegionStatistics( session );
+					assertThat( defaultQueryCacheRegionStatistics.getHitCount() ).isEqualTo( 0 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Query<Parent> queryParent = session.createQuery(
+							"from Parent p where p.name = 'John'",
+							Parent.class
+					);
+					List<Parent> p = queryParent.getResultList();
+					assertThat( p ).hasSize( 1 );
+
+					Query<Child> queryChildren = session.createQuery(
+							"from Child c where c.parent.id = ?1",
+							Child.class
+					);
+					queryChildren.setParameter( 1, null );
+					queryChildren.setCacheable( true );
+					List<Child> c = queryChildren.getResultList();
+					assertThat( c ).hasSize( 0 );
 
 					CacheRegionStatistics defaultQueryCacheRegionStatistics = getQueryCacheRegionStatistics( session );
 					assertThat( defaultQueryCacheRegionStatistics.getHitCount() ).isEqualTo( 1 );

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.exec.internal;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -158,20 +159,27 @@ public abstract class AbstractJdbcParameter
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
 		final JdbcMapping jdbcMapping = getJdbcMapping();
 		final BasicValueConverter converter = jdbcMapping.getValueConverter();
 
+		final Serializable disassemble;
+		final int hashCode;
 		if ( converter == null ) {
 			final JavaType javaTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
-			cacheKey.addValue( javaTypeDescriptor.getMutabilityPlan().disassemble( value, session ) );
-			cacheKey.addHashCode( javaTypeDescriptor.extractHashCode( value ) );
+			disassemble = javaTypeDescriptor.getMutabilityPlan().disassemble( value, session );
+			hashCode = javaTypeDescriptor.extractHashCode( value );
 		}
 		else {
 			final Object relationalValue = converter.toRelationalValue( value );
 			final JavaType relationalJavaType = converter.getRelationalJavaType();
-			cacheKey.addValue( relationalJavaType.getMutabilityPlan().disassemble( relationalValue, session ) );
-			cacheKey.addHashCode( relationalJavaType.extractHashCode( relationalValue ) );
+			disassemble = relationalJavaType.getMutabilityPlan().disassemble( relationalValue, session );
+			hashCode = relationalJavaType.extractHashCode( relationalValue );
 		}
+		cacheKey.addValue( disassemble );
+		cacheKey.addHashCode( hashCode );
 	}
 
 	@Override

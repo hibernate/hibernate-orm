@@ -44,6 +44,9 @@ public class TupleMappingModelExpressible implements MappingModelExpressible {
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
 		for ( int i = 0; i < components.length; i++ ) {
 			components[i].addToCacheKey( cacheKey, value, session );
 		}

@@ -423,6 +423,9 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
 		final JdbcMapping jdbcMapping = getJdbcMapping();
 		final BasicValueConverter converter = jdbcMapping.getValueConverter();
 		final Serializable disassemble;

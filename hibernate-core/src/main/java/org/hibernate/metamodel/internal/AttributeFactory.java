@@ -23,6 +23,7 @@ import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.RepresentationMode;
@@ -36,6 +37,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -116,7 +118,11 @@ public class AttributeFactory {
 
 		if ( attributeMetadata instanceof PluralAttributeMetadata ) {
 			//noinspection rawtypes
-			return PluralAttributeBuilder.build( (PluralAttributeMetadata) attributeMetadata, metadataContext );
+			return PluralAttributeBuilder.build(
+					(PluralAttributeMetadata) attributeMetadata,
+					property.isGeneric(),
+					metadataContext
+			);
 		}
 
 		final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>) attributeMetadata;
@@ -221,7 +227,18 @@ public class AttributeFactory {
 	public static <Y> DomainType<Y> determineSimpleType(ValueContext typeContext, MetadataContext context) {
 		switch ( typeContext.getValueClassification() ) {
 			case BASIC: {
-				return context.resolveBasicType( typeContext.getJpaBindableType() );
+				Class returnedClass = typeContext.getJpaBindableType();
+				if ( returnedClass.isAssignableFrom( Object.class ) ) {
+					final SimpleValue simpleValue = (SimpleValue) typeContext.getHibernateValue();
+					if ( simpleValue.getTypeParameters() != null && typeContext.getAttributeMetadata()
+							.getOwnerType() instanceof EntityDomainType ) {
+						// Due to how generics work with Java, the type of generic fields will always
+						// be reported as Object. We need to resolve type based on the actual property
+						// value for basic attributes in entities which specify concrete type parameters.
+						returnedClass = simpleValue.getType().getReturnedClass();
+					}
+				}
+				return context.resolveBasicType( returnedClass );
 			}
 			case ENTITY: {
 				final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();

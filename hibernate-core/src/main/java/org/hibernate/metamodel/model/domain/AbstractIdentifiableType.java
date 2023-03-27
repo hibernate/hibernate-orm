@@ -416,7 +416,8 @@ public abstract class AbstractIdentifiableType<J>
 						EntityIdentifierMapping.ROLE_LOCAL_NAME,
 						(SqmPathSource) id,
 						(BasicDomainType<?>) type,
-						Bindable.BindableType.SINGULAR_ATTRIBUTE
+						Bindable.BindableType.SINGULAR_ATTRIBUTE,
+						id.isGeneric()
 				);
 			}
 			else {

@@ -705,8 +705,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
 		if ( !missing && !isInitialized ) {
-			preLoad( rowProcessingState );
-
 			final LazyInitializer lazyInitializer = extractLazyInitializer( entityInstance );
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
@@ -797,6 +795,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		resolvedEntityState = extractConcreteTypeStateValues( rowProcessingState );
+
+		preLoad( rowProcessingState );
 
 		if ( isPersistentAttributeInterceptable(toInitialize) ) {
 			PersistentAttributeInterceptor persistentAttributeInterceptor =
@@ -1076,6 +1076,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			preLoadEvent.reset();
 
 			preLoadEvent.setEntity( entityInstance )
+					.setState( resolvedEntityState )
 					.setId( entityKey.getIdentifier() )
 					.setPersister( concreteDescriptor );
 

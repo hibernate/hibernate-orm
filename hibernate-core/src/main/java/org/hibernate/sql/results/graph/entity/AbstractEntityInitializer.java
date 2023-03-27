@@ -659,7 +659,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	protected Object instantiateEntity(Object entityIdentifier, SharedSessionContractImplementor session) {
-		final Object instance = session.instantiate( concreteDescriptor.getEntityName(), entityKey.getIdentifier() );
+		final Object instance = session.instantiate( concreteDescriptor, entityKey.getIdentifier() );
 		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Created new entity instance [%s] : %s",

@@ -10,8 +10,11 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
+import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
@@ -59,6 +62,18 @@ public abstract class AbstractMutationCoordinator {
 	protected Dialect dialect() {
 		return factory().getJdbcServices().getDialect();
 	}
+
+	protected BatchKeyAccess resolveBatchKeyAccess(boolean dynamicUpdate, SharedSessionContractImplementor session) {
+		if ( !dynamicUpdate
+				&& session.getTransactionCoordinator() != null
+				&& session.getTransactionCoordinator().isTransactionActive() ) {
+			return this::getBatchKey;
+		}
+
+		return NoBatchKeyAccess.INSTANCE;
+	}
+
+	protected abstract BatchKey getBatchKey();
 
 	protected MutationOperationGroup createOperationGroup(ValuesAnalysis valuesAnalysis, MutationGroup mutationGroup) {
 		final int numberOfTableMutations = mutationGroup.getNumberOfTableMutations();

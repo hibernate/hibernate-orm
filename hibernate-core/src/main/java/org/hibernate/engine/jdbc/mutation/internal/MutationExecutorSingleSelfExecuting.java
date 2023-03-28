@@ -33,6 +33,8 @@ public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecuto
 				this::findJdbcValueDescriptor,
 				session
 		);
+
+		prepareForNonBatchedWork( null, session );
 	}
 
 	private JdbcValueDescriptor findJdbcValueDescriptor(String tableName, String columnName, ParameterUsage usage) {

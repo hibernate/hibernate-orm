@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.process.internal;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -16,7 +17,6 @@ import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.internal.AttributeConverterMutabilityPlanImpl;
@@ -149,6 +149,8 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			return ImmutableMutabilityPlan.instance();
 		}
 
+		// if the domain JavaType is immutable, use the immutability plan
+		// 		- note : ignore this for collection-as-basic mappings.
 		if ( !domainJtd.getMutabilityPlan().isMutable()
 				&& !isCollection( domainJtd.getJavaTypeClass() ) ) {
 			return ImmutableMutabilityPlan.instance();

@@ -52,7 +52,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -498,10 +497,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
 		final Object proxy = getProxy( persistenceContext );
-		final Object entityInstanceFromExecutionContext =
-				rowProcessingState.getJdbcValuesSourceProcessingState().getExecutionContext().getEntityInstance();
+		final Object entityInstanceFromExecutionContext = getEntityInstanceFromExecutionContext( rowProcessingState );
 		if ( isProxyInstance( proxy ) ) {
-			if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
+			if ( entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -518,7 +516,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					this.isInitialized = true;
 				}
 			}
-			else if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
+			else if ( entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -532,13 +530,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private boolean useEntityInstanceFromExecutionContext(
-			Object entityInstanceFromExecutionContext,
-			SharedSessionContractImplementor session) {
-		return this instanceof EntityResultInitializer
-			&& entityInstanceFromExecutionContext != null
-			&& entityKey.getIdentifier()
-				.equals( entityDescriptor.getIdentifier( entityInstanceFromExecutionContext, session ) );
+	protected Object getEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState) {
+		return null;
 	}
 
 	private void upgradeLockMode(RowProcessingState rowProcessingState) {
@@ -803,8 +796,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 
-		entityDescriptor.setIdentifier( toInitialize, entityIdentifier, session );
-
 		resolvedEntityState = extractConcreteTypeStateValues( rowProcessingState );
 
 		if ( isPersistentAttributeInterceptable(toInitialize) ) {
@@ -858,6 +849,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					toLoggableString( getNavigablePath(), entityIdentifier )
 			);
 		}
+
+		assert concreteDescriptor.getIdentifier( entityInstance, session ) != null;
 
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {

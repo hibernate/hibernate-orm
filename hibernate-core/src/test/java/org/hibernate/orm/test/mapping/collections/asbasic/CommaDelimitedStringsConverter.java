@@ -6,12 +6,17 @@
  */
 package org.hibernate.orm.test.mapping.collections.asbasic;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
+
 import jakarta.persistence.AttributeConverter;
 
+
 import static org.hibernate.internal.util.StringHelper.join;
+import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
 
 /**
  * @author Steve Ebersole
@@ -31,7 +36,7 @@ public class CommaDelimitedStringsConverter implements AttributeConverter<List<S
 		if ( dbData == null ) {
 			return null;
 		}
-		return Arrays.asList( dbData.split( "," ) );
+		return listOf( dbData.split( "," ) );
 	}
 }
 //end::ex-csv-converter[]

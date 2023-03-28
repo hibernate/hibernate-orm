@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
+import org.hibernate.engine.jdbc.batch.JdbcBatchLogging;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
@@ -189,6 +190,18 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			finally {
 				currentBatch.release();
 			}
+		}
+	}
+
+	@Override
+	public void conditionallyExecuteBatch(BatchKey key) {
+		if ( currentBatch == null ) {
+			return;
+		}
+
+		if ( !currentBatch.getKey().equals( key ) ) {
+			JdbcBatchLogging.BATCH_LOGGER.debugf( "Conditionally executing batch - %s", currentBatch.getKey() );
+			currentBatch.execute();
 		}
 	}
 

@@ -61,6 +61,12 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	void executeBatch();
 
 	/**
+	 * Conditionally execute the currently managed batch (if any), if the
+	 * keys do not match
+	 */
+	void conditionallyExecuteBatch(BatchKey key);
+
+	/**
 	 * Abort the currently managed batch (if any)
 	 */
 	void abortBatch();

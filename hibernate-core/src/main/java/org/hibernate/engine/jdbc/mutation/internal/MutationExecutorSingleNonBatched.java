@@ -22,8 +22,8 @@ public class MutationExecutorSingleNonBatched extends AbstractSingleMutationExec
 			PreparableMutationOperation mutationOperation,
 			SharedSessionContractImplementor session) {
 		super( mutationOperation, session );
-
 		this.statementGroup = new PreparedStatementGroupSingleTable( mutationOperation, session );
+		prepareForNonBatchedWork( null, session );
 	}
 
 	@Override

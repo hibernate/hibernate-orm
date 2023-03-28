@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -44,7 +45,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 
 	@Override
 	public MutationExecutor createExecutor(
-			Supplier<BatchKey> batchKeySupplier,
+			BatchKeyAccess batchKeySupplier,
 			MutationOperationGroup operationGroup,
 			SharedSessionContractImplementor session) {
 		// decide whether to use batching - any number > one means to batch
@@ -78,7 +79,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 			}
 
 			final PreparableMutationOperation jdbcOperation = (PreparableMutationOperation) singleOperation;
-			final BatchKey batchKey = batchKeySupplier.get();
+			final BatchKey batchKey = batchKeySupplier.getBatchKey();
 			if ( jdbcOperation.canBeBatched( batchKey, batchSizeToUse ) ) {
 				return new MutationExecutorSingleBatched( jdbcOperation, batchKey, batchSizeToUse, session );
 			}

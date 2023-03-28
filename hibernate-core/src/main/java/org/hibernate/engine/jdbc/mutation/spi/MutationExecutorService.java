@@ -6,9 +6,6 @@
  */
 package org.hibernate.engine.jdbc.mutation.spi;
 
-import java.util.function.Supplier;
-
-import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.Service;
@@ -21,8 +18,11 @@ import org.hibernate.sql.model.MutationOperationGroup;
  */
 public interface MutationExecutorService extends Service {
 
+	/**
+	 * Create an executor for the given {@code operationGroup}, potentially using batching
+	 */
 	MutationExecutor createExecutor(
-			Supplier<BatchKey> batchKeySupplier,
+			BatchKeyAccess batchKeySupplier,
 			MutationOperationGroup operationGroup,
 			SharedSessionContractImplementor session);
 }

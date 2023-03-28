@@ -8,6 +8,7 @@ package org.hibernate.engine.jdbc.mutation.internal;
 
 import java.sql.SQLException;
 
+import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
@@ -26,6 +27,15 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  * @author Steve Ebersole
  */
 public abstract class AbstractMutationExecutor implements MutationExecutor {
+	/**
+	 * Executors with non-batched operations should call this to clean up any "previous" batch
+	 * before starting their work
+	 */
+	protected void prepareForNonBatchedWork(BatchKey batchKey, SharedSessionContractImplementor session) {
+		// if there is a current batch, make sure to execute it first
+		session.getJdbcCoordinator().conditionallyExecuteBatch( batchKey );
+	}
+
 	/**
 	 * Templated implementation of execution as <ol>
 	 *     <li>{@link #performNonBatchedOperations}</li>

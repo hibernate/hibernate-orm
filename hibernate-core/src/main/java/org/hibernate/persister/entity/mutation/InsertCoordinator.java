@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -79,7 +80,8 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		return staticInsertGroup;
 	}
 
-	public BasicBatchKey getInsertBatchKey() {
+	@Override
+	protected BatchKey getBatchKey() {
 		return batchKey;
 	}
 
@@ -305,9 +307,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		return session.getFactory()
 				.getServiceRegistry()
 				.getService( MutationExecutorService.class )
-				.createExecutor( ( !dynamicUpdate && session.getTransactionCoordinator() != null &&
-									session.getTransactionCoordinator().isTransactionActive() ? () -> batchKey : () -> null ),
-								group, session );
+				.createExecutor( resolveBatchKeyAccess( dynamicUpdate, session ), group, session );
 	}
 
 	protected static TableInclusionChecker getTableInclusionChecker(InsertValuesAnalysis insertValuesAnalysis) {
@@ -409,5 +409,13 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			&& generator.generatesOnInsert()
 			&& generator.generatedOnExecution()
 			&& ( (OnExecutionGenerator) generator ).referenceColumnsInSql(dialect);
+	}
+
+	/**
+	 * @deprecated Use {@link #getBatchKey()}
+	 */
+	@Deprecated
+	public BasicBatchKey getInsertBatchKey() {
+		return batchKey;
 	}
 }

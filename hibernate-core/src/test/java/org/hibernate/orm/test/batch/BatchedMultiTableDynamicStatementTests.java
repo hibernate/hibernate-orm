@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -114,7 +115,9 @@ public class BatchedMultiTableDynamicStatementTests {
 	public static class Payment {
 		@Id
 		private Integer id;
+		@Column( name = "amt")
 		private double amount;
+		@Column( name = "the_comment")
 		private String comment;
 
 		public Integer getId() {
@@ -151,6 +154,7 @@ public class BatchedMultiTableDynamicStatementTests {
 		@Basic(optional = false)
 		private String route;
 		@Basic(optional = false)
+		@Column( name = "acct" )
 		private String account;
 		private String memo;
 

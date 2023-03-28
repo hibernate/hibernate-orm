@@ -148,6 +148,7 @@ public class OptionalEagerMappedByNotFoundTest {
 
 	private void checkResult(Person person) {
 		assertNotNull( person );
+		assertNotNull( person.getId() );
 		assertNull( person.getEmployment() );
 	}
 

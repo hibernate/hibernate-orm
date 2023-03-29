@@ -30,6 +30,7 @@ import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrate
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.type.WrapperArrayHandling;
 
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -2767,6 +2768,19 @@ public interface AvailableSettings {
 	 */
 	@Incubating
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
+
+	/**
+	 * Configurable control over how to handle {@code Byte[]} and {@code Character[]} types
+	 * encountered in the application domain model.  Allowable semantics are defined by
+	 * {@link WrapperArrayHandling}.  Accepted values include:<ol>
+	 *     <li>{@link WrapperArrayHandling} instance</li>
+	 *     <li>case-insensitive name of a {@link WrapperArrayHandling} instance (e.g. {@code allow})</li>
+	 * </ol>
+	 *
+	 * @since 6.2
+	 */
+	@Incubating
+	String WRAPPER_ARRAY_HANDLING = "hibernate.type.wrapper_array_handling";
 
 	/**
 	 * Specifies the default strategy for storage of the timezone information for the zoned

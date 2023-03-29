@@ -42,7 +42,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.sql.results.graph.Fetchable;
 
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements SqlTupleContainer,
 		Assignable {
@@ -296,11 +296,13 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final Expression sqlExpression;
 
 		if ( resultModelPart == null ) {
+			// Expand to all columns of the entity mapping type, as we already did for the selection
 			final EntityMappingType entityMappingType = mapping.getEntityMappingType();
 			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 			final EntityDiscriminatorMapping discriminatorMapping = entityMappingType.getDiscriminatorMapping();
+			final int numberOfFetchables = entityMappingType.getNumberOfFetchables();
 			final List<Expression> expressions = new ArrayList<>(
-					entityMappingType.getJdbcTypeCount() + identifierMapping.getJdbcTypeCount()
+					numberOfFetchables + identifierMapping.getJdbcTypeCount()
 							+ ( discriminatorMapping == null ? 0 : 1 )
 			);
 			final TableGroup parentTableGroup = tableGroup;
@@ -318,7 +320,12 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			if ( discriminatorMapping != null ) {
 				discriminatorMapping.forEachSelectable( selectableConsumer );
 			}
-			entityMappingType.forEachSelectable( selectableConsumer );
+			for ( int i = 0; i < numberOfFetchables; i++ ) {
+				final Fetchable fetchable = entityMappingType.getFetchable( i );
+				if ( fetchable.isSelectable() ) {
+					fetchable.forEachSelectable( selectableConsumer );
+				}
+			}
 			sqlExpression = new SqlTuple( expressions, entityMappingType );
 		}
 		else {

@@ -9,10 +9,12 @@ package org.hibernate.sql.ast.spi;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
+import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 
@@ -53,9 +55,9 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 	@Override
 	public TableGroup findTableGroupForGetOrCreate(NavigablePath navigablePath) {
 		final TableGroup tableGroup = findTableGroup( navigablePath );
-		if ( parent != null && tableGroup instanceof VirtualTableGroup && tableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
+		if ( parent != null && tableGroup != null && navigablePath.getParent() != null ) {
 			final NavigableRole navigableRole = tableGroup.getModelPart().getNavigableRole();
-			if ( navigableRole != null ) {
+			if ( navigableRole != null && navigableRole.getParent() != null ) {
 				// Traverse up the navigable path to the point where resolving the path leads us to a regular TableGroup
 				NavigableRole parentRole = navigableRole.getParent();
 				NavigablePath parentPath = navigablePath.getParent();
@@ -64,7 +66,7 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 					parentPath = parentPath.getParent();
 				}
 				// Only return the TableGroup if its regular parent TableGroup corresponds to the underlying one
-				if ( findTableGroup( parentPath ) == getUnderlyingTableGroup( (VirtualTableGroup) tableGroup ) ) {
+				if ( getUnderlyingTableGroup( findTableGroup( parentPath ) ) == getUnderlyingTableGroup( tableGroup ) ) {
 					return tableGroup;
 				}
 				else {
@@ -75,10 +77,15 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 		return tableGroup;
 	}
 
-	private TableGroup getUnderlyingTableGroup(VirtualTableGroup virtualTableGroup) {
-		final TableGroup tableGroup = virtualTableGroup.getUnderlyingTableGroup();
+	private TableGroup getUnderlyingTableGroup(TableGroup tableGroup) {
 		if ( tableGroup instanceof VirtualTableGroup ) {
-			return getUnderlyingTableGroup( (VirtualTableGroup) tableGroup );
+			return getUnderlyingTableGroup( ( (VirtualTableGroup) tableGroup ).getUnderlyingTableGroup() );
+		}
+		else if ( tableGroup instanceof CorrelatedTableGroup ) {
+			return getUnderlyingTableGroup( ( (CorrelatedTableGroup) tableGroup ).getCorrelatedTableGroup() );
+		}
+		else if ( tableGroup instanceof PluralTableGroup ) {
+			return getUnderlyingTableGroup( ( (PluralTableGroup) tableGroup ).getElementTableGroup() );
 		}
 		return tableGroup;
 	}

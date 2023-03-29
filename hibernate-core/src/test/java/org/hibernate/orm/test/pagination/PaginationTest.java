@@ -36,11 +36,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				"org/hibernate/orm/test/pagination/DataPoint.hbm.xml"
 		}
 )
-@SessionFactory
 public class PaginationTest {
 	public static final int NUMBER_OF_TEST_ROWS = 100;
 
 	@Test
+	@SessionFactory
 	public void testLimit(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -74,6 +74,7 @@ public class PaginationTest {
 	}
 
 	@Test
+	@SessionFactory
 	public void testOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -91,7 +92,7 @@ public class PaginationTest {
 
 					assertEquals(
 							firstDataPointHQL,
-							firstDataPointHQL,
+							firstDataPointCriteria,
 							"The first entry should be the same in HQL and Criteria"
 					);
 					assertEquals( 3, firstDataPointCriteria.getSequence(), "Wrong first result" );
@@ -103,7 +104,7 @@ public class PaginationTest {
 
 					assertEquals(
 							firstDataPointHQL,
-							firstDataPointHQL,
+							firstDataPointCriteria,
 							"The first entry should be the same in HQL and Criteria"
 					);
 				}
@@ -111,6 +112,7 @@ public class PaginationTest {
 	}
 
 	@Test
+	@SessionFactory
 	public void testLimitOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

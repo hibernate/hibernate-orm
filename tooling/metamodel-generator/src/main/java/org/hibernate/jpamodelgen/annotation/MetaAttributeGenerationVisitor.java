@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
+import java.util.Arrays;
 import java.util.List;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -288,6 +289,8 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
  */
 class BasicAttributeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 
+	private static final List<String> HANDLED_ELEMENT_KINDS = Arrays.asList("CLASS", "INTERFACE", "RECORD");
+
 	private final Context context;
 
 	public BasicAttributeVisitor(Context context) {
@@ -313,7 +316,7 @@ class BasicAttributeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 			return Boolean.TRUE;
 		}
 
-		if ( ElementKind.CLASS.equals( element.getKind() ) || ElementKind.INTERFACE.equals( element.getKind() ) ) {
+		if ( HANDLED_ELEMENT_KINDS.contains( element.getKind().name() ) ) {
 			TypeElement typeElement = ( (TypeElement) element );
 			String typeName = typeElement.getQualifiedName().toString();
 			if ( Constants.BASIC_TYPES.contains( typeName ) ) {

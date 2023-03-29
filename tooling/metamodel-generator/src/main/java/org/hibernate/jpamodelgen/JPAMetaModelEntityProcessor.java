@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -67,6 +67,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
 
 	private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;
+	private static final List<String> HANDLED_ELEMENT_KINDS = Arrays.asList("CLASS", "RECORD");
 
 	private Context context;
 
@@ -221,7 +222,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private void handleRootElementAnnotationMirrors(final Element element) {
 		List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
 		for ( AnnotationMirror mirror : annotationMirrors ) {
-			if ( !ElementKind.CLASS.equals( element.getKind() ) ) {
+			if ( !HANDLED_ELEMENT_KINDS.contains( element.getKind().name() ) ) {
 				continue;
 			}
 

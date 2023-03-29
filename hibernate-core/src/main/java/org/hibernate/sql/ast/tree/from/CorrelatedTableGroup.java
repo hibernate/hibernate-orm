@@ -122,4 +122,8 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	public Consumer<Predicate> getJoinPredicateConsumer() {
 		return joinPredicateConsumer;
 	}
+
+	public TableGroup getCorrelatedTableGroup(){
+		return correlatedTableGroup;
+	}
 }

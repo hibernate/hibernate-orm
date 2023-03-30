@@ -714,17 +714,20 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			if ( "HY008".equals( sqlState ) ) {
 				throw new QueryTimeoutException( message, sqlException, sql );
 			}
-			if ( 1222 == errorCode ) {
-				throw new LockTimeoutException( message, sqlException, sql );
+
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			switch ( errorCode ) {
+				case 1222:
+					throw new LockTimeoutException( message, sqlException, sql );
+				case 2627:
+				case 2601:
+					throw new ConstraintViolationException( message, sqlException, sql );
+				default:
+					return null;
 			}
-			if ( 2627 == errorCode || 2601 == errorCode ) {
-				throw new ConstraintViolationException( message, sqlException, sql );
-			}
-			return null;
 		};
 	}
 

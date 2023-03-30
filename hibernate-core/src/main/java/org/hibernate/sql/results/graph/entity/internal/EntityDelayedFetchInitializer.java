@@ -17,7 +17,6 @@ import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
@@ -147,7 +146,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 									&& isEnhancedForLazyLoading( parentEntityInitializer ) ) {
 								return;
 							}
-							entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(
+							entityInstance = concreteDescriptor.loadByUniqueKey(
 									uniqueKeyPropertyName,
 									identifier,
 									session

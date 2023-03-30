@@ -12,7 +12,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * An {@link EntityPersister} that can be loaded by a non-primary unique key.
  *
  * @author Gavin King
+ *
+ * @deprecated Use {@link org.hibernate.metamodel.mapping.EntityMappingType#loadByUniqueKey} instead
  */
+@Deprecated
 public interface UniqueKeyLoadable extends Loadable {
 	/**
 	 * Load an instance of the persistent class, by a unique key other

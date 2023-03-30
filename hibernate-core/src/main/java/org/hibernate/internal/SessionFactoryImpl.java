@@ -210,7 +210,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		sessionFactoryOptions = options;
 
 		serviceRegistry = getServiceRegistry( options, this );
-
 		eventEngine = new EventEngine( bootMetamodel, this );
 
 		bootMetamodel.initSessionFactory( this );
@@ -262,87 +261,13 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			// registry here, and doing the engine later
 			queryEngine = QueryEngine.from( this, bootMetamodel );
 
-			// this is where creation of the runtime metamodel happens
+			// create runtime metamodels (mapping and JPA)
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
 			runtimeMetamodels = runtimeMetamodelsImpl;
-			new RuntimeModelCreationContext() {
-				final MappingMetamodelImpl mappingMetamodelImpl =
-						new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
-				{
-					// need to set this before calling finishInitialization()
-					runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
-					// because this calls back to the RuntimeMetamodelsImplementor
-					mappingMetamodelImpl.finishInitialization( this );
-					// need to set this after calling finishInitialization()
-					runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
-				}
-
-				@Override
-				public BootstrapContext getBootstrapContext() {
-					return bootstrapContext;
-				}
-
-				@Override
-				public SessionFactoryImplementor getSessionFactory() {
-					// this is bad, we're not yet fully-initialized
-					return SessionFactoryImpl.this;
-				}
-
-				@Override
-				public MetadataImplementor getBootModel() {
-					return bootMetamodel;
-				}
-
-				@Override
-				public MappingMetamodelImplementor getDomainModel() {
-					return mappingMetamodelImpl;
-				}
-
-				@Override
-				public CacheImplementor getCache() {
-					return cacheAccess;
-				}
-
-				@Override
-				public Map<String, Object> getSettings() {
-					return settings;
-				}
-
-				@Override
-				public Dialect getDialect() {
-					return jdbcServices.getDialect();
-				}
-
-				@Override
-				public SqmFunctionRegistry getFunctionRegistry() {
-					return queryEngine.getSqmFunctionRegistry();
-				}
-
-				@Override
-				public TypeConfiguration getTypeConfiguration() {
-					return typeConfiguration;
-				}
-
-				@Override
-				public SessionFactoryOptions getSessionFactoryOptions() {
-					return options;
-				}
-
-				@Override
-				public JdbcServices getJdbcServices() {
-					return jdbcServices;
-				}
-
-				@Override
-				public SqlStringGenerationContext getSqlStringGenerationContext() {
-					return sqlStringGenerationContext;
-				}
-
-				@Override
-				public ServiceRegistry getServiceRegistry() {
-					return serviceRegistry;
-				}
-			};
+			final MappingMetamodelImpl mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
+			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
+			initializeMappingModel( mappingMetamodelImpl, bootstrapContext, bootMetamodel, options );
+			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
 
 			// this needs to happen after the mapping metamodel is
 			// completely built, since we need to use the persisters
@@ -383,6 +308,96 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		LOG.debug( "Instantiated SessionFactory" );
+	}
+
+	private void initializeMappingModel(
+			MappingMetamodelImpl mappingMetamodelImpl,
+			BootstrapContext bootstrapContext,
+			MetadataImplementor bootMetamodel,
+			SessionFactoryOptions options) {
+		final TypeConfiguration typeConfiguration = mappingMetamodelImpl.getTypeConfiguration();
+		mappingMetamodelImpl.finishInitialization( runtimeModelCreationContext(
+				bootstrapContext,
+				bootMetamodel,
+				mappingMetamodelImpl,
+				typeConfiguration,
+				options
+		) );
+	}
+
+	private RuntimeModelCreationContext runtimeModelCreationContext(
+			BootstrapContext bootstrapContext,
+			MetadataImplementor bootMetamodel,
+			MappingMetamodelImplementor mappingMetamodel,
+			TypeConfiguration typeConfiguration,
+			SessionFactoryOptions options) {
+		return new RuntimeModelCreationContext() {
+			@Override
+			public BootstrapContext getBootstrapContext() {
+				return bootstrapContext;
+			}
+
+			@Override
+			public SessionFactoryImplementor getSessionFactory() {
+				// this is bad, we're not yet fully-initialized
+				return SessionFactoryImpl.this;
+			}
+
+			@Override
+			public MetadataImplementor getBootModel() {
+				return bootMetamodel;
+			}
+
+			@Override
+			public MappingMetamodelImplementor getDomainModel() {
+				return mappingMetamodel;
+			}
+
+			@Override
+			public CacheImplementor getCache() {
+				return cacheAccess;
+			}
+
+			@Override
+			public Map<String, Object> getSettings() {
+				return settings;
+			}
+
+			@Override
+			public Dialect getDialect() {
+				return jdbcServices.getDialect();
+			}
+
+			@Override
+			public SqmFunctionRegistry getFunctionRegistry() {
+				return queryEngine.getSqmFunctionRegistry();
+			}
+
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
+			}
+
+			@Override
+			public SessionFactoryOptions getSessionFactoryOptions() {
+				return options;
+			}
+
+			@Override
+			public JdbcServices getJdbcServices() {
+				return jdbcServices;
+			}
+
+			@Override
+			public SqlStringGenerationContext getSqlStringGenerationContext() {
+				return sqlStringGenerationContext;
+			}
+
+			@Override
+			public ServiceRegistry getServiceRegistry() {
+				return serviceRegistry;
+			}
+		};
 	}
 
 	private static Map<String, Generator> createGenerators(

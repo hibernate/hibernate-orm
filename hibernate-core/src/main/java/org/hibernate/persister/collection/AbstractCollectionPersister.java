@@ -146,11 +146,12 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  */
 @Internal
 public abstract class AbstractCollectionPersister
-		implements SQLLoadableCollection, PluralAttributeMappingImpl.Aware, CollectionMutationTarget, CollectionMetadata {
+		implements CollectionPersister, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, DeprecatedCollectionStuff {
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
 
+	protected final String qualifiedTableName;
 	private final CollectionTableMapping tableMapping;
 
 	private final String sqlSelectSizeString;
@@ -171,12 +172,6 @@ public abstract class AbstractCollectionPersister
 	protected final boolean indexContainsFormula;
 	protected final boolean elementIsPureFormula;
 
-	// types
-	private final Type keyType;
-	private final Type indexType;
-	protected final Type elementType;
-	private final Type identifierType;
-
 	// columns
 	protected final String[] keyColumnNames;
 	protected final String[] indexColumnNames;
@@ -192,14 +187,8 @@ public abstract class AbstractCollectionPersister
 	protected final String[] elementFormulas;
 	protected final boolean[] elementColumnIsGettable;
 	protected final boolean[] elementColumnIsSettable;
-	protected final String[] indexColumnAliases;
-	protected final String[] elementColumnAliases;
-	protected final String[] keyColumnAliases;
 
 	protected final String identifierColumnName;
-	private final String identifierColumnAlias;
-
-	protected final String qualifiedTableName;
 
 	private final String queryLoaderName;
 
@@ -219,7 +208,6 @@ public abstract class AbstractCollectionPersister
 
 	// extra information about the element type
 	private final Class<?> elementClass;
-	private final String entityName;
 
 	private final Dialect dialect;
 	protected final SqlExceptionHelper sqlExceptionHelper;
@@ -229,7 +217,6 @@ public abstract class AbstractCollectionPersister
 	private final PropertyMapping elementPropertyMapping;
 	private final EntityPersister elementPersister;
 	private final CollectionDataAccess cacheAccessStrategy;
-	private final CollectionType collectionType;
 
 	private final CacheEntryStructure cacheEntryStructure;
 
@@ -243,8 +230,6 @@ public abstract class AbstractCollectionPersister
 	private final String manyToManyWhereTemplate;
 
 	private final String[] spaces;
-
-	private final Map<String,String[]> collectionPropertyColumnAliases = new HashMap<>();
 
 	private final Comparator<?> comparator;
 
@@ -285,8 +270,7 @@ public abstract class AbstractCollectionPersister
 		sqlExceptionHelper = creationContext.getJdbcServices().getSqlExceptionHelper();
 		collectionType = collectionBootDescriptor.getCollectionType();
 		navigableRole = new NavigableRole( collectionBootDescriptor.getRole() );
-		entityName = collectionBootDescriptor.getOwnerEntityName();
-		ownerPersister = creationContext.getDomainModel().getEntityDescriptor( entityName );
+		ownerPersister = creationContext.getDomainModel().getEntityDescriptor( collectionBootDescriptor.getOwnerEntityName() );
 		queryLoaderName = collectionBootDescriptor.getLoaderName();
 		isMutable = collectionBootDescriptor.isMutable();
 		mappedByProperty = collectionBootDescriptor.getMappedByProperty();
@@ -1125,7 +1109,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	public String getOwnerEntityName() {
-		return entityName;
+		return ownerPersister.getEntityName();
 	}
 
 	@Override
@@ -1821,4 +1805,23 @@ public abstract class AbstractCollectionPersister
 			return null;
 		}
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// State related to this we handle differently in 6+.  In other words, state
+	// that is no longer needed
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Deprecated private final CollectionType collectionType;
+	@Deprecated private final Type keyType;
+	@Deprecated private final Type identifierType;
+	@Deprecated private final Type indexType;
+	@Deprecated protected final Type elementType;
+	@Deprecated protected final String[] keyColumnAliases;
+	@Deprecated private final String identifierColumnAlias;
+	@Deprecated protected final String[] indexColumnAliases;
+	@Deprecated protected final String[] elementColumnAliases;
+	@Deprecated private final Map<String,String[]> collectionPropertyColumnAliases = new HashMap<>();
 }

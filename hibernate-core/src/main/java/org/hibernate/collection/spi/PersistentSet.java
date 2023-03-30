@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -96,7 +97,8 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	@Override
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert set == null;
-		set = (Set<E>) persister.getCollectionType().instantiate( 0 );
+		//noinspection unchecked
+		set = (Set<E>) persister.getCollectionSemantics().instantiateRaw( 0, persister );
 		endRead();
 	}
 

@@ -94,7 +94,8 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 	@Override
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert map == null;
-		map = (Map<K,E>) persister.getCollectionType().instantiate( 0 );
+		//noinspection unchecked
+		map = (Map<K,E>) persister.getCollectionSemantics().instantiateRaw( 0, persister );
 		endRead();
 	}
 

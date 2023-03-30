@@ -4732,7 +4732,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 		else {
-			mode = FrameMode.ROWS;
+			mode = FrameMode.RANGE;
 			startKind = FrameKind.UNBOUNDED_PRECEDING;
 			startExpression = null;
 			endKind = FrameKind.CURRENT_ROW;

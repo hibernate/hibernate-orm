@@ -4766,7 +4766,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitOverClause(
 				partitionExpressions,
 				sortSpecifications,
-				FrameMode.ROWS,
+				FrameMode.RANGE,
 				FrameKind.UNBOUNDED_PRECEDING,
 				null,
 				FrameKind.CURRENT_ROW,
@@ -4793,7 +4793,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( !orderedSetAggregate ) {
 				renderOrderBy( !partitionExpressions.isEmpty(), sortSpecifications );
 			}
-			if ( mode == FrameMode.ROWS && startKind == FrameKind.UNBOUNDED_PRECEDING && endKind == FrameKind.CURRENT_ROW && exclusion == FrameExclusion.NO_OTHERS ) {
+			if ( mode == FrameMode.RANGE && startKind == FrameKind.UNBOUNDED_PRECEDING && endKind == FrameKind.CURRENT_ROW && exclusion == FrameExclusion.NO_OTHERS ) {
 				// This is the default, so we don't need to render anything
 			}
 			else {

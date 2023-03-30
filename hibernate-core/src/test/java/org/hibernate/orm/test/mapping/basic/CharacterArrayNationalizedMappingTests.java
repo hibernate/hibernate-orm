@@ -132,7 +132,6 @@ public class CharacterArrayNationalizedMappingTests {
 		char[] primitiveNClob;
 		@Lob
 		@Nationalized
-		@JavaType( CharacterArrayJavaType.class )
 		Character[] wrapperNClob;
 		//end::basic-nchararray-example[]
 	}

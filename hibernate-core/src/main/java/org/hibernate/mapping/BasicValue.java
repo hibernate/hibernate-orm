@@ -437,8 +437,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 								getTypeConfiguration(),
 								getDialect(),
 								registeredElementType,
-								column instanceof ColumnTypeInformation ? (ColumnTypeInformation) column : null
-						);
+								column instanceof ColumnTypeInformation ? (ColumnTypeInformation) column : null,
+								this
+				);
 				if ( registeredType != null ) {
 					getTypeConfiguration().getBasicTypeRegistry().register( registeredType );
 
@@ -861,6 +862,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Internal
 	public boolean isDisallowedWrapperArray() {
 		return getBuildingContext().getBuildingOptions().getWrapperArrayHandling() == WrapperArrayHandling.DISALLOW
+				&& !isLob()
 				&& ( explicitJavaTypeAccess == null || explicitJavaTypeAccess.apply( getTypeConfiguration() ) == null )
 				&& isWrapperByteOrCharacterArray();
 	}

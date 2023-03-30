@@ -44,8 +44,13 @@ public class GetterMethodImpl implements Getter {
 			return getterMethod.invoke( owner, ArrayHelper.EMPTY_OBJECT_ARRAY );
 		}
 		catch (InvocationTargetException ite) {
+			Throwable cause = ite.getCause();
+			if ( cause instanceof Error ) {
+				// HHH-16403 Don't wrap Error
+				throw (Error) cause;
+			}
 			throw new PropertyAccessException(
-					ite,
+					cause,
 					"Exception occurred inside",
 					false,
 					containerClass,

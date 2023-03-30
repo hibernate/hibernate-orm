@@ -28,6 +28,7 @@ import jakarta.persistence.criteria.Order;
 import static org.hibernate.query.sqm.FrameExclusion.NO_OTHERS;
 import static org.hibernate.query.sqm.FrameKind.CURRENT_ROW;
 import static org.hibernate.query.sqm.FrameKind.UNBOUNDED_PRECEDING;
+import static org.hibernate.query.sqm.FrameMode.RANGE;
 import static org.hibernate.query.sqm.FrameMode.ROWS;
 
 /**
@@ -49,7 +50,7 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 				nodeBuilder,
 				new ArrayList<>(),
 				new ArrayList<>(),
-				ROWS,
+				RANGE,
 				UNBOUNDED_PRECEDING,
 				null,
 				CURRENT_ROW,
@@ -221,7 +222,7 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 				orderList.get( i ).appendHqlString( sb );
 			}
 		}
-		if ( mode == ROWS && startKind == UNBOUNDED_PRECEDING && endKind == CURRENT_ROW && exclusion == NO_OTHERS ) {
+		if ( mode == RANGE && startKind == UNBOUNDED_PRECEDING && endKind == CURRENT_ROW && exclusion == NO_OTHERS ) {
 			// This is the default, so we don't need to render anything
 		}
 		else {

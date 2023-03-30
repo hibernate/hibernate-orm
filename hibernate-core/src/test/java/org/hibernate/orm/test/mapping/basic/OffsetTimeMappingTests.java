@@ -43,7 +43,10 @@ public class OffsetTimeMappingTests {
 		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("offsetTime");
 		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(OffsetTime.class));
-		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), isOneOf( Types.TIME, Types.TIME_WITH_TIMEZONE));
+		assertThat(
+				jdbcMapping.getJdbcType().getJdbcTypeCode(),
+				isOneOf( Types.TIME, Types.TIMESTAMP_WITH_TIMEZONE, Types.TIME_WITH_TIMEZONE )
+		);
 
 		scope.inTransaction(
 				(session) -> {

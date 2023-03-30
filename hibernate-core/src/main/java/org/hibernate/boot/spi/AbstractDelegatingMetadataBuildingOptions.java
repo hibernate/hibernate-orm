@@ -19,6 +19,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.SharedCacheMode;
@@ -65,6 +66,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
 		return delegate.getTimeZoneSupport();
+	}
+
+	@Override
+	public WrapperArrayHandling getWrapperArrayHandling() {
+		return delegate.getWrapperArrayHandling();
 	}
 
 	@Override

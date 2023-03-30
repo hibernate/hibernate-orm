@@ -14,25 +14,3 @@ earlier versions, see any other pertinent migration guides as well.
 * link:{docsBase}/6.1/migration-guide/migration-guide.html[6.1 Migration guide]
 * link:{docsBase}/6.0/migration-guide/migration-guide.html[6.0 Migration guide]
 
-[[ddl-changes]]
-== DDL type changes
-
-[[ddl-offset-time]]
-=== OffsetTime mapping changes
-
-`OffsetTime` now depends on `@TimeZoneStorage` and the `hibernate.timezone.default_storage` setting.
-Since the default for this setting is now `TimeZoneStorageType.DEFAULT`, this means that the DDL expectations for such columns changed.
-
-If the target database supports time zone types natively like H2, Oracle, SQL Server and DB2 z/OS,
-the type code `SqlTypes.TIME_WITH_TIMEZONE` is now used, which maps to the DDL type `time with time zone`.
-
-Due to this change, schema validation errors could occur on existing databases.
-
-The migration to `time with time zone` requires a migration expression like `cast(old as time with time zone)`
-which will interpret the previous time as local time and compute the offset for the `time with time zone` based on the current date
-and time zone settings of your database session.
-
-If the target database does not support time zone types natively, Hibernate behaves just like before.
-
-To retain backwards compatibility, configure the setting `hibernate.timezone.default_storage` to `NORMALIZE`.
-

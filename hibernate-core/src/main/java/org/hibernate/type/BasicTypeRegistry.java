@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -274,6 +275,17 @@ public class BasicTypeRegistry implements Serializable {
 	public void unregister(String... keys) {
 		for ( String key : keys ) {
 			typesByName.remove( key );
+		}
+	}
+
+	@Internal
+	public void addTypeReferenceRegistrationKey(String typeReferenceKey, String... additionalTypeReferenceKeys) {
+		final BasicTypeReference<?> basicTypeReference = typeReferencesByName.get( typeReferenceKey );
+		if ( basicTypeReference == null ) {
+			throw new IllegalArgumentException( "Couldn't find type reference with name: " + typeReferenceKey );
+		}
+		for ( String additionalTypeReferenceKey : additionalTypeReferenceKeys ) {
+			typeReferencesByName.put( additionalTypeReferenceKey, basicTypeReference );
 		}
 	}
 

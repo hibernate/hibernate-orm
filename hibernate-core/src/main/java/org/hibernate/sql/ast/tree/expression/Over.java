@@ -43,7 +43,7 @@ public class Over<T> implements Expression, DomainResultProducer<T> {
 		this.expression = expression;
 		this.partitions = partitions;
 		this.orderList = orderList;
-		this.mode = FrameMode.ROWS;
+		this.mode = FrameMode.RANGE;
 		this.startKind = FrameKind.UNBOUNDED_PRECEDING;
 		this.startExpression = null;
 		this.endKind = FrameKind.CURRENT_ROW;

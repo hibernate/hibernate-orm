@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.extractor.Extractors.resultOf;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_FIELD_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_GETTER_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME;
@@ -93,8 +94,8 @@ public class DirtyCheckingWithEmbeddedTest {
 		assertThat( entity.getFirstPlayerToken() )
 				.extracting( TRACKER_COMPOSITE_FIELD_NAME ).isInstanceOf( CompositeOwnerTracker.class );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
-		assertThat( entity ).extracting( TRACKER_GET_NAME )
+		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( true );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) )
 				.isEqualTo( new String[] { "name", "firstPlayerToken" } );
 		assertThat( entity.getFirstPlayerToken() ).extracting( TRACKER_COMPOSITE_FIELD_NAME + ".names" )
 				.isEqualTo( new String[] { "firstPlayerToken" } );
@@ -107,8 +108,8 @@ public class DirtyCheckingWithEmbeddedTest {
 		Method trackerClearMethod = CardGame.class.getMethod( TRACKER_CLEAR_NAME );
 		trackerClearMethod.invoke( entity );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( false );
-		assertThat( entity ).extracting( TRACKER_GET_NAME ).isEqualTo( new String[0] );
+		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( false );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) ).isEqualTo( new String[0] );
 	}
 
 	@Test
@@ -121,14 +122,14 @@ public class DirtyCheckingWithEmbeddedTest {
 
 		entity.setName( "Splendor: Cities of Splendor" );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
-		assertThat( entity ).extracting( TRACKER_GET_NAME )
+		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( true );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) )
 				.isEqualTo( new String[] { "name", "firstPlayerToken" } );
 
 		trackerClearMethod.invoke( entity );
 
 		entity.setFirstPlayerToken( new Component( "FIRST PLAYER!!!!!!!!" ) );
-		assertThat( entity ).extracting( TRACKER_GET_NAME )
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) )
 				.isEqualTo( new String[] { "firstPlayerToken" } );
 
 		assertThat( entity.getFirstPlayerToken() ).extracting( TRACKER_COMPOSITE_FIELD_NAME + ".names" )

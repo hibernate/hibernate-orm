@@ -125,7 +125,7 @@ dependencyResolutionManagement {
         testLibs {
             version( "junit4", "4.13.2" )
             version( "junit5", "5.9.2" )
-            version( "assertj", "3.14.0" )
+            version( "assertj", "3.22.0" )
             version( "mockito", "5.2.0" )
             version( "byteman", "4.0.20" ) //Compatible with JDK20
             version( "shrinkwrap", "1.2.6" )

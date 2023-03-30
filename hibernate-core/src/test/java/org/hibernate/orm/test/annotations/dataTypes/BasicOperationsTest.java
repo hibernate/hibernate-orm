@@ -14,6 +14,7 @@ import java.sql.Statement;
 import java.util.Date;
 import java.util.Locale;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -26,8 +27,10 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.RequiresDialectFeatureGroup;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,6 +51,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		annotatedClasses = { SomeEntity.class, SomeOtherEntity.class }
 )
 @SessionFactory
+@ServiceRegistry(
+		settings = @Setting(name = AvailableSettings.WRAPPER_ARRAY_HANDLING, value = "ALLOW")
+)
 public class BasicOperationsTest {
 
 	private static final String SOME_ENTITY_TABLE_NAME = "SOMEENTITY";

@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -27,8 +28,10 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -45,6 +48,9 @@ import static org.hamcrest.Matchers.isOneOf;
 @DomainModel(annotatedClasses = CharacterArrayNationalizedMappingTests.EntityWithCharArrays.class)
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNationalizedData.class)
+@ServiceRegistry(
+		settings = @Setting(name = AvailableSettings.WRAPPER_ARRAY_HANDLING, value = "ALLOW")
+)
 public class CharacterArrayNationalizedMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {

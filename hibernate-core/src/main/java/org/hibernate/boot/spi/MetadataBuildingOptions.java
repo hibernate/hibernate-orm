@@ -23,6 +23,7 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.SharedCacheMode;
@@ -69,6 +70,13 @@ public interface MetadataBuildingOptions {
 	 * @see org.hibernate.dialect.Dialect#getTimeZoneSupport()
 	 */
 	TimeZoneSupport getTimeZoneSupport();
+
+	/**
+	 * @return the {@link WrapperArrayHandling} to use for wrapper arrays {@code Byte[]} and {@code Character[]}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#WRAPPER_ARRAY_HANDLING
+	 */
+	WrapperArrayHandling getWrapperArrayHandling();
 
 	default ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
 		// for now always return the standard one

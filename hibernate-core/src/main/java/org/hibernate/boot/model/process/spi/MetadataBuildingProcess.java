@@ -63,6 +63,10 @@ import org.hibernate.mapping.Table;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.WrapperArrayHandling;
+import org.hibernate.type.descriptor.java.ByteArrayJavaType;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
@@ -602,6 +606,21 @@ public class MetadataBuildingProcess {
 				converterRegistry.addAttributeConverter( converterClass );
 			}
 		};
+
+		if ( options.getWrapperArrayHandling() == WrapperArrayHandling.LEGACY ) {
+			typeConfiguration.getJavaTypeRegistry().addDescriptor( ByteArrayJavaType.INSTANCE );
+			typeConfiguration.getJavaTypeRegistry().addDescriptor( CharacterArrayJavaType.INSTANCE );
+			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+
+			basicTypeRegistry.addTypeReferenceRegistrationKey(
+					StandardBasicTypes.CHARACTER_ARRAY.getName(),
+					Character[].class.getName(), "Character[]"
+			);
+			basicTypeRegistry.addTypeReferenceRegistrationKey(
+					StandardBasicTypes.BINARY_WRAPPER.getName(),
+					Byte[].class.getName(), "Byte[]"
+					);
+		}
 
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();

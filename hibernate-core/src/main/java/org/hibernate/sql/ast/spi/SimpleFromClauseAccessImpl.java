@@ -85,7 +85,7 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 			return getUnderlyingTableGroup( ( (CorrelatedTableGroup) tableGroup ).getCorrelatedTableGroup() );
 		}
 		else if ( tableGroup instanceof PluralTableGroup ) {
-			return getUnderlyingTableGroup( ( (PluralTableGroup) tableGroup ).getElementTableGroup() );
+			return ( (PluralTableGroup) tableGroup ).getElementTableGroup();
 		}
 		return tableGroup;
 	}

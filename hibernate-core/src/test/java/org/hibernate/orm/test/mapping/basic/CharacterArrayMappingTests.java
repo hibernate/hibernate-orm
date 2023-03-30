@@ -119,7 +119,6 @@ public class CharacterArrayMappingTests {
 		@Lob
 		char[] primitiveClob;
 		@Lob
-		@JavaType( CharacterArrayJavaType.class )
 		Character[] wrapperClob;
 		//end::basic-chararray-example[]
 	}

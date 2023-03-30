@@ -20,6 +20,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.AdjustableBasicType;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
@@ -199,9 +200,10 @@ public class InferredBasicValueResolver {
 							typeConfiguration,
 							dialect,
 							resolveSqlTypeIndicators( stdIndicators, registeredElementType, elementJtd ),
-							columnTypeInformation
+							columnTypeInformation,
+							stdIndicators
 					);
-					if ( registeredType != null ) {
+					if ( registeredType instanceof BasicPluralType<?, ?> ) {
 						typeConfiguration.getBasicTypeRegistry().register( registeredType );
 					}
 				}

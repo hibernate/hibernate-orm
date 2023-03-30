@@ -12,6 +12,7 @@ import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -38,6 +39,7 @@ public interface BasicPluralJavaType<T> extends Serializable {
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			BasicType<T> elementType,
-			ColumnTypeInformation columnTypeInformation);
+			ColumnTypeInformation columnTypeInformation,
+			JdbcTypeIndicators stdIndicators);
 
 }

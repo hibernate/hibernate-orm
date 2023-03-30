@@ -213,7 +213,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		// If one-to-many and inverse, still need to create the index.  See HHH-5732.
 		final boolean doWrite = isInverse
-				&& hasIndex
+				&& hasIndex()
 				&& !indexContainsFormula
 				&& ArrayHelper.countTrue( indexColumnIsSettable ) > 0;
 		if ( !doWrite ) {
@@ -328,7 +328,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		assert fkDescriptor != null;
 
 		final int keyColumnCount = fkDescriptor.getJdbcTypeCount();
-		final int valuesCount = hasIndex
+		final int valuesCount = hasIndex()
 				? keyColumnCount + indexColumnNames.length
 				: keyColumnCount;
 
@@ -360,7 +360,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			);
 		}
 
-		if ( hasIndex && !indexContainsFormula ) {
+		if ( hasIndex() && !indexContainsFormula ) {
 			getAttributeMapping().getIndexDescriptor().forEachSelectable( (selectionIndex, selectableMapping) -> {
 				if ( ! selectableMapping.isUpdateable() ) {
 					return;
@@ -402,7 +402,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final RowMutationOperations.Values writeIndexValues;
 		final RowMutationOperations.Restrictions writeIndexRestrictions;
 		final boolean needsWriteIndex = isInverse
-				&& hasIndex
+				&& hasIndex()
 				&& !indexContainsFormula
 				&& !ArrayHelper.isAllFalse( indexColumnIsSettable );
 		if ( needsWriteIndex ) {
@@ -592,7 +592,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		}
 
 		// set the value for each index column to null
-		if ( hasIndex && !indexContainsFormula ) {
+		if ( hasIndex() && !indexContainsFormula ) {
 			final CollectionPart indexDescriptor = getAttributeMapping().getIndexDescriptor();
 			assert indexDescriptor != null;
 

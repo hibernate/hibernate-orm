@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -83,7 +82,7 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 				final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState = rowProcessingState.getJdbcValuesSourceProcessingState();
 				jdbcValuesSourceProcessingState.registerInitializer( euk, this );
 
-				entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(
+				entityInstance = concreteDescriptor.loadByUniqueKey(
 						uniqueKeyPropertyName,
 						entityIdentifier,
 						session

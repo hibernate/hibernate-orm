@@ -27,30 +27,30 @@ public enum CollectionClassification {
 	 * An Object or primitive array.  Roughly follows the semantics
 	 * of {@link #LIST}
 	 */
-	ARRAY( PluralAttribute.CollectionType.COLLECTION ),
+	ARRAY( PluralAttribute.CollectionType.COLLECTION, true ),
 
 	/**
 	 * A non-unique, unordered collection.  Represented
 	 * as {@link java.util.Collection} or {@link java.util.List}
 	 */
-	BAG( PluralAttribute.CollectionType.COLLECTION ),
+	BAG( PluralAttribute.CollectionType.COLLECTION, false ),
 
 	/**
 	 * A {@link #BAG} with a generated id for each element
 	 */
-	ID_BAG( PluralAttribute.CollectionType.COLLECTION ),
+	ID_BAG( PluralAttribute.CollectionType.COLLECTION, false ),
 
 	/**
 	 * A non-unique, ordered collection following the requirements of {@link java.util.List}
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
 	 */
-	LIST( PluralAttribute.CollectionType.LIST ),
+	LIST( PluralAttribute.CollectionType.LIST, true ),
 
 	/**
 	 * A unique, unordered collection following the requirements of {@link java.util.Set}
 	 */
-	SET( PluralAttribute.CollectionType.SET ),
+	SET( PluralAttribute.CollectionType.SET, false ),
 
 	/**
 	 * A sorted {@link #SET} using either natural sorting of the elements or a
@@ -60,7 +60,7 @@ public enum CollectionClassification {
 	 * @see org.hibernate.annotations.SortNatural
 	 * @see org.hibernate.annotations.SortComparator
 	 */
-	SORTED_SET( PluralAttribute.CollectionType.SET ),
+	SORTED_SET( PluralAttribute.CollectionType.SET, false ),
 
 	/**
 	 * A {@link #SET} that is ordered using an order-by fragment
@@ -71,12 +71,12 @@ public enum CollectionClassification {
 	 * @see jakarta.persistence.OrderBy
 	 * @see org.hibernate.annotations.OrderBy
 	 */
-	ORDERED_SET( PluralAttribute.CollectionType.SET ),
+	ORDERED_SET( PluralAttribute.CollectionType.SET, false ),
 
 	/**
 	 * A collection following the semantics of {@link java.util.Map}
 	 */
-	MAP( PluralAttribute.CollectionType.MAP ),
+	MAP( PluralAttribute.CollectionType.MAP, true ),
 
 	/**
 	 * A sorted {@link #MAP} using either natural sorting of the keys or a
@@ -86,7 +86,7 @@ public enum CollectionClassification {
 	 * @see org.hibernate.annotations.SortNatural
 	 * @see org.hibernate.annotations.SortComparator
 	 */
-	SORTED_MAP( PluralAttribute.CollectionType.MAP ),
+	SORTED_MAP( PluralAttribute.CollectionType.MAP, true ),
 
 	/**
 	 * A {@link #MAP} that is ordered using an order-by fragment
@@ -97,16 +97,27 @@ public enum CollectionClassification {
 	 * @see jakarta.persistence.OrderBy
 	 * @see org.hibernate.annotations.OrderBy
 	 */
-	ORDERED_MAP( PluralAttribute.CollectionType.MAP );
+	ORDERED_MAP( PluralAttribute.CollectionType.MAP, true );
 
 	private final PluralAttribute.CollectionType jpaClassification;
+	private final boolean isIndexed;
 
-	CollectionClassification(PluralAttribute.CollectionType jpaClassification) {
+	CollectionClassification(PluralAttribute.CollectionType jpaClassification, boolean isIndexed) {
 		this.jpaClassification = jpaClassification;
+		this.isIndexed = isIndexed;
 	}
 
 	public PluralAttribute.CollectionType toJpaClassification() {
 		return jpaClassification;
+	}
+
+	public boolean isIndexed() {
+		return isIndexed;
+	}
+
+	public boolean isRowUpdatePossible() {
+		// anything other than BAG and SET
+		return this != BAG && this != SET;
 	}
 
 	/**
@@ -173,10 +184,5 @@ public enum CollectionClassification {
 		);
 
 		return null;
-	}
-
-	public boolean isRowUpdatePossible() {
-		// anything other than BAG and SET
-		return this != BAG && this != SET;
 	}
 }

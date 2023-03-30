@@ -640,7 +640,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		else {
 			deleteBuilder.addKeyRestrictionsLeniently( pluralAttribute.getKeyDescriptor().getKeyPart() );
 
-			if ( hasIndex && !indexContainsFormula ) {
+			if ( hasIndex() && !indexContainsFormula ) {
 				assert pluralAttribute.getIndexDescriptor() != null;
 				deleteBuilder.addKeyRestrictionsLeniently( pluralAttribute.getIndexDescriptor() );
 			}

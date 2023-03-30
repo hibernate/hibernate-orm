@@ -87,7 +87,8 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	@SuppressWarnings("unchecked")
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert list == null;
-		list = (List<E>) persister.getCollectionType().instantiate( 0 );
+		//noinspection unchecked
+		list = (List<E>) persister.getCollectionSemantics().instantiateRaw( 0, persister );
 		endRead();
 	}
 
@@ -121,7 +122,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		final int size = array.length;
 
 		assert list == null;
-		this.list = (List<E>) persister.getCollectionType().instantiate( size );
+		list = (List<E>) persister.getCollectionSemantics().instantiateRaw( size, persister );
 
 		for ( Serializable arrayElement : array ) {
 			list.add( (E) persister.getElementType().assemble( arrayElement, getSession(), owner ) );

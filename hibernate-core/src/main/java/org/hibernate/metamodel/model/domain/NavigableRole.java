@@ -7,18 +7,23 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.io.Serializable;
-import java.util.Objects;
 
-import org.hibernate.spi.DotIdentifierSequence;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.spi.DotIdentifierSequence;
 import org.hibernate.spi.NavigablePath;
 
 /**
- * Poorly named.
+ * A compound path which represents a {@link org.hibernate.metamodel.mapping.ModelPart}
+ * and uniquely identifies it with the runtime metamodel.
+ * <p/>
+ * The {@linkplain #isRoot() root} will name either an
+ * {@linkplain org.hibernate.metamodel.MappingMetamodel#getEntityDescriptor entity} or
+ * {@linkplain org.hibernate.metamodel.MappingMetamodel#getCollectionDescriptor collection}
  *
- * Should have been named `org.hibernate.metamodel.model.mapping.MappingRole`
  *
- * Represents a compound path of `ModelPart` nodes rooted at an entity-name.
+ * @apiNote Poorly named. Should probably have been `org.hibernate.metamodel.model.mapping.MappingRole`;
+ * the term "navigable" here is meant to indicate that we could navigate to the specific
+ * {@link org.hibernate.metamodel.mapping.ModelPart} given the role.
  *
  * @author Steve Ebersole
  */

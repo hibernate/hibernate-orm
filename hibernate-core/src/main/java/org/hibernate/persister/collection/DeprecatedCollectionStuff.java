@@ -13,4 +13,8 @@ import org.hibernate.metadata.CollectionMetadata;
  */
 @Deprecated
 public interface DeprecatedCollectionStuff extends SQLLoadableCollection, CollectionMetadata {
+	@Override
+	default String getRole() {
+		return SQLLoadableCollection.super.getRole();
+	}
 }

@@ -590,6 +590,14 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	 */
 	List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions);
 
+	@Override
+	default Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException(
+				"EntityPersister implementation '" + getClass().getName()
+						+ "' does not support 'UniqueKeyLoadable'"
+		);
+	}
+
 	/**
 	 * Do a version check (optional operation)
 	 */

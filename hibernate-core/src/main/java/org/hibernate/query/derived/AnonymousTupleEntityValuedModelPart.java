@@ -675,6 +675,11 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
+	public Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session) {
+		return delegate.getEntityMappingType().loadByUniqueKey( propertyName, uniqueKey, session );
+	}
+
+	@Override
 	public NaturalIdLoader<?> getNaturalIdLoader() {
 		return delegate.getEntityMappingType().getNaturalIdLoader();
 	}

@@ -174,6 +174,7 @@ public class PluralAttributeMappingImpl
 		else {
 			baseIndex = -1;
 		}
+
 		indexMetadata = new IndexMetadata() {
 			@Override
 			public CollectionPart getIndexDescriptor() {

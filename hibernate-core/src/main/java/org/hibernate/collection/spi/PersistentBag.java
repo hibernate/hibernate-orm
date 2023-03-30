@@ -243,7 +243,8 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	@Override
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert bag == null;
-		bag = (List<E>) persister.getCollectionType().instantiate( 0 );
+		//noinspection unchecked
+		bag = (List<E>) persister.getCollectionSemantics().instantiateRaw( 0, persister );
 		endRead();
 	}
 

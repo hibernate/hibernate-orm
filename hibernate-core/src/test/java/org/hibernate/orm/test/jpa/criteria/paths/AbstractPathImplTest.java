@@ -113,10 +113,10 @@ public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
 			Root<Thing> thingRoot = criteria.from( Thing.class );
 
 			criteria.select( thingRoot );
-			assertEquals( em.createQuery( criteria ).getResultList().size(), 3);
+			assertEquals( 3, em.createQuery( criteria ).getResultList().size() );
 
 			criteria.where( criteriaBuilder.equal( thingRoot.type(), criteriaBuilder.literal( Thing.class ) ) );
-			assertEquals( em.createQuery( criteria ).getResultList().size(), 2 );
+			assertEquals( 2, em.createQuery( criteria ).getResultList().size() );
 		}
 		finally {
 			em.close();

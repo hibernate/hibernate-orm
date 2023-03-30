@@ -85,6 +85,7 @@ import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.persister.collection.mutation.CollectionTableMapping;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -533,7 +534,16 @@ public abstract class AbstractCollectionPersister
 			filterHelper = null;
 		}
 		else {
-			filterHelper = new FilterHelper( collectionBootDescriptor.getFilters(), factory);
+			final Map<String, String> entityNameByTableNameMap;
+			if ( elementPersister == null ) {
+				entityNameByTableNameMap = null;
+			}
+			else {
+				entityNameByTableNameMap = AbstractEntityPersister.getEntityNameByTableNameMap(
+						creationContext.getBootModel().getEntityBinding( elementPersister.getEntityName() )
+				);
+			}
+			filterHelper = new FilterHelper( collectionBootDescriptor.getFilters(), entityNameByTableNameMap, factory );
 		}
 
 		// Handle any filters applied to this collectionBinding for many-to-many
@@ -1186,12 +1196,19 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public void applyFilterRestrictions(Consumer<Predicate> predicateConsumer, TableGroup tableGroup, boolean useQualifier, Map<String, Filter> enabledFilters, SqlAstCreationState creationState) {
+	public void applyFilterRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			SqlAstCreationState creationState) {
 		if ( filterHelper != null ) {
 			filterHelper.applyEnabledFilters(
 					predicateConsumer,
 					getFilterAliasGenerator( tableGroup ),
-					enabledFilters
+					enabledFilters,
+					tableGroup,
+					creationState
 			);
 		}
 	}
@@ -1200,7 +1217,13 @@ public abstract class AbstractCollectionPersister
 	public abstract boolean isManyToMany();
 
 	@Override
-	public void applyBaseManyToManyRestrictions(Consumer<Predicate> predicateConsumer, TableGroup tableGroup, boolean useQualifier, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations, SqlAstCreationState creationState) {
+	public void applyBaseManyToManyRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			SqlAstCreationState creationState) {
 		if ( manyToManyFilterHelper == null && manyToManyWhereTemplate == null ) {
 			return;
 		}
@@ -1208,7 +1231,13 @@ public abstract class AbstractCollectionPersister
 
 		if ( manyToManyFilterHelper != null ) {
 			final FilterAliasGenerator aliasGenerator = elementPersister.getFilterAliasGenerator( tableGroup );
-			manyToManyFilterHelper.applyEnabledFilters( predicateConsumer, aliasGenerator, enabledFilters );
+			manyToManyFilterHelper.applyEnabledFilters(
+					predicateConsumer,
+					aliasGenerator,
+					enabledFilters,
+					tableGroup,
+					creationState
+			);
 		}
 
 		if ( manyToManyWhereString != null ) {

@@ -57,6 +57,10 @@ public class InFragment {
 		return setColumn( this.columnName );
 	}
 
+	public List<Object> getValues() {
+		return values;
+	}
+
 	public String toFragmentString() {
 		if ( values.size() == 0 ) {
 			return "1=2";

@@ -77,10 +77,10 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsJdbcTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -273,7 +273,7 @@ public class H2LegacyDialect extends Dialect {
 
 		if ( getVersion().isBefore( 2 ) ) {
 			// Support for TIME_WITH_TIMEZONE was only added in 2.0
-			jdbcTypeRegistry.addDescriptor( TIME_WITH_TIMEZONE, TimestampWithTimeZoneJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( TimeAsTimestampWithTimeZoneJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( TimeUtcAsJdbcTimeJdbcType.INSTANCE );
 		}
 		else {

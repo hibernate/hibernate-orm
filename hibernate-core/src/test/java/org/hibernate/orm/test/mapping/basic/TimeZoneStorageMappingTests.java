@@ -284,15 +284,15 @@ public class TimeZoneStorageMappingTests {
 		private ZonedDateTime zonedDateTimeNormalized;
 
 		@TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
-		@Column(name = "birthtime_offset_normalized_utc")
+		@Column(name = "birthtime_offset_utc")
 		private OffsetTime offsetTimeNormalizedUtc;
 
 		@TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
-		@Column(name = "birthday_offset_normalized_utc")
+		@Column(name = "birthday_offset_utc")
 		private OffsetDateTime offsetDateTimeNormalizedUtc;
 
 		@TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
-		@Column(name = "birthday_zoned_normalized_utc")
+		@Column(name = "birthday_zoned_utc")
 		private ZonedDateTime zonedDateTimeNormalizedUtc;
 
 		public TimeZoneStorageEntity() {

@@ -486,6 +486,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public static String timestampdiffPatternV10(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		final boolean isTime = fromTemporalType == TemporalType.TIME || toTemporalType == TemporalType.TIME;
 		final String fromExpression;
 		final String toExpression;
 		if ( unit.isDateUnit() ) {
@@ -518,20 +519,45 @@ public class DB2Dialect extends Dialect {
 		}
 		switch ( unit ) {
 			case NATIVE:
-				return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))+(microsecond(t2)-microsecond(t1))/1e6 " +
-						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))+(microsecond(t2)-microsecond(t1))/1e6 " +
+							"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
 			case NANOSECOND:
-				return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))*1e9+(microsecond(t2)-microsecond(t1))*1e3 " +
-						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))*1e9";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))*1e9+(microsecond(t2)-microsecond(t1))*1e3 " +
+							"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
 			case SECOND:
-				return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1)) " +
-						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1)) " +
+							"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
 			case MINUTE:
-				return "(select (days(t2)-days(t1))*1440+(midnight_seconds(t2)-midnight_seconds(t1))/60 from " +
-						"lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))/60";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*1440+(midnight_seconds(t2)-midnight_seconds(t1))/60 from " +
+							"lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
 			case HOUR:
-				return "(select (days(t2)-days(t1))*24+(midnight_seconds(t2)-midnight_seconds(t1))/3600 " +
-						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))/3600";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*24+(midnight_seconds(t2)-midnight_seconds(t1))/3600 " +
+							"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
 			case YEAR:
 				return "(year(" + toExpression + ")-year(" + fromExpression + "))";
 			// the months_between() function results

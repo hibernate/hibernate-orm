@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import java.util.Collection;
 import java.util.function.Consumer;
 
 import org.hibernate.graph.spi.SubGraphImplementor;
@@ -40,6 +41,8 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 	 * type descriptor in anticipation of supporting embeddable inheritance
 	 */
 	ManagedDomainType<? super J> getSuperType();
+
+	Collection<? extends ManagedDomainType<? extends J>> getSubTypes();
 
 	void addSubType(ManagedDomainType subType);
 

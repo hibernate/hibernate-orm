@@ -44,6 +44,20 @@ public class CollectionElementLoaderByIndex implements Loader {
 
 	private final int keyJdbcCount;
 
+	/**
+	 * Shortened form of {@link #CollectionElementLoaderByIndex(PluralAttributeMapping, int, LoadQueryInfluencers, SessionFactoryImplementor)}
+	 * which applied the collection mapping's {@linkplain PluralAttributeMapping.IndexMetadata#getListIndexBase()}
+	 */
+	public CollectionElementLoaderByIndex(
+			PluralAttributeMapping attributeMapping,
+			LoadQueryInfluencers influencers,
+			SessionFactoryImplementor sessionFactory) {
+		this( attributeMapping, attributeMapping.getIndexMetadata().getListIndexBase(), influencers, sessionFactory );
+	}
+
+	/**
+	 * @param baseIndex A base value to apply to the relational index values processed on {@link #incrementIndexByBase}
+	 */
 	public CollectionElementLoaderByIndex(
 			PluralAttributeMapping attributeMapping,
 			int baseIndex,
@@ -144,11 +158,20 @@ public class CollectionElementLoaderByIndex implements Loader {
 		return list.get( 0 );
 	}
 
+	/**
+	 * If the index being loaded by for a List and the mapping specified a
+	 * {@linkplain org.hibernate.annotations.ListIndexBase base-index}, this will return
+	 * the passed {@code index} value incremented by the base.  Otherwise, the passed {@code index}
+	 * is returned.
+	 *
+	 * @param index The relational index value; specifically without any mapped base applied
+	 *
+	 * @return The appropriately incremented base
+	 */
 	protected Object incrementIndexByBase(Object index) {
-		if ( baseIndex != 0 ) {
-			index = (Integer) index + baseIndex;
+		if ( baseIndex > 0 ) {
+			return (Integer) index + baseIndex;
 		}
 		return index;
 	}
-
 }

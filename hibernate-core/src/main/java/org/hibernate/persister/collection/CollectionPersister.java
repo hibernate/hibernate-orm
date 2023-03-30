@@ -86,9 +86,18 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public interface CollectionPersister extends Restrictable {
+	/**
+	 * The NavigableRole for this collection.
+	 */
 	NavigableRole getNavigableRole();
 
-	String getRole();
+	default String getRole() {
+		return getNavigableRole().getFullPath();
+	}
+
+	default PluralAttributeMapping getAttributeMapping() {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
 
 	/**
 	 * Get the persister of the entity that "owns" this collection
@@ -280,10 +289,6 @@ public interface CollectionPersister extends Restrictable {
 	SessionFactoryImplementor getFactory();
 
 	boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session);
-
-	default PluralAttributeMapping getAttributeMapping() {
-		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
-	}
 
 	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );

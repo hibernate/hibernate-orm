@@ -70,7 +70,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.List;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
@@ -150,6 +149,8 @@ public abstract class AbstractCollectionPersister
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
+	private final EntityPersister ownerPersister;
+	private final SessionFactoryImplementor factory;
 
 	protected final String qualifiedTableName;
 	private final CollectionTableMapping tableMapping;
@@ -164,8 +165,6 @@ public abstract class AbstractCollectionPersister
 
 	private final boolean hasOrder;
 	private final boolean hasManyToManyOrder;
-
-	private final int baseIndex;
 
 	private final String mappedByProperty;
 
@@ -211,8 +210,6 @@ public abstract class AbstractCollectionPersister
 
 	private final Dialect dialect;
 	protected final SqlExceptionHelper sqlExceptionHelper;
-	private final SessionFactoryImplementor factory;
-	private final EntityPersister ownerPersister;
 	private final BeforeExecutionGenerator identifierGenerator;
 	private final PropertyMapping elementPropertyMapping;
 	private final EntityPersister elementPersister;
@@ -453,10 +450,6 @@ public abstract class AbstractCollectionPersister
 				i++;
 			}
 			indexContainsFormula = hasFormula;
-			//noinspection ConstantConditions
-			baseIndex = indexedCollection.isList()
-					? ( (List) indexedCollection ).getBaseIndex()
-					: 0;
 		}
 		else {
 			indexContainsFormula = false;
@@ -467,7 +460,6 @@ public abstract class AbstractCollectionPersister
 			indexType = null;
 			indexColumnNames = null;
 			indexColumnAliases = null;
-			baseIndex = 0;
 		}
 
 		hasIdentifier = collectionBootDescriptor.isIdentified();
@@ -611,11 +603,6 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public String getRole() {
-		return navigableRole.getFullPath();
-	}
-
-	@Override
 	public Comparator<?> getSortingComparator() {
 		return comparator;
 	}
@@ -639,7 +626,6 @@ public abstract class AbstractCollectionPersister
 		if ( attributeMapping.getIndexDescriptor() != null ) {
 			collectionElementLoaderByIndex = new CollectionElementLoaderByIndex(
 					attributeMapping,
-					baseIndex,
 					LoadQueryInfluencers.NONE,
 					getFactory()
 			);
@@ -852,14 +838,16 @@ public abstract class AbstractCollectionPersister
 	@Deprecated(forRemoval = true)
 	@Remove
 	protected Object decrementIndexByBase(Object index) {
-		if ( baseIndex != 0 ) {
+		final int baseIndex = attributeMapping.getIndexMetadata().getListIndexBase();
+		if ( baseIndex > 0 ) {
 			index = (Integer)index - baseIndex;
 		}
 		return index;
 	}
 
 	protected Object incrementIndexByBase(Object index) {
-		if ( baseIndex != 0 ) {
+		final int baseIndex = attributeMapping.getIndexMetadata().getListIndexBase();
+		if ( baseIndex > 0  ) {
 			index = (Integer)index + baseIndex;
 		}
 		return index;
@@ -1429,6 +1417,7 @@ public abstract class AbstractCollectionPersister
 				getKeyType().nullSafeSet( st, key, 1, session );
 				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
 				try {
+					final int baseIndex = Math.max( attributeMapping.getIndexMetadata().getListIndexBase(), 0 );
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
 				}
 				finally {

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
@@ -19,11 +20,11 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -35,6 +36,7 @@ public class SqlAstQueryPartProcessingStateImpl
 		implements SqlAstQueryPartProcessingState {
 
 	private final QueryPart queryPart;
+	private final Map<TableGroup, Map<EntityDomainType<?>, Boolean>> treatRegistrations = new HashMap<>();
 	private final boolean deduplicateSelectionItems;
 	private FetchParent nestingFetchParent;
 
@@ -72,6 +74,30 @@ public class SqlAstQueryPartProcessingStateImpl
 	@Override
 	public QueryPart getInflightQueryPart() {
 		return queryPart;
+	}
+
+	@Override
+	public void registerTreat(TableGroup tableGroup, EntityDomainType<?> treatType) {
+		treatRegistrations.computeIfAbsent( tableGroup, tg -> new HashMap<>() ).put( treatType, Boolean.FALSE );
+	}
+
+	@Override
+	public void registerTreatUsage(TableGroup tableGroup, EntityDomainType<?> treatType) {
+		final Map<EntityDomainType<?>, Boolean> treatUses = treatRegistrations.get( tableGroup );
+		if ( treatUses == null ) {
+			final SqlAstProcessingState parentState = getParentState();
+			if ( parentState instanceof SqlAstQueryPartProcessingState ) {
+				( (SqlAstQueryPartProcessingState) parentState ).registerTreatUsage( tableGroup, treatType );
+			}
+		}
+		else {
+			treatUses.put( treatType, Boolean.TRUE );
+		}
+	}
+
+	@Override
+	public Map<TableGroup, Map<EntityDomainType<?>, Boolean>> getTreatRegistrations() {
+		return treatRegistrations;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

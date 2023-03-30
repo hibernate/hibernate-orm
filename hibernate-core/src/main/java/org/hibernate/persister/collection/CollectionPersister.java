@@ -80,8 +80,8 @@ import org.hibernate.type.Type;
  *     </li>
  * </ol>
  *
- * @see QueryableCollection
  * @see PersistentCollection
+ * @see PluralAttributeMapping
  *
  * @author Gavin King
  */

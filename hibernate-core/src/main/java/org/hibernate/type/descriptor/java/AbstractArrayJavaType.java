@@ -65,7 +65,8 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			BasicType<E> elementType,
-			ColumnTypeInformation columnTypeInformation) {
+			ColumnTypeInformation columnTypeInformation,
+			JdbcTypeIndicators stdIndicators) {
 		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
 		if ( elementType instanceof BasicPluralType<?, ?> || elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
 			return null;

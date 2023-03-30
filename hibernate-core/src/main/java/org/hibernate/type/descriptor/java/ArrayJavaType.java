@@ -28,6 +28,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -55,7 +56,23 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			BasicType<T> elementType,
-			ColumnTypeInformation columnTypeInformation) {
+			ColumnTypeInformation columnTypeInformation,
+			JdbcTypeIndicators stdIndicators) {
+		if ( stdIndicators.isLob() ) {
+			final Class<?> javaTypeClass = getJavaTypeClass();
+			if ( javaTypeClass == Byte[].class ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve(
+						ByteArrayJavaType.INSTANCE,
+						ByteArrayJavaType.INSTANCE.getRecommendedJdbcType( stdIndicators )
+				);
+			}
+			if ( javaTypeClass == Character[].class ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve(
+						CharacterArrayJavaType.INSTANCE,
+						CharacterArrayJavaType.INSTANCE.getRecommendedJdbcType( stdIndicators )
+				);
+			}
+		}
 		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
 		if ( elementType instanceof BasicPluralType<?, ?> || elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
 			return null;

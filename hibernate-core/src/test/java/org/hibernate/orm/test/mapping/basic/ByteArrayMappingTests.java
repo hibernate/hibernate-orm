@@ -145,7 +145,6 @@ public class ByteArrayMappingTests {
 		@Lob
 		private byte[] primitiveLob;
 		@Lob
-		@JavaType( ByteArrayJavaType.class )
 		private Byte[] wrapperLob;
 		//end::basic-bytearray-example[]
 

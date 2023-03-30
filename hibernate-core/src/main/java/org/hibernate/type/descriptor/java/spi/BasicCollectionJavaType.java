@@ -94,7 +94,8 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			BasicType<E> elementType,
-			ColumnTypeInformation columnTypeInformation) {
+			ColumnTypeInformation columnTypeInformation,
+			JdbcTypeIndicators stdIndicators) {
 		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
 		if ( elementType instanceof BasicPluralType<?, ?>
 				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {

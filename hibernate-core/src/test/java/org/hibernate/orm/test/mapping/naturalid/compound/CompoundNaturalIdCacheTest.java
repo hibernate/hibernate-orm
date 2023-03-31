@@ -100,7 +100,7 @@ public class CompoundNaturalIdCacheTest {
 		);
 	}
 
-	@Entity(name = "EntityWithSimpleNaturalId")
+	@Entity(name = "SimpleNaturalId")
 	@NaturalIdCache
 	public static class EntityWithSimpleNaturalId {
 
@@ -128,7 +128,7 @@ public class CompoundNaturalIdCacheTest {
 		}
 	}
 
-	@Entity(name = "EntityWithCompoundNaturalId")
+	@Entity(name = "CompoundNaturalId")
 	@NaturalIdCache
 	public static class EntityWithCompoundNaturalId {
 

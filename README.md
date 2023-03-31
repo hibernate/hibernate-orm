@@ -1,9 +1,9 @@
 <img src="https://static.jboss.org/hibernate/images/hibernate_logo_whitebkg_200px.png" />
 <img align="right" height="50" src="https://nuodb.com/themes/custom/nuodb/logo.svg" />
 
-# Hibernate and NuoDB
+# Hibernate 5 and NuoDB
 
-This is a fork of Hibernate ORM (http://github.com/hibernate/hibernate-orm) to allow testing of NuoDB's Hibernate dialect.  The tests of interest are the matrix tests (which allow testing against multiple databases). Unfortunately the section on Matrix testing (in the original README below) is yet to be written.
+This is a fork of Hibernate ORM (http://github.com/hibernate/hibernate-orm) `V5.6.5.Final` to allow testing of NuoDB's Hibernate 5 dialect.  The tests of interest are the matrix tests (which allow testing against multiple databases). Unfortunately the section on Matrix testing (in the original README below) is yet to be written.
 
 ## Running Tests
 
@@ -15,7 +15,8 @@ To run the matrix tests for NuoDB:
 
    * clone https://github.com/nuodb/HibernateDialect5
    * Run `mvn install` - see [project README](https://github.com/nuodb/HibernateDialect5/blob/master/README.md)
-   * Check the version in the POM - it will be of the form `22.x.x-hib5`
+   * Check the version in the POM - it will be of the form `
+   .x.x-hib5`
       * You will need to set `DIALECT_VERSION` to `22.x.x``to match - see below
 
 1. This project's gradle build file assumes you have your maven repository in
@@ -72,7 +73,7 @@ To run the matrix tests for NuoDB:
    **NOTE:** Not all tests are against NuoDB and actually some are explicitly skipped due to timeout and locks. Those tests have the special annotation `@SkipForDialect(value = NuoDBDialect.class)`
 
 1. Pull Jar from Sonatype
-   Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-NNNN/com/nuodb/hibernate/nuodb-hibernate/20.x.x-hib5/nuodb-hibernate-20.x.x-hib5.jar.
+   Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-NNNN/com/nuodb/hibernate/nuodb-hibernate/22.x.x-hib5/nuodb-hibernate-22.x.x-hib5.jar.
    Note the build number - NNNN (a 4 digit number such as 1050). To use this dependency run as follows:
 
    ```
@@ -100,8 +101,8 @@ This variable is used in three places and should get picked up by all of them:
 
 This must be changed manually in two places:
 
-1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:24.0.0"`
-2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:24.0.0" )`
+1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:22.0.0"`
+2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:22.0.0" )`
 
 ## Changes Made to Project
 

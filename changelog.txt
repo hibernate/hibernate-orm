@@ -3,6 +3,59 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.0 (March 31, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32144
+
+** Bug
+    * [HHH-16404] - SkipFirstLimitHandler calls insertAfterSelect with parameter in wrong order
+    * [HHH-16402] - Fix default window frame mode to be RANGE instead of ROWS
+    * [HHH-16396] - HQL with SubQuery having same alias of root Query generates wrong SQL
+    * [HHH-16391] - Incorrect mutability-plan resolution for converted collection-as-basic mappings
+    * [HHH-16390] - Execution of non-batched statements do not force execution of current batch
+    * [HHH-16378] - SQM fails to resolve target type of association defined in mappersuperclass with generics
+    * [HHH-16372] - NPE in EmbeddedIdentifierMappingImpl#disassemble
+    * [HHH-16368] - UnsupportedOperationException: compare() not implemented for EntityType
+    * [HHH-16359] - SingularAttribute with non-nullable column is wrongly reported as optional
+    * [HHH-16358] - OneToMany with abstract TABLE_PER_CLASS element not working
+    * [HHH-16355] - Map association with entity typed key breaks if mappedBy is specified
+    * [HHH-16350] - PreLoadEvent listeners always receive PreLoadEvent with null state
+    * [HHH-16337] - EntityCollection is not deleted when replaced
+    * [HHH-16336] - Modify the newly introduced mappedBy type check to be more lenient
+    * [HHH-16334] - Persisting  and loading an entity with a null all-delete-orphan collection results in error
+    * [HHH-16333] - Handle converters properly in BasicPluralType
+    * [HHH-16305] - Error when using parameter as both a select function argument and in where clause
+    * [HHH-16295] -  JDBCUpdateMutation with MutationType.INSERT instead of MutationType.UPDATE
+    * [HHH-16281] - Inconsistent Behaivor of L2 cache between Hibernate 5 and 6
+    * [HHH-16274] - Incorrect foreign key column order for @OneToMany with multiple join columns and @IdClass
+    * [HHH-16272] - Hibernate 6 fails to refresh when collections are accessed in entity setter method when access type is property
+    * [HHH-16255] - Logging "Executing import script" when it's not being executed
+    * [HHH-16249] - StatelessSession does not flush when using jdbc batch_size > 1
+    * [HHH-16248] - Problem with batching and inheritance with @ManyToOne mapped in multiple subclasses
+    * [HHH-16241] - Unable to write/query attribute on type with AttributeConverter
+    * [HHH-16218] - Natural id cache is extremely slow for entities with compound natural id
+
+** Deprecation
+    * [HHH-16407] - EntityPersister and CollectionPersister deprecations
+
+** Improvement
+    * [HHH-16380] - Avoid map-based mapping metamodel access when instantiating entity instances
+    * [HHH-16348] - Re-add JdbcOperationQuery#getAppliedParameters for query extensions
+    * [HHH-16339] - Unify entity and any discriminator handling
+    * [HHH-16317] - InstantAsTimestampWithTimeZoneJdbcType doesn't work for timestamp on PG-JDBC and MSSQL
+    * [HHH-16287] - Consider hibernate.timezone.default_storage for OffsetTime typing and storage
+
+** New Feature
+    * [HHH-16353] - Make it possible for Hibernate Reactive to override the creation of AttributeMapping and Fetch strategies
+    * [HHH-16097] - Move all tests from documentation into hibernate-core
+
+** Task
+    * [HHH-16400] - Avoid reflection for calls to StackWalker
+    * [HHH-16388] - Configuration setting for wrapper Byte[]/Character[] treatment
+    * [HHH-16386] - Disable batching for dynamic-insert and dynamic-update
+
+
 Changes in 6.2.0.CR4 (March 17, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -42,11 +42,15 @@ To run the matrix tests for NuoDB:
 
 1. Compile the code: `./gradlew clean compile`
 
-
 1. Run tests:
 
-   * **Note:** If you wish, you can setup a local database by runnning `setup.sh` inside `env` folder. This script will create a NuoDB env with an admin service, a Storage Manager (SM) and a Transaction Engine (TE) to run the tests against. Requires docker to be installed on the server.
-   * Execute `./gradlew clean hibernate-core:matrix_nuodb`. On Windows run `gradlew` (which will invoke `gradlew.bat`). To setup gradle, see original readme content below.  The expected output is:
+   * **Note:** If you wish, you can setup a local database by runnning `setup.sh` inside `env` folder.
+     This script will create a NuoDB env with an admin service (AP), a Storage Manager (SM) and a Transaction Engine (TE) to run the tests against.
+     Requires docker to be installed on the server.
+   * Execute `./gradlew clean hibernate-core:matrix_nuodb`.
+     On Windows run `gradlew` (which will invoke `gradlew.bat`).
+     To setup `gradle`, see original README content below.
+     The expected output is:
 
      ```sh
      9444 tests completed, 2698 failed, 1803 skipped
@@ -55,10 +59,12 @@ To run the matrix tests for NuoDB:
    * **Warnings:**
      * If you run the tests without the `clean` option you may get a weird internal error in the compiler.
 
-     * Not all tests clean up after themselves.  If using the local database you may need to restart the environment by rerunning the script `env/setup.sh`.
+     * Not all tests clean up after themselves.
+       If using the local database you may need to restart the environment by rerunning the script `env/setup.sh`.
 
      * Test execution takes ~30m in average with a live database and ~3m without.
-
+        * The tests will keep running, and failing even if the database is not avilable.
+        * If the tests run quickly, that's the hint that your database isn't running!
 
 1. Run individual tests
 
@@ -72,7 +78,7 @@ To run the matrix tests for NuoDB:
 
    **NOTE:** Not all tests are against NuoDB and actually some are explicitly skipped due to timeout and locks. Those tests have the special annotation `@SkipForDialect(value = NuoDBDialect.class)`
 
-1. Pull Jar from Sonatype
+1. Pull JAR from Sonatype
    Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-NNNN/com/nuodb/hibernate/nuodb-hibernate/22.x.x-hib5/nuodb-hibernate-22.x.x-hib5.jar.
    Note the build number - NNNN (a 4 digit number such as 1050). To use this dependency run as follows:
 
@@ -83,7 +89,8 @@ To run the matrix tests for NuoDB:
    gradle clean ...
    ```
 
-Please note that even if a NuoDB database is not available, 4588 tests complete, 2823 fail, and 840 are skipped. So 925 tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.  We are just piggybacking on them for convenience.
+Please note that even if a NuoDB database is not available, 4588 tests complete, 2823 fail, and 840 are skipped. So many tests pass without using the database because the tests are intended for testing Hibernate not the underlying database.
+We are just piggybacking on them for convenience.
 
 ## Upgrade Hibernate Dialect
 
@@ -91,18 +98,22 @@ If the Hibernate dialect has a new version number:
 
 1. Update the environment variable: `SET DIALECT_VERSION=22.x.x`
 
-This variable is used in three places and should get picked up by all of them:
+2. The JAR version is required in three places.
 
-* `build.gradle`
-* `databases/nuodb/matrix.gradle`
-* `hibernate-core/hibernate-core.gradle`
+    * `build.gradle`
+       * Contains a "smart" class `NuodbHibernateVersion` which either picks up `DIALECT_VERSION` or looks in the local Maven repo to
+         find the latest version of the JAR in there.
+         If you have just built and installed a new version of the JAR, it should find it.
+       * The class sets variable `nuodbHibernateJarVersion` to the version it has found.
+    * `databases/nuodb/matrix.gradle` - referenced `${nuodbHibernateJarVersion}`.
+    * `hibernate-core/hibernate-core.gradle` - also references `${nuodbHibernateJarVersion}`.
 
 ## Upgrade NuoDB JDBC Driver
 
 This must be changed manually in two places:
 
-1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:22.0.0"`
-2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:22.0.0" )`
+1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:24.0.0"`
+2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:24.0.0" )`
 
 ## Changes Made to Project
 
@@ -123,12 +134,14 @@ To configure NuoDB
 
 ## To Run in IntelliJ
 
-It is possible to run the tests in IntelliH (Eclipse's gradle support can't handle this project).
+It is possible to run the tests in IntelliJ (Eclipse's gradle support can't handle this project).
 
 Open as a gradle project in IntelliJ in the usual way.
 
 To force it to use NuoDB: `cp databases/nuodb/resources/hibernate.properties hibernate-core/out/test/resources/hibernate.properties`.
 
+-------------------
+-------------------
 
 # Original README
 

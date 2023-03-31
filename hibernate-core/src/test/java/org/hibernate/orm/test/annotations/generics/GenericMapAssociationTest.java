@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -110,6 +112,7 @@ public class GenericMapAssociationTest {
 	@MappedSuperclass
 	public static abstract class AbstractParent<K, E> {
 		@OneToMany
+		@JoinTable( name = "map_join_table", joinColumns = @JoinColumn( name = "container_id" ) )
 		private Map<K, E> map;
 
 		public AbstractParent() {

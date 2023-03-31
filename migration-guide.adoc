@@ -135,6 +135,8 @@ See link:{javadocsBase}/org/hibernate/cfg/AvailableSettings.html#WRAPPER_ARRAY_H
 The main idea here is for applications using these types in the domain model to make a conscious decision about how these
 values are stored.
 
+NOTE: Some mappings are considered implicit opt-in to the legacy behavior; e.g. using `@Lob` or `@Nationalized`
+
 For those using such mappings, there are a few options -
 
 1. Migrate the domain model to use `byte[]` and `char[]` instead.
@@ -146,8 +148,6 @@ For those using such mappings, there are a few options -
   c. Run the query `select t.primary_key, t.array_col_old from table t` to extract `byte[]` or `String`
   d. For every result, load the Hibernate entity by primary key and set the field value to transformed result `Byte[]` or `Character[]`
   e. Finally, drop the old column `alter table tbl drop column array_col_old`
-
-NOTE: Some mappings are considered implicit opt-in to the legacy behavior; e.g. using `@Lob` or `@Nationalized`
 
 [[ddl-check]]
 === Check constraints for boolean and enum mappings

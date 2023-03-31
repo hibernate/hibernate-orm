@@ -132,16 +132,22 @@ LEGACY:: Allows the use of the wrapper arrays stored as `VARBINARY` and `VARCHAR
 
 See link:{javadocsBase}/org/hibernate/cfg/AvailableSettings.html#WRAPPER_ARRAY_HANDLING[AvailableSettings#WRAPPER_ARRAY_HANDLING]
 
-A possible migration could involve the following steps in a migration script:
+The main idea here is for applications using these types in the domain model to make a conscious decision about how these
+values are stored.
 
-* Execute `alter table tbl rename column array_col to array_col_old` to have the old format available
-* Execute `alter table tbl add column array_col DATATYPE array` to add the column like the new mapping expects it to be
-* Run the query `select t.primary_key, t.array_col_old from table t` to extract `byte[]` or `String`
-* For every result, load the Hibernate entity by primary key and set the field value to transformed result `Byte[]` or `Character[]`
-* Finally, drop the old column `alter table tbl drop column array_col_old`
+For those using such mappings, there are a few options -
 
-Alternatively, to revert to pre-6.2 behavior for specific properties, annotate your array property with `@JavaType(ByteArrayJavaType.class)`
-or `@JavaType(CharacterArrayJavaType.class)` or simply change the domain model type to `byte[]` and `char[]` respectively.
+1. Migrate the domain model to use `byte[]` and `char[]` instead.
+2. Specify `hibernate.type.wrapper_array_handling=legacy` to enable the legacy behavior.
+3. Specify `@JavaType(ByteArrayJavaType.class)` or `@JavaType(CharacterArrayJavaType.class)` attribute-by-attribute
+4. Specify `hibernate.type.wrapper_array_handling=allow`.  If the schema is legacy, migrate the database schema to use a structured SQL type.  E.g.
+  a. Execute `alter table tbl rename column array_col to array_col_old` to have the old format available
+  b. Execute `alter table tbl add column array_col DATATYPE array` to add the column like the new mapping expects it to be
+  c. Run the query `select t.primary_key, t.array_col_old from table t` to extract `byte[]` or `String`
+  d. For every result, load the Hibernate entity by primary key and set the field value to transformed result `Byte[]` or `Character[]`
+  e. Finally, drop the old column `alter table tbl drop column array_col_old`
+
+NOTE: Some mappings are considered implicit opt-in to the legacy behavior; e.g. using `@Lob` or `@Nationalized`
 
 [[ddl-check]]
 === Check constraints for boolean and enum mappings

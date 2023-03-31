@@ -1,0 +1,50 @@
+= Class Diagrams
+:author:Jan Schatteman
+:toc:
+:toclevels: 2
+
+Some high-level Hibernate class diagrams
+
+:numbered:
+== Query
+
+
+[plantuml,query,png]
+.Query class diagram
+----
+@startuml
+interface jakarta.persistence.Query
+interface jakarta.persistence.TypedQuery extends jakarta.persistence.Query
+
+interface CommonQueryContract
+interface MutationQuery
+interface SelectionQuery
+interface Query
+interface QueryImplementor
+interface NativeQuery
+interface NativeQueryImplementor
+class AbstractCommonQueryContract
+class AbstractSelectionQuery
+class AbstractQuery
+class NativeQueryImpl
+
+interface MutationQuery extends CommonQueryContract
+interface SelectionQuery extends CommonQueryContract
+interface Query extends MutationQuery, SelectionQuery, jakarta.persistence.TypedQuery
+interface QueryImplementor extends Query
+interface NativeQuery extends Query
+interface NativeQueryImplementor extends NativeQuery
+
+MutationQuery -[hidden]-> SelectionQuery
+AbstractCommonQueryContract .right.> CommonQueryContract
+AbstractSelectionQuery -up-|> AbstractCommonQueryContract
+AbstractSelectionQuery .right.> SelectionQuery
+AbstractQuery -up-|> AbstractSelectionQuery
+AbstractQuery -right.> QueryImplementor
+NativeQueryImpl -up-|> AbstractQuery
+NativeQueryImpl .right.> NativeQueryImplementor
+
+@enduml
+----
+
+==

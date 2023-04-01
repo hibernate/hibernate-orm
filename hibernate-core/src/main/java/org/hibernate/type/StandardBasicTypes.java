@@ -413,12 +413,40 @@ public final class StandardBasicTypes {
 	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME TIME}.
+	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME_WITH_TIMEZONE TIME_WITH_TIMEZONE}.
 	 */
 	public static final BasicTypeReference<OffsetTime> OFFSET_TIME = new BasicTypeReference<>(
 			"OffsetTime",
 			OffsetTime.class,
-			// todo (6.0): why not TIME_WITH_TIMEZONE ?
+			SqlTypes.TIME_WITH_TIMEZONE
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME_UTC TIME_UTC}.
+	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NORMALIZE_UTC}.
+	 */
+	public static final BasicTypeReference<OffsetTime> OFFSET_TIME_UTC = new BasicTypeReference<>(
+			"OffsetTimeUtc",
+			OffsetTime.class,
+			SqlTypes.TIME_UTC
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME_WITH_TIMEZONE TIME_WITH_TIMEZONE}.
+	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NATIVE}.
+	 */
+	public static final BasicTypeReference<OffsetTime> OFFSET_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
+			"OffsetTimeWithTimezone",
+			OffsetTime.class,
+			SqlTypes.TIME_WITH_TIMEZONE
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME TIME}.
+	 */
+	public static final BasicTypeReference<OffsetTime> OFFSET_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
+			"OffsetTimeWithoutTimezone",
+			OffsetTime.class,
 			SqlTypes.TIME
 	);
 
@@ -777,7 +805,7 @@ public final class StandardBasicTypes {
 				BINARY_WRAPPER,
 				"org.hibernate.type.WrapperBinaryType",
 				basicTypeRegistry,
-				"binary_wrapper", "wrapper-binary", "Byte[]", Byte[].class.getName()
+				"binary_wrapper", "wrapper-binary"//, "Byte[]", Byte[].class.getName()
 		);
 
 		handle(
@@ -905,7 +933,7 @@ public final class StandardBasicTypes {
 				CHARACTER_ARRAY,
 				"org.hibernate.type.CharacterArrayType",
 				basicTypeRegistry,
-				"wrapper-characters", Character[].class.getName(), "Character[]"
+				"wrapper-characters"//, Character[].class.getName(), "Character[]"
 		);
 
 		handle(
@@ -1036,6 +1064,27 @@ public final class StandardBasicTypes {
 				"org.hibernate.type.OffsetTimeType",
 				basicTypeRegistry,
 				OffsetTime.class.getSimpleName(), OffsetTime.class.getName()
+		);
+
+		handle(
+				OFFSET_TIME_UTC,
+				null,
+				basicTypeRegistry,
+				OFFSET_TIME_UTC.getName()
+		);
+
+		handle(
+				OFFSET_TIME_WITH_TIMEZONE,
+				null,
+				basicTypeRegistry,
+				OFFSET_TIME_WITH_TIMEZONE.getName()
+		);
+
+		handle(
+				OFFSET_TIME_WITHOUT_TIMEZONE,
+				null,
+				basicTypeRegistry,
+				OFFSET_TIME_WITHOUT_TIMEZONE.getName()
 		);
 
 		handle(

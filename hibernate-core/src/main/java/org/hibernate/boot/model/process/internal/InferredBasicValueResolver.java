@@ -20,6 +20,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.AdjustableBasicType;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
@@ -198,10 +199,11 @@ public class InferredBasicValueResolver {
 					registeredType = registeredElementType == null ? null : containerJtd.resolveType(
 							typeConfiguration,
 							dialect,
-							registeredElementType,
-							columnTypeInformation
+							resolveSqlTypeIndicators( stdIndicators, registeredElementType, elementJtd ),
+							columnTypeInformation,
+							stdIndicators
 					);
-					if ( registeredType != null ) {
+					if ( registeredType instanceof BasicPluralType<?, ?> ) {
 						typeConfiguration.getBasicTypeRegistry().register( registeredType );
 					}
 				}
@@ -374,8 +376,8 @@ public class InferredBasicValueResolver {
 			BasicJavaType<N> explicitJavaType,
 			JdbcType explicitJdbcType,
 			MetadataBuildingContext context) {
-		final JavaType<N> relationalJavaType = ordinalJavaType( explicitJavaType, context );
 		final JdbcType jdbcType = ordinalJdbcType( explicitJdbcType, enumJavaType, context );
+		final JavaType<N> relationalJavaType = ordinalJavaType( explicitJavaType, jdbcType, context );
 
 		return new EnumeratedValueResolution<>(
 				jdbcType,
@@ -395,6 +397,7 @@ public class InferredBasicValueResolver {
 
 	private static <N extends Number> JavaType<N> ordinalJavaType(
 			JavaType<N> explicitJavaType,
+			JdbcType jdbcType,
 			MetadataBuildingContext context) {
 		if ( explicitJavaType != null ) {
 			if ( !Integer.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
@@ -407,7 +410,11 @@ public class InferredBasicValueResolver {
 			return explicitJavaType;
 		}
 		else {
-			return context.getMetadataCollector().getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Integer.class );
+			return jdbcType.getJdbcRecommendedJavaTypeMapping(
+					null,
+					null,
+					context.getMetadataCollector().getTypeConfiguration()
+			);
 		}
 	}
 

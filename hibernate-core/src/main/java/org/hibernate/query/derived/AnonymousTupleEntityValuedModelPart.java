@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -552,6 +553,11 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		delegate.addToCacheKey( cacheKey, value, session );
+	}
+
+	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
 			Object value,
 			int offset,
@@ -666,6 +672,11 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
 		delegate.getEntityMappingType().visitConstraintOrderedTables( consumer );
+	}
+
+	@Override
+	public Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session) {
+		return delegate.getEntityMappingType().loadByUniqueKey( propertyName, uniqueKey, session );
 	}
 
 	@Override

@@ -69,8 +69,16 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 		}
 	}
 
-	public static Object staticCreateNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
-		return new NaturalIdCacheKey( naturalIdValues,  persister, session );
+	public static Object staticCreateNaturalIdKey(
+			Object naturalIdValues,
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		NaturalIdCacheKey.NaturalIdCacheKeyBuilder builder = new NaturalIdCacheKey.NaturalIdCacheKeyBuilder(
+				naturalIdValues,
+				persister,
+				session
+		);
+		return builder.build();
 	}
 
 	public static Object staticGetEntityId(Object cacheKey) {

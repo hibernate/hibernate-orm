@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.SharedSessionContract;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,6 +23,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -101,7 +103,7 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	@Override
-	public BasicValuedModelPart getDiscriminatorPart() {
+	public DiscriminatorMapping getDiscriminatorMapping() {
 		return discriminatorMapping.getDiscriminatorPart();
 	}
 
@@ -235,6 +237,25 @@ public class DiscriminatedAssociationAttributeMapping
 		};
 	}
 
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			cacheKey.addValue( null );
+			cacheKey.addHashCode( 0 );
+		}
+		else {
+			final EntityMappingType concreteMappingType = determineConcreteType( value, session );
+
+			final Object discriminator = discriminatorMapping
+					.getModelPart()
+					.resolveDiscriminatorForEntityType( concreteMappingType );
+			discriminatorMapping.getDiscriminatorPart().addToCacheKey( cacheKey, discriminator, session );
+
+			final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
+			identifierMapping.addToCacheKey( cacheKey, identifierMapping.getIdentifier( value ), session );
+		}
+	}
+
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
 		final String entityName;
 		if ( session == null ) {
@@ -271,7 +292,23 @@ public class DiscriminatedAssociationAttributeMapping
 			Y y,
 			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		if ( value != null ) {
+		if ( value == null ) {
+			valuesConsumer.consume(
+					offset,
+					x,
+					y,
+					null,
+					discriminatorMapping.getDiscriminatorPart().getJdbcMapping()
+			);
+			valuesConsumer.consume(
+					offset + 1,
+					x,
+					y,
+					null,
+					discriminatorMapping.getKeyPart().getJdbcMapping()
+			);
+		}
+		else {
 			if ( value.getClass().isArray() ) {
 				final Object[] values = (Object[]) value;
 				valuesConsumer.consume(
@@ -482,5 +519,10 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public String getSqlAliasStem() {
 		return getAttributeName();
+	}
+
+	@Override
+	public void applyDiscriminator(Consumer<Predicate> predicateConsumer, String alias, TableGroup tableGroup, SqlAstCreationState creationState) {
+		throw new UnsupportedOperationException();
 	}
 }

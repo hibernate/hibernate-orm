@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -27,7 +28,7 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
-	private final Map<EntityKey, List<ParentInfo>> toBatchLoad = new HashMap<>();
+	private Map<EntityKey, List<ParentInfo>> toBatchLoad;
 	private final String rootEmbeddablePropertyName;
 
 	/**
@@ -71,27 +72,23 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 
 	@Override
 	protected void registerResolutionListener() {
-		final List<ParentInfo> batchParentInfos = getBatchInfos();
-
-		parentAccess.registerResolutionListener(
-				o ->
-					batchParentInfos.add(
-							new ParentInfo(
-									firstEntityInitializer.getEntityKey(),
-									o,
-									getPropertyIndex( firstEntityInitializer, rootEmbeddablePropertyName )
-							)
-					)
-		);
+		parentAccess.registerResolutionListener( parentInstance -> {
+			final AttributeMapping parentAttribute = getParentEntityAttribute( rootEmbeddablePropertyName );
+			if ( parentAttribute != null ) {
+				getParentInfos().add( new ParentInfo(
+						firstEntityInitializer.getEntityKey(),
+						parentInstance,
+						parentAttribute.getStateArrayPosition()
+				) );
+			}
+		} );
 	}
 
-	private List<ParentInfo> getBatchInfos() {
-		List<ParentInfo> objects = toBatchLoad.get( entityKey );
-		if ( objects == null ) {
-			objects = new ArrayList<>();
-			toBatchLoad.put( entityKey, objects );
+	private List<ParentInfo> getParentInfos() {
+		if ( toBatchLoad == null ) {
+			toBatchLoad = new HashMap<>();
 		}
-		return objects;
+		return toBatchLoad.computeIfAbsent( entityKey, key -> new ArrayList<>() );
 	}
 
 	@Override
@@ -113,27 +110,29 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 
 	@Override
 	public void endLoading(ExecutionContext context) {
-		toBatchLoad.forEach(
-				(entityKey, parentInfos) -> {
-					final SharedSessionContractImplementor session = context.getSession();
-					final Object loadedInstance = loadInstance( entityKey, referencedModelPart, session );
-					for ( ParentInfo parentInfo : parentInfos ) {
-						final PersistenceContext persistenceContext = session.getPersistenceContext();
-						setInstance(
-								firstEntityInitializer,
-								referencedModelPart,
-								rootEmbeddablePropertyName,
-								parentInfo.propertyIndex,
-								loadedInstance,
-								parentInfo.parentInstance,
-								parentInfo.initializerEntityKey,
-								persistenceContext.getEntry( persistenceContext.getEntity( parentInfo.initializerEntityKey ) ),
-								session
-						);
+		if ( toBatchLoad != null ) {
+			toBatchLoad.forEach(
+					(entityKey, parentInfos) -> {
+						final SharedSessionContractImplementor session = context.getSession();
+						final Object loadedInstance = loadInstance( entityKey, referencedModelPart, session );
+						for ( ParentInfo parentInfo : parentInfos ) {
+							final PersistenceContext persistenceContext = session.getPersistenceContext();
+							setInstance(
+									firstEntityInitializer,
+									referencedModelPart,
+									rootEmbeddablePropertyName,
+									parentInfo.propertyIndex,
+									loadedInstance,
+									parentInfo.parentInstance,
+									parentInfo.initializerEntityKey,
+									persistenceContext.getEntry( persistenceContext.getEntity( parentInfo.initializerEntityKey ) ),
+									session
+							);
+						}
 					}
-				}
-		);
-		toBatchLoad.clear();
+			);
+			toBatchLoad.clear();
+		}
 		parentAccess = null;
 	}
 

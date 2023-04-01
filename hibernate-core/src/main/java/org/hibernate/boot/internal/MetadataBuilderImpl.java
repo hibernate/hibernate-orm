@@ -78,6 +78,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -86,6 +87,8 @@ import org.jboss.jandex.IndexView;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.SharedCacheMode;
+
+import static org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING;
 
 /**
  * @author Steve Ebersole
@@ -582,6 +585,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final MappingDefaultsImpl mappingDefaults;
 		private final IdentifierGeneratorFactory identifierGeneratorFactory;
 		private final TimeZoneStorageType defaultTimezoneStorage;
+		private final WrapperArrayHandling wrapperArrayHandling;
 
 		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
 		private BootstrapContext bootstrapContext;
@@ -619,6 +623,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
 			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
+			this.wrapperArrayHandling = resolveWrapperArrayHandling( configService );
 			this.multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
 
 			this.xmlMappingEnabled = configService.getSetting(
@@ -869,6 +874,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		public WrapperArrayHandling getWrapperArrayHandling() {
+			return wrapperArrayHandling;
+		}
+
+		@Override
 		public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 			return basicTypeRegistrations;
 		}
@@ -997,6 +1007,23 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 				AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
 				value -> TimeZoneStorageType.valueOf( value.toString() ),
 				TimeZoneStorageType.DEFAULT
+		);
+	}
+
+	private static WrapperArrayHandling resolveWrapperArrayHandling(
+			ConfigurationService configService) {
+		return configService.getSetting(
+				WRAPPER_ARRAY_HANDLING,
+				value -> {
+					if ( value == null ) {
+						throw new IllegalArgumentException( "Null value passed to convert" );
+					}
+
+					return value instanceof WrapperArrayHandling
+							? (WrapperArrayHandling) value
+							: WrapperArrayHandling.valueOf( value.toString().toUpperCase( Locale.ROOT ) );
+				},
+				WrapperArrayHandling.DISALLOW
 		);
 	}
 }

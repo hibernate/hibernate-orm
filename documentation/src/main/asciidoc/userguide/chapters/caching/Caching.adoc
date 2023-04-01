@@ -1,8 +1,8 @@
 [[caching]]
 == Caching
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-caching: {documentation-project-dir}/src/test/java/org/hibernate/userguide/caching
+:jcache-project-dir: {root-project-dir}/hibernate-jcache
+:example-dir-caching: {jcache-project-dir}/src/test/java/org/hibernate/orm/test/caching
 
 At runtime, Hibernate handles moving data into and out of the second-level cache in response to the operations performed by the `Session`, which acts as a transaction-level cache of persistent data.
 Once an entity becomes managed, that object is added to the internal cache of the current persistence context (`EntityManager` or `Session`).

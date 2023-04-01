@@ -18,7 +18,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecutor {
+public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecutor implements JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
 	private final SelfExecutingUpdateOperation operation;
 	private final JdbcValueBindingsImpl valueBindings;
 
@@ -30,12 +30,15 @@ public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecuto
 		this.valueBindings = new JdbcValueBindingsImpl(
 				operation.getMutationType(),
 				operation.getMutationTarget(),
-				this::findJdbcValueDescriptor,
+				this,
 				session
 		);
+
+		prepareForNonBatchedWork( null, session );
 	}
 
-	private JdbcValueDescriptor findJdbcValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
+	@Override
+	public JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
 		return operation.findValueDescriptor( columnName, usage );
 	}
 

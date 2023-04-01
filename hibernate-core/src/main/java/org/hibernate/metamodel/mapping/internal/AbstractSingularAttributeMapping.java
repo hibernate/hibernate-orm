@@ -49,6 +49,14 @@ public abstract class AbstractSingularAttributeMapping
 		this.propertyAccess = propertyAccess;
 	}
 
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected AbstractSingularAttributeMapping( AbstractSingularAttributeMapping original ) {
+		super( original );
+		this.propertyAccess = original.propertyAccess;
+	}
+
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return propertyAccess;

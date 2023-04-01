@@ -99,6 +99,11 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 	}
 
 	@Override
+	public Map<JdbcParameter, JdbcParameterBinding> getAppliedParameters() {
+		return appliedParameters;
+	}
+
+	@Override
 	public boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
 		if ( !appliedParameters.isEmpty() ) {
 			if ( jdbcParameterBindings == null ) {

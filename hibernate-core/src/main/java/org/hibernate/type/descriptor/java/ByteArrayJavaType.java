@@ -15,10 +15,15 @@ import java.util.Arrays;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * Descriptor for {@code Byte[]} handling.
+ * Descriptor for {@code Byte[]} handling, which disallows {@code null} elements.
+ * This {@link JavaType} is useful if the domain model uses {@code Byte[]} and wants to map to {@link SqlTypes#VARBINARY}.
  *
  * @author Steve Ebersole
  */
@@ -41,6 +46,15 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 			hashCode = 31 * hashCode + aByte;
 		}
 		return hashCode;
+	}
+
+	@Override
+	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
+		// match legacy behavior
+		final JdbcType descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARBINARY ) );
+		return descriptor instanceof AdjustableJdbcType
+				? ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this )
+				: descriptor;
 	}
 
 	@Override

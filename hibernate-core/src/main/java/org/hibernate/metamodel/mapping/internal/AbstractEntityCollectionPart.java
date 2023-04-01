@@ -23,6 +23,7 @@ import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -41,6 +42,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.type.CompositeType;
@@ -80,6 +82,18 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				associatedEntityTypeDescriptor,
 				creationProcess
 		);
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected AbstractEntityCollectionPart(AbstractEntityCollectionPart original) {
+		this.navigableRole = original.navigableRole;
+		this.nature = original.nature;
+		this.collectionDescriptor = original.collectionDescriptor;
+		this.associatedEntityTypeDescriptor = original.associatedEntityTypeDescriptor;
+		this.notFoundAction = original.notFoundAction;
+		this.targetKeyPropertyNames = original.targetKeyPropertyNames;
 	}
 
 	@Override
@@ -193,7 +207,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		final boolean added = creationState.registerVisitedAssociationKey( associationKey );
 
 		final TableGroup partTableGroup = resolveTableGroup( fetchablePath, creationState );
-		final EntityFetchJoinedImpl fetch = new EntityFetchJoinedImpl(
+		final EntityFetch fetch = buildEntityFetchJoined(
 				fetchParent,
 				this,
 				partTableGroup,
@@ -206,6 +220,42 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		}
 
 		return fetch;
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected EagerCollectionFetch buildEagerCollectionFetch(
+			NavigablePath fetchedPath,
+			PluralAttributeMapping fetchedAttribute,
+			TableGroup collectionTableGroup,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState) {
+		return new EagerCollectionFetch(
+				fetchedPath,
+				fetchedAttribute,
+				collectionTableGroup,
+				fetchParent,
+				creationState
+		);
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected EntityFetch buildEntityFetchJoined(
+			FetchParent fetchParent,
+			AbstractEntityCollectionPart abstractEntityCollectionPart,
+			TableGroup partTableGroup,
+			NavigablePath fetchablePath,
+			DomainResultCreationState creationState) {
+		return new EntityFetchJoinedImpl(
+				fetchParent,
+				abstractEntityCollectionPart,
+				partTableGroup,
+				fetchablePath,
+				creationState
+		);
 	}
 
 	protected abstract AssociationKey resolveFetchAssociationKey();

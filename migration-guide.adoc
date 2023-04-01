@@ -14,4 +14,3 @@ earlier versions, see any other pertinent migration guides as well.
 * link:{docsBase}/6.1/migration-guide/migration-guide.html[6.1 Migration guide]
 * link:{docsBase}/6.0/migration-guide/migration-guide.html[6.0 Migration guide]
 
-

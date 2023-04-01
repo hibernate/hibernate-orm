@@ -133,7 +133,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		return session.getFactory()
 				.getServiceRegistry()
 				.getService( MutationExecutorService.class )
-				.createExecutor( () -> batchKey, group, session );
+				.createExecutor( resolveBatchKeyAccess( false, session ), group, session );
 	}
 
 	protected void applyLocking(

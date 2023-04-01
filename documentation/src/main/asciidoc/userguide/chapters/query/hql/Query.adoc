@@ -1,9 +1,10 @@
 [[hql]]
 == Java API for HQL and JPQL
 :root-project-dir: ../../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-model: {documentation-project-dir}/src/main/java/org/hibernate/userguide/model
-:example-dir-query: {documentation-project-dir}/src/test/java/org/hibernate/userguide/hql
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-query: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :extrasdir: extras
 
 The Hibernate Query Language (HQL) and the Java Persistence Query Language (JPQL) are object-oriented query languages based on SQL and very similar in flavor to SQL.

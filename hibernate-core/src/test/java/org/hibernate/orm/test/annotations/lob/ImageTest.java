@@ -9,8 +9,11 @@ package org.hibernate.orm.test.annotations.lob;
 import java.util.Arrays;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.type.WrapperArrayHandling;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -27,6 +30,12 @@ import junit.framework.AssertionFailedError;
 @RequiresDialect( { SQLServerDialect.class, SybaseDialect.class })
 public class ImageTest extends BaseCoreFunctionalTestCase {
 	private static final int ARRAY_SIZE = 10000;
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( AvailableSettings.WRAPPER_ARRAY_HANDLING, WrapperArrayHandling.ALLOW.name() );
+	}
 
 	@Test
 	public void testBoundedLongByteArrayAccess() {

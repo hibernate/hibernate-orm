@@ -55,7 +55,7 @@ public class SkipFirstLimitHandler extends AbstractLimitHandler {
 			}
 		}
 
-		return insertAfterSelect( sql, skipFirst.toString() );
+		return insertAfterSelect( skipFirst.toString(), sql );
 	}
 
 	@Override

@@ -33,7 +33,9 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 				"id",
 				null,
 				(BasicDomainType<?>) domainType.getKeyType(),
-				SINGULAR_ATTRIBUTE
+				domainType.getKeyType().getExpressibleJavaType(),
+				SINGULAR_ATTRIBUTE,
+				false
 		);
 		discriminatorPathSource = new AnyDiscriminatorSqmPathSource<>(
 				localPathName,

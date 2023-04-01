@@ -10,7 +10,7 @@ package org.hibernate.metamodel.model.domain;
 /**
  * Models Hibernate's ANY mapping (reverse discrimination) as a JPA domain model type
  *
- * @param <J> The base Java type defined for the any mapping
+ * @param <J> The base Java type defined for the {@code any} mapping
  *
  * @author Steve Ebersole
  */

@@ -21,7 +21,9 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
+import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -30,12 +32,14 @@ import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+
 /**
  * Standard MutationExecutor implementation
  *
  * @author Steve Ebersole
  */
-public class MutationExecutorStandard extends AbstractMutationExecutor {
+public class MutationExecutorStandard extends AbstractMutationExecutor implements JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
 	private final MutationOperationGroup mutationOperationGroup;
 
 	/**
@@ -60,12 +64,12 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 
 	public MutationExecutorStandard(
 			MutationOperationGroup mutationOperationGroup,
-			Supplier<BatchKey> batchKeySupplier,
+			BatchKeyAccess batchKeySupplier,
 			int batchSize,
 			SharedSessionContractImplementor session) {
 		this.mutationOperationGroup = mutationOperationGroup;
 
-		final BatchKey batchKey = batchKeySupplier.get();
+		final BatchKey batchKey = batchKeySupplier.getBatchKey();
 
 		// split the table operations into batchable and non-batchable -
 		// 		1. batchable statements are handle via Batch
@@ -152,9 +156,13 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 		this.valueBindings = new JdbcValueBindingsImpl(
 				mutationOperationGroup.getMutationType(),
 				mutationOperationGroup.getMutationTarget(),
-				this::findJdbcValueDescriptor,
+				this,
 				session
 		);
+
+		if ( isNotEmpty( nonBatchedJdbcMutations ) || isNotEmpty( selfExecutingMutations ) ) {
+			prepareForNonBatchedWork( batchKey, session );
+		}
 	}
 
 	protected PreparedStatementGroup getNonBatchedStatementGroup() {
@@ -166,7 +174,8 @@ public class MutationExecutorStandard extends AbstractMutationExecutor {
 		return valueBindings;
 	}
 
-	private JdbcValueDescriptor findJdbcValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
+	@Override
+	public JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
 		return mutationOperationGroup.getOperation( tableName ).findValueDescriptor( columnName, usage );
 	}
 

@@ -64,7 +64,7 @@ public class TableBasedDeleteHandler
 		return resolveDelegate( executionContext ).execute( executionContext );
 	}
 
-	private ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
+	protected ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
 		return new RestrictedDeleteExecutionDelegate(
 				getEntityDescriptor(),
 				idTable,
@@ -77,6 +77,23 @@ public class TableBasedDeleteHandler
 				executionContext.getQueryParameterBindings(),
 				getSessionFactory()
 		);
+	}
+
+	// Getters for Hibernat Reactive
+	protected TemporaryTable getIdTable() {
+		return idTable;
+	}
+
+	protected AfterUseAction getAfterUseAction() {
+		return afterUseAction;
+	}
+
+	protected Function<SharedSessionContractImplementor, String> getSessionUidAccess() {
+		return sessionUidAccess;
+	}
+
+	protected DomainParameterXref getDomainParameterXref() {
+		return domainParameterXref;
 	}
 
 	@Override

@@ -92,8 +92,10 @@ import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
@@ -161,6 +163,10 @@ public class DerbyLegacyDialect extends Dialect {
 			case CLOB:
 			case NCLOB:
 				return "clob";
+
+			case TIME:
+			case TIME_WITH_TIMEZONE:
+				return "time";
 
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
@@ -383,6 +389,8 @@ public class DerbyLegacyDialect extends Dialect {
 				return "(({fn timestampdiff(sql_tsi_day,date(char(year(?2),4)||'-01-01'),{fn timestampadd(sql_tsi_day,{fn timestampdiff(sql_tsi_day,{d '1753-01-01'},?2)}/7*7,{d '1753-01-04'})})}+7)/7)";
 			case QUARTER:
 				return "((month(?2)+2)/3)";
+			case EPOCH:
+				return "{fn timestampdiff(sql_tsi_second,{ts '1970-01-01 00:00:00'},?2)}";
 			default:
 				return "?1(?2)";
 		}

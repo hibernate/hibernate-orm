@@ -13,11 +13,9 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
@@ -208,7 +206,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 			);
 			Object entityInstance = persistenceContext.getEntity( euk );
 			if ( entityInstance == null ) {
-				entityInstance = ( (UniqueKeyLoadable) entityPersister ).loadByUniqueKey(
+				entityInstance = entityPersister.loadByUniqueKey(
 						uniqueKeyPropertyName,
 						key,
 						session

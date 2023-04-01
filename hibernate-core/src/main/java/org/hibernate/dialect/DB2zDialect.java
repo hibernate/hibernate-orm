@@ -32,6 +32,7 @@ import java.util.List;
 
 import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 
 /**
  * A SQL dialect for DB2 for z/OS version 12.1 and above, previously known as:
@@ -78,9 +79,13 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		if ( sqlTypeCode == TIMESTAMP_WITH_TIMEZONE && getVersion().isAfter( 10 ) ) {
-			// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
-			return "timestamp with time zone";
+		if ( getVersion().isAfter( 10 ) ) {
+			switch ( sqlTypeCode ) {
+				case TIME_WITH_TIMEZONE:
+				case TIMESTAMP_WITH_TIMEZONE:
+					// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
+					return "timestamp with time zone";
+			}
 		}
 		return super.columnType( sqlTypeCode );
 	}
@@ -150,14 +155,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		StringBuilder pattern = new StringBuilder();
-		final boolean castTo;
-		if ( unit.isDateUnit() ) {
-			castTo = temporalType == TemporalType.TIME;
-		}
-		else {
-			castTo = temporalType == TemporalType.DATE;
-		}
+		final StringBuilder pattern = new StringBuilder();
 		pattern.append("add_");
 		switch (unit) {
 			case NATIVE:
@@ -175,12 +173,24 @@ public class DB2zDialect extends DB2Dialect {
 				pattern.append("?1");
 		}
 		pattern.append("s(");
-		if (castTo) {
-			pattern.append("cast(?3 as timestamp)");
+		final String timestampExpression;
+		if ( unit.isDateUnit() ) {
+			if ( temporalType == TemporalType.TIME ) {
+				timestampExpression = "timestamp('1970-01-01',?3)";
+			}
+			else {
+				timestampExpression = "?3";
+			}
 		}
 		else {
-			pattern.append("?3");
+			if ( temporalType == TemporalType.DATE ) {
+				timestampExpression = "cast(?3 as timestamp)";
+			}
+			else {
+				timestampExpression = "?3";
+			}
 		}
+		pattern.append(timestampExpression);
 		pattern.append(",");
 		switch (unit) {
 			case NANOSECOND:

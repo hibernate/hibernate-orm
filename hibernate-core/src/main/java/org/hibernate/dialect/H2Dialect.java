@@ -69,8 +69,12 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
-import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeAsTimestampWithTimeZoneJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsJdbcTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -97,7 +101,8 @@ import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
@@ -190,6 +195,9 @@ public class H2Dialect extends Dialect {
 			// which caused problems for schema update tool
 			case NUMERIC:
 				return getVersion().isBefore( 2 ) ? columnType( DECIMAL ) : super.columnType( sqlTypeCode );
+			// Support was only added in 2.0
+			case TIME_WITH_TIMEZONE:
+				return getVersion().isBefore( 2 ) ? columnType( TIMESTAMP_WITH_TIMEZONE ) : super.columnType( sqlTypeCode );
 			case NCHAR:
 				return columnType( CHAR );
 			case NVARCHAR:
@@ -243,7 +251,15 @@ public class H2Dialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 
-		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantJdbcType.INSTANCE );
+		if ( getVersion().isBefore( 2 ) ) {
+			// Support for TIME_WITH_TIMEZONE was only added in 2.0
+			jdbcTypeRegistry.addDescriptor( TimeAsTimestampWithTimeZoneJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( TimeUtcAsJdbcTimeJdbcType.INSTANCE );
+		}
+		else {
+			jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
+		}
+		jdbcTypeRegistry.addDescriptor( TimestampUtcAsInstantJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );

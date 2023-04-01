@@ -1,8 +1,8 @@
 [[multitenacy]]
 == Multitenancy
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-multitenancy: {documentation-project-dir}/src/test/java/org/hibernate/userguide/multitenancy
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-multitenancy: {core-project-dir}/src/test/java/org/hibernate/orm/test/multitenancy
 :extrasdir: extras
 
 [[multitenacy-intro]]

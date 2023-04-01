@@ -38,12 +38,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import org.hibernate.testing.hamcrest.AssignableMatcher;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -56,6 +51,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isOneOf;
 
 /**
  * @author Steve Ebersole
@@ -170,7 +166,10 @@ public class SmokeTests {
 					assertThat( selectedExpressible.getJdbcType().isInteger(), is( true ) );
 
 					final EnumValueConverter<?, ?> enumConverter = (EnumValueConverter<?, ?>) selectedExpressible.getValueConverter();
-					assertThat( enumConverter.getRelationalJavaType().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
+					assertThat(
+							enumConverter.getRelationalJavaType().getJavaTypeClass(),
+							isOneOf( Byte.class, Short.class, Integer.class )
+					);
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
 					final DomainResult<?> domainResult = sqlAst.getDomainResultDescriptors().get( 0 );

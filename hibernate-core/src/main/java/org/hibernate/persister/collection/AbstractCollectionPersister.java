@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -70,11 +69,11 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.List;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -146,11 +145,14 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  */
 @Internal
 public abstract class AbstractCollectionPersister
-		implements SQLLoadableCollection, PluralAttributeMappingImpl.Aware, CollectionMutationTarget, CollectionMetadata {
+		implements CollectionPersister, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, DeprecatedCollectionStuff {
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
+	private final EntityPersister ownerPersister;
+	private final SessionFactoryImplementor factory;
 
+	protected final String qualifiedTableName;
 	private final CollectionTableMapping tableMapping;
 
 	private final String sqlSelectSizeString;
@@ -164,18 +166,10 @@ public abstract class AbstractCollectionPersister
 	private final boolean hasOrder;
 	private final boolean hasManyToManyOrder;
 
-	private final int baseIndex;
-
 	private final String mappedByProperty;
 
 	protected final boolean indexContainsFormula;
 	protected final boolean elementIsPureFormula;
-
-	// types
-	private final Type keyType;
-	private final Type indexType;
-	protected final Type elementType;
-	private final Type identifierType;
 
 	// columns
 	protected final String[] keyColumnNames;
@@ -192,21 +186,12 @@ public abstract class AbstractCollectionPersister
 	protected final String[] elementFormulas;
 	protected final boolean[] elementColumnIsGettable;
 	protected final boolean[] elementColumnIsSettable;
-	protected final String[] indexColumnAliases;
-	protected final String[] elementColumnAliases;
-	protected final String[] keyColumnAliases;
 
 	protected final String identifierColumnName;
-	private final String identifierColumnAlias;
-
-	protected final String qualifiedTableName;
 
 	private final String queryLoaderName;
 
 	private final boolean isPrimitiveArray;
-	private final boolean isArray;
-	protected final boolean hasIndex;
-	protected final boolean hasIdentifier;
 	private final boolean isLazy;
 	private final boolean isExtraLazy;
 	protected final boolean isInverse;
@@ -219,17 +204,13 @@ public abstract class AbstractCollectionPersister
 
 	// extra information about the element type
 	private final Class<?> elementClass;
-	private final String entityName;
 
 	private final Dialect dialect;
 	protected final SqlExceptionHelper sqlExceptionHelper;
-	private final SessionFactoryImplementor factory;
-	private final EntityPersister ownerPersister;
 	private final BeforeExecutionGenerator identifierGenerator;
 	private final PropertyMapping elementPropertyMapping;
 	private final EntityPersister elementPersister;
 	private final CollectionDataAccess cacheAccessStrategy;
-	private final CollectionType collectionType;
 
 	private final CacheEntryStructure cacheEntryStructure;
 
@@ -242,9 +223,7 @@ public abstract class AbstractCollectionPersister
 	private final String manyToManyWhereString;
 	private final String manyToManyWhereTemplate;
 
-	private final Serializable[] spaces;
-
-	private final Map<String,String[]> collectionPropertyColumnAliases = new HashMap<>();
+	private final String[] spaces;
 
 	private final Comparator<?> comparator;
 
@@ -267,10 +246,12 @@ public abstract class AbstractCollectionPersister
 			Collection collectionBootDescriptor,
 			CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
-
-		final Value elementBootDescriptor = collectionBootDescriptor.getElement();
-
 		this.factory = creationContext.getSessionFactory();
+		this.collectionSemantics = creationContext.getBootstrapContext()
+				.getMetadataBuildingOptions()
+				.getPersistentCollectionRepresentationResolver()
+				.resolveRepresentation( collectionBootDescriptor );
+
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		if ( creationContext.getSessionFactoryOptions().isStructuredCacheEntriesEnabled() ) {
 			cacheEntryStructure = collectionBootDescriptor.isMap()
@@ -285,26 +266,25 @@ public abstract class AbstractCollectionPersister
 		sqlExceptionHelper = creationContext.getJdbcServices().getSqlExceptionHelper();
 		collectionType = collectionBootDescriptor.getCollectionType();
 		navigableRole = new NavigableRole( collectionBootDescriptor.getRole() );
-		entityName = collectionBootDescriptor.getOwnerEntityName();
-		ownerPersister = creationContext.getDomainModel().getEntityDescriptor( entityName );
+		ownerPersister = creationContext.getDomainModel().getEntityDescriptor( collectionBootDescriptor.getOwnerEntityName() );
 		queryLoaderName = collectionBootDescriptor.getLoaderName();
 		isMutable = collectionBootDescriptor.isMutable();
 		mappedByProperty = collectionBootDescriptor.getMappedByProperty();
 
-		Table table = collectionBootDescriptor.getCollectionTable();
+		final Value elementBootDescriptor = collectionBootDescriptor.getElement();
+		final Table table = collectionBootDescriptor.getCollectionTable();
+
 		fetchMode = elementBootDescriptor.getFetchMode();
 		elementType = elementBootDescriptor.getType();
 		// isSet = collectionBinding.isSet();
 		// isSorted = collectionBinding.isSorted();
 		isPrimitiveArray = collectionBootDescriptor.isPrimitiveArray();
-		isArray = collectionBootDescriptor.isArray();
 		subselectLoadable = collectionBootDescriptor.isSubselectLoadable();
 
 		qualifiedTableName = determineTableName( table );
 
 		int spacesSize = 1 + collectionBootDescriptor.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
-		spaces[0] = qualifiedTableName;
 		Iterator<String> tables = collectionBootDescriptor.getSynchronizedTables().iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = tables.next();
@@ -363,6 +343,8 @@ public abstract class AbstractCollectionPersister
 		else {
 			elementPersister = null;
 		}
+		// Defer this after the element persister was determined, because it is needed in OneToManyPersister#getTableName()
+		spaces[0] = getTableName();
 
 		int elementSpan = elementBootDescriptor.getColumnSpan();
 		elementColumnAliases = new String[elementSpan];
@@ -419,7 +401,7 @@ public abstract class AbstractCollectionPersister
 
 		// INDEX AND ROW SELECT
 
-		hasIndex = collectionBootDescriptor.isIndexed();
+		final boolean hasIndex = collectionBootDescriptor.isIndexed();
 		if ( hasIndex ) {
 			// NativeSQL: collect index column and auto-aliases
 			IndexedCollection indexedCollection = (IndexedCollection) collectionBootDescriptor;
@@ -468,10 +450,6 @@ public abstract class AbstractCollectionPersister
 				i++;
 			}
 			indexContainsFormula = hasFormula;
-			//noinspection ConstantConditions
-			baseIndex = indexedCollection.isList()
-					? ( (List) indexedCollection ).getBaseIndex()
-					: 0;
 		}
 		else {
 			indexContainsFormula = false;
@@ -482,10 +460,9 @@ public abstract class AbstractCollectionPersister
 			indexType = null;
 			indexColumnNames = null;
 			indexColumnAliases = null;
-			baseIndex = 0;
 		}
 
-		hasIdentifier = collectionBootDescriptor.isIdentified();
+		final boolean hasIdentifier = collectionBootDescriptor.isIdentified();
 		if ( hasIdentifier ) {
 			if ( collectionBootDescriptor.isOneToMany() ) {
 				throw new MappingException( "one-to-many collections with identifiers are not supported" );
@@ -587,11 +564,6 @@ public abstract class AbstractCollectionPersister
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// "mapping model"
 
-		this.collectionSemantics = creationContext.getBootstrapContext()
-				.getMetadataBuildingOptions()
-				.getPersistentCollectionRepresentationResolver()
-				.resolveRepresentation( collectionBootDescriptor );
-
 		if ( queryLoaderName != null ) {
 			final NamedQueryMemento namedQueryMemento = factory
 					.getQueryEngine()
@@ -602,7 +574,7 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 
-		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, qualifiedTableName );
+		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, getTableName(), getCollectionSpaces() );
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
@@ -623,11 +595,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
-	}
-
-	@Override
-	public String getRole() {
-		return navigableRole.getFullPath();
 	}
 
 	@Override
@@ -654,7 +621,6 @@ public abstract class AbstractCollectionPersister
 		if ( attributeMapping.getIndexDescriptor() != null ) {
 			collectionElementLoaderByIndex = new CollectionElementLoaderByIndex(
 					attributeMapping,
-					baseIndex,
 					LoadQueryInfluencers.NONE,
 					getFactory()
 			);
@@ -792,11 +758,6 @@ public abstract class AbstractCollectionPersister
 		return cacheAccessStrategy != null;
 	}
 
-	@Override
-	public CollectionType getCollectionType() {
-		return collectionType;
-	}
-
 	protected abstract RowMutationOperations getRowMutationOperations();
 	protected abstract RemoveCoordinator getRemoveCoordinator();
 
@@ -838,21 +799,6 @@ public abstract class AbstractCollectionPersister
 		return hasWhere;
 	}
 
-	@Override
-	public Type getKeyType() {
-		return keyType;
-	}
-
-	@Override
-	public Type getIndexType() {
-		return indexType;
-	}
-
-	@Override
-	public Type getElementType() {
-		return elementType;
-	}
-
 	/**
 	 * Return the element class of an array, or null otherwise.  needed by arrays
 	 */
@@ -867,14 +813,16 @@ public abstract class AbstractCollectionPersister
 	@Deprecated(forRemoval = true)
 	@Remove
 	protected Object decrementIndexByBase(Object index) {
-		if ( baseIndex != 0 ) {
+		final int baseIndex = attributeMapping.getIndexMetadata().getListIndexBase();
+		if ( baseIndex > 0 ) {
 			index = (Integer)index - baseIndex;
 		}
 		return index;
 	}
 
 	protected Object incrementIndexByBase(Object index) {
-		if ( baseIndex != 0 ) {
+		final int baseIndex = attributeMapping.getIndexMetadata().getListIndexBase();
+		if ( baseIndex > 0  ) {
 			index = (Integer)index + baseIndex;
 		}
 		return index;
@@ -887,12 +835,12 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean isArray() {
-		return isArray;
+		return collectionSemantics.getCollectionClassification() == CollectionClassification.ARRAY;
 	}
 
 	@Override
 	public String getIdentifierColumnName() {
-		if ( hasIdentifier ) {
+		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
 			return identifierColumnName;
 		}
 		else {
@@ -949,7 +897,7 @@ public abstract class AbstractCollectionPersister
 			i++;
 		}
 
-		if ( hasIndex ) {
+		if ( hasIndex() ) {
 			for ( String indexAlias : indexColumnAliases ) {
 				sqlSelections.set(
 						i,
@@ -962,7 +910,7 @@ public abstract class AbstractCollectionPersister
 				i++;
 			}
 		}
-		if ( hasIdentifier ) {
+		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
 			sqlSelections.set(
 					i,
 					new SqlSelectionImpl(
@@ -1087,7 +1035,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean hasIndex() {
-		return hasIndex;
+		return collectionSemantics.getCollectionClassification().isIndexed();
 	}
 
 	@Override
@@ -1124,7 +1072,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	public String getOwnerEntityName() {
-		return entityName;
+		return ownerPersister.getEntityName();
 	}
 
 	@Override
@@ -1140,11 +1088,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public BeforeExecutionGenerator getGenerator() {
 		return identifierGenerator;
-	}
-
-	@Override
-	public Type getIdentifierType() {
-		return identifierType;
 	}
 
 	@Override
@@ -1330,7 +1273,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public Serializable[] getCollectionSpaces() {
+	public String[] getCollectionSpaces() {
 		return spaces;
 	}
 
@@ -1409,10 +1352,10 @@ public abstract class AbstractCollectionPersister
 
 		initCollectionPropertyMap( "key", keyType, keyColumnAliases );
 		initCollectionPropertyMap( "element", elementType, elementColumnAliases );
-		if ( hasIndex ) {
+		if ( hasIndex() ) {
 			initCollectionPropertyMap( "index", indexType, indexColumnAliases );
 		}
-		if ( hasIdentifier ) {
+		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
 			initCollectionPropertyMap( "id", identifierType, new String[] { identifierColumnAlias } );
 		}
 	}
@@ -1444,6 +1387,7 @@ public abstract class AbstractCollectionPersister
 				getKeyType().nullSafeSet( st, key, 1, session );
 				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
 				try {
+					final int baseIndex = Math.max( attributeMapping.getIndexMetadata().getListIndexBase(), 0 );
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
 				}
 				finally {
@@ -1616,7 +1560,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean hasPhysicalIndexColumn() {
-		return hasIndex && !indexContainsFormula;
+		return hasIndex() && !indexContainsFormula;
 	}
 
 	@Override
@@ -1631,9 +1575,11 @@ public abstract class AbstractCollectionPersister
 
 	private static CollectionTableMapping buildCollectionTableMapping(
 			Collection collectionBootDescriptor,
-			String qualifiedTableName) {
+			String qualifiedTableName,
+			String[] spaces) {
 		return new CollectionTableMapping(
 				qualifiedTableName,
+				spaces,
 				!collectionBootDescriptor.isOneToMany(),
 				collectionBootDescriptor.isInverse(),
 				new MutationDetails(
@@ -1788,6 +1734,56 @@ public abstract class AbstractCollectionPersister
 
 
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Types (the methods are already deprecated on CollectionPersister)
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Deprecated private final CollectionType collectionType;
+	@Deprecated private final Type keyType;
+	@Deprecated private final Type identifierType;
+	@Deprecated private final Type indexType;
+	@Deprecated protected final Type elementType;
+
+	public CollectionType getCollectionType() {
+		return collectionType;
+	}
+
+	@Override
+	public Type getKeyType() {
+		return keyType;
+	}
+
+	@Override
+	public Type getIdentifierType() {
+		return identifierType;
+	}
+
+	@Override
+	public Type getIndexType() {
+		return indexType;
+	}
+
+	@Override
+	public Type getElementType() {
+		return elementType;
+	}
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// State related to this we handle differently in 6+.  In other words, state
+	// that is no longer needed
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Deprecated protected final String[] keyColumnAliases;
+	@Deprecated private final String identifierColumnAlias;
+	@Deprecated protected final String[] indexColumnAliases;
+	@Deprecated protected final String[] elementColumnAliases;
+	@Deprecated private final Map<String,String[]> collectionPropertyColumnAliases = new HashMap<>();
 
 	@Override
 	public String[] getKeyColumnAliases(String suffix) {
@@ -1801,7 +1797,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String[] getIndexColumnAliases(String suffix) {
-		if ( hasIndex ) {
+		if ( hasIndex() ) {
 			return new Alias( suffix ).toAliasStrings( indexColumnAliases );
 		}
 		else {
@@ -1811,7 +1807,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String getIdentifierColumnAlias(String suffix) {
-		if ( hasIdentifier ) {
+		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
 			return new Alias( suffix ).toAliasString( identifierColumnAlias );
 		}
 		else {

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.LockMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
@@ -15,10 +16,14 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.AbstractNonLazyEntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 /**
  * @author Andrea Boriero
@@ -74,6 +79,17 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 		this.entityResult.afterInitialize( this, creationState );
 	}
 
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected EntityFetchJoinedImpl(EntityFetchJoinedImpl original ) {
+		super( original.getFetchParent(), original.getReferencedModePart(), original.getNavigablePath() );
+		this.entityResult = original.entityResult;
+		this.keyResult = original.keyResult;
+		this.notFoundAction = original.notFoundAction;
+		this.sourceAlias = original.sourceAlias;
+	}
+
 	@Override
 	protected EntityInitializer getEntityInitializer(
 			FetchParentAccess parentAccess,
@@ -81,7 +97,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 		return creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),
-				() -> new EntityJoinedFetchInitializer(
+				() -> buildEntityJoinedFetchInitializer(
 						entityResult,
 						getReferencedModePart(),
 						getNavigablePath(),
@@ -93,6 +109,32 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 						creationState
 				)
 		).asEntityInitializer();
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected Initializer buildEntityJoinedFetchInitializer(
+			EntityResultGraphNode resultDescriptor,
+			EntityValuedFetchable referencedFetchable,
+			NavigablePath navigablePath,
+			LockMode lockMode,
+			NotFoundAction notFoundAction,
+			DomainResult<?> keyResult,
+			Fetch identifierFetch,
+			Fetch discriminatorFetch,
+			AssemblerCreationState creationState) {
+		return new EntityJoinedFetchInitializer(
+				resultDescriptor,
+				referencedFetchable,
+				navigablePath,
+				lockMode,
+				notFoundAction,
+				keyResult,
+				identifierFetch,
+				discriminatorFetch,
+				creationState
+		);
 	}
 
 	@Override

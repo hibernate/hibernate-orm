@@ -1650,8 +1650,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void logCannotLocateIndexColumnInformation(String columnIdentifierText, String indexIdentifierText);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Executing import script '%s'", id = 476)
-	void executingImportScript(String scriptName);
+	@Message(value = "Executing script '%s'", id = 476)
+	void executingScript(String scriptName);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Starting delayed evictData of schema as part of SessionFactory shut-down'", id = 477)

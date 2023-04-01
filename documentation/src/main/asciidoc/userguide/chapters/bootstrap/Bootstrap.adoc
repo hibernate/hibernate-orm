@@ -1,10 +1,10 @@
 [[bootstrap]]
 == Bootstrap
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
 :core-project-dir: {root-project-dir}/hibernate-core
-:example-dir-boot: {documentation-project-dir}/src/test/java/org/hibernate/userguide/bootstrap
-:example-dir-boot-spi: {core-project-dir}/src/test/java/org/hibernate/orm/test/bootstrap/spi
+:core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:example-dir-boot: {core-test-base}/bootstrap
+:example-dir-boot-spi: {core-test-base}/bootstrap/spi
 :extrasdir: extras
 
 The term bootstrapping refers to initializing and starting a software component.

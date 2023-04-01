@@ -73,6 +73,15 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		}
 	}
 
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected OneToManyCollectionPart(OneToManyCollectionPart original) {
+		super( original );
+		this.mapKeyPropertyName = original.mapKeyPropertyName;
+		this.fetchAssociationKey = original.fetchAssociationKey;
+	}
+
 	@Override
 	public Cardinality getCardinality() {
 		return Cardinality.ONE_TO_MANY;
@@ -94,16 +103,6 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 				valueConsumer,
 				session
 		);
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return null;
-		}
-
-		// should be an instance of the associated entity
-		return getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( value );
 	}
 
 	@Override

@@ -6,6 +6,10 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import java.lang.reflect.Type;
+import java.sql.Types;
+import java.util.List;
+
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -16,18 +20,13 @@ import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
-import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import java.lang.reflect.Type;
-import java.sql.Types;
-import java.util.List;
 
 import static org.hibernate.type.SqlTypes.BIT;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -92,7 +91,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			SqmExpressible<?> nodeType = argument.getNodeType();
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if ( nodeType != null ) {
-				JavaType<?> javaType = nodeType.getExpressibleJavaType();
+				JavaType<?> javaType = nodeType.getRelationalJavaType();
 				if (javaType != null) {
 					try {
 						checkType(
@@ -159,9 +158,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			if (argument instanceof Expression) {
 				JdbcMappingContainer expressionType = ((Expression) argument).getExpressionType();
 				if (expressionType != null) {
-					ParameterDetector detector = new ParameterDetector();
-					argument.accept(detector);
-					if (detector.detected) {
+					if (expressionType instanceof JavaObjectType) {
 						count += expressionType.getJdbcTypeCount();
 					}
 					else {
@@ -256,14 +253,6 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 						javaType.getTypeName()
 				)
 		);
-	}
-
-	private static class ParameterDetector extends AbstractSqlAstWalker {
-		private boolean detected;
-		@Override
-		public void visitParameter(JdbcParameter jdbcParameter) {
-			detected = true;
-		}
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -28,6 +29,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicTypeReference;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 
 /**
  * Standard implementation of JdbcParameterBindings
@@ -77,35 +79,62 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 					throw new IllegalArgumentException( "Could not resolve NativeQuery parameter type : `" + param + "`");
 				}
 
+				final BasicValueConverter valueConverter = jdbcMapping == null ? null : jdbcMapping.getValueConverter();
+
 				if ( binding.isMultiValued() ) {
 					final Collection<?> bindValues = binding.getBindValues();
 					final int bindValueCount = bindValues.size();
-					Object lastBindValue = null;
-					for ( Object bindValue : bindValues ) {
-						final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
-						jdbcParameterBinders.add( jdbcParameter );
-						addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, bindValue ) );
-						lastBindValue = bindValue;
-					}
 					final int bindValueMaxCount = NativeQueryImpl.determineBindValueMaxCount(
 							paddingEnabled,
 							inExprLimit,
 							bindValueCount
 					);
-					if ( bindValueMaxCount != bindValueCount ) {
-						for ( int i = bindValueCount; i < bindValueMaxCount; i++ ) {
+					Object lastBindValue = null;
+					if ( valueConverter != null ) {
+						for ( Object bindValue : bindValues ) {
 							final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 							jdbcParameterBinders.add( jdbcParameter );
+							lastBindValue = bindValue == null ? null : valueConverter.toRelationalValue( bindValue );
 							addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
+						}
+						if ( bindValueMaxCount != bindValueCount ) {
+							for ( int i = bindValueCount; i < bindValueMaxCount; i++ ) {
+								final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+								jdbcParameterBinders.add( jdbcParameter );
+								addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
+							}
+						}
+					}
+					else {
+						for ( Object bindValue : bindValues ) {
+							final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+							jdbcParameterBinders.add( jdbcParameter );
+							addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, bindValue ) );
+							lastBindValue = bindValue;
+						}
+						if ( bindValueMaxCount != bindValueCount ) {
+							for ( int i = bindValueCount; i < bindValueMaxCount; i++ ) {
+								final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
+								jdbcParameterBinders.add( jdbcParameter );
+								addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
+							}
 						}
 					}
 				}
 				else {
+					final Object bindValue;
+					if ( valueConverter != null && binding.getBindValue() != null ) {
+						bindValue = valueConverter.toRelationalValue( binding.getBindValue() );
+					}
+					else {
+						bindValue = binding.getBindValue();
+					}
+
 					final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 					jdbcParameterBinders.add( jdbcParameter );
 					addBinding(
 							jdbcParameter,
-							new JdbcParameterBindingImpl( jdbcMapping, binding.getBindValue() )
+							new JdbcParameterBindingImpl( jdbcMapping, bindValue )
 					);
 				}
 			}

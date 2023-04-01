@@ -1,8 +1,8 @@
 [[flushing]]
 == Flushing
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-flushing: {documentation-project-dir}/src/test/java/org/hibernate/userguide/flush
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-flushing: {core-project-dir}/src/test/java/org/hibernate/orm/test/flush
 :extrasdir: extras
 
 Flushing is the process of synchronizing the state of the persistence context with the underlying database.

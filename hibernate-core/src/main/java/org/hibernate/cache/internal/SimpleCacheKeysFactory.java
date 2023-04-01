@@ -32,9 +32,18 @@ public class SimpleCacheKeysFactory implements CacheKeysFactory {
 	}
 
 	@Override
-	public Object createNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+	public Object createNaturalIdKey(
+			Object naturalIdValues,
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
 		// natural ids always need to be wrapped
-		return new NaturalIdCacheKey(naturalIdValues, persister, null, session);
+		NaturalIdCacheKey.NaturalIdCacheKeyBuilder builder = new NaturalIdCacheKey.NaturalIdCacheKeyBuilder(
+				naturalIdValues,
+				persister,
+				null,
+				session
+		);
+		return builder.build();
 	}
 
 	@Override

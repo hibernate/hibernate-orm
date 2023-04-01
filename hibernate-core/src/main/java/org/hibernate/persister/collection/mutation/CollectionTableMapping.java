@@ -13,6 +13,7 @@ import org.hibernate.sql.model.TableMapping;
  */
 public class CollectionTableMapping implements TableMapping {
 	private final String tableName;
+	private final String[] spaces;
 	private final boolean isJoinTable;
 	private final boolean isInverse;
 	private final MutationDetails insertDetails;
@@ -27,6 +28,7 @@ public class CollectionTableMapping implements TableMapping {
 
 	public CollectionTableMapping(
 			String tableName,
+			String[] spaces,
 			boolean isJoinTable,
 			boolean isInverse,
 			MutationDetails insertDetails,
@@ -35,6 +37,7 @@ public class CollectionTableMapping implements TableMapping {
 			MutationDetails deleteAllDetails,
 			MutationDetails deleteRowDetails) {
 		this.tableName = tableName;
+		this.spaces = spaces;
 		this.isJoinTable = isJoinTable;
 		this.isInverse = isInverse;
 		this.insertDetails = insertDetails;
@@ -47,6 +50,24 @@ public class CollectionTableMapping implements TableMapping {
 	@Override
 	public String getTableName() {
 		return tableName;
+	}
+
+	public String[] getSpaces() {
+		return spaces;
+	}
+
+	@Override
+	public boolean containsTableName(String tableName) {
+		if ( this.tableName.equals( tableName ) ) {
+			return true;
+		}
+		for ( String space : spaces ) {
+			if ( space.equals( tableName ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Override

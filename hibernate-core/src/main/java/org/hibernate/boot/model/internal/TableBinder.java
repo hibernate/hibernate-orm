@@ -631,7 +631,16 @@ public class TableBinder {
 			}
 		}
 		if ( value instanceof ToOne ) {
-			( (ToOne) value).setSorted( true );
+			( (ToOne) value ).setSorted( true );
+		}
+		else if ( value instanceof DependantValue ) {
+			( (DependantValue) value ).setSorted( true );
+		}
+		else {
+			throw new AssertionError(
+					"This should never happen, value can only be ToOne or DependantValue," +
+							"instead it's '" + value.getClass().getName() + "'"
+			);
 		}
 	}
 

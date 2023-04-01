@@ -7,10 +7,12 @@
 package org.hibernate.sql.exec.spi;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 /**
  * Unifying contract for any SQL statement we want to execute via JDBC.
@@ -41,6 +43,11 @@ public interface JdbcOperationQuery extends JdbcOperation {
 	 * of parameter values or multiValued parameters.
 	 */
 	boolean dependsOnParameterBindings();
+
+	/**
+	 * The parameters which were inlined into the query as literals.
+	 */
+	Map<JdbcParameter, JdbcParameterBinding> getAppliedParameters();
 
 	boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 }

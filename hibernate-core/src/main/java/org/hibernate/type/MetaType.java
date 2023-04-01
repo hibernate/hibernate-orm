@@ -17,10 +17,18 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.persister.entity.DiscriminatorMetadata;
+import org.hibernate.persister.entity.DiscriminatorType;
 
 /**
  * @author Gavin King
+ *
+ * @deprecated The functionality of MetaType, {@link DiscriminatorType} and {@link DiscriminatorMetadata}  have been
+ * consolidated into {@link EntityDiscriminatorMapping} and {@link DiscriminatorConverter}
  */
+@Deprecated( since = "6.2", forRemoval = true )
 public class MetaType extends AbstractType {
 	public static final String[] REGISTRATION_KEYS = ArrayHelper.EMPTY_STRING_ARRAY;
 
@@ -65,6 +73,11 @@ public class MetaType extends AbstractType {
 	@Override
 	public Class<?> getReturnedClass() {
 		return String.class;
+	}
+
+	@Override
+	public int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+		return compare( x, y );
 	}
 
 	@Override

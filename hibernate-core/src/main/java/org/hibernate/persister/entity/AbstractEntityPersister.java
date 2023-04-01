@@ -25,7 +25,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -154,9 +153,10 @@ import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
@@ -176,11 +176,13 @@ import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor;
+import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -190,7 +192,6 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -200,7 +201,6 @@ import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
-import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -271,7 +271,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
@@ -299,7 +299,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.toSmallLi
 import static org.hibernate.metamodel.RepresentationMode.POJO;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
-import static org.hibernate.persister.entity.DiscriminatorHelper.discriminatorLiteral;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -310,20 +309,15 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
  */
 @Internal
 public abstract class AbstractEntityPersister
-		implements OuterJoinLoadable, ClassMetadata, UniqueKeyLoadable,
-				SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable,
-				org.hibernate.persister.entity.Queryable, InFlightEntityMappingType, EntityMutationTarget {
+		implements InFlightEntityMappingType, EntityMutationTarget, LazyPropertyInitializer, PostInsertIdentityPersister, DeprecatedEntityStuff {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
 	public static final String ENTITY_CLASS = "class";
 	public static final String VERSION_COLUMN_ALIAS = "version_";
 
-	private final SessionFactoryImplementor factory;
-
 	private final NavigableRole navigableRole;
-
-	private final EntityMetamodel entityMetamodel;
+	private final SessionFactoryImplementor factory;
 	private final EntityEntryFactory entityEntryFactory;
 
 	private final String sqlAliasStem;
@@ -332,18 +326,6 @@ public abstract class AbstractEntityPersister
 	private final MultiIdEntityLoader<?> multiIdEntityLoader;
 	private NaturalIdLoader<?> naturalIdLoader;
 	private MultiNaturalIdLoader<?> multiNaturalIdLoader;
-
-	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
-	private SqmMultiTableInsertStrategy sqmMultiTableInsertStrategy;
-
-	private final EntityDataAccess cacheAccessStrategy;
-	private final NaturalIdDataAccess naturalIdRegionAccessStrategy;
-	private final CacheEntryHelper cacheEntryHelper;
-	private final boolean canReadFromCache;
-	private final boolean canWriteToCache;
-	private final boolean invalidateCache;
-	private final boolean isLazyPropertiesCacheable;
-	private final boolean useReferenceCacheEntries;
 
 	private final String[] rootTableKeyColumnNames;
 	private final String[] rootTableKeyColumnReaders;
@@ -393,47 +375,39 @@ public abstract class AbstractEntityPersister
 	private final boolean[] propertyDefinedOnSubclass;
 	private final CascadeStyle[] subclassPropertyCascadeStyleClosure;
 
-	//information about all columns/formulas in class hierarchy
-	private final String[] subclassColumnAliasClosure;
-	private final String[] subclassFormulaAliasClosure;
-
-	// dynamic filters attached to the class-level
-	private final FilterHelper filterHelper;
-	private volatile Set<String> affectingFetchProfileNames;
-
+	private Map<String, SingleIdArrayLoadPlan> lazyLoadPlanByFetchGroup;
 	private final LockModeEnumMap<LockingStrategy> lockers = new LockModeEnumMap<>();
+	private String sqlVersionSelectString;
 
 	private EntityTableMapping[] tableMappings;
 	private InsertCoordinator insertCoordinator;
 	private UpdateCoordinator updateCoordinator;
 	private DeleteCoordinator deleteCoordinator;
 
-	protected Expectation[] insertExpectations;
-	protected Expectation[] updateExpectations;
-	protected Expectation[] deleteExpectations;
+	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
+	private SqmMultiTableInsertStrategy sqmMultiTableInsertStrategy;
 
-	// SQL strings
-	private String sqlVersionSelectString;
-	private Map<String, SingleIdArrayLoadPlan> lazyLoadPlanByFetchGroup;
+	private final EntityDataAccess cacheAccessStrategy;
+	private final NaturalIdDataAccess naturalIdRegionAccessStrategy;
+	private final CacheEntryHelper cacheEntryHelper;
+	private final boolean canReadFromCache;
+	private final boolean canWriteToCache;
+	private final boolean invalidateCache;
+	private final boolean isLazyPropertiesCacheable;
+	private final boolean useReferenceCacheEntries;
 
+	// dynamic filters attached to the class-level
+	private final FilterHelper filterHelper;
+	private volatile Set<String> affectingFetchProfileNames;
 
 	private GeneratedValuesProcessor insertGeneratedValuesProcessor;
 	private GeneratedValuesProcessor updateGeneratedValuesProcessor;
-
-	//Custom SQL (would be better if these were private)
-	protected boolean[] insertCallable;
-	protected boolean[] updateCallable;
-	protected boolean[] deleteCallable;
-	protected String[] customSQLInsert;
-	protected String[] customSQLUpdate;
-	protected String[] customSQLDelete;
 
 	private InsertGeneratedIdentifierDelegate identityDelegate;
 	private String identitySelectString;
 
 	private boolean[] tableHasColumns;
 
-	private final Map<String,String[]> subclassPropertyAliases = new HashMap<>();
 	private final Map<String,String[]> subclassPropertyColumnNames = new HashMap<>();
 
 	private final JavaType<?> javaType;
@@ -456,7 +430,6 @@ public abstract class AbstractEntityPersister
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
-//	private final String[] fullDiscriminatorSQLValues;
 	private final Object[] fullDiscriminatorValues;
 
 	/**
@@ -939,10 +912,6 @@ public abstract class AbstractEntityPersister
 				: Template.TEMPLATE + "." + DISCRIMINATOR_ALIAS;
 	}
 
-	public String getDiscriminatorAlias() {
-		return DISCRIMINATOR_ALIAS;
-	}
-
 	public String getDiscriminatorFormulaTemplate() {
 		return null;
 	}
@@ -1011,13 +980,17 @@ public abstract class AbstractEntityPersister
 		return rowIdName != null;
 	}
 
-	//used by Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	@SuppressWarnings("unused")
 	public boolean[][] getPropertyColumnUpdateable() {
 		return propertyColumnUpdateable;
 	}
 
-	//used by Hibernate Reactive
+	/**
+	 * For Hibernate Reactive
+	 */
 	@SuppressWarnings("unused")
 	public boolean[][] getPropertyColumnInsertable() {
 		return propertyColumnInsertable;
@@ -1580,7 +1553,9 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
-	// called by Hibernate Reactive
+	/**
+	 * Called by Hibernate Reactive
+	 */
 	protected boolean initializeLazyProperty(
 			final String fieldName,
 			final Object entity,
@@ -2190,21 +2165,49 @@ public abstract class AbstractEntityPersister
 		return ( (PluralAttributeMapping) attributeMapping ).getKeyDescriptor().getKeyTable();
 	}
 
-	private DiscriminatorMetadata discriminatorMetadata;
+	private DiscriminatorType discriminatorType;
+
+
+	protected DiscriminatorType resolveDiscriminatorType() {
+		if ( discriminatorType == null ) {
+			discriminatorType = buildDiscriminatorType();
+		}
+		return discriminatorType;
+	}
+
+	private DiscriminatorType buildDiscriminatorType() {
+		final BasicType<?> underlingJdbcMapping = getDiscriminatorType();
+		if ( underlingJdbcMapping == null ) {
+			return null;
+		}
+
+		final JavaTypeRegistry javaTypeRegistry = factory.getTypeConfiguration().getJavaTypeRegistry();
+
+		final JavaType<Object> domainJavaType;
+		if ( representationStrategy.getMode() == POJO
+				&& getEntityName().equals( getJavaType().getJavaTypeClass().getName() ) ) {
+			domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
+		}
+		else {
+			domainJavaType = javaTypeRegistry.resolveDescriptor( String.class );
+		}
+
+		//noinspection rawtypes
+		final DiscriminatorConverter converter = DiscriminatorConverter.fromValueMappings(
+				getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME ),
+				domainJavaType,
+				underlingJdbcMapping,
+				getSubclassByDiscriminatorValue(),
+				factory
+		);
+
+		//noinspection unchecked,rawtypes
+		return new DiscriminatorTypeImpl( underlingJdbcMapping, converter );
+	}
 
 	@Override
 	public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
-		if ( discriminatorMetadata == null ) {
-			discriminatorMetadata = buildTypeDiscriminatorMetadata();
-		}
-		return discriminatorMetadata;
-	}
-
-	private DiscriminatorMetadata buildTypeDiscriminatorMetadata() {
-		return () -> {
-			final BasicType<?> type = getDiscriminatorType();
-			return type == null ? null : new DiscriminatorType<>( type, AbstractEntityPersister.this );
-		};
+		return this::buildDiscriminatorType;
 	}
 
 	public static String generateTableAlias(String rootAlias, int tableNumber) {
@@ -2435,132 +2438,10 @@ public abstract class AbstractEntityPersister
 				);
 	}
 
-	// returns the aliases of the selectable columns
-	protected String[] getSubclassColumnAliasClosure() {
-		return subclassColumnAliasClosure;
-	}
-
-	protected String[] getSubclassFormulaAliasClosure() {
-		return subclassFormulaAliasClosure;
-	}
-
-	@Override
-	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
-		final String[] rawAliases = subclassPropertyAliases.get( propertyName );
-		if ( rawAliases == null ) {
-			return null;
-		}
-		else {
-			final String[] result = new String[rawAliases.length];
-			for ( int i = 0; i < rawAliases.length; i++ ) {
-				result[i] = new Alias( suffix ).toUnquotedAliasString( rawAliases[i] );
-			}
-			return result;
-		}
-	}
-
 	@Override
 	public String[] getSubclassPropertyColumnNames(String propertyName) {
 		//TODO: should we allow suffixes on these ?
 		return subclassPropertyColumnNames.get( propertyName );
-	}
-
-
-	//This is really ugly, but necessary:
-
-	/**
-	 * Must be called by subclasses, at the end of their constructors
-	 */
-	protected void initSubclassPropertyAliasesMap(PersistentClass model) throws MappingException {
-
-		// ALIASES
-		internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosure() );
-
-		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
-		if ( !entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
-			subclassPropertyAliases.put( ENTITY_ID, getIdentifierAliases() );
-			subclassPropertyColumnNames.put( ENTITY_ID, getIdentifierColumnNames() );
-		}
-
-		// aliases named identifier ( alias.idname )
-		if ( hasIdentifierProperty() ) {
-			subclassPropertyAliases.put( getIdentifierPropertyName(), getIdentifierAliases() );
-			subclassPropertyColumnNames.put( getIdentifierPropertyName(), getIdentifierColumnNames() );
-		}
-
-		// aliases for composite-id's
-		if ( getIdentifierType().isComponentType() ) {
-			// Fetch embedded identifiers property names from the "virtual" identifier component
-			final CompositeType componentId = (CompositeType) getIdentifierType();
-			final String[] idPropertyNames = componentId.getPropertyNames();
-			final String[] idAliases = getIdentifierAliases();
-			final String[] idColumnNames = getIdentifierColumnNames();
-
-			for ( int i = 0; i < idPropertyNames.length; i++ ) {
-				if ( entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
-					subclassPropertyAliases.put(
-							ENTITY_ID + "." + idPropertyNames[i],
-							new String[] {idAliases[i]}
-					);
-					subclassPropertyColumnNames.put(
-							ENTITY_ID + "." + getIdentifierPropertyName() + "." + idPropertyNames[i],
-							new String[] {idColumnNames[i]}
-					);
-				}
-//				if (hasIdentifierProperty() && !ENTITY_ID.equals( getIdentifierPropertyNames() ) ) {
-				if ( hasIdentifierProperty() ) {
-					subclassPropertyAliases.put(
-							getIdentifierPropertyName() + "." + idPropertyNames[i],
-							new String[] {idAliases[i]}
-					);
-					subclassPropertyColumnNames.put(
-							getIdentifierPropertyName() + "." + idPropertyNames[i],
-							new String[] {idColumnNames[i]}
-					);
-				}
-				else {
-					// embedded composite ids ( alias.idName1, alias.idName2 )
-					subclassPropertyAliases.put( idPropertyNames[i], new String[] {idAliases[i]} );
-					subclassPropertyColumnNames.put( idPropertyNames[i], new String[] {idColumnNames[i]} );
-				}
-			}
-		}
-
-		if ( entityMetamodel.isPolymorphic() ) {
-			subclassPropertyAliases.put( ENTITY_CLASS, new String[] {getDiscriminatorAlias()} );
-			subclassPropertyColumnNames.put( ENTITY_CLASS, new String[] {getDiscriminatorColumnName()} );
-		}
-
-	}
-
-	private void internalInitSubclassPropertyAliasesMap(String path, List<Property> properties) {
-		for (Property property : properties) {
-			final String name = path == null ? property.getName() : path + "." + property.getName();
-			if ( property.isComposite() ) {
-				Component component = (Component) property.getValue();
-				internalInitSubclassPropertyAliasesMap( name, component.getProperties() );
-			}
-
-			String[] aliases = new String[property.getColumnSpan()];
-			String[] cols = new String[property.getColumnSpan()];
-			int l = 0;
-			for ( Selectable selectable: property.getSelectables() ) {
-				Dialect dialect = getFactory().getJdbcServices().getDialect();
-				aliases[l] = selectable.getAlias( dialect, property.getValue().getTable() );
-				cols[l] = selectable.getText(dialect); // TODO: skip formulas?
-				l++;
-			}
-
-			subclassPropertyAliases.put( name, aliases );
-			subclassPropertyColumnNames.put( name, cols );
-		}
-
-	}
-
-	// used by Hibernate Reactive
-	@SuppressWarnings("unused")
-	protected String[][] getLazyPropertyColumnAliases() {
-		return lazyPropertyColumnAliases;
 	}
 
 	@Override
@@ -4997,7 +4878,6 @@ public abstract class AbstractEntityPersister
 					isPhysicalDiscriminator(),
 					columnDefinition, length, precision, scale,
 					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType(),
-					buildDiscriminatorValueMappings( modelCreationProcess ),
 					modelCreationProcess
 			);
 		}
@@ -5005,27 +4885,6 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public abstract BasicType<?> getDiscriminatorType();
-
-	protected Map<Object, DiscriminatorValueDetails> buildDiscriminatorValueMappings(
-			MappingModelCreationProcess modelCreationProcess) {
-		final MappingMetamodelImplementor mappingModel =
-				modelCreationProcess.getCreationContext().getDomainModel();
-		//noinspection unchecked
-		final JdbcLiteralFormatter<Object> jdbcLiteralFormatter =
-				(JdbcLiteralFormatter<Object>) getDiscriminatorType().getJdbcLiteralFormatter();
-		final Dialect dialect = modelCreationProcess.getCreationContext().getDialect();
-
-		final Map<Object, DiscriminatorValueDetails> valueMappings = new ConcurrentHashMap<>();
-		getSubclassByDiscriminatorValue().forEach( (value, entityName) -> {
-			final DiscriminatorValueDetailsImpl valueMapping = new DiscriminatorValueDetailsImpl(
-					value,
-					discriminatorLiteral( jdbcLiteralFormatter, dialect, value ),
-					mappingModel.findEntityDescriptor( entityName )
-			);
-			valueMappings.put( value, valueMapping );
-		} );
-		return valueMappings;
-	}
 
 	protected EntityVersionMapping generateVersionMapping(
 			Supplier<?> templateInstanceCreator,
@@ -5420,7 +5279,7 @@ public abstract class AbstractEntityPersister
 				dependantValue = ( (DependantValue) bootProperty.getValue() );
 			}
 
-			return MappingModelCreationHelper.buildEmbeddedAttributeMapping(
+			return buildEmbeddedAttributeMapping(
 					attrName,
 					stateArrayPosition,
 					fetchableIndex,
@@ -5437,7 +5296,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof CollectionType ) {
-			return MappingModelCreationHelper.buildPluralAttributeMapping(
+			return buildPluralAttributeMapping(
 					attrName,
 					stateArrayPosition,
 					fetchableIndex,
@@ -5450,7 +5309,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof EntityType ) {
-			return MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+			return buildSingularAssociationAttributeMapping(
 					attrName,
 					getNavigableRole().append( attrName ),
 					stateArrayPosition,
@@ -5468,6 +5327,96 @@ public abstract class AbstractEntityPersister
 		// todo (6.0) : for now ignore any non basic-typed attributes
 
 		return null;
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			DependantValue dependantValue,
+			int dependantColumnIndex,
+			ManagedMappingType declaringType,
+			CompositeType attrType,
+			String tableExpression,
+			String[] rootTableKeyColumnNames,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		return MappingModelCreationHelper.buildEmbeddedAttributeMapping(
+				attrName,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				dependantValue,
+				dependantColumnIndex,
+				declaringType,
+				attrType,
+				tableExpression,
+				rootTableKeyColumnNames,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess
+		);
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected AttributeMapping buildSingularAssociationAttributeMapping(
+			String attrName,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			EntityPersister declaringEntityPersister,
+			EntityType attrType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			MappingModelCreationProcess creationProcess) {
+		return MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
+				attrName,
+				navigableRole,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				declaringType,
+				declaringEntityPersister,
+				attrType,
+				propertyAccess,
+				cascadeStyle,
+				creationProcess
+		);
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected AttributeMapping buildPluralAttributeMapping(
+			String attrName,
+			int stateArrayPosition,
+			int fetchableIndex,
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess,
+			CascadeStyle cascadeStyle,
+			FetchMode fetchMode,
+			MappingModelCreationProcess creationProcess) {
+		return MappingModelCreationHelper.buildPluralAttributeMapping(
+				attrName,
+				stateArrayPosition,
+				fetchableIndex,
+				bootProperty,
+				declaringType,
+				propertyAccess,
+				cascadeStyle,
+				fetchMode,
+				creationProcess
+		);
 	}
 
 	@Override
@@ -5851,8 +5800,13 @@ public abstract class AbstractEntityPersister
 		return hasPartitionedSelectionMapping;
 	}
 
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecations
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
 	 * @deprecated With no replacement
@@ -6148,5 +6102,194 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		return true;
+	}
+
+
+
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// State built and stored here during instantiation, and only used in other
+	// phases of initialization
+	//		- postConstruct
+	//		- postInstantiate
+	//		- prepareMappingModel
+	//		- ...
+	//
+	// This is effectively bootstrap state that is kept around during runtime.
+	//
+	// Would be better to encapsulate and store this state relative to the
+	// `PersisterCreationContext` so it can get released after bootstrap
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Deprecated protected Expectation[] insertExpectations;
+	@Deprecated protected Expectation[] updateExpectations;
+	@Deprecated protected Expectation[] deleteExpectations;
+
+	@Deprecated protected boolean[] insertCallable;
+	@Deprecated protected boolean[] updateCallable;
+	@Deprecated protected boolean[] deleteCallable;
+
+	@Deprecated protected String[] customSQLInsert;
+	@Deprecated protected String[] customSQLUpdate;
+	@Deprecated protected String[] customSQLDelete;
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// State related to this we handle differently in 6+.  In other words, state
+	// that is no longer needed
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Deprecated private final EntityMetamodel entityMetamodel;
+
+	@Deprecated private final String[] subclassColumnAliasClosure;
+	@Deprecated private final String[] subclassFormulaAliasClosure;
+	@Deprecated private final Map<String,String[]> subclassPropertyAliases = new HashMap<>();
+
+	/**
+	 * @deprecated Hibernate no longer uses aliases to read from result sets
+	 */
+	@Deprecated	protected String[] getSubclassColumnAliasClosure() {
+		return subclassColumnAliasClosure;
+	}
+
+	/**
+	 * @deprecated Hibernate no longer uses aliases to read from result sets
+	 */
+	@Deprecated	protected String[] getSubclassFormulaAliasClosure() {
+		return subclassFormulaAliasClosure;
+	}
+
+	/**
+	 * @deprecated Hibernate no longer uses aliases to read from result sets
+	 */
+	@Deprecated	@Override
+	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
+		final String[] rawAliases = subclassPropertyAliases.get( propertyName );
+		if ( rawAliases == null ) {
+			return null;
+		}
+		else {
+			final String[] result = new String[rawAliases.length];
+			for ( int i = 0; i < rawAliases.length; i++ ) {
+				result[i] = new Alias( suffix ).toUnquotedAliasString( rawAliases[i] );
+			}
+			return result;
+		}
+	}
+
+	/**
+	 * Must be called by subclasses, at the end of their constructors
+	 *
+	 * @deprecated Hibernate no longer uses aliases to read from result sets
+	 */
+	@Deprecated	protected void initSubclassPropertyAliasesMap(PersistentClass model) throws MappingException {
+
+		// ALIASES
+		internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosure() );
+
+		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
+		if ( !entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
+			subclassPropertyAliases.put( ENTITY_ID, getIdentifierAliases() );
+			subclassPropertyColumnNames.put( ENTITY_ID, getIdentifierColumnNames() );
+		}
+
+		// aliases named identifier ( alias.idname )
+		if ( hasIdentifierProperty() ) {
+			subclassPropertyAliases.put( getIdentifierPropertyName(), getIdentifierAliases() );
+			subclassPropertyColumnNames.put( getIdentifierPropertyName(), getIdentifierColumnNames() );
+		}
+
+		// aliases for composite-id's
+		if ( getIdentifierType().isComponentType() ) {
+			// Fetch embedded identifiers property names from the "virtual" identifier component
+			final CompositeType componentId = (CompositeType) getIdentifierType();
+			final String[] idPropertyNames = componentId.getPropertyNames();
+			final String[] idAliases = getIdentifierAliases();
+			final String[] idColumnNames = getIdentifierColumnNames();
+
+			for ( int i = 0; i < idPropertyNames.length; i++ ) {
+				if ( entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
+					subclassPropertyAliases.put(
+							ENTITY_ID + "." + idPropertyNames[i],
+							new String[] {idAliases[i]}
+					);
+					subclassPropertyColumnNames.put(
+							ENTITY_ID + "." + getIdentifierPropertyName() + "." + idPropertyNames[i],
+							new String[] {idColumnNames[i]}
+					);
+				}
+//				if (hasIdentifierProperty() && !ENTITY_ID.equals( getIdentifierPropertyNames() ) ) {
+				if ( hasIdentifierProperty() ) {
+					subclassPropertyAliases.put(
+							getIdentifierPropertyName() + "." + idPropertyNames[i],
+							new String[] {idAliases[i]}
+					);
+					subclassPropertyColumnNames.put(
+							getIdentifierPropertyName() + "." + idPropertyNames[i],
+							new String[] {idColumnNames[i]}
+					);
+				}
+				else {
+					// embedded composite ids ( alias.idName1, alias.idName2 )
+					subclassPropertyAliases.put( idPropertyNames[i], new String[] {idAliases[i]} );
+					subclassPropertyColumnNames.put( idPropertyNames[i], new String[] {idColumnNames[i]} );
+				}
+			}
+		}
+
+		if ( entityMetamodel.isPolymorphic() ) {
+			subclassPropertyAliases.put( ENTITY_CLASS, new String[] {getDiscriminatorAlias()} );
+			subclassPropertyColumnNames.put( ENTITY_CLASS, new String[] {getDiscriminatorColumnName()} );
+		}
+
+	}
+
+	private void internalInitSubclassPropertyAliasesMap(String path, List<Property> properties) {
+		for (Property property : properties) {
+			final String name = path == null ? property.getName() : path + "." + property.getName();
+			if ( property.isComposite() ) {
+				Component component = (Component) property.getValue();
+				internalInitSubclassPropertyAliasesMap( name, component.getProperties() );
+			}
+
+			String[] aliases = new String[property.getColumnSpan()];
+			String[] cols = new String[property.getColumnSpan()];
+			int l = 0;
+			for ( Selectable selectable: property.getSelectables() ) {
+				Dialect dialect = getFactory().getJdbcServices().getDialect();
+				aliases[l] = selectable.getAlias( dialect, property.getValue().getTable() );
+				cols[l] = selectable.getText(dialect); // TODO: skip formulas?
+				l++;
+			}
+
+			subclassPropertyAliases.put( name, aliases );
+			subclassPropertyColumnNames.put( name, cols );
+		}
+
+	}
+
+	/**
+	 * Called by Hibernate Reactive
+	 *
+	 * @deprecated Hibernate no longer uses aliases to read from result sets
+	 */
+	@Deprecated	@SuppressWarnings("unused")
+	protected String[][] getLazyPropertyColumnAliases() {
+		return lazyPropertyColumnAliases;
+	}
+
+	/**
+	 * @deprecated Hibernate no longer uses aliases to read from result sets
+	 */
+	@Deprecated
+	public String getDiscriminatorAlias() {
+		return DISCRIMINATOR_ALIAS;
 	}
 }

@@ -13,7 +13,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.JavaType;
 import org.hibernate.query.Query;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -121,6 +123,7 @@ public class CharacterArrayIdTest {
 	@Table(name = "DemoEntity")
 	public static class DemoEntity {
 		@Id
+		@JavaType( CharacterArrayJavaType.class )
 		public Character[] id;
 		public String name;
 	}

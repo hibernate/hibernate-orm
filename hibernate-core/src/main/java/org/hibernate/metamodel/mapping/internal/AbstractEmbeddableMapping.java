@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -574,17 +575,59 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
+	public <X, Y> int breakDownJdbcValues(
+			Object domainValue,
+			int offset,
+			X x,
+			Y y,
+			JdbcValueBiConsumer<X, Y> valueConsumer, SharedSessionContractImplementor session) {
+		int span = 0;
+		if ( domainValue == null ) {
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attribute = attributeMappings.get( i );
+				span += attribute.breakDownJdbcValues( null, offset + span, x, y, valueConsumer, session );
+			}
+		}
+		else {
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attribute = attributeMappings.get( i );
+				final Object attributeValue = attribute.getValue( domainValue );
+				span += attribute.breakDownJdbcValues( attributeValue, offset + span, x, y, valueConsumer, session );
+			}
+		}
+		return span;
+	}
+
+	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final MutableAttributeMappingList attributes = attributeMappings;
-		final int size = attributes.size();
+		if ( value == null ) {
+			return null;
+		}
+		final int size = attributeMappings.size();
 		final Object[] result = new Object[ size ];
 		for ( int i = 0; i < size; i++ ) {
-			final AttributeMapping attributeMapping = attributes.get( i );
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			final Object o = attributeMapping.getValue( value );
 			result[i] = attributeMapping.disassemble( o, session );
 		}
 
 		return result;
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		final int size = attributeMappings.size();
+		if ( value == null ) {
+			for ( int i = 0; i < size; i++ ) {
+				attributeMappings.get( i ).addToCacheKey( cacheKey, null, session );
+			}
+		}
+		else {
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				attributeMapping.addToCacheKey( cacheKey, attributeMapping.getValue( value ), session );
+			}
+		}
 	}
 
 	@Override
@@ -595,11 +638,19 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			Y y,
 			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
-		final Object[] values = (Object[]) value;
 		int span = 0;
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping mapping = attributeMappings.get( i );
-			span += mapping.forEachDisassembledJdbcValue( values[i], span + offset, x, y, valuesConsumer, session );
+		if ( value == null ) {
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping mapping = attributeMappings.get( i );
+				span += mapping.forEachDisassembledJdbcValue( null, span + offset, x, y, valuesConsumer, session );
+			}
+		}
+		else {
+			final Object[] values = (Object[]) value;
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping mapping = attributeMappings.get( i );
+				span += mapping.forEachDisassembledJdbcValue( values[i], span + offset, x, y, valuesConsumer, session );
+			}
 		}
 		return span;
 	}
@@ -613,14 +664,24 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			JdbcValuesBiConsumer<X, Y> valuesConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
-
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			if ( attributeMapping instanceof PluralAttributeMapping ) {
-				continue;
+		if ( value == null ) {
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				if ( attributeMapping instanceof PluralAttributeMapping ) {
+					continue;
+				}
+				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
-			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-			span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
+		}
+		else {
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				if ( attributeMapping instanceof PluralAttributeMapping ) {
+					continue;
+				}
+				final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+				span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
+			}
 		}
 		return span;
 	}

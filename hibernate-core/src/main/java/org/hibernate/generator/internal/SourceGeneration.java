@@ -6,9 +6,7 @@
  */
 package org.hibernate.generator.internal;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
-import org.hibernate.Session;
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.dialect.Dialect;
@@ -19,8 +17,8 @@ import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.tuple.TimestampGenerators;
-import org.hibernate.tuple.ValueGenerator;
+import org.hibernate.type.descriptor.java.JavaType;
+
 import org.jboss.logging.Logger;
 
 import java.lang.reflect.Member;
@@ -59,25 +57,16 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 			SourceGeneration.class.getName()
 	);
 
-	private final Class<?> propertyType;
-	private final ValueGenerator<?> valueGenerator;
+	private final JavaType<?> propertyType;
+	private final CurrentTimestampGeneration.CurrentTimestampGeneratorDelegate valueGenerator;
 
 	public SourceGeneration(Source annotation, Member member, GeneratorCreationContext context) {
-		this( annotation.value(), context.getProperty().getType().getReturnedClass() );
+		this( annotation.value(), context.getProperty().getType().getReturnedClass(), context );
 	}
 
-	public SourceGeneration(SourceType sourceType, Class<?> propertyType) {
-		this.propertyType = propertyType;
-		switch ( sourceType ) {
-			case DB:
-				valueGenerator = this::generateValue;
-				break;
-			case VM:
-				valueGenerator = TimestampGenerators.get( propertyType );
-				break;
-			default:
-				throw new AssertionFailure( "unknown source type" );
-		}
+	public SourceGeneration(SourceType sourceType, Class<?> propertyType, GeneratorCreationContext context) {
+		this.propertyType = context.getDatabase().getTypeConfiguration().getJavaTypeRegistry().getDescriptor( propertyType );
+		this.valueGenerator = CurrentTimestampGeneration.getGeneratorDelegate( sourceType, propertyType, context );
 	}
 
 	/**
@@ -90,13 +79,12 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-		return valueGenerator.generateValue( session.asSessionImplementor(), owner, currentValue );
-	}
-
-	public Object generateValue(Session session, Object owner) {
-		SharedSessionContractImplementor implementor = (SharedSessionContractImplementor) session;
-		return implementor.getTypeConfiguration().getBasicTypeForJavaType( propertyType )
-				.getJavaTypeDescriptor().wrap( getCurrentTimestamp( implementor ), implementor );
+		if ( valueGenerator == null ) {
+			return propertyType.wrap( getCurrentTimestamp( session ), session );
+		}
+		else {
+			return valueGenerator.generate();
+		}
 	}
 
 	private Timestamp getCurrentTimestamp(SharedSessionContractImplementor session) {

@@ -89,10 +89,6 @@ import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
-import org.hibernate.query.sqm.sql.internal.DiscriminatorPathInterpretation;
-import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
-import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -101,7 +97,7 @@ import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
+import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -142,9 +138,10 @@ import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
+import org.hibernate.query.sqm.sql.internal.AnyDiscriminatorPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
-import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationTypePathInterpretation;
+import org.hibernate.query.sqm.sql.internal.DiscriminatorPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedExpression;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
@@ -382,21 +379,23 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
@@ -2905,7 +2904,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	protected void registerTypeUsage(DiscriminatorSqmPath path) {
+	protected void registerTypeUsage(EntityDiscriminatorSqmPath path) {
 		// When we encounter a discriminator path i.e. a use of `type( alias )`
 		// we have to resolve all subclass tables, otherwise we might get wrong results
 		// It might be worth deferring this process to the pruning phase when we start to prune subclass joins in more cases
@@ -4106,7 +4105,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return withTreatRestriction(
 				prepareReusablePath(
 						sqmPath,
-						() -> DiscriminatedAssociationTypePathInterpretation.from( sqmPath, this )
+						() -> AnyDiscriminatorPathInterpretation.from( sqmPath, this )
 				),
 				sqmPath
 		);
@@ -4160,7 +4159,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Object visitDiscriminatorPath(DiscriminatorSqmPath sqmPath) {
+	public Object visitDiscriminatorPath(EntityDiscriminatorSqmPath sqmPath) {
 		return prepareReusablePath(
 				sqmPath,
 				() -> {
@@ -4797,7 +4796,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.addAll( entityDescriptor.getSubclassEntityNames() );
 				return expression;
 			}
-			if ( wrappedPath instanceof DiscriminatorSqmPath ) {
+			if ( wrappedPath instanceof EntityDiscriminatorSqmPath ) {
 				// Note: If the columns that are accessed are not shared with other entities, we could avoid this wrapping
 				return createCaseExpression( wrappedPath, treatedPath.getTreatTarget(), expression );
 			}
@@ -4851,7 +4850,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, Set<String> subclassEntityNames) {
 		// Do what visitSelfInterpretingSqmPath does, except for calling preparingReusablePath
 		// as that would register a type usage for the table group that we don't want here
-		final DiscriminatorSqmPath discriminatorSqmPath = (DiscriminatorSqmPath) lhs.type();
+		final EntityDiscriminatorSqmPath discriminatorSqmPath = (EntityDiscriminatorSqmPath) lhs.type();
 		registerTypeUsage( discriminatorSqmPath );
 		final Expression typeExpression = DiscriminatorPathInterpretation.from( discriminatorSqmPath, this );
 		if ( subclassEntityNames.size() == 1 ) {
@@ -4948,10 +4947,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final Object value = literal.getLiteralValue();
 				final Object sqlLiteralValue;
 				// For converted query literals, we support both, the domain and relational java type
-				if ( value == null || valueConverter.getDomainJavaType().getJavaTypeClass().isInstance( value ) ) {
+				if ( value == null || valueConverter.getDomainJavaType().isInstance( value ) ) {
 					sqlLiteralValue = valueConverter.toRelationalValue( value );
 				}
-				else if ( valueConverter.getRelationalJavaType().getJavaTypeClass().isInstance( value ) ) {
+				else if ( valueConverter.getRelationalJavaType().isInstance( value ) ) {
 					sqlLiteralValue = value;
 				}
 				else if ( basicValuedMapping instanceof EntityDiscriminatorMapping ) {
@@ -4961,6 +4960,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqlLiteralValue = valueConverter.getRelationalJavaType().wrap(
 							value,
 							creationContext.getSessionFactory().getWrapperOptions()
+					);
+				}
+				// In HQL, number literals might not match the relational java type exactly,
+				// so we allow coercion between the number types
+				else if ( Number.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )
+						&& value instanceof Number ) {
+					sqlLiteralValue = valueConverter.getRelationalJavaType().coerce(
+							value,
+							creationContext.getSessionFactory()::getTypeConfiguration
 					);
 				}
 				else {
@@ -6518,13 +6526,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			JavaType<N> relationalJtd) {
 		return new QueryLiteral<>(
 				sqmEnumLiteral.getEnumValue().ordinal(),
-				new CustomType<>(
-						new EnumType<>(
-								enumJtd.getJavaTypeClass(),
-								new OrdinalEnumValueConverter<>( enumJtd, jdbcType, relationalJtd ),
-								typeConfiguration
-						),
-						typeConfiguration
+				new ConvertedBasicTypeImpl<>(
+						null,
+						"Query literal implicit Enum type descriptor",
+						jdbcType,
+						new OrdinalEnumValueConverter<>( enumJtd, jdbcType, relationalJtd )
 				)
 		);
 	}

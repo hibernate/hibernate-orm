@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.UUID;
@@ -124,6 +125,7 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( Time.class, SqlTypes.TIME );
 		workMap.put( Timestamp.class, SqlTypes.TIMESTAMP );
 		workMap.put( LocalTime.class, SqlTypes.TIME );
+		workMap.put( OffsetTime.class, SqlTypes.TIME_WITH_TIMEZONE );
 		workMap.put( LocalDate.class, SqlTypes.DATE );
 		workMap.put( LocalDateTime.class, SqlTypes.TIMESTAMP );
 		workMap.put( OffsetDateTime.class, SqlTypes.TIMESTAMP_WITH_TIMEZONE );
@@ -147,8 +149,8 @@ public class JdbcTypeJavaClassMappings {
 		// additional "common sense" registrations
 		workMap.put( Character.class, SqlTypes.CHAR );
 		workMap.put( char[].class, SqlTypes.VARCHAR );
-		workMap.put( Character[].class, SqlTypes.VARCHAR );
-		workMap.put( Byte[].class, SqlTypes.VARBINARY );
+//		workMap.put( Character[].class, SqlTypes.VARCHAR );
+//		workMap.put( Byte[].class, SqlTypes.VARBINARY );
 		workMap.put( java.util.Date.class, SqlTypes.TIMESTAMP );
 		workMap.put( Calendar.class, SqlTypes.TIMESTAMP );
 
@@ -181,6 +183,8 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( SqlTypes.DATE, java.sql.Date.class );
 		workMap.put( SqlTypes.TIME, Time.class );
 		workMap.put( SqlTypes.TIMESTAMP, Timestamp.class );
+		workMap.put( SqlTypes.TIME_WITH_TIMEZONE, OffsetTime.class );
+		workMap.put( SqlTypes.TIMESTAMP_WITH_TIMEZONE, OffsetDateTime.class );
 		workMap.put( SqlTypes.BLOB, Blob.class );
 		workMap.put( SqlTypes.CLOB, Clob.class );
 		workMap.put( SqlTypes.NCLOB, NClob.class );

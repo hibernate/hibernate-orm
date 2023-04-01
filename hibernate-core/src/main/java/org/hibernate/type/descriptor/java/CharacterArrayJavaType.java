@@ -13,10 +13,16 @@ import java.util.Arrays;
 
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
 
 /**
- * Descriptor for {@code Character[]} handling.
+ * Descriptor for {@code Character[]} handling, which disallows {@code null} elements.
+ * This {@link JavaType} is useful if the domain model uses {@code Character[]} and wants to map to {@link SqlTypes#VARCHAR}.
  *
  * @author Steve Ebersole
  */
@@ -51,6 +57,15 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 			hashCode = 31 * hashCode + aChar;
 		}
 		return hashCode;
+	}
+
+	@Override
+	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
+		// match legacy behavior
+		final JdbcType descriptor = indicators.getJdbcType( indicators.resolveJdbcTypeCode( SqlTypes.VARCHAR ) );
+		return descriptor instanceof AdjustableJdbcType
+				? ( (AdjustableJdbcType) descriptor ).resolveIndicatedType( indicators, this )
+				: descriptor;
 	}
 
 	@SuppressWarnings("unchecked")

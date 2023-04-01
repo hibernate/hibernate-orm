@@ -13,8 +13,10 @@ import java.lang.reflect.ParameterizedType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
+import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.List;
@@ -22,10 +24,12 @@ import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.ValueClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -35,6 +39,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -115,16 +120,26 @@ public class AttributeFactory {
 
 		if ( attributeMetadata instanceof PluralAttributeMetadata ) {
 			//noinspection rawtypes
-			return PluralAttributeBuilder.build( (PluralAttributeMetadata) attributeMetadata, metadataContext );
+			return PluralAttributeBuilder.build(
+					(PluralAttributeMetadata) attributeMetadata,
+					property.isGeneric(),
+					metadataContext
+			);
 		}
 
-		final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>) attributeMetadata;
-		final DomainType<Y> metaModelType = determineSimpleType( singularAttributeMetadata.getValueContext(), metadataContext );
+		final ValueContext valueContext = ( (SingularAttributeMetadata<X, Y>) attributeMetadata ).getValueContext();
+		final DomainType<Y> metaModelType = determineSimpleType( valueContext, metadataContext );
+		final JavaType<?> relationalJavaType = determineRelationalJavaType(
+				valueContext,
+				metaModelType,
+				metadataContext
+		);
 		return new SingularAttributeImpl<>(
 				ownerType,
 				attributeMetadata.getName(),
 				attributeMetadata.getAttributeClassification(),
 				metaModelType,
+				relationalJavaType,
 				attributeMetadata.getMember(),
 				false,
 				false,
@@ -220,7 +235,18 @@ public class AttributeFactory {
 	public static <Y> DomainType<Y> determineSimpleType(ValueContext typeContext, MetadataContext context) {
 		switch ( typeContext.getValueClassification() ) {
 			case BASIC: {
-				return context.resolveBasicType( typeContext.getJpaBindableType() );
+				Class returnedClass = typeContext.getJpaBindableType();
+				if ( returnedClass.isAssignableFrom( Object.class ) ) {
+					final SimpleValue simpleValue = (SimpleValue) typeContext.getHibernateValue();
+					if ( simpleValue.getTypeParameters() != null && typeContext.getAttributeMetadata()
+							.getOwnerType() instanceof EntityDomainType ) {
+						// Due to how generics work with Java, the type of generic fields will always
+						// be reported as Object. We need to resolve type based on the actual property
+						// value for basic attributes in entities which specify concrete type parameters.
+						returnedClass = simpleValue.getType().getReturnedClass();
+					}
+				}
+				return context.resolveBasicType( returnedClass );
 			}
 			case ENTITY: {
 				final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();
@@ -245,10 +271,12 @@ public class AttributeFactory {
 						.getJavaTypeRegistry()
 						.resolveDescriptor( anyType.getReturnedClass() );
 				return (DomainType<Y>) new AnyMappingDomainTypeImpl(
+						(Any) typeContext.getHibernateValue(),
 						anyType,
 						(JavaType<Class>) baseJtd,
 						context.getTypeConfiguration(),
-						context.getMetamodel()
+						context.getMetamodel(),
+						context.getRuntimeModelCreationContext().getSessionFactory()
 				);
 			}
 			case EMBEDDABLE: {
@@ -307,6 +335,21 @@ public class AttributeFactory {
 				throw new AssertionFailure( "Unknown type : " + typeContext.getValueClassification() );
 			}
 		}
+	}
+
+	private static JavaType<?> determineRelationalJavaType(
+			ValueContext typeContext,
+			DomainType<?> metaModelType,
+			MetadataContext context) {
+		if ( typeContext.getValueClassification() == ValueClassification.BASIC ) {
+			final ConverterDescriptor descriptor = ( (SimpleValue) typeContext.getHibernateValue() ).getJpaAttributeConverterDescriptor();
+			if ( descriptor != null ) {
+				return context.getJavaTypeRegistry().resolveDescriptor(
+						descriptor.getRelationalValueResolvedType().getErasedType()
+				);
+			}
+		}
+		return metaModelType.getExpressibleJavaType();
 	}
 
 	private static EntityPersister getDeclaringEntity(

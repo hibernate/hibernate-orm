@@ -30,6 +30,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
 import org.jboss.logging.Logger;
 
@@ -45,6 +46,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MappedSuperclass;
 
+import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.isOffsetTimeClass;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.useColumnForTimeZoneStorage;
 
 /**
@@ -484,11 +486,19 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				}
 			}
 			else if ( useColumnForTimeZoneStorage( element, context ) ) {
-				final Column column = createTimestampColumn( element, path, context );
-				columnOverride.put(
-						path + "." + AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME,
-						new Column[]{ column }
-				);
+				final Column column = createTemporalColumn( element, path, context );
+				if ( isOffsetTimeClass( element ) ) {
+					columnOverride.put(
+							path + "." + OffsetTimeCompositeUserType.LOCAL_TIME_NAME,
+							new Column[] { column }
+					);
+				}
+				else {
+					columnOverride.put(
+							path + "." + AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME,
+							new Column[] { column }
+					);
+				}
 				final Column offsetColumn = createTimeZoneColumn( element, column );
 				columnOverride.put(
 						path + "." + AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME,
@@ -527,7 +537,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 	}
 
-	private static Column createTimestampColumn(XAnnotatedElement element, String path, MetadataBuildingContext context) {
+	private static Column createTemporalColumn(XAnnotatedElement element, String path, MetadataBuildingContext context) {
 		int precision;
 		final Column annotatedColumn = element.getAnnotation( Column.class );
 		if ( annotatedColumn != null ) {

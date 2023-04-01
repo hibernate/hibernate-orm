@@ -76,7 +76,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 	private final DomainParameterXref domainParameterXref;
 	private final JdbcParameter sessionUidParameter;
 
-	TableBasedInsertHandler(
+	public TableBasedInsertHandler(
 			SqmInsertStatement<?> sqmInsert,
 			DomainParameterXref domainParameterXref,
 			TemporaryTable entityTable,
@@ -116,7 +116,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 		return resolveDelegate( executionContext ).execute( executionContextAdapter );
 	}
 
-	private ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
+	protected ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
 		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( getSqmInsertStatement().getTarget().getEntityName() );
@@ -319,7 +319,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 			collectTableReference( insertingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );
 		}
 
-		return new InsertExecutionDelegate(
+		return buildExecutionDelegate(
 				sqmInsertStatement,
 				converterDelegate,
 				entityTable,
@@ -329,6 +329,42 @@ public class TableBasedInsertHandler implements InsertHandler {
 				insertingTableGroup,
 				tableReferenceByAlias,
 				targetPathColumns,
+				insertStatement,
+				parameterResolutions,
+				sessionUidParameter,
+				paramTypeResolutions,
+				executionContext
+		);
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected ExecutionDelegate buildExecutionDelegate(
+			SqmInsertStatement<?> sqmInsert,
+			MultiTableSqmMutationConverter sqmConverter,
+			TemporaryTable entityTable,
+			AfterUseAction afterUseAction,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			DomainParameterXref domainParameterXref,
+			TableGroup insertingTableGroup,
+			Map<String, TableReference> tableReferenceByAlias,
+			List<Assignment> assignments,
+			InsertSelectStatement insertStatement,
+			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
+			JdbcParameter sessionUidParameter,
+			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
+			DomainQueryExecutionContext executionContext) {
+		return new InsertExecutionDelegate(
+				sqmInsertStatement,
+				sqmConverter,
+				entityTable,
+				afterUseAction,
+				sessionUidAccess,
+				domainParameterXref,
+				insertingTableGroup,
+				tableReferenceByAlias,
+				assignments,
 				insertStatement,
 				parameterResolutions,
 				sessionUidParameter,

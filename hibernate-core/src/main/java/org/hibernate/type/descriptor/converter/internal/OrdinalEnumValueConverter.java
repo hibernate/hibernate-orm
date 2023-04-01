@@ -40,9 +40,9 @@ public class OrdinalEnumValueConverter<E extends Enum<E>, N extends Number> impl
 		return enumJavaType.fromOrdinal( relationalForm == null ? null : relationalForm.intValue() );
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public N toRelationalValue(E domainForm) {
-		return (N) enumJavaType.toOrdinal( domainForm );
+		return relationalJavaType.wrap( enumJavaType.toOrdinal( domainForm ), null );
 	}
 
 	@Override

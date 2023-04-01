@@ -47,6 +47,7 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
+import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -436,8 +437,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 								getTypeConfiguration(),
 								getDialect(),
 								registeredElementType,
-								column instanceof ColumnTypeInformation ? (ColumnTypeInformation) column : null
-						);
+								column instanceof ColumnTypeInformation ? (ColumnTypeInformation) column : null,
+								this
+				);
 				if ( registeredType != null ) {
 					getTypeConfiguration().getBasicTypeRegistry().register( registeredType );
 
@@ -855,6 +857,19 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Internal
+	public boolean isDisallowedWrapperArray() {
+		return getBuildingContext().getBuildingOptions().getWrapperArrayHandling() == WrapperArrayHandling.DISALLOW
+				&& !isLob()
+				&& ( explicitJavaTypeAccess == null || explicitJavaTypeAccess.apply( getTypeConfiguration() ) == null )
+				&& isWrapperByteOrCharacterArray();
+	}
+
+	private boolean isWrapperByteOrCharacterArray() {
+		final Class<?> javaTypeClass = getResolution().getDomainJavaType().getJavaTypeClass();
+		return javaTypeClass == Byte[].class || javaTypeClass == Character[].class;
 	}
 
 	/**

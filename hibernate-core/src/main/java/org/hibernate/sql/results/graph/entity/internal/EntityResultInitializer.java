@@ -8,12 +8,14 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.LockMode;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
  * Initializer for cases where the entity is a root domain selection
@@ -55,6 +57,18 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 	@Override
 	public String toString() {
 		return CONCRETE_NAME + "(" + getNavigablePath() + ")";
+	}
+
+	@Override
+	protected Object getEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState) {
+		final ExecutionContext executionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getExecutionContext();
+		final Object entityInstanceFromExecutionContext = executionContext.getEntityInstance();
+		if ( entityInstanceFromExecutionContext != null
+				&& getEntityKey().getIdentifier().equals( executionContext.getEntityId() ) ) {
+			return entityInstanceFromExecutionContext;
+		}
+		return null;
 	}
 
 }

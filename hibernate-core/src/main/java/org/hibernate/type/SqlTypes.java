@@ -440,9 +440,9 @@ public class SqlTypes {
 	 * JDBC} timezone.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_INSTANT_JDBC_TYPE
-	 * @see org.hibernate.type.descriptor.jdbc.InstantJdbcType
-	 * @see org.hibernate.type.descriptor.jdbc.InstantAsTimestampJdbcType
-	 * @see org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType
+	 * @see org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType
+	 * @see org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType
+	 * @see org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType
 	 */
 	public static final int TIMESTAMP_UTC = 3003;
 
@@ -478,6 +478,18 @@ public class SqlTypes {
 	 */
 	@Internal
 	public static final int MATERIALIZED_NCLOB = 3006;
+
+	/**
+	 * A type code representing the generic SQL type {@code TIME},
+	 * where the value is given in UTC, instead of in the system or
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
+	 * JDBC} timezone.
+	 *
+	 * @see org.hibernate.annotations.TimeZoneStorageType#NORMALIZE_UTC
+	 * @see org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType
+	 * @see org.hibernate.type.descriptor.jdbc.TimeUtcAsJdbcTimeJdbcType
+	 */
+	public static final int TIME_UTC = 3007;
 
 	// Interval types
 
@@ -689,6 +701,8 @@ public class SqlTypes {
 		switch ( typeCode ) {
 			case DATE:
 			case TIME:
+			case TIME_WITH_TIMEZONE:
+			case TIME_UTC:
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 			case TIMESTAMP_UTC:
@@ -728,6 +742,8 @@ public class SqlTypes {
 	public static boolean hasTimePart(int typeCode) {
 		switch ( typeCode ) {
 			case TIME:
+			case TIME_WITH_TIMEZONE:
+			case TIME_UTC:
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 			case TIMESTAMP_UTC:

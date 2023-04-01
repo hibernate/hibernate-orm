@@ -57,6 +57,18 @@ public abstract class AbstractStateArrayContributorMapping
 		);
 	}
 
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected AbstractStateArrayContributorMapping(AbstractStateArrayContributorMapping original) {
+		super( original );
+		this.attributeMetadata = original.attributeMetadata;
+		this.fetchTiming = original.fetchTiming;
+		this.fetchStyle = original.fetchStyle;
+		this.stateArrayPosition = original.stateArrayPosition;
+	}
+
+
 	@Override
 	public int getStateArrayPosition() {
 		return stateArrayPosition;

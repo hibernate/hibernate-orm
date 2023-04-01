@@ -80,15 +80,24 @@ import org.hibernate.type.Type;
  *     </li>
  * </ol>
  *
- * @see QueryableCollection
  * @see PersistentCollection
+ * @see PluralAttributeMapping
  *
  * @author Gavin King
  */
 public interface CollectionPersister extends Restrictable {
+	/**
+	 * The NavigableRole for this collection.
+	 */
 	NavigableRole getNavigableRole();
 
-	String getRole();
+	default String getRole() {
+		return getNavigableRole().getFullPath();
+	}
+
+	default PluralAttributeMapping getAttributeMapping() {
+		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
+	}
 
 	/**
 	 * Get the persister of the entity that "owns" this collection
@@ -123,22 +132,6 @@ public interface CollectionPersister extends Restrictable {
 	 */
 	CacheEntryStructure getCacheEntryStructure();
 
-	/**
-	 * Get the associated {@code Type}
-	 */
-	CollectionType getCollectionType();
-	/**
-	 * Get the "key" type (the type of the foreign key)
-	 */
-	Type getKeyType();
-	/**
-	 * Get the "index" type for a list or map (optional operation)
-	 */
-	Type getIndexType();
-	/**
-	 * Get the "element" type
-	 */
-	Type getElementType();
 	/**
 	 * Return the element class of an array, or null otherwise
 	 */
@@ -246,11 +239,6 @@ public interface CollectionPersister extends Restrictable {
 	}
 
 	/**
-	 * Get the type of the surrogate key
-	 */
-	Type getIdentifierType();
-
-	/**
 	 * Does this collection implement "orphan delete"?
 	 */
 	boolean hasOrphanDelete();
@@ -301,10 +289,6 @@ public interface CollectionPersister extends Restrictable {
 	SessionFactoryImplementor getFactory();
 
 	boolean isAffectedByEnabledFilters(SharedSessionContractImplementor session);
-
-	default PluralAttributeMapping getAttributeMapping() {
-		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
-	}
 
 	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
@@ -408,4 +392,54 @@ public interface CollectionPersister extends Restrictable {
 	 */
 	@Deprecated( since = "6", forRemoval = true )
 	String getIdentifierColumnAlias(String suffix);
+
+	/**
+	 * Get the associated {@code Type}
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here (generally), {@link PluralAttributeMapping}
+	 */
+	@Deprecated( forRemoval = true )
+	CollectionType getCollectionType();
+
+	/**
+	 * Get the "key" type (the type of the foreign key)
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here, {@link PluralAttributeMapping#getKeyDescriptor()}
+	 */
+	@Deprecated( forRemoval = true )
+	Type getKeyType();
+
+	/**
+	 * Get the "index" type for a list or map (optional operation)
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here, {@link PluralAttributeMapping#getIndexDescriptor()}
+	 */
+	@Deprecated( forRemoval = true )
+	Type getIndexType();
+
+	/**
+	 * Get the "element" type
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here, {@link PluralAttributeMapping#getElementDescriptor()}
+	 */
+	@Deprecated( forRemoval = true )
+	Type getElementType();
+
+	/**
+	 * Get the type of the surrogate key
+	 *
+	 * @deprecated Hibernate is moving away from {@link Type}.  Corresponding
+	 * {@linkplain org.hibernate.metamodel.mapping mapping metamodel} calls should
+	 * be used instead - here, {@link PluralAttributeMapping#getIdentifierDescriptor()}
+	 */
+	@Deprecated( forRemoval = true )
+	Type getIdentifierType();
 }

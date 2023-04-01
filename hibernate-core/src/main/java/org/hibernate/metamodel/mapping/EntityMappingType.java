@@ -19,6 +19,7 @@ import org.hibernate.Internal;
 import org.hibernate.boot.jaxb.mapping.JaxbEntity;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -457,6 +458,12 @@ public interface EntityMappingType
 	 * Access to performing multi-value natural-id database selection.  This is per-entity in the hierarchy
 	 */
 	MultiNaturalIdLoader<?> getMultiNaturalIdLoader();
+
+	/**
+	 * Load an instance of the persistent class, by a unique key other
+	 * than the primary key.
+	 */
+	Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

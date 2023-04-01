@@ -72,7 +72,6 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
-import org.hibernate.type.descriptor.jdbc.InstantAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -195,6 +194,10 @@ public class CockroachLegacyDialect extends Dialect {
 			case BLOB:
 				return "bytes";
 
+			// We do not use the time with timezone type because PG deprecated it and it lacks certain operations like subtraction
+//			case TIME_UTC:
+//				return columnType( TIME_WITH_TIMEZONE );
+
 			case TIMESTAMP_UTC:
 				return columnType( TIMESTAMP_WITH_TIMEZONE );
 
@@ -269,6 +272,12 @@ public class CockroachLegacyDialect extends Dialect {
 						break;
 				}
 				break;
+			case TIME:
+				// The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
+				if ( "timetz".equals( columnTypeName ) ) {
+					jdbcTypeCode = TIME_UTC;
+				}
+				break;
 			case TIMESTAMP:
 				// The PostgreSQL JDBC driver reports TIMESTAMP for timestamptz, but we use it only for mapping Instant
 				if ( "timestamptz".equals( columnTypeName ) ) {
@@ -324,7 +333,8 @@ public class CockroachLegacyDialect extends Dialect {
 	protected void contributeCockroachTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-		jdbcTypeRegistry.addDescriptor( TIMESTAMP_UTC, InstantAsTimestampWithTimeZoneJdbcType.INSTANCE );
+		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
+		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
@@ -423,7 +433,13 @@ public class CockroachLegacyDialect extends Dialect {
 
 		functionContributions.getFunctionRegistry().register(
 				"format",
-				new FormatFunction( "experimental_strftime", functionContributions.getTypeConfiguration() )
+				new FormatFunction(
+						"experimental_strftime",
+						false,
+						true,
+						false,
+						functionContributions.getTypeConfiguration()
+				)
 		);
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "string" );
@@ -757,22 +773,30 @@ public class CockroachLegacyDialect extends Dialect {
 		if ( unit == null ) {
 			return "(?3-?2)";
 		}
-		switch (unit) {
-			case YEAR:
-				return "(extract(year from ?3)-extract(year from ?2))";
-			case QUARTER:
-				return "(extract(year from ?3)*4-extract(year from ?2)*4+extract(month from ?3)//3-extract(month from ?2)//3)";
-			case MONTH:
-				return "(extract(year from ?3)*12-extract(year from ?2)*12+extract(month from ?3)-extract(month from ?2))";
-		}
-		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP ) {
+		if ( toTemporalType == TemporalType.DATE && fromTemporalType == TemporalType.DATE ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
-			return "(?3-?2)" + DAY.conversionFactor( unit, this );
+			switch ( unit ) {
+				case YEAR:
+				case MONTH:
+				case QUARTER:
+					// age only supports timestamptz, so we have to cast the date expressions
+					return "extract(" + translateDurationField( unit ) + " from age(cast(?3 as timestamptz),cast(?2 as timestamptz)))";
+				default:
+					return "(?3-?2)" + DAY.conversionFactor( unit, this );
+			}
 		}
 		else {
 			switch (unit) {
+				case YEAR:
+					return "extract(year from ?3-?2)";
+				case QUARTER:
+					return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
+				case MONTH:
+					return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+				// Prior to v20, Cockroach didn't support extracting from an interval/duration,
+				// so we use the extract_duration function
 				case WEEK:
 					return "extract_duration(hour from ?3-?2)/168";
 				case DAY:

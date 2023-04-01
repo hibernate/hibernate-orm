@@ -155,14 +155,7 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public QueryImplementor<R> setFirstResult(int startPosition) {
-		getSession().checkOpen();
-
-		if ( startPosition < 0 ) {
-			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
-		}
-
-		getQueryOptions().getLimit().setFirstRow( startPosition );
-
+		super.setFirstResult( startPosition );
 		return this;
 	}
 

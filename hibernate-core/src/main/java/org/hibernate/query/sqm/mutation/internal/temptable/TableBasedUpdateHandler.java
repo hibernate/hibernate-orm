@@ -62,7 +62,7 @@ public class TableBasedUpdateHandler
 
 	private final EntityPersister entityDescriptor;
 
-	TableBasedUpdateHandler(
+	public TableBasedUpdateHandler(
 			SqmUpdateStatement<?> sqmUpdate,
 			DomainParameterXref domainParameterXref,
 			TemporaryTable idTable,
@@ -102,7 +102,7 @@ public class TableBasedUpdateHandler
 		return resolveDelegate( executionContext ).execute( executionContextAdapter );
 	}
 
-	private ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
+	protected ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
 		final MappingMetamodel domainModel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( getSqmDeleteOrUpdateStatement().getTarget().getEntityName() );
@@ -207,7 +207,7 @@ public class TableBasedUpdateHandler
 			collectTableReference( updatingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );
 		}
 
-		return new UpdateExecutionDelegate(
+		return buildExecutionDelegate(
 				converterDelegate,
 				idTable,
 				afterUseAction,
@@ -223,18 +223,44 @@ public class TableBasedUpdateHandler
 		);
 	}
 
+	protected UpdateExecutionDelegate buildExecutionDelegate(
+			MultiTableSqmMutationConverter sqmConverter,
+			TemporaryTable idTable,
+			AfterUseAction afterUseAction,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			DomainParameterXref domainParameterXref,
+			TableGroup updatingTableGroup,
+			Map<String, TableReference> tableReferenceByAlias,
+			List<Assignment> assignments,
+			Predicate suppliedPredicate,
+			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
+			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
+			DomainQueryExecutionContext executionContext) {
+		return new UpdateExecutionDelegate(
+				sqmConverter,
+				idTable,
+				afterUseAction,
+				sessionUidAccess,
+				domainParameterXref,
+				updatingTableGroup,
+				tableReferenceByAlias,
+				assignments,
+				suppliedPredicate,
+				parameterResolutions,
+				paramTypeResolutions,
+				executionContext
+		);
+	}
 
-	private void collectTableReference(
+	protected void collectTableReference(
 			TableReference tableReference,
 			BiConsumer<String, TableReference> consumer) {
 		consumer.accept( tableReference.getIdentificationVariable(), tableReference );
 	}
 
-	private void collectTableReference(
+	protected void collectTableReference(
 			TableReferenceJoin tableReferenceJoin,
 			BiConsumer<String, TableReference> consumer) {
 		collectTableReference( tableReferenceJoin.getJoinedTableReference(), consumer );
 	}
-
-
 }

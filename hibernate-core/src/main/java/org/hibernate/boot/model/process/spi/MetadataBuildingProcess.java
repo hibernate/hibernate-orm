@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,10 +63,13 @@ import org.hibernate.mapping.Table;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.WrapperArrayHandling;
+import org.hibernate.type.descriptor.java.ByteArrayJavaType;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
@@ -603,6 +607,21 @@ public class MetadataBuildingProcess {
 			}
 		};
 
+		if ( options.getWrapperArrayHandling() == WrapperArrayHandling.LEGACY ) {
+			typeConfiguration.getJavaTypeRegistry().addDescriptor( ByteArrayJavaType.INSTANCE );
+			typeConfiguration.getJavaTypeRegistry().addDescriptor( CharacterArrayJavaType.INSTANCE );
+			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+
+			basicTypeRegistry.addTypeReferenceRegistrationKey(
+					StandardBasicTypes.CHARACTER_ARRAY.getName(),
+					Character[].class.getName(), "Character[]"
+			);
+			basicTypeRegistry.addTypeReferenceRegistrationKey(
+					StandardBasicTypes.BINARY_WRAPPER.getName(),
+					Byte[].class.getName(), "Byte[]"
+					);
+		}
+
 		// add Dialect contributed types
 		final Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
@@ -687,7 +706,11 @@ public class MetadataBuildingProcess {
 
 		final JdbcType timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );
 		if ( timestampWithTimeZoneOverride != null ) {
-			adaptToDefaultTimeZoneStorage( typeConfiguration, timestampWithTimeZoneOverride );
+			adaptTimestampTypesToDefaultTimeZoneStorage( typeConfiguration, timestampWithTimeZoneOverride );
+		}
+		final JdbcType timeWithTimeZoneOverride = getTimeWithTimeZoneOverride( options, jdbcTypeRegistry );
+		if ( timeWithTimeZoneOverride != null ) {
+			adaptTimeTypesToDefaultTimeZoneStorage( typeConfiguration, timeWithTimeZoneOverride );
 		}
 		final int preferredSqlTypeCodeForInstant = getPreferredSqlTypeCodeForInstant( serviceRegistry );
 		if ( preferredSqlTypeCodeForInstant != SqlTypes.TIMESTAMP_UTC ) {
@@ -728,7 +751,25 @@ public class MetadataBuildingProcess {
 		);
 	}
 
-	private static void adaptToDefaultTimeZoneStorage(
+	private static void adaptTimeTypesToDefaultTimeZoneStorage(
+			TypeConfiguration typeConfiguration,
+			JdbcType timestampWithTimeZoneOverride) {
+		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(
+				javaTypeRegistry.getDescriptor( OffsetTime.class ),
+				timestampWithTimeZoneOverride,
+				"OffsetTime"
+		);
+		basicTypeRegistry.register(
+				offsetDateTimeType,
+				"org.hibernate.type.OffsetTimeType",
+				OffsetTime.class.getSimpleName(),
+				OffsetTime.class.getName()
+		);
+	}
+
+	private static void adaptTimestampTypesToDefaultTimeZoneStorage(
 			TypeConfiguration typeConfiguration,
 			JdbcType timestampWithTimeZoneOverride) {
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
@@ -755,6 +796,19 @@ public class MetadataBuildingProcess {
 				ZonedDateTime.class.getSimpleName(),
 				ZonedDateTime.class.getName()
 		);
+	}
+
+	private static JdbcType getTimeWithTimeZoneOverride(MetadataBuildingOptions options, JdbcTypeRegistry jdbcTypeRegistry) {
+		switch ( options.getDefaultTimeZoneStorage() ) {
+			case NORMALIZE:
+				// For NORMALIZE, we replace the standard types that use TIME_WITH_TIMEZONE to use TIME
+				return jdbcTypeRegistry.getDescriptor( Types.TIME );
+			case NORMALIZE_UTC:
+				// For NORMALIZE_UTC, we replace the standard types that use TIME_WITH_TIMEZONE to use TIME_UTC
+				return jdbcTypeRegistry.getDescriptor( SqlTypes.TIME_UTC );
+			default:
+				return null;
+		}
 	}
 
 	private static JdbcType getTimestampWithTimeZoneOverride(MetadataBuildingOptions options, JdbcTypeRegistry jdbcTypeRegistry) {

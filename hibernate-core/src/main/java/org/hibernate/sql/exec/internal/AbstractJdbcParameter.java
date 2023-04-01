@@ -6,9 +6,11 @@
  */
 package org.hibernate.sql.exec.internal;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -24,6 +26,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -152,6 +155,31 @@ public abstract class AbstractJdbcParameter
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return value;
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		final BasicValueConverter converter = jdbcMapping.getValueConverter();
+
+		final Serializable disassemble;
+		final int hashCode;
+		if ( converter == null ) {
+			final JavaType javaTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
+			disassemble = javaTypeDescriptor.getMutabilityPlan().disassemble( value, session );
+			hashCode = javaTypeDescriptor.extractHashCode( value );
+		}
+		else {
+			final Object relationalValue = converter.toRelationalValue( value );
+			final JavaType relationalJavaType = converter.getRelationalJavaType();
+			disassemble = relationalJavaType.getMutabilityPlan().disassemble( relationalValue, session );
+			hashCode = relationalJavaType.extractHashCode( relationalValue );
+		}
+		cacheKey.addValue( disassemble );
+		cacheKey.addHashCode( hashCode );
 	}
 
 	@Override

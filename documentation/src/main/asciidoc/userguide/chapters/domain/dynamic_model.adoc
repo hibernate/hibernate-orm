@@ -1,9 +1,9 @@
 [[dynamic-model]]
 === Dynamic Model
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:example-dir-dynamic: {documentation-project-dir}/src/test/java/org/hibernate/userguide/mapping/dynamic
-:example-dir-resources: {documentation-project-dir}/src/test/resources/org/hibernate/userguide/mapping/dynamic
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-dynamic: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/dynamic
+:example-dir-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/mapping/dynamic
 :extrasdir: extras
 
 [IMPORTANT]

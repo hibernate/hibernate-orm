@@ -71,6 +71,7 @@ dependencies {
     testRuntimeOnly libs.byteBuddy
     testRuntimeOnly testLibs.weld
     testRuntimeOnly testLibs.wildFlyTxnClient
+    testRuntimeOnly jakartaLibs.jsonb
     testRuntimeOnly libs.jackson
     testRuntimeOnly libs.jacksonXml
     testRuntimeOnly libs.jacksonJsr310

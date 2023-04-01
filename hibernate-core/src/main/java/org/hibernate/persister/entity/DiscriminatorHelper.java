@@ -27,6 +27,10 @@ public class DiscriminatorHelper {
 	public static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
 	public static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
 
+	/**
+	 * The underlying BasicType as the "JDBC mapping" between the relational {@link org.hibernate.type.descriptor.java.JavaType}
+	 * and the {@link org.hibernate.type.descriptor.jdbc.JdbcType}.
+	 */
 	static BasicType<?> getDiscriminatorType(PersistentClass persistentClass) {
 		Type discriminatorType = persistentClass.getDiscriminator().getType();
 		if ( discriminatorType instanceof BasicType ) {

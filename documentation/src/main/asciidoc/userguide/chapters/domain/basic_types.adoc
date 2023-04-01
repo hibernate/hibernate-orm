@@ -1,13 +1,12 @@
 [[basic]]
 === Basic values
 :root-project-dir: ../../../../../../..
-:documentation-project-dir: {root-project-dir}/documentation
-:documentation-example-base: {documentation-project-dir}/src/test/
-:example-dir-model: {documentation-project-dir}/src/main/java/org/hibernate/userguide/model
-:example-dir-basic-mapping: {documentation-example-base}/java/org/hibernate/userguide/mapping
-:example-dir-resources: {documentation-example-base}/resources/org/hibernate/userguide/
+:testing-project-dir: {root-project-dir}/hibernate-testing
+:example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test
+:example-dir-basic-mapping: {core-test-base}/java/org/hibernate/orm/test/mapping
+:example-dir-resources: {core-test-base}/resources/org/hibernate/orm/test/
 :example-dir-generated: {core-test-base}/java/org/hibernate/orm/test/mapping/generated
 :example-dir-converter: {core-test-base}/java/org/hibernate/orm/test/mapping/converted/converter
 :extrasdir: extras
@@ -689,7 +688,11 @@ See <<basic-nationalized>> for details on mapping strings using nationalized cha
 [[basic-chararray]]
 ==== Character arrays
 
-By default, Hibernate maps `Character[]` and `char[]` to the `VARCHAR` JDBC type.
+By default, Hibernate maps `char[]` to the `VARCHAR` JDBC type.
+Since `Character[]` can contain null elements, it is mapped as <<basic-mapping-array,basic array type>> instead.
+Prior to Hibernate 6.2, also `Character[]` mapped to `VARCHAR`, yet disallowed `null` elements.
+To continue mapping `Character[]` to the `VARCHAR` JDBC type, or for LOBs mapping to the `CLOB` JDBC type,
+it is necessary to annotate the persistent attribute with `@JavaType( CharacterArrayJavaType.class )`.
 
 [[basic-string-example-implicit]]
 .Mapping Character
@@ -872,8 +875,11 @@ include::{example-dir-basic-mapping}/basic/NClobCharArrayTest.java[tags=basic-nc
 [[basic-bytearray]]
 ==== Byte array
 
-By default, Hibernate maps values of type `byte[]` and `Byte[]` to the JDBC type
-`VARBINARY`.
+By default, Hibernate maps `byte[]` to the `VARBINARY` JDBC type.
+Since `Byte[]` can contain null elements, it is mapped as <<basic-mapping-array,basic array type>> instead.
+Prior to Hibernate 6.2, also `Byte[]` mapped to `VARBINARY`, yet disallowed `null` elements.
+To continue mapping `Byte[]` to the `VARBINARY` JDBC type, or for LOBs mapping to the `BLOB` JDBC type,
+it is necessary to annotate the persistent attribute with `@JavaType( ByteArrayJavaType.class )`.
 
 [[basic-bytearray-example]]
 .Mapping arrays of bytes

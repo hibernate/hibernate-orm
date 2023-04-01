@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -33,7 +34,7 @@ import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
+import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
@@ -41,7 +42,6 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
 import org.hibernate.spi.NavigablePath;
@@ -52,7 +52,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -498,10 +497,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
 		final Object proxy = getProxy( persistenceContext );
-		final Object entityInstanceFromExecutionContext =
-				rowProcessingState.getJdbcValuesSourceProcessingState().getExecutionContext().getEntityInstance();
+		final Object entityInstanceFromExecutionContext = getEntityInstanceFromExecutionContext( rowProcessingState );
 		if ( isProxyInstance( proxy ) ) {
-			if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
+			if ( entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -518,7 +516,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					this.isInitialized = true;
 				}
 			}
-			else if ( useEntityInstanceFromExecutionContext( entityInstanceFromExecutionContext, persistenceContext.getSession() ) ) {
+			else if ( entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
@@ -532,13 +530,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private boolean useEntityInstanceFromExecutionContext(
-			Object entityInstanceFromExecutionContext,
-			SharedSessionContractImplementor session) {
-		return this instanceof EntityResultInitializer
-			&& entityInstanceFromExecutionContext != null
-			&& entityKey.getIdentifier()
-				.equals( entityDescriptor.getIdentifier( entityInstanceFromExecutionContext, session ) );
+	protected Object getEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState) {
+		return null;
 	}
 
 	private void upgradeLockMode(RowProcessingState rowProcessingState) {
@@ -563,18 +556,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	private boolean isExistingEntityInitialized(Object existingEntity) {
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entityInstance );
-		if ( lazyInitializer != null ) {
-			return !lazyInitializer.isUninitialized();
-		}
-		else if ( isPersistentAttributeInterceptable( existingEntity ) ) {
-			final PersistentAttributeInterceptor persistentAttributeInterceptor =
-					asPersistentAttributeInterceptable( entityInstance ).$$_hibernate_getInterceptor();
-			return persistentAttributeInterceptor != null
-				&& !( persistentAttributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor );
-		}
-
-		return true;
+		return Hibernate.isInitialized( existingEntity );
 	}
 
 	/**
@@ -670,7 +652,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	protected Object instantiateEntity(Object entityIdentifier, SharedSessionContractImplementor session) {
-		final Object instance = session.instantiate( concreteDescriptor.getEntityName(), entityKey.getIdentifier() );
+		final Object instance = session.instantiate( concreteDescriptor, entityKey.getIdentifier() );
 		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Created new entity instance [%s] : %s",
@@ -723,8 +705,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
 		if ( !missing && !isInitialized ) {
-			preLoad( rowProcessingState );
-
 			final LazyInitializer lazyInitializer = extractLazyInitializer( entityInstance );
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
@@ -814,9 +794,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 
-		entityDescriptor.setIdentifier( toInitialize, entityIdentifier, session );
-
 		resolvedEntityState = extractConcreteTypeStateValues( rowProcessingState );
+
+		preLoad( rowProcessingState );
 
 		if ( isPersistentAttributeInterceptable(toInitialize) ) {
 			PersistentAttributeInterceptor persistentAttributeInterceptor =
@@ -869,6 +849,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					toLoggableString( getNavigablePath(), entityIdentifier )
 			);
 		}
+
+		assert concreteDescriptor.getIdentifier( entityInstance, session ) != null;
 
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
@@ -1094,6 +1076,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			preLoadEvent.reset();
 
 			preLoadEvent.setEntity( entityInstance )
+					.setState( resolvedEntityState )
 					.setId( entityKey.getIdentifier() )
 					.setPersister( concreteDescriptor );
 

@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
@@ -18,12 +19,16 @@ import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.descriptor.converter.internal.ArrayConverter;
 import org.hibernate.type.BasicArrayType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.ConvertedBasicArrayType;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -51,7 +56,23 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			BasicType<T> elementType,
-			ColumnTypeInformation columnTypeInformation) {
+			ColumnTypeInformation columnTypeInformation,
+			JdbcTypeIndicators stdIndicators) {
+		if ( stdIndicators.isLob() ) {
+			final Class<?> javaTypeClass = getJavaTypeClass();
+			if ( javaTypeClass == Byte[].class ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve(
+						ByteArrayJavaType.INSTANCE,
+						ByteArrayJavaType.INSTANCE.getRecommendedJdbcType( stdIndicators )
+				);
+			}
+			if ( javaTypeClass == Character[].class ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve(
+						CharacterArrayJavaType.INSTANCE,
+						CharacterArrayJavaType.INSTANCE.getRecommendedJdbcType( stdIndicators )
+				);
+			}
+		}
 		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
 		if ( elementType instanceof BasicPluralType<?, ?> || elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
 			return null;
@@ -65,21 +86,48 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			// Register the array type as that will be resolved in the next step
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( arrayJavaType );
 		}
-		return typeConfiguration.standardBasicTypeForJavaType(
-				arrayJavaType.getJavaType(),
-				javaType -> {
-					JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
-					if ( arrayJdbcType instanceof ArrayJdbcType ) {
-						arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
-								typeConfiguration,
-								dialect,
-								elementType,
-								columnTypeInformation
-						);
-					}
-					return new BasicArrayType<>( elementType, arrayJdbcType, javaType );
+		//noinspection unchecked
+		final BasicValueConverter<Object, Object> valueConverter = (BasicValueConverter<Object, Object>) elementType.getValueConverter();
+		if ( valueConverter == null ) {
+			final Function<JavaType<T[]>, BasicType<T[]>> creator = javaType -> {
+				JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
+				if ( arrayJdbcType instanceof ArrayJdbcType ) {
+					arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
+							typeConfiguration,
+							dialect,
+							elementType,
+							columnTypeInformation
+					);
 				}
-		);
+				return new BasicArrayType<>( elementType, arrayJdbcType, javaType );
+			};
+			if ( typeConfiguration.getBasicTypeRegistry().getRegisteredType( elementType.getName() ) == elementType ) {
+				return typeConfiguration.standardBasicTypeForJavaType( arrayJavaType.getJavaType(), creator );
+			}
+			return creator.apply( arrayJavaType );
+		}
+		else {
+			final JavaType<Object> relationalJavaType = typeConfiguration.getJavaTypeRegistry().getDescriptor(
+					Array.newInstance( valueConverter.getRelationalJavaType().getJavaTypeClass(), 0 ).getClass()
+			);
+
+			JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
+			if ( arrayJdbcType instanceof ArrayJdbcType ) {
+				arrayJdbcType = ( (ArrayJdbcType) arrayJdbcType ).resolveType(
+						typeConfiguration,
+						dialect,
+						elementType,
+						columnTypeInformation
+				);
+			}
+			//noinspection unchecked
+			return new ConvertedBasicArrayType<>(
+					elementType,
+					arrayJdbcType,
+					arrayJavaType,
+					new ArrayConverter<>( valueConverter, arrayJavaType, relationalJavaType )
+			);
+		}
 	}
 
 	@Override

@@ -26,7 +26,7 @@ public class ScriptSourceInputNonExistentImpl extends AbstractScriptSourceInput 
 	public static final ScriptSourceInputNonExistentImpl INSTANCE = new ScriptSourceInputNonExistentImpl();
 
 	@Override
-	protected String getScriptDescription() {
+	public String getScriptDescription() {
 		return "[injected ScriptSourceInputNonExistentImpl script]";
 	}
 

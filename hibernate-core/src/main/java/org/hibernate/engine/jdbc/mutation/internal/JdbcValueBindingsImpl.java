@@ -60,7 +60,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 			throw new UnknownParameterException( mutationType, mutationTarget, tableName, columnName, usage );
 		}
 
-		resolveBindingGroup( tableName ).bindValue( columnName, value, jdbcValueDescriptor );
+		resolveBindingGroup( jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName ) ).bindValue( columnName, value, jdbcValueDescriptor );
 	}
 
 	private BindingGroup resolveBindingGroup(String tableName) {
@@ -119,8 +119,12 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 	/**
 	 * Access to {@link JdbcValueDescriptor} values
 	 */
-	@FunctionalInterface
 	public interface JdbcValueDescriptorAccess {
+
+		default String resolvePhysicalTableName(String tableName) {
+			return tableName;
+		}
+
 		JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage);
 	}
 }

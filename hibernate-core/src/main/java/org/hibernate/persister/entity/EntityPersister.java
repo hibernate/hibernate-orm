@@ -17,6 +17,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -589,6 +590,14 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	 */
 	List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions);
 
+	@Override
+	default Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException(
+				"EntityPersister implementation '" + getClass().getName()
+						+ "' does not support 'UniqueKeyLoadable'"
+		);
+	}
+
 	/**
 	 * Do a version check (optional operation)
 	 */
@@ -1001,6 +1010,14 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	@Override
 	default EntityMappingType getEntityMappingType() {
 		return this;
+	}
+
+	@Override
+	default void addToCacheKey(
+			MutableCacheKeyBuilder cacheKey,
+			Object value,
+			SharedSessionContractImplementor session) {
+		getIdentifierMapping().addToCacheKey( cacheKey, value, session );
 	}
 
 	BytecodeEnhancementMetadata getInstrumentationMetadata();

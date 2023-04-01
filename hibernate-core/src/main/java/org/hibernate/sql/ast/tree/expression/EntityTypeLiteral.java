@@ -8,11 +8,12 @@ package org.hibernate.sql.ast.tree.expression;
 
 import java.util.List;
 
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.persister.entity.DiscriminatorType;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -77,6 +78,11 @@ public class EntityTypeLiteral
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return discriminatorType.disassemble( value, session );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		discriminatorType.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

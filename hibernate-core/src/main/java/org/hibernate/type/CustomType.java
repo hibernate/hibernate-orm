@@ -15,6 +15,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -214,6 +215,36 @@ public class CustomType<J>
 			}
 		}
 		return disassembled;
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
+		final Serializable disassembled = getUserType().disassemble( (J) value );
+		// Since UserType#disassemble is an optional operation,
+		// we have to handle the fact that it could produce a null value,
+		// in which case we will try to use a converter for disassembling,
+		// or if that doesn't exist, simply use the domain value as is
+		if ( disassembled == null && value != null ) {
+			final BasicValueConverter<J, Object> valueConverter = getUserType().getValueConverter();
+			if ( valueConverter == null ) {
+				cacheKey.addValue( value );
+			}
+			else {
+				cacheKey.addValue(
+						valueConverter.getRelationalJavaType().getMutabilityPlan().disassemble(
+								valueConverter.toRelationalValue( (J) value ),
+								session
+						)
+				);
+			}
+		}
+		else {
+			cacheKey.addValue( disassembled );
+		}
+		cacheKey.addHashCode( getUserType().hashCode( (J) value ) );
 	}
 
 	@Override

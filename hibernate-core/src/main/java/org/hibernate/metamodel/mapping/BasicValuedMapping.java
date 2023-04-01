@@ -6,8 +6,14 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+
+import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Any basic-typed ValueMapping.  Generally this would be one of<ul>
@@ -43,4 +49,35 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 	}
 
 	JdbcMapping getJdbcMapping();
+
+	@Override
+	default Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return getJdbcMapping().convertToRelationalValue( value );
+	}
+
+	@Override
+	default void addToCacheKey(
+			MutableCacheKeyBuilder cacheKey,
+			Object value,
+			SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return;
+		}
+		final JdbcMapping jdbcMapping = getJdbcMapping();
+		final BasicValueConverter converter = jdbcMapping.getValueConverter();
+		final Serializable disassemble;
+		final int hashCode;
+		if ( converter == null ) {
+			disassemble = jdbcMapping.getJavaTypeDescriptor().getMutabilityPlan().disassemble( value, session );
+			hashCode = ( (JavaType) jdbcMapping.getMappedJavaType() ).extractHashCode( value );
+		}
+		else {
+			final Object relationalValue = converter.toRelationalValue( value );
+			final JavaType relationalJavaType = converter.getRelationalJavaType();
+			disassemble = relationalJavaType.getMutabilityPlan().disassemble( relationalValue, session );
+			hashCode = relationalJavaType.extractHashCode( relationalValue );
+		}
+		cacheKey.addValue( disassemble );
+		cacheKey.addHashCode( hashCode );
+	}
 }

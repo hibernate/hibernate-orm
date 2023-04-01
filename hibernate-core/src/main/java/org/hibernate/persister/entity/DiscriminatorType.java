@@ -15,17 +15,17 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DiscriminatorValueDetails;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.ClassJavaType;
@@ -35,16 +35,25 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
+ * @deprecated The functionality of DiscriminatorType, {@link DiscriminatorMetadata} and {@link MetaType} have been
+ * consolidated into {@link EntityDiscriminatorMapping} and {@link DiscriminatorConverter}
+ *
  * @author Steve Ebersole
  */
 @Internal
-public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, BasicValueConverter<T, Object> {
+@Deprecated( since = "6.2", forRemoval = true )
+public class DiscriminatorType<T> extends AbstractType implements BasicType<T> {
 	private final BasicType<Object> underlyingType;
 	private final Loadable persister;
+	private final DiscriminatorConverter converter;
 
-	public DiscriminatorType(BasicType<?> underlyingType, Loadable persister) {
+	public DiscriminatorType(
+			BasicType<?> underlyingType,
+			Loadable persister,
+			DiscriminatorConverter converter) {
 		this.underlyingType = (BasicType<Object>) underlyingType;
 		this.persister = persister;
+		this.converter = converter;
 	}
 
 	public BasicType<?> getUnderlyingType() {
@@ -52,59 +61,13 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	}
 
 	@Override
-	public BasicValueConverter<T, ?> getValueConverter() {
-		return this;
+	public DiscriminatorConverter getValueConverter() {
+		return converter;
 	}
 
 	@Override
 	public JavaType<?> getJdbcJavaType() {
 		return underlyingType.getJdbcJavaType();
-	}
-
-	@Override
-	public T toDomainValue(Object discriminatorValue) {
-		if ( discriminatorValue == null ) {
-			return null;
-		}
-		final DiscriminatorValueDetails valueDetails = persister.getDiscriminatorMapping().resolveDiscriminatorValue( discriminatorValue );
-		if ( valueDetails == null ) {
-			throw new HibernateException( "Unable to resolve discriminator value [" + discriminatorValue + "] to entity name" );
-		}
-
-		final EntityMappingType indicatedEntity = valueDetails.getIndicatedEntity();
-		//noinspection unchecked
-		return indicatedEntity.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				? (T) indicatedEntity.getJavaType().getJavaTypeClass()
-				: (T) indicatedEntity.getEntityName();
-	}
-
-	@Override
-	public Object toRelationalValue(T domainForm) {
-		if ( domainForm == null ) {
-			return null;
-		}
-		final MappingMetamodelImplementor mappingMetamodel = persister.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
-		final Loadable loadable;
-		if ( domainForm instanceof Class<?> ) {
-			loadable = (Loadable) mappingMetamodel.getEntityDescriptor( (Class<?>) domainForm );
-		}
-		else {
-			loadable = (Loadable) mappingMetamodel.getEntityDescriptor( (String) domainForm );
-		}
-
-		return loadable.getDiscriminatorValue();
-	}
-
-	@Override
-	public JavaType<T> getDomainJavaType() {
-		return getExpressibleJavaType();
-	}
-
-	@Override
-	public JavaType<Object> getRelationalJavaType() {
-		return underlyingType.getExpressibleJavaType();
 	}
 
 	@Override
@@ -131,14 +94,16 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	public T extract(CallableStatement statement, int paramIndex, SharedSessionContractImplementor session)
 			throws SQLException {
 		final Object discriminatorValue = underlyingType.extract( statement, paramIndex, session );
-		return toDomainValue( discriminatorValue );
+		//noinspection unchecked
+		return (T) converter.toDomainValue( discriminatorValue );
 	}
 
 	@Override
 	public T extract(CallableStatement statement, String paramName, SharedSessionContractImplementor session)
 			throws SQLException {
 		final Object discriminatorValue = underlyingType.extract( statement, paramName, session );
-		return toDomainValue( discriminatorValue );
+		//noinspection unchecked
+		return (T) converter.toDomainValue( discriminatorValue );
 	}
 
 	@Override
@@ -157,7 +122,9 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		underlyingType.nullSafeSet( st, toRelationalValue( (T) value ), index, session);
+		//noinspection unchecked
+		final Object relationalValue = converter.toRelationalValue( value );
+		underlyingType.nullSafeSet( st, relationalValue, index, session);
 	}
 
 	@Override
@@ -192,7 +159,13 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return toRelationalValue( (T) value );
+		//noinspection unchecked
+		return converter.toRelationalValue( value );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		underlyingType.addToCacheKey( cacheKey, value, session );
 	}
 
 	// simple delegation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -240,6 +241,11 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return attribute.disassemble( value, session );
+	}
+
+	@Override
+	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
+		attribute.addToCacheKey( cacheKey, value, session );
 	}
 
 	@Override

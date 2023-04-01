@@ -28,6 +28,8 @@ public abstract class PublishDescriptorTask extends DefaultTask {
 		setGroup( "Release" );
 		setDescription( "Publishes the documentation publication descriptor (JSON)" );
 
+		getInputs().property( "hibernate-version", getProject().getVersion() );
+
 		docServerUrl = config.getDocDescriptorServerUrl();
 		jsonFile = config.getUpdatedJsonFile();
 	}
@@ -49,11 +51,6 @@ public abstract class PublishDescriptorTask extends DefaultTask {
 		final String normalizedBase = base.endsWith( "/" ) ? base : base + "/";
 		final String url = normalizedBase + "_outdated-content/orm.json";
 
-		final String jsonPath = jsonFile.get().getAsFile().getAbsolutePath();
-
-		getProject().exec( (exec) -> {
-			exec.executable( "rsync" );
-			exec.args( "--port=2222", "-z", jsonPath, url );
-		} );
+		RsyncHelper.rsync( jsonFile.get(), url, getProject() );
 	}
 }

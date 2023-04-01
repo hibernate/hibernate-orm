@@ -47,6 +47,13 @@ public class DocumentationPublishingPlugin implements Plugin<Project> {
 				docPubDsl
 		);
 
+		final PublishMigrationGuide publishMigrationGuideTask = project.getTasks().create(
+				PublishMigrationGuide.NAME,
+				PublishMigrationGuide.class,
+				docPubDsl
+		);
+		publishMigrationGuideTask.getMigrationGuideDirectory().convention( project.getLayout().getBuildDirectory().dir( "asciidoc/migration-guide" ) );
+
 		// todo - incorporate HibernateVersion from `gradle/base-information.gradle`
 		final boolean isSnapshot = project.getVersion().toString().endsWith( "-SNAPSHOT" );
 		uploadTask.onlyIf( (task) -> !isSnapshot );

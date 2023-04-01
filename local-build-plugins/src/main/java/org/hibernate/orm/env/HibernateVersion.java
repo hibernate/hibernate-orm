@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Properties;
 import java.util.function.Consumer;
 
@@ -18,7 +19,7 @@ import org.gradle.api.Project;
 /**
  * @author Steve Ebersole
  */
-public class HibernateVersion {
+public class HibernateVersion implements Serializable {
 	public static final String EXT_KEY = "ormVersion";
 	public static final String VERSION_KEY = "releaseVersion";
 	public static final String RELATIVE_FILE = "gradle/version.properties";

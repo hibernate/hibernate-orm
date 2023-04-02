@@ -223,7 +223,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private void handleRootElementAnnotationMirrors(final Element element) {
 		List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
 		for ( AnnotationMirror mirror : annotationMirrors ) {
-			if ( !ElementKind.CLASS.equals( element.getKind() ) ) {
+			if ( !ElementKind.CLASS.equals( element.getKind() ) && !ElementKind.RECORD.equals( element.getKind() ) ) {
 				continue;
 			}
 

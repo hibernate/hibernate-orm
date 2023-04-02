@@ -316,7 +316,7 @@ class BasicAttributeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 			return Boolean.TRUE;
 		}
 
-		if ( ElementKind.CLASS.equals( element.getKind() ) || ElementKind.INTERFACE.equals( element.getKind() ) ) {
+		if ( ElementKind.CLASS.equals( element.getKind() ) || ElementKind.INTERFACE.equals( element.getKind() ) || ElementKind.RECORD.equals( element.getKind() ) ) {
 			TypeElement typeElement = ( (TypeElement) element );
 			String typeName = typeElement.getQualifiedName().toString();
 			if ( Constants.BASIC_TYPES.contains( typeName ) ) {

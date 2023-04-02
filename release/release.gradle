@@ -254,8 +254,13 @@ task stageMigrationGuide(type: Copy) {
 
     dependsOn ':documentation:renderMigrationGuide'
 
-    from "${project( ':documentation' ).buildDir}/asciidoc/migration-guide"
-    into "${buildDir}/documentation/migration-guide"
+    from project(":documentation").layout.buildDirectory.dir("asciidoc/migration-guide")
+    into layout.buildDirectory.dir("documentation/migration-guide")
+}
+
+tasks.named( "publishMigrationGuide" ).configure {
+    dependsOn stageMigrationGuide
+    migrationGuideDirectory = project.layout.buildDirectory.dir("documentation/migration-guide")
 }
 
 task stageOrmReports {

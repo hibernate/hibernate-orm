@@ -6,6 +6,8 @@ import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.getFieldFromMetamodelFor;
+import static org.junit.Assert.assertNotNull;
 
 public class Java14RecordsTest extends CompilationTest {
 
@@ -15,5 +17,6 @@ public class Java14RecordsTest extends CompilationTest {
     public void testEmbeddableRecordProperty() {
         assertMetamodelClassGeneratedFor(Address.class);
         assertMetamodelClassGeneratedFor(Author.class);
+        assertNotNull("Author must contain 'address' field", getFieldFromMetamodelFor(Author.class, "address"));
     }
 }

@@ -28,7 +28,6 @@ public final class JdbcTypeNameMapper {
 
 	private static final Map<Integer, String> JDBC_TYPE_MAP = buildJdbcTypeMap( Types.class );
 	private static final Map<Integer, String> SQL_TYPE_MAP = buildJdbcTypeMap( SqlTypes.class );
-	private static final Map<String, Integer> JDBC_TYPE_NAME_MAP = buildJdbcTypeNameMap( Types.class );
 	private static final Map<String, Integer> SQL_TYPE_NAME_MAP = buildJdbcTypeNameMap( SqlTypes.class );
 
 	private static Map<Integer, String> buildJdbcTypeMap(Class<?> typesClass) {

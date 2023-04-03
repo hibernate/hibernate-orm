@@ -850,7 +850,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 
-		assert concreteDescriptor.getIdentifier( entityInstance, session ) != null;
+		assert concreteDescriptor.getIdentifier( toInitialize, session ) != null;
 
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {

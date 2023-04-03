@@ -17,7 +17,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Locale;
-import java.util.regex.Pattern;
 import jakarta.persistence.Transient;
 
 import org.hibernate.AssertionFailure;
@@ -42,11 +41,7 @@ import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 @SuppressWarnings("unchecked")
 public final class ReflectHelper {
 
-	private static final Pattern JAVA_CONSTANT_PATTERN = Pattern.compile(
-			"[a-z\\d]+\\.([A-Z]+[a-z\\d]+)+\\$?([A-Z]{1}[a-z\\d]+)*\\.[A-Z_\\$]+", Pattern.UNICODE_CHARACTER_CLASS);
-
 	public static final Class[] NO_PARAM_SIGNATURE = ArrayHelper.EMPTY_CLASS_ARRAY;
-	public static final Object[] NO_PARAMS = ArrayHelper.EMPTY_OBJECT_ARRAY;
 
 	public static final Class[] SINGLE_OBJECT_PARAM_SIGNATURE = new Class[] { Object.class };
 

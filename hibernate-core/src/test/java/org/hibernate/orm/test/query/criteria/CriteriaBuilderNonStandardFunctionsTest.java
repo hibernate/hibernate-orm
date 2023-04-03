@@ -468,6 +468,16 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	}
 
 	@Test
+	@JiraKey("HHH-16420")
+	public void testFunctionWithArrayResultType(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final CriteriaBuilder cb = session.getCriteriaBuilder();
+			Expression<String[]> expr = cb.function("test", String[].class);
+			assertEquals(String[].class, expr.getJavaType());
+		} );
+	}
+
+	@Test
 	@JiraKey("HHH-16130")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support any form of date truncation")
 	public void testDateTruncFunction(SessionFactoryScope scope) {

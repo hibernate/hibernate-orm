@@ -61,13 +61,16 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicArrayType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -679,8 +682,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
 	}
 
+	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	public <J> BasicType<J> getBasicTypeForJavaType(Class<J> javaType) {
-		return getBasicTypeForJavaType( (Type) javaType );
+		final BasicType<J> type = getBasicTypeForJavaType( (Type) javaType );
+		if ( type == null && javaType.isArray() ) {
+			BasicType<?> componentType = getBasicTypeForJavaType( javaType.getComponentType() );
+			if ( componentType != null ) {
+				return new BasicArrayType(componentType, new ArrayJdbcType(componentType.getJdbcType()),
+						new ArrayJavaType<>(componentType.getJdbcJavaType()));
+			}
+		}
+		return type;
 	}
 
 	public <J> BasicType<J> getBasicTypeForJavaType(Type javaType) {

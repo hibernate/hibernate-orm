@@ -609,7 +609,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see AnsiSqlKeywords
 	 */
 	protected void registerDefaultKeywords() {
-		for ( String keyword : AnsiSqlKeywords.INSTANCE.sql2003() ) {
+		AnsiSqlKeywords keywords = new AnsiSqlKeywords();
+		for ( String keyword : keywords.sql2003() ) {
 			registerKeyword( keyword );
 		}
 	}

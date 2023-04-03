@@ -11,6 +11,7 @@ import org.hibernate.internal.util.StringHelper;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -21,10 +22,10 @@ import java.util.StringTokenizer;
  */
 public final class HighlightingFormatter implements Formatter {
 
-	private static final Set<String> KEYWORDS = new HashSet<>( AnsiSqlKeywords.INSTANCE.sql2003() );
+	private static final Set<String> KEYWORDS_LOWERCASED = new HashSet<>( new AnsiSqlKeywords().sql2003() );
 	static {
 		// additional keywords not reserved by ANSI SQL 2003
-		KEYWORDS.addAll( Arrays.asList( "KEY", "SEQUENCE", "CASCADE", "INCREMENT" ) );
+		KEYWORDS_LOWERCASED.addAll( Arrays.asList( "key", "sequence", "cascade", "increment" ) );
 	}
 
 	public static final Formatter INSTANCE =
@@ -92,7 +93,7 @@ public final class HighlightingFormatter implements Formatter {
 					}
 					break;
 				default:
-					if ( KEYWORDS.contains( token.toUpperCase() ) ) {
+					if ( KEYWORDS_LOWERCASED.contains( token.toLowerCase( Locale.ROOT ) ) ) {
 						result.append( keywordEscape ).append( token ).append( normalEscape );
 					}
 					else {

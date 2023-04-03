@@ -15,14 +15,9 @@ import java.util.Set;
  */
 public final class AnsiSqlKeywords {
 
-	/**
-	 * Singleton access
-	 */
-	public static final AnsiSqlKeywords INSTANCE = new AnsiSqlKeywords();
-
 	private final Set<String> keywordsSql2003;
 
-	private AnsiSqlKeywords() {
+	public AnsiSqlKeywords() {
 		this.keywordsSql2003 = Set.of(
 		"add",
 		"all",

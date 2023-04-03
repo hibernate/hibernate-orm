@@ -43,6 +43,40 @@ compileTestJava {
 }
 
 
+// Tests with records
+if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolchainEnabled ) {
+    // We need to configure the source and target version to 17
+    //compileTestJava17Java {
+    compileTestJava {
+        javaCompiler = javaToolchains.compilerFor {
+            languageVersion = gradle.ext.javaVersions.test.compiler
+        }
+        sourceCompatibility = 17
+        targetCompatibility = 17
+    }
+
+    test {
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = gradle.ext.javaVersions.test.launcher
+        }
+
+        if ( gradle.ext.javaVersions.test.launcher.asInt() >= 19 ) {
+            logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
+                                 " Setting 'net.bytebuddy.experimental=true'." )
+            systemProperty 'net.bytebuddy.experimental', true
+        }
+    }
+} else {
+    sourceSets {
+        test {
+            java {
+                exclude '**/records/*.java'
+            }
+        }
+    }
+}
+
+
 task jaxb {
     // configure Gradle up-to-date checking
     inputs.dir( xsdDir ).withPropertyName("xsdDir" ).withPathSensitivity( PathSensitivity.RELATIVE )

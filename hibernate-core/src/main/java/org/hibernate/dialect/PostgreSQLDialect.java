@@ -29,6 +29,7 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.PostgreSQLMinMaxFunction;
+import org.hibernate.dialect.function.PostgreSQLNativeAnyFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -613,6 +614,7 @@ public class PostgreSQLDialect extends Dialect {
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 		functionFactory.dateTrunc();
+		functionContributions.getFunctionRegistry().register("native_any", new PostgreSQLNativeAnyFunction());
 	}
 
 	/**

@@ -16,11 +16,11 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -124,6 +124,26 @@ public class PostgreSQLFunctionWhereClauseTest extends BaseEntityManagerFunction
 				.isPresent()
 			);
 			//end::hql-user-defined-function-postgresql-jpql-example[]
+		});
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-16421")
+	public void testNativeAnyFunction() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			List<Book> books = entityManager.createQuery(
+				"select b " +
+				"from Book b " +
+				"where :word = native_any(function('string_to_array', b.title, ' '))", Book.class)
+			.setParameter("word", "Java")
+			.getResultList();
+
+			assertTrue(books
+				.stream()
+				.filter(book -> "High-Performance Java Persistence".equals(book.getTitle()))
+				.findAny()
+				.isPresent()
+			);
 		});
 	}
 

@@ -27,7 +27,15 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -284,10 +292,28 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			EntityValuedModelPart mapping,
 			EntityValuedModelPart treatedMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
+		final boolean expandToAllColumns;
+		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
+		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
+			final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) sqlAstCreationState.getCurrentSqmQueryPart();
+			if ( currentClause == Clause.ORDER && !groupByClauseContains( navigablePath, querySpec ) ) {
+				// We must ensure that the order by expression be expanded but only if the group by
+				// contained the same expression, and that was expanded as well
+				expandToAllColumns = false;
+			}
+			else {
+				// When the table group is selected and the navigablePath is selected we need to expand
+				// to all columns, as we also expand this to all columns in the select clause
+				expandToAllColumns = isSelected( tableGroup, navigablePath, querySpec );
+			}
+		}
+		else {
+			expandToAllColumns = false;
+		}
+
 		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final Expression sqlExpression;
-
-		if ( resultModelPart == null ) {
+		if ( expandToAllColumns ) {
 			// Expand to all columns of the entity mapping type, as we already did for the selection
 			final EntityMappingType entityMappingType = mapping.getEntityMappingType();
 			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
@@ -350,6 +376,47 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				tableGroup,
 				treatedMapping
 		);
+	}
+
+	private static boolean isSelected(TableGroup tableGroup, NavigablePath path, SqmQuerySpec<?> sqmQuerySpec) {
+		// If the table group is selected (initialized), check if the entity valued
+		// navigable path or any child path appears in the select clause
+		return tableGroup.isInitialized() && selectClauseContains( path, sqmQuerySpec );
+	}
+
+	private static boolean selectClauseContains(NavigablePath path, SqmQuerySpec<?> sqmQuerySpec) {
+		final List<SqmSelection<?>> selections = sqmQuerySpec.getSelectClause() == null
+				? Collections.emptyList()
+				: sqmQuerySpec.getSelectClause().getSelections();
+		for ( SqmSelection<?> selection : selections ) {
+			if ( selectableNodeContains( selection.getSelectableNode(), path ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean selectableNodeContains(SqmSelectableNode<?> selectableNode, NavigablePath path) {
+		if ( selectableNode instanceof SqmPath && path.isParentOrEqual( ( (SqmPath<?>) selectableNode ).getNavigablePath() ) ) {
+			return true;
+		}
+		else if ( selectableNode instanceof SqmDynamicInstantiation ) {
+			for ( SqmDynamicInstantiationArgument<?> argument : ( (SqmDynamicInstantiation<?>) selectableNode ).getArguments() ) {
+				if ( selectableNodeContains( argument.getSelectableNode(), path ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean groupByClauseContains(NavigablePath path, SqmQuerySpec<?> sqmQuerySpec) {
+		for ( SqmExpression<?> expression : sqmQuerySpec.getGroupByClauseExpressions() ) {
+			if ( expression instanceof SqmPath && ( (SqmPath<?>) expression ).getNavigablePath() == path ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private final Expression sqlExpression;

@@ -8,6 +8,7 @@ package org.hibernate.orm.test.query;
 
 import java.time.LocalDate;
 
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -69,6 +70,7 @@ public class NamedParameterInSelectAndWhereTest {
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16305" )
 	@SkipForDialect( dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL doesn't support parameters as arguments for timestampdiff" )
+	@SkipForDialect( dialectClass = CockroachDialect.class, reason = "CockroachDB doesn't support parameters as arguments for timestampdiff" )
 	public void testSelectFunctionAndWhere(SessionFactoryScope scope) {
 		scope.inTransaction( session -> assertEquals( 0, session.createQuery(
 						"select timestampdiff(year, e.theLocalDate, :date) from EntityOfBasics e where e.theLocalDate <= :date",

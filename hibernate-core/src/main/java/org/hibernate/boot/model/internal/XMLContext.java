@@ -57,13 +57,16 @@ public class XMLContext implements Serializable {
 	private boolean hasContext = false;
 
 	public XMLContext(BootstrapContext bootstrapContext) {
-		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
-		this.classmateContext = bootstrapContext.getClassmateContext();
+		this( bootstrapContext.getClassLoaderAccess(), bootstrapContext.getClassmateContext() );
+	}
+
+	public XMLContext(ClassLoaderAccess classLoaderAccess, ClassmateContext classmateContext) {
+		this.classLoaderAccess = classLoaderAccess;
+		this.classmateContext = classmateContext;
 	}
 
 	/**
-	 * @param entityMappings The xml document to add
-	 * @return Add an xml document to this context and return the list of added class names.
+	 * Add the JAXB binding to this context and return the list of added class names.
 	 */
 	public List<String> addDocument(JaxbEntityMappings entityMappings) {
 		hasContext = true;

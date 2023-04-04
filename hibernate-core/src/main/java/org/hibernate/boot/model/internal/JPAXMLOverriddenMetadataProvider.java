@@ -54,8 +54,12 @@ public class JPAXMLOverriddenMetadataProvider implements MetadataProvider {
 	private Map<AnnotatedElement, AnnotationReader> cache;
 
 	public JPAXMLOverriddenMetadataProvider(BootstrapContext bootstrapContext) {
-		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
-		this.xmlContext = new XMLContext( bootstrapContext );
+		this( bootstrapContext.getClassLoaderAccess(), bootstrapContext );
+	}
+
+	public JPAXMLOverriddenMetadataProvider(ClassLoaderAccess classLoaderAccess, BootstrapContext bootstrapContext) {
+		this.classLoaderAccess = classLoaderAccess;
+		this.xmlContext = new XMLContext( classLoaderAccess, bootstrapContext.getClassmateContext() );
 		this.xmlMappingEnabled = bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled();
 	}
 

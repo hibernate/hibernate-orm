@@ -15,6 +15,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+
 /**
  * Performs basic syntax highlighting for SQL using ANSI escape codes.
  *
@@ -58,6 +60,10 @@ public final class HighlightingFormatter implements Formatter {
 
 	@Override
 	public String format(String sql) {
+		if ( isEmpty( sql ) ) {
+			return sql;
+		}
+
 		StringBuilder result = new StringBuilder();
 		boolean inString = false;
 		boolean inQuoted = false;

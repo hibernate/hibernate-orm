@@ -8,9 +8,11 @@ package org.hibernate.id.insert;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
@@ -63,6 +65,9 @@ public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 
 	@Override
 	protected String getSelectSQL() {
+		if ( persister.getIdentitySelectString() == null && !dialect.getIdentityColumnSupport().supportsInsertSelectIdentity() ) {
+			throw CoreLogging.messageLogger( BasicSelectingDelegate.class ).nullIdentitySelectString();
+		}
 		return persister.getIdentitySelectString();
 	}
 }

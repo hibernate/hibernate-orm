@@ -751,6 +751,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return currentClauseStack;
 	}
 
+	@Override
+	public SqmQueryPart<?> getCurrentSqmQueryPart() {
+		return currentSqmQueryPart;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Statements
@@ -2395,46 +2399,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return -( offset + selections.size() );
 	}
 
-	private boolean selectClauseContains(SqmFrom<?, ?> from) {
-		final SqmQuerySpec<?> sqmQuerySpec = (SqmQuerySpec<?>) currentSqmQueryPart;
-		final List<SqmSelection<?>> selections = sqmQuerySpec.getSelectClause() == null
-				? Collections.emptyList()
-				: sqmQuerySpec.getSelectClause().getSelections();
-		if ( selections.isEmpty() && from instanceof SqmRoot<?> ) {
-			return true;
-		}
-		for ( SqmSelection<?> selection : selections ) {
-			if ( selectableNodeContains( selection.getSelectableNode(), from ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean selectableNodeContains(SqmSelectableNode<?> selectableNode, SqmFrom<?, ?> from) {
-		if ( selectableNode == from ) {
-			return true;
-		}
-		else if ( selectableNode instanceof SqmDynamicInstantiation ) {
-			for ( SqmDynamicInstantiationArgument<?> argument : ( (SqmDynamicInstantiation<?>) selectableNode ).getArguments() ) {
-				if ( selectableNodeContains( argument.getSelectableNode(), from ) ) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	private boolean groupByClauseContains(SqmFrom<?, ?> from) {
-		final SqmQuerySpec<?> sqmQuerySpec = (SqmQuerySpec<?>) currentSqmQueryPart;
-		for ( SqmExpression<?> expression : sqmQuerySpec.getGroupByClauseExpressions() ) {
-			if ( expression == from ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public List<Expression> visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions) {
 		if ( !groupByClauseExpressions.isEmpty() ) {
@@ -3755,8 +3719,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final EntityValuedModelPart interpretationModelPart;
 			final TableGroup tableGroupToUse;
 			if ( inferredEntityMapping == null ) {
-				// When the inferred mapping is null, we try to resolve to the FK by default,
-				// which is fine because expansion to all target columns for select and group by clauses is handled below
+				// When the inferred mapping is null, we try to resolve to the FK by default, which is fine because
+				// expansion to all target columns for select and group by clauses is handled in EntityValuedPathInterpretation
 				if ( entityValuedModelPart instanceof EntityAssociationMapping && ( (EntityAssociationMapping) entityValuedModelPart ).isFkOptimizationAllowed() ) {
 					// If the table group uses an association mapping that is not a one-to-many,
 					// we make use of the FK model part
@@ -3883,22 +3847,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroupToUse = null;
 			}
 
-			final boolean expandToAllColumns;
-			if ( currentClauseStack.getCurrent() == Clause.GROUP ) {
-				// When the table group is known to be fetched i.e. a fetch join
-				// but also when the from clause is part of the select clause
-				// we need to expand to all columns, as we also expand this to all columns in the select clause
-				expandToAllColumns = tableGroup.isFetched() || selectClauseContains( path );
-			}
-			else if ( currentClauseStack.getCurrent() == Clause.ORDER ) {
-				// We must ensure that the order by expression be expanded if the group by
-				// contained the same expression, and that was expanded as well
-				expandToAllColumns = groupByClauseContains( path ) && ( tableGroup.isFetched() || selectClauseContains( path ) );
-			}
-			else {
-				expandToAllColumns = false;
-			}
-
 			final EntityMappingType treatedMapping;
 			if ( path instanceof SqmTreatedPath ) {
 				treatedMapping = creationContext.getSessionFactory()
@@ -3913,7 +3861,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			result = EntityValuedPathInterpretation.from(
 					navigablePath,
 					tableGroupToUse == null ? tableGroup : tableGroupToUse,
-					expandToAllColumns ? null : resultModelPart,
+					resultModelPart,
 					interpretationModelPart,
 					treatedMapping,
 					this

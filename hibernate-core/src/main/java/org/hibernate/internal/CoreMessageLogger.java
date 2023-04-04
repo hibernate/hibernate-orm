@@ -1824,4 +1824,8 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 514)
 	void postgreSQLJdbcDriverNotAccessible();
 
+	@Message(value = "The identity select string is undefined for the dialect in use. Check the identity generation configuration, in particular the 'hibernate.jdbc.use_get_generated_keys' setting",
+			id = 515)
+	HibernateException nullIdentitySelectString();
+
 }

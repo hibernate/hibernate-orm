@@ -9,10 +9,14 @@ package org.hibernate.orm.test.query.hql;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.internal.util.ExceptionHelper;
+import org.hibernate.query.sqm.ParsingException;
+
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,7 +28,10 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.TypedQuery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Christian Beikov
@@ -164,5 +171,44 @@ public class WindowFunctionTest {
 					assertEquals( 7, resultList.get( 4 ) );
 				}
 		);
+	}
+
+	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsWindowFunctions.class )
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16347" )
+	public void testOrderByAndAlias(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final TypedQuery<Integer> q = session.createQuery(
+							"select id from (select id as id, dense_rank() over (order by theInt, id ASC) as ranking" +
+							" from EntityOfBasics) entity_rank where ranking = :rank",
+							Integer.class
+					).setParameter( "rank", 5 );
+					assertEquals( 4, q.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsWindowFunctions.class )
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16347" )
+	public void testOrderByAndPositional(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			try {
+				session.createQuery(
+						"select id from (select id, dense_rank() over (order by theInt, 1 ASC) as ranking from EntityOfBasics) ",
+						Integer.class
+				);
+				fail( "Order-by positional '1' should not be allowed in OVER clause" );
+			}
+			catch (Exception e) {
+				final Throwable rootCause = ExceptionHelper.getRootCause( e );
+				assertInstanceOf( ParsingException.class, rootCause );
+				assertEquals(
+						"Position based order-by is not allowed in OVER or WITHIN GROUP clauses",
+						rootCause.getMessage()
+				);
+			}
+		} );
 	}
 }

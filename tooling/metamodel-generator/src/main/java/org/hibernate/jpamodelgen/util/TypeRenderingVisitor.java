@@ -26,10 +26,12 @@ import javax.lang.model.type.UnionType;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Christian Beikov
  */
-public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Object> {
+public final class TypeRenderingVisitor extends SimpleTypeVisitor8<@Nullable Object, @Nullable Object> {
 
 	private final StringBuilder sb = new StringBuilder();
 	private final Set<TypeVariable> visitedTypeVariables = new HashSet<>();
@@ -66,7 +68,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 	}
 
 	@Override
-	public Object visitPrimitive(PrimitiveType t, Object o) {
+	public @Nullable Object visitPrimitive(PrimitiveType t, @Nullable Object o) {
 		final String primitiveTypeName = getPrimitiveTypeName( t.getKind() );
 		if ( primitiveTypeName != null ) {
 			sb.append( primitiveTypeName );
@@ -74,7 +76,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 		return null;
 	}
 
-	private static String getPrimitiveTypeName(TypeKind kind) {
+	private static @Nullable String getPrimitiveTypeName(TypeKind kind) {
 		switch ( kind ) {
 			case INT:
 				return "int";
@@ -99,19 +101,19 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 	}
 
 	@Override
-	public Object visitNull(NullType t, Object o) {
+	public @Nullable Object visitNull(NullType t, @Nullable Object o) {
 		return null;
 	}
 
 	@Override
-	public Object visitArray(ArrayType t, Object o) {
+	public @Nullable Object visitArray(ArrayType t, @Nullable Object o) {
 		t.getComponentType().accept( this, null );
 		sb.append( "[]" );
 		return t;
 	}
 
 	@Override
-	public Object visitDeclared(DeclaredType t, Object o) {
+	public @Nullable Object visitDeclared(DeclaredType t, @Nullable Object o) {
 		sb.append( t.asElement().toString() );
 		List<? extends TypeMirror> typeArguments = t.getTypeArguments();
 		if ( !typeArguments.isEmpty() ) {
@@ -127,7 +129,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 	}
 
 	@Override
-	public Object visitTypeVariable(TypeVariable t, Object o) {
+	public @Nullable Object visitTypeVariable(TypeVariable t, @Nullable Object o) {
 		final Element typeVariableElement = t.asElement();
 		if ( typeVariableElement instanceof TypeParameterElement ) {
 			final TypeParameterElement typeParameter = (TypeParameterElement) typeVariableElement;
@@ -145,7 +147,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 	}
 
 	@Override
-	public Object visitWildcard(WildcardType t, Object o) {
+	public @Nullable Object visitWildcard(WildcardType t, @Nullable Object o) {
 		sb.append( '?' );
 		if ( t.getExtendsBound() != null ) {
 			sb.append( " extends " );
@@ -159,12 +161,12 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 	}
 
 	@Override
-	public Object visitUnion(UnionType t, Object o) {
+	public @Nullable Object visitUnion(UnionType t, @Nullable Object o) {
 		return null;
 	}
 
 	@Override
-	public Object visitIntersection(IntersectionType t, Object o) {
+	public @Nullable Object visitIntersection(IntersectionType t, @Nullable Object o) {
 		final List<? extends TypeMirror> bounds = t.getBounds();
 		bounds.get( 0 ).accept( this, null );
 		for ( int i = 0; i < bounds.size(); i++ ) {
@@ -175,12 +177,12 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 	}
 
 	@Override
-	public Object visitExecutable(ExecutableType t, Object o) {
+	public @Nullable Object visitExecutable(ExecutableType t, @Nullable Object o) {
 		return null;
 	}
 
 	@Override
-	public Object visitNoType(NoType t, Object o) {
+	public @Nullable Object visitNoType(NoType t, @Nullable Object o) {
 		return null;
 	}
 }

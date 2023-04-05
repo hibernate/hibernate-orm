@@ -36,6 +36,8 @@ import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Main annotation processor.
  *
@@ -240,7 +242,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				requiresLazyMemberInitialization = true;
 			}
 
-			metaEntity = new AnnotationMetaEntity( (TypeElement) element, context, requiresLazyMemberInitialization );
+			metaEntity = AnnotationMetaEntity.create( (TypeElement) element, context, requiresLazyMemberInitialization );
 
 			if ( alreadyExistingMetaEntity != null ) {
 				metaEntity.mergeInMembers( alreadyExistingMetaEntity );
@@ -249,7 +251,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		}
 	}
 
-	private MetaEntity tryGettingExistingEntityFromContext(AnnotationMirror mirror, String fqn) {
+	private @Nullable MetaEntity tryGettingExistingEntityFromContext(AnnotationMirror mirror, String fqn) {
 		MetaEntity alreadyExistingMetaEntity = null;
 		if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ENTITY )
 				|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MAPPED_SUPERCLASS )) {

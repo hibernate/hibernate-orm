@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
@@ -36,10 +37,9 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 	private final ValueGenerator generator;
 	private final ValueTransformer valueTransformer;
 
-	public UuidGenerator(
+	private UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
-			Member idMember,
-			CustomIdGeneratorCreationContext creationContext) {
+			Member idMember) {
 		if ( config.style() == TIME ) {
 			generator = new CustomVersionOneStrategy();
 		}
@@ -61,6 +61,20 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 		else {
 			throw new HibernateException( "Unanticipated return type [" + propertyType.getName() + "] for UUID conversion" );
 		}
+	}
+
+	public UuidGenerator(
+			org.hibernate.annotations.UuidGenerator config,
+			Member idMember,
+			CustomIdGeneratorCreationContext creationContext) {
+		this(config, idMember);
+	}
+
+	public UuidGenerator(
+			org.hibernate.annotations.UuidGenerator config,
+			Member idMember,
+			GeneratorCreationContext creationContext) {
+		this(config, idMember);
 	}
 
 	/**

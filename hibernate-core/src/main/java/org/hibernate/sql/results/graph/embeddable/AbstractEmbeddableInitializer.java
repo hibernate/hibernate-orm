@@ -71,6 +71,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private Boolean stateAllNull;
 	private Boolean stateInjected;
 	protected Object compositeInstance;
+	private boolean isParentInitialized;
+	private RowProcessingState wrappedProcessingState;
 
 	public AbstractEmbeddableInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
@@ -207,13 +209,27 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				return;
 			}
 		}
+		if ( isParentInitialized ) {
+			return;
+		}
 
-		stateInjected = false;
 		// We need to possibly wrap the processing state if the embeddable is within an aggregate
-		processingState = wrapProcessingState( processingState );
-		extractRowState( processingState );
-		prepareCompositeInstance( processingState );
-		handleParentInjection( processingState );
+		if ( wrappedProcessingState == null ) {
+			wrappedProcessingState = wrapProcessingState( processingState );
+		}
+		initializeInstance( );
+	}
+
+	private void initializeInstance() {
+		stateInjected = false;
+		extractRowState( wrappedProcessingState );
+		prepareCompositeInstance( wrappedProcessingState );
+		if ( isParentInitialized ) {
+			return;
+		}
+		if ( !stateInjected ) {
+			handleParentInjection( wrappedProcessingState );
+		}
 
 		if ( compositeInstance != NULL_MARKER ) {
 			notifyResolutionListeners( compositeInstance );
@@ -222,7 +238,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
 			// and the compositeInstance == entity, so we have to inject the row state into the entity when it finishes resolution
 			if ( lazyInitializer != null ) {
-				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
+				final Initializer parentInitializer = wrappedProcessingState.resolveInitializer( navigablePath.getParent() );
 				if ( parentInitializer != this ) {
 					( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
 						representationEmbeddable.setValues( entity, rowState );
@@ -264,6 +280,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() ) ) {
 			fetchParentAccess.resolveInstance( processingState );
 			compositeInstance = fetchParentAccess.getInitializedInstance();
+			EntityInitializer entityInitializer = fetchParentAccess.asEntityInitializer();
+			if ( entityInitializer != null && entityInitializer.isEntityInitialized() ) {
+				this.isParentInitialized = true;
+				return;
+			}
 		}
 
 		if ( compositeInstance == null ) {
@@ -485,6 +506,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		compositeInstance = null;
 		stateAllNull = null;
 		stateInjected = null;
+		isParentInitialized = false;
+		wrappedProcessingState = null;
 
 		clearResolutionListeners();
 	}

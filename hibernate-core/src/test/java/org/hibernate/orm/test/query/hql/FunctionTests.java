@@ -12,6 +12,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.TestForIssue;
@@ -534,6 +535,22 @@ public class FunctionTests {
 							is( LocalDateTime.of(1974,10,3,12,30,0) ) );
 					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30:45.123, second)", LocalDateTime.class ).getSingleResult(),
 							is( LocalDateTime.of(1974,10,3,12,30,45,0) ) );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support any form of date truncation")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "See HHH-16442, Oracle trunc() throws away the timezone")
+	public void testDateTruncWithOffsetFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select truncate(offset datetime 1974-10-03 12:30-12:00, day)", OffsetDateTime.class ).getSingleResult(),
+							isOneOf( OffsetDateTime.of( 1974,10,3,0,0,0, 0, ZoneOffset.ofHours(-12) ),
+									OffsetDateTime.of( 1974,10,4,0,0,0, 0, ZoneOffset.UTC ) ) );
+					assertThat( session.createQuery( "select truncate(offset datetime 1974-10-03 12:30-12:00, minute)", OffsetDateTime.class ).getSingleResult(),
+							isOneOf( OffsetDateTime.of( 1974,10,3,12,30,0, 0, ZoneOffset.ofHours(-12) ),
+									OffsetDateTime.of( 1974,10,4,0,30,0, 0, ZoneOffset.UTC ) ) );
 				}
 		);
 	}

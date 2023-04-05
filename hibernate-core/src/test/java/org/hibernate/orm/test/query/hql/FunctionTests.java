@@ -10,11 +10,8 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.TestForIssue;
@@ -523,6 +520,19 @@ public class FunctionTests {
 					session.createQuery( "select truncate(current_timestamp,hour)", Timestamp.class ).getSingleResult();
 					session.createQuery( "select truncate(current_timestamp,minute)", Timestamp.class ).getSingleResult();
 					session.createQuery( "select truncate(current_timestamp,second)", Timestamp.class ).getSingleResult();
+
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30, day)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,3,0,0,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30, month)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,1,0,0,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30, year)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,1,1,0,0,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30:45, hour)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,3,12,0,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30:45, minute)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,3,12,30,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30:45.123, second)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,3,12,30,45,0) ) );
 				}
 		);
 	}

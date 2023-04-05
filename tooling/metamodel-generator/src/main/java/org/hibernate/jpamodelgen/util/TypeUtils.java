@@ -31,6 +31,8 @@ import javax.tools.Diagnostic;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.MetaModelGenerationException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Utility class.
  *
@@ -72,7 +74,7 @@ public final class TypeUtils {
 
 	public static String toTypeString(TypeMirror type) {
 		if ( type.getKind().isPrimitive() ) {
-			return PRIMITIVE_WRAPPERS.get( type.getKind() );
+			return NullnessUtil.castNonNull( PRIMITIVE_WRAPPERS.get( type.getKind() ) );
 		}
 		return TypeRenderingVisitor.toString( type );
 	}
@@ -102,7 +104,7 @@ public final class TypeUtils {
 		return extractClosestRealTypeAsString( component, context ) + "[]";
 	}
 
-	public static TypeElement getSuperclassTypeElement(TypeElement element) {
+	public static @Nullable TypeElement getSuperclassTypeElement(TypeElement element) {
 		final TypeMirror superClass = element.getSuperclass();
 		//superclass of Object is of NoType which returns some other kind
 		if ( superClass.getKind() == TypeKind.DECLARED ) {
@@ -175,7 +177,7 @@ public final class TypeUtils {
 	 * @return the annotation mirror for the specified annotation class from the {@code Element} or {@code null} in case
 	 *         the {@code TypeElement} does not host the specified annotation.
 	 */
-	public static AnnotationMirror getAnnotationMirror(Element element, String fqcn) {
+	public static @Nullable AnnotationMirror getAnnotationMirror(Element element, String fqcn) {
 		assert element != null;
 		assert fqcn != null;
 
@@ -189,7 +191,7 @@ public final class TypeUtils {
 		return mirror;
 	}
 
-	public static Object getAnnotationValue(AnnotationMirror annotationMirror, String parameterValue) {
+	public static @Nullable Object getAnnotationValue(AnnotationMirror annotationMirror, String parameterValue) {
 		assert annotationMirror != null;
 		assert parameterValue != null;
 
@@ -251,7 +253,7 @@ public final class TypeUtils {
 		updateEmbeddableAccessType( searchedElement, context, defaultAccessType );
 	}
 
-	public static TypeMirror getCollectionElementType(DeclaredType t, String fqNameOfReturnedType, String explicitTargetEntityName, Context context) {
+	public static TypeMirror getCollectionElementType(DeclaredType t, String fqNameOfReturnedType, @Nullable String explicitTargetEntityName, Context context) {
 		TypeMirror collectionElementType;
 		if ( explicitTargetEntityName != null ) {
 			Elements elements = context.getElementUtils();
@@ -300,7 +302,7 @@ public final class TypeUtils {
 		}
 	}
 
-	private static AccessType getDefaultAccessForHierarchy(TypeElement element, Context context) {
+	private static @Nullable AccessType getDefaultAccessForHierarchy(TypeElement element, Context context) {
 		AccessType defaultAccessType = null;
 		TypeElement superClass = element;
 		do {
@@ -370,7 +372,7 @@ public final class TypeUtils {
 	 * @return returns the access type of the element annotated with the id annotation. If no element is annotated
 	 *         {@code null} is returned.
 	 */
-	private static AccessType getAccessTypeInCaseElementIsRoot(TypeElement searchedElement, Context context) {
+	private static @Nullable AccessType getAccessTypeInCaseElementIsRoot(TypeElement searchedElement, Context context) {
 		List<? extends Element> myMembers = searchedElement.getEnclosedElements();
 		for ( Element subElement : myMembers ) {
 			List<? extends AnnotationMirror> entityAnnotations =
@@ -385,7 +387,7 @@ public final class TypeUtils {
 		return null;
 	}
 
-	private static AccessType getAccessTypeOfIdAnnotation(Element element) {
+	private static @Nullable AccessType getAccessTypeOfIdAnnotation(Element element) {
 		AccessType accessType = null;
 		final ElementKind kind = element.getKind();
 		if ( kind == ElementKind.FIELD || kind == ElementKind.METHOD ) {
@@ -399,13 +401,12 @@ public final class TypeUtils {
 				|| TypeUtils.isAnnotationMirrorOfType( annotationMirror, Constants.EMBEDDED_ID );
 	}
 
-	public static AccessType determineAnnotationSpecifiedAccessType(Element element) {
+	public static @Nullable AccessType determineAnnotationSpecifiedAccessType(Element element) {
 		final AnnotationMirror accessAnnotationMirror = TypeUtils.getAnnotationMirror( element, Constants.ACCESS );
 		AccessType forcedAccessType = null;
 		if ( accessAnnotationMirror != null ) {
-			Element accessElement = (Element) TypeUtils.getAnnotationValue(
-					accessAnnotationMirror,
-					DEFAULT_ANNOTATION_PARAMETER_NAME
+			Element accessElement = (Element) NullnessUtil.castNonNull(
+					TypeUtils.getAnnotationValue( accessAnnotationMirror, DEFAULT_ANNOTATION_PARAMETER_NAME )
 			);
 			if ( accessElement.getKind().equals( ElementKind.ENUM_CONSTANT ) ) {
 				if ( accessElement.getSimpleName().toString().equals( AccessType.PROPERTY.toString() ) ) {
@@ -436,7 +437,7 @@ public final class TypeUtils {
 		return extractClosestRealTypeAsString( typeArguments.get( 0 ), context );
 	}
 
-	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor6<String, Element> {
+	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor6<@Nullable String, Element> {
 		private Context context;
 
 		EmbeddedAttributeVisitor(Context context) {
@@ -444,7 +445,7 @@ public final class TypeUtils {
 		}
 
 		@Override
-		public String visitDeclared(DeclaredType declaredType, Element element) {
+		public @Nullable String visitDeclared(DeclaredType declaredType, Element element) {
 			TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
 			String fqNameOfReturnType = null;
 			if ( containsAnnotation( returnedElement, Constants.EMBEDDABLE ) ) {
@@ -454,7 +455,7 @@ public final class TypeUtils {
 		}
 
 		@Override
-		public String visitExecutable(ExecutableType t, Element p) {
+		public @Nullable String visitExecutable(ExecutableType t, Element p) {
 			if ( !p.getKind().equals( ElementKind.METHOD ) ) {
 				return null;
 			}

@@ -821,7 +821,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			addVersionedAssignment( assignments::add, sqmStatement );
 
 			FilterHelper.applyBaseRestrictions(
-					(filterPredicate) -> additionalRestrictions = filterPredicate,
+					(filterPredicate) -> additionalRestrictions = combinePredicates( additionalRestrictions, filterPredicate),
 					entityDescriptor,
 					rootTableGroup,
 					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.UPDATE ),
@@ -1078,7 +1078,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			FilterHelper.applyBaseRestrictions(
-					(filterPredicate) -> additionalRestrictions = filterPredicate,
+					(filterPredicate) -> additionalRestrictions = combinePredicates( additionalRestrictions, filterPredicate),
 					entityDescriptor,
 					rootTableGroup,
 					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.DELETE ),

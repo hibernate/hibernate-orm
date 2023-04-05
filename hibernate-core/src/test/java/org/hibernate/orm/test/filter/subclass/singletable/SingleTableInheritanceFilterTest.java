@@ -87,7 +87,7 @@ public class SingleTableInheritanceFilterTest {
 
 	@Entity(name = "AbstractSuperClass")
 	@DiscriminatorColumn(name = "DISC_COL", discriminatorType = DiscriminatorType.INTEGER)
-	@FilterDef(name = "dummy_filter", defaultCondition = "(ID IS NOT NULL)")
+	@FilterDef(name = "dummy_filter", defaultCondition = "(id IS NOT NULL)")
 	@Filter(name = "dummy_filter")
 	public static abstract class AbstractSuperClass {
 		@Id

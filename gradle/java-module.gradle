@@ -31,6 +31,8 @@ apply plugin: 'java-library'
 apply plugin: 'biz.aQute.bnd.builder'
 apply plugin: 'org.hibernate.orm.database-service'
 
+apply plugin: 'org.checkerframework'
+
 apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
@@ -502,6 +504,9 @@ checkstyle {
 
 // exclude generated java sources - by explicitly setting the base source dir
 tasks.checkstyleMain.source = 'src/main/java'
+tasks.checkstyleMain
+		.exclude('org/hibernate/jpamodelgen/util/NullnessUtil.java')
+		.exclude('org/hibernate/internal/util/NullnessUtil.java')
 
 // define a second checkstyle task for checking non-fatal violations
 task nonFatalCheckstyle(type:Checkstyle) {
@@ -509,6 +514,17 @@ task nonFatalCheckstyle(type:Checkstyle) {
 	classpath = project.configurations.checkstyle
 	showViolations = false
 	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
+}
+
+checkerFramework {
+	checkers = [
+			'org.checkerframework.checker.nullness.NullnessChecker'
+	]
+	extraJavacArgs = [
+	        '-AsuppressWarnings=initialization',
+			"-Astubs=${project.rootDir}/checkerstubs",
+			'-AonlyDefs=^org\\.hibernate\\.jpamodelgen\\.'
+	]
 }
 
 

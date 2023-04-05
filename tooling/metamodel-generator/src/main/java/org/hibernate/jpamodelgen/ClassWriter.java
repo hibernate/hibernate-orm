@@ -27,6 +27,8 @@ import org.hibernate.jpamodelgen.model.MetaEntity;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Helper class to write the actual meta model class using the  {@link javax.annotation.processing.Filer} API.
  *
@@ -35,6 +37,8 @@ import org.hibernate.jpamodelgen.util.TypeUtils;
  */
 public final class ClassWriter {
 	private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
+	// See https://github.com/typetools/checker-framework/issues/979
+	@SuppressWarnings( "type.argument" )
 	private static final ThreadLocal<SimpleDateFormat> SIMPLE_DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		public SimpleDateFormat initialValue() {
@@ -140,7 +144,7 @@ public final class ClassWriter {
 		pw.println( " {" );
 	}
 
-	private static String findMappedSuperClass(MetaEntity entity, Context context) {
+	private static @Nullable String findMappedSuperClass(MetaEntity entity, Context context) {
 		TypeMirror superClass = entity.getTypeElement().getSuperclass();
 		//superclass of Object is of NoType which returns some other kind
 		while ( superClass.getKind() == TypeKind.DECLARED ) {

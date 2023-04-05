@@ -26,6 +26,7 @@ import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.MetaEntity;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
+import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.jaxb.Attributes;
@@ -43,6 +44,8 @@ import org.hibernate.jpamodelgen.xml.jaxb.MapKeyClass;
 import org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass;
 import org.hibernate.jpamodelgen.xml.jaxb.OneToMany;
 import org.hibernate.jpamodelgen.xml.jaxb.OneToOne;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Collects XML-based meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -64,13 +67,13 @@ public class XmlMetaEntity implements MetaEntity {
 	private final String packageName;
 	private final String defaultPackageName;
 	private final ImportContext importContext;
-	private final List<MetaAttribute> members = new ArrayList<MetaAttribute>();
+	private final List<MetaAttribute> members = new ArrayList<>();
 	private final TypeElement element;
 	private final Context context;
 	private final boolean isMetaComplete;
 
-	private Attributes attributes;
-	private EmbeddableAttributes embeddableAttributes;
+	private @Nullable Attributes attributes;
+	private @Nullable EmbeddableAttributes embeddableAttributes;
 	private AccessTypeInformation accessTypeInfo;
 
 	/**
@@ -90,8 +93,13 @@ public class XmlMetaEntity implements MetaEntity {
 		this( ormEntity.getClazz(), defaultPackageName, element, context, ormEntity.isMetadataComplete() );
 		this.attributes = ormEntity.getAttributes();
 		this.embeddableAttributes = null;
+	}
+
+	static XmlMetaEntity create(Entity ormEntity, String defaultPackageName, TypeElement element, Context context) {
+		XmlMetaEntity entity = new XmlMetaEntity( ormEntity, defaultPackageName, element, context );
 		// entities can be directly initialised
-		init();
+		entity.init();
+		return entity;
 	}
 
 	XmlMetaEntity(MappedSuperclass mappedSuperclass, String defaultPackageName, TypeElement element, Context context) {
@@ -125,15 +133,15 @@ public class XmlMetaEntity implements MetaEntity {
 		this.clazzName = className;
 		this.packageName = pkg;
 		this.context = context;
-		this.importContext = new ImportContextImpl( getPackageName() );
+		this.importContext = new ImportContextImpl( pkg );
 		this.element = element;
-		this.isMetaComplete = initIsMetaComplete( metaComplete );
+		this.isMetaComplete = initIsMetaComplete( context, metaComplete );
 	}
 
 	private final void init() {
 		context.logMessage( Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + "." );
 
-		this.accessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
+		this.accessTypeInfo = NullnessUtil.castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
 		if ( attributes != null ) {
 			parseAttributes( attributes );
 		}
@@ -197,11 +205,11 @@ public class XmlMetaEntity implements MetaEntity {
 		return sb.toString();
 	}
 
-	private boolean initIsMetaComplete(Boolean metadataComplete) {
+	private static boolean initIsMetaComplete(Context context, Boolean metadataComplete) {
 		return context.isFullyXmlConfigured() || Boolean.TRUE.equals( metadataComplete );
 	}
 
-	private String[] getCollectionTypes(String propertyName, String explicitTargetEntity, String explicitMapKeyClass, ElementKind expectedElementKind) {
+	private @Nullable String @Nullable[] getCollectionTypes(String propertyName, String explicitTargetEntity, @Nullable String explicitMapKeyClass, ElementKind expectedElementKind) {
 		for ( Element elem : element.getEnclosedElements() ) {
 			if ( !expectedElementKind.equals( elem.getKind() ) ) {
 				continue;
@@ -226,7 +234,7 @@ public class XmlMetaEntity implements MetaEntity {
 		return null;
 	}
 
-	private DeclaredType determineDeclaredType(Element elem) {
+	private @Nullable DeclaredType determineDeclaredType(Element elem) {
 		DeclaredType type = null;
 		if ( elem.asType() instanceof DeclaredType ) {
 			type = ( (DeclaredType) elem.asType() );
@@ -240,17 +248,16 @@ public class XmlMetaEntity implements MetaEntity {
 		return type;
 	}
 
-	private String[] determineTypes(String propertyName, String explicitTargetEntity, String explicitMapKeyClass, DeclaredType type) {
-		String[] types = new String[3];
+	private @Nullable String[] determineTypes(String propertyName, String explicitTargetEntity, @Nullable String explicitMapKeyClass, DeclaredType type) {
+		@Nullable String[] types = new String[3];
 		determineTargetType( type, propertyName, explicitTargetEntity, types );
-		determineCollectionType( type, types );
-		if ( types[1].equals( "jakarta.persistence.metamodel.MapAttribute" ) ) {
+		if ( determineCollectionType( type, types ).equals( "jakarta.persistence.metamodel.MapAttribute" ) ) {
 			determineMapType( type, explicitMapKeyClass, types );
 		}
 		return types;
 	}
 
-	private void determineMapType(DeclaredType type, String explicitMapKeyClass, String[] types) {
+	private void determineMapType(DeclaredType type, @Nullable String explicitMapKeyClass, @Nullable String[] types) {
 		if ( explicitMapKeyClass != null ) {
 			types[2] = explicitMapKeyClass;
 		}
@@ -259,11 +266,11 @@ public class XmlMetaEntity implements MetaEntity {
 		}
 	}
 
-	private void determineCollectionType(DeclaredType type, String[] types) {
-		types[1] = COLLECTIONS.get( type.asElement().toString() );
+	private String determineCollectionType(DeclaredType type, @Nullable String[] types) {
+		return NullnessUtil.castNonNull( types[1] = COLLECTIONS.get( type.asElement().toString() ) );
 	}
 
-	private void determineTargetType(DeclaredType type, String propertyName, String explicitTargetEntity, String[] types) {
+	private void determineTargetType(DeclaredType type, String propertyName, String explicitTargetEntity, @Nullable String[] types) {
 		List<? extends TypeMirror> typeArguments = type.getTypeArguments();
 
 		if ( typeArguments.size() == 0 && explicitTargetEntity == null ) {
@@ -288,7 +295,7 @@ public class XmlMetaEntity implements MetaEntity {
 	 * @return The entity type for this property  or {@code null} if the property with the name and the matching access
 	 *         type does not exist.
 	 */
-	private String getType(String propertyName, String explicitTargetEntity, ElementKind expectedElementKind) {
+	private @Nullable String getType(String propertyName, @Nullable String explicitTargetEntity, ElementKind expectedElementKind) {
 		for ( Element elem : element.getEnclosedElements() ) {
 			if ( !expectedElementKind.equals( elem.getKind() ) ) {
 				continue;
@@ -413,7 +420,7 @@ public class XmlMetaEntity implements MetaEntity {
 		}
 	}
 
-	private void parseEmbeddableAttributes(EmbeddableAttributes attributes) {
+	private void parseEmbeddableAttributes(@Nullable EmbeddableAttributes attributes) {
 		if ( attributes == null ) {
 			return;
 		}
@@ -449,7 +456,7 @@ public class XmlMetaEntity implements MetaEntity {
 	}
 
 	private boolean parseElementCollection(ElementCollection collection) {
-		String[] types;
+		@Nullable String @Nullable[] types;
 		XmlMetaCollection metaCollection;
 		ElementKind elementKind = getElementKind( collection.getAccess() );
 		String explicitTargetClass = determineExplicitTargetEntity( collection.getTargetClass() );
@@ -464,11 +471,14 @@ public class XmlMetaEntity implements MetaEntity {
 			return true;
 		}
 		if ( types != null ) {
-			if ( types[2] == null ) {
-				metaCollection = new XmlMetaCollection( this, collection.getName(), types[0], types[1] );
+			final String type = NullnessUtil.castNonNull( types[0] );
+			final String collectionType = NullnessUtil.castNonNull( types[1] );
+			final String keyType = types[2];
+			if ( keyType == null ) {
+				metaCollection = new XmlMetaCollection( this, collection.getName(), type, collectionType );
 			}
 			else {
-				metaCollection = new XmlMetaMap( this, collection.getName(), types[0], types[1], types[2] );
+				metaCollection = new XmlMetaMap( this, collection.getName(), type, collectionType, keyType );
 			}
 			members.add( metaCollection );
 		}
@@ -495,7 +505,7 @@ public class XmlMetaEntity implements MetaEntity {
 		return explicitTargetClass;
 	}
 
-	private String determineExplicitMapKeyClass(MapKeyClass mapKeyClass) {
+	private @Nullable String determineExplicitMapKeyClass(MapKeyClass mapKeyClass) {
 		String explicitMapKey = null;
 		if ( mapKeyClass != null ) {
 			explicitMapKey = StringUtil.determineFullyQualifiedClassName( defaultPackageName, mapKeyClass.getClazz() );
@@ -504,7 +514,7 @@ public class XmlMetaEntity implements MetaEntity {
 	}
 
 	private boolean parseOneToMany(OneToMany oneToMany) {
-		String[] types;
+		@Nullable String @Nullable [] types;
 		XmlMetaCollection metaCollection;
 		ElementKind elementKind = getElementKind( oneToMany.getAccess() );
 		String explicitTargetClass = determineExplicitTargetEntity( oneToMany.getTargetEntity() );
@@ -517,11 +527,14 @@ public class XmlMetaEntity implements MetaEntity {
 			return true;
 		}
 		if ( types != null ) {
-			if ( types[2] == null ) {
-				metaCollection = new XmlMetaCollection( this, oneToMany.getName(), types[0], types[1] );
+			final String type = NullnessUtil.castNonNull( types[0] );
+			final String collectionType = NullnessUtil.castNonNull( types[1] );
+			final String keyType = types[2];
+			if ( keyType == null ) {
+				metaCollection = new XmlMetaCollection( this, oneToMany.getName(), type, collectionType );
 			}
 			else {
-				metaCollection = new XmlMetaMap( this, oneToMany.getName(), types[0], types[1], types[2] );
+				metaCollection = new XmlMetaMap( this, oneToMany.getName(), type, collectionType, keyType );
 			}
 			members.add( metaCollection );
 		}
@@ -529,7 +542,7 @@ public class XmlMetaEntity implements MetaEntity {
 	}
 
 	private boolean parseManyToMany(ManyToMany manyToMany) {
-		String[] types;
+		@Nullable String @Nullable [] types;
 		XmlMetaCollection metaCollection;
 		ElementKind elementKind = getElementKind( manyToMany.getAccess() );
 		String explicitTargetClass = determineExplicitTargetEntity( manyToMany.getTargetEntity() );
@@ -544,11 +557,14 @@ public class XmlMetaEntity implements MetaEntity {
 			return true;
 		}
 		if ( types != null ) {
-			if ( types[2] == null ) {
-				metaCollection = new XmlMetaCollection( this, manyToMany.getName(), types[0], types[1] );
+			final String type = NullnessUtil.castNonNull( types[0] );
+			final String collectionType = NullnessUtil.castNonNull( types[1] );
+			final String keyType = types[2];
+			if ( keyType == null ) {
+				metaCollection = new XmlMetaCollection( this, manyToMany.getName(), type, collectionType );
 			}
 			else {
-				metaCollection = new XmlMetaMap( this, manyToMany.getName(), types[0], types[1], types[2] );
+				metaCollection = new XmlMetaMap( this, manyToMany.getName(), type, collectionType, keyType );
 			}
 			members.add( metaCollection );
 		}

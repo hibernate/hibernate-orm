@@ -38,6 +38,8 @@ import org.hibernate.jpamodelgen.xml.jaxb.Persistence;
 import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitDefaults;
 import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitMetadata;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Parser for JPA XML descriptors (persistence.xml and referenced mapping files).
  *
@@ -105,7 +107,7 @@ public class JpaDescriptorParser {
 		return mappingFileNames;
 	}
 
-	private Persistence getPersistence() {
+	private @Nullable Persistence getPersistence() {
 		Persistence persistence = null;
 		String persistenceXmlLocation = context.getPersistenceXmlLocation();
 		final InputStream stream = xmlParserHelper.getInputStreamForResource( persistenceXmlLocation );
@@ -249,7 +251,7 @@ public class JpaDescriptorParser {
 				continue;
 			}
 
-			XmlMetaEntity metaEntity = new XmlMetaEntity(
+			XmlMetaEntity metaEntity = XmlMetaEntity.create(
 					entity, defaultPackageName, getXmlMappedType( fqcn ), context
 			);
 			if ( context.containsMetaEntity( fqcn ) ) {
@@ -333,8 +335,9 @@ public class JpaDescriptorParser {
 
 	private AccessType determineEntityAccessType(EntityMappings mappings) {
 		AccessType accessType = context.getPersistenceUnitDefaultAccessType();
-		if ( mappings.getAccess() != null ) {
-			accessType = mapXmlAccessTypeToJpaAccessType( mappings.getAccess() );
+		final org.hibernate.jpamodelgen.xml.jaxb.AccessType mappingsAccess = mappings.getAccess();
+		if ( mappingsAccess != null ) {
+			accessType = mapXmlAccessTypeToJpaAccessType( mappingsAccess );
 		}
 		return accessType;
 	}
@@ -456,15 +459,11 @@ public class JpaDescriptorParser {
 
 	private AccessType mapXmlAccessTypeToJpaAccessType(org.hibernate.jpamodelgen.xml.jaxb.AccessType xmlAccessType) {
 		switch ( xmlAccessType ) {
-			case FIELD: {
+			case FIELD:
 				return AccessType.FIELD;
-			}
-			case PROPERTY: {
+			case PROPERTY:
 				return AccessType.PROPERTY;
-			}
-			default: {
-			}
 		}
-		return null;
+		throw new IllegalArgumentException( "Unknown access type: " + xmlAccessType );
 	}
 }

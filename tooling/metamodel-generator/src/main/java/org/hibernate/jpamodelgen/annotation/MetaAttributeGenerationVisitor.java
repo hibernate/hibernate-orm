@@ -25,13 +25,16 @@ import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Hardy Ferentschik
  */
-public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<AnnotationMetaAttribute, Element> {
+public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<@Nullable AnnotationMetaAttribute, Element> {
 
 	/**
 	 * FQCN of the Hibernate-specific {@code @Target} annotation.
@@ -54,12 +57,12 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	}
 
 	@Override
-	public AnnotationMetaAttribute visitPrimitive(PrimitiveType t, Element element) {
+	public @Nullable AnnotationMetaAttribute visitPrimitive(PrimitiveType t, Element element) {
 		return new AnnotationMetaSingleAttribute( entity, element, TypeUtils.toTypeString( t ) );
 	}
 
 	@Override
-	public AnnotationMetaAttribute visitArray(ArrayType t, Element element) {
+	public @Nullable AnnotationMetaAttribute visitArray(ArrayType t, Element element) {
 		// METAGEN-2 - For now we handle arrays as SingularAttribute
 		// The code below is an attempt to be closer to the spec and only allow byte[], Byte[], char[] and Character[]
 //			AnnotationMetaSingleAttribute attribute = null;
@@ -81,7 +84,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	}
 
 	@Override
-	public AnnotationMetaAttribute visitTypeVariable(TypeVariable t, Element element) {
+	public @Nullable AnnotationMetaAttribute visitTypeVariable(TypeVariable t, Element element) {
 		// METAGEN-29 - for a type variable we use the upper bound
 		TypeMirror mirror = t.getUpperBound();
 		TypeMirror erasedType = context.getTypeUtils().erasure( mirror );
@@ -91,7 +94,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	}
 
 	@Override
-	public AnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
+	public @Nullable AnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
 		AnnotationMetaAttribute metaAttribute = null;
 		TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
@@ -110,7 +113,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		return metaAttribute;
 	}
 
-	private AnnotationMetaAttribute createMetaCollectionAttribute(DeclaredType declaredType, Element element, String fqNameOfReturnType, String collection, String targetEntity) {
+	private @Nullable AnnotationMetaAttribute createMetaCollectionAttribute(DeclaredType declaredType, Element element, String fqNameOfReturnType, String collection, @Nullable String targetEntity) {
 		if ( TypeUtils.containsAnnotation( element, Constants.ELEMENT_COLLECTION ) ) {
 			String explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
 			TypeMirror collectionElementType = TypeUtils.getCollectionElementType(
@@ -164,7 +167,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	}
 
 	@Override
-	public AnnotationMetaAttribute visitExecutable(ExecutableType t, Element p) {
+	public @Nullable AnnotationMetaAttribute visitExecutable(ExecutableType t, Element p) {
 		if ( !p.getKind().equals( ElementKind.METHOD ) ) {
 			return null;
 		}
@@ -196,13 +199,12 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		return returnedElement.asType().accept( basicVisitor, returnedElement );
 	}
 
-	private AnnotationMetaAttribute createAnnotationMetaAttributeForMap(DeclaredType declaredType, Element element, String collection, String targetEntity) {
+	private @Nullable AnnotationMetaAttribute createAnnotationMetaAttributeForMap(DeclaredType declaredType, Element element, String collection, @Nullable String targetEntity) {
+		final AnnotationMirror annotationMirror = TypeUtils.getAnnotationMirror( element, Constants.MAP_KEY_CLASS );
 		String keyType;
-		if ( TypeUtils.containsAnnotation( element, Constants.MAP_KEY_CLASS ) ) {
-			TypeMirror typeMirror = (TypeMirror) TypeUtils.getAnnotationValue(
-					TypeUtils.getAnnotationMirror(
-							element, Constants.MAP_KEY_CLASS
-					), TypeUtils.DEFAULT_ANNOTATION_PARAMETER_NAME
+		if ( annotationMirror != null ) {
+			TypeMirror typeMirror = (TypeMirror) NullnessUtil.castNonNull(
+					TypeUtils.getAnnotationValue( annotationMirror, TypeUtils.DEFAULT_ANNOTATION_PARAMETER_NAME )
 			);
 			keyType = typeMirror.toString();
 		}
@@ -218,7 +220,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		);
 	}
 
-	private String getElementType(DeclaredType declaredType, String targetEntity) {
+	private String getElementType(DeclaredType declaredType, @Nullable String targetEntity) {
 		if ( targetEntity != null ) {
 			return targetEntity;
 		}
@@ -247,7 +249,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	 *
 	 * @return target entity class name as string or {@code null} if no targetEntity is here or if equals to void
 	 */
-	private String getTargetEntity(List<? extends AnnotationMirror> annotations) {
+	private @Nullable String getTargetEntity(List<? extends AnnotationMirror> annotations) {
 		String fullyQualifiedTargetEntityName = null;
 		for ( AnnotationMirror mirror : annotations ) {
 			if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ELEMENT_COLLECTION ) ) {
@@ -266,7 +268,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		return fullyQualifiedTargetEntityName;
 	}
 
-	private String getFullyQualifiedClassNameOfTargetEntity(AnnotationMirror mirror, String parameterName) {
+	private @Nullable String getFullyQualifiedClassNameOfTargetEntity(AnnotationMirror mirror, String parameterName) {
 		assert mirror != null;
 		assert parameterName != null;
 
@@ -291,6 +293,7 @@ class BasicAttributeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 	private final Context context;
 
 	public BasicAttributeVisitor(Context context) {
+		super( Boolean.FALSE );
 		this.context = context;
 	}
 

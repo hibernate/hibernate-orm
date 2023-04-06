@@ -15,21 +15,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
+import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.results.LoadingLogger;
 
 /**
- * Standard MultiNaturalIdLoader implementation
+ * MultiNaturalIdLoader implementation using SQL IN predicate to specify the ids
  */
-public class MultiNaturalIdLoaderStandard<E> implements MultiNaturalIdLoader<E> {
-
-	// todo (6.0) : much of the execution logic here is borrowed from `org.hibernate.loader.ast.internal.MultiIdEntityLoaderStandardImpl`
-	// 	- consider ways to consolidate/share logic
-	//		- actually, org.hibernate.loader.ast.internal.MultiNaturalIdLoadingBatcher is pretty close
-
+public class MultiNaturalIdLoaderInPredicate<E> implements MultiNaturalIdLoader<E>, SqlInPredicateMultiKeyLoader {
 	private final EntityMappingType entityDescriptor;
 
-	public MultiNaturalIdLoaderStandard(EntityMappingType entityDescriptor) {
+	public MultiNaturalIdLoaderInPredicate(EntityMappingType entityDescriptor) {
 		this.entityDescriptor = entityDescriptor;
 	}
 
@@ -54,7 +50,7 @@ public class MultiNaturalIdLoaderStandard<E> implements MultiNaturalIdLoader<E> 
 			maxBatchSize = options.getBatchSize();
 		}
 		else {
-			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
+			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getMultiKeyLoadSizingStrategy().determineOptimalBatchLoadSize(
 					entityDescriptor.getNaturalIdMapping().getJdbcTypeCount(),
 					naturalIds.length,
 					sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled()

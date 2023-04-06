@@ -25,6 +25,14 @@ public class B {
 
   private String otherProperty;
 
+  public B() {
+  }
+
+  public B(Integer idPart1, Integer idPart2) {
+    this.idPart1 = idPart1;
+    this.idPart2 = idPart2;
+  }
+
   public Integer getIdPart1() {
     return idPart1;
   }

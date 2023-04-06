@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
-import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
+import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderInPredicate;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.UnsupportedMappingException;
@@ -251,7 +251,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public MultiNaturalIdLoader<?> makeMultiLoader(EntityMappingType entityDescriptor) {
-		return new MultiNaturalIdLoaderStandard<>( entityDescriptor );
+		return new MultiNaturalIdLoaderInPredicate<>( entityDescriptor );
 	}
 
 	@Override

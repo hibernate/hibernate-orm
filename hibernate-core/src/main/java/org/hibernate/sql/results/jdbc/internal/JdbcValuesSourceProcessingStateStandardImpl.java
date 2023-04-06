@@ -21,19 +21,16 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
-import org.hibernate.persister.entity.Loadable;
-import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.collection.internal.ArrayInitializer;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
+import org.hibernate.sql.results.graph.collection.internal.ArrayInitializer;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -188,9 +185,9 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 					final Callback callback = executionContext.getCallback();
 					if ( callback != null ) {
 						callback.invokeAfterLoadActions(
-								getSession(),
 								loadingEntityEntry.getEntityInstance(),
-								(Loadable) loadingEntityEntry.getDescriptor()
+								loadingEntityEntry.getDescriptor(),
+								getSession()
 						);
 					}
 				}

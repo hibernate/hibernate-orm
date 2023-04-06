@@ -32,6 +32,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiat
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
 import org.hibernate.event.internal.EntityCopyObserverFactoryInitiator;
 import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactoryInitiator;
+import org.hibernate.loader.ast.internal.BatchLoaderFactoryInitiator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInitiator;
@@ -158,6 +159,7 @@ public final class StandardServiceInitiators {
 
 		// ParameterMarkerStrategy
 		serviceInitiators.add( ParameterMarkerStrategyInitiator.INSTANCE );
+		serviceInitiators.add( BatchLoaderFactoryInitiator.INSTANCE );
 
 		serviceInitiators.trimToSize();
 

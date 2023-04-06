@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
-import org.hibernate.persister.entity.Loadable;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.exec.spi.Callback;
 
 /**
@@ -32,9 +32,9 @@ public class CallbackImpl implements Callback {
 	}
 
 	@Override
-	public void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
+	public void invokeAfterLoadActions(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session) {
 		for ( int i = 0; i < afterLoadActions.size(); i++ ) {
-			afterLoadActions.get( i ).afterLoad( session, entity, persister );
+			afterLoadActions.get( i ).afterLoad( entity, entityMappingType, session );
 		}
 	}
 }

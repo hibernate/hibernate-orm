@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
-public interface NaturalIdLoader<T> extends EntityLoader {
+public interface NaturalIdLoader<T> extends EntityLoader, MultiKeyLoader {
 
 	/**
 	 * Perform the load of the entity by its natural-id

@@ -15,18 +15,13 @@ import java.util.function.BiConsumer;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
-import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
+import org.hibernate.loader.ast.internal.*;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.*;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -36,11 +31,14 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
+
 /**
  * Single-attribute NaturalIdMapping implementation
  */
 public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaType.CoercionContext {
 	private final SingularAttributeMapping attribute;
+	private final SessionFactoryImplementor sessionFactory;
 	private final TypeConfiguration typeConfiguration;
 
 	public SimpleNaturalIdMapping(
@@ -53,7 +51,8 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		);
 		this.attribute = attribute;
 
-		typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
+		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		this.typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
 
 	}
 
@@ -62,7 +61,11 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public void verifyFlushState(Object id, Object[] currentState, Object[] loadedState, SharedSessionContractImplementor session) {
+	public void verifyFlushState(
+			Object id,
+			Object[] currentState,
+			Object[] loadedState,
+			SharedSessionContractImplementor session) {
 		if ( isMutable() ) {
 			// EARLY EXIT!!!
 			// the natural id is mutable (!immutable), no need to do the checks
@@ -77,7 +80,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 				? persistenceContext.getNaturalIdSnapshot( id, persister )
 				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
 
-		if ( ! areEqual( naturalId, snapshot, session ) ) {
+		if ( !areEqual( naturalId, snapshot, session ) ) {
 			throw new HibernateException(
 					String.format(
 							"An immutable natural identifier of entity %s was altered from `%s` to `%s`",
@@ -99,7 +102,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			return state[0];
 		}
 
-		return state[ attribute.getStateArrayPosition() ];
+		return state[attribute.getStateArrayPosition()];
 	}
 
 	@Override
@@ -122,7 +125,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			}
 		}
 
-		if ( ! getJavaType().getJavaTypeClass().isInstance( naturalIdValue ) ) {
+		if ( !getJavaType().getJavaTypeClass().isInstance( naturalIdValue ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							Locale.ROOT,
@@ -146,7 +149,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		return normalizeIncomingValue( incoming );
 	}
 
-	@SuppressWarnings( "rawtypes" )
+	@SuppressWarnings("rawtypes")
 	public Object normalizeIncomingValue(Object naturalIdToLoad) {
 		final Object normalizedValue;
 		if ( naturalIdToLoad instanceof Map ) {
@@ -195,7 +198,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
 		attribute.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
@@ -288,7 +294,11 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 
 	@Override
 	public MultiNaturalIdLoader<?> makeMultiLoader(EntityMappingType entityDescriptor) {
-		return new MultiNaturalIdLoaderStandard<>( entityDescriptor );
+		boolean supportsSqlArrayType = supportsSqlArrayType( sessionFactory.getFastSessionServices().jdbcServices.getDialect() );
+		if ( supportsSqlArrayType && attribute instanceof BasicAttributeMapping ) {
+			return new MultiNaturalIdLoaderArrayParam<>( entityDescriptor );
+		}
+		return new MultiNaturalIdLoaderInPredicate<>( entityDescriptor );
 	}
 
 	@Override

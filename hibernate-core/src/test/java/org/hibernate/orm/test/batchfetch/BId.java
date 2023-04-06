@@ -15,6 +15,14 @@ public class BId
   private Integer idPart1;
   private Integer idPart2;
 
+  public BId() {
+  }
+
+  public BId(Integer idPart1, Integer idPart2) {
+    this.idPart1 = idPart1;
+    this.idPart2 = idPart2;
+  }
+
   public Integer getIdPart1() {
     return idPart1;
   }

@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -30,6 +32,7 @@ import jakarta.persistence.OrderBy;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.FetchType.LAZY;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -111,18 +114,24 @@ public class NestedLazyManyToOneTest {
 				else {
 					Set<Entity3> children3 = child2.getChildren();
 					if ( child2.getId().equals( "0_0" ) ) {
-						assertEquals( 5, children3.size() );
+						assertEquals( 5, children3.size(), "Size of `Child2(0_0).children3` did not match expectation" );
 					}
 					else {
-						assertEquals( 0, children3.size() );
+						assertEquals( 0, children3.size(), "Size of `Child2(" + child2.getId() + ").children3` did not match expectation" );
 					}
 				}
 			}
 
 			assertEquals( 8, entity1.getChildren().size() );
-			statementInspector.assertExecutedCount( 3 ); // 1 for Entity1, 1 for Entity2, 1 for Entity3
+			// 1 for Entity1, 1 for Entity2, 1 for Entity3
+			statementInspector.assertExecutedCount( 3 );
 			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 1, QUESTION_MARK, 1 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 2, QUESTION_MARK, 5 );
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
+				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 2 ), '?' ) ).isEqualTo( 1 );
+			}
+			else {
+				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 2 ), '?' ) ).isEqualTo( 5 );
+			}
 		} );
 	}
 
@@ -143,11 +152,18 @@ public class NestedLazyManyToOneTest {
 				}
 			}
 
-			assertEquals( 8, entity1.getChildren().size() );
-			statementInspector.assertExecutedCount( 4 ); // 1 for Entity1, 1 for Entity2, 2 for Entity3
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 1, QUESTION_MARK, 1 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 2, QUESTION_MARK, 5 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 3, QUESTION_MARK, 3 );
+			assertThat( entity1.getChildren() ).hasSize( 8 );
+			// 1 for Entity1, 1 for Entity2, 2 for Entity3
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 4 );
+			assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 1 ), '?' ) ).isEqualTo( 1 );
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
+				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 2 ), '?' ) ).isEqualTo( 1 );
+				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 3 ), '?' ) ).isEqualTo( 1 );
+			}
+			else {
+				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 2 ), '?' ) ).isEqualTo( 5 );
+				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 3 ), '?' ) ).isEqualTo( 5 );
+			}
 		} );
 	}
 

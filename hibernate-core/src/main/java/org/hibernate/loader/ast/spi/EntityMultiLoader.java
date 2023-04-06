@@ -7,9 +7,9 @@
 package org.hibernate.loader.ast.spi;
 
 /**
- * Commonality for multi-loading
+ * Commonality for multi-loading an {@linkplain org.hibernate.metamodel.mapping.EntityMappingType entity}
  *
  * @param <T> The loaded model part
  */
-public interface MultiLoader<T> extends EntityLoader {
+public interface EntityMultiLoader<T> extends EntityLoader, MultiKeyLoader {
 }

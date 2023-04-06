@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
@@ -55,6 +56,15 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		if ( isNegated ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		// column in ( unnest(?) )
+		inArrayPredicate.getTestExpression().accept( this );
+		appendSql( " in (unnest(" );
+		inArrayPredicate.getArrayParameter().accept( this );
+		appendSql( "))" );
 	}
 
 	@Override

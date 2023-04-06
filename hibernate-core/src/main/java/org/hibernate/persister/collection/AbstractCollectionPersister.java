@@ -58,11 +58,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
-import org.hibernate.loader.ast.internal.CollectionLoaderBatchKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
 import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
+import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -738,13 +738,64 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
+	private CollectionLoader reusableCollectionLoader;
+
 	protected CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
-		final int batchSize = getBatchSize();
-		if ( batchSize > 1 ) {
-			return new CollectionLoaderBatchKey( attributeMapping, batchSize, loadQueryInfluencers, getFactory() );
+		if ( canUseReusableCollectionLoader( loadQueryInfluencers ) ) {
+			if ( reusableCollectionLoader == null ) {
+				reusableCollectionLoader = generateCollectionLoader( LoadQueryInfluencers.NONE );
+			}
+			return reusableCollectionLoader;
 		}
 
+		// create a one-off
+		return generateCollectionLoader( loadQueryInfluencers );
+	}
 
+	// todo (batch-fetch) : `affectedByAnyInfluencers` requires collecting the fetch-profile details
+	//		affecting this collection.  Currently that is not collected, like it is with
+	//		`org.hibernate.persister.entity.AbstractEntityPersister.affectingFetchProfileNames` e.g.
+
+	//		- in SessionFactoryImpl, after building the fetchProfiles (or even while ideally), build
+	//			`Map<String, Map<String, Fetch.Style>>`.  The primary Map is keyed by the fetch role name and
+	//			refers to a nested Map, which is the fetch-style for the role, keyed by the profile-name.
+
+//	private boolean canUseReusableCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+//		final boolean affectedByAnyInfluencers = hasDefinedFilters() || attributeMapping.hasDefinedFetchProfiles();
+//		if ( !affectedByAnyInfluencers ) {
+//			// short-cut to avoid checking all enabled filters and profiles - there will never be any
+//			return true;
+//		}
+//
+//		// we can reuse it so long as none of the enabled influencers affect it
+//		return !isAffectedByEnabledFilters( loadQueryInfluencers )
+//				&& !isAffectedByEnabledFetchProfiles( loadQueryInfluencers );
+//	}
+	private boolean canUseReusableCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+		// we can reuse it so long as none of the enabled influencers affect it
+		return isNotInfluenced( loadQueryInfluencers );
+	}
+
+	private boolean isInfluenced(LoadQueryInfluencers loadQueryInfluencers) {
+		return isAffectedByEnabledFilters( loadQueryInfluencers )
+				|| isAffectedByEnabledFetchProfiles( loadQueryInfluencers )
+				|| isAffectedByEntityGraph( loadQueryInfluencers );
+	}
+
+	private boolean isNotInfluenced(LoadQueryInfluencers loadQueryInfluencers) {
+		return !isAffectedByEnabledFilters( loadQueryInfluencers )
+				&& !isAffectedByEnabledFetchProfiles( loadQueryInfluencers )
+				&& !isAffectedByEntityGraph( loadQueryInfluencers );
+	}
+
+
+	private CollectionLoader generateCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+		final int batchSize = getBatchSize();
+		if ( batchSize > 1 ) {
+			return getFactory().getServiceRegistry()
+					.getService( BatchLoaderFactory.class )
+					.createCollectionBatchLoader( batchSize, loadQueryInfluencers, attributeMapping, getFactory() );
+		}
 		return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, getFactory() );
 	}
 

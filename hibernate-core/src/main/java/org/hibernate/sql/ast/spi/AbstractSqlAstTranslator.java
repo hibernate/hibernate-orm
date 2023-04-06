@@ -153,6 +153,7 @@ import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate.FilterFragmentParameter;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate.FilterFragmentPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -6874,6 +6875,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		sqlBuffer.append( "array_contains(" );
+		inArrayPredicate.getArrayParameter().accept( this );
+		sqlBuffer.append( "," );
+		inArrayPredicate.getTestExpression().accept( this );
+		sqlBuffer.append( ')' );
 	}
 
 	@Override

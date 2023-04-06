@@ -118,7 +118,13 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 0 );
-	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
+
+	/**
+	 * NOTE : 2100 is the documented limit supposedly - but in my testing, sending
+	 * 2100 parameters fails saying it must be less than 2100.
+	 */
+	private static final int PARAM_LIST_SIZE_LIMIT = 2048;
+
 	// See microsoft.sql.Types.GEOMETRY
 	private static final int GEOMETRY_TYPE_CODE = -157;
 	// See microsoft.sql.Types.GEOGRAPHY

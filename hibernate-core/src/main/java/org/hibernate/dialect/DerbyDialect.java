@@ -629,6 +629,14 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
+	public int getInExpressionCountLimit() {
+		// Derby does not have a limit on the number of expressions/parameters per-se (it may, I just
+		// don't know). It does, however, have a limit on the size of the SQL text it will accept as a
+		// PreparedStatement; so let's limit this to a sensible value to avoid that.
+		return 512;
+	}
+
+	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );

@@ -47,7 +47,7 @@ import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.loader.BatchLoadSizingStrategy;
+import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
@@ -90,7 +90,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 /**
@@ -1241,8 +1240,13 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public BatchLoadSizingStrategy getDefaultBatchLoadSizingStrategy() {
-		return wrapped.getDefaultBatchLoadSizingStrategy();
+	public MultiKeyLoadSizingStrategy getBatchLoadSizingStrategy() {
+		return wrapped.getBatchLoadSizingStrategy();
+	}
+
+	@Override
+	public MultiKeyLoadSizingStrategy getMultiKeyLoadSizingStrategy() {
+		return wrapped.getMultiKeyLoadSizingStrategy();
 	}
 
 	@Override

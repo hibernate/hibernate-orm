@@ -119,13 +119,13 @@ import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
-import org.hibernate.loader.ast.internal.MultiIdLoaderStandard;
+import org.hibernate.loader.ast.internal.MultiIdEntityLoaderStandard;
 import org.hibernate.loader.ast.internal.Preparable;
 import org.hibernate.loader.ast.internal.SingleIdArrayLoadPlan;
-import org.hibernate.loader.ast.internal.SingleIdEntityLoaderDynamicBatch;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
 import org.hibernate.loader.ast.internal.SingleUniqueKeyEntityLoaderStandard;
+import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
@@ -538,7 +538,7 @@ public abstract class AbstractEntityPersister
 			singleIdEntityLoader = new SingleIdEntityLoaderStandardImpl<>( this, factory );
 		}
 
-		multiIdEntityLoader = new MultiIdLoaderStandard<>( this, persistentClass, factory );
+		multiIdEntityLoader = new MultiIdEntityLoaderStandard<>( this, persistentClass, factory );
 
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
@@ -1006,13 +1006,15 @@ public abstract class AbstractEntityPersister
 
 	private static SingleIdEntityLoader<?> createBatchingIdEntityLoader(
 			EntityMappingType entityDescriptor,
-			int batchSize,
+			int domainBatchSize,
 			SessionFactoryImplementor factory) {
-		return new SingleIdEntityLoaderDynamicBatch<>( entityDescriptor, batchSize, factory );
+		return factory.getServiceRegistry()
+				.getService( BatchLoaderFactory.class )
+				.createEntityBatchLoader( domainBatchSize, entityDescriptor, factory );
 	}
 
 	/**
-	 * We might need to use cache invalidation is we have formulas,
+	 * We might need to use cache invalidation if we have formulas,
 	 * dynamic update, or secondary tables.
 	 *
 	 * @see #isCacheInvalidationRequired()

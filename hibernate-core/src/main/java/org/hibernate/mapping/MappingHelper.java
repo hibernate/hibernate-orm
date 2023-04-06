@@ -17,7 +17,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
+import org.hibernate.metamodel.mapping.MappingModelCreationLogging;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -33,6 +33,8 @@ import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
+
+import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -107,7 +109,7 @@ public final class MappingHelper {
 			( (ParameterizedType) type ).setParameterValues( parameters == null ? EMPTY_PROPERTIES : parameters );
 		}
 		else if ( parameters != null && !parameters.isEmpty() ) {
-			MappingModelCreationLogger.LOGGER.debugf(
+			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 					"UserCollectionType impl does not implement ParameterizedType but parameters were present : `%s`",
 					type.getClass().getName()
 			);

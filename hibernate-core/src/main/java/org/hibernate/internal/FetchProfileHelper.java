@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Creates {@link FetchProfile}s.
+ * Create {@link FetchProfile} references from {@link org.hibernate.mapping.FetchProfile} references
  *
  * @author Gavin King
  */

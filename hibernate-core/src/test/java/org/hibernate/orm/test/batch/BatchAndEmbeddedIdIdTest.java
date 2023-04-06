@@ -31,7 +31,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -89,26 +89,25 @@ public class BatchAndEmbeddedIdIdTest {
 	@Test
 	public void testSelectChild(SessionFactoryScope scope) {
 		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
-		scope.inTransaction(
-				session -> {
-					statementInspector.clear();
-					List<Child> children = session.createQuery( "select c from Child c", Child.class ).getResultList();
-					statementInspector.assertExecutedCount( 3 );
-					assertThat( statementInspector.getSqlQueries()
-										.get( 1 )
-										.toLowerCase( Locale.ROOT )
-										.contains( "in(?,?,?,?,?)" ) ).isTrue();
-					assertThat( statementInspector.getSqlQueries()
-										.get( 2 )
-										.toLowerCase( Locale.ROOT )
-										.contains( "in(?,?,?,?,?)" ) ).isTrue();
-					statementInspector.clear();
-					for ( Child c : children ) {
-						c.getParent().getName();
-					}
-					statementInspector.assertExecutedCount( 0 );
-				}
-		);
+		scope.inTransaction( (session) -> {
+			statementInspector.clear();
+			List<Child> children = session.createQuery( "select c from Child c", Child.class ).getResultList();
+			statementInspector.assertExecutedCount( 3 );
+			if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsStandardArrays() ) {
+				assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "?" );
+				assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "?" );
+			}
+			else {
+				assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
+				assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
+			}
+
+			statementInspector.clear();
+			for ( Child c : children ) {
+				c.getParent().getName();
+			}
+			statementInspector.assertExecutedCount( 0 );
+		} );
 	}
 
 	@Test

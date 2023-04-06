@@ -107,13 +107,12 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 						lockOptionsToUse.setTimeOut( lockOptions.getTimeOut() );
 						lockOptionsToUse.setScope( lockOptions.getScope() );
 
-						executionContext.getCallback().registerAfterLoadAction(
-								(session, entity, persister) ->
-									session.asSessionImplementor().lock(
-											persister.getEntityName(),
-											entity,
-											lockOptionsToUse
-									)
+						executionContext.getCallback().registerAfterLoadAction( (entity, persister, session) ->
+								session.asSessionImplementor().lock(
+										persister.getEntityName(),
+										entity,
+										lockOptionsToUse
+								)
 						);
 					}
 				}

@@ -61,6 +61,7 @@ import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -378,6 +379,12 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 		for ( Expression listExpression : inListPredicate.getListExpressions() ) {
 			listExpression.accept( this );
 		}
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate predicate) {
+		predicate.getTestExpression().accept( this );
+		predicate.getArrayParameter().accept( this );
 	}
 
 	@Override

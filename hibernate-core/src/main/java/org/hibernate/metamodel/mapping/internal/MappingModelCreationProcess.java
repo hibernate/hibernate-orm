@@ -13,13 +13,15 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+
+import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
+import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_TRACE_ENABLED;
 
 /**
  * @author Steve Ebersole
@@ -41,11 +43,9 @@ public class MappingModelCreationProcess {
 	}
 
 	private final Map<String,EntityPersister> entityPersisterMap;
-
 	private final RuntimeModelCreationContext creationContext;
 
 	private String currentlyProcessingRole;
-
 	private List<PostInitCallbackEntry> postInitCallbacks;
 
 	private MappingModelCreationProcess(
@@ -89,7 +89,7 @@ public class MappingModelCreationProcess {
 	}
 
 	private void executePostInitCallbacks() {
-		MappingModelCreationLogger.LOGGER.debugf( "Starting post-init callbacks" );
+		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf( "Starting post-init callbacks" );
 
 		Map<PostInitCallbackEntry, Exception> exceptions = new HashMap<>();
 		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
@@ -112,7 +112,7 @@ public class MappingModelCreationProcess {
 				}
 				catch (Exception e) {
 					if ( e instanceof NonTransientException ) {
-						MappingModelCreationLogger.LOGGER.debugf(
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 								"Mapping-model creation encountered non-transient error : %s",
 								e
 						);
@@ -121,11 +121,11 @@ public class MappingModelCreationProcess {
 					exceptions.put( callbackEntry, e );
 
 					final String format = "Mapping-model creation encountered (possibly) transient error : %s";
-					if ( MappingModelCreationLogger.TRACE_ENABLED ) {
-						MappingModelCreationLogger.LOGGER.tracef( e, format, e );
+					if ( MAPPING_MODEL_CREATION_TRACE_ENABLED ) {
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef( e, format, e );
 					}
 					else {
-						MappingModelCreationLogger.LOGGER.debugf( format, e );
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf( format, e );
 					}
 				}
 			}
@@ -239,7 +239,7 @@ public class MappingModelCreationProcess {
 		}
 
 		private boolean process() {
-			MappingModelCreationLogger.LOGGER.debugf(
+			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 					"Starting PostInitCallbackEntry : %s",
 					description
 			);

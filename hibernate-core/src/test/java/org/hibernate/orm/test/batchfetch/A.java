@@ -8,20 +8,25 @@ package org.hibernate.orm.test.batchfetch;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
 @Entity
 public class A {
   @Id
-  @GeneratedValue
   private Integer id;
 
   private String otherProperty;
 
   @OneToOne(fetch = FetchType.LAZY)
   private B b;
+
+  public A() {
+  }
+
+  public A(Integer id) {
+    this.id = id;
+  }
 
   public Integer getId() {
     return id;

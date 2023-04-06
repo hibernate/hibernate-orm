@@ -11,6 +11,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -51,7 +52,7 @@ public abstract class BaseSqmUnitTest
 	}
 
 	@Override
-	public void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
+	public void invokeAfterLoadActions(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session) {
 	}
 
 	protected SqmSelectStatement<?> interpretSelect(String hql) {

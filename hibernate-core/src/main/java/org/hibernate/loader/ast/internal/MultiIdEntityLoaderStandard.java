@@ -46,17 +46,19 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.jboss.logging.Logger;
 
 /**
+ * Standard MultiIdEntityLoader
+ *
  * @author Steve Ebersole
  */
-public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
-	private static final Logger log = Logger.getLogger( MultiIdLoaderStandard.class );
+public class MultiIdEntityLoaderStandard<T> implements MultiIdEntityLoader<T> {
+	private static final Logger log = Logger.getLogger( MultiIdEntityLoaderStandard.class );
 
 	private final EntityPersister entityDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final int idJdbcTypeCount;
 
-	public MultiIdLoaderStandard(
+	public MultiIdEntityLoaderStandard(
 			EntityPersister entityDescriptor,
 			PersistentClass bootDescriptor,
 			SessionFactoryImplementor sessionFactory) {
@@ -108,7 +110,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			maxBatchSize = loadOptions.getBatchSize();
 		}
 		else {
-			maxBatchSize = dialect.getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
+			maxBatchSize = dialect.getBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
 					idJdbcTypeCount,
 					ids.length,
 					sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled()
@@ -409,7 +411,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			maxBatchSize = loadOptions.getBatchSize();
 		}
 		else {
-			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
+			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
 					entityDescriptor.getIdentifierType().getColumnSpan( session.getFactory() ),
 					numberOfIdsLeft,
 					sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled()

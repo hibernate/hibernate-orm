@@ -62,7 +62,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -101,7 +100,8 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogger.LOGGER;
+import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_DEBUG_ENABLED;
+import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -208,7 +208,7 @@ public class MappingModelCreationHelper {
 		final FetchStyle fetchStyle;
 		if ( declaringType instanceof EmbeddableMappingType ) {
 			if ( bootProperty.isLazy() ) {
-				LOGGER.debugf(
+				MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 						"Attribute was declared lazy, but is part of an embeddable - `%s#%s` - LAZY will be ignored",
 						declaringType.getNavigableRole().getFullPath(),
 						bootProperty.getName()
@@ -656,24 +656,23 @@ public class MappingModelCreationHelper {
 				sessionFactory
 		);
 
-		final PluralAttributeMappingImpl pluralAttributeMapping = mappingConverter
-				.apply( new PluralAttributeMappingImpl(
-						attrName,
-						bootValueMapping,
-						propertyAccess,
-						attributeMetadata,
-						collectionMappingType,
-						stateArrayPosition,
-						fetchableIndex,
-						elementDescriptor,
-						indexDescriptor,
-						identifierDescriptor,
-						timing,
-						style,
-						cascadeStyle,
-						declaringType,
-						collectionDescriptor
-				) );
+		final PluralAttributeMappingImpl pluralAttributeMapping = mappingConverter.apply( new PluralAttributeMappingImpl(
+				attrName,
+				bootValueMapping,
+				propertyAccess,
+				attributeMetadata,
+				collectionMappingType,
+				stateArrayPosition,
+				fetchableIndex,
+				elementDescriptor,
+				indexDescriptor,
+				identifierDescriptor,
+				timing,
+				style,
+				cascadeStyle,
+				declaringType,
+				collectionDescriptor
+		) );
 
 		creationProcess.registerInitializationCallback(
 				"PluralAttributeMapping(" + bootValueMapping.getRole() + ")#finishInitialization",
@@ -1695,8 +1694,8 @@ public class MappingModelCreationHelper {
 					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
 				if ( lazy ) {
-					if ( MappingModelCreationLogger.DEBUG_ENABLED ) {
-						MappingModelCreationLogger.LOGGER.debugf(
+					if ( MAPPING_MODEL_CREATION_DEBUG_ENABLED ) {
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 								"Forcing FetchTiming.IMMEDIATE for to-one association : %s.%s",
 								declaringType.getNavigableRole(),
 								bootProperty.getName()

@@ -8,13 +8,12 @@ package org.hibernate.loader.ast.spi;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 
 /**
  * Loader subtype for loading multiple entities by multiple identifier values.
  */
-public interface MultiIdEntityLoader<T> extends MultiLoader<T> {
+public interface MultiIdEntityLoader<T> extends EntityMultiLoader<T> {
 	/**
 	 * Load multiple entities by id.  The exact result depends on the passed options.
 	 */

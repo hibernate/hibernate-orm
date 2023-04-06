@@ -18,6 +18,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -36,6 +37,19 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 
 	public PostgreSQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		inArrayPredicate.getTestExpression().accept( this );
+		appendSql( " = any (" );
+		inArrayPredicate.getArrayParameter().accept( this );
+		appendSql( ")" );
+	}
+
+	@Override
+	protected String getArrayContainsFunction() {
+		return super.getArrayContainsFunction();
 	}
 
 	@Override

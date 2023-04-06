@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.mutationquery;
 
 import java.util.List;
 
-import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Where;
 import org.hibernate.query.MutationQuery;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -34,7 +34,7 @@ import static java.util.Arrays.stream;
 
 /**
  * Same as {@link MutationQueriesFilterTest} and {@link MutationQueriesWhereAndFilterTest},
- * but using only {@link SQLRestriction @SQLRestriction}
+ * but using only {@link Where @Where}
  *
  * @author Marco Belladelli
  */
@@ -164,7 +164,7 @@ public class MutationQueriesWhereTest {
 	}
 
 	@Entity( name = "UserEntity" )
-	@SQLRestriction( "deleted = false" )
+	@Where( clause = "deleted = false" )
 	public static class UserEntity {
 		@Id
 		private Long id;
@@ -183,7 +183,7 @@ public class MutationQueriesWhereTest {
 	@Entity( name = "DiscriminatorBase" )
 	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
 	@DiscriminatorColumn( name = "disc_col" )
-	@SQLRestriction( "deleted = false" )
+	@Where( clause = "deleted = false" )
 	public static class DiscriminatorBase {
 		@Id
 		private Long id;
@@ -206,7 +206,7 @@ public class MutationQueriesWhereTest {
 
 	@Entity( name = "TablePerClassBase" )
 	@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
-	@SQLRestriction( "deleted = false" )
+	@Where( clause = "deleted = false" )
 	public static abstract class TablePerClassBase {
 		@Id
 		private Long id;

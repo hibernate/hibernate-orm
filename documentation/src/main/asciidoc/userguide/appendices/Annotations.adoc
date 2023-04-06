@@ -1427,7 +1427,7 @@ See the <<chapters/domain/basic_types.adoc#mapping-database-generated-value-exam
 [[annotations-hibernate-where]]
 ==== `@Where`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Where.html[`@Where`] annotation is used to specify a custom SQL `WHERE` clause used when fetching an entity or a collection.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Where.html[`@Where`] annotation is used to specify a custom SQL `WHERE` clause used to filter out entities or collections.
 
 See the <<chapters/pc/PersistenceContext.adoc#pc-where-example,`@Where` mapping>> section for more info.
 

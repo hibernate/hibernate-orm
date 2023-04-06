@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Where;
 import org.hibernate.query.MutationQuery;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -36,7 +36,7 @@ import static java.util.Arrays.stream;
 
 /**
  * Same as {@link MutationQueriesWhereTest} and {@link MutationQueriesFilterTest},
- * but using both {@link SQLRestriction @SQLRestriction} and {@link Filter @Filter}
+ * but using both {@link Where @Where} and {@link Filter @Filter}
  *
  * @author Marco Belladelli
  */
@@ -176,7 +176,7 @@ public class MutationQueriesWhereAndFilterTest {
 	}
 
 	@Entity( name = "UserEntity" )
-	@SQLRestriction( "where_deleted = false" )
+	@Where( clause = "where_deleted = false" )
 	@FilterDef( name = "deleted_filter", defaultCondition = "filter_deleted = false" )
 	@Filter( name = "deleted_filter" )
 	public static class UserEntity {
@@ -199,7 +199,7 @@ public class MutationQueriesWhereAndFilterTest {
 	@Entity( name = "DiscriminatorBase" )
 	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
 	@DiscriminatorColumn( name = "disc_col" )
-	@SQLRestriction( "where_deleted = false" )
+	@Where( clause = "where_deleted = false" )
 	@Filter( name = "deleted_filter" )
 	public static class DiscriminatorBase {
 		@Id
@@ -225,7 +225,7 @@ public class MutationQueriesWhereAndFilterTest {
 
 	@Entity( name = "TablePerClassBase" )
 	@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
-	@SQLRestriction( "where_deleted = false" )
+	@Where( clause = "where_deleted = false" )
 	@Filter( name = "deleted_filter" )
 	public static abstract class TablePerClassBase {
 		@Id

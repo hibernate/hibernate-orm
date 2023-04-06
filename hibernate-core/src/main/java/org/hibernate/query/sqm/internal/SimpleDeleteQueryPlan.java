@@ -124,8 +124,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 			jdbcDelete = deleteTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		}
 
-		final boolean missingRestriction = sqmDelete.getWhereClause() == null
-				|| sqmDelete.getWhereClause().getPredicate() == null;
+		final boolean missingRestriction = sqmInterpretation.getSqlAst().getRestriction() == null;
 		if ( missingRestriction ) {
 			assert domainParameterXref.getSqmParameterCount() == 0;
 			assert jdbcParamsXref.isEmpty();
@@ -171,7 +170,12 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 							tableGroup
 					);
 
-					matchingIdSubQuery.applyPredicate( sqmInterpretation.getSqlAst().getRestriction() );
+					matchingIdSubQuery.applyPredicate( SqmMutationStrategyHelper.getIdSubqueryPredicate(
+							sqmInterpretation.getSqlAst().getRestriction(),
+							entityDescriptor,
+							tableGroup,
+							session
+					) );
 
 					return new InSubQueryPredicate( fkColumnExpression, matchingIdSubQuery, false );
 				},

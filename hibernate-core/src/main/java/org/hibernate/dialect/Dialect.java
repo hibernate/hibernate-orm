@@ -1528,7 +1528,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	@Override
 	public String toString() {
-		return getClass().getName();
+		return getClass().getName() + ", version: " + getVersion();
 	}
 
 

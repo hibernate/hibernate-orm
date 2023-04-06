@@ -2029,18 +2029,20 @@ public interface AvailableSettings {
 	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
 	/**
-	 * The {@link org.hibernate.annotations.Where} annotation specifies a restriction
-	 * on the table rows which are visible as entity class instances or collection
-	 * elements.
-	 * <p/>
-	 * This setting controls whether the restriction applied to an entity should
-	 * be applied to association fetches (one-to-one, many-to-one, one-to-many and many-to-many)
-	 * targeting the entity.
+	 * The {@link org.hibernate.annotations.Where @Where} annotation specifies a
+	 * restriction on the table rows which are visible as entity class instances or
+	 * collection elements.
+	 * <p>
+	 * This setting controls whether the restriction applied to an entity should be
+	 * applied to association fetches (for one-to-one, many-to-one, one-to-many, and
+	 * many-to-many associations) which target the entity.
 	 *
-	 * @apiNote The setting is very misnamed - it applies across all entity associations, not just collections.
+	 * @apiNote The setting is very misnamed - it applies across all entity associations,
+	 *          not only to collections.
 	 *
-	 * @implSpec Enabled ({@code true}) by default, meaning the restriction is applied. When this setting
-	 * is disabled ({@code false}), the restriction is not applied.
+	 * @implSpec Enabled ({@code true}) by default, meaning the restriction is applied.
+	 *           When this setting is explicitly disabled ({@code false}), the restriction
+	 *           is not applied.
 	 *
 	 * @deprecated Originally added as a backwards compatibility flag
 	 */

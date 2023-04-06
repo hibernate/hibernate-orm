@@ -118,6 +118,11 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 	}
 
 	@Override
+	protected void registerLoadingEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState, Object instance) {
+		// we want the EntityResultInitializer to take care of the instance
+	}
+
+	@Override
 	protected String getSimpleConcreteImplName() {
 		return CONCRETE_NAME;
 	}

@@ -230,6 +230,28 @@ public class OracleFollowOnLockingTest extends
 
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-16433")
+	public void testPessimisticLockWithOrderByThenNoFollowOnLocking() {
+
+		final Session session = openSession();
+		session.beginTransaction();
+
+		sqlStatementInterceptor.getSqlQueries().clear();
+
+		List<Product> products =
+				session.createQuery(
+						"select p from Product p order by p.id", Product.class )
+						.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
+						.getResultList();
+
+		assertTrue( products.size() > 1 );
+		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
+
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
 	public void testPessimisticLockWithMaxResultsAndOrderByThenFollowOnLocking() {
 
 		final Session session = openSession();

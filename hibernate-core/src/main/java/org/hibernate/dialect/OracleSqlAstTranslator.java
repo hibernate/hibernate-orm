@@ -97,7 +97,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			Boolean followOnLocking) {
 		LockStrategy strategy = super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
 		final boolean followOnLockingDisabled = Boolean.FALSE.equals( followOnLocking );
-		if ( strategy != LockStrategy.FOLLOW_ON && querySpec.hasSortSpecifications() ) {
+		if ( strategy != LockStrategy.FOLLOW_ON && querySpec.hasSortSpecifications() && hasLimit() ) {
 			if ( followOnLockingDisabled ) {
 				throw new IllegalQueryOperationException( "Locking with ORDER BY is not supported" );
 			}

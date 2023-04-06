@@ -52,7 +52,7 @@ public final class HighlightingFormatter implements Formatter {
 	 * @param stringCode the ANSI escape code to use for highlighting SQL strings
 	 */
 	public HighlightingFormatter(String keywordCode, String stringCode, String quotedCode) {
-		keywordEscape =escape( keywordCode );
+		keywordEscape = escape( keywordCode );
 		stringEscape = escape( stringCode );
 		quotedEscape = escape( quotedCode );
 		normalEscape = escape( "0" );

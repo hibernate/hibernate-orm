@@ -1427,9 +1427,9 @@ See the <<chapters/domain/basic_types.adoc#mapping-database-generated-value-exam
 [[annotations-hibernate-where]]
 ==== `@SQLRestriction`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLRestriction.html[`@SQLRestriction`] annotation is used to specify a custom SQL `WHERE` clause used when fetching an entity or a collection.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLRestriction.html[`@SQLRestriction`] annotation is used to specify a custom SQL `WHERE` clause used to filter out entities or collections.
 
-See the <<chapters/pc/PersistenceContext.adoc#pc-where-example,`@SQLRestriction` mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-where,`@SQLRestriction` mapping>> section for more info.
 
 [[annotations-hibernate-wherejointable]]
 ==== `@SQLJoinTableRestriction`

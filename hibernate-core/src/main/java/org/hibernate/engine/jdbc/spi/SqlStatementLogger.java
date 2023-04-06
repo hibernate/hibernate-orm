@@ -10,6 +10,8 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.build.AllowSysOut;
+import org.hibernate.service.Service;
+
 import org.jboss.logging.Logger;
 
 import java.sql.Statement;
@@ -21,7 +23,7 @@ import java.util.function.Supplier;
  *
  * @author Steve Ebersole
  */
-public class SqlStatementLogger {
+public class SqlStatementLogger implements Service {
 	private static final Logger LOG = CoreLogging.logger( "org.hibernate.SQL" );
 	private static final Logger LOG_SLOW = CoreLogging.logger( "org.hibernate.SQL_SLOW" );
 

@@ -45,6 +45,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -502,7 +503,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( isProxyInstance( proxy ) ) {
 			if ( entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
-				registerLoadingEntity( rowProcessingState, entityInstance );
+				registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
 			}
 			else {
 				entityInstance = proxy;
@@ -519,7 +520,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 			else if ( entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
-				registerLoadingEntity( rowProcessingState, entityInstance );
+				registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
 			}
 			else {
 				// look to see if another initializer from a parent load context or an earlier
@@ -538,7 +539,19 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
+	protected abstract void registerLoadingEntityInstanceFromExecutionContext(
+			RowProcessingState rowProcessingState,
+			Object instance);
+
 	protected Object getEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState) {
+		final ExecutionContext executionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getExecutionContext();
+		final Object entityInstanceFromExecutionContext = executionContext.getEntityInstance();
+		if ( entityInstanceFromExecutionContext != null
+				&& getConcreteDescriptor().getJavaType().isInstance( entityInstanceFromExecutionContext )
+				&& getEntityKey().getIdentifier().equals( executionContext.getEntityId() ) ) {
+			return entityInstanceFromExecutionContext;
+		}
 		return null;
 	}
 
@@ -702,7 +715,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		);
 	}
 
-	private void registerLoadingEntity(RowProcessingState rowProcessingState, Object instance) {
+	protected void registerLoadingEntity(RowProcessingState rowProcessingState, Object instance) {
 		rowProcessingState.getJdbcValuesSourceProcessingState()
 				.registerLoadingEntity(
 						entityKey,

@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.LockMode;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
@@ -60,15 +59,10 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 	}
 
 	@Override
-	protected Object getEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState) {
-		final ExecutionContext executionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
-				.getExecutionContext();
-		final Object entityInstanceFromExecutionContext = executionContext.getEntityInstance();
-		if ( entityInstanceFromExecutionContext != null
-				&& getEntityKey().getIdentifier().equals( executionContext.getEntityId() ) ) {
-			return entityInstanceFromExecutionContext;
-		}
-		return null;
+	protected void registerLoadingEntityInstanceFromExecutionContext(
+			RowProcessingState rowProcessingState,
+			Object instance) {
+		registerLoadingEntity( rowProcessingState, instance );
 	}
 
 }

@@ -21,14 +21,15 @@ import org.jboss.logging.annotations.ValidIdRange;
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 90005701, max = 90005800 )
 @SubSystemLogging(
-		name = MappingModelCreationLogger.LOGGER_NAME,
+		name = MappingModelCreationLogging.LOGGER_NAME,
 		description = "Logging related to building of Hibernate's runtime metamodel descriptors of the domain model"
 )
-public interface MappingModelCreationLogger extends BasicLogger {
+public interface MappingModelCreationLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".model.mapping.creation";
 
-	MappingModelCreationLogger LOGGER = Logger.getMessageLogger( MappingModelCreationLogger.class, LOGGER_NAME );
+	Logger MAPPING_MODEL_CREATION_LOGGER = Logger.getLogger( LOGGER_NAME );
+	MappingModelCreationLogging MAPPING_MODEL_CREATION_MESSAGE_LOGGER = Logger.getMessageLogger( MappingModelCreationLogging.class, LOGGER_NAME );
 
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
+	boolean MAPPING_MODEL_CREATION_TRACE_ENABLED = MAPPING_MODEL_CREATION_LOGGER.isTraceEnabled();
+	boolean MAPPING_MODEL_CREATION_DEBUG_ENABLED = MAPPING_MODEL_CREATION_LOGGER.isDebugEnabled();
 }

@@ -108,7 +108,7 @@ import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
-import org.hibernate.loader.BatchLoadSizingStrategy;
+import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
@@ -177,9 +177,6 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
@@ -187,6 +184,9 @@ import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsJdbcTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -3775,6 +3775,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Return the limit that the underlying database places on the number of parameters
+	 * that can be defined for a PreparedStatement.  If the database defines no such
+	 * limits, simply return zero or a number smaller than zero.  By default, Dialect
+	 * returns the same value as {@link #getInExpressionCountLimit()}.
+	 *
+	 * @return The limit, or a non-positive integer to indicate no limit.
+	 */
+	public int getParameterCountLimit() {
+		return getInExpressionCountLimit();
+	}
+
+	/**
 	 * Must LOB values occur last in inserts and updates?
 	 *
 	 * @implNote Oracle is the culprit here, see HHH-4635.
@@ -4008,40 +4020,43 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return null;
 	}
 
-	protected final BatchLoadSizingStrategy STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY =
-			(numberOfKeyColumns, numberOfKeys, inClauseParameterPaddingEnabled) -> {
-		final int paddedSize;
-
-		if ( inClauseParameterPaddingEnabled ) {
-			paddedSize = MathHelper.ceilingPowerOfTwo( numberOfKeys );
-		}
-		else {
-			paddedSize = numberOfKeys;
-		}
-
-		// For tuples, there is no limit, so we can just use the power of two padding approach
-		if ( numberOfKeyColumns > 1 ) {
-			return paddedSize;
-		}
-		final int inExpressionCountLimit = getInExpressionCountLimit();
-		if ( inExpressionCountLimit > 0 ) {
-			if ( paddedSize < inExpressionCountLimit ) {
-				return paddedSize;
-			}
-			else if ( numberOfKeys < inExpressionCountLimit ) {
-				return numberOfKeys;
-			}
-			return getInExpressionCountLimit();
-		}
-		return paddedSize;
-	};
+	/**
+	 * The strategy used to determine the appropriate number of keys
+	 * to load in a single SQL query with multi-key loading.
+	 * @see org.hibernate.Session#byMultipleIds
+	 * @see org.hibernate.Session#byMultipleNaturalId
+	 */
+	public MultiKeyLoadSizingStrategy getMultiKeyLoadSizingStrategy() {
+		return STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY;
+	}
 
 	/**
-	 * The strategy to use for determining batch sizes in batch loading.
+	 * The strategy used to determine the appropriate number of keys
+	 * to load in a single SQL query with batch-fetch loading.
+	 *
+	 * @implNote By default, the same as {@linkplain #getMultiKeyLoadSizingStrategy}
+	 *
+	 * @see org.hibernate.annotations.BatchSize
 	 */
-	public BatchLoadSizingStrategy getDefaultBatchLoadSizingStrategy() {
-		return STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY;
+	public MultiKeyLoadSizingStrategy getBatchLoadSizingStrategy() {
+		return getMultiKeyLoadSizingStrategy();
 	}
+
+	protected final MultiKeyLoadSizingStrategy STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY = (numberOfColumns, numberOfKeys, pad) -> {
+		numberOfKeys = pad ? MathHelper.ceilingPowerOfTwo( numberOfKeys ) : numberOfKeys;
+
+		final long parameterCount = (long) numberOfColumns * numberOfKeys;
+		final int limit = getParameterCountLimit();
+
+		if ( limit > 0 ) {
+			// the Dialect reported a limit -  see if the parameter count exceeds the limit
+			if ( parameterCount >= limit ) {
+				return limit / numberOfColumns;
+			}
+		}
+
+		return numberOfKeys;
+	};
 
 	/**
 	 * Is JDBC statement warning logging enabled by default?

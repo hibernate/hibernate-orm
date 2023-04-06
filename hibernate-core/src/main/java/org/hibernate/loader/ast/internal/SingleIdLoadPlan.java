@@ -14,6 +14,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
@@ -41,20 +42,20 @@ import org.hibernate.sql.results.spi.RowTransformer;
  * @author Steve Ebersole
  */
 public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
-	private final org.hibernate.persister.entity.Loadable persister;
+	private final EntityMappingType entityMappingType;
 	private final ModelPart restrictivePart;
 	private final LockOptions lockOptions;
 	private final JdbcOperationQuerySelect jdbcSelect;
 	private final List<JdbcParameter> jdbcParameters;
 
 	public SingleIdLoadPlan(
-			org.hibernate.persister.entity.Loadable persister,
+			EntityMappingType entityMappingType,
 			ModelPart restrictivePart,
 			SelectStatement sqlAst,
 			List<JdbcParameter> jdbcParameters,
 			LockOptions lockOptions,
 			SessionFactoryImplementor sessionFactory) {
-		this.persister = persister;
+		this.entityMappingType = entityMappingType;
 		this.restrictivePart = restrictivePart;
 		this.lockOptions = lockOptions.makeCopy();
 		this.jdbcParameters = jdbcParameters;
@@ -83,7 +84,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 
 	@Override
 	public Loadable getLoadable() {
-		return persister;
+		return entityMappingType;
 	}
 
 	@Override
@@ -154,8 +155,8 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		}
 
 		final T entity = list.get( 0 );
-		if ( persister != null ) {
-			callback.invokeAfterLoadActions( session, entity, persister );
+		if ( entityMappingType != null ) {
+			callback.invokeAfterLoadActions( entity, entityMappingType, session );
 		}
 		return entity;
 	}

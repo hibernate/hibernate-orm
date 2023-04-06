@@ -17,6 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.TestForIssue;
@@ -122,7 +123,7 @@ public class UserTypeComparableIdTest {
 		}
 	}
 
-	public static class CustomIdType implements UserType<CustomId>, Comparator<CustomId> {
+	public static class CustomIdType implements EnhancedUserType<CustomId>, Comparator<CustomId> {
 
 		@Override
 		public int getSqlType() {
@@ -194,6 +195,35 @@ public class UserTypeComparableIdTest {
 		@Override
 		public CustomId replace(CustomId original, CustomId target, Object owner) throws HibernateException {
 			return original;
+		}
+
+		@Override
+		public String toSqlLiteral(CustomId value) {
+			return toString( value );
+		}
+
+		@Override
+		public String toString(CustomId customId) throws HibernateException {
+			if ( customId == null ) {
+				return null;
+			}
+
+			final Long longValue = customId.getValue();
+			if ( longValue == null ) {
+				return null;
+			}
+
+			return longValue.toString();
+		}
+
+		@Override
+		public CustomId fromStringValue(CharSequence sequence) throws HibernateException {
+			if ( sequence == null ) {
+				return null;
+			}
+
+			final long longValue = Long.parseLong( sequence.toString() );
+			return new CustomId( longValue );
 		}
 	}
 }

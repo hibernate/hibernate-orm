@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @param <E> The entity Java type
  */
-public interface MultiNaturalIdLoader<E> extends MultiLoader<E> {
+public interface MultiNaturalIdLoader<E> extends EntityMultiLoader<E> {
 	/**
 	 * Load multiple entities by natural-id.  The exact result depends on the passed options.
 	 *

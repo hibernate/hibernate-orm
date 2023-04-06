@@ -59,6 +59,7 @@ import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -323,6 +324,12 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 		else {
 			returnedNode = inListPredicate;
 		}
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		final Expression replacedTestExpression = replaceExpression( inArrayPredicate.getTestExpression() );
+		returnedNode = new InArrayPredicate( replacedTestExpression, inArrayPredicate.getArrayParameter() );
 	}
 
 	@Override

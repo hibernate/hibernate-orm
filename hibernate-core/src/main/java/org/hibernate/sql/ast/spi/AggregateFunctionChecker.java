@@ -45,6 +45,7 @@ import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -198,6 +199,10 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 
 	@Override
 	public void visitInListPredicate(InListPredicate inListPredicate) {
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate predicate) {
 	}
 
 	@Override

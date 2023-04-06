@@ -29,6 +29,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertFalse;
@@ -94,14 +95,15 @@ public class BatchAndClassIdTest {
 					statementInspector.clear();
 					List<Child> children = session.createQuery( "select c from Child c", Child.class ).getResultList();
 					statementInspector.assertExecutedCount( 3 );
-					assertThat( statementInspector.getSqlQueries()
-										.get( 1 )
-										.toLowerCase( Locale.ROOT )
-										.contains( "in(?,?,?,?,?)" ) ).isTrue();
-					assertThat( statementInspector.getSqlQueries()
-										.get( 2 )
-										.toLowerCase( Locale.ROOT )
-										.contains( "in(?,?,?,?,?)" ) ).isTrue();
+					if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsStandardArrays() ) {
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "?" );
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "?" );
+					}
+					else {
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
+					}
+
 					statementInspector.clear();
 					for ( Child c : children ) {
 						c.getParent().getName();

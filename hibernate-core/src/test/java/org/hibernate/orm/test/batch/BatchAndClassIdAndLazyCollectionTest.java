@@ -9,6 +9,7 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.util.StringHelper;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -30,6 +31,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertFalse;
@@ -100,14 +102,20 @@ public class BatchAndClassIdAndLazyCollectionTest {
 						c.getParent().getName();
 					}
 					statementInspector.assertExecutedCount( 2 );
-					assertThat( statementInspector.getSqlQueries()
-										.get( 0 )
-										.toLowerCase( Locale.ROOT )
-										.contains( "in(?,?,?,?,?)" ) ).isTrue();
-					assertThat( statementInspector.getSqlQueries()
-										.get( 1 )
-										.toLowerCase( Locale.ROOT )
-										.contains( "in(?,?,?,?,?)" ) ).isTrue();
+
+					if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsStandardArrays() ) {
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "?" );
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "?" );
+					}
+					else {
+						final int batchSize = scope.getSessionFactory()
+								.getJdbcServices()
+								.getDialect()
+								.getBatchLoadSizingStrategy()
+								.determineOptimalBatchLoadSize( 1, 5, false );
+						Assertions.assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 0 ), '?' ) ).isEqualTo( batchSize );
+						Assertions.assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 1 ), '?' ) ).isEqualTo( batchSize );
+					}
 				}
 		);
 	}

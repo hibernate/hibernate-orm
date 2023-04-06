@@ -8,7 +8,7 @@ package org.hibernate.sql.exec.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
-import org.hibernate.persister.entity.Loadable;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.exec.spi.Callback;
 
 /**
@@ -26,7 +26,7 @@ public class CallbackNoOp implements Callback {
 	}
 
 	@Override
-	public void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
+	public void invokeAfterLoadActions(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session) {
 		// don't do anything
 	}
 }

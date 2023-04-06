@@ -593,6 +593,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return limit != null && !limit.isEmpty();
 	}
 
+	protected boolean hasLimit(QueryPart queryPart) {
+		if ( queryPart.isRoot() && hasLimit() && limit.getMaxRows() != null ) {
+			return true;
+		}
+		else {
+			return queryPart.getFetchClauseExpression() != null;
+		}
+	}
+
 	protected boolean hasOffset(QueryPart queryPart) {
 		if ( queryPart.isRoot() && hasLimit() && limit.getFirstRow() != null ) {
 			return true;
@@ -1350,12 +1359,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected LockMode getEffectiveLockMode(String alias) {
+		return getEffectiveLockMode( alias, getQueryPartStack().getCurrent().isRoot() );
+	}
+
+	protected LockMode getEffectiveLockMode(String alias, boolean isRoot) {
 		if ( getLockOptions() == null ) {
 			return LockMode.NONE;
 		}
-		final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
 		LockMode lockMode = getLockOptions().getAliasSpecificLockMode( alias );
-		if ( currentQueryPart.isRoot() && lockMode == null ) {
+		if ( isRoot && lockMode == null ) {
 			lockMode = getLockOptions().getLockMode();
 		}
 		return lockMode == null ? LockMode.NONE : lockMode;
@@ -4487,8 +4499,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 				// We render the FOR UPDATE clause in the outer query
 				if ( queryPart instanceof QuerySpec ) {
-					clauseStack.pop();
-					clauseStack.push( Clause.FOR_UPDATE );
 					visitForUpdateClause( (QuerySpec) queryPart );
 				}
 			}
@@ -5252,6 +5262,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			forUpdate.applyAliases( dialect.getLockRowIdentifier( effectiveLockMode ), tableGroup );
 		}
+	}
+
+	protected boolean needsLocking(QuerySpec querySpec) {
+		return querySpec.getFromClause().queryTableGroups(
+				tableGroup -> {
+					if ( LockMode.READ.lessThan( getEffectiveLockMode( tableGroup.getSourceAlias(), querySpec.isRoot() ) ) ) {
+						return true;
+					}
+					return null;
+				}
+		) != null;
 	}
 
 	protected boolean hasNestedTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {

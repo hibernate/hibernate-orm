@@ -736,12 +736,8 @@ public class OracleDialect extends Dialect {
 					// Don't infer TINYINT or SMALLINT on Oracle, since the
 					// range of values of a NUMBER(3,0) or NUMBER(5,0) just
 					// doesn't really match naturally.
-					if ( precision <= 10 ) {
-						// A NUMBER(10,0) might not fit in a 32-bit integer,
-						// but it's still pretty safe to use INTEGER here,
-						// since we can assume the most likely reason to find
-						// a column of type NUMBER(10,0) in an Oracle database
-						// is that it's intended to store an integer.
+					if ( precision < 10 ) {
+						// A NUMBER(10,0) might not fit in a 32-bit integer
 						return jdbcTypeRegistry.getDescriptor( INTEGER );
 					}
 					else if ( precision <= 19 ) {

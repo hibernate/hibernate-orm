@@ -84,4 +84,21 @@ public class SimpleDatabaseVersion implements DatabaseVersion {
 	public int getMicro() {
 		return micro;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder version = new StringBuilder();
+		if ( major != NO_VERSION ) {
+			version.append( major );
+		}
+		if ( minor != NO_VERSION ) {
+			version.append( "." );
+			version.append( minor );
+			if ( micro > 0 ) {
+				version.append( "." );
+				version.append( micro );
+			}
+		}
+		return version.toString();
+	}
 }

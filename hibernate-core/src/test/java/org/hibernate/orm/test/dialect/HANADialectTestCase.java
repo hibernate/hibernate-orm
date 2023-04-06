@@ -29,11 +29,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hamcrest.MatcherAssert;
 
-import static org.hamcrest.core.Is.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HANADialectTestCase extends BaseUnitTestCase {
 	@Test
@@ -42,20 +41,18 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 				() -> new StandardServiceRegistryBuilder()
 						.applySetting( AvailableSettings.DIALECT, HANAColumnStoreDialect.class )
 						.build(),
-				(registryScope) -> {
+				registryScope -> {
 					final StandardServiceRegistry registry = registryScope.getRegistry();
 					final MetadataSources metadataSources = new MetadataSources( registry );
 					metadataSources.addAnnotatedClass( EntityWithIdentity.class );
 
-					try ( SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) metadataSources.buildMetadata().buildSessionFactory() ) {
-						fail( "Should have thrown MappingException!" );
-					}
-					catch (MappingException e) {
-						MatcherAssert.assertThat(
-								e.getMessage(),
-								is( "The INSERT statement for table [EntityWithIdentity] contains no column, and this is not supported by [" + HANAColumnStoreDialect.class.getName() + "]" )
-						);
-					}
+					String errorMessage = assertThrows( MappingException.class, () -> {
+						try ( SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) metadataSources.buildMetadata().buildSessionFactory() ) {
+							// Nothing to do, we expect an exception
+						}
+					} ).getMessage();
+					assertThat( errorMessage )
+							.matches( "The INSERT statement for table \\[EntityWithIdentity\\] contains no column, and this is not supported by \\[" + HANAColumnStoreDialect.class.getName() + ", version: [\\d\\.]+\\]" );
 				}
 		);
 	}

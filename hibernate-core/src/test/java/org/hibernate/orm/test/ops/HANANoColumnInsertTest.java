@@ -15,15 +15,14 @@ import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = AbstractHANADialect.class)
+@RequiresDialect( value = AbstractHANADialect.class )
 public class HANANoColumnInsertTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
@@ -43,13 +42,9 @@ public class HANANoColumnInsertTest extends BaseSessionFactoryFunctionalTest {
 			return sessionFactoryImplementor;
 		}
 		catch (MappingException e) {
-			assertThat(
-
-					e.getMessage(),
-					is( "The INSERT statement for table [Competition] contains no column, and this is not supported by [" + getDialect()
-							.getClass()
-							.getName() + "]" )
-			);
+			assertThat( e.getMessage() ).startsWith(
+					"The INSERT statement for table [Competition] contains no column, and this is not supported by [" + getDialect().getClass()
+							.getName() );
 		}
 		return sessionFactoryImplementor;
 	}

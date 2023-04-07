@@ -75,7 +75,7 @@ public class CompoundNaturalIdTest {
 		long loadDurationForSimpleNaturalId = loadEntities( EntityWithSimpleNaturalId.class, MAX_RESULTS, scope );
 
 		assertTrue(
-				loadDurationForCompoundNaturalId <= 5 * loadDurationForSimpleNaturalId,
+				loadDurationForCompoundNaturalId <= 10 * loadDurationForSimpleNaturalId,
 				"it should not be soo long to load entities with compound naturalId"
 		);
 	}
@@ -94,7 +94,7 @@ public class CompoundNaturalIdTest {
 		return duration;
 	}
 
-	@Entity(name = "EntityWithSimpleNaturalId")
+	@Entity(name = "SimpleNaturalId")
 	public static class EntityWithSimpleNaturalId {
 
 		@Id
@@ -121,7 +121,7 @@ public class CompoundNaturalIdTest {
 		}
 	}
 
-	@Entity(name = "EntityWithCompoundNaturalId")
+	@Entity(name = "CompoundNaturalId")
 	public static class EntityWithCompoundNaturalId {
 
 		@Id

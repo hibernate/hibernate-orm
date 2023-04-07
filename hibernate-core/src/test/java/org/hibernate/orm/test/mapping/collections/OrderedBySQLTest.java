@@ -18,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+import org.hibernate.annotations.SQLOrder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -94,9 +95,7 @@ public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
 			mappedBy = "person",
 			cascade = CascadeType.ALL
 		)
-		@org.hibernate.annotations.OrderBy(
-			clause = "CHAR_LENGTH(name) DESC"
-		)
+		@SQLOrder("CHAR_LENGTH(name) DESC")
 		private List<Article> articles = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity

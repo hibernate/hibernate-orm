@@ -13,7 +13,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 /**
  * 
@@ -21,7 +21,7 @@ import org.hibernate.annotations.Where;
  *
  */
 @Entity
-@Where(clause = "yearsExperience > 3")
+@SQLRestriction("yearsExperience > 3")
 public class Doctor {
 	private Integer id;
 	private String name;

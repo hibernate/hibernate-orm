@@ -25,7 +25,7 @@ import jakarta.persistence.MapKeyEnumerated;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.OrderBy;
+import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 
@@ -367,7 +367,7 @@ public class EntityOfMaps {
 
 	@ElementCollection
 	@MapKeyColumn( name = "ordered_component_key")
-	@OrderBy( clause = "ordered_component_key, ordered_component_key" )
+	@SQLOrder( "ordered_component_key, ordered_component_key" )
 	@CollectionTable(name = "EntityOfMaps_comp_basic2")
 	public Map<String, SimpleComponent> getComponentByBasicOrdered() {
 		return componentByBasicOrdered;

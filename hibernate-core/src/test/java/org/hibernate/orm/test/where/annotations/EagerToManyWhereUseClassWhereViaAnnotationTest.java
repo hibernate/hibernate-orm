@@ -15,16 +15,14 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.WhereJoinTable;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -172,7 +170,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest extends BaseNonConfi
 
 		@OneToMany(fetch = FetchType.EAGER)
 		@JoinColumn
-		@Where( clause = "description is not null" )
+		@SQLRestriction( "description is not null" )
 		private Set<Category> categoriesWithDescOneToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
@@ -181,19 +179,19 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest extends BaseNonConfi
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescManyToMany", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@Where( clause = "description is not null" )
+		@SQLRestriction( "description is not null" )
 		private Set<Category> categoriesWithDescManyToMany = new HashSet<>();
 
 		@ManyToMany(fetch = FetchType.EAGER)
 		@JoinTable(name = "categoriesWithDescIdLt4MToM", inverseJoinColumns = { @JoinColumn( name = "categoryId" )})
-		@Where( clause = "description is not null" )
-		@WhereJoinTable( clause = "categoryId < 4")
+		@SQLRestriction( "description is not null" )
+		@SQLJoinTableRestriction("categoryId < 4")
 		private Set<Category> categoriesWithDescIdLt4ManyToMany = new HashSet<>();
 	}
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "inactive = 0")
+	@SQLRestriction("inactive = 0")
 	public static class Category {
 		@Id
 		private int id;

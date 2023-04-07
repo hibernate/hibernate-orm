@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.where;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,7 +19,7 @@ import static jakarta.persistence.FetchType.LAZY;
 import static java.text.MessageFormat.format;
 import static java.util.Objects.hash;
 
-@Where(clause = "has_deleted = false")
+@SQLRestriction("has_deleted = false")
 @Table(name = "t_user_skills")
 @Entity(name = "UserSkill")
 public class UserSkill {

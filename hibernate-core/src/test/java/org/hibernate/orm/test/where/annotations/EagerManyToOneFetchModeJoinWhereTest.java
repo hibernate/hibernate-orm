@@ -23,7 +23,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
@@ -131,7 +131,7 @@ public class EagerManyToOneFetchModeJoinWhereTest extends BaseNonConfigCoreFunct
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@Where(clause = "inactive = 0")
+	@SQLRestriction("inactive = 0")
 	public static class Category {
 		@Id
 		@GeneratedValue

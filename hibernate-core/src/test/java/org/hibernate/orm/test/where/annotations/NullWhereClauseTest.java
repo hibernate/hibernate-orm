@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.where.annotations;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
@@ -33,7 +33,7 @@ public class NullWhereClauseTest {
 
 	@Entity
 	@Table(name = "person")
-	@Where(clause = "`used` IS NULL")
+	@SQLRestriction("`used` IS NULL")
 	public static class Person {
 		@Id
 		private Integer id;

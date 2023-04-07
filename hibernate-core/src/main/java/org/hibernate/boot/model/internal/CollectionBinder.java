@@ -66,6 +66,9 @@ import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Synchronize;
@@ -77,7 +80,6 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
-import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
@@ -166,6 +168,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
+import static org.hibernate.boot.model.source.internal.hbm.ModelBinder.useEntityWhereClauseForCollections;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -232,6 +235,7 @@ public abstract class CollectionBinder {
 
 	private OrderBy jpaOrderBy;
 	private org.hibernate.annotations.OrderBy sqlOrderBy;
+	private SQLOrder sqlOrder;
 	private SortNatural naturalSort;
 	private SortComparator comparatorSort;
 
@@ -274,6 +278,7 @@ public abstract class CollectionBinder {
 		collectionBinder.setBatchSize( property.getAnnotation( BatchSize.class ) );
 		collectionBinder.setJpaOrderBy( property.getAnnotation( OrderBy.class ) );
 		collectionBinder.setSqlOrderBy( getOverridableAnnotation( property, org.hibernate.annotations.OrderBy.class, context ) );
+		collectionBinder.setSqlOrder( getOverridableAnnotation( property, SQLOrder.class, context ) );
 		collectionBinder.setNaturalSort( property.getAnnotation( SortNatural.class ) );
 		collectionBinder.setComparatorSort( property.getAnnotation( SortComparator.class ) );
 		collectionBinder.setCache( property.getAnnotation( Cache.class ) );
@@ -778,6 +783,10 @@ public abstract class CollectionBinder {
 
 	public void setSqlOrderBy(org.hibernate.annotations.OrderBy sqlOrderBy) {
 		this.sqlOrderBy = sqlOrderBy;
+	}
+
+	public void setSqlOrder(SQLOrder sqlOrder) {
+		this.sqlOrder = sqlOrder;
 	}
 
 	public void setNaturalSort(SortNatural naturalSort) {
@@ -1362,14 +1371,17 @@ public abstract class CollectionBinder {
 			comparatorClass = null;
 		}
 
-		if ( jpaOrderBy != null && sqlOrderBy != null ) {
+		if ( jpaOrderBy != null && ( sqlOrderBy != null || sqlOrder != null ) ) {
 			throw buildIllegalOrderCombination();
 		}
-		boolean ordered = jpaOrderBy != null || sqlOrderBy != null;
+		boolean ordered = jpaOrderBy != null || sqlOrderBy != null || sqlOrder != null ;
 		if ( ordered ) {
 			// we can only apply the sql-based order by up front.  The jpa order by has to wait for second pass
 			if ( sqlOrderBy != null ) {
 				collection.setOrderBy( sqlOrderBy.clause() );
+			}
+			if ( sqlOrder != null ) {
+				collection.setOrderBy( sqlOrder.value() );
 			}
 		}
 
@@ -1774,6 +1786,10 @@ public abstract class CollectionBinder {
 	}
 
 	private String getWhereJoinTableClause() {
+		final SQLJoinTableRestriction joinTableRestriction = property.getAnnotation( SQLJoinTableRestriction.class );
+		if ( joinTableRestriction != null ) {
+			return joinTableRestriction.value();
+		}
 		final WhereJoinTable whereJoinTable = property.getAnnotation( WhereJoinTable.class );
 		return whereJoinTable == null ? null : whereJoinTable.clause();
 	}
@@ -1789,16 +1805,29 @@ public abstract class CollectionBinder {
 	}
 
 	private String getWhereOnCollectionClause() {
-		final Where whereOnCollection = getOverridableAnnotation( property, Where.class, getBuildingContext() );
-		return whereOnCollection != null ? whereOnCollection.clause() : null;
+		final SQLRestriction restrictionOnCollection = getOverridableAnnotation( property, SQLRestriction.class, getBuildingContext() );
+		if ( restrictionOnCollection != null ) {
+			return restrictionOnCollection.value();
+		}
+		final Where whereOnCollection = getOverridableAnnotation( property, Where.class, buildingContext );
+		if ( whereOnCollection != null ) {
+			return whereOnCollection.clause();
+		}
+		return null;
 	}
 
 	private String getWhereOnClassClause() {
-		if ( property.getElementClass() != null ) {
-			final Where whereOnClass = getOverridableAnnotation( property.getElementClass(), Where.class, getBuildingContext() );
-			return whereOnClass != null && ModelBinder.useEntityWhereClauseForCollections( buildingContext )
-					? whereOnClass.clause()
-					: null;
+		XClass elementClass = property.getElementClass();
+		if ( elementClass != null && useEntityWhereClauseForCollections( buildingContext ) ) {
+			final SQLRestriction restrictionOnClass = getOverridableAnnotation( elementClass, SQLRestriction.class, buildingContext );
+			if ( restrictionOnClass != null ) {
+				return restrictionOnClass.value();
+			}
+			final Where whereOnClass = getOverridableAnnotation( elementClass, Where.class, buildingContext );
+			if ( whereOnClass != null ) {
+				return whereOnClass.clause();
+			}
+			return null;
 		}
 		else {
 			return null;

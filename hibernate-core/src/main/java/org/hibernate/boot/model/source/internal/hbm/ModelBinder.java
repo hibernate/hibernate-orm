@@ -109,7 +109,6 @@ import org.hibernate.generator.internal.SourceGeneration;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -162,6 +161,8 @@ import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
 import static org.hibernate.cfg.AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.mapping.SimpleValue.DEFAULT_ID_GEN_STRATEGY;
 
@@ -213,7 +214,7 @@ public class ModelBinder {
 				.getSettings()
 				.get( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
 		if ( explicitSetting != null ) {
-			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSettingNoReplacement( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
+			DEPRECATION_LOGGER.deprecatedSettingNoReplacement( USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS );
 			return ConfigurationHelper.toBoolean( explicitSetting, true );
 		}
 
@@ -356,31 +357,28 @@ public class ModelBinder {
 			EntityHierarchySourceImpl hierarchySource,
 			RootClass rootEntityDescriptor) {
 		switch ( hierarchySource.getIdentifierSource().getNature() ) {
-			case SIMPLE: {
+			case SIMPLE:
 				bindSimpleEntityIdentifier(
 						mappingDocument,
 						hierarchySource,
 						rootEntityDescriptor
 				);
 				break;
-			}
-			case AGGREGATED_COMPOSITE: {
+			case AGGREGATED_COMPOSITE:
 				bindAggregatedCompositeEntityIdentifier(
 						mappingDocument,
 						hierarchySource,
 						rootEntityDescriptor
 				);
 				break;
-			}
-			case NON_AGGREGATED_COMPOSITE: {
+			case NON_AGGREGATED_COMPOSITE:
 				bindNonAggregatedCompositeEntityIdentifier(
 						mappingDocument,
 						hierarchySource,
 						rootEntityDescriptor
 				);
 				break;
-			}
-			default: {
+			default:
 				throw new MappingException(
 						String.format(
 								Locale.ENGLISH,
@@ -390,7 +388,6 @@ public class ModelBinder {
 						),
 						mappingDocument.getOrigin()
 				);
-			}
 		}
 	}
 
@@ -2077,7 +2074,7 @@ public class ModelBinder {
 		oneToOneBinding.setReferencedEntityName( oneToOneSource.getReferencedEntityName() );
 
 		if ( oneToOneSource.isEmbedXml() == Boolean.TRUE ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
+			DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
 
 		if ( StringHelper.isNotEmpty( oneToOneSource.getExplicitForeignKeyName() ) ) {
@@ -2194,7 +2191,7 @@ public class ModelBinder {
 		);
 
 		if ( manyToOneSource.isEmbedXml() == Boolean.TRUE ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
+			DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
 
 		manyToOneBinding.setIgnoreNotFound( manyToOneSource.isIgnoreNotFound() );
@@ -3452,7 +3449,7 @@ public class ModelBinder {
 					// Collection#setWhere is used to set the "where" clause that applies to the collection table
 					// (which is the associated entity table for a one-to-many association).
 					collectionBinding.setWhere(
-							StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+							getNonEmptyOrConjunctionIfBothNonEmpty(
 									referencedEntityBinding.getWhere(),
 									getPluralAttributeSource().getWhere()
 							)
@@ -3522,7 +3519,7 @@ public class ModelBinder {
 					// Collection#setManytoManyWhere is used to set the "where" clause that applies to
 					// to the many-to-many associated entity table (not the join table).
 					getCollectionBinding().setManyToManyWhere(
-							StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
+							getNonEmptyOrConjunctionIfBothNonEmpty(
 									referencedEntityBinding.getWhere(),
 									elementSource.getWhere()
 							)

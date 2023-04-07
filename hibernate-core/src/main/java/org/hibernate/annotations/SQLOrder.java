@@ -14,7 +14,10 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Order a collection using an expression written in native SQL.
+ * Order a collection using an expression or list of expression written
+ * in native SQL. For example, {@code @SQLOrder("first_name, last_name")},
+ * {@code @SQLOrder("char_length(name) desc")}, or even
+ * {@code @SQLOrder("name asc nulls last")}.
  * <p>
  * The order is applied by the database when the collection is fetched,
  * but is not maintained by operations that mutate the collection in
@@ -40,28 +43,34 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     of a {@link java.util.List} with a dedicated index column.
  * </ul>
  * <p>
- * It's illegal to use {@code OrderBy} together with the JPA-defined
+ * It's illegal to use {@code SQLOrder} together with the JPA-defined
  * {@link jakarta.persistence.OrderBy} for the same collection.
  *
  * @see jakarta.persistence.OrderBy
  * @see SortComparator
  * @see SortNatural
  *
+ * @since 6.3
+ *
+ * @author Gavin King
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  *
- * @see DialectOverride.OrderBy
- *
- * @deprecated Use {@link SQLOrder} instead. This annotation will be
- *             removed eventually, since its unqualified name collides
- *             with {@link jakarta.persistence.OrderBy}.
+ * @see DialectOverride.SQLOrder
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-@Deprecated(since = "6.3", forRemoval = true)
-public @interface OrderBy {
+public @interface SQLOrder {
 	/**
-	 * The native SQL expression used to sort the collection elements.
+	 * A comma-separated list native SQL expressions used to sort the
+	 * collection elements. Each element of the list may optionally
+	 * specify:
+	 * <ul>
+	 * <li>{@code asc}-ending or {@code desc}-ending order, or even
+	 * <li>{@code nulls first} or {@code nulls last}.
+	 * </ul>
+	 * Hibernate does not interpret these keywords, and simply passes
+	 * them through to the generated SQL.
 	 */
-	String clause();
+	String value();
 }

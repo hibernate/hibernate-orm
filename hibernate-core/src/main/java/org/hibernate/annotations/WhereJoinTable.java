@@ -31,9 +31,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Emmanuel Bernard
  *
  * @see Where
+ *
+ * @deprecated Use {@link SQLJoinTableRestriction}
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated(since = "6.3")
 public @interface WhereJoinTable {
 	/**
 	 * A predicate, written in native SQL.

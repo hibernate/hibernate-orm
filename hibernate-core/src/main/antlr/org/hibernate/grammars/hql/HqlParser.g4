@@ -1622,6 +1622,7 @@ rollup
 	| JOIN
 	| KEY
 	| LAST
+	| LATERAL
 	| LEADING
 //	| LEFT
 	| LIKE
@@ -1713,7 +1714,8 @@ rollup
 	| WITH
 	| WITHIN
 	| WITHOUT
-	| YEAR) {
+	| YEAR
+	| ZONED) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );
 	}
 	;

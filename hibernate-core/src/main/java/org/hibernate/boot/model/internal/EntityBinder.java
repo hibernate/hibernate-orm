@@ -53,6 +53,7 @@ import org.hibernate.annotations.SQLInserts;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
 import org.hibernate.annotations.SelectBeforeUpdate;
@@ -1480,6 +1481,10 @@ public class EntityBinder {
 		final Where where = getOverridableAnnotation( annotatedClass, Where.class, context );
 		if ( where != null ) {
 			this.where = where.clause();
+		}
+		final SQLRestriction restriction = getOverridableAnnotation( annotatedClass, SQLRestriction.class, context );
+		if ( restriction != null ) {
+			this.where = restriction.value();
 		}
 	}
 

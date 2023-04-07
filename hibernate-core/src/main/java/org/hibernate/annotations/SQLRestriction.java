@@ -18,11 +18,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Specifies a restriction written in native SQL to add to the generated
  * SQL when querying an entity or collection.
  * <p>
- * For example, {@code @Where} could be used to hide entity instances which
- * have been soft-deleted, either for the entity class itself:
+ * For example, {@code @SQLRestriction} could be used to hide entity
+ * instances which have been soft-deleted, either for the entity class
+ * itself:
  * <pre>
  * &#64;Entity
- * &#64;Where(clause = "status &lt;&gt; 'DELETED'")
+ * &#64;SQLRestriction("status &lt;&gt; 'DELETED'")
  * class Document {
  *     ...
  *     &#64;Enumerated(STRING)
@@ -34,44 +35,38 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * or, at the level of an association to the entity:
  * <pre>
  * &#64;OneToMany(mappedBy = "owner")
- * &#64;Where(clause = "status &lt;&gt; 'DELETED'")
+ * &#64;SQLRestriction("status &lt;&gt; 'DELETED'")
  * List&lt;Document&gt; documents;
  * </pre>
  * <p>
- * The {@link WhereJoinTable} annotation lets a restriction be applied to
- * an {@linkplain jakarta.persistence.JoinTable association table}:
+ * The {@link SQLJoinTableRestriction} annotation lets a restriction be
+ * applied to an {@linkplain jakarta.persistence.JoinTable association table}:
  * <pre>
  * &#64;ManyToMany
  * &#64;JoinTable(name = "collaborations")
- * &#64;Where(clause = "status &lt;&gt; 'DELETED'")
- * &#64;WhereJoinTable(clause = "status = 'ACTIVE'")
+ * &#64;SQLRestriction("status &lt;&gt; 'DELETED'")
+ * &#64;SQLJoinTableRestriction("status = 'ACTIVE'")
  * List&lt;Document&gt; documents;
  * </pre>
  * <p>
- * By default, {@code @Where} restrictions declared for an entity are
- * applied when loading associations of that entity type. This behavior can
- * be disabled using the setting {@value org.hibernate.cfg.AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS};
- * note, however, that setting is disabled.
- * <p>
- * Note that {@code @Where} restrictions are always applied and cannot be
+ * Note that {@code @SQLRestriction}s are always applied and cannot be
  * disabled. Nor may they be parameterized. They're therefore <em>much</em>
  * less flexible than {@linkplain Filter filters}.
  *
  * @see Filter
- * @see DialectOverride.Where
- * @see org.hibernate.cfg.AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS
- * @see WhereJoinTable
+ * @see DialectOverride.SQLRestriction
+ * @see SQLJoinTableRestriction
  *
+ * @since 6.3
+ *
+ * @author Gavin King
  * @author Emmanuel Bernard
- *
- * @deprecated Use {@link SQLRestriction}
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
-@Deprecated(since = "6.3")
-public @interface Where {
+public @interface SQLRestriction {
 	/**
 	 * A predicate, written in native SQL.
 	 */
-	String clause();
+	String value();
 }

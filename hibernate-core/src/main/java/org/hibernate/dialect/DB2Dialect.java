@@ -108,6 +108,9 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * A {@linkplain Dialect SQL dialect} for DB2 for LUW (Linux, Unix, and Windows) version 10.5 and above.
  *
  * @author Gavin King
+ *
+ * @see DB2iDialect
+ * @see DB2zDialect
  */
 public class DB2Dialect extends Dialect {
 

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.mapping.where;
 
 import java.util.Set;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -71,7 +71,7 @@ public class DiscriminatorWhereTest {
 
 		@OneToMany
 		@JoinColumn(name = "allC")
-		@Where(clause = "type = 'C'")
+		@SQLRestriction("type = 'C'")
 		private Set<EntityC> allMyC;
 
 		public Integer getId() {

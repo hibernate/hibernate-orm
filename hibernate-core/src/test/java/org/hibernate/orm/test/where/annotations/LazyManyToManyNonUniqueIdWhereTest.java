@@ -22,8 +22,8 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.CollectionClassification;
 
@@ -265,7 +265,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	@Entity( name = "Material" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'MATERIAL'" )
+	@SQLRestriction( "CODE = 'MATERIAL'" )
 	public static class Material {
 		private int id;
 
@@ -297,7 +297,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) },
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
-		@WhereJoinTable( clause = "MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='SIZE'")
+		@SQLJoinTableRestriction("MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='SIZE'")
 		@Immutable
 		public Set<Size> getSizesFromCombined() {
 			return sizesFromCombined;
@@ -312,8 +312,8 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) },
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
-		@WhereJoinTable( clause = "MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='RATING'" )
-		@Where( clause = "NAME = 'high' or NAME = 'medium'" )
+		@SQLJoinTableRestriction( "MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='RATING'" )
+		@SQLRestriction( "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatingsFromCombined() {
 			return mediumOrHighRatingsFromCombined;
@@ -339,7 +339,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	@Entity( name = "Building" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'BUILDING'" )
+	@SQLRestriction( "CODE = 'BUILDING'" )
 	public static class Building {
 		private int id;
 		private String name;
@@ -370,7 +370,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) },
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
-		@WhereJoinTable( clause = "MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'")
+		@SQLJoinTableRestriction("MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'")
 		@Immutable
 		public Set<Size> getSizesFromCombined() {
 			return sizesFromCombined;
@@ -385,7 +385,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) },
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
-		@WhereJoinTable( clause = "MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'" )
+		@SQLJoinTableRestriction("MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'" )
 		@Immutable
 		public Set<Rating> getRatingsFromCombined() {
 			return ratingsFromCombined;
@@ -400,7 +400,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 				joinColumns = { @JoinColumn( name = "BUILDING_ID") },
 				inverseJoinColumns = { @JoinColumn( name = "RATING_ID" ) }
 		)
-		@Where( clause = "NAME = 'high' or NAME = 'medium'" )
+		@SQLRestriction( "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatings() {
 			return mediumOrHighRatings;
@@ -412,7 +412,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	@Entity( name = "Size" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'SIZE'" )
+	@SQLRestriction( "CODE = 'SIZE'" )
 	public static class Size {
 		private int id;
 		private String name;
@@ -437,7 +437,7 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	@Entity( name = "Rating" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'RATING'" )
+	@SQLRestriction( "CODE = 'RATING'" )
 	public static class Rating {
 		private int id;
 		private String name;

@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.CollectionClassification;
 
@@ -174,7 +174,7 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 
 	@Entity( name = "Material" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'MATERIAL'" )
+	@SQLRestriction( "CODE = 'MATERIAL'" )
 	public static class Material {
 		private int id;
 
@@ -211,7 +211,7 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 
 		@OneToMany
 		@JoinColumn( name = "MATERIAL_OWNER_ID")
-		@Where( clause = "NAME = 'high' or NAME = 'medium'" )
+		@SQLRestriction( "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatingsFromCombined() {
 			return mediumOrHighRatingsFromCombined;
@@ -223,7 +223,7 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 
 	@Entity( name = "Building" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'BUILDING'" )
+	@SQLRestriction( "CODE = 'BUILDING'" )
 	public static class Building {
 		private int id;
 		private String name;
@@ -271,7 +271,7 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 
 	@Entity( name = "Size" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'SIZE'" )
+	@SQLRestriction( "CODE = 'SIZE'" )
 	public static class Size {
 		private int id;
 		private String name;
@@ -296,7 +296,7 @@ public class LazyOneToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCas
 
 	@Entity( name = "Rating" )
 	@Table( name = "MAIN_TABLE" )
-	@Where( clause = "CODE = 'RATING'" )
+	@SQLRestriction( "CODE = 'RATING'" )
 	public static class Rating {
 		private int id;
 		private String name;

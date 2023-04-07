@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
@@ -118,7 +119,7 @@ public class BasicWhereTest extends BaseEnversJPAFunctionalTestCase {
 
 		@OneToMany
 		@JoinColumn(name = "allC")
-		@Where(clause = "type = 'C'")
+		@SQLRestriction("type = 'C'")
 		@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 		@AuditJoinTable(name = "A_C_AUD")
 		private Set<EntityC> allMyC;
@@ -192,7 +193,7 @@ public class BasicWhereTest extends BaseEnversJPAFunctionalTestCase {
 		private String name;
 
 		@OneToMany
-		@Where(clause = "type = 'Z'")
+		@SQLRestriction("type = 'Z'")
 		@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 		private Set<EntityZ> allMyZ;
 

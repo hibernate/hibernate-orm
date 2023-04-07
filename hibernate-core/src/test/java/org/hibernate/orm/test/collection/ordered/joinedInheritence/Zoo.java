@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.SQLOrder;
 
 /**
  * @author Steve Ebersole
@@ -69,7 +70,7 @@ public class Zoo {
 
 	@OneToMany
 	@JoinColumn
-	@org.hibernate.annotations.OrderBy( clause = "weight" )
+	@SQLOrder( "weight" )
 	public Set<Lion> getLions() {
 		return lions;
 	}

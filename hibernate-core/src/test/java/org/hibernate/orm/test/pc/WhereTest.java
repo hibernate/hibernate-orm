@@ -18,7 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -122,11 +122,11 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String name;
 
-		@Where(clause = "account_type = 'DEBIT'")
+		@SQLRestriction("account_type = 'DEBIT'")
 		@OneToMany(mappedBy = "client")
 		private List<Account> debitAccounts = new ArrayList<>();
 
-		@Where(clause = "account_type = 'CREDIT'")
+		@SQLRestriction("account_type = 'CREDIT'")
 		@OneToMany(mappedBy = "client")
 		private List<Account> creditAccounts = new ArrayList<>();
 
@@ -160,7 +160,7 @@ public class WhereTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity(name = "Account")
-	@Where(clause = "active = true")
+	@SQLRestriction("active = true")
 	public static class Account {
 
 		@Id

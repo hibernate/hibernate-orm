@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.annotations.Where;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.annotations.SQLRestriction;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -100,7 +98,7 @@ public class EagerManyToOne3Test {
 
 	@Entity(name = "Child")
 	@Table(name = "children")
-	@Where(clause = "deleted_at IS NULL")
+	@SQLRestriction("deleted_at IS NULL")
 	public static class Child {
 		@Id
 		private Long id;

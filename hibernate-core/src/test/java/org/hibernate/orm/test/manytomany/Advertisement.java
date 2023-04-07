@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.manytomany;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,7 +25,7 @@ public class Advertisement {
     @GeneratedValue
     private Integer id;
 
-    @Where(clause = "deleted <> 'true'")
+    @SQLRestriction("deleted <> 'true'")
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "advertisements")
     @OrderBy("id asc")
     private Set<Attachment> attachments;

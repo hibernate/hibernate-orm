@@ -24,6 +24,7 @@ import jakarta.persistence.TypedQuery;
 
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -141,7 +142,7 @@ public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestC
 
 	@Entity(name = "Book")
 	@SQLDelete(sql = "UPDATE Book SET deleted = true WHERE id = ?", check = ResultCheckStyle.COUNT)
-	@Where(clause = "deleted = false")
+	@SQLRestriction("deleted = false")
 	public static class Book {
 		@Id
 		@GeneratedValue

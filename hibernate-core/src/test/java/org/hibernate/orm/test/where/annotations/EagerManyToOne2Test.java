@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -134,7 +134,7 @@ public class EagerManyToOne2Test {
 		private String name;
 
 		@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-		@Where(clause = "deleted_at IS NULL")
+		@SQLRestriction("deleted_at IS NULL")
 		private List<Child> children = new ArrayList<>();
 
 		public Parent() {

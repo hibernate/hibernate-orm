@@ -16,7 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 
-import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.envers.Audited;
 
 /**
@@ -49,7 +49,7 @@ public class Child2Entity {
 			joinColumns = @JoinColumn(name = "child2_id"),
 			inverseJoinColumns = @JoinColumn(name = "parent_id", insertable = false, updatable = false)
 	)
-	@WhereJoinTable(clause = "child2_id is not null")
+	@SQLJoinTableRestriction("child2_id is not null")
 	private List<ParentEntity> parents = new ArrayList<ParentEntity>();
 
 	public Integer getId() {

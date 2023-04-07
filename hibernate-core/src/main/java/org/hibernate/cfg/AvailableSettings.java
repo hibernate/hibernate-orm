@@ -475,6 +475,11 @@ public interface AvailableSettings {
 	 * By default, Hibernate will attempt to automatically determine the dialect from the
 	 * {@linkplain #URL JDBC URL} and JDBC metadata, so this setting is not usually necessary.
 	 *
+	 * @apiNote As of Hibernate 6, this property should not be explicitly specified,
+	 *          except when using a custom user-written implementation of {@code Dialect}.
+	 *          Instead, applications should allow Hibernate to select the {@code Dialect}
+	 *          automatically.
+	 *
 	 * @see org.hibernate.dialect.Dialect
 	 */
 	String DIALECT = "hibernate.dialect";

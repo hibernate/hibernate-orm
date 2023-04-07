@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class UTCNormalizedInstantTest {
 
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = DB2zDialect.class)
 	@Test void test(SessionFactoryScope scope) {
 		Instant instant = Instant.now();
 		long id = scope.fromTransaction( s-> {
@@ -40,6 +42,7 @@ public class UTCNormalizedInstantTest {
 	}
 
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = DB2zDialect.class)
 	@Test void testWithSystemTimeZone(SessionFactoryScope scope) {
 		TimeZone.setDefault( TimeZone.getTimeZone("CET") );
 		Instant instant = Instant.now();

@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.derived.AnonymousTupleSqmPathSource;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -208,7 +209,7 @@ public class StandardFunctionReturnTypeResolvers {
 			List<? extends SqmTypedNode<?>> arguments,
 			int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
-		final SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
+		SqmExpressible<?> specifiedArgType = getSpecifiedArgType( specifiedArgument );
 		if ( !(specifiedArgType instanceof ReturnableType ) ) {
 			throw new QueryException(
 					String.format(
@@ -222,6 +223,13 @@ public class StandardFunctionReturnTypeResolvers {
 		}
 
 		return (ReturnableType<?>) specifiedArgType;
+	}
+
+	private static SqmExpressible<?> getSpecifiedArgType(SqmTypedNode<?> specifiedArgument) {
+		SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
+		return specifiedArgType instanceof AnonymousTupleSqmPathSource ?
+				( (AnonymousTupleSqmPathSource) specifiedArgType ).getSqmPathType() :
+				specifiedArgType;
 	}
 
 	public static JdbcMapping extractArgumentJdbcMapping(

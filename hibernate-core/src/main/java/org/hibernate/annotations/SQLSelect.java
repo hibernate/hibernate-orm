@@ -51,6 +51,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </ol>
  *
  * @see HQLSelect
+ * @see DialectOverride.SQLSelect
  *
  * @author Gavin King
  *

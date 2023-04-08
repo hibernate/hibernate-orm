@@ -1251,8 +1251,9 @@ public class EntityBinder {
 	}
 
 	private void bindCustomSql() {
-		//SQL overriding
 		//TODO: tolerate non-empty table() member here if it explicitly names the main table
+		//TODO: would be nice to add these guys to @DialectOverride, but getOverridableAnnotation()
+		//      does not yet handle repeatable annotations
 
 		final SQLInsert sqlInsert = findMatchingSqlAnnotation( "", SQLInsert.class, SQLInserts.class );
 		if ( sqlInsert != null ) {
@@ -1288,7 +1289,7 @@ public class EntityBinder {
 					+ persistentClass.getEntityName());
 		}
 
-		final SQLSelect sqlSelect = annotatedClass.getAnnotation( SQLSelect.class );
+		final SQLSelect sqlSelect = getOverridableAnnotation( annotatedClass, SQLSelect.class, context );
 		if ( sqlSelect != null ) {
 			final String loaderName = persistentClass.getEntityName() + "$SQLSelect";
 			persistentClass.setLoaderName( loaderName );

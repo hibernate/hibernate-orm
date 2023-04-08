@@ -363,6 +363,30 @@ public interface DialectOverride {
 	}
 
 	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLSelect}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLSelects.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLSelect.class)
+	@interface SQLSelect {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLSelect override();
+	}
+	@Target({METHOD, FIELD})
+	@Retention(RUNTIME)
+	@interface SQLSelects {
+		SQLSelect[] value();
+	}
+
+	/**
 	 * Marks an annotation type as a dialect-specific override for
 	 * some other annotation type.
 	 * <p>

@@ -81,7 +81,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void batchContainedStatementsOnRelease();
 
 	@LogMessage(level = INFO)
-	@Message(value = "Bytecode provider name : %s", id = 21)
+	@Message(value = "Bytecode provider: %s", id = 21)
 	void bytecodeProvider(String provider);
 
 	@LogMessage(level = WARN)

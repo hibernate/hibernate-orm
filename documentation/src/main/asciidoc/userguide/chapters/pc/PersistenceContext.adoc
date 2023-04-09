@@ -345,18 +345,18 @@ Locking is discussed in a separate <<chapters/locking/Locking.adoc#locking,chapt
 
 Hibernate offers two options if you want to filter entities or entity associations:
 
-static (e.g. `@Where` and `@WhereJoinTable`):: which are defined at mapping time and
+static (e.g. `@SQLRestriction` and `@SQLJoinTableRestriction`):: which are defined at mapping time and
 cannot change at runtime.
 dynamic (e.g. `@Filter` and `@FilterJoinTable`):: which are applied and configured at runtime.
 
 [[pc-where]]
-==== `@Where`
+==== `@SQLRestriction`
 
 Sometimes, you want to filter out entities or collections using custom SQL criteria.
-This can be achieved using the `@Where` annotation, which can be applied to entities and collections.
+This can be achieved using the `@SQLRestriction` annotation, which can be applied to entities and collections.
 
 [[pc-where-example]]
-.`@Where` mapping usage
+.`@SQLRestriction` mapping usage
 ====
 [source, JAVA, indent=0]
 ----
@@ -367,7 +367,7 @@ include::{example-dir-pc}/WhereTest.java[tags=pc-where-example]
 If the database contains the following entities:
 
 [[pc-where-persistence-example]]
-.Persisting and fetching entities with a `@Where` mapping
+.Persisting and fetching entities with a `@SQLRestriction` mapping
 ====
 [source, JAVA, indent=0]
 ----
@@ -383,7 +383,7 @@ include::{extrasdir}/pc-where-persistence-example.sql[]
 When executing an `Account` entity query, Hibernate is going to filter out all records that are not active.
 
 [[pc-where-entity-query-example]]
-.Query entities mapped with `@Where`
+.Query entities mapped with `@SQLRestriction`
 ====
 [source, JAVA, indent=0]
 ----
@@ -396,10 +396,10 @@ include::{extrasdir}/pc-where-entity-query-example.sql[]
 ----
 ====
 
-When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate is going to apply the `@Where` clause filtering criteria to the associated child entities.
+When fetching the `debitAccounts` or the `creditAccounts` collections, Hibernate is going to apply the `@SQLRestriction` clause filtering criteria to the associated child entities.
 
 [[pc-where-collection-query-example]]
-.Traversing collections mapped with `@Where`
+.Traversing collections mapped with `@SQLRestriction`
 ====
 [source, JAVA, indent=0]
 ----
@@ -413,12 +413,12 @@ include::{extrasdir}/pc-where-collection-query-example.sql[]
 ====
 
 [[pc-where-join-table]]
-==== `@WhereJoinTable`
+==== `@SQLJoinTableRestriction`
 
-Just like `@Where` annotation, `@WhereJoinTable` is used to filter out collections using a joined table (e.g. @ManyToMany association).
+Just like `@SQLRestriction` annotation, `@SQLJoinTableRestriction` is used to filter out collections using a joined table (e.g. @ManyToMany association).
 
 [[pc-where-join-table-example]]
-.`@WhereJoinTable` mapping example
+.`@SQLJoinTableRestriction` mapping example
 ====
 [source, JAVA, indent=0]
 ----
@@ -432,12 +432,12 @@ include::{extrasdir}/pc-where-join-table-example.sql[]
 ====
 
 In the example above, the current week `Reader` entities are included in the `currentWeekReaders` collection
-which uses the `@WhereJoinTable` annotation to filter the joined table rows according to the provided SQL clause.
+which uses the `@SQLJoinTableRestriction` annotation to filter the joined table rows according to the provided SQL clause.
 
 Considering that the following two `Book_Reader` entries are added into our system:
 
 [[pc-where-join-table-persist-example]]
-.`@WhereJoinTable` test data
+.`@SQLJoinTableRestriction` test data
 ====
 [source, JAVA, indent=0]
 ----
@@ -448,7 +448,7 @@ include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-persi
 When fetching the `currentWeekReaders` collection, Hibernate is going to find only one entry:
 
 [[pc-where-join-table-fetch-example]]
-.`@WhereJoinTable` fetch example
+.`@SQLJoinTableRestriction` fetch example
 ====
 [source, JAVA, indent=0]
 ----
@@ -460,7 +460,7 @@ include::{example-dir-pc}/WhereJoinTableTest.java[tags=pc-where-join-table-fetch
 ==== `@Filter`
 
 The `@Filter` annotation is another way to filter out entities or collections using custom SQL criteria.
-Unlike the `@Where` annotation, `@Filter` allows you to parameterize the filter clause at runtime.
+Unlike the `@SQLRestriction` annotation, `@Filter` allows you to parameterize the filter clause at runtime.
 
 Now, considering we have the following `Account` entity:
 
@@ -596,7 +596,7 @@ include::{extrasdir}/pc-filter-collection-query-example.sql[]
 
 [NOTE]
 ====
-The main advantage of `@Filter` over the `@Where` clause is that the filtering criteria can be customized at runtime.
+The main advantage of `@Filter` over the `@SQLRestriction` clause is that the filtering criteria can be customized at runtime.
 ====
 
 [WARNING]

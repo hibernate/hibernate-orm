@@ -3622,7 +3622,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmLiteral<? extends Number> integerOrLongLiteral(String text) {
 		try {
-			final Integer value = Integer.valueOf( text );
+			final Integer value = Integer.valueOf( text.replace("_", "") );
 			return new SqmLiteral<>(
 					value,
 					resolveExpressibleTypeBasic( Integer.class ),
@@ -3651,7 +3651,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmLiteral<Integer> integerLiteral(String text) {
 		try {
-			final Integer value = Integer.valueOf( text );
+			final Integer value = Integer.valueOf( text.replace("_", "") );
 			return new SqmLiteral<>(
 					value,
 					resolveExpressibleTypeBasic( Integer.class ),
@@ -3670,7 +3670,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final String originalText = text;
 		try {
 			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
-				text = text.substring( 0, text.length() - 1 );
+				text = text.substring( 0, text.length() - 1 ).replace("_", "");
 			}
 			final Long value = Long.valueOf( text );
 			return new SqmLiteral<>(

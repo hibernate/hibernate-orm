@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -864,6 +865,9 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast(time 12:13:14 as String)", String.class).getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000"), is("12.13.14") ) );
 					assertThat( session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)", String.class).getSingleResult(), anyOf( startsWith("1911-10-09 12:13:14"), startsWith("1911-10-09-12.13.14") ) );
 
+					assertThat( session.createQuery("select cast(local datetime as Instant)", Instant.class).getSingleResult(), instanceOf(Instant.class) );
+					assertThat( session.createQuery("select cast(offset datetime as Instant)", Instant.class).getSingleResult(), instanceOf(Instant.class) );
+
 					assertThat( session.createQuery("select cast(1 as NumericBoolean)", Boolean.class).getSingleResult(), is(true) );
 					assertThat( session.createQuery("select cast(0 as NumericBoolean)", Boolean.class).getSingleResult(), is(false) );
 					assertThat( session.createQuery("select cast(true as YesNo)", Boolean.class).getSingleResult(), is(true) );
@@ -1242,6 +1246,31 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select (2 * e.theDuration + 3 day) by hour from EntityOfBasics e", Long.class)
 							.list();
+				}
+		);
+	}
+
+	@Test
+	public void testInstantCast(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Instant instant = Instant.ofEpochSecond(123456789);
+					assertEquals( instant,
+							session.createQuery("select cast(?1 as Instant)", Instant.class)
+									.setParameter( 1, instant.atOffset(ZoneOffset.UTC) )
+									.getSingleResult() );
+					assertEquals( instant,
+							session.createQuery("select cast(?1 as Instant)", Instant.class)
+									.setParameter( 1, instant.atOffset(ZoneOffset.UTC).toLocalDateTime() )
+									.getSingleResult() );
+					assertEquals( instant.atOffset(ZoneOffset.UTC),
+							session.createQuery("select cast(?1 as OffsetDateTime)", OffsetDateTime.class)
+									.setParameter( 1, instant )
+									.getSingleResult() );
+					assertEquals( instant.atOffset(ZoneOffset.UTC).toLocalDateTime(),
+							session.createQuery("select cast(?1 as LocalDateTime)", LocalDateTime.class)
+									.setParameter( 1, instant )
+									.getSingleResult() );
 				}
 		);
 	}

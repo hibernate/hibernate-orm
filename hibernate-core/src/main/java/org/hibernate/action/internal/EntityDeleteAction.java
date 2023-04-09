@@ -145,7 +145,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private Object getCurrentVersion() {
+	protected Object getCurrentVersion() {
 		return getPersister().isVersionPropertyGenerated()
 						// skip if we're deleting an unloaded proxy, no need for the version
 						&& isInstanceLoaded()
@@ -156,7 +156,7 @@ public class EntityDeleteAction extends EntityAction {
 				: version;
 	}
 
-	private void postDeleteLoaded(
+	protected void postDeleteLoaded(
 			Object id,
 			EntityPersister persister,
 			SharedSessionContractImplementor session,
@@ -171,7 +171,7 @@ public class EntityDeleteAction extends EntityAction {
 			throw new AssertionFailure( "possible non-threadsafe access to session" );
 		}
 		entry.postDelete();
-		EntityKey key = entry.getEntityKey();
+		final EntityKey key = entry.getEntityKey();
 		persistenceContext.removeEntity( key );
 		persistenceContext.removeProxy( key );
 		removeCacheItem( ck );
@@ -179,9 +179,9 @@ public class EntityDeleteAction extends EntityAction {
 		postDelete();
 	}
 
-	private void postDeleteUnloaded(Object id, EntityPersister persister, SharedSessionContractImplementor session, Object ck) {
+	protected void postDeleteUnloaded(Object id, EntityPersister persister, SharedSessionContractImplementor session, Object ck) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		EntityKey key = session.generateEntityKey( id, persister );
+		final EntityKey key = session.generateEntityKey( id, persister );
 		if ( !persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
 			throw new AssertionFailure( "deleted proxy should be for an unloaded entity: " + key );
 		}
@@ -257,12 +257,17 @@ public class EntityDeleteAction extends EntityAction {
 		return false;
 	}
 
-	private Object lockCacheItem() {
+	protected Object lockCacheItem() {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final SharedSessionContractImplementor session = getSession();
-			Object ck = cache.generateCacheKey( getId(), persister, session.getFactory(), session.getTenantIdentifier() );
+			final Object ck = cache.generateCacheKey(
+					getId(),
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
+			);
 			lock = cache.lockItem( session, ck, getCurrentVersion() );
 			return ck;
 		}
@@ -271,7 +276,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void unlockCacheItem() {
+	protected void unlockCacheItem() {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
@@ -286,7 +291,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void removeCacheItem(Object ck) {
+	protected void removeCacheItem(Object ck) {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			persister.getCacheAccessStrategy().remove( getSession(), ck );

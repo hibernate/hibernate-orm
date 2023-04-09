@@ -56,9 +56,9 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 			LOG.explicitSkipLockedLockCombo();
 		}
 
-		SessionImplementor source = event.getSession();
+		final SessionImplementor source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
+		final Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
 		//TODO: if object was an uninitialized proxy, this is inefficient,
 		//      resulting in two SQL selects
 		
@@ -78,7 +78,7 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 	}
 	
 	private void cascadeOnLock(LockEvent event, EntityPersister persister, Object entity) {
-		EventSource source = event.getSession();
+		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {

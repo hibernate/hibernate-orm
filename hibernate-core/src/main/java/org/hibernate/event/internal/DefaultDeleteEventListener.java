@@ -131,17 +131,17 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	}
 
 	private static void deleteOwnedCollections(Type type, Object key, EventSource session) {
-		MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
-		ActionQueue actionQueue = session.getActionQueue();
+		final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
+		final ActionQueue actionQueue = session.getActionQueue();
 		if ( type.isCollectionType() ) {
-			String role = ( (CollectionType) type ).getRole();
-			CollectionPersister persister = mappingMetamodel.getCollectionDescriptor(role);
+			final String role = ( (CollectionType) type ).getRole();
+			final CollectionPersister persister = mappingMetamodel.getCollectionDescriptor(role);
 			if ( !persister.isInverse() ) {
 				actionQueue.addAction( new CollectionRemoveAction( persister, key, session ) );
 			}
 		}
 		else if ( type.isComponentType() ) {
-			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
+			final Type[] subtypes = ( (CompositeType) type ).getSubtypes();
 			for ( Type subtype : subtypes ) {
 				deleteOwnedCollections( subtype, key, session );
 			}
@@ -151,7 +151,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	private void delete(DeleteEvent event, DeleteContext transientEntities) {
 		final PersistenceContext persistenceContext = event.getSession().getPersistenceContextInternal();
 		final Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
-		EntityEntry entityEntry = persistenceContext.getEntry( entity );
+		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
 		if ( entityEntry == null ) {
 			deleteTransientInstance( event, transientEntities, entity );
 		}
@@ -165,7 +165,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		final EventSource source = event.getSession();
 
-		EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( ForeignKeys.isTransient( persister.getEntityName(), entity, null, source ) ) {
 			deleteTransientEntity( source, entity, persister, transientEntities );
 		}
@@ -186,7 +186,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 			final Object version = persister.getVersion( entity );
 
-			EntityEntry entityEntry = persistenceContext.addEntity(
+			final EntityEntry entityEntry = persistenceContext.addEntity(
 					entity,
 					persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
 					persister.getValues( entity ),
@@ -214,18 +214,19 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 				|| source.getPersistenceContextInternal()
 						.containsDeletedUnloadedEntityKey( entityEntry.getEntityKey() ) ) {
 			LOG.trace( "Object was already deleted" );
-			return;
 		}
-		delete(
-				event,
-				transientEntities,
-				source,
-				entity,
-				entityEntry.getPersister(),
-				entityEntry.getId(),
-				entityEntry.getVersion(),
-				entityEntry
-		);
+		else {
+			delete(
+					event,
+					transientEntities,
+					source,
+					entity,
+					entityEntry.getPersister(),
+					entityEntry.getId(),
+					entityEntry.getVersion(),
+					entityEntry
+			);
+		}
 	}
 
 	private void delete(
@@ -330,12 +331,13 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 			EntityPersister persister,
 			DeleteContext transientEntities) {
 		LOG.handlingTransientEntity();
-		if ( !transientEntities.add( entity ) ) {
-			LOG.trace( "Already handled transient entity; skipping" );
-			return;
+		if ( transientEntities.add( entity ) ) {
+			cascadeBeforeDelete( session, persister, entity, transientEntities );
+			cascadeAfterDelete( session, persister, entity, transientEntities );
 		}
-		cascadeBeforeDelete( session, persister, entity, transientEntities );
-		cascadeAfterDelete( session, persister, entity, transientEntities );
+		else {
+			LOG.trace( "Already handled transient entity; skipping" );
+		}
 	}
 
 	/**

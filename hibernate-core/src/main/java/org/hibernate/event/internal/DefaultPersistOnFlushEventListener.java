@@ -15,6 +15,7 @@ import org.hibernate.event.spi.PersistContext;
  * @author Emmanuel Bernard
  */
 public class DefaultPersistOnFlushEventListener extends DefaultPersistEventListener {
+	@Override
 	protected CascadingAction<PersistContext> getCascadeAction() {
 		return CascadingActions.PERSIST_ON_FLUSH;
 	}

@@ -339,6 +339,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "zoneddatetime": return getBasicTypeForJavaType( ZonedDateTime.class );
 			case "biginteger": return getBasicTypeForJavaType( BigInteger.class );
 			case "bigdecimal": return getBasicTypeForJavaType( BigDecimal.class );
+			case "duration": return getBasicTypeForJavaType( Duration.class );
 			case "binary": return getBasicTypeForJavaType( byte[].class );
 			//this one is very fragile ... works well for BIT or BOOLEAN columns only
 			//works OK, I suppose, for integer columns, but not at all for char columns

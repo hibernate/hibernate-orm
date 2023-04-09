@@ -1256,6 +1256,14 @@ public class FunctionTests {
 					assertEquals( 5*60*1_000_000_000L,
 							session.createQuery("select cast(5 minute as Long)", Long.class)
 									.getSingleResult() );
+					assertEquals( Duration.of(5, ChronoUnit.MINUTES),
+							session.createQuery("select cast(?1 as Duration)", Duration.class)
+									.setParameter(1, 5*60*1000000000L)
+									.getSingleResult() );
+					assertEquals( Duration.of(1, ChronoUnit.DAYS),
+							session.createQuery("select cast(?1 as Duration)", Duration.class)
+									.setParameter(1, 24*60*60*1000000000L)
+									.getSingleResult() );
 				}
 		);
 	}

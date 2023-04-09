@@ -21,7 +21,8 @@ import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * We do 2 things here:<ul>
+ * We do two things here:
+ * <ul>
  * <li>Call {@link Lifecycle} interface if necessary</li>
  * <li>Perform needed {@link EntityEntry#getLockMode()} related processing</li>
  * </ul>
@@ -49,34 +50,26 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
 
-		final LockMode lockMode = entry.getLockMode();
-		switch (lockMode) {
+		switch ( entry.getLockMode() ) {
 			case PESSIMISTIC_FORCE_INCREMENT:
-				final EntityPersister persister = entry.getPersister();
-				final Object nextVersion = persister.forceVersionIncrement(
-						entry.getId(),
-						entry.getVersion(),
-						session
-				);
-				entry.forceLocked(entity, nextVersion);
+				final Object nextVersion = entry.getPersister()
+						.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
+				entry.forceLocked( entity, nextVersion );
 				break;
 			case OPTIMISTIC_FORCE_INCREMENT:
-				final EntityIncrementVersionProcess incrementVersion = new EntityIncrementVersionProcess(entity);
-				session.getActionQueue().registerProcess(incrementVersion);
+				session.getActionQueue().registerProcess( new EntityIncrementVersionProcess( entity ) );
 				break;
 			case OPTIMISTIC:
-				final EntityVerifyVersionProcess verifyVersion = new EntityVerifyVersionProcess(entity);
-				session.getActionQueue().registerProcess(verifyVersion);
+				session.getActionQueue().registerProcess( new EntityVerifyVersionProcess( entity ) );
 				break;
 		}
 
-		invokeLoadLifecycle(event, session);
+		invokeLoadLifecycle( event, session );
 
 	}
 
 	protected void invokeLoadLifecycle(PostLoadEvent event, EventSource session) {
 		if ( event.getPersister().implementsLifecycle() ) {
-			//log.debug( "calling onLoad()" );
 			( (Lifecycle) event.getEntity() ).onLoad( session, event.getId() );
 		}
 	}

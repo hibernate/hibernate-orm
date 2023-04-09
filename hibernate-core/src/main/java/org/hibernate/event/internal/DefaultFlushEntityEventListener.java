@@ -128,10 +128,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	public void onFlushEntity(FlushEntityEvent event) throws HibernateException {
 		final Object entity = event.getEntity();
 		final EntityEntry entry = event.getEntityEntry();
+		final EventSource session = event.getSession();
 
 		final boolean mightBeDirty = entry.requiresDirtyCheck( entity );
 
-		final Object[] values = getValues( entity, entry, mightBeDirty, event.getSession() );
+		final Object[] values = getValues( entity, entry, mightBeDirty, session );
 
 		event.setPropertyValues( values );
 
@@ -153,7 +154,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// Search for collections by reachability, updating their role.
 			// We don't want to touch collections reachable from a deleted object
 			if ( persister.hasCollections() ) {
-				new FlushVisitor(event.getSession(), entity )
+				new FlushVisitor( session, entity )
 						.processEntityPropertyValues( values, persister.getPropertyTypes() );
 			}
 		}
@@ -194,7 +195,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// because collections need wrapping but changes to _them_
 			// don't dirty the container. Also, for versioned data, we
 			// need to wrap before calling searchForDirtyCollections
-			WrapVisitor visitor = new WrapVisitor( event.getEntity(), entry.getId() , event.getSession() );
+			final WrapVisitor visitor = new WrapVisitor( event.getEntity(), entry.getId(), event.getSession() );
 			// substitutes into values by side effect
 			visitor.processEntityPropertyValues( values, persister.getPropertyTypes() );
 			return visitor.isSubstitutionRequired();
@@ -205,7 +206,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private boolean isUpdateNecessary(final FlushEntityEvent event, final boolean mightBeDirty) {
-		EntityEntry entry = event.getEntityEntry();
+		final EntityEntry entry = event.getEntityEntry();
 		if ( mightBeDirty || entry.getStatus() == Status.DELETED ) {
 			// compare to cached state (ignoring collections unless versioned)
 			dirtyCheck( event );
@@ -213,11 +214,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				return true;
 			}
 			else {
-				processIfSelfDirtinessTracker( event.getEntity(), SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
-				EventSource source = event.getSession();
+				final Object entity = event.getEntity();
+				processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
+				final EventSource source = event.getSession();
 				source.getFactory()
 						.getCustomEntityDirtinessStrategy()
-						.resetDirty( event.getEntity(), entry.getPersister(), source );
+						.resetDirty( entity, entry.getPersister(), source );
 				return false;
 			}
 		}
@@ -255,9 +257,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 						values,
 						dirtyProperties,
 						event.hasDirtyCollection(),
-						status == Status.DELETED && !entry.isModifiableEntity() ?
-								persister.getValues( entity ) :
-								entry.getLoadedState(),
+						status == Status.DELETED && !entry.isModifiableEntity()
+								? persister.getValues( entity )
+								: entry.getLoadedState(),
 						entry.getVersion(),
 						nextVersion,
 						entity,
@@ -384,10 +386,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	 * Convenience method to retrieve an entities next version value
 	 */
 	private Object getNextVersion(FlushEntityEvent event) throws HibernateException {
-		EntityEntry entry = event.getEntityEntry();
-		EntityPersister persister = entry.getPersister();
+		final EntityEntry entry = event.getEntityEntry();
+		final EntityPersister persister = entry.getPersister();
 		if ( persister.isVersioned() ) {
-			Object[] values = event.getPropertyValues();
+			final Object[] values = event.getPropertyValues();
 			if ( entry.isBeingReplicated() ) {
 				return getVersion( values, persister );
 			}
@@ -402,7 +404,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		else {
 			return null;
 		}
-
 	}
 
 	private static boolean isVersionIncrementRequired(FlushEntityEvent event, EntityEntry entry) {
@@ -432,9 +433,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private boolean hasDirtyCollections(FlushEntityEvent event) {
-		EntityPersister persister = event.getEntityEntry().getPersister();
-		if ( isCollectionDirtyCheckNecessary( persister, event.getEntityEntry().getStatus() ) ) {
-			DirtyCollectionSearchVisitor visitor = new DirtyCollectionSearchVisitor(
+		final EntityEntry entityEntry = event.getEntityEntry();
+		final EntityPersister persister = entityEntry.getPersister();
+		if ( isCollectionDirtyCheckNecessary( persister, entityEntry.getStatus() ) ) {
+			final DirtyCollectionSearchVisitor visitor = new DirtyCollectionSearchVisitor(
 					event.getEntity(),
 					event.getSession(),
 					persister.getPropertyVersionability()
@@ -576,8 +578,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				}
 			}
 		}
-		EventSource session = event.getSession();
-		DirtyCheckContextImpl context = new DirtyCheckContextImpl();
+		final EventSource session = event.getSession();
+		final DirtyCheckContextImpl context = new DirtyCheckContextImpl();
 		session.getFactory().getCustomEntityDirtinessStrategy()
 				.findDirty( event.getEntity(), event.getEntityEntry().getPersister(), session, context );
 		return context.found;
@@ -675,13 +677,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 	}
 
-	private static Object[] getDatabaseSnapshot(
-			EntityPersister persister,
-			Object id,
-			SessionImplementor session) {
+	private static Object[] getDatabaseSnapshot(EntityPersister persister, Object id, SessionImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		if ( persister.isSelectBeforeUpdateRequired() ) {
-			Object[] snapshot = persistenceContext.getDatabaseSnapshot( id, persister );
+			final Object[] snapshot = persistenceContext.getDatabaseSnapshot( id, persister );
 			if ( snapshot == null ) {
 				//do we even really need this? the update will fail anyway....
 				final StatisticsImplementor statistics = session.getFactory().getStatistics();

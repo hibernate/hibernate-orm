@@ -42,6 +42,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -63,11 +64,16 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( persister == null ) {
 			throw new HibernateException( "Unable to locate persister: " + event.getEntityClassName() );
 		}
+		checkId( event, loadType, persister );
+		doOnLoad( persister, event, loadType );
+	}
+
+	private void checkId(LoadEvent event, LoadType loadType, EntityPersister persister) {
 		final Object id = event.getEntityId();
 		if ( !persister.getIdentifierMapping().getJavaType().isInstance( id )
 				&& !( id instanceof DelayedPostInsertIdentifier ) ) {
 			final Class<?> idClass = persister.getIdentifierType().getReturnedClass();
-			if ( handleIdType( persister, event, loadType, idClass) ) {
+			if ( handleIdType( persister, event, loadType, idClass ) ) {
 				throw new TypeMismatchException(
 						"Supplied id had wrong type: entity '" + persister.getEntityName()
 								+ "' has id type '" + idClass
@@ -75,7 +81,6 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				);
 			}
 		}
-		doOnLoad( persister, event, loadType );
 	}
 
 	protected EntityPersister getPersister(final LoadEvent event) {
@@ -193,7 +198,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( session.getPersistenceContextInternal().getEntry( event.getInstanceToLoad() ) != null ) {
 				throw new PersistentObjectException(
 						"attempted to load into an instance that was already associated with the session: "
-								+ MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
+								+ infoString( persister, event.getEntityId(), session.getFactory() )
 				);
 			}
 			persister.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), session);
@@ -227,7 +232,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Loading entity: {0}",
-					MessageHelper.infoString( persister, event.getEntityId(), persister.getFactory() )
+					infoString( persister, event.getEntityId(), persister.getFactory() )
 			);
 		}
 		if ( hasBytecodeProxy( persister, options ) ) {
@@ -519,19 +524,20 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @return The loaded entity, or null.
 	 */
 	private Object doLoad(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
+		final EventSource session = event.getSession();
+
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
 					"Attempting to resolve: {0}",
-					MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
+					infoString( persister, event.getEntityId(), session.getFactory() )
 			);
 		}
 
-		if ( event.getSession().getPersistenceContextInternal()
-				.containsDeletedUnloadedEntityKey( keyToLoad ) ) {
+		if ( session.getPersistenceContextInternal().containsDeletedUnloadedEntityKey( keyToLoad ) ) {
 			return null;
 		}
 		else {
-			PersistenceContextEntry persistenceContextEntry
+			final PersistenceContextEntry persistenceContextEntry
 					= CacheEntityLoaderHelper.INSTANCE.loadFromSessionCache( event, keyToLoad, options );
 			final Object entity = persistenceContextEntry.getEntity();
 			if ( entity != null ) {
@@ -573,7 +579,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Resolved object in second-level cache: {0}",
-						MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
+						infoString( persister, event.getEntityId(), session.getFactory() )
 				);
 			}
 			return entity;
@@ -582,7 +588,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Object not resolved in any cache: {0}",
-						MessageHelper.infoString( persister, event.getEntityId(), session.getFactory() )
+						infoString( persister, event.getEntityId(), session.getFactory() )
 				);
 			}
 			return loadFromDatasource( event, persister );

@@ -42,6 +42,7 @@ import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.id.IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * A convenience base class for listeners responding to save events.
@@ -115,7 +116,7 @@ public abstract class AbstractSaveEventListener<C>
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 
 		final EntityPersister persister = source.getEntityPersister( entityName, entity );
-		Generator generator = persister.getGenerator();
+		final Generator generator = persister.getGenerator();
 		if ( !generator.generatedOnExecution() ) {
 			final Object generatedId = ( (BeforeExecutionGenerator) generator ).generate( source, entity, null, INSERT );
 			if ( generatedId == null ) {
@@ -169,7 +170,7 @@ public abstract class AbstractSaveEventListener<C>
 			boolean requiresImmediateIdAccess) {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Saving {0}", MessageHelper.infoString( persister, id, source.getFactory() ) );
+			LOG.tracev( "Saving {0}", infoString( persister, id, source.getFactory() ) );
 		}
 
 		final EntityKey key = entityKey( entity, id, persister, useIdentityColumn, source );
@@ -250,13 +251,13 @@ public abstract class AbstractSaveEventListener<C>
 
 		final Object id = key == null ? null : key.getIdentifier();
 
-		boolean shouldDelayIdentityInserts = !source.isTransactionInProgress() && !requiresImmediateIdAccess;
+		final boolean shouldDelayIdentityInserts = !source.isTransactionInProgress() && !requiresImmediateIdAccess;
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
 		// likewise, should it be done before onUpdate()?
-		EntityEntry original = persistenceContext.addEntry(
+		final EntityEntry original = persistenceContext.addEntry(
 				entity,
 				Status.SAVING,
 				null,
@@ -287,9 +288,9 @@ public abstract class AbstractSaveEventListener<C>
 
 		final Object finalId = handleGeneratedId( useIdentityColumn, id, insert );
 
-		EntityEntry newEntry = persistenceContext.getEntry( entity );
+		final EntityEntry newEntry = persistenceContext.getEntry( entity );
 		if ( newEntry != original ) {
-			EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
+			final EntityEntryExtraState extraState = newEntry.getExtraState( EntityEntryExtraState.class );
 			if ( extraState == null ) {
 				newEntry.addExtraState( original.getExtraState( EntityEntryExtraState.class ) );
 			}
@@ -301,7 +302,7 @@ public abstract class AbstractSaveEventListener<C>
 	private static Object handleGeneratedId(boolean useIdentityColumn, Object id, AbstractEntityInsertAction insert) {
 		if ( useIdentityColumn && insert.isEarlyInsert() ) {
 			if ( insert instanceof EntityIdentityInsertAction ) {
-				Object generatedId = ((EntityIdentityInsertAction) insert).getGeneratedId();
+				final Object generatedId = ((EntityIdentityInsertAction) insert).getGeneratedId();
 				insert.handleNaturalIdPostSaveNotifications( generatedId );
 				return generatedId;
 			}
@@ -318,8 +319,8 @@ public abstract class AbstractSaveEventListener<C>
 	}
 
 	private Object[] cloneAndSubstituteValues(Object entity, EntityPersister persister, C context, EventSource source, Object id) {
-		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap(context), source );
-		Type[] types = persister.getPropertyTypes();
+		final Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( context ), source );
+		final Type[] types = persister.getPropertyTypes();
 
 		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
 		if ( persister.hasCollections() ) {
@@ -349,7 +350,7 @@ public abstract class AbstractSaveEventListener<C>
 			EventSource source,
 			boolean shouldDelayIdentityInserts) {
 		if ( useIdentityColumn ) {
-			EntityIdentityInsertAction insert = new EntityIdentityInsertAction(
+			final EntityIdentityInsertAction insert = new EntityIdentityInsertAction(
 					values,
 					entity,
 					persister,
@@ -396,7 +397,7 @@ public abstract class AbstractSaveEventListener<C>
 			Object[] values,
 			Type[] types,
 			EventSource source) {
-		WrapVisitor visitor = new WrapVisitor( entity, id, source );
+		final WrapVisitor visitor = new WrapVisitor( entity, id, source );
 		// substitutes into values by side effect
 		visitor.processEntityPropertyValues( values, types );
 		return visitor.isSubstitutionRequired();

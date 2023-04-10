@@ -71,7 +71,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		LOG.trace( "Flushing session" );
 
-		EventSource session = event.getSession();
+		final EventSource session = event.getSession();
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() );
@@ -139,12 +139,18 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
-			EntityEntry entry = me.getValue();
-			Status status = entry.getStatus();
-			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
+			final EntityEntry entry = me.getValue();
+			if ( flushable( entry ) ) {
 				cascadeOnFlush( session, entry.getPersister(), me.getKey(), context );
 			}
 		}
+	}
+
+	private static boolean flushable(EntityEntry entry) {
+		final Status status = entry.getStatus();
+		return status == Status.MANAGED
+			|| status == Status.SAVING
+			|| status == Status.READ_ONLY;
 	}
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, PersistContext anything)
@@ -209,9 +215,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
 
-			EntityEntry entry = me.getValue();
-			Status status = entry.getStatus();
-
+			final EntityEntry entry = me.getValue();
+			final Status status = entry.getStatus();
 
 			if ( status != Status.LOADING && status != Status.GONE ) {
 				entityEvent = createOrReuseEventInstance( entityEvent, source, me.getKey(), entry );
@@ -238,15 +243,15 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 			EventSource source,
 			Object key,
 			EntityEntry entry) {
-		FlushEntityEvent entityEvent = possiblyValidExistingInstance;
-		if ( entityEvent == null || (! entityEvent.isAllowedToReuse() ) ) {
+		final FlushEntityEvent entityEvent = possiblyValidExistingInstance;
+		if ( entityEvent == null || !entityEvent.isAllowedToReuse() ) {
 			//need to create a new instance
-			entityEvent = new FlushEntityEvent( source, key, entry );
+			return new FlushEntityEvent( source, key, entry );
 		}
 		else {
 			entityEvent.resetAndReuseEventInstance( key, entry );
+			return entityEvent;
 		}
-		return entityEvent;
 	}
 
 	/**
@@ -351,8 +356,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		try {
 			jdbcCoordinator.flushBeginning();
 			persistenceContext.setFlushing( true );
-			// we need to lock the collection caches before executing entity inserts/updates in order to
-			// account for bi-directional associations
+			// we need to lock the collection caches before executing entity inserts/updates
+			// in order to account for bidirectional associations
 			final ActionQueue actionQueue = session.getActionQueue();
 			actionQueue.prepareActions();
 			actionQueue.executeActions();

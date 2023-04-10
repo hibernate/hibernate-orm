@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
@@ -88,7 +88,7 @@ public class EagerManyToOneTest {
 
 	@Entity(name = "Child")
 	@Table(name = "children")
-	@Where(clause = "deleted_at IS NULL")
+	@SQLRestriction("deleted_at IS NULL")
 	public static class Child {
 		@Id
 		private Long id;

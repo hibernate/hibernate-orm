@@ -19,6 +19,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Where;
 
@@ -104,7 +105,7 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 		@SortNatural
-		@Where(clause = "TYPE = 'INPUT'")
+		@SQLRestriction("TYPE = 'INPUT'")
 		@Fetch(FetchMode.SUBSELECT)
 		List<InputParameter> children = new ArrayList<>();
 	}
@@ -118,7 +119,7 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 		@SortNatural
-		@Where(clause = "TYPE = 'OUTPUT'")
+		@SQLRestriction("TYPE = 'OUTPUT'")
 		@Fetch(FetchMode.SUBSELECT)
 		@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 		List<OutputParameter> children = new ArrayList<>();

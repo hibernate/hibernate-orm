@@ -20,13 +20,22 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MAJOR_VERSION;
+import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MINOR_VERSION;
+import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_NAME;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
+import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
  * @author Steve Ebersole
@@ -48,89 +57,12 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	public JdbcEnvironment initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final DialectFactory dialectFactory = registry.getService( DialectFactory.class );
 
-		// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
-		// The need for it is intended to be alleviated with future development, thus it is
-		// not defined as an Environment constant...
-		//
-		// it is used to control whether we should consult the JDBC metadata to determine
-		// certain default values; it is useful to *not* do this when the database
-		// may not be available (mainly in tools usage).
-		final boolean useJdbcMetadata = ConfigurationHelper.getBoolean(
-				"hibernate.temp.use_jdbc_metadata_defaults",
-				configurationValues,
-				true
-		);
+		final String explicitDatabaseName = getExplicitDatabaseName( configurationValues );
+		Integer explicitDatabaseMajorVersion = getExplicitDatabaseMajorVersion( configurationValues );
+		Integer explicitDatabaseMinorVersion = getExplicitDatabaseMinorVersion( configurationValues );
 
-		String explicitDatabaseName = NullnessHelper.coalesceSuppliedValues(
-				() -> (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_NAME ),
-				() -> {
-					final Object value = configurationValues.get( AvailableSettings.DIALECT_DB_NAME );
-					if ( value != null ) {
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-								AvailableSettings.DIALECT_DB_NAME,
-								AvailableSettings.JAKARTA_HBM2DDL_DB_NAME
-						);
-					}
-					return (String) value;
-				}
-		);
-
-		Integer explicitDatabaseMajorVersion = NullnessHelper.coalesceSuppliedValues(
-				() -> ConfigurationHelper.getInteger( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, configurationValues ),
-				() -> {
-					final Integer value = ConfigurationHelper.getInteger(
-							AvailableSettings.DIALECT_DB_MAJOR_VERSION,
-							configurationValues
-					);
-					if ( value != null ) {
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-								AvailableSettings.DIALECT_DB_MAJOR_VERSION,
-								AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION
-						);
-					}
-					return value;
-				}
-		);
-
-		Integer explicitDatabaseMinorVersion = NullnessHelper.coalesceSuppliedValues(
-				() -> ConfigurationHelper.getInteger( AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION, configurationValues ),
-				() -> {
-					final Integer value = ConfigurationHelper.getInteger(
-							AvailableSettings.DIALECT_DB_MINOR_VERSION,
-							configurationValues
-					);
-					if ( value != null ) {
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-								AvailableSettings.DIALECT_DB_MINOR_VERSION,
-								AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION
-						);
-					}
-					return value;
-				}
-		);
-
-		Integer configuredDatabaseMajorVersion = explicitDatabaseMajorVersion;
-		Integer configuredDatabaseMinorVersion = explicitDatabaseMinorVersion;
-		String explicitDatabaseVersion = NullnessHelper.coalesceSuppliedValues(
-				() -> (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION ),
-				() -> {
-					final Object value = configurationValues.get( AvailableSettings.DIALECT_DB_VERSION );
-					if ( value != null ) {
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-								AvailableSettings.DIALECT_DB_VERSION,
-								AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION
-						);
-					}
-					return (String) value;
-				}
-				,
-				() -> {
-					if ( configuredDatabaseMajorVersion != null ) {
-						return configuredDatabaseMinorVersion == null ? configuredDatabaseMajorVersion.toString() : (configuredDatabaseMajorVersion + "." + configuredDatabaseMinorVersion);
-					}
-					return null;
-				}
-		);
+		final String explicitDatabaseVersion =
+				getExplicitDatabaseVersion( configurationValues, explicitDatabaseMajorVersion, explicitDatabaseMinorVersion );
 
 		if ( explicitDatabaseMajorVersion == null && explicitDatabaseMinorVersion == null && explicitDatabaseVersion != null ) {
 			final String[] parts = explicitDatabaseVersion.split( "\\." );
@@ -146,140 +78,279 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			}
 		}
 
-		if ( useJdbcMetadata ) {
-			final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess( registry );
-			try {
-				final Connection connection = jdbcConnectionAccess.obtainConnection();
-				try {
-					final DatabaseMetaData dbmd = connection.getMetaData();
-					if ( log.isDebugEnabled() ) {
-						log.debugf(
-								"Database ->\n"
-										+ "       name : %s\n"
-										+ "    version : %s\n"
-										+ "      major : %s\n"
-										+ "      minor : %s",
-								dbmd.getDatabaseProductName(),
-								dbmd.getDatabaseProductVersion(),
-								dbmd.getDatabaseMajorVersion(),
-								dbmd.getDatabaseMinorVersion()
-						);
-						log.debugf(
-								"Driver ->\n"
-										+ "       name : %s\n"
-										+ "    version : %s\n"
-										+ "      major : %s\n"
-										+ "      minor : %s",
-								dbmd.getDriverName(),
-								dbmd.getDriverVersion(),
-								dbmd.getDriverMajorVersion(),
-								dbmd.getDriverMinorVersion()
-						);
-						log.debugf( "JDBC version : %s.%s", dbmd.getJDBCMajorVersion(), dbmd.getJDBCMinorVersion() );
-					}
-
-					final String databaseName;
-					final String databaseVersion;
-					final int databaseMajorVersion;
-					final int databaseMinorVersion;
-
-					if ( explicitDatabaseName == null ) {
-						databaseName = dbmd.getDatabaseProductName();
-					}
-					else {
-						databaseName = explicitDatabaseName;
-					}
-					if ( explicitDatabaseVersion == null ) {
-						databaseVersion = dbmd.getDatabaseProductVersion();
-					}
-					else {
-						databaseVersion = explicitDatabaseVersion;
-					}
-					if ( explicitDatabaseMajorVersion == null ) {
-						databaseMajorVersion = dbmd.getDatabaseMajorVersion();
-					}
-					else {
-						databaseMajorVersion = explicitDatabaseMajorVersion;
-					}
-					if ( explicitDatabaseMinorVersion == null ) {
-						databaseMinorVersion = dbmd.getDatabaseMinorVersion();
-					}
-					else {
-						databaseMinorVersion = explicitDatabaseMinorVersion;
-					}
-
-					final DialectResolutionInfo dialectResolutionInfo = new DialectResolutionInfoImpl(
-							dbmd,
-							databaseName,
-							databaseVersion,
-							databaseMajorVersion,
-							databaseMinorVersion,
-							dbmd.getDriverName(),
-							dbmd.getDriverMajorVersion(),
-							dbmd.getDriverMinorVersion(),
-							dbmd.getSQLKeywords()
-					);
-					return new JdbcEnvironmentImpl(
-							registry,
-							dialectFactory.buildDialect(
-									configurationValues,
-									() -> dialectResolutionInfo
-							),
-							dbmd,
-							jdbcConnectionAccess
-					);
-				}
-				catch (SQLException e) {
-					log.unableToObtainConnectionMetadata( e );
-				}
-				finally {
-					try {
-						jdbcConnectionAccess.releaseConnection( connection );
-					}
-					catch (SQLException ignore) {
-					}
-				}
-			}
-			catch (Exception e) {
-				log.unableToObtainConnectionToQueryMetadata( e );
-			}
+		if ( useJdbcMetadata( configurationValues ) ) {
+			return getJdbcEnvironmentUsingJdbcMetadata(
+					configurationValues,
+					registry,
+					dialectFactory,
+					explicitDatabaseName,
+					explicitDatabaseMajorVersion,
+					explicitDatabaseMinorVersion,
+					explicitDatabaseVersion);
+		}
+		else if ( explicitDialectConfiguration(
+				configurationValues,
+				explicitDatabaseName,
+				explicitDatabaseMajorVersion,
+				explicitDatabaseMinorVersion,
+				explicitDatabaseVersion) ) {
+			return getJdbcEnvironmentWithExplicitConfiguration(
+					configurationValues,
+					registry,
+					dialectFactory,
+					explicitDatabaseName,
+					explicitDatabaseMajorVersion,
+					explicitDatabaseMinorVersion,
+					explicitDatabaseVersion
+			);
 		}
 		else {
-			if (
-				(StringHelper.isNotEmpty( explicitDatabaseVersion ) || explicitDatabaseMajorVersion != null || explicitDatabaseMinorVersion != null)
-				&& ( StringHelper.isNotEmpty( explicitDatabaseName ) || isNotEmpty( configurationValues.get( AvailableSettings.DIALECT ) ) )
-			) {
+			return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+		}
+	}
+
+	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry,
+			DialectFactory dialectFactory) {
+		return new JdbcEnvironmentImpl(
+				registry,
+				dialectFactory.buildDialect( configurationValues, null )
+		);
+	}
+
+	private static JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry,
+			DialectFactory dialectFactory,
+			String explicitDatabaseName,
+			Integer explicitDatabaseMajorVersion,
+			Integer explicitDatabaseMinorVersion,
+			String explicitDatabaseVersion) {
+		final DialectResolutionInfo dialectResolutionInfo = new DialectResolutionInfoImpl(
+				null,
+				explicitDatabaseName,
+				explicitDatabaseVersion != null ? explicitDatabaseVersion : "0",
+				explicitDatabaseMajorVersion != null ? explicitDatabaseMajorVersion : 0,
+				explicitDatabaseMinorVersion != null ? explicitDatabaseMinorVersion : 0,
+				null,
+				0,
+				0,
+				null
+		);
+		return new JdbcEnvironmentImpl(
+				registry,
+				dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo )
+		);
+	}
+
+	// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
+	// The need for it is intended to be alleviated with future development, thus it is
+	// not defined as an Environment constant...
+	//
+	// it is used to control whether we should consult the JDBC metadata to determine
+	// certain default values; it is useful to *not* do this when the database
+	// may not be available (mainly in tools usage).
+	private static boolean useJdbcMetadata(Map<String, Object> configurationValues) {
+		return getBoolean(
+				"hibernate.temp.use_jdbc_metadata_defaults",
+				configurationValues,
+				true
+		);
+	}
+
+	private static String getExplicitDatabaseVersion(
+			Map<String, Object> configurationValues,
+			Integer configuredDatabaseMajorVersion,
+			Integer configuredDatabaseMinorVersion) {
+		return coalesceSuppliedValues(
+				() -> (String) configurationValues.get(AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION),
+				() -> {
+					final Object value = configurationValues.get(AvailableSettings.DIALECT_DB_VERSION);
+					if ( value != null ) {
+						DEPRECATION_LOGGER.deprecatedSetting(
+								AvailableSettings.DIALECT_DB_VERSION,
+								AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION
+						);
+					}
+					return (String) value;
+				}
+				,
+				() -> {
+					if ( configuredDatabaseMajorVersion != null ) {
+						return configuredDatabaseMinorVersion == null
+								? configuredDatabaseMajorVersion.toString()
+								: (configuredDatabaseMajorVersion + "." + configuredDatabaseMinorVersion);
+					}
+					return null;
+				}
+		);
+	}
+
+	private static Integer getExplicitDatabaseMinorVersion(Map<String, Object> configurationValues) {
+		return coalesceSuppliedValues(
+				() -> getInteger( JAKARTA_HBM2DDL_DB_MINOR_VERSION, configurationValues ),
+				() -> {
+					final Integer value = getInteger( DIALECT_DB_MINOR_VERSION, configurationValues );
+					if ( value != null ) {
+						DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_MINOR_VERSION, JAKARTA_HBM2DDL_DB_MINOR_VERSION );
+					}
+					return value;
+				}
+		);
+	}
+
+	private static Integer getExplicitDatabaseMajorVersion(Map<String, Object> configurationValues) {
+		return coalesceSuppliedValues(
+				() -> getInteger( JAKARTA_HBM2DDL_DB_MAJOR_VERSION, configurationValues ),
+				() -> {
+					final Integer value = getInteger( DIALECT_DB_MAJOR_VERSION, configurationValues );
+					if ( value != null ) {
+						DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_MAJOR_VERSION, JAKARTA_HBM2DDL_DB_MAJOR_VERSION );
+					}
+					return value;
+				}
+		);
+	}
+
+	private static String getExplicitDatabaseName(Map<String, Object> configurationValues) {
+		return coalesceSuppliedValues(
+				() -> (String) configurationValues.get(JAKARTA_HBM2DDL_DB_NAME),
+				() -> {
+					final Object value = configurationValues.get( DIALECT_DB_NAME );
+					if ( value != null ) {
+						DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_NAME, JAKARTA_HBM2DDL_DB_NAME );
+					}
+					return (String) value;
+				}
+		);
+	}
+
+	private JdbcEnvironmentImpl getJdbcEnvironmentUsingJdbcMetadata(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry,
+			DialectFactory dialectFactory, String explicitDatabaseName,
+			Integer explicitDatabaseMajorVersion,
+			Integer explicitDatabaseMinorVersion,
+			String explicitDatabaseVersion) {
+		final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess(registry);
+		try {
+			final Connection connection = jdbcConnectionAccess.obtainConnection();
+			try {
+				final DatabaseMetaData dbmd = connection.getMetaData();
+				logDatabaseAndDriver( dbmd );
+
+				final String databaseName;
+				final String databaseVersion;
+				final int databaseMajorVersion;
+				final int databaseMinorVersion;
+
+				if ( explicitDatabaseName == null ) {
+					databaseName = dbmd.getDatabaseProductName();
+				}
+				else {
+					databaseName = explicitDatabaseName;
+				}
+				if ( explicitDatabaseVersion == null ) {
+					databaseVersion = dbmd.getDatabaseProductVersion();
+				}
+				else {
+					databaseVersion = explicitDatabaseVersion;
+				}
+				if ( explicitDatabaseMajorVersion == null ) {
+					databaseMajorVersion = dbmd.getDatabaseMajorVersion();
+				}
+				else {
+					databaseMajorVersion = explicitDatabaseMajorVersion;
+				}
+				if ( explicitDatabaseMinorVersion == null ) {
+					databaseMinorVersion = dbmd.getDatabaseMinorVersion();
+				}
+				else {
+					databaseMinorVersion = explicitDatabaseMinorVersion;
+				}
+
 				final DialectResolutionInfo dialectResolutionInfo = new DialectResolutionInfoImpl(
-						null,
-						explicitDatabaseName,
-						explicitDatabaseVersion != null ? explicitDatabaseVersion : "0",
-						explicitDatabaseMajorVersion != null ? explicitDatabaseMajorVersion : 0,
-						explicitDatabaseMinorVersion != null ? explicitDatabaseMinorVersion : 0,
-						null,
-						0,
-						0,
-						null
+						dbmd,
+						databaseName,
+						databaseVersion,
+						databaseMajorVersion,
+						databaseMinorVersion,
+						dbmd.getDriverName(),
+						dbmd.getDriverMajorVersion(),
+						dbmd.getDriverMinorVersion(),
+						dbmd.getSQLKeywords()
 				);
 				return new JdbcEnvironmentImpl(
 						registry,
-						dialectFactory.buildDialect(
-								configurationValues,
-								() -> dialectResolutionInfo
-						)
+						dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo ),
+						dbmd,
+						jdbcConnectionAccess
 				);
 			}
+			catch ( SQLException e ) {
+				log.unableToObtainConnectionMetadata( e );
+			}
+			finally {
+				try {
+					jdbcConnectionAccess.releaseConnection( connection );
+				}
+				catch ( SQLException ignore ) {
+				}
+			}
+		}
+		catch ( Exception e ) {
+			log.unableToObtainConnectionToQueryMetadata( e );
 		}
 
-		// if we get here, either we were asked to not use JDBC metadata or accessing the JDBC metadata failed.
-		return new JdbcEnvironmentImpl( registry, dialectFactory.buildDialect( configurationValues, null ) );
+		// accessing the JDBC metadata failed
+		return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
 	}
 
-	private static boolean isNotEmpty(Object o) {
+	private static void logDatabaseAndDriver(DatabaseMetaData dbmd) throws SQLException {
+		if ( log.isDebugEnabled() ) {
+			log.debugf(
+					"Database ->\n"
+							+ "       name : %s\n"
+							+ "    version : %s\n"
+							+ "      major : %s\n"
+							+ "      minor : %s",
+					dbmd.getDatabaseProductName(),
+					dbmd.getDatabaseProductVersion(),
+					dbmd.getDatabaseMajorVersion(),
+					dbmd.getDatabaseMinorVersion()
+			);
+			log.debugf(
+					"Driver ->\n"
+							+ "       name : %s\n"
+							+ "    version : %s\n"
+							+ "      major : %s\n"
+							+ "      minor : %s",
+					dbmd.getDriverName(),
+					dbmd.getDriverVersion(),
+					dbmd.getDriverMajorVersion(),
+					dbmd.getDriverMinorVersion()
+			);
+			log.debugf( "JDBC version : %s.%s", dbmd.getJDBCMajorVersion(), dbmd.getJDBCMinorVersion() );
+		}
+	}
+
+	private static boolean explicitDialectConfiguration(
+			Map<String, Object> configurationValues,
+			String explicitDatabaseName,
+			Integer explicitDatabaseMajorVersion,
+			Integer explicitDatabaseMinorVersion,
+			String explicitDatabaseVersion) {
+		return ( isNotEmpty(explicitDatabaseVersion) || explicitDatabaseMajorVersion != null || explicitDatabaseMinorVersion != null )
+			&& ( isNotEmpty(explicitDatabaseName) || isNotNullAndNotEmpty( configurationValues.get(AvailableSettings.DIALECT) ) );
+	}
+
+	private static boolean isNotNullAndNotEmpty(Object o) {
 		return o != null && ( !(o instanceof String) || !((String) o).isEmpty() );
 	}
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(ServiceRegistryImplementor registry) {
-		if ( !JdbcEnvironmentImpl.isMultiTenancyEnabled( registry ) ) {
+		if ( !isMultiTenancyEnabled( registry ) ) {
 			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}
@@ -290,7 +361,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	public static JdbcConnectionAccess buildBootstrapJdbcConnectionAccess(ServiceRegistryImplementor registry) {
-		if ( !JdbcEnvironmentImpl.isMultiTenancyEnabled( registry ) ) {
+		if ( !isMultiTenancyEnabled( registry ) ) {
 			ConnectionProvider connectionProvider = registry.getService( ConnectionProvider.class );
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}

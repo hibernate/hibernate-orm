@@ -53,6 +53,7 @@ import org.hibernate.annotations.SQLInserts;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
 import org.hibernate.annotations.SelectBeforeUpdate;
@@ -1250,8 +1251,9 @@ public class EntityBinder {
 	}
 
 	private void bindCustomSql() {
-		//SQL overriding
 		//TODO: tolerate non-empty table() member here if it explicitly names the main table
+		//TODO: would be nice to add these guys to @DialectOverride, but getOverridableAnnotation()
+		//      does not yet handle repeatable annotations
 
 		final SQLInsert sqlInsert = findMatchingSqlAnnotation( "", SQLInsert.class, SQLInserts.class );
 		if ( sqlInsert != null ) {
@@ -1287,7 +1289,7 @@ public class EntityBinder {
 					+ persistentClass.getEntityName());
 		}
 
-		final SQLSelect sqlSelect = annotatedClass.getAnnotation( SQLSelect.class );
+		final SQLSelect sqlSelect = getOverridableAnnotation( annotatedClass, SQLSelect.class, context );
 		if ( sqlSelect != null ) {
 			final String loaderName = persistentClass.getEntityName() + "$SQLSelect";
 			persistentClass.setLoaderName( loaderName );
@@ -1480,6 +1482,10 @@ public class EntityBinder {
 		final Where where = getOverridableAnnotation( annotatedClass, Where.class, context );
 		if ( where != null ) {
 			this.where = where.clause();
+		}
+		final SQLRestriction restriction = getOverridableAnnotation( annotatedClass, SQLRestriction.class, context );
+		if ( restriction != null ) {
+			this.where = restriction.value();
 		}
 	}
 

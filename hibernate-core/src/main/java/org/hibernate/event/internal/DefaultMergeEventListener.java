@@ -25,7 +25,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
@@ -50,6 +49,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTra
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
+import static org.hibernate.event.internal.EntityState.getEntityState;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -147,13 +147,13 @@ public class DefaultMergeEventListener
 	private void merge(MergeEvent event, MergeContext copiedAlready, Object entity) {
 		switch ( entityState( event, entity ) ) {
 			case DETACHED:
-				entityIsDetached(event, copiedAlready);
+				entityIsDetached( event, copiedAlready );
 				break;
 			case TRANSIENT:
-				entityIsTransient(event, copiedAlready);
+				entityIsTransient( event, copiedAlready );
 				break;
 			case PERSISTENT:
-				entityIsPersistent(event, copiedAlready);
+				entityIsPersistent( event, copiedAlready );
 				break;
 			default: //DELETED
 				throw new ObjectDeletedException(
@@ -186,7 +186,7 @@ public class DefaultMergeEventListener
 				}
 			}
 		}
-		return EntityState.getEntityState( entity, event.getEntityName(), entry, source, false );
+		return getEntityState( entity, event.getEntityName(), entry, source, false );
 	}
 
 	protected void entityIsPersistent(MergeEvent event, MergeContext copyCache) {
@@ -343,7 +343,6 @@ public class DefaultMergeEventListener
 			markInterceptorDirty( entity, target );
 			event.setResult( result );
 		}
-
 	}
 
 	private static Object targetEntity(MergeEvent event, Object entity, EntityPersister persister, Object id, Object result) {
@@ -380,7 +379,7 @@ public class DefaultMergeEventListener
 		}
 		else {
 			// check that entity id = requestedId
-			Object entityId = persister.getIdentifier( entity, source );
+			final Object entityId = persister.getIdentifier( entity, source );
 			if ( !persister.getIdentifierType().isEqual( id, entityId, source.getFactory() ) ) {
 				throw new HibernateException( "merge requested with id not matching id of passed entity" );
 			}
@@ -400,8 +399,10 @@ public class DefaultMergeEventListener
 		if ( isPersistentAttributeInterceptable( incoming )
 				&& persister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 
-			final PersistentAttributeInterceptor incomingInterceptor = asPersistentAttributeInterceptable( incoming ).$$_hibernate_getInterceptor();
-			final PersistentAttributeInterceptor managedInterceptor = asPersistentAttributeInterceptable( managed ).$$_hibernate_getInterceptor();
+			final PersistentAttributeInterceptor incomingInterceptor =
+					asPersistentAttributeInterceptable( incoming ).$$_hibernate_getInterceptor();
+			final PersistentAttributeInterceptor managedInterceptor =
+					asPersistentAttributeInterceptable( managed ).$$_hibernate_getInterceptor();
 
 			// todo - do we need to specially handle the case where both `incoming` and `managed` are initialized, but
 			//		with different attributes initialized?

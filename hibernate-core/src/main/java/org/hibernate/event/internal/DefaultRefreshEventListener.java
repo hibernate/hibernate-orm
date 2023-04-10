@@ -37,6 +37,8 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.pretty.MessageHelper.infoString;
+
 /**
  * Defines the default refresh event listener used by hibernate for refreshing entities
  * in response to generated refresh events.
@@ -89,19 +91,18 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final Object id;
 		if ( entry == null ) {
 			//refresh() does not pass an entityName
-			persister = source.getEntityPersister( event.getEntityName(), object);
-			id = persister.getIdentifier(object, event.getSession() );
+			persister = source.getEntityPersister( event.getEntityName(), object );
+			id = persister.getIdentifier( object, event.getSession() );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Refreshing transient {0}",
-						MessageHelper.infoString( persister, id, source.getFactory() )
+						infoString( persister, id, source.getFactory() )
 				);
 			}
-			final EntityKey key = source.generateEntityKey( id, persister );
-			if ( persistenceContext.getEntry( key ) != null ) {
+			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
 				throw new PersistentObjectException(
-						"attempted to refresh transient instance when persistent instance was already associated with the Session: " +
-								MessageHelper.infoString( persister, id, source.getFactory() )
+						"attempted to refresh transient instance when persistent instance was already associated with the Session: "
+								+ infoString( persister, id, source.getFactory() )
 				);
 			}
 		}
@@ -109,7 +110,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Refreshing ",
-						MessageHelper.infoString( entry.getPersister(), entry.getId(), source.getFactory() )
+						infoString( entry.getPersister(), entry.getId(), source.getFactory() )
 				);
 			}
 			if ( !entry.isExistsInDatabase() ) {
@@ -140,12 +141,12 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 
-		evictEntity( object, persister, id, source);
-		evictCachedCollections( persister, id, source);
+		evictEntity( object, persister, id, source );
+		evictCachedCollections( persister, id, source );
 
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
 				CascadingFetchProfile.REFRESH,
-				() -> doRefresh(event, source, object, entry, persister, id, persistenceContext)
+				() -> doRefresh( event, source, object, entry, persister, id, persistenceContext )
 		);
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 	}
@@ -183,7 +184,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		// Handle the requested lock-mode (if one) in relation to the entry's (if one) current lock-mode
 		LockOptions lockOptionsToUse = event.getLockOptions();
 		final LockMode requestedLockMode = lockOptionsToUse.getLockMode();
-		LockMode postRefreshLockMode = null;
+		final LockMode postRefreshLockMode;
 		if ( entry != null ) {
 			final LockMode currentLockMode = entry.getLockMode();
 			if ( currentLockMode.greaterThan( requestedLockMode ) ) {
@@ -207,8 +208,15 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				}
 				else {
 					lockOptionsToUse.setLockMode( currentLockMode );
+					postRefreshLockMode = null;
 				}
 			}
+			else {
+				postRefreshLockMode = null;
+			}
+		}
+		else {
+			postRefreshLockMode = null;
 		}
 
 		final Object result = persister.load( id, object, lockOptionsToUse, source );
@@ -245,7 +253,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		for ( Type type : types ) {
 			if ( type.isCollectionType() ) {
 				final String role = ((CollectionType) type).getRole();
-				CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( role );
+				final CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( role );
 				if ( collectionPersister.hasCache() ) {
 					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(
@@ -260,7 +268,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				}
 			}
 			else if ( type.isComponentType() ) {
-				CompositeType compositeType = (CompositeType) type;
+				final CompositeType compositeType = (CompositeType) type;
 				evictCachedCollections( compositeType.getSubtypes(), id, source );
 			}
 		}

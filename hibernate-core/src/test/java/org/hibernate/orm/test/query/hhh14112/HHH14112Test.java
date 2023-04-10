@@ -7,7 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -36,7 +36,7 @@ public class HHH14112Test extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Super")
 	@Inheritance(strategy = InheritanceType.JOINED)
-	@Where(clause = "deleted = false")
+	@SQLRestriction("deleted = false")
 	public static class Super {
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

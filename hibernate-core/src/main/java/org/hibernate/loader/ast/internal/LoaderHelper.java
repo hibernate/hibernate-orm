@@ -24,7 +24,7 @@ import org.hibernate.persister.entity.EntityPersister;
 public class LoaderHelper {
 
 	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource session) {
-		LockMode requestedLockMode = lockOptions.getLockMode();
+		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// The user requested a "greater" (i.e. more restrictive) form of
 			// pessimistic lock

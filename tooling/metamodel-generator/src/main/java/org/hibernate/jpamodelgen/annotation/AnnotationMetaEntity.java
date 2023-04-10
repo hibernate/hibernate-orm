@@ -28,6 +28,7 @@ import org.hibernate.jpamodelgen.model.MetaEntity;
 import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 
 /**
@@ -66,14 +67,19 @@ public class AnnotationMetaEntity implements MetaEntity {
 	 */
 	private MetaEntity entityToMerge;
 
-	public AnnotationMetaEntity(TypeElement element, Context context, boolean lazilyInitialised) {
+	public AnnotationMetaEntity(TypeElement element, Context context) {
 		this.element = element;
 		this.context = context;
-		this.members = new HashMap<String, MetaAttribute>();
-		this.importContext = new ImportContextImpl( getPackageName() );
+		this.members = new HashMap<>();
+		this.importContext = new ImportContextImpl( getPackageName( context, element ) );
+	}
+
+	public static AnnotationMetaEntity create(TypeElement element, Context context, boolean lazilyInitialised) {
+		final AnnotationMetaEntity annotationMetaEntity = new AnnotationMetaEntity( element, context );
 		if ( !lazilyInitialised ) {
-			init();
+			annotationMetaEntity.init();
 		}
+		return annotationMetaEntity;
 	}
 
 	public AccessTypeInformation getEntityAccessTypeInfo() {
@@ -93,6 +99,10 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	public final String getPackageName() {
+		return getPackageName( context, element );
+	}
+
+	private static String getPackageName(Context context, TypeElement element) {
 		PackageElement packageOf = context.getElementUtils().getPackageOf( element );
 		return context.getElementUtils().getName( packageOf.getQualifiedName() ).toString();
 	}
@@ -167,7 +177,8 @@ public class AnnotationMetaEntity implements MetaEntity {
 		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + "." );
 
 		TypeUtils.determineAccessTypeForHierarchy( element, context );
-		entityAccessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
+		AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
+		entityAccessTypeInfo = NullnessUtil.castNonNull(accessTypeInfo);
 
 		List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
 		addPersistentMembers( fieldsOfClass, AccessType.FIELD );

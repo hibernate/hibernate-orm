@@ -18,7 +18,7 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.OrderBy;
+import org.hibernate.annotations.SQLOrder;
 
 /**
  * Shows a default one to many
@@ -32,7 +32,7 @@ public class Troop {
 	private Set<Soldier> soldiers;
 
 	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
-	@OrderBy(clause = "name desc")
+	@SQLOrder("name desc")
 	@org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	public Set<Soldier> getSoldiers() {

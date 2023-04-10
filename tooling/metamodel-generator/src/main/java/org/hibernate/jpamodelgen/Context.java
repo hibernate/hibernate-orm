@@ -24,6 +24,8 @@ import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Max Andersen
  * @author Hardy Ferentschik
@@ -68,21 +70,21 @@ public final class Context {
 	public Context(ProcessingEnvironment pe) {
 		this.pe = pe;
 
-		if ( pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION ) != null ) {
-			String tmp = pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
-			if ( !tmp.startsWith( Constants.PATH_SEPARATOR ) ) {
-				tmp = Constants.PATH_SEPARATOR + tmp;
+		String persistenceXmlOption = pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
+		if ( persistenceXmlOption != null ) {
+			if ( !persistenceXmlOption.startsWith( Constants.PATH_SEPARATOR ) ) {
+				persistenceXmlOption = Constants.PATH_SEPARATOR + persistenceXmlOption;
 			}
-			persistenceXmlLocation = tmp;
+			persistenceXmlLocation = persistenceXmlOption;
 		}
 		else {
 			persistenceXmlLocation = DEFAULT_PERSISTENCE_XML_LOCATION;
 		}
 
-		if ( pe.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION ) != null ) {
-			String tmp = pe.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
-			ormXmlFiles = new ArrayList<String>();
-			for ( String ormFile : tmp.split( "," ) ) {
+		String ormXmlOption = pe.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
+		if ( ormXmlOption != null ) {
+			ormXmlFiles = new ArrayList<>();
+			for ( String ormFile : ormXmlOption.split( "," ) ) {
 				if ( !ormFile.startsWith( Constants.PATH_SEPARATOR ) ) {
 					ormFile = Constants.PATH_SEPARATOR + ormFile;
 				}
@@ -161,7 +163,7 @@ public final class Context {
 		return metaEntities.containsKey( fqcn );
 	}
 
-	public MetaEntity getMetaEntity(String fqcn) {
+	public @Nullable MetaEntity getMetaEntity(String fqcn) {
 		return metaEntities.get( fqcn );
 	}
 
@@ -177,7 +179,7 @@ public final class Context {
 		return metaEmbeddables.containsKey( fqcn );
 	}
 
-	public MetaEntity getMetaEmbeddable(String fqcn) {
+	public @Nullable MetaEntity getMetaEmbeddable(String fqcn) {
 		return metaEmbeddables.get( fqcn );
 	}
 
@@ -193,7 +195,7 @@ public final class Context {
 		accessTypeInformation.put( fqcn, info );
 	}
 
-	public AccessTypeInformation getAccessTypeInfo(String fqcn) {
+	public @Nullable AccessTypeInformation getAccessTypeInfo(String fqcn) {
 		return accessTypeInformation.get( fqcn );
 	}
 

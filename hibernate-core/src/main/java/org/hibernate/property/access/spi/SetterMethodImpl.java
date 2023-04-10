@@ -63,8 +63,13 @@ public class SetterMethodImpl implements Setter {
 			}
 		}
 		catch (InvocationTargetException ite) {
+			Throwable cause = ite.getCause();
+			if ( cause instanceof Error ) {
+				// HHH-16403 Don't wrap Error
+				throw (Error) cause;
+			}
 			throw new PropertyAccessException(
-					ite,
+					cause,
 					"Exception occurred inside",
 					true,
 					containerClass,

@@ -17,7 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 public class SoccerTeam {
@@ -28,7 +28,7 @@ public class SoccerTeam {
 	String name;
 	
 	@OneToMany
-	@Where(clause = "activeLicense = true")
+	@SQLRestriction("activeLicense = true")
 	private List<Doctor> physiologists = new ArrayList<Doctor>();
 
 	@OneToMany(mappedBy="team",

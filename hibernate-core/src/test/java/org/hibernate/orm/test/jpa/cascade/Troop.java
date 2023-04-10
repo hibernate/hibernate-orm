@@ -18,7 +18,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.OrderBy;
+import org.hibernate.annotations.SQLOrder;
 
 /**
  * @author Emmanuel Bernard
@@ -30,7 +30,7 @@ public class Troop implements Serializable {
 	private Set<Soldier> soldiers;
 
 	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
-	@OrderBy(clause = "name desc")
+	@SQLOrder("name desc")
 	@org.hibernate.annotations.Cascade({org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
 	public Set<Soldier> getSoldiers() {
 		return soldiers;

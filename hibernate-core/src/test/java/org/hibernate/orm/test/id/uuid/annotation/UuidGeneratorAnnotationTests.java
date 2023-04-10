@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DomainModel( annotatedClasses = TheEntity.class )
+@DomainModel( annotatedClasses = {TheEntity.class, TheOtherEntity.class} )
 @SessionFactory
 public class UuidGeneratorAnnotationTests {
 	@Test
@@ -36,7 +36,20 @@ public class UuidGeneratorAnnotationTests {
 	@Test
 	public void basicUseTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.persist( new TheEntity( "steve" ) );
+			TheEntity steve = new TheEntity("steve");
+			session.persist( steve );
+			session.flush();
+			assertThat( steve.id ).isNotNull();
+		} );
+	}
+
+	@Test
+	public void nonPkUseTest(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			TheOtherEntity gavin = new TheOtherEntity("gavin");
+			session.persist( gavin );
+			session.flush();
+			assertThat( gavin.id ).isNotNull();
 		} );
 	}
 }

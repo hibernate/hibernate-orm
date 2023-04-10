@@ -51,9 +51,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Steve Ebersole
  *
  * @see DialectOverride.OrderBy
+ *
+ * @deprecated Use {@link SQLOrder} instead. This annotation will be
+ *             removed eventually, since its unqualified name collides
+ *             with {@link jakarta.persistence.OrderBy}.
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated(since = "6.3", forRemoval = true)
 public @interface OrderBy {
 	/**
 	 * The native SQL expression used to sort the collection elements.

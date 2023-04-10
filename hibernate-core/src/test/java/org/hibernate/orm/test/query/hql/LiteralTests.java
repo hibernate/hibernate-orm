@@ -302,6 +302,8 @@ public class LiteralTests {
 		scope.inTransaction(
 				session -> {
 					assertThat( session.createQuery( "select 1" ).getSingleResult(), is( 1 ) );
+					assertThat( session.createQuery( "select 1_000_000" ).getSingleResult(), is( 1_000_000 ) );
+					assertThat( session.createQuery( "select 1_000_000L" ).getSingleResult(), is( 1_000_000L ) );
 				}
 		);
 	}

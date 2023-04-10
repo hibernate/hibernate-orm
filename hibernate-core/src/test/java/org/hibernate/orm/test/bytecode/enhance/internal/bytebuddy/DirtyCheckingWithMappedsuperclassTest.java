@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import org.assertj.core.extractor.Extractors;
 
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 
@@ -20,6 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.extractor.Extractors.resultOf;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_FIELD_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_GETTER_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME;
@@ -71,8 +73,8 @@ public class DirtyCheckingWithMappedsuperclassTest {
 		assertThat( entity )
 				.extracting( TRACKER_FIELD_NAME ).isInstanceOf( SimpleFieldTracker.class );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
-		assertThat( entity ).extracting( TRACKER_GET_NAME ).isEqualTo( new String[] { "name", "code" } );
+		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( true );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) ).isEqualTo( new String[] { "name", "code" } );
 	}
 
 	@Test
@@ -82,8 +84,8 @@ public class DirtyCheckingWithMappedsuperclassTest {
 		Method trackerClearMethod = CardGame.class.getMethod( TRACKER_CLEAR_NAME );
 		trackerClearMethod.invoke( entity );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( false );
-		assertThat( entity ).extracting( TRACKER_GET_NAME ).isEqualTo( new String[0] );
+		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( false );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) ).isEqualTo( new String[0] );
 	}
 
 	@Test
@@ -98,12 +100,12 @@ public class DirtyCheckingWithMappedsuperclassTest {
 
 		assertThat( entity.getCode() )
 				.as( "Field 'code' should have not change" ).isEqualTo( "XsplX" );
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
-		assertThat( entity ).extracting( TRACKER_GET_NAME ).isEqualTo( new String[] { "name" } );
+		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( true );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) ).isEqualTo( new String[] { "name" } );
 
 		entity.setName( "Cities of Splendor" );
 
-		assertThat( entity ).extracting( TRACKER_GET_NAME ).isEqualTo( new String[] { "name", "code" } );
+		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) ).isEqualTo( new String[] { "name", "code" } );
 	}
 
 	@MappedSuperclass

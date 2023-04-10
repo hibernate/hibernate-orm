@@ -84,9 +84,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	@Override
 	public Dialect buildDialect(Map<String,Object> configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
 		final Object dialectReference = configValues.get( AvailableSettings.DIALECT );
-		Dialect dialect = !isEmpty( dialectReference ) ?
-				constructDialect( dialectReference, resolutionInfoSource ) :
-				determineDialect( resolutionInfoSource );
+		Dialect dialect = !isEmpty( dialectReference )
+				? constructDialect( dialectReference, resolutionInfoSource )
+				: determineDialect( resolutionInfoSource );
 		logSelectedDialect( dialect );
 		return dialect;
 	}
@@ -104,6 +104,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 			else {
 				DEPRECATION_LOGGER.deprecatedDialect( dialectClass.getSimpleName() );
 			}
+		}
+		else if ( Dialect.class.getPackage() == dialectClass.getPackage() ) {
+			DEPRECATION_LOGGER.automaticDialect( dialectClass.getSimpleName() );
 		}
 	}
 
@@ -129,7 +132,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 					(dialectClass) -> {
 						try {
 							try {
-								if (resolutionInfoSource != null) {
+								if ( resolutionInfoSource != null ) {
 									return dialectClass.getConstructor( DialectResolutionInfo.class ).newInstance(
 											resolutionInfoSource.getDialectResolutionInfo()
 									);
@@ -157,7 +160,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 			final String dialectFqn = dialectReference.toString();
 			if ( LEGACY_DIALECTS.contains( dialectFqn ) ) {
 				throw new StrategySelectionException(
-						"Couldn't load the dialect class for the `hibernate.dialect` [" + dialectFqn + "], " +
+						"Couldn't load the dialect class for the 'hibernate.dialect' [" + dialectFqn + "], " +
 								"because the application is missing a dependency on the hibernate-community-dialects module. " +
 								"Hibernate 6.2 dropped support for database versions that are unsupported by vendors  " +
 								"and code for old versions was moved to the hibernate-community-dialects module. " +

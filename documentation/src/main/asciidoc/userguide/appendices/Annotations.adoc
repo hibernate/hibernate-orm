@@ -1406,18 +1406,18 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 See the <<chapters/domain/basic_types.adoc#mapping-database-generated-value-example,`@ValueGenerationType` mapping>> section for more info.
 
 [[annotations-hibernate-where]]
-==== `@Where`
+==== `@SQLRestriction`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Where.html[`@Where`] annotation is used to specify a custom SQL `WHERE` clause used when fetching an entity or a collection.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLRestriction.html[`@SQLRestriction`] annotation is used to specify a custom SQL `WHERE` clause used when fetching an entity or a collection.
 
-See the <<chapters/pc/PersistenceContext.adoc#pc-where-example,`@Where` mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-where-example,`@SQLRestriction` mapping>> section for more info.
 
 [[annotations-hibernate-wherejointable]]
-==== `@WhereJoinTable`
+==== `@SQLJoinTableRestriction`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/WhereJoinTable.html[`@WhereJoinTable`] annotation is used to specify a custom SQL `WHERE` clause used when fetching a join collection table.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/SQLJoinTableRestriction.html[`@SQLJoinTableRestriction`] annotation is used to specify a custom SQL `WHERE` clause used when fetching a join collection table.
 
-See the <<chapters/pc/PersistenceContext.adoc#pc-where-join-table, `@WhereJoinTable` mapping>> section for more info.
+See the <<chapters/pc/PersistenceContext.adoc#pc-where-join-table, `@SQLJoinTableRestriction` mapping>> section for more info.
 
 
 [[annotations-hibernate-tenantid]]

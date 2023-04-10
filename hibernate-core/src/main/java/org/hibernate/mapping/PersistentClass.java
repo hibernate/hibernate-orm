@@ -1103,7 +1103,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			//and checked later, so it needs to be excluded
 			checkColumnDuplication( cols, getKey() );
 		}
-		checkColumnDuplication( cols, getDiscriminator() );
+		if ( isDiscriminatorInsertable() ) {
+			checkColumnDuplication( cols, getDiscriminator() );
+		}
 		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties() );
 		for ( Join join : getJoins() ) {
 			cols.clear();

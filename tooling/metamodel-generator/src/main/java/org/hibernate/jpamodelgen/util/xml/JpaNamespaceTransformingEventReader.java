@@ -131,10 +131,10 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 	}
 
 	private List<Namespace> updateElementNamespaces(StartElement startElement) {
-		List<Namespace> newNamespaceList = new ArrayList<Namespace>();
-		Iterator<?> existingNamespaceIterator = startElement.getNamespaces();
+		List<Namespace> newNamespaceList = new ArrayList<>();
+		Iterator<Namespace> existingNamespaceIterator = startElement.getNamespaces();
 		while ( existingNamespaceIterator.hasNext() ) {
-			Namespace namespace = (Namespace) existingNamespaceIterator.next();
+			Namespace namespace = existingNamespaceIterator.next();
 			if ( NAMESPACE_MAPPING.containsKey( namespace.getNamespaceURI() ) ) {
 				newNamespaceList.add( xmlEventFactory.createNamespace( EMPTY_PREFIX, currentDocumentNamespaceUri ) );
 			}
@@ -153,10 +153,10 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 
 	private List<Attribute> updateElementAttributes(StartElement startElement) {
 		// adjust the version attribute
-		List<Attribute> newElementAttributeList = new ArrayList<Attribute>();
-		Iterator<?> existingAttributesIterator = startElement.getAttributes();
+		List<Attribute> newElementAttributeList = new ArrayList<>();
+		Iterator<Attribute> existingAttributesIterator = startElement.getAttributes();
 		while ( existingAttributesIterator.hasNext() ) {
-			Attribute attribute = (Attribute) existingAttributesIterator.next();
+			Attribute attribute = existingAttributesIterator.next();
 			if ( VERSION_ATTRIBUTE_NAME.equals( attribute.getName().getLocalPart() ) ) {
 				if ( currentDocumentNamespaceUri.equals( DEFAULT_PERSISTENCE_NAMESPACE ) ) {
 					if ( !DEFAULT_PERSISTENCE_VERSION.equals( attribute.getName().getPrefix() ) ) {

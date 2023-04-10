@@ -25,6 +25,7 @@ import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
+import org.hibernate.engine.jdbc.internal.SqlStatementLoggerInitiator;
 import org.hibernate.engine.jdbc.mutation.internal.MutationExecutorServiceInitiator;
 import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
@@ -118,6 +119,9 @@ public final class StandardServiceInitiators {
 
 		// BatchBuilder
 		serviceInitiators.add( BatchBuilderInitiator.INSTANCE );
+
+		// SqlStatementLoggerInitiator
+		serviceInitiators.add( SqlStatementLoggerInitiator.INSTANCE );
 
 		// JdbcServices
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );

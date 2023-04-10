@@ -24,8 +24,10 @@ import javax.xml.validation.SchemaFactory;
 
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.jpamodelgen.xml.jaxb.ObjectFactory;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;
 
 /**
@@ -48,7 +50,7 @@ public class XmlParserHelper {
 
 	private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
 
-	private static final ConcurrentMap<String, Schema> SCHEMA_CACHE = new ConcurrentHashMap<String, Schema>(
+	private static final ConcurrentMap<String, Schema> SCHEMA_CACHE = new ConcurrentHashMap<>(
 			NUMBER_OF_SCHEMAS
 	);
 
@@ -66,7 +68,7 @@ public class XmlParserHelper {
 	 *
 	 * @return an input stream for the specified resource or {@code null} in case resource cannot be loaded
 	 */
-	public InputStream getInputStreamForResource(String resource) {
+	public @Nullable InputStream getInputStreamForResource(String resource) {
 		// METAGEN-75
 		if ( !resource.startsWith( RESOURCE_PATH_SEPARATOR ) ) {
 			resource = RESOURCE_PATH_SEPARATOR + resource;
@@ -160,19 +162,17 @@ public class XmlParserHelper {
 	}
 
 	private Schema loadSchema(String schemaName) throws XmlParsingException {
-		Schema schema = null;
-		URL schemaUrl = this.getClass().getClassLoader().getResource( schemaName );
+		URL schemaUrl = NullnessUtil.castNonNull( this.getClass().getClassLoader() ).getResource( schemaName );
 		if ( schemaUrl == null ) {
-			return schema;
+			throw new IllegalArgumentException( "Couldn't find schema on classpath: " + schemaName );
 		}
 
 		SchemaFactory sf = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI );
 		try {
-			schema = sf.newSchema( schemaUrl );
+			return sf.newSchema( schemaUrl );
 		}
 		catch ( SAXException e ) {
 			throw new XmlParsingException( "Unable to create schema for " + schemaName + ": " + e.getMessage(), e );
 		}
-		return schema;
 	}
 }

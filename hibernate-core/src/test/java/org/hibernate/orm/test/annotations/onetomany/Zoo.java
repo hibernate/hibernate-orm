@@ -14,6 +14,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.SQLOrder;
 
 /**
  * Entity used to test {@code NULL} values ordering in SQL {@code ORDER BY} clause.
@@ -30,7 +31,7 @@ public class Zoo implements Serializable {
 
 	@OneToMany
 	@JoinColumn(name = "zoo_id")
-	@org.hibernate.annotations.OrderBy(clause = "name asc nulls last") // By default H2 places NULL values first.
+	@SQLOrder("name asc nulls last") // By default H2 places NULL values first.
 	private Set<Tiger> tigers = new HashSet<Tiger>();
 
 	@OneToMany

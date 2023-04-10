@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -26,13 +27,12 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Jan Schatteman
  */
-@TestForIssue(jiraKey = "HHH-15561")
-@RequiresDialect( value = H2Dialect.class )
 public class IdentityIdEntityTest {
 
 	@AfterEach
@@ -43,11 +43,13 @@ public class IdentityIdEntityTest {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-15561")
 	@ServiceRegistry(
 			settings = { @Setting( name = AvailableSettings.USE_GET_GENERATED_KEYS, value = "false") }
 	)
 	@DomainModel( annotatedClasses = { IdentityEntity.class } )
 	@SessionFactory
+	@RequiresDialect( value = H2Dialect.class )
 	public void testIdentityEntityWithDisabledGetGeneratedKeys(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -64,11 +66,13 @@ public class IdentityIdEntityTest {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-15561")
 	@ServiceRegistry(
 			settings = { @Setting( name = "use_jdbc_metadata_defaults", value = "false") }
 	)
 	@DomainModel( annotatedClasses = { IdentityEntity.class } )
 	@SessionFactory
+	@RequiresDialect( value = H2Dialect.class )
 	public void testIdentityEntityWithDisabledJdbcMetadataDefaults(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -79,6 +83,30 @@ public class IdentityIdEntityTest {
 					}
 					catch (Exception e) {
 						fail( "Creation of an IDENTITY-id-based entity failed when \"use_jdbc_metadata_defaults\" was set to false (" + e.getMessage() + ")" );
+					}
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-16418")
+	@ServiceRegistry(
+			settings = { @Setting( name = AvailableSettings.USE_GET_GENERATED_KEYS, value = "false") }
+	)
+	@DomainModel( annotatedClasses = { IdentityEntity.class } )
+	@SessionFactory
+	@RequiresDialect( value = OracleDialect.class, majorVersion = 12 )
+	public void testNullSelectIdentityString(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					try {
+						IdentityEntity ie = new IdentityEntity();
+						ie.setTimestamp( new Date() );
+						session.persist( ie );
+						fail( "A HibernateException with message id HHH000515 should have been thrown" );
+					}
+					catch (Exception e) {
+						assertTrue( e.getMessage().startsWith( "HHH000515" ) );
 					}
 				}
 		);

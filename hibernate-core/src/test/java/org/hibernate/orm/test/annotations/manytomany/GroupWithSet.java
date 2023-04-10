@@ -17,10 +17,9 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterJoinTable;
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLRestriction;
 
 /**
  * @author Emmanuel Bernard
@@ -42,8 +41,8 @@ public class GroupWithSet {
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
 	@OrderBy("expirationDate")
-	@Where(clause = "1=1")
-	@WhereJoinTable(clause = "2=2")
+	@SQLRestriction("1=1")
+	@SQLJoinTableRestriction("2=2")
 	@Filter(name="Groupfilter", condition = "3=3")
 	@FilterJoinTable(name="Groupfilter", condition = "4=4")
 	public Set<Permission> getPermissions() {

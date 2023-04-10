@@ -81,7 +81,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void batchContainedStatementsOnRelease();
 
 	@LogMessage(level = INFO)
-	@Message(value = "Bytecode provider name : %s", id = 21)
+	@Message(value = "Bytecode provider: %s", id = 21)
 	void bytecodeProvider(String provider);
 
 	@LogMessage(level = WARN)
@@ -1823,5 +1823,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "PostgreSQL JDBC driver classes are inaccessible and thus, certain DDL types like JSONB, JSON, GEOMETRY can not be used.",
 			id = 514)
 	void postgreSQLJdbcDriverNotAccessible();
+
+	@Message(value = "Can't retrieve the generated identity value, because the dialect does not support selecting the last generated identity and 'hibernate.jdbc.use_get_generated_keys' was disabled",
+			id = 515)
+	HibernateException nullIdentitySelectString();
 
 }

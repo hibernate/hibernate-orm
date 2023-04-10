@@ -1,0 +1,166 @@
+// Checkerframework stubs for the jakarta.persistence module
+
+package jakarta.persistence;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+public interface AttributeConverter<X,Y> {
+	public @Nullable Y convertToDatabaseColumn(@Nullable X attribute);
+	public @Nullable X convertToEntityAttribute(@Nullable Y dbData);
+}
+public interface EntityManager extends AutoCloseable {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey);
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties);
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode);
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties);
+}
+public interface EntityManagerFactory extends AutoCloseable {
+	public @Nullable Cache getCache();
+}
+public interface Parameter {
+	public @Nullable String getName();
+	public @Nullable Integer getPosition();
+}
+public interface PersistenceUnitUtil extends PersistenceUtil {
+	public @Nullable Object getIdentifier(Object entity);
+}
+public interface Query {
+	<T> Query setParameter(Parameter<T> param, @Nullable T value);
+	Query setParameter(Parameter<Calendar> param, @Nullable Calendar value, TemporalType temporalType);
+	Query setParameter(Parameter<Date> param, @Nullable Date value, TemporalType temporalType);
+	Query setParameter(String name, @Nullable Object value);
+	Query setParameter(String name, @Nullable Calendar value, TemporalType temporalType);
+	Query setParameter(String name, @Nullable Date value, TemporalType temporalType);
+	Query setParameter(int position, @Nullable Object value);
+	Query setParameter(int position, @Nullable Calendar value, TemporalType temporalType);
+	Query setParameter(int position, @Nullable Date value, TemporalType temporalType);
+	<T> @Nullable T getParameterValue(Parameter<T> param);
+	@Nullable Object getParameterValue(String name);
+	@Nullable Object getParameterValue(int position);
+}
+public interface StoredProcedureQuery extends Query {
+	<T> StoredProcedureQuery setParameter(Parameter<T> param, @Nullable T value);
+	StoredProcedureQuery setParameter(Parameter<Calendar> param, @Nullable Calendar value, TemporalType temporalType);
+	StoredProcedureQuery setParameter(Parameter<Date> param, @Nullable Date value, TemporalType temporalType);
+	StoredProcedureQuery setParameter(String name, @Nullable Object value);
+	StoredProcedureQuery setParameter(String name, @Nullable Calendar value, TemporalType temporalType);
+	StoredProcedureQuery setParameter(String name, @Nullable Date value, TemporalType temporalType);
+	StoredProcedureQuery setParameter(int position, @Nullable Object value);
+	StoredProcedureQuery setParameter(int position, @Nullable Calendar value, TemporalType temporalType);
+	StoredProcedureQuery setParameter(int position, @Nullable Date value, TemporalType temporalType);
+	@Nullable Object getOutputParameterValue(int position);
+	@Nullable Object getOutputParameterValue(String parameterName);
+}
+public interface TypedQuery<X> extends Query {
+	<T> TypedQuery<X> setParameter(Parameter<T> param, @Nullable T value);
+	TypedQuery<X> setParameter(Parameter<Calendar> param, @Nullable Calendar value, TemporalType temporalType);
+	TypedQuery<X> setParameter(Parameter<Date> param, @Nullable Date value, TemporalType temporalType);
+	TypedQuery<X> setParameter(String name, @Nullable Object value);
+	TypedQuery<X> setParameter(String name, @Nullable Calendar value, TemporalType temporalType);
+	TypedQuery<X> setParameter(String name, @Nullable Date value, TemporalType temporalType);
+	TypedQuery<X> setParameter(int position, @Nullable Object value);
+	TypedQuery<X> setParameter(int position, @Nullable Calendar value, TemporalType temporalType);
+	TypedQuery<X> setParameter(int position, @Nullable Date value, TemporalType temporalType);
+	@Nullable Object getOutputParameterValue(int position);
+	@Nullable Object getOutputParameterValue(String parameterName);
+}
+public interface Tuple {
+	<X> @Nullable X get(TupleElement<X> tupleElement);
+	<X> @Nullable X get(String alias, Class<X> type);
+	@Nullable Object get(String alias);
+	<X> @Nullable X get(int i, Class<X> type);
+	@Nullable Object get(int i);
+	@Nullable Object[] toArray();
+}
+public interface TupleElement<X> {
+	@Nullable String getAlias();
+}
+
+package jakarta.persistence.criteria;
+
+public interface CommonAbstractCriteria {
+	@Nullable Predicate getRestriction();
+}
+public interface AbstractQuery<T> extends CommonAbstractCriteria {
+	AbstractQuery<T> where(@Nullable Expression<Boolean> restriction);
+    AbstractQuery<T> where(@Nullable Predicate... restrictions);
+    AbstractQuery<T> having(@Nullable Expression<Boolean> restriction);
+    AbstractQuery<T> having(@Nullable Predicate... restrictions);
+	@Nullable Selection<T> getSelection();
+	@Nullable Predicate getGroupRestriction();
+}
+public interface CriteriaUpdate<T> extends CommonAbstractCriteria {
+	<Y, X extends Y> CriteriaUpdate<T> set(SingularAttribute<? super T, Y> attribute, @Nullable X value);
+	<Y, X extends Y> CriteriaUpdate<T> set(Path<Y> attribute, @Nullable X value);
+	CriteriaUpdate<T> set(String attributeName, @Nullable Object value);
+}
+public interface Subquery<T> extends AbstractQuery<T>, Expression<T> {
+	Subquery<T> where(@Nullable Expression<Boolean> restriction);
+    Subquery<T> where(@Nullable Predicate... restrictions);
+    Subquery<T> having(@Nullable Expression<Boolean> restriction);
+    Subquery<T> having(@Nullable Predicate... restrictions);
+	@Nullable Expression<T> getSelection();
+}
+public interface CriteriaBuilder {
+	public static interface SimpleCase<C,R> extends Expression<R> {
+		SimpleCase<C, R> when(C condition, @Nullable R result);
+		SimpleCase<C, R> when(Expression<? extends C> condition, @Nullable R result);
+		Expression<R> otherwise(@Nullable R result);
+	}
+	public static interface Case<R> extends Expression<R> {
+		Case<R> when(Expression<Boolean> condition, @Nullable R result);
+		Expression<R> otherwise(@Nullable R result);
+	}
+}
+public interface Join<Z, X> extends From<Z, X> {
+	Join<Z, X> on(@Nullable Expression<Boolean> restriction);
+    Join<Z, X> on(@Nullable Predicate... restrictions);
+    @Nullable Predicate getOn();
+}
+public interface SetJoin<Z,E> extends PluralJoin<Z, Set<E>, E> {
+	SetJoin<Z, E> on(@Nullable Expression<Boolean> restriction);
+    SetJoin<Z, E> on(@Nullable Predicate... restrictions);
+}
+public interface ListJoin<Z,E> extends PluralJoin<Z, List<E>, E> {
+	ListJoin<Z, E> on(@Nullable Expression<Boolean> restriction);
+    ListJoin<Z, E> on(@Nullable Predicate... restrictions);
+}
+public interface MapJoin<Z,K,V> extends PluralJoin<Z, Map<K,V>, V> {
+	MapJoin<Z,K,V> on(@Nullable Expression<Boolean> restriction);
+    MapJoin<Z,K,V> on(@Nullable Predicate... restrictions);
+}
+public interface Path<X> extends Expression<X> {
+	// CteRoot etc.
+	@Nullable Bindable<X> getModel();
+	@Nullable Path<?> getParentPath();
+    MapJoin<Z,K,V> on(@Nullable Predicate... restrictions);
+}
+
+package jakarta.persistence.metamodel;
+
+public interface IdentifiableType<X> extends ManagedType<X> {
+	@Nullable IdentifiableType<? super X> getSupertype();
+}
+
+package jakarta.persistence.spi;
+
+public interface ClassTransformer {
+	@Nullable byte[] transform(
+			@Nullable ClassLoader loader,
+			String className,
+			@Nullable Class<?> classBeingRedefined,
+			ProtectionDomain protectionDomain,
+			byte[] classfileBuffer) throws TransformerException;
+}
+public interface PersistenceProvider {
+	public @Nullable EntityManagerFactory createEntityManagerFactory(String emName, @Nullable Map map);
+	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, @Nullable Map map);
+}
+public interface PersistenceUnitInfo {
+	public @Nullable String getPersistenceProviderClassName();
+	public @Nullable PersistenceUnitTransactionType getTransactionType();
+	public @Nullable DataSource getJtaDataSource();
+	public @Nullable DataSource getNonJtaDataSource();
+	public @Nullable ClassLoader getClassLoader();
+	public @Nullable ClassLoader getNewTempClassLoader();
+}

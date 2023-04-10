@@ -18,7 +18,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -127,7 +127,7 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 			joinColumns = @JoinColumn(name = "book_id"),
 			inverseJoinColumns = @JoinColumn(name = "reader_id")
 		)
-		@WhereJoinTable(clause = "created_on > DATEADD('DAY', -7, CURRENT_TIMESTAMP())")
+		@SQLJoinTableRestriction("created_on > DATEADD('DAY', -7, CURRENT_TIMESTAMP())")
 		private List<Reader> currentWeekReaders = new ArrayList<>();
 
 		//Getters and setters omitted for brevity

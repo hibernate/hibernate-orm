@@ -15,17 +15,15 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.Where;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.metamodel.CollectionClassification;
@@ -119,16 +117,9 @@ public class CustomSQLTest extends BaseEntityManagerFunctionalTestCase {
 	@SQLDelete(
 		sql = "UPDATE person SET valid = false WHERE id = ? "
 	)
-	@Loader(namedQuery = "find_valid_person")
-	@NamedNativeQueries({
-		@NamedNativeQuery(
-			name = "find_valid_person",
-			query = "SELECT id, name " +
-					"FROM person " +
-					"WHERE id = ? and valid = true",
-			resultClass = Person.class
-		)
-	})
+	@SQLSelect(
+		sql ="SELECT id, name FROM person WHERE id = ? and valid = true"
+	)
 	public static class Person {
 
 		@Id
@@ -142,7 +133,7 @@ public class CustomSQLTest extends BaseEntityManagerFunctionalTestCase {
 			sql = "INSERT INTO person_phones (person_id, phones, valid) VALUES (?, ?, true) ")
 		@SQLDeleteAll(
 			sql = "UPDATE person_phones SET valid = false WHERE person_id = ?")
-		@Where(clause = "valid = true")
+		@SQLRestriction("valid = true")
 		private List<String> phones = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity

@@ -25,6 +25,8 @@ plugins {
 	id 'org.hibernate.orm.database-service' apply false
 	id 'biz.aQute.bnd' version '6.3.1' apply false
 
+	id 'org.checkerframework' version '0.6.25'
+
 	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
 
 	id 'idea'

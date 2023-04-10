@@ -10,10 +10,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
-@Where(clause = "deleted = false")
+@SQLRestriction("deleted = false")
 public class City {
 
 	@Id

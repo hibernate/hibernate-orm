@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpamodelgen.util;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Encapsulates the access type information for a single class.
  *
@@ -17,17 +19,17 @@ public class AccessTypeInformation {
 	/**
 	 * Access type explicitly specified in xml or on an entity.
 	 */
-	private AccessType explicitAccessType;
+	private @Nullable AccessType explicitAccessType;
 
 	/**
 	 * The default type for en entity. This type might change during the parsing/discovering process. The reason
 	 * for that is the ability to mix and match xml and annotation configuration.
 	 */
-	private AccessType defaultAccessType;
+	private @Nullable AccessType defaultAccessType;
 
 	private static final AccessType DEFAULT_ACCESS_TYPE = AccessType.PROPERTY;
 
-	public AccessTypeInformation(String fqcn, AccessType explicitAccessType, AccessType defaultAccessType) {
+	public AccessTypeInformation(String fqcn, @Nullable AccessType explicitAccessType, @Nullable AccessType defaultAccessType) {
 		this.fqcn = fqcn;
 		this.explicitAccessType = explicitAccessType;
 		this.defaultAccessType = defaultAccessType;
@@ -58,7 +60,7 @@ public class AccessTypeInformation {
 		this.explicitAccessType = explicitAccessType;
 	}
 
-	public AccessType getDefaultAccessType() {
+	public @Nullable AccessType getDefaultAccessType() {
 		return defaultAccessType;
 	}
 

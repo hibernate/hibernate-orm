@@ -10,11 +10,8 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.TestForIssue;
@@ -36,6 +33,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -523,6 +521,19 @@ public class FunctionTests {
 					session.createQuery( "select truncate(current_timestamp,hour)", Timestamp.class ).getSingleResult();
 					session.createQuery( "select truncate(current_timestamp,minute)", Timestamp.class ).getSingleResult();
 					session.createQuery( "select truncate(current_timestamp,second)", Timestamp.class ).getSingleResult();
+
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30, day)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,3,0,0,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30, month)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,1,0,0,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30, year)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,1,1,0,0,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30:45, hour)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,3,12,0,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30:45, minute)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,3,12,30,0) ) );
+					assertThat( session.createQuery( "select truncate(datetime 1974-10-03 12:30:45.123, second)", LocalDateTime.class ).getSingleResult(),
+							is( LocalDateTime.of(1974,10,3,12,30,45,0) ) );
 				}
 		);
 	}
@@ -853,6 +864,9 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast(date 1911-10-09 as String)", String.class).getSingleResult(), is("1911-10-09") );
 					assertThat( session.createQuery("select cast(time 12:13:14 as String)", String.class).getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000"), is("12.13.14") ) );
 					assertThat( session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)", String.class).getSingleResult(), anyOf( startsWith("1911-10-09 12:13:14"), startsWith("1911-10-09-12.13.14") ) );
+
+					assertThat( session.createQuery("select cast(local datetime as Instant)", Instant.class).getSingleResult(), instanceOf(Instant.class) );
+					assertThat( session.createQuery("select cast(offset datetime as Instant)", Instant.class).getSingleResult(), instanceOf(Instant.class) );
 
 					assertThat( session.createQuery("select cast(1 as NumericBoolean)", Boolean.class).getSingleResult(), is(true) );
 					assertThat( session.createQuery("select cast(0 as NumericBoolean)", Boolean.class).getSingleResult(), is(false) );
@@ -1237,6 +1251,31 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testInstantCast(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Instant instant = Instant.ofEpochSecond(123456789);
+					assertEquals( instant,
+							session.createQuery("select cast(?1 as Instant)", Instant.class)
+									.setParameter( 1, instant.atOffset(ZoneOffset.UTC) )
+									.getSingleResult() );
+					assertEquals( instant,
+							session.createQuery("select cast(?1 as Instant)", Instant.class)
+									.setParameter( 1, instant.atOffset(ZoneOffset.UTC).toLocalDateTime() )
+									.getSingleResult() );
+					assertEquals( instant.atOffset(ZoneOffset.UTC),
+							session.createQuery("select cast(?1 as OffsetDateTime)", OffsetDateTime.class)
+									.setParameter( 1, instant )
+									.getSingleResult() );
+					assertEquals( instant.atOffset(ZoneOffset.UTC).toLocalDateTime(),
+							session.createQuery("select cast(?1 as LocalDateTime)", LocalDateTime.class)
+									.setParameter( 1, instant )
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
 	public void testDurationCast(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1245,6 +1284,14 @@ public class FunctionTests {
 									.getSingleResult() );
 					assertEquals( 5*60*1_000_000_000L,
 							session.createQuery("select cast(5 minute as Long)", Long.class)
+									.getSingleResult() );
+					assertEquals( Duration.of(5, ChronoUnit.MINUTES),
+							session.createQuery("select cast(?1 as Duration)", Duration.class)
+									.setParameter(1, 5*60*1000000000L)
+									.getSingleResult() );
+					assertEquals( Duration.of(1, ChronoUnit.DAYS),
+							session.createQuery("select cast(?1 as Duration)", Duration.class)
+									.setParameter(1, 24*60*60*1000000000L)
 									.getSingleResult() );
 				}
 		);

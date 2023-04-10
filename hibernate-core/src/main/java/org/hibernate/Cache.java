@@ -7,7 +7,7 @@
 package org.hibernate;
 
 /**
- * An API for directly querying and managing the second level cache.
+ * An API for directly querying and managing the second-level cache.
  * <p>
  * Hibernate has two levels of caching:
  * <ul>

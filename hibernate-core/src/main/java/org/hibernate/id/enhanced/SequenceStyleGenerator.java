@@ -195,10 +195,10 @@ public class SequenceStyleGenerator
 		this.identifierType = type;
 		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, parameters, false );
 
-		final QualifiedName sequenceName = determineSequenceName(parameters, dialect, jdbcEnvironment, serviceRegistry );
+		final QualifiedName sequenceName = determineSequenceName( parameters, dialect, jdbcEnvironment, serviceRegistry );
 
-		final int initialValue = determineInitialValue(parameters);
-		int incrementSize = determineIncrementSize(parameters);
+		final int initialValue = determineInitialValue( parameters );
+		int incrementSize = determineIncrementSize( parameters );
 
 		final String optimizationStrategy = determineOptimizationStrategy(parameters, incrementSize );
 
@@ -211,7 +211,9 @@ public class SequenceStyleGenerator
 				SequenceMismatchStrategy.EXCEPTION
 		);
 
-		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE && isPooledOptimizer && isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
+		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE
+				&& isPooledOptimizer
+				&& isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
 			String databaseSequenceName = sequenceName.getObjectName().getText();
 			Number databaseIncrementValue = getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
 
@@ -487,7 +489,7 @@ public class SequenceStyleGenerator
 
 	protected boolean isPhysicalSequence(JdbcEnvironment jdbcEnvironment, boolean forceTableUse) {
 		return jdbcEnvironment.getDialect().getSequenceSupport().supportsSequences()
-				&& !forceTableUse;
+			&& !forceTableUse;
 	}
 
 	protected DatabaseStructure buildSequenceStructure(

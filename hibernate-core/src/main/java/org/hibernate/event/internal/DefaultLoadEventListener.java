@@ -35,7 +35,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -542,18 +541,25 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final Object entity = persistenceContextEntry.getEntity();
 			if ( entity != null ) {
 				if ( persistenceContextEntry.isManaged() ) {
-					if ( isPersistentAttributeInterceptable( entity ) ) {
-						final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-						if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-							( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( entity, null );
-						}
-					}
+					initializeIfNecessary( entity );
 					return entity;
 				}
-				return null;
+				else {
+					return null;
+				}
 			}
 			else {
 				return load( event, persister, keyToLoad );
+			}
+		}
+	}
+
+	private static void initializeIfNecessary(Object entity) {
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( entity );
+			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( entity, null );
 			}
 		}
 	}

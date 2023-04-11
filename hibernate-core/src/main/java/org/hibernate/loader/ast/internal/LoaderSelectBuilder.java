@@ -11,11 +11,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.LockOptions;
-import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
@@ -30,6 +28,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -444,7 +443,9 @@ public class LoaderSelectBuilder {
 	private SelectStatement generateSelect() {
 		if ( loadable instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
-			if ( pluralAttributeMapping.getMappedType().getCollectionSemantics() instanceof BagSemantics ) {
+			if ( pluralAttributeMapping.getMappedType()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.BAG ) {
 				currentBagRole = pluralAttributeMapping.getNavigableRole().getNavigableName();
 			}
 		}
@@ -750,27 +751,65 @@ public class LoaderSelectBuilder {
 		}
 
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
-		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, creationState, fetches );
+		final FetchableConsumer<Fetchable, Boolean, Boolean> processor = createFetchableConsumer( fetchParent, creationState, fetches );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
+
+		final List<Fetchable> bagKeyFetchables = new ArrayList();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
 			final int size = referencedMappingContainer.getNumberOfKeyFetchables();
 			for ( int i = 0; i < size; i++ ) {
-				processor.accept( referencedMappingContainer.getKeyFetchable( i ), true );
+				Fetchable keyFetchable = referencedMappingContainer.getKeyFetchable( i );
+				if ( isBag( keyFetchable ) ) {
+					bagKeyFetchables.add( keyFetchable );
+				}
+				else {
+					processor.accept( keyFetchable, true, false );
+				}
 			}
 		}
+
 		final int size = referencedMappingContainer.getNumberOfFetchables();
+		final List<Fetchable> bagFetchables = new ArrayList();
+
 		for ( int i = 0; i < size; i++ ) {
-			processor.accept( referencedMappingContainer.getFetchable( i ), false );
+			Fetchable fetchable = referencedMappingContainer.getFetchable( i );
+			if ( isBag( fetchable ) ) {
+				bagFetchables.add( fetchable );
+			}
+			else {
+				processor.accept( fetchable, false, false );
+			}
+		}
+
+		for ( Fetchable fetchable : bagKeyFetchables ) {
+			processor.accept( fetchable, true, true );
+		}
+		for ( Fetchable fetchable : bagFetchables ) {
+			processor.accept( fetchable, false, true );
 		}
 		return fetches.build();
 	}
 
-	private BiConsumer<Fetchable, Boolean> createFetchableBiConsumer(
+	private boolean isBag(Fetchable fetchable) {
+		if ( fetchable instanceof PluralAttributeMapping ) {
+			return ( (PluralAttributeMapping) fetchable ).getMappedType()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.BAG;
+		}
+		return false;
+	}
+
+	@FunctionalInterface
+	private interface FetchableConsumer<F,T,V>{
+		void accept(F fetchable, T isKeyFetchable, V isABag);
+	}
+
+	private FetchableConsumer<Fetchable, Boolean, Boolean> createFetchableConsumer(
 			FetchParent fetchParent,
 			LoaderSqlAstCreationState creationState,
 			ImmutableFetchList.Builder fetches) {
-		return (fetchable, isKeyFetchable) -> {
+		return (fetchable, isKeyFetchable, isABag) -> {
 			if ( !fetchable.isSelectable() ) {
 				return;
 			}
@@ -871,21 +910,15 @@ public class LoaderSelectBuilder {
 					}
 				}
 			}
-
 			final String previousBagRole = currentBagRole;
-			final String bagRole;
-			if ( isFetchablePluralAttributeMapping
-					&& ( (PluralAttributeMapping) fetchable ).getMappedType()
-					.getCollectionSemantics()
-					.getCollectionClassification() == CollectionClassification.BAG ) {
-				bagRole = fetchable.getNavigableRole().getNavigableName();
+			// whenever there is a joined bag if nay another collection is joined then the bag will contain duplicate results
+			if ( isABag ) {
+				if ( joined && ( hasCollectionJoinFetches || currentBagRole != null ) ) {
+					joined = false;
+				}
+				currentBagRole = fetchable.getNavigableRole().getNavigableName();
 			}
-			else {
-				bagRole = null;
-			}
-
-			if ( joined && previousBagRole != null && bagRole != null ) {
-				// Avoid join fetching multiple bags to prevent result multiplication
+			else if ( joined && isFetchablePluralAttributeMapping && currentBagRole != null ) {
 				joined = false;
 			}
 
@@ -918,16 +951,6 @@ public class LoaderSelectBuilder {
 							return;
 						}
 					}
-				}
-				if ( joined ) {
-					// For join fetches we remember the currentBagRole so that we can avoid multiple bag fetches
-					if ( bagRole != null ) {
-						currentBagRole = bagRole;
-					}
-				}
-				else {
-					// For non-join fetches, we reset the currentBagRole and set it to the previous value in the finally block
-					currentBagRole = null;
 				}
 
 				final Fetch fetch = fetchParent.generateFetchableFetch(
@@ -964,13 +987,11 @@ public class LoaderSelectBuilder {
 				fetches.add( fetch );
 			}
 			finally {
+				if ( isABag ) {
+					currentBagRole = previousBagRole;
+				}
 				if ( fetchable.incrementFetchDepth() ) {
 					fetchDepth--;
-				}
-				// Only set the currentBagRole to the previous value for non-join fetches,
-				// otherwise we could run into a multiple bag fetch situation
-				if ( !joined ) {
-					currentBagRole = previousBagRole;
 				}
 				if ( entityGraphTraversalState != null && traversalResult != null ) {
 					entityGraphTraversalState.backtrack( traversalResult );

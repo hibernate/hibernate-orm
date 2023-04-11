@@ -6,13 +6,17 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
@@ -90,7 +94,42 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	}
 
 	@Override
+	public boolean isScrollResult(){
+		return processingState.isScrollResult();
+	}
+
+	@Override
 	public Callback getCallback() {
 		return processingState.getCallback();
+	}
+
+	@Override
+	public CollectionKey getCollectionKey() {
+		return processingState.getCollectionKey();
+	}
+
+	@Override
+	public Object getEntityInstance() {
+		return processingState.getEntityInstance();
+	}
+
+	@Override
+	public Object getEntityId() {
+		return processingState.getEntityId();
+	}
+
+	@Override
+	public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+		processingState.registerLoadingEntityEntry( entityKey, entry );
+	}
+
+	@Override
+	public void afterStatement(LogicalConnectionImplementor logicalConnection) {
+		processingState.afterStatement( logicalConnection );
+	}
+
+	@Override
+	public boolean hasQueryExecutionToBeAddedToStatistics() {
+		return processingState.hasQueryExecutionToBeAddedToStatistics();
 	}
 }

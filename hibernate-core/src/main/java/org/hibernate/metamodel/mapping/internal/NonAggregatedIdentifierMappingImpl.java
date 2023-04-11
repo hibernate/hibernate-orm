@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -35,8 +36,15 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
+import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingFetch;
+import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingResult;
 
 /**
  * A "non-aggregated" composite identifier.
@@ -314,6 +322,38 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		identifierValueMapper.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
+	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return new NonAggregatedIdentifierMappingResult<>(
+				navigablePath,
+				this,
+				resultVariable,
+				creationState
+		);
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return new NonAggregatedIdentifierMappingFetch(
+				fetchablePath,
+				this,
+				fetchParent,
+				fetchTiming,
+				selected,
+				creationState
+		);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -11,7 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
@@ -53,7 +52,9 @@ import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.singletonMap;
 import static org.hibernate.cfg.AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
+import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
 import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
@@ -336,33 +337,33 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 
-		qualifiedTableName = determineGeneratorTableName(parameters, jdbcEnvironment, serviceRegistry );
-		segmentColumnName = determineSegmentColumnName(parameters, jdbcEnvironment );
-		valueColumnName = determineValueColumnName(parameters, jdbcEnvironment );
+		qualifiedTableName = determineGeneratorTableName( parameters, jdbcEnvironment, serviceRegistry );
+		segmentColumnName = determineSegmentColumnName( parameters, jdbcEnvironment );
+		valueColumnName = determineValueColumnName( parameters, jdbcEnvironment );
 
-		segmentValue = determineSegmentValue(parameters);
+		segmentValue = determineSegmentValue( parameters );
 
-		segmentValueLength = determineSegmentColumnSize(parameters);
-		initialValue = determineInitialValue(parameters);
-		incrementSize = determineIncrementSize(parameters);
+		segmentValueLength = determineSegmentColumnSize( parameters );
+		initialValue = determineInitialValue( parameters );
+		incrementSize = determineIncrementSize( parameters );
 
-		final String optimizationStrategy = getString(
-				OPT_PARAM,
-				parameters,
-				OptimizerFactory.determineImplicitOptimizerName( incrementSize, parameters)
-		);
-		int optimizerInitialValue = getInt( INITIAL_PARAM, parameters, -1 );
 		optimizer = OptimizerFactory.buildOptimizer(
-				optimizationStrategy,
+				determineOptimizationStrategy( parameters, incrementSize ),
 				identifierType.getReturnedClass(),
 				incrementSize,
-				optimizerInitialValue
+				getInt( INITIAL_PARAM, parameters, -1 )
 		);
 
 		contributor = parameters.getProperty( CONTRIBUTOR_NAME );
 		if ( contributor == null ) {
 			contributor = "orm";
 		}
+	}
+
+	private static OptimizerDescriptor determineOptimizationStrategy(Properties parameters, int incrementSize) {
+		return StandardOptimizerDescriptor.fromExternalName(
+				getString( OPT_PARAM, parameters, determineImplicitOptimizerName( incrementSize, parameters ) )
+		);
 	}
 
 	/**
@@ -515,7 +516,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		return getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
 	}
 
-	@SuppressWarnings("unchecked")
 	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
 		final String alias = "tbl";
 		final String query = "select " + StringHelper.qualify( alias, valueColumnName )
@@ -523,7 +523,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				+ " where " + StringHelper.qualify( alias, segmentColumnName ) + "=?";
 		final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 		lockOptions.setAliasSpecificLockMode( alias, LockMode.PESSIMISTIC_WRITE );
-		final Map updateTargetColumnsMap = Collections.singletonMap( alias, new String[] { valueColumnName } );
+		final Map<String,String[]> updateTargetColumnsMap = singletonMap( alias, new String[] { valueColumnName } );
 		return context.getDialect().applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
 	}
 

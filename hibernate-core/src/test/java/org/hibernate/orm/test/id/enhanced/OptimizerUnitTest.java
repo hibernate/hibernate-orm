@@ -328,7 +328,7 @@ public class OptimizerUnitTest {
 			StandardOptimizerDescriptor descriptor,
 			long initial,
 			int increment) {
-		return OptimizerFactory.buildOptimizer( descriptor.getExternalName(), Long.class, increment, initial );
+		return OptimizerFactory.buildOptimizer( descriptor, Long.class, increment, initial );
 	}
 
 	private static class SourceMock implements AccessCallback {

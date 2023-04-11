@@ -459,7 +459,7 @@ public class DomainResultCreationStateImpl
 
 	private Consumer<Fetchable> createFetchableConsumer(FetchParent fetchParent, ImmutableFetchList.Builder fetches) {
 		return fetchable -> {
-			if ( !fetchable.isSelectable() ) {
+			if ( !fetchable.isSelectable() || fetchable.getPartName().equals( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ) ) {
 				return;
 			}
 			final String fetchableName = fetchable.getFetchableName();

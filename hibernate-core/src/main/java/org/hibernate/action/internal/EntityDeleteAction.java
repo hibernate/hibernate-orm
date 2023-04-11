@@ -145,7 +145,10 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private Object getCurrentVersion() {
+	/**
+	 * Called by Hibernate Reactive
+	 */
+	protected Object getCurrentVersion() {
 		return getPersister().isVersionPropertyGenerated()
 						// skip if we're deleting an unloaded proxy, no need for the version
 						&& isInstanceLoaded()
@@ -156,7 +159,10 @@ public class EntityDeleteAction extends EntityAction {
 				: version;
 	}
 
-	private void postDeleteLoaded(
+	/**
+	 * Called by Hibernate Reactive
+	 */
+	protected void postDeleteLoaded(
 			Object id,
 			EntityPersister persister,
 			SharedSessionContractImplementor session,
@@ -179,7 +185,10 @@ public class EntityDeleteAction extends EntityAction {
 		postDelete();
 	}
 
-	private void postDeleteUnloaded(Object id, EntityPersister persister, SharedSessionContractImplementor session, Object ck) {
+	/**
+	 * Called by Hibernate Reactive
+	 */
+	protected void postDeleteUnloaded(Object id, EntityPersister persister, SharedSessionContractImplementor session, Object ck) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		EntityKey key = session.generateEntityKey( id, persister );
 		if ( !persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
@@ -257,7 +266,10 @@ public class EntityDeleteAction extends EntityAction {
 		return false;
 	}
 
-	private Object lockCacheItem() {
+	/**
+	 * Called by Hibernate Reactive
+	 */
+	protected Object lockCacheItem() {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
@@ -286,7 +298,10 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void removeCacheItem(Object ck) {
+	/**
+	 * Called by Hibernate Reactive
+	 */
+	protected void removeCacheItem(Object ck) {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			persister.getCacheAccessStrategy().remove( getSession(), ck );

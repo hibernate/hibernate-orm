@@ -515,14 +515,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
-		appendSql( tableReference.getTableExpression() );
-		registerAffectedTable( tableReference );
-		renderTableReferenceIdentificationVariable( tableReference );
-		return false;
-	}
-
-	@Override
 	protected void visitSetAssignment(Assignment assignment) {
 		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
 		if ( columnReferences.size() == 1 ) {
@@ -549,15 +541,4 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			assignment.getAssignedValue().accept( this );
 		}
 	}
-
-	@Override
-	public void visitColumnReference(ColumnReference columnReference) {
-		columnReference.appendReadExpression( this );
-	}
-
-	@Override
-	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
-		aggregateColumnWriteExpression.appendWriteExpression( this, this );
-	}
-
 }

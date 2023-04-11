@@ -34,6 +34,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
@@ -831,7 +832,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					(filterPredicate) -> additionalRestrictions = combinePredicates( additionalRestrictions, filterPredicate),
 					entityDescriptor,
 					rootTableGroup,
-					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.UPDATE ),
+					getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS,
 					getLoadQueryInfluencers(),
 					this
 			);
@@ -1088,7 +1089,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					(filterPredicate) -> additionalRestrictions = combinePredicates( additionalRestrictions, filterPredicate),
 					entityDescriptor,
 					rootTableGroup,
-					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.DELETE ),
+					getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS,
 					getLoadQueryInfluencers(),
 					this
 			);

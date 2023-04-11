@@ -5224,4 +5224,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public String getRowIdColumnString(String rowId) {
 		return null;
 	}
+
+	/**
+	 * Get the minimum {@link DmlTargetColumnQualifierSupport} required by this dialect.
+	 *
+	 * @return the column qualifier support required by this dialect
+	 */
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.NONE;
+	}
 }

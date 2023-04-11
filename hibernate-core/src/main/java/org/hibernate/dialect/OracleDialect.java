@@ -1467,4 +1467,9 @@ public class OracleDialect extends Dialect {
 		final OracleSqlAstTranslator<?> translator = new OracleSqlAstTranslator<>( factory, optionalTableUpdate );
 		return translator.createMergeOperation( optionalTableUpdate );
 	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
 }

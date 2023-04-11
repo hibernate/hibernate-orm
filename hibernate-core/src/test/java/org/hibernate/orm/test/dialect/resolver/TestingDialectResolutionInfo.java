@@ -101,4 +101,9 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 	public String getSQLKeywords() {
 		return "";
 	}
+
+	@Override
+	public String toString() {
+		return getMajor() + "." + getMinor();
+	}
 }

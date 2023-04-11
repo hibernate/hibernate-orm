@@ -102,4 +102,9 @@ public class DatabaseMetaDataDialectResolutionInfoAdapter implements DialectReso
 	public DatabaseMetaData getDatabaseMetadata() {
 		return databaseMetaData;
 	}
+
+	@Override
+	public String toString() {
+		return getMajor() + "." + getMinor();
+	}
 }

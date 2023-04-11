@@ -500,5 +500,10 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		public DatabaseMetaData getDatabaseMetadata() {
 			return databaseMetadata;
 		}
+
+		@Override
+		public String toString() {
+			return getMajor() + "." + getMinor();
+		}
 	}
 }

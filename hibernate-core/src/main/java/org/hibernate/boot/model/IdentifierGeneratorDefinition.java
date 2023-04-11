@@ -13,8 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
+import org.hibernate.boot.model.IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext;
 import org.hibernate.id.IdentifierGenerator;
 
 import jakarta.persistence.GenerationType;
@@ -109,12 +111,14 @@ public class IdentifierGeneratorDefinition implements Serializable {
 				return buildTableGeneratorDefinition( name, generationInterpreter );
 			// really AUTO and IDENTITY work the same in this respect, aside from the actual strategy name
 			case IDENTITY:
-				strategyName = "identity";
-				break;
+				throw new AnnotationException(
+						"@GeneratedValue annotation specified 'strategy=IDENTITY' and 'generator'"
+								+ " but the generator name is unnecessary"
+				);
 			case AUTO:
 				strategyName = generationInterpreter.determineGeneratorName(
 						generationType,
-						new IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext() {
+						new GeneratorNameDeterminationContext() {
 							@Override
 							public Class<?> getIdType() {
 								return idType;
@@ -127,7 +131,17 @@ public class IdentifierGeneratorDefinition implements Serializable {
 				);
 				break;
 			default:
-				throw new AssertionFailure( "unknown generator type: " + generationType );
+				//case UUID:
+				// (use the name instead for compatibility with javax.persistence)
+				if ( "UUID".equals( generationType.name() ) ) {
+					throw new AnnotationException(
+							"@GeneratedValue annotation specified 'strategy=UUID' and 'generator'"
+									+ " but the generator name is unnecessary"
+					);
+				}
+				else {
+					throw new AssertionFailure( "unknown generator type: " + generationType );
+				}
 		}
 
 		return new IdentifierGeneratorDefinition(
@@ -137,7 +151,8 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		);
 	}
 
-	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(String name, IdGeneratorStrategyInterpreter generationInterpreter) {
+	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(
+			String name, IdGeneratorStrategyInterpreter generationInterpreter) {
 		final Builder builder = new Builder();
 		generationInterpreter.interpretTableGenerator(
 				new TableGenerator() {
@@ -207,7 +222,8 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		return builder.build();
 	}
 
-	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name, IdGeneratorStrategyInterpreter generationInterpreter) {
+	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(
+			String name, IdGeneratorStrategyInterpreter generationInterpreter) {
 		final Builder builder = new Builder();
 		generationInterpreter.interpretSequenceGenerator(
 				new SequenceGenerator() {

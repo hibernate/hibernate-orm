@@ -40,7 +40,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
@@ -1740,35 +1739,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 
 	// native identifier generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * The "native" id generation strategy for this dialect.
-	 * <p>
-	 * This is the id generation strategy which should be used when {@code "native"} is
-	 * specified in {@code hbm.xml}, or {@link GenerationType#AUTO} is specified by the
-	 * {@link jakarta.persistence.GeneratedValue#strategy @GeneratedValue} annotation.
-	 *
-	 * @return The native generator strategy.
-	 */
-	@Incubating
-	public GenerationType getNativeIdentifierGenerationType() {
-		switch ( getNativeIdentifierGeneratorStrategy() ) {
-			case "identity":
-				return GenerationType.IDENTITY;
-			case "sequence":
-				return GenerationType.SEQUENCE;
-			case "uuid":
-				return GenerationType.UUID;
-			default:
-				throw new AssertionFailure( "unknown native generation type" );
-		}
-	}
+	
 	/**
 	 * The name identifying the "native" id generation strategy for this dialect.
 	 * <p>
-	 * This is the id generation strategy which should be used when {@code "native"} is
-	 * specified in {@code hbm.xml}, or {@link GenerationType#AUTO} is specified by the
-	 * {@link jakarta.persistence.GeneratedValue#strategy @GeneratedValue} annotation.
+	 * This is the name of the id generation strategy which should be used when
+	 * {@code "native"} is specified in {@code hbm.xml}.
 	 *
 	 * @return The name identifying the native generator strategy.
 	 */

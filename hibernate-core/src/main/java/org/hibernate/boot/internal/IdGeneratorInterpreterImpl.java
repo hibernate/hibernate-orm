@@ -95,22 +95,27 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 				case TABLE:
 					return org.hibernate.id.enhanced.TableGenerator.class.getName();
 				case AUTO:
-					if ( "increment".equalsIgnoreCase( context.getGeneratedValueGeneratorName() ) ) {
-						return IncrementGenerator.class.getName();
-					}
-
-					final Class<?> javaType = context.getIdType();
-					if ( UUID.class.isAssignableFrom( javaType ) ) {
+					if ( UUID.class.isAssignableFrom( context.getIdType() ) ) {
 						return UUIDGenerator.class.getName();
 					}
-
-					return SequenceStyleGenerator.class.getName();
+					else if ( "increment".equalsIgnoreCase( context.getGeneratedValueGeneratorName() ) ) {
+						// special case for @GeneratedValue(name="increment")
+						// for some reason we consider there to be an implicit
+						// generator named 'increment' (doesn't seem very useful)
+						return IncrementGenerator.class.getName();
+					}
+					else {
+						return SequenceStyleGenerator.class.getName();
+					}
 				default:
-					// UNKNOWN
+					//case UUID:
+					// (use the name instead for compatibility with javax.persistence)
 					if ( "UUID".equals( generationType.name() ) ) {
 						return UUIDGenerator.class.getName();
 					}
-					throw new UnsupportedOperationException( "Unsupported generation type:" + generationType );
+					else {
+						throw new UnsupportedOperationException( "Unsupported generation type:" + generationType );
+					}
 			}
 		}
 

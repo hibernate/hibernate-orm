@@ -9,6 +9,7 @@ import java.util.Set;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,14 +42,14 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
-	@Before
-	public void setUp() {
+	@After
+	public void trearDown() {
 		inTransaction(
 				session -> {
-					RealmEntity realm = new RealmEntity();
-					realm.setId( REALM_ID );
-					realm.setName( "realm" );
-					session.persist( realm );
+					RealmEntity find = session.find( RealmEntity.class, "id" );
+					if(find != null) {
+						session.remove( find );
+					}
 				}
 		);
 	}
@@ -57,11 +58,134 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 	public void testRefresh() {
 		inTransaction(
 				session -> {
+					RealmEntity realm = new RealmEntity();
+					realm.setId( REALM_ID );
+					realm.setName( "realm" );
+					session.persist( realm );
+				}
+		);
+
+		inTransaction(
+				session -> {
 					RealmEntity realm = session.find( RealmEntity.class, REALM_ID );
 
 					session.refresh( realm );
 
 					assertThat( realm.getComponents().size() ).isEqualTo( 0 );
+
+					session.remove( realm );
+				}
+		);
+	}
+
+	@Test
+	public void testRefresh2() {
+		inTransaction(
+				session -> {
+					RealmEntity realm = new RealmEntity();
+					realm.setId( "id" );
+					realm.setName( "realm" );
+
+					RealmAttributeEntity attribute1 = new RealmAttributeEntity();
+					attribute1.setName( "a1" );
+					RealmAttributeEntity attribute2 = new RealmAttributeEntity();
+					attribute2.setName( "a2" );
+					realm.addAttribute( attribute1 );
+					realm.addAttribute( attribute2 );
+
+					session.persist( attribute1 );
+					session.persist( attribute2 );
+
+					session.persist( realm );
+				}
+		);
+
+		inTransaction(
+				session -> {
+					RealmEntity realm = session.find( RealmEntity.class, REALM_ID );
+
+					session.refresh( realm );
+
+					assertThat( realm.getComponents().size() ).isEqualTo( 0 );
+					assertThat( realm.getAttributes().size() ).isEqualTo( 2 );
+
+					session.remove( realm );
+				}
+		);
+	}
+
+	@Test
+	public void testRefresh3() {
+		inTransaction(
+				session -> {
+					RealmEntity realm = new RealmEntity();
+					realm.setId( "id" );
+					realm.setName( "realm" );
+
+					ComponentEntity component = new ComponentEntity();
+					component.setId( "id_comp" );
+					realm.addComponent( component );
+
+					ComponentEntity component2 = new ComponentEntity();
+					component2.setId( "id_comp_2" );
+					realm.addComponent( component2 );
+
+					session.persist( realm );
+				}
+		);
+
+		inTransaction(
+				session -> {
+					RealmEntity realm = session.find( RealmEntity.class, REALM_ID );
+
+					session.refresh( realm );
+
+					assertThat( realm.getComponents().size() ).isEqualTo( 2 );
+					assertThat( realm.getAttributes().size() ).isEqualTo( 0 );
+
+					session.remove( realm );
+				}
+		);
+	}
+
+	@Test
+	public void testRefresh4() {
+		inTransaction(
+				session -> {
+					RealmEntity realm = new RealmEntity();
+					realm.setId( "id" );
+					realm.setName( "realm" );
+
+					ComponentEntity component = new ComponentEntity();
+					component.setId( "id_comp" );
+					realm.addComponent( component );
+
+					ComponentEntity component2 = new ComponentEntity();
+					component2.setId( "id_comp_2" );
+					realm.addComponent( component2 );
+					RealmAttributeEntity attribute1 = new RealmAttributeEntity();
+					attribute1.setName( "a1" );
+					RealmAttributeEntity attribute2 = new RealmAttributeEntity();
+					attribute2.setName( "a2" );
+					realm.addAttribute( attribute1 );
+					realm.addAttribute( attribute2 );
+
+					session.persist( attribute1 );
+					session.persist( attribute2 );
+
+
+					session.persist( realm );
+				}
+		);
+
+		inTransaction(
+				session -> {
+					RealmEntity realm = session.find( RealmEntity.class, REALM_ID );
+
+					session.refresh( realm );
+
+					assertThat( realm.getComponents().size() ).isEqualTo( 2 );
+					assertThat( realm.getAttributes().size() ).isEqualTo( 2 );
 
 					session.remove( realm );
 				}
@@ -111,6 +235,11 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 			this.attributes = attributes;
 		}
 
+		public void addAttribute(RealmAttributeEntity attribute){
+			attribute.setRealm( this );
+			this.attributes.add( attribute );
+		}
+
 		public Set<ComponentEntity> getComponents() {
 			if ( components == null ) {
 				components = new HashSet<>();
@@ -120,6 +249,11 @@ public class RefreshTest extends BaseCoreFunctionalTestCase {
 
 		public void setComponents(Set<ComponentEntity> components) {
 			this.components = components;
+		}
+
+		public void addComponent(ComponentEntity component){
+			this.components.add( component );
+			component.setRealm( this );
 		}
 	}
 

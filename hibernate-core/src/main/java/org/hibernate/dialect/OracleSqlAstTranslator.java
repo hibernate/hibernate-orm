@@ -513,14 +513,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
-		appendSql( tableReference.getTableExpression() );
-		registerAffectedTable( tableReference );
-		renderTableReferenceIdentificationVariable( tableReference );
-		return false;
-	}
-
-	@Override
 	protected void visitSetAssignment(Assignment assignment) {
 		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
 		if ( columnReferences.size() == 1 ) {
@@ -546,16 +538,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			appendSql( ")=" );
 			assignment.getAssignedValue().accept( this );
 		}
-	}
-
-	@Override
-	public void visitColumnReference(ColumnReference columnReference) {
-		columnReference.appendReadExpression( this );
-	}
-
-	@Override
-	public void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression) {
-		aggregateColumnWriteExpression.appendWriteExpression( this, this );
 	}
 
 	@Override

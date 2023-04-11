@@ -689,7 +689,7 @@ public class LoaderSelectBuilder {
 			LoaderSqlAstCreationState creationState,
 			ImmutableFetchList.Builder fetches) {
 		return (fetchable, isKeyFetchable) -> {
-			if ( !fetchable.isSelectable() || fetchable.getPartName().equals( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ) ) {
+			if ( !fetchable.isSelectable() ) {
 				return;
 			}
 

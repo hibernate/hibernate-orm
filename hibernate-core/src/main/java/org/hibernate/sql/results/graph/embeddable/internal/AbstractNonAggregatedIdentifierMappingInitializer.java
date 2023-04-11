@@ -160,6 +160,10 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 	public void initializeInstance(RowProcessingState processingState) {
 		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Initializing composite instance [%s]", navigablePath );
 
+		if ( stateInjected ) {
+			return;
+		}
+
 		if ( compositeInstance == NULL_MARKER ) {
 			// we already know it is null
 			return;
@@ -178,7 +182,7 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 		}
 
 		final Object parentInstance;
-		if ( !stateInjected && needsVirtualIdState && ( parentInstance = fetchParentAccess.getInitializedInstance() ) != null ) {
+		if ( needsVirtualIdState && ( parentInstance = fetchParentAccess.getInitializedInstance() ) != null ) {
 			notifyResolutionListeners( compositeInstance );
 
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( parentInstance );

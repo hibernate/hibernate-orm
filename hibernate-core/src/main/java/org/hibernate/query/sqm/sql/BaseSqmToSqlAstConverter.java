@@ -7144,7 +7144,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Fetch createFetch(FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
-		if ( !fetchable.isSelectable() || fetchable.getPartName().equals( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ) ) {
+		if ( !fetchable.isSelectable() ) {
 			return null;
 		}
 		final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );

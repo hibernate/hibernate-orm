@@ -68,6 +68,7 @@ public class EmbeddedAttributeMapping
 	private final String tableExpression;
 	private final EmbeddableMappingType embeddableMappingType;
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
+	private final boolean selectable;
 
 	public EmbeddedAttributeMapping(
 			String name,
@@ -128,6 +129,12 @@ public class EmbeddedAttributeMapping
 
 		this.embeddableMappingType = embeddableMappingType;
 
+		if ( getAttributeName().equals( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ) ) {
+			selectable = false;
+		}
+		else {
+			selectable = attributeMetadata.isSelectable();
+		}
 	}
 
 	// Constructor is only used for creating the inverse attribute mapping
@@ -142,7 +149,7 @@ public class EmbeddedAttributeMapping
 				inverseModelPart.getFetchableName(),
 				-1,
 				inverseModelPart.getFetchableKey(),
-				inverseModelPart instanceof AttributeMapping
+				inverseModelPart.asAttributeMapping() != null
 						? inverseModelPart.asAttributeMapping().getAttributeMetadata()
 						: null,
 				inverseModelPart.getMappedFetchOptions(),
@@ -162,6 +169,19 @@ public class EmbeddedAttributeMapping
 				creationProcess
 		);
 		this.parentInjectionAttributePropertyAccess = null;
+
+		if ( getAttributeName().equals( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ) ) {
+			selectable = false;
+		}
+		else {
+			AttributeMapping attributeMapping = inverseModelPart.asAttributeMapping();
+			if ( attributeMapping != null ) {
+				selectable = attributeMapping.isSelectable();
+			}
+			else {
+				selectable = true;
+			}
+		}
 	}
 
 	@Override
@@ -368,5 +388,10 @@ public class EmbeddedAttributeMapping
 	@Override
 	public boolean isEmbeddedAttributeMapping() {
 		return true;
+	}
+
+	@Override
+	public boolean isSelectable() {
+		return selectable;
 	}
 }

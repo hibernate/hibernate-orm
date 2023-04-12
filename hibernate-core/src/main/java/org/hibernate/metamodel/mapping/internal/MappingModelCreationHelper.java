@@ -1720,7 +1720,8 @@ public class MappingModelCreationHelper {
 					entityPersister,
 					declaringType,
 					declaringEntityPersister,
-					propertyAccess
+					propertyAccess,
+					creationProcess
 			) );
 
 			creationProcess.registerForeignKeyPostInitCallbacks(

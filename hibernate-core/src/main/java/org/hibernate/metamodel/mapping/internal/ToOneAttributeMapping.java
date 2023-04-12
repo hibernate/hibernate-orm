@@ -196,7 +196,8 @@ public class ToOneAttributeMapping
 			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
 			EntityPersister declaringEntityPersister,
-			PropertyAccess propertyAccess) {
+			PropertyAccess propertyAccess,
+			MappingModelCreationProcess creationProcess) {
 		this(
 				name,
 				navigableRole,
@@ -209,7 +210,8 @@ public class ToOneAttributeMapping
 				entityMappingType,
 				declaringType,
 				declaringEntityPersister,
-				propertyAccess
+				propertyAccess,
+				creationProcess
 		);
 	}
 
@@ -225,7 +227,8 @@ public class ToOneAttributeMapping
 			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
 			EntityPersister declaringEntityPersister,
-			PropertyAccess propertyAccess) {
+			PropertyAccess propertyAccess,
+			MappingModelCreationProcess creationProcess) {
 		super(
 				name,
 				stateArrayPosition,
@@ -488,6 +491,19 @@ public class ToOneAttributeMapping
 					);
 				}
 			}
+		}
+		if ( declaringType instanceof VirtualIdEmbeddable ) {
+			creationProcess.registerInitializationCallback(
+					"Register VirtualIdEmbeddable targetKeyPropertyNames",
+					() -> {
+						for ( AttributeMapping attributeMapping : declaringType.getAttributeMappings() ) {
+							final String attributeName = attributeMapping.getAttributeName();
+							targetKeyPropertyNames.add( attributeName.concat( "." ).concat( ForeignKeyDescriptor.PART_NAME ) );
+							targetKeyPropertyNames.add( attributeName.concat( "." ).concat( EntityIdentifierMapping.ROLE_LOCAL_NAME ) );
+						}
+						return true;
+					}
+			);
 		}
 	}
 

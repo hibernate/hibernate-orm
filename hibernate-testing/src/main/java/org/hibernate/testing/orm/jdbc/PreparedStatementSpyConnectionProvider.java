@@ -151,6 +151,14 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	}
 
 	/**
+	 * @return the PreparedStatements that were executed since the last clear operation,
+	 * along with each statement's corresponding SQL.
+	 */
+	public Map<PreparedStatement, String> getPreparedStatementsAndSql() {
+		return preparedStatementMap;
+	}
+
+	/**
 	 * Get the PreparedStatements SQL statements.
 	 *
 	 * @return list of recorded PreparedStatements SQL statements.

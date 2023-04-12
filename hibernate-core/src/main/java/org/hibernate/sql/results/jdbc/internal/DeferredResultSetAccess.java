@@ -249,6 +249,12 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 		}
 		catch (SQLException e) {
+			try {
+				release();
+			}
+			catch (RuntimeException e2) {
+				e.addSuppressed( e2 );
+			}
 			throw executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"JDBC exception executing SQL [" + finalSql + "]"

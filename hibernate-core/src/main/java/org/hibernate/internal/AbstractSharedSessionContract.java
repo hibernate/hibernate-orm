@@ -708,7 +708,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		try {
 			final HqlInterpretation interpretation = interpretHql( hql, resultType );
 			checkSelectionQuery( hql, interpretation );
-			return createSelectionQuery( hql, resultType, interpretation);
+			return createSelectionQuery( hql, resultType, interpretation );
 		}
 		catch ( RuntimeException e ) {
 			markForRollbackOnly();
@@ -778,7 +778,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			final QuerySqmImpl<T> query = new QuerySqmImpl<>( queryString, interpretation, expectedResultType, this );
 			applyQuerySettingsAndHints( query );
 			query.setComment( queryString );
-
 			return query;
 		}
 		catch (RuntimeException e) {
@@ -827,12 +826,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	private NamedResultSetMappingMemento getResultSetMappingMemento(String resultSetMappingName) {
+	protected NamedResultSetMappingMemento getResultSetMappingMemento(String resultSetMappingName) {
 		final NamedResultSetMappingMemento resultSetMappingMemento = getFactory().getQueryEngine()
 				.getNamedObjectRepository().getResultSetMappingMemento( resultSetMappingName );
 		if ( resultSetMappingMemento == null ) {
-			throw new HibernateException( "Could not resolve specified result-set mapping name : "
-					+ resultSetMappingName);
+			throw new HibernateException( "Could not resolve specified result-set mapping name: "
+					+ resultSetMappingName );
 		}
 		return resultSetMappingMemento;
 	}
@@ -860,11 +859,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		final NativeQueryImplementor<T> query = createNativeQuery( sqlString );
 		if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
 			query.addEntity( tableAlias, resultClass.getName(), LockMode.READ );
+			return query;
 		}
 		else {
 			throw new UnknownEntityTypeException( "unable to locate persister: " + resultClass.getName() );
 		}
-		return query;
 	}
 
 	@Override

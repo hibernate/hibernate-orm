@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.annotations.generics;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,13 +26,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Yoann Rodière
@@ -38,21 +39,21 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SessionFactory
 @DomainModel( annotatedClasses = {
-		GenericAssociationTest.AbstractParent.class,
-		GenericAssociationTest.Parent.class,
-		GenericAssociationTest.AbstractChild.class,
-		GenericAssociationTest.Child.class
+		GenericToOneAssociationTest.AbstractParent.class,
+		GenericToOneAssociationTest.Parent.class,
+		GenericToOneAssociationTest.AbstractChild.class,
+		GenericToOneAssociationTest.Child.class
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16378" )
-public class GenericAssociationTest {
+public class GenericToOneAssociationTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Parent parent = new Parent( 1L );
+			session.persist( parent );
 			final Child child = new Child( 2L );
 			child.setParent( parent );
-			parent.getChildren().add( child );
-			session.persist( parent );
+			parent.setChild( child );
 			session.persist( child );
 		} );
 	}
@@ -61,7 +62,7 @@ public class GenericAssociationTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.createQuery( "from Parent", Parent.class )
 				.getResultList()
-				.forEach( p -> p.getChildren().clear() ) );
+				.forEach( p -> p.setChild( null ) ) );
 		scope.inTransaction( session -> {
 			session.createMutationQuery( "delete from Child" ).executeUpdate();
 			session.createMutationQuery( "delete from Parent" ).executeUpdate();
@@ -95,7 +96,7 @@ public class GenericAssociationTest {
 	@Test
 	public void testChildQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> assertThat( session.createQuery(
-				"select c.id from Parent p join p.children c",
+				"select c.id from Parent p join p.child c",
 				Long.class
 		).getSingleResult() ).isEqualTo( 2L ) );
 	}
@@ -106,40 +107,32 @@ public class GenericAssociationTest {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
 			final CriteriaQuery<Long> query = cb.createQuery( Long.class );
 			final Root<Parent> root = query.from( Parent.class );
-			final Join<Parent, Child> join = root.join( "children" );
+			final Join<Parent, Child> join = root.join( "child" );
 			// generic attributes are always reported as Object java type
 			assertThat( join.getJavaType() ).isEqualTo( Object.class );
-			assertThat( join.getModel() ).isSameAs( root.getModel().getAttribute( "children" ) );
+			assertThat( join.getModel() ).isSameAs( root.getModel().getAttribute( "child" ) );
 			assertThat( ( (JpaPath<?>) join ).getResolvedModel().getBindableJavaType() ).isEqualTo( Child.class );
 			final Long result = session.createQuery( query.select( join.get( "id" ) ) ).getSingleResult();
 			assertThat( result ).isEqualTo( 2L );
 		} );
 	}
 
-	@Test
-	public void testElementQuery(SessionFactoryScope scope) {
-		scope.inTransaction( session -> assertThat( session.createQuery(
-				"select element(c).id from Parent p join p.children c",
-				Long.class
-		).getSingleResult() ).isEqualTo( 2L ) );
-	}
-
 	@MappedSuperclass
-	public abstract static class AbstractParent<E, T> {
-		@OneToMany
-		private Set<E> children;
+	public abstract static class AbstractParent<T> {
+		@OneToOne
+		private T child;
 
-		public AbstractParent() {
-			this.children = new HashSet<>();
+		public T getChild() {
+			return child;
 		}
 
-		public Set<E> getChildren() {
-			return children;
+		public void setChild(T child) {
+			this.child = child;
 		}
 	}
 
 	@Entity( name = "Parent" )
-	public static class Parent extends AbstractParent<Child, String> {
+	public static class Parent extends AbstractParent<Child> {
 		@Id
 		private Long id;
 
@@ -157,7 +150,7 @@ public class GenericAssociationTest {
 
 	@MappedSuperclass
 	public abstract static class AbstractChild<T> {
-		@ManyToOne
+		@OneToOne(mappedBy = "child")
 		private T parent;
 
 		public AbstractChild() {

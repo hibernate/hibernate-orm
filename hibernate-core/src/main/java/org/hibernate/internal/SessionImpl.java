@@ -160,6 +160,10 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.event.spi.LoadEventListener.IMMEDIATE_LOAD;
+import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_EAGER;
+import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_LAZY;
+import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_NULLABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
@@ -1032,48 +1036,41 @@ public class SessionImpl
 	@Override
 	public Object immediateLoad(String entityName, Object id) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
-			final EntityPersister persister = getFactory().getRuntimeMetamodels()
-					.getMappingMetamodel()
+			final EntityPersister persister = getFactory().getMappingMetamodel()
 					.getEntityDescriptor( entityName );
 			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
 		}
 		LoadEvent event = loadEvent;
 		loadEvent = null;
 		event = recycleEventInstance( event, id, entityName );
-		fireLoadNoChecks( event, LoadEventListener.IMMEDIATE_LOAD );
-		Object result = event.getResult();
+		fireLoadNoChecks( event, IMMEDIATE_LOAD );
+		final Object result = event.getResult();
 		finishWithEventInstance( event );
 		final LazyInitializer lazyInitializer = extractLazyInitializer( result );
-		if ( lazyInitializer != null ) {
-			return lazyInitializer.getImplementation();
-		}
-		return result;
+		return lazyInitializer != null ? lazyInitializer.getImplementation() : result;
 	}
 
 	@Override
-	public Object internalLoad(
-			String entityName,
-			Object id,
-			boolean eager,
-			boolean nullable) {
+	public Object internalLoad(String entityName, Object id, boolean eager, boolean nullable) {
 		final LoadType type = internalLoadType( eager, nullable );
 		final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
 		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
-		boolean clearedEffectiveGraph = false;
-		if ( semantic != null ) {
-			if ( ! graph.appliesTo( entityName ) ) {
-				log.debug( "Clearing effective entity graph for subsequent-select" );
-				clearedEffectiveGraph = true;
-				effectiveEntityGraph.clear();
-			}
+		boolean clearedEffectiveGraph;
+		if ( semantic == null || graph.appliesTo( entityName ) ) {
+			clearedEffectiveGraph = false;
+		}
+		else {
+			log.debug("Clearing effective entity graph for subsequent-select");
+			clearedEffectiveGraph = true;
+			effectiveEntityGraph.clear();
 		}
 		try {
 			LoadEvent event = loadEvent;
 			loadEvent = null;
 			event = recycleEventInstance( event, id, entityName );
 			fireLoadNoChecks( event, type );
-			Object result = event.getResult();
+			final Object result = event.getResult();
 			if ( !nullable ) {
 				UnresolvableObjectException.throwIfNull( result, id, entityName );
 			}
@@ -1087,14 +1084,12 @@ public class SessionImpl
 		}
 	}
 
-	private static LoadType internalLoadType(boolean eager, boolean nullable) {
+	protected static LoadType internalLoadType(boolean eager, boolean nullable) {
 		if ( nullable ) {
-			return LoadEventListener.INTERNAL_LOAD_NULLABLE;
+			return INTERNAL_LOAD_NULLABLE;
 		}
 		else {
-			return eager
-					? LoadEventListener.INTERNAL_LOAD_EAGER
-					: LoadEventListener.INTERNAL_LOAD_LAZY;
+			return eager ? INTERNAL_LOAD_EAGER : INTERNAL_LOAD_LAZY;
 		}
 	}
 
@@ -1615,12 +1610,11 @@ public class SessionImpl
 		}
 
 		try {
-			final LazyInitializer li = extractLazyInitializer( object );
-			if ( li == null && persistenceContext.getEntry( object ) == null ) {
+			final LazyInitializer lazyInitializer = extractLazyInitializer( object );
+			if ( lazyInitializer == null && persistenceContext.getEntry( object ) == null ) {
 				// check if it is an entity -> if not throw an exception (per JPA)
 				try {
-					getFactory().getRuntimeMetamodels()
-							.getMappingMetamodel()
+					getFactory().getMappingMetamodel()
 							.getEntityDescriptor( entityName );
 				}
 				catch (HibernateException e) {
@@ -1628,22 +1622,22 @@ public class SessionImpl
 				}
 			}
 
-			if ( li != null ) {
+			if ( lazyInitializer != null ) {
 				//do not use proxiesByKey, since not all
 				//proxies that point to this session's
 				//instances are in that collection!
-				if ( li.isUninitialized() ) {
+				if ( lazyInitializer.isUninitialized() ) {
 					//if it is an uninitialized proxy, pointing
 					//with this session, then when it is accessed,
 					//the underlying instance will be "contained"
-					return li.getSession() == this;
+					return lazyInitializer.getSession() == this;
 				}
 				else {
 					//if it is initialized, see if the underlying
 					//instance is contained, since we need to
 					//account for the fact that it might have been
 					//evicted
-					object = li.getImplementation();
+					object = lazyInitializer.getImplementation();
 				}
 			}
 			// A session is considered to contain an entity only if the entity has

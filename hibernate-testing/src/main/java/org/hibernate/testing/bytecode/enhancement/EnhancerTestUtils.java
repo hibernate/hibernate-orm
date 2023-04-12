@@ -18,9 +18,12 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import org.assertj.core.api.Assertions;
 
 /**
  * utility class to use in bytecode enhancement tests
@@ -54,10 +57,10 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	 */
 	public static void checkDirtyTracking(Object entityInstance, String... dirtyFields) {
 		SelfDirtinessTracker selfDirtinessTracker = (SelfDirtinessTracker) entityInstance;
-		assertEquals( dirtyFields.length > 0, selfDirtinessTracker.$$_hibernate_hasDirtyAttributes() );
-		String[] tracked = selfDirtinessTracker.$$_hibernate_getDirtyAttributes();
-		assertEquals( dirtyFields.length, tracked.length );
-		assertTrue( Arrays.asList( tracked ).containsAll( Arrays.asList( dirtyFields ) ) );
+		assertThat( selfDirtinessTracker.$$_hibernate_getDirtyAttributes() )
+				.containsExactlyInAnyOrder( dirtyFields );
+		assertThat( selfDirtinessTracker.$$_hibernate_hasDirtyAttributes() )
+				.isEqualTo( dirtyFields.length > 0 );
 	}
 
 	public static EntityEntry makeEntityEntry() {

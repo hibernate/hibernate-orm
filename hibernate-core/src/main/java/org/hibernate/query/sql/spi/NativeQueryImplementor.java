@@ -315,5 +315,6 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
+	void addResultTypeClass(Class<?> resultClass);
 }
 

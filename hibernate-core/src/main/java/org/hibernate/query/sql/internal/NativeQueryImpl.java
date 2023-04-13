@@ -861,6 +861,7 @@ public class NativeQueryImpl<R>
 				: null;
 	}
 
+	@Override
 	public void addResultTypeClass(Class<?> resultClass) {
 		assert resultSetMapping.getNumberOfResultBuilders() == 0;
 		registerBuilder( Builders.resultClassBuilder( resultClass, getSessionFactory() ) );

@@ -360,13 +360,13 @@ public class CascadingActions {
 				Type propertyType,
 				int propertyIndex) {
 			if ( propertyType.isEntityType() ) {
-				Object child = persister.getValue( parent, propertyIndex );
+				final Object child = persister.getValue( parent, propertyIndex );
 				if ( child != null
 						&& !isInManagedState( child, session )
-						&& !( isHibernateProxy( child ) ) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient
+						&& !isHibernateProxy( child ) ) { //a proxy cannot be transient and it breaks ForeignKeys.isTransient
 					final String childEntityName =
 							((EntityType) propertyType).getAssociatedEntityName( session.getFactory() );
-					if ( ForeignKeys.isTransient(childEntityName, child, null, session) ) {
+					if ( ForeignKeys.isTransient( childEntityName, child, null, session ) ) {
 						String parentEntityName = persister.getEntityName();
 						String propertyName = persister.getPropertyNames()[propertyIndex];
 						throw new TransientPropertyValueException(
@@ -387,12 +387,19 @@ public class CascadingActions {
 
 		private boolean isInManagedState(Object child, EventSource session) {
 			EntityEntry entry = session.getPersistenceContextInternal().getEntry( child );
-			return entry != null &&
-					(
-							entry.getStatus() == Status.MANAGED ||
-									entry.getStatus() == Status.READ_ONLY ||
-									entry.getStatus() == Status.SAVING
-					);
+			if ( entry == null ) {
+				return false;
+			}
+			else {
+				switch ( entry.getStatus() ) {
+					case MANAGED:
+					case READ_ONLY:
+					case SAVING:
+						return true;
+					default:
+						return false;
+				}
+			}
 		}
 
 		@Override

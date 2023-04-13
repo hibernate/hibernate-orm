@@ -255,7 +255,7 @@ public class StandardIdentifierGeneratorFactory
 		}
 	}
 
-	private Class<? extends Generator> generatorClassForName(String strategy) {
+	protected Class<? extends Generator> generatorClassForName(String strategy) {
 		try {
 			Class<? extends Generator> clazz =
 					serviceRegistry.getService( ClassLoaderService.class )
@@ -268,7 +268,7 @@ public class StandardIdentifierGeneratorFactory
 			return clazz;
 		}
 		catch ( ClassLoadingException e ) {
-			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy) );
+			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 		}
 	}
 }

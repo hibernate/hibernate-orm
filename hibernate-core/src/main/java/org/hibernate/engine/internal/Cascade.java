@@ -26,17 +26,16 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.type.ForeignKeyDirection.TO_PARENT;
 
 /**
  * Delegate responsible for, in conjunction with the various
@@ -319,7 +318,7 @@ public final class Cascade {
 
 					// orphaned if the association was nulled (child == null) or receives a new value while the
 					// entity is managed (without first nulling and manually flushing).
-					if ( child == null || ( loadedValue != null && child != loadedValue ) ) {
+					if ( child == null || loadedValue != null && child != loadedValue ) {
 						EntityEntry valueEntry = persistenceContext.getEntry( loadedValue );
 
 						if ( valueEntry == null && isHibernateProxy( loadedValue ) ) {
@@ -339,16 +338,17 @@ public final class Cascade {
 						}
 
 						if ( valueEntry != null ) {
-							final String entityName = valueEntry.getPersister().getEntityName();
+							final EntityPersister persister = valueEntry.getPersister();
+							final String entityName = persister.getEntityName();
 							if ( LOG.isTraceEnabled() ) {
-								final Object id = valueEntry.getPersister().getIdentifier( loadedValue, eventSource );
-								final String description = MessageHelper.infoString( entityName, id );
-								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
+								LOG.tracev(
+										"Deleting orphaned entity instance: {0}",
+										infoString( entityName, persister.getIdentifier( loadedValue, eventSource ) )
+								);
 							}
 
-							if ( type.isAssociationType() && ( (AssociationType) type ).getForeignKeyDirection().equals(
-									ForeignKeyDirection.TO_PARENT
-							) ) {
+							if ( type.isAssociationType()
+									&& ( (AssociationType) type ).getForeignKeyDirection().equals(TO_PARENT) ) {
 								// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
 								// occur.  Otherwise, replacing the association on a managed entity, without manually
 								// nulling and flushing, causes FK constraint violations.
@@ -397,8 +397,9 @@ public final class Cascade {
 		for ( int i = 0; i < types.length; i++ ) {
 			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
 			final String subPropertyName = propertyNames[i];
-			if ( componentPropertyStyle.doCascade( action ) || componentPropertyStyle.hasOrphanDelete() && action.deleteOrphans() ) {
-				if (children == null) {
+			if ( componentPropertyStyle.doCascade( action )
+					|| componentPropertyStyle.hasOrphanDelete() && action.deleteOrphans() ) {
+				if ( children == null ) {
 					// Get children on demand.
 					children = componentType.getPropertyValues( child, eventSource );
 				}
@@ -461,10 +462,9 @@ public final class Cascade {
 			final CascadeStyle style,
 			final T anything,
 			final CollectionType type) {
-		final CollectionPersister persister = eventSource.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( type.getRole());
+		final CollectionPersister persister =
+				eventSource.getFactory().getMappingMetamodel()
+						.getCollectionDescriptor( type.getRole() );
 		final Type elemType = persister.getElementType();
 
 		CascadePoint elementsCascadePoint = cascadePoint;

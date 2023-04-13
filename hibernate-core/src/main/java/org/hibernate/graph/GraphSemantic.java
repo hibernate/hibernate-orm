@@ -8,8 +8,11 @@ package org.hibernate.graph;
 
 import java.util.Locale;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.jpa.LegacySpecHints;
 
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 
@@ -29,7 +32,7 @@ public enum GraphSemantic {
 	 * are not fetched.
 	 * </ul>
 	 */
-	FETCH( HINT_SPEC_FETCH_GRAPH, LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH ),
+	FETCH,
 
 	/**
 	 * Indicates that an {@link jakarta.persistence.EntityGraph} should be interpreted as a JPA "load graph".
@@ -40,15 +43,7 @@ public enum GraphSemantic {
 	 * depending on the mapping of the attribute, instead of forcing {@code FetchType.LAZY}.
 	 * </ul>
 	 */
-	LOAD( HINT_SPEC_LOAD_GRAPH, LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH );
-
-	private final String jakartaHintName;
-	private final String javaeeHintName;
-
-	GraphSemantic(String jakartaHintName, String javaeeHintName) {
-		this.jakartaHintName = jakartaHintName;
-		this.javaeeHintName = javaeeHintName;
-	}
+	LOAD;
 
 	/**
 	 * The corresponding Jakarta Persistence hint name.
@@ -57,7 +52,14 @@ public enum GraphSemantic {
 	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_LOAD_GRAPH
 	 */
 	public String getJakartaHintName() {
-		return jakartaHintName;
+		switch ( this ) {
+			case FETCH:
+				return HINT_SPEC_FETCH_GRAPH;
+			case LOAD:
+				return HINT_SPEC_LOAD_GRAPH;
+			default:
+				throw new AssertionFailure( "unknown GraphSemantic" );
+		}
 	}
 
 	/**
@@ -70,32 +72,38 @@ public enum GraphSemantic {
 	 */
 	@Deprecated(since = "6.0")
 	public String getJpaHintName() {
-		return javaeeHintName;
+		switch ( this ) {
+			case FETCH:
+				return HINT_JAVAEE_FETCH_GRAPH;
+			case LOAD:
+				return HINT_JAVAEE_LOAD_GRAPH;
+			default:
+				throw new AssertionFailure( "unknown GraphSemantic" );
+		}
 	}
 
 	public static GraphSemantic fromHintName(String hintName) {
-		assert hintName != null;
-
-		if ( FETCH.getJakartaHintName().equals( hintName ) || FETCH.getJpaHintName().equals( hintName ) ) {
-			return FETCH;
-		}
-
-		if ( LOAD.getJakartaHintName().equalsIgnoreCase( hintName ) || LOAD.getJpaHintName().equalsIgnoreCase( hintName ) ) {
-			return LOAD;
-		}
-
-		throw new IllegalArgumentException(
-				String.format(
-						Locale.ROOT,
-						"Unknown EntityGraph hint name - `%s`.  " +
-								"Expecting `%s` or `%s` (or `%s` and `%s`).",
+		switch ( hintName ) {
+			case HINT_SPEC_FETCH_GRAPH:
+			case HINT_JAVAEE_FETCH_GRAPH:
+				return FETCH;
+			case HINT_SPEC_LOAD_GRAPH:
+			case HINT_JAVAEE_LOAD_GRAPH:
+				return LOAD;
+			default:
+				throw new IllegalArgumentException(
+						String.format(
+								Locale.ROOT,
+								"Unknown EntityGraph hint name - `%s`.  " +
+										"Expecting `%s` or `%s` (or `%s` and `%s`).",
 								hintName,
-						FETCH.jakartaHintName,
-						LOAD.jakartaHintName,
-						FETCH.javaeeHintName,
-						LOAD.javaeeHintName
-				)
-		);
+								HINT_SPEC_FETCH_GRAPH,
+								HINT_SPEC_LOAD_GRAPH,
+								HINT_JAVAEE_FETCH_GRAPH,
+								HINT_JAVAEE_LOAD_GRAPH
+						)
+				);
+		}
 	}
 
 	/**

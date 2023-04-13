@@ -195,7 +195,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private EntityPersister getEntityPersister(String entityName) {
-		return getFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
+		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override

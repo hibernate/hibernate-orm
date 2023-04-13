@@ -571,7 +571,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	private void upgradeLockMode(RowProcessingState rowProcessingState) {
-		if ( lockMode != LockMode.NONE ) {
+		if ( lockMode != LockMode.NONE && rowProcessingState.upgradeLocks() ) {
 			final EntityEntry entry =
 					rowProcessingState.getSession().getPersistenceContextInternal()
 							.getEntry( entityInstance );

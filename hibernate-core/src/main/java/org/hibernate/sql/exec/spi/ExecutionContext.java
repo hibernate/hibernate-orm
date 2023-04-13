@@ -90,4 +90,12 @@ public interface ExecutionContext {
 		return false;
 	}
 
+	/**
+	 * Does this query return objects that might be already cached
+	 * by the session, whose lock mode may need upgrading
+	 */
+	default boolean upgradeLocks(){
+		return false;
+	}
+
 }

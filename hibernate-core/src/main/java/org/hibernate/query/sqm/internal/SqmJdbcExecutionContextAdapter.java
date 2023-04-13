@@ -75,4 +75,8 @@ public class SqmJdbcExecutionContextAdapter extends BaseExecutionContext {
 		return true;
 	}
 
+	@Override
+	public boolean upgradeLocks() {
+		return true;
+	}
 }

@@ -3,6 +3,28 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.1.Final (April 14, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32147
+
+** Bug
+    * [HHH-16459] - Bytecode-enhanced inline dirty tracking ignores generic associations from mapped superclasses
+    * [HHH-16429] - WF SessionFactoryTestCase test fails 
+    * [HHH-16413] - Subquery with multiple left joins broken in 6.2.0
+    * [HHH-16394] - Statement Batch + Version + Dirty Collection leads to OptimisticLockException: Batch update returned unexpected row count from update
+    * [HHH-16387] - Entity in key not returned when querying
+    * [HHH-16352] - DynamicUpdate / DynamicInsert with batching leads to parameter binding exception
+    * [HHH-16349] - ORA-00979 not a group by expression when using a polymorphic entity in HQL group by
+    * [HHH-16340] - Duplicate column exception when mapping discriminator column inside an EmbeddedId
+
+** Improvement
+    * [HHH-16414] - Improve table group resolution for subqueries using the same alias as parent
+
+** Task
+    * [HHH-16389] - Introduce annotations for nullness marking/checking
+
+
 Changes in 6.2.0.Final (March 31, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

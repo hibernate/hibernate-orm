@@ -3166,6 +3166,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private TableGroup consumeEntityJoin(SqmEntityJoin<?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
+		final List<Predicate> predicates = new ArrayList<>();
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
@@ -3174,16 +3175,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				null,
-				() -> (predicate) -> additionalRestrictions = combinePredicates( additionalRestrictions, predicate ),
+				() -> (predicate) -> {
+					switch ( correspondingSqlJoinType ) {
+						case INNER:
+						case LEFT:
+						case FULL:
+							predicates.add( predicate );
+							break;
+						default:
+							additionalRestrictions = combinePredicates( additionalRestrictions, predicate );
+					}
+				},
 				this
-		);
+				);
 		getFromClauseIndex().register( sqmJoin, tableGroup );
 
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
 				correspondingSqlJoinType,
 				tableGroup,
-				null
+				predicates.size() == 1 ? predicates.get(0) : null
 		);
 
 		// add any additional join restrictions

@@ -8,15 +8,17 @@ package org.hibernate.orm.test.join;
 
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
@@ -45,8 +47,8 @@ public class JoinWithSingleTableInheritanceTest {
 	public void cleanup( SessionFactoryScope scope ) {
 		scope.inTransaction(
 				s -> {
-					s.createMutationQuery( "delete from AbstractSuperClass" ).executeUpdate();
 					s.createMutationQuery( "delete from RootOne" ).executeUpdate();
+					s.createMutationQuery( "delete from AbstractSuperClass" ).executeUpdate();
 				}
 		);
 	}
@@ -54,7 +56,7 @@ public class JoinWithSingleTableInheritanceTest {
 	@Test
 	public void testLeftJoinOnSingleTableInheritance(SessionFactoryScope scope) {
 		scope.inTransaction(
-				s -> s.persist( new RootOne() )
+				s -> s.persist( new RootOne(1) )
 		);
 
 		scope.inTransaction(
@@ -71,10 +73,10 @@ public class JoinWithSingleTableInheritanceTest {
 				s -> {
 					s.persist(new ChildEntityA( 11 ));
 					s.persist(new ChildEntityB( 21 ));
-					RootOne r1 = new RootOne();
+					RootOne r1 = new RootOne(1);
 					r1.setSomeOtherId( 11 );
 					s.persist( r1 );
-					RootOne r2 = new RootOne();
+					RootOne r2 = new RootOne(2);
 					r2.setSomeOtherId( 21 );
 					s.persist( r2 );
 				}
@@ -82,27 +84,131 @@ public class JoinWithSingleTableInheritanceTest {
 
 		scope.inTransaction(
 				s -> {
-					List<Object[]> l = s.createSelectionQuery( "select r.id, r.someOtherId, ce.id from RootOne r left join ChildEntityA ce on ce.id = r.someOtherId order by r.id", Object[].class ).list();
+					List<Object[]> l = s.createSelectionQuery( "select r.id, r.someOtherId, ce.id, ce.disc_col from RootOne r left join ChildEntityA ce on ce.id = r.someOtherId order by r.id", Object[].class ).list();
 					assertEquals( 2, l.size() );
 					Object[] r1 = l.get( 0 );
-					assertEquals( (int) r1[0], 1 );
-					assertEquals( (int) r1[1], 11 );
-					assertEquals( (int) r1[2], 11 );
+					assertEquals( 1, (int) r1[0] );
+					assertEquals( 11, (int) r1[1] );
+					assertEquals( 11, (int) r1[2] );
+					assertEquals( 1, (int) r1[3] );
 					// r2 has to be there, but shouldn't have any data w/ respect to ChildEntityB
 					Object[] r2 = l.get( 1 );
-					assertEquals( (int) r2[0], 2 );
-					assertEquals( (int) r2[1], 21 );
+					assertEquals( 2, (int) r2[0] );
+					assertEquals( 21, (int) r2[1] );
 					assertNull( r2[2] );
+					assertNull( r2[3] );
+				}
+		);
+	}
 
+	@Test
+	public void testCrossJoinOnSingleTableInheritance(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> {
+					s.persist(new ChildEntityA( 11 ));
+					s.persist(new ChildEntityA( 12 ));
+					s.persist(new ChildEntityB( 21 ));
+					RootOne r1 = new RootOne(1);
+					r1.setSomeOtherId( 11 );
+					s.persist( r1 );
+					RootOne r2 = new RootOne(2);
+					r2.setSomeOtherId( 12 );
+					s.persist( r2 );
+					RootOne r3 = new RootOne(3);
+					r3.setSomeOtherId( 21 );
+					s.persist( r3 );
+				}
+		);
+
+		scope.inTransaction(
+				s -> {
+					List<Object[]> l = s.createSelectionQuery( "select r.id, r.someOtherId from RootOne r join ChildEntityA", Object[].class ).list();
+					assertEquals( 6, l.size() );
+				}
+		);
+	}
+
+	@Test
+	public void testRightJoinOnSingleTableInheritance(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> {
+					s.persist(new ChildEntityA( 11 ));
+					s.persist(new ChildEntityA( 12 ));
+					s.persist(new ChildEntityB( 21 ));
+					RootOne r1 = new RootOne(1);
+					r1.setSomeOtherId( 11 );
+					s.persist( r1 );
+					RootOne r2 = new RootOne(2);
+					r2.setSomeOtherId( 11 );
+					s.persist( r2 );
+					RootOne r3 = new RootOne(3);
+					r3.setSomeOtherId( 21 );
+					s.persist( r3 );
+				}
+		);
+
+		scope.inTransaction(
+				s -> {
+					List<Object[]> l = s.createSelectionQuery( "select r.id, r.someOtherId, ce.id, ce.disc_col from RootOne r right join ChildEntityA ce on ce.id = r.someOtherId order by ce.id, r.id", Object[].class ).list();
+					assertEquals( 3, l.size() );
+					Object[] r1 = l.get( 0 );
+					assertEquals( 1, (int) r1[0] );
+					assertEquals( 11, (int) r1[1] );
+					assertEquals( 11, (int) r1[2] );
+					assertEquals( 1, (int) r1[3] );
+					Object[] r2 = l.get( 1 );
+					assertEquals( 2, (int) r2[0] );
+					assertEquals( 11, (int) r2[1] );
+					assertEquals( 11, (int) r2[2] );
+					assertEquals( 1, (int) r2[3] );
+					Object[] r3 = l.get( 2 );
+					assertNull( r3[0] );
+					assertNull( r3[1] );
+					assertEquals( 12, (int) r3[2] );
+					assertEquals( 1, (int) r3[3] );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
+	public void testFullJoinOnSingleTableInheritance(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> {
+					s.persist(new ChildEntityA( 11 ));
+					s.persist(new ChildEntityA( 12 ));
+					s.persist(new ChildEntityB( 21 ));
+					s.persist(new ChildEntityB( 22 ));
+					RootOne r1 = new RootOne(1);
+					r1.setSomeOtherId( 11 );
+					s.persist( r1 );
+					RootOne r2 = new RootOne(2);
+					r2.setSomeOtherId( 11 );
+					s.persist( r2 );
+					RootOne r3 = new RootOne(3);
+					r3.setSomeOtherId( 21 );
+					s.persist( r3 );
+					RootOne r4 = new RootOne(4);
+					s.persist( r4 );
+				}
+		);
+
+		scope.inTransaction(
+				s -> {
+					List<Object[]> l = s.createSelectionQuery( "select r.id, r.someOtherId from RootOne r full join ChildEntityA ce order by ce.id, r.id", Object[].class ).list();
+					assertEquals( 10, l.size() );
 				}
 		);
 	}
 
 	@Entity(name = "AbstractSuperClass")
-	@DiscriminatorColumn(name = "DISC_COL", discriminatorType = DiscriminatorType.INTEGER)
+	@DiscriminatorColumn(name = "disc_col", discriminatorType = DiscriminatorType.INTEGER)
 	public static abstract class AbstractSuperClass {
 		@Id
 		private Integer id;
+
+		@Column(insertable = false, updatable = false)
+		private Integer disc_col;
 
 		public AbstractSuperClass(Integer id) {
 			this.id = id;
@@ -128,9 +234,15 @@ public class JoinWithSingleTableInheritanceTest {
 	@Entity(name = "RootOne")
 	public static class RootOne {
 		@Id
-		@GeneratedValue
 		Integer id;
 		Integer someOtherId;
+
+		public RootOne() {
+		}
+
+		public RootOne(Integer id) {
+			this.id = id;
+		}
 
 		public Integer getSomeOtherId() {
 			return someOtherId;

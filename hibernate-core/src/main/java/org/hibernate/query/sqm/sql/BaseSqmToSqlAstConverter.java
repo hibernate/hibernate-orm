@@ -49,6 +49,7 @@ import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -3166,6 +3167,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private TableGroup consumeEntityJoin(SqmEntityJoin<?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
+		final MutableObject<Predicate> predicate = new MutableObject<>();
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
@@ -3174,16 +3176,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				null,
-				() -> (predicate) -> additionalRestrictions = combinePredicates( additionalRestrictions, predicate ),
+				() -> p -> predicate.set( combinePredicates( predicate.get(), p ) ),
 				this
-		);
+				);
 		getFromClauseIndex().register( sqmJoin, tableGroup );
 
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
 				correspondingSqlJoinType,
 				tableGroup,
-				null
+				predicate.get()
 		);
 
 		// add any additional join restrictions

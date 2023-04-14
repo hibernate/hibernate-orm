@@ -37,8 +37,6 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
@@ -56,7 +54,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	private final NavigablePath navigablePath;
 	private final EmbeddableValuedModelPart embedded;
-	private final EmbeddableMappingType representationEmbeddable;
+//	private final EmbeddableMappingType representationEmbeddable;
 	private final EmbeddableRepresentationStrategy representationStrategy;
 	private final FetchParentAccess fetchParentAccess;
 	private final boolean createEmptyCompositesEnabled;
@@ -68,10 +66,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	// per-row state
 	private final Object[] rowState;
-	private Boolean stateAllNull;
-	private Boolean stateInjected;
+	private State state = State.INITIAL;
 	protected Object compositeInstance;
-	private boolean isParentInitialized;
 	private RowProcessingState wrappedProcessingState;
 
 	public AbstractEmbeddableInitializer(
@@ -83,14 +79,14 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.fetchParentAccess = fetchParentAccess;
 
 		final EmbeddableMappingType embeddableTypeDescriptor = embedded.getEmbeddableTypeDescriptor();
-		if ( embedded instanceof CompositeIdentifierMapping ) {
-			representationEmbeddable = ( (CompositeIdentifierMapping) embedded ).getMappedIdEmbeddableTypeDescriptor();
-		}
-		else {
-			representationEmbeddable = embeddableTypeDescriptor;
-		}
+//		if ( embedded instanceof CompositeIdentifierMapping ) {
+//			representationEmbeddable = ( (CompositeIdentifierMapping) embedded ).getMappedIdEmbeddableTypeDescriptor();
+//		}
+//		else {
+//			representationEmbeddable = embeddableTypeDescriptor;
+//		}
 
-		this.representationStrategy = representationEmbeddable.getRepresentationStrategy();
+		this.representationStrategy = embeddableTypeDescriptor.getRepresentationStrategy();
 		this.usesStandardInstantiation = representationStrategy.getInstantiator() instanceof StandardEmbeddableInstantiator;
 
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
@@ -174,14 +170,62 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	public void initializeInstance(RowProcessingState processingState) {
 		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Initializing composite instance [%s]", navigablePath );
 
-		if ( compositeInstance == NULL_MARKER ) {
-			// we already know it is null
-			return;
-		}
+		switch ( state ) {
+			case NULL:
+				return;
+			case INITIAL:
+				if ( isParentInstanceNull() ) {
+					state = State.NULL;
+					return;
+				}
 
-		if ( isParentInstanceNull() ) {
-			compositeInstance = NULL_MARKER;
-			return;
+				// We need to possibly wrap the processing state if the embeddable is within an aggregate
+				if ( wrappedProcessingState == null ) {
+					wrappedProcessingState = wrapProcessingState( processingState );
+				}
+				extractRowState( wrappedProcessingState );
+				prepareCompositeInstance( wrappedProcessingState );
+				if ( state == State.NULL ) {
+					return;
+				}
+				notifyResolutionListeners( compositeInstance );
+			case EXTRACTED:
+				if ( embedded.getParentInjectionAttributePropertyAccess() != null || embedded instanceof VirtualModelPart ) {
+					handleParentInjection( wrappedProcessingState );
+
+					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( compositeInstance );
+					// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
+					// and the compositeInstance == entity, so we have to inject the row state into the entity when it finishes resolution
+					if ( lazyInitializer != null ) {
+						final Initializer parentInitializer = wrappedProcessingState.resolveInitializer( navigablePath.getParent() );
+						if ( parentInitializer != this ) {
+							( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
+								embedded.getEmbeddableTypeDescriptor().setValues( entity, rowState );
+								state = State.INJECTED;
+							} );
+						}
+						else {
+							// At this point, createEmptyCompositesEnabled is always true, so we generate
+							// the composite instance.
+							//
+							// NOTE: `valuesAccess` is set to null to indicate that all values are null,
+							//		as opposed to returning the all-null value array.  the instantiator
+							//		interprets that as the values are not known or were all null.
+							final Object target = representationStrategy
+									.getInstantiator()
+									.instantiate( this, sessionFactory);
+							state = State.INJECTED;
+							lazyInitializer.setImplementation( target );
+						}
+					}
+					else {
+						embedded.getEmbeddableTypeDescriptor().setValues( compositeInstance, rowState );
+						state = State.INJECTED;
+					}
+				}
+				else {
+					state = State.INJECTED;
+				}
 		}
 
 		// IMPORTANT: This method might be called multiple times for the same role for a single row.
@@ -203,68 +247,68 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		//		critical in the case we have custom constructor injection.  Luckily, custom instantiation
 		//		is only allowed for non-key usage atm, so we leverage that distinction here
 
-		if ( !usesStandardInstantiation ) {
-			// we have a custom instantiator
-			if ( compositeInstance != null ) {
-				return;
-			}
-		}
-		if ( isParentInitialized ) {
-			return;
-		}
-
-		// We need to possibly wrap the processing state if the embeddable is within an aggregate
-		if ( wrappedProcessingState == null ) {
-			wrappedProcessingState = wrapProcessingState( processingState );
-		}
-		initializeInstance( );
+//		if ( !usesStandardInstantiation ) {
+//			// we have a custom instantiator
+//			if ( compositeInstance != null ) {
+//				return;
+//			}
+//		}
+//		if ( isParentInitialized ) {
+//			return;
+//		}
+//
+//		// We need to possibly wrap the processing state if the embeddable is within an aggregate
+//		if ( wrappedProcessingState == null ) {
+//			wrappedProcessingState = wrapProcessingState( processingState );
+//		}
+//		initializeInstance( );
 	}
 
-	private void initializeInstance() {
-		stateInjected = false;
-		extractRowState( wrappedProcessingState );
-		prepareCompositeInstance( wrappedProcessingState );
-		if ( isParentInitialized ) {
-			return;
-		}
-		if ( !stateInjected ) {
-			handleParentInjection( wrappedProcessingState );
-		}
-
-		if ( compositeInstance != NULL_MARKER ) {
-			notifyResolutionListeners( compositeInstance );
-
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( compositeInstance );
-			// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
-			// and the compositeInstance == entity, so we have to inject the row state into the entity when it finishes resolution
-			if ( lazyInitializer != null ) {
-				final Initializer parentInitializer = wrappedProcessingState.resolveInitializer( navigablePath.getParent() );
-				if ( parentInitializer != this ) {
-					( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
-						representationEmbeddable.setValues( entity, rowState );
-						stateInjected = true;
-					} );
-				}
-				else {
-					// At this point, createEmptyCompositesEnabled is always true, so we generate
-					// the composite instance.
-					//
-					// NOTE: `valuesAccess` is set to null to indicate that all values are null,
-					//		as opposed to returning the all-null value array.  the instantiator
-					//		interprets that as the values are not known or were all null.
-					final Object target = representationStrategy
-							.getInstantiator()
-							.instantiate( this, sessionFactory);
-					stateInjected = true;
-					lazyInitializer.setImplementation( target );
-				}
-			}
-			else if ( stateAllNull == FALSE && stateInjected != TRUE ) {
-				representationEmbeddable.setValues( compositeInstance, rowState );
-				stateInjected = true;
-			}
-		}
-	}
+//	private void initializeInstance() {
+//		stateInjected = false;
+//		extractRowState( wrappedProcessingState );
+//		prepareCompositeInstance( wrappedProcessingState );
+//		if ( isParentInitialized ) {
+//			return;
+//		}
+//		if ( !stateInjected ) {
+//			handleParentInjection( wrappedProcessingState );
+//		}
+//
+//		if ( compositeInstance != NULL_MARKER ) {
+//			notifyResolutionListeners( compositeInstance );
+//
+//			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( compositeInstance );
+//			// If the composite instance has a lazy initializer attached, this means that the embeddable is actually virtual
+//			// and the compositeInstance == entity, so we have to inject the row state into the entity when it finishes resolution
+//			if ( lazyInitializer != null ) {
+//				final Initializer parentInitializer = wrappedProcessingState.resolveInitializer( navigablePath.getParent() );
+//				if ( parentInitializer != this ) {
+//					( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
+//						embedded.getEmbeddableTypeDescriptor().setValues( entity, rowState );
+//						stateInjected = true;
+//					} );
+//				}
+//				else {
+//					// At this point, createEmptyCompositesEnabled is always true, so we generate
+//					// the composite instance.
+//					//
+//					// NOTE: `valuesAccess` is set to null to indicate that all values are null,
+//					//		as opposed to returning the all-null value array.  the instantiator
+//					//		interprets that as the values are not known or were all null.
+//					final Object target = representationStrategy
+//							.getInstantiator()
+//							.instantiate( this, sessionFactory);
+//					stateInjected = true;
+//					lazyInitializer.setImplementation( target );
+//				}
+//			}
+//			else if ( stateAllNull == FALSE && stateInjected != TRUE ) {
+//				embedded.getEmbeddableTypeDescriptor().setValues( compositeInstance, rowState );
+//				stateInjected = true;
+//			}
+//		}
+//	}
 
 	private void prepareCompositeInstance(RowProcessingState processingState) {
 		if ( compositeInstance != null ) {
@@ -282,7 +326,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			compositeInstance = fetchParentAccess.getInitializedInstance();
 			EntityInitializer entityInitializer = fetchParentAccess.asEntityInitializer();
 			if ( entityInitializer != null && entityInitializer.isEntityInitialized() ) {
-				this.isParentInitialized = true;
+//				this.isParentInitialized = true;
 				return;
 			}
 		}
@@ -326,7 +370,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	}
 
 	private void extractRowState(RowProcessingState processingState) {
-		stateAllNull = true;
+		boolean stateAllNull = true;
 		final boolean isKey = ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
 				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
 				|| EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embedded.getFetchableName() );
@@ -353,7 +397,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			}
 		}
 
-		applyMapsId( processingState );
+		state = stateAllNull ? State.NULL : State.EXTRACTED;
+//		applyMapsId( processingState );
 	}
 
 	private void applyMapsId(RowProcessingState processingState) {
@@ -392,12 +437,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			NavigablePath navigablePath,
 			EmbeddableRepresentationStrategy representationStrategy,
 			SessionFactoryImplementor sessionFactory) {
-		if ( !createEmptyCompositesEnabled && stateAllNull == TRUE ) {
+		if ( !createEmptyCompositesEnabled && state == State.NULL ) {
 			return NULL_MARKER;
 		}
 
 		final Object instance = representationStrategy.getInstantiator().instantiate( this, sessionFactory );
-		stateInjected = true;
 
 		EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
 
@@ -406,12 +450,12 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public Object[] getValues() {
-		return stateAllNull ? null : rowState;
+		return state == State.NULL ? null : rowState;
 	}
 
 	@Override
 	public <T> T getValue(int i, Class<T> clazz) {
-		return stateAllNull ? null : clazz.cast( rowState[i] );
+		return state == State.NULL ? null : clazz.cast( rowState[i] );
 	}
 
 	@Override
@@ -504,9 +548,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		compositeInstance = null;
-		stateAllNull = null;
-		stateInjected = null;
-		isParentInitialized = false;
+		state = State.INITIAL;
 		wrappedProcessingState = null;
 
 		clearResolutionListeners();
@@ -515,5 +557,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "(" + navigablePath + ") : `" + getInitializedPart().getJavaType().getJavaTypeClass() + "`";
+	}
+	enum State {
+		INITIAL,
+		EXTRACTED,
+		NULL,
+		INJECTED
 	}
 }

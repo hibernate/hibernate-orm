@@ -19,6 +19,7 @@ import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -51,7 +52,7 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final List<DomainResultAssembler<?>> assemblers;
-	private final boolean needsVirtualIdState;
+	private final boolean hasIdClass;
 
 
 	// per-row state
@@ -70,8 +71,8 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 
 		final EmbeddableMappingType virtualIdEmbeddable = embedded.getEmbeddableTypeDescriptor();
 		this.representationEmbeddable = embedded.getMappedIdEmbeddableTypeDescriptor();
-
 		this.representationStrategy = representationEmbeddable.getRepresentationStrategy();
+		this.hasIdClass = embedded.hasContainingClass() && virtualIdEmbeddable != representationEmbeddable;
 
 		final int size = virtualIdEmbeddable.getNumberOfFetchables();
 		this.virtualIdState = new Object[ size ];
@@ -79,8 +80,6 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 		this.assemblers = arrayList( size );
 
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
-		this.needsVirtualIdState = embedded.hasContainingClass() && virtualIdEmbeddable != representationEmbeddable
-				&& fetchParentAccess != null;
 		initializeAssemblers( resultDescriptor, creationState, virtualIdEmbeddable );
 	}
 
@@ -156,6 +155,14 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 			case NULL:
 				return;
 			case INITIAL:
+				// If we don't have an id class and this is a find by id lookup, we just use that instance
+				if ( !hasIdClass && processingState.getEntityId() != null
+						&& navigablePath.getParent().getParent() == null
+						&& navigablePath instanceof EntityIdentifierNavigablePath ) {
+					compositeInstance = processingState.getEntityId();
+					state = State.INJECTED;
+					return;
+				}
 				// We need to possibly wrap the processing state if the embeddable is within an aggregate
 				processingState = wrapProcessingState( processingState );
 				extractRowState( processingState );
@@ -165,11 +172,9 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 				else {
 					compositeInstance = representationStrategy.getInstantiator().instantiate( this, sessionFactory );
 				}
-				state = State.EXTRACTED;
 			case EXTRACTED:
-
 				final Object parentInstance;
-				if ( needsVirtualIdState && ( parentInstance = fetchParentAccess.getInitializedInstance() ) != null ) {
+				if ( fetchParentAccess != null && ( parentInstance = fetchParentAccess.getInitializedInstance() ) != null ) {
 					notifyResolutionListeners( compositeInstance );
 
 					final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( parentInstance );
@@ -209,7 +214,6 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 
 	private void extractRowState(RowProcessingState processingState) {
 		state = State.NULL;
-		final EmbeddableMappingType virtualIdEmbeddable = embedded.getEmbeddableTypeDescriptor();
 		for ( int i = 0; i < assemblers.size(); i++ ) {
 			final DomainResultAssembler<?> assembler = assemblers.get( i );
 			final Object contributorValue = assembler.assemble(
@@ -228,8 +232,8 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 			else {
 				virtualIdState[i] = contributorValue;
 				idClassState[i] = contributorValue;
-				if ( needsVirtualIdState ) {
-					final AttributeMapping virtualIdAttribute = virtualIdEmbeddable.getAttributeMapping( i );
+				if ( hasIdClass ) {
+					final AttributeMapping virtualIdAttribute = embedded.getEmbeddableTypeDescriptor().getAttributeMapping( i );
 					final AttributeMapping mappedIdAttribute = representationEmbeddable.getAttributeMapping( i );
 					if ( virtualIdAttribute instanceof ToOneAttributeMapping
 							&& !( mappedIdAttribute instanceof ToOneAttributeMapping ) ) {

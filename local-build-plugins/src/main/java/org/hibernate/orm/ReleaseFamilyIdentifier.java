@@ -6,12 +6,14 @@
  */
 package org.hibernate.orm;
 
+import java.io.Serializable;
+
 /**
  * Major/family version component pair
  *
  * @author Steve Ebersole
  */
-public class ReleaseFamilyIdentifier implements Comparable<ReleaseFamilyIdentifier> {
+public class ReleaseFamilyIdentifier implements Comparable<ReleaseFamilyIdentifier>, Serializable {
 	private final int majorVersion;
 	private final int familyVersion;
 

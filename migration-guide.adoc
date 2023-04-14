@@ -1105,4 +1105,14 @@ and `AvailableSettings.MULTI_TENANT`/`MultiTenancyStrategy` will lead to compila
 consider relying on the new `@TenantId` annotation
 and link:{userGuideBase}#multitenacy-hibernate-session-configuration[setting the session's tenant ID] instead.
 
+[[where-annotation]]
+== @Where annotation
+
+The link:{userGuideBase}#pc-where[@Where annotation] was always meant as a way of supporting "soft deletes",
+allowing the records of an entity which do not respect a simple `WHERE` clause to be completely ignored by Hibernate.
+
+In Hibernate 5.x, this was true only when *fetching* entities or collections of entities having this annotation.
+As of Hibernate 6.0, the clause specified by a `@Where` applied to an entity type is used in *all* interactions Hibernate has the with that entity type. This includes, for instance, when deleting or updating records using mutation queries (e.g. `DELETE FROM MyEntity where id = :id`), for which in 5 the annotation's clause was not applied.
+This is consistent with the purpose of the annotation, which is to always disregard records not respecting the specified condition.
+
 // todo (6.0) - surely there are more than this...

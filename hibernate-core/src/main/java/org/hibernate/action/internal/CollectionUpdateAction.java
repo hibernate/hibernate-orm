@@ -16,8 +16,9 @@ import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * The action for updating a collection
@@ -71,7 +72,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 		else if ( collection.needsRecreate( persister ) ) {
 			if ( affectedByFilters ) {
 				throw new HibernateException( "cannot recreate collection while filter is enabled: "
-						+ MessageHelper.collectionInfoString( persister, collection, id, session )
+						+ collectionInfoString( persister, collection, id, session )
 				);
 			}
 			if ( !emptySnapshot ) {

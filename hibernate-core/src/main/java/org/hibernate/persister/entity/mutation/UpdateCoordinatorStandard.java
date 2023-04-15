@@ -23,6 +23,8 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
+import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
+import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -81,6 +83,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private final BatchKey batchKey;
 
 	private final MutationOperationGroup versionUpdateGroup;
+	private final BatchKey versionUpdateBatchkey;
 
 	public UpdateCoordinatorStandard(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
@@ -92,10 +95,15 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		if ( entityPersister.hasUpdateGeneratedProperties() ) {
 			// disable batching in case of update generated properties
 			this.batchKey = null;
+			this.versionUpdateBatchkey = null;
 		}
 		else {
 			this.batchKey = new BasicBatchKey(
 					entityPersister.getEntityName() + "#UPDATE",
+					null
+			);
+			this.versionUpdateBatchkey = new BasicBatchKey(
+					entityPersister.getEntityName() + "#UPDATE_VERSION",
 					null
 			);
 		}
@@ -447,7 +455,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		final EntityTableMapping mutatingTableDetails = (EntityTableMapping) versionUpdateGroup.getSingleOperation().getTableDetails();
 
-		final MutationExecutor mutationExecutor = executor( session, versionUpdateGroup, false );
+		final MutationExecutor mutationExecutor = updateVersionExecutor( session, versionUpdateGroup, false );
 
 		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
 
@@ -971,6 +979,27 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				.getServiceRegistry()
 				.getService( MutationExecutorService.class )
 				.createExecutor( resolveBatchKeyAccess( dynamicUpdate, session ), group, session );
+	}
+
+	private MutationExecutor updateVersionExecutor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
+		return session.getSessionFactory()
+				.getServiceRegistry()
+				.getService( MutationExecutorService.class )
+				.createExecutor( resolveUpdateVersionBatchKeyAccess( dynamicUpdate, session ), group, session );
+	}
+
+	protected BatchKeyAccess resolveUpdateVersionBatchKeyAccess(boolean dynamicUpdate, SharedSessionContractImplementor session) {
+		if ( !dynamicUpdate
+				&& session.getTransactionCoordinator() != null
+				&& session.getTransactionCoordinator().isTransactionActive() ) {
+			return this::getVersionUpdateBatchkey;
+		}
+
+		return NoBatchKeyAccess.INSTANCE;
+	}
+
+	private BatchKey getVersionUpdateBatchkey(){
+		return versionUpdateBatchkey;
 	}
 
 	protected MutationOperationGroup generateDynamicUpdateGroup(

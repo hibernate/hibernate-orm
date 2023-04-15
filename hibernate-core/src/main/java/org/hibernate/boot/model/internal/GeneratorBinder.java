@@ -142,7 +142,7 @@ public class GeneratorBinder {
 
 	private static IdentifierGeneratorDefinition makeIdentifierGeneratorDefinition(
 			String name,
-			XProperty idXProperty,
+			XProperty idProperty,
 			Map<String, IdentifierGeneratorDefinition> localGenerators,
 			MetadataBuildingContext buildingContext) {
 		if ( localGenerators != null ) {
@@ -160,7 +160,7 @@ public class GeneratorBinder {
 
 		LOG.debugf( "Could not resolve explicit IdentifierGeneratorDefinition - using implicit interpretation (%s)", name );
 
-		final GeneratedValue generatedValue = idXProperty.getAnnotation( GeneratedValue.class );
+		final GeneratedValue generatedValue = idProperty.getAnnotation( GeneratedValue.class );
 		if ( generatedValue == null ) {
 			// this should really never happen, but it's easy to protect against it...
 			return new IdentifierGeneratorDefinition( DEFAULT_ID_GEN_STRATEGY, DEFAULT_ID_GEN_STRATEGY );
@@ -171,7 +171,7 @@ public class GeneratorBinder {
 				buildingContext
 						.getBootstrapContext()
 						.getReflectionManager()
-						.toClass( idXProperty.getType() ),
+						.toClass( idProperty.getType() ),
 				generatedValue.generator(),
 				buildingContext.getBuildingOptions().getIdGenerationTypeInterpreter(),
 				interpretGenerationType( generatedValue )

@@ -353,12 +353,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	@Incubating
-	public GenerationType getNativeIdentifierGenerationType() {
-		return wrapped.getNativeIdentifierGenerationType();
-	}
-
-	@Override
 	public String getNativeIdentifierGeneratorStrategy() {
 		return wrapped.getNativeIdentifierGeneratorStrategy();
 	}

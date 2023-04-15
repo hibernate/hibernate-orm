@@ -6,6 +6,8 @@
  */
 package org.hibernate.testing.bytecode.enhancement;
 
+import java.lang.reflect.Field;
+
 import org.hibernate.LockMode;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.spi.EntityEntry;
@@ -15,11 +17,7 @@ import org.hibernate.internal.util.ReflectHelper;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -53,11 +51,11 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	 * compares the dirty fields of an entity with a set of expected values
 	 */
 	public static void checkDirtyTracking(Object entityInstance, String... dirtyFields) {
-		SelfDirtinessTracker selfDirtinessTracker = (SelfDirtinessTracker) entityInstance;
-		assertEquals( dirtyFields.length > 0, selfDirtinessTracker.$$_hibernate_hasDirtyAttributes() );
-		String[] tracked = selfDirtinessTracker.$$_hibernate_getDirtyAttributes();
-		assertEquals( dirtyFields.length, tracked.length );
-		assertTrue( Arrays.asList( tracked ).containsAll( Arrays.asList( dirtyFields ) ) );
+		final SelfDirtinessTracker selfDirtinessTracker = (SelfDirtinessTracker) entityInstance;
+		assertThat( selfDirtinessTracker.$$_hibernate_getDirtyAttributes() )
+				.containsExactlyInAnyOrder( dirtyFields );
+		assertThat( selfDirtinessTracker.$$_hibernate_hasDirtyAttributes() )
+				.isEqualTo( dirtyFields.length > 0 );
 	}
 
 	public static EntityEntry makeEntityEntry() {

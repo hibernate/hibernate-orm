@@ -22,7 +22,6 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
@@ -107,8 +106,6 @@ public class BatchImpl implements Batch {
 					getKey().toLoggableString()
 			);
 		}
-
-		final SharedSessionContractImplementor session = (SharedSessionContractImplementor) jdbcCoordinator.getJdbcSessionOwner();
 
 		try {
 			getStatementGroup().forEachStatement( (tableName, statementDetails) -> {

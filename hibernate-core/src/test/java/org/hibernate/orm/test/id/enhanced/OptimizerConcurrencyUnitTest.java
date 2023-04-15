@@ -176,7 +176,7 @@ public class OptimizerConcurrencyUnitTest extends BaseUnitTestCase {
 	}
 
 	private Optimizer buildOptimizer(long initial, int increment) {
-		return OptimizerFactory.buildOptimizer( optimizerDescriptor.getExternalName(), Long.class, increment, initial );
+		return OptimizerFactory.buildOptimizer( optimizerDescriptor, Long.class, increment, initial );
 	}
 
 	private <R> R getDoneFutureValue(Future<R> future) {

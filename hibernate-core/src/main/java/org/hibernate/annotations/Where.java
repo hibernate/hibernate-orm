@@ -48,10 +48,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * List&lt;Document&gt; documents;
  * </pre>
  * <p>
- * By default, {@code @Where} restrictions declared for an entity are
+ * By default, {@code @Where} restrictions declared for an entity are also
  * applied when loading associations of that entity type. This behavior can
- * be disabled using the setting {@value org.hibernate.cfg.AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS};
- * note, however, that setting is disabled.
+ * be disabled using the setting
+ * {@value org.hibernate.cfg.AvailableSettings#USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS}.
+ * However, this setting is now deprecated.
  * <p>
  * Note that {@code @Where} restrictions are always applied and cannot be
  * disabled. Nor may they be parameterized. They're therefore <em>much</em>

@@ -270,7 +270,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 								TypeDescription.VOID,
 								Visibility.PUBLIC
 						)
-						.withParameters( enhancedField.getType().asErasure() )
+						.withParameters( enhancedField.asDefined().getType().asErasure() )
 						.intercept( fieldWriter( enhancedField ) );
 			}
 
@@ -396,12 +396,12 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 				MethodDescription instrumentedMethod
 		) {
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			methodVisitor.visitVarInsn( Type.getType( persistentField.getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
+			methodVisitor.visitVarInsn( Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ).getOpcode( Opcodes.ILOAD ), 1 );
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
 					EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + persistentField.getName(),
-					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( persistentField.getType().asErasure().getDescriptor() ) ),
+					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( persistentField.asDefined().getType().asErasure().getDescriptor() ) ),
 					false
 			);
 			methodVisitor.visitInsn( Opcodes.RETURN );

@@ -62,7 +62,7 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
 		if ( entityInstance != null ) {
-			throw new UnsupportedOperationException(  );
+			throw new UnsupportedOperationException("null entity instance");
 		}
 		return load( pkValue, lockOptions, readOnly, session );
 	}

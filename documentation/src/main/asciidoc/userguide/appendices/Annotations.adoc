@@ -847,6 +847,25 @@ See the <<chapters/pc/PersistenceContext.adoc#pc-managed-state-dynamic-update,`@
 For reattachment of detached entities, the dynamic update is not possible without having the <<annotations-hibernate-selectbeforeupdate>> annotation as well.
 ====
 
+[[annotations-hibernate-embeddableinstantiator]]
+==== `@EmbeddableInstantiator`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/EmbeddableInstantiator.html[`@EmbeddableInstantiator`] annotation is used to specify a custom instantiator for a specific embedded.
+
+See the <<chapters/domain/embeddables.adoc#embeddable-instantiator, Custom instantiation>> section for more info.
+
+[[annotations-hibernate-embeddableinstantiatorregistration]]
+==== `@EmbeddableInstantiatorRegistration`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/EmbeddableInstantiatorRegistration.html[`@EmbeddableInstantiatorRegistration`] annotation is used to register a custom instantiator implementation to be used for all references to a particular Embeddable.
+
+See the <<chapters/domain/embeddables.adoc#embeddable-instantiator, Custom instantiation>> section for more info.
+
+[[annotations-hibernate-embeddableinstantiatorregistrations]]
+==== `@EmbeddableInstantiatorRegistrations`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/EmbeddableInstantiatorRegistrations.html[`@EmbeddableInstantiatorRegistrations`] annotation is used to group multiple <<annotations-hibernate-embeddableinstantiatorregistration>> annotations.
+
 [[annotations-hibernate-fetch]]
 ==== `@Fetch`
 

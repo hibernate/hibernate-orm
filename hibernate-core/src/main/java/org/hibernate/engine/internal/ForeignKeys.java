@@ -22,6 +22,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 
 /**
  * Algorithms related to foreign key constraint transparency
@@ -117,10 +118,10 @@ public final class ForeignKeys {
 				returnedValue = isNullifiable( null, value ) ? null : value;
 			}
 			else if ( type.isComponentType() ) {
-				final CompositeType actype = (CompositeType) type;
-				final Object[] subvalues = actype.getPropertyValues( value, session );
-				final Type[] subtypes = actype.getSubtypes();
-				final String[] subPropertyNames = actype.getPropertyNames();
+				final CompositeType compositeType = (CompositeType) type;
+				final Object[] subvalues = compositeType.getPropertyValues( value, session );
+				final Type[] subtypes = compositeType.getSubtypes();
+				final String[] subPropertyNames = compositeType.getPropertyNames();
 				boolean substitute = false;
 				for ( int i = 0; i < subvalues.length; i++ ) {
 					final Object replacement = nullifyTransientReferences(
@@ -135,7 +136,7 @@ public final class ForeignKeys {
 				}
 				if ( substitute ) {
 					// todo : need to account for entity mode on the CompositeType interface :(
-					actype.setPropertyValues( value, subvalues );
+					compositeType.setPropertyValues( value, subvalues );
 				}
 				returnedValue = value;
 			}
@@ -148,19 +149,16 @@ public final class ForeignKeys {
 			// When bytecode-enhancement is used for dirty-checking, the change should
 			// only be tracked when returnedValue was nullified (1)).
 			if ( value != returnedValue && returnedValue == null ) {
-				ManagedTypeHelper.processIfSelfDirtinessTracker( self, SelfDirtinessTracker::$$_hibernate_trackChange, propertyName );
+				processIfSelfDirtinessTracker( self, SelfDirtinessTracker::$$_hibernate_trackChange, propertyName );
 			}
 			return returnedValue;
 		}
 
-		private Object initializeIfNecessary(
-				final Object value,
-				final String propertyName,
-				final Type type) {
-			if ( isDelete &&
-					value == LazyPropertyInitializer.UNFETCHED_PROPERTY &&
-					type.isEntityType() &&
-					!session.getPersistenceContextInternal().isNullifiableEntityKeysEmpty() ) {
+		private Object initializeIfNecessary(final Object value, final String propertyName, final Type type) {
+			if ( isDelete
+					&& value == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					&& type.isEntityType()
+					&& !session.getPersistenceContextInternal().isNullifiableEntityKeysEmpty() ) {
 				// IMPLEMENTATION NOTE: If cascade-remove was mapped for the attribute,
 				// then value should have been initialized previously, when the remove operation was
 				// cascaded to the property (because CascadingAction.DELETE.performOnLazyProperty()
@@ -209,10 +207,11 @@ public final class ForeignKeys {
 				// as nullifiable
 				Object entity = lazyInitializer.getImplementation( session );
 				if ( entity == null ) {
+					// an unloaded proxy might be scheduled for deletion
 					return persistenceContext.containsDeletedUnloadedEntityKey(
 							session.generateEntityKey(
 									lazyInitializer.getIdentifier(),
-									session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+									session.getFactory().getMappingMetamodel()
 											.getEntityDescriptor( lazyInitializer.getEntityName() )
 							)
 					);
@@ -420,12 +419,12 @@ public final class ForeignKeys {
 			}
 		}
 		else if ( type.isComponentType() ) {
-			final CompositeType actype = (CompositeType) type;
-			final boolean[] subValueNullability = actype.getPropertyNullability();
+			final CompositeType compositeType = (CompositeType) type;
+			final boolean[] subValueNullability = compositeType.getPropertyNullability();
 			if ( subValueNullability != null ) {
-				final String[] subPropertyNames = actype.getPropertyNames();
-				final Object[] subvalues = actype.getPropertyValues( value, session );
-				final Type[] subtypes = actype.getSubtypes();
+				final String[] subPropertyNames = compositeType.getPropertyNames();
+				final Object[] subvalues = compositeType.getPropertyValues( value, session );
+				final Type[] subtypes = compositeType.getSubtypes();
 				for ( int j = 0; j < subvalues.length; j++ ) {
 					collectNonNullableTransientEntities(
 							nullifier,

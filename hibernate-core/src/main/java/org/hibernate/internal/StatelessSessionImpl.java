@@ -23,6 +23,7 @@ import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -185,9 +186,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
 
-		final EntityPersister entityDescriptor = getEntityPersister( entityName );
-		final Object result = entityDescriptor.load( id, null, getNullSafeLockMode( lockMode ), this );
-
+		final Object result = getEntityPersister( entityName )
+				.load( id, null, getNullSafeLockMode( lockMode ), this );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
@@ -195,7 +195,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private EntityPersister getEntityPersister(String entityName) {
-		return getFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
+		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -291,7 +291,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 		// first, try to load it from the temp PC associated to this SS
 		final PersistenceContext persistenceContext = getPersistenceContext();
-		Object loaded = persistenceContext.getEntity( entityKey );
+		final Object loaded = persistenceContext.getEntity( entityKey );
 		if ( loaded != null ) {
 			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
 			// containing eager fetches via join fetch
@@ -305,8 +305,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			// first, check to see if we can use "bytecode proxies"
 
 			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
-			final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
-			if ( bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
+			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
 
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
@@ -331,10 +331,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 						LOG.debug( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
 						return createProxy( entityKey );
 					}
-					return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
+					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
 				else if ( !entityMetamodel.hasSubclasses() ) {
-					return bytecodeEnhancementMetadata.createEnhancedProxy( entityKey, false, this );
+					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
 				}
 				// If we get here, then the entity class has subclasses and there is no HibernateProxy factory.
 				// The entity will get loaded below.
@@ -374,16 +374,16 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public void fetch(Object association) {
 		checkOpen();
-		PersistenceContext persistenceContext = getPersistenceContext();
+		final PersistenceContext persistenceContext = getPersistenceContext();
 		final LazyInitializer initializer = extractLazyInitializer( association );
 		if ( initializer != null ) {
 			if ( initializer.isUninitialized() ) {
-				String entityName = initializer.getEntityName();
-				Object id = initializer.getIdentifier();
-				initializer.setSession(this);
+				final String entityName = initializer.getEntityName();
+				final Object id = initializer.getIdentifier();
+				initializer.setSession( this );
 				persistenceContext.beforeLoad();
 				try {
-					Object entity = initializer.getImplementation(); //forces the load to occur
+					final Object entity = initializer.getImplementation(); //forces the load to occur
 					if ( entity==null ) {
 						getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
 					}
@@ -399,9 +399,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 		else if ( isPersistentAttributeInterceptable( association ) ) {
-			final PersistentAttributeInterceptor interceptor =
-					asPersistentAttributeInterceptable( association ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor) {
+			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( association );
+			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				final EnhancementAsProxyLazinessInterceptor proxyInterceptor =
 						(EnhancementAsProxyLazinessInterceptor) interceptor;
 				proxyInterceptor.setSession( this );
@@ -419,18 +419,16 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else if ( association instanceof PersistentCollection ) {
 			final PersistentCollection<?> persistentCollection = (PersistentCollection<?>) association;
 			if ( !persistentCollection.wasInitialized() ) {
-
-				final CollectionPersister collectionDescriptor = getFactory().getRuntimeMetamodels()
-						.getMappingMetamodel()
+				final CollectionPersister collectionDescriptor = getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( persistentCollection.getRole() );
 				final Object key = persistentCollection.getKey();
 				persistenceContext.addUninitializedCollection( collectionDescriptor, persistentCollection, key );
-				persistentCollection.setCurrentSession(this);
+				persistentCollection.setCurrentSession( this );
 				try {
 					collectionDescriptor.initialize( key, this );
 				}
 				finally {
-					persistentCollection.unsetSession(this);
+					persistentCollection.unsetSession( this );
 					if ( persistenceContext.isLoadFinished() ) {
 						persistenceContext.clear();
 					}

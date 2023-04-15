@@ -36,7 +36,6 @@ import org.hibernate.id.factory.spi.GenerationTypeStrategy;
 import org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration;
 import org.hibernate.id.factory.spi.GeneratorDefinitionResolver;
 import org.hibernate.id.factory.spi.StandardGenerator;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
@@ -50,6 +49,7 @@ import jakarta.persistence.GenerationType;
 
 import static org.hibernate.cfg.AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER;
 import static org.hibernate.id.factory.IdGenFactoryLogging.ID_GEN_FAC_LOGGER;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * Basic implementation of {@link org.hibernate.id.factory.IdentifierGeneratorFactory},
@@ -151,7 +151,7 @@ public class StandardIdentifierGeneratorFactory
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 		final Object providerSetting = configService.getSettings().get( IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
 		if ( providerSetting != null ) {
-			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting2(
+			DEPRECATION_LOGGER.deprecatedSetting2(
 					IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
 					"supply a org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration Java service"
 			);
@@ -243,32 +243,32 @@ public class StandardIdentifierGeneratorFactory
 
 	@Override
 	public Class<? extends Generator> getIdentifierGeneratorClass(String strategy) {
-		if ( "hilo".equals( strategy ) ) {
-			throw new UnsupportedOperationException( "Support for 'hilo' generator has been removed" );
+		switch ( strategy ) {
+			case "hilo":
+				throw new UnsupportedOperationException( "Support for 'hilo' generator has been removed" );
+			case "native":
+				strategy = getDialect().getNativeIdentifierGeneratorStrategy();
+				//then fall through:
+			default:
+				Class<? extends Generator> generatorClass = legacyGeneratorClassNameMap.get( strategy );
+				return generatorClass != null ? generatorClass : generatorClassForName( strategy );
 		}
-		final String resolvedStrategy = "native".equals( strategy )
-				? getDialect().getNativeIdentifierGeneratorStrategy()
-				: strategy;
+	}
 
-		Class<? extends Generator> generatorClass = legacyGeneratorClassNameMap.get( resolvedStrategy );
-		if ( generatorClass != null ) {
-			return generatorClass;
+	protected Class<? extends Generator> generatorClassForName(String strategy) {
+		try {
+			Class<? extends Generator> clazz =
+					serviceRegistry.getService( ClassLoaderService.class )
+							.classForName( strategy );
+			if ( !Generator.class.isAssignableFrom( clazz ) ) {
+				// in principle, this shouldn't happen, since @GenericGenerator
+				// constrains the type to subtypes of Generator
+				throw new MappingException( clazz.getName() + " does not implement 'Generator'" );
+			}
+			return clazz;
 		}
-		else {
-			try {
-				Class<? extends Generator> clazz =
-						serviceRegistry.getService( ClassLoaderService.class )
-								.classForName( resolvedStrategy );
-				if ( !Generator.class.isAssignableFrom( clazz ) ) {
-					// in principle, this shouldn't happen, since @GenericGenerator
-					// constrains the type to subtypes of Generator
-					throw new MappingException( clazz.getName() + " does not implement 'Generator'" );
-				}
-				return clazz;
-			}
-			catch ( ClassLoadingException e ) {
-				throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
-			}
+		catch ( ClassLoadingException e ) {
+			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 		}
 	}
 }

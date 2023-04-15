@@ -708,7 +708,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		try {
 			final HqlInterpretation interpretation = interpretHql( hql, resultType );
 			checkSelectionQuery( hql, interpretation );
-			return createSelectionQuery( hql, resultType, interpretation);
+			return createSelectionQuery( hql, resultType, interpretation );
 		}
 		catch ( RuntimeException e ) {
 			markForRollbackOnly();
@@ -726,7 +726,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	private <R> HqlInterpretation interpretHql(String hql, Class<R> resultType) {
+	protected <R> HqlInterpretation interpretHql(String hql, Class<R> resultType) {
 		final QueryEngine queryEngine = getFactory().getQueryEngine();
 		return queryEngine.getInterpretationCache()
 				.resolveHqlInterpretation(
@@ -736,13 +736,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				);
 	}
 
-	private static void checkSelectionQuery(String hql, HqlInterpretation hqlInterpretation) {
+	protected static void checkSelectionQuery(String hql, HqlInterpretation hqlInterpretation) {
 		if ( !( hqlInterpretation.getSqmStatement() instanceof SqmSelectStatement ) ) {
 			throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hql + "`", hql);
 		}
 	}
 
-	private static <R> void checkResultType(Class<R> expectedResultType, SqmSelectionQueryImpl<?> query) {
+	protected static <R> void checkResultType(Class<R> expectedResultType, SqmSelectionQueryImpl<?> query) {
 		final Class<?> resultType = query.getResultType();
 		if ( !expectedResultType.isAssignableFrom( resultType ) ) {
 			throw new QueryTypeMismatchException(
@@ -778,7 +778,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			final QuerySqmImpl<T> query = new QuerySqmImpl<>( queryString, interpretation, expectedResultType, this );
 			applyQuerySettingsAndHints( query );
 			query.setComment( queryString );
-
 			return query;
 		}
 		catch (RuntimeException e) {
@@ -827,12 +826,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	private NamedResultSetMappingMemento getResultSetMappingMemento(String resultSetMappingName) {
+	protected NamedResultSetMappingMemento getResultSetMappingMemento(String resultSetMappingName) {
 		final NamedResultSetMappingMemento resultSetMappingMemento = getFactory().getQueryEngine()
 				.getNamedObjectRepository().getResultSetMappingMemento( resultSetMappingName );
 		if ( resultSetMappingMemento == null ) {
-			throw new HibernateException( "Could not resolve specified result-set mapping name : "
-					+ resultSetMappingName);
+			throw new HibernateException( "Could not resolve specified result-set mapping name: "
+					+ resultSetMappingName );
 		}
 		return resultSetMappingMemento;
 	}
@@ -842,6 +841,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	//      the clashing signatures declared by the supertypes
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
 		final NativeQueryImpl query = createNativeQuery( sqlString );
+		addResultType( resultClass, query );
+		return query;
+	}
+
+	protected <T> void addResultType(Class<T> resultClass, NativeQueryImplementor<T> query) {
 		if ( Tuple.class.equals( resultClass ) ) {
 			query.setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
@@ -851,7 +855,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		else if ( resultClass != Object.class && resultClass != Object[].class ) {
 			query.addResultTypeClass( resultClass );
 		}
-		return query;
 	}
 
 	@Override
@@ -860,11 +863,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		final NativeQueryImplementor<T> query = createNativeQuery( sqlString );
 		if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
 			query.addEntity( tableAlias, resultClass.getName(), LockMode.READ );
+			return query;
 		}
 		else {
 			throw new UnknownEntityTypeException( "unable to locate persister: " + resultClass.getName() );
 		}
-		return query;
 	}
 
 	@Override
@@ -1021,7 +1024,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	private <T> NativeQueryImplementor<T> createNativeQueryImplementor(Class<T> resultType, NamedNativeQueryMemento memento) {
+	protected <T> NativeQueryImplementor<T> createNativeQueryImplementor(Class<T> resultType, NamedNativeQueryMemento memento) {
 		final NativeQueryImplementor<T> query = resultType == null
 				? memento.toQuery(this )
 				: memento.toQuery(this, resultType );
@@ -1032,7 +1035,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	private <T> SqmQueryImplementor<T> createSqmQueryImplementor(Class<T> resultType, NamedSqmQueryMemento memento) {
+	protected <T> SqmQueryImplementor<T> createSqmQueryImplementor(Class<T> resultType, NamedSqmQueryMemento memento) {
 		final SqmQueryImplementor<T> query = memento.toQuery( this, resultType );
 		if ( isEmpty( query.getComment() ) ) {
 			query.setComment( "dynamic query" );
@@ -1079,7 +1082,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	private static void checkMutationQuery(String hqlString, SqmStatement<?> sqmStatement) {
+	protected static void checkMutationQuery(String hqlString, SqmStatement<?> sqmStatement) {
 		if ( !( sqmStatement instanceof SqmDmlStatement ) ) {
 			throw new IllegalMutationQueryException( "Expecting a mutation query, but found `" + hqlString + "`" );
 		}
@@ -1103,7 +1106,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		);
 	}
 
-	private NativeQueryImplementor<?> createNativeQueryImplementor(String queryName, NamedNativeQueryMemento memento) {
+	protected NativeQueryImplementor<?> createNativeQueryImplementor(String queryName, NamedNativeQueryMemento memento) {
 		final NativeQueryImplementor<?> query = memento.toQuery( this );
 		final Boolean isUnequivocallySelect = query.isSelectQuery();
 		if ( isUnequivocallySelect == TRUE ) {
@@ -1119,7 +1122,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	private SqmQueryImplementor<?> createSqmQueryImplementor(String queryName, NamedSqmQueryMemento memento) {
+	protected SqmQueryImplementor<?> createSqmQueryImplementor(String queryName, NamedSqmQueryMemento memento) {
 		final SqmQueryImplementor<?> query = memento.toQuery( this );
 		final SqmStatement<?> sqmStatement = query.getSqmStatement();
 		if ( !( sqmStatement instanceof SqmDmlStatement ) ) {

@@ -165,7 +165,7 @@ public class QuerySqmImpl<R>
 				(s) -> queryEngine.getHqlTranslator().translate( hql, expectedResultType )
 		);
 
-		this.sqm = hqlInterpretation.getSqmStatement();
+		this.sqm = (SqmStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
@@ -184,7 +184,7 @@ public class QuerySqmImpl<R>
 			NamedCriteriaQueryMementoImpl memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
-		this( memento.getSqmStatement(), resultType, session );
+		this( (SqmStatement<R>) memento.getSqmStatement(), resultType, session );
 
 		applyOptions( memento );
 	}
@@ -202,7 +202,7 @@ public class QuerySqmImpl<R>
 		this.hql = hql;
 		this.resultType = resultType;
 
-		this.sqm = hqlInterpretation.getSqmStatement();
+		this.sqm = (SqmStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();

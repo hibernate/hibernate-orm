@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
@@ -33,15 +34,22 @@ public class AggregateEmbeddableFetchInitializer extends AbstractEmbeddableIniti
 				fetchParentAccess,
 				structSelection
 		);
-		super.initializeAssemblers( resultDescriptor, creationState, resultDescriptor.getReferencedMappingType() );
+		final DomainResultAssembler<?>[] assemblers = super.createAssemblers(
+				resultDescriptor,
+				creationState,
+				resultDescriptor.getReferencedMappingType()
+		);
+		System.arraycopy( assemblers, 0, this.assemblers, 0, assemblers.length );
 	}
 
 	@Override
-	protected void initializeAssemblers(
+	protected DomainResultAssembler<?>[] createAssemblers(
 			EmbeddableResultGraphNode resultDescriptor,
 			AssemblerCreationState creationState,
 			EmbeddableMappingType embeddableTypeDescriptor) {
-		// No-op as we need to initialize assemblers in the constructor after the aggregateValuesArrayPositions is set
+		// Return just the assemblers array here without elements,
+		// as we initialize the array in the constructor after the aggregateValuesArrayPositions is set
+		return new DomainResultAssembler[embeddableTypeDescriptor.getNumberOfFetchables()];
 	}
 
 	@Override

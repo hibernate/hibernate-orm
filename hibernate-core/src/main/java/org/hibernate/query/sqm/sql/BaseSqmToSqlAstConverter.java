@@ -5935,30 +5935,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					if ( result instanceof SqlTupleContainer ) {
 						return result;
 					}
+					final NavigablePath baseNavigablePath;
 					final Object offset;
 					if ( lhs != expression.getLeftHandOperand() ) {
-						offset = ( (SqmPath<?>) expression.getLeftHandOperand() ).get(
+						final SqmPath<?> temporalPath = (SqmPath<?>) expression.getLeftHandOperand();
+						baseNavigablePath = temporalPath.getNavigablePath().getParent();
+						offset = (temporalPath).get(
 								AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME
 						).accept( this );
 					}
 					else if ( rhs != expression.getRightHandOperand() ) {
-						offset = ( (SqmPath<?>) expression.getRightHandOperand() ).get(
+						final SqmPath<?> temporalPath = (SqmPath<?>) expression.getRightHandOperand();
+						baseNavigablePath = temporalPath.getNavigablePath().getParent();
+						offset = ( temporalPath ).get(
 								AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME
 						).accept( this );
 					}
 					else {
-						offset = null;
-					}
-					if ( offset == null ) {
 						return result;
 					}
-					else {
-						final EmbeddableValuedModelPart valueMapping = (EmbeddableValuedModelPart) determineValueMapping( expression );
-						return new EmbeddableValuedExpression<>(
-								valueMapping,
-								new SqlTuple( List.of( (Expression) result, (Expression) offset ), valueMapping )
-						);
-					}
+					final EmbeddableValuedModelPart valueMapping = (EmbeddableValuedModelPart) determineValueMapping( expression );
+					return new EmbeddableValuedExpression<>(
+							baseNavigablePath,
+							valueMapping,
+							new SqlTuple( List.of( (Expression) result, (Expression) offset ), valueMapping )
+					);
 				}
 				finally {
 					if ( operator == SUBTRACT ) {

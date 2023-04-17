@@ -19,7 +19,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -40,11 +39,14 @@ public class EmbeddableValuedExpression<T> implements Expression, DomainResultPr
 	private final EmbeddableValuedModelPart mapping;
 	private final SqlTuple sqlExpression;
 
-	public EmbeddableValuedExpression(EmbeddableValuedModelPart mapping, SqlTuple sqlExpression) {
+	public EmbeddableValuedExpression(
+			NavigablePath baseNavigablePath,
+			EmbeddableValuedModelPart mapping,
+			SqlTuple sqlExpression) {
 		assert mapping != null;
 		assert sqlExpression != null;
 		assert mapping.getEmbeddableTypeDescriptor().getNumberOfAttributeMappings() == sqlExpression.getExpressions().size();
-		this.navigablePath = new NavigablePath( mapping.getPartName(), Long.toString( System.nanoTime() ) );
+		this.navigablePath = baseNavigablePath.append( mapping.getPartName(), Long.toString( System.nanoTime() ) );
 		this.mapping = mapping;
 		this.sqlExpression = sqlExpression;
 	}

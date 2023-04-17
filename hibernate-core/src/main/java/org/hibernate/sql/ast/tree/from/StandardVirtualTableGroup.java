@@ -9,7 +9,11 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.OwnedValuedModelPart;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -105,21 +109,68 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 	}
 
 	@Override
-	public TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		final TableReference tableReference = underlyingTableGroup.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 		if ( tableReference != null ) {
 			return tableReference;
 		}
-		return super.getTableReferenceInternal( navigablePath, tableExpression, allowFkOptimization, resolve );
+
+		for ( TableReferenceJoin tableJoin : getTableReferenceJoins() ) {
+			final TableReference joinedTableReference = tableJoin.getJoinedTableReference().getTableReference(
+					navigablePath,
+					tableExpression,
+					resolve
+			);
+			if ( joinedTableReference != null) {
+				return joinedTableReference;
+			}
+		}
+		return null;
 	}
 
+	@Override
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression,
+			boolean resolve) {
+		final ValuedModelPart parentModelPart;
+		final MappingType declaringType;
+		if ( modelPart instanceof OwnedValuedModelPart
+				&& ( declaringType = ( (OwnedValuedModelPart) modelPart ).getDeclaringType() ) instanceof EmbeddableMappingType ) {
+			parentModelPart = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
+		}
+		else {
+			parentModelPart = modelPart;
+		}
+		final TableReference tableReference = underlyingTableGroup.getTableReference(
+				navigablePath,
+				parentModelPart,
+				tableExpression,
+				resolve
+		);
+		if ( tableReference != null ) {
+			return tableReference;
+		}
+
+		for ( TableReferenceJoin tableJoin : getTableReferenceJoins() ) {
+			final TableReference joinedTableReference = tableJoin.getJoinedTableReference().getTableReference(
+					navigablePath,
+					modelPart,
+					tableExpression,
+					resolve
+			);
+			if ( joinedTableReference != null) {
+				return joinedTableReference;
+			}
+		}
+		return null;
+	}
 }

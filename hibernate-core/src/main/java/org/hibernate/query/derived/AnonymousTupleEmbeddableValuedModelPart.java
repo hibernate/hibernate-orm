@@ -9,6 +9,7 @@ package org.hibernate.query.derived;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -34,7 +35,9 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -60,6 +63,8 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import jakarta.persistence.metamodel.Attribute;
+
 /**
  * @author Christian Beikov
  */
@@ -76,17 +81,62 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	private final int fetchableIndex;
 
 	public AnonymousTupleEmbeddableValuedModelPart(
-			Map<String, ModelPart> modelPartMap,
+			SqmExpressible<?> sqmExpressible,
+			List<SqlSelection> sqlSelections,
+			int selectionIndex,
+			String selectionExpression,
+			Set<String> compatibleTableExpressions,
+			Set<Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
 			String componentName,
 			EmbeddableValuedModelPart existingModelPartContainer,
 			int fetchableIndex) {
-		this.modelPartMap = modelPartMap;
+		this.modelPartMap = createModelParts(
+				sqmExpressible,
+				sqlSelections,
+				selectionIndex,
+				selectionExpression,
+				compatibleTableExpressions,
+				attributes,
+				existingModelPartContainer
+		);
 		this.modelParts = modelPartMap.values().toArray( new ModelPart[0] );
 		this.domainType = domainType;
 		this.componentName = componentName;
 		this.existingModelPartContainer = existingModelPartContainer;
 		this.fetchableIndex = fetchableIndex;
+	}
+
+	private Map<String, ModelPart> createModelParts(
+			SqmExpressible<?> sqmExpressible,
+			List<SqlSelection> sqlSelections,
+			int selectionIndex,
+			String selectionExpression,
+			Set<String> compatibleTableExpressions,
+			Set<Attribute<?, ?>> attributes,
+			EmbeddableValuedModelPart modelPartContainer) {
+		final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
+		int index = 0;
+		for ( Attribute<?, ?> attribute : attributes ) {
+			if ( !( attribute instanceof SingularPersistentAttribute<?, ?> ) ) {
+				throw new IllegalArgumentException( "Only embeddables without collections are supported!" );
+			}
+			final DomainType<?> attributeType = ( (SingularPersistentAttribute<?, ?>) attribute ).getType();
+			final ModelPart modelPart = AnonymousTupleTableGroupProducer.createModelPart(
+					this,
+					sqmExpressible,
+					attributeType,
+					sqlSelections,
+					selectionIndex,
+					selectionExpression + "_" + attribute.getName(),
+					attribute.getName(),
+					modelPartContainer.findSubPart( attribute.getName(), null ),
+					compatibleTableExpressions,
+					index++
+			);
+			modelParts.put( modelPart.getPartName(), modelPart );
+		}
+		return modelParts;
 	}
 
 	@Override
@@ -281,7 +331,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			SqlAstCreationState sqlAstCreationState) {
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( getJdbcTypeCount() );
 		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( componentName );
-		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
+		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, this, getContainingTableExpression() );
 		for ( ModelPart modelPart : modelParts ) {
 			modelPart.forEachSelectable(
 					(columnIndex, selection) -> {

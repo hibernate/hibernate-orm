@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -58,40 +59,20 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	}
 
 	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
-		return resolveTableReference( navigablePath, tableExpression, true );
-	}
-
-	@Override
-	public TableReference resolveTableReference(String tableExpression) {
-		return resolveTableReference( null, tableExpression, true );
-	}
-
-	@Override
-	public TableReference resolveTableReference(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
-		return getTableGroup().resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
-	}
-
-	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return getTableReference( navigablePath, tableExpression, true, false );
-	}
-
-	@Override
-	public TableReference getTableReference(String tableExpression) {
-		return getTableReference( null, tableExpression, true, false );
+			boolean resolve) {
+		return getTableGroup().getTableReference( navigablePath, tableExpression, resolve );
 	}
 
 	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		return getTableGroup().getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+		return getTableGroup().getTableReference( navigablePath, modelPart, tableExpression, resolve );
 	}
 
 	@Override

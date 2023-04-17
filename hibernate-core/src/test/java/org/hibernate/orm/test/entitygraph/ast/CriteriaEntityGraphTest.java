@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
@@ -70,10 +71,10 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.hamcrest.AssignableMatcher.assignableTo;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Nathan Xu
@@ -286,8 +287,11 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 									.next()
 									.getJoinedGroup();
 							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
-							assertThat( compositeTableGroup.getTableGroupJoins(), isEmpty() );
 							assertThat( compositeTableGroup.getNestedTableGroupJoins(), isEmpty() );
+							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
+
+							final TableGroup joinedGroup = compositeTableGroup.getTableGroupJoins().get( 0 ).getJoinedGroup();
+							assertThat( joinedGroup.isInitialized(), is( false ) );
 						}
 						else {
 							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
@@ -295,8 +299,11 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 
 							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getNestedTableGroupJoins() ).getJoinedGroup();
 							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
-							assertThat( compositeTableGroup.getTableGroupJoins(), isEmpty() );
 							assertThat( compositeTableGroup.getNestedTableGroupJoins(), isEmpty() );
+							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
+
+							final TableGroup joinedGroup = compositeTableGroup.getTableGroupJoins().get( 0 ).getJoinedGroup();
+							assertThat( joinedGroup.isInitialized(), is( false ) );
 						}
 					} );
 
@@ -311,7 +318,10 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 		assertThat( fromClause.getRoots(), hasSize( 1 ) );
 
 		final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
-		assertThat( rootTableGroup.getTableGroupJoins(), isEmpty() );
+		assertThat( rootTableGroup.getTableGroupJoins(), hasSize( 1 ) );
+
+		final TableGroup tableGroup = rootTableGroup.getTableGroupJoins().get( 0 ).getJoinedGroup();
+		assertThat( tableGroup.isInitialized(), is( false ) );
 	}
 
 	private void assertEntityValuedJoinedGroup(SelectStatement sqlAst, String expectedAttributeName, Class<?> expectedEntityJpaClass, Consumer<TableGroup> tableGroupConsumer) {
@@ -343,12 +353,18 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 	}
 
 	private void assertPersonHomeAddressJoinedGroup(TableGroup tableGroup) {
-		assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+		assertThat( tableGroup.getTableGroupJoins(), hasSize( 2 ) );
 
-		final TableGroup joinedGroup = tableGroup.getTableGroupJoins().iterator().next().getJoinedGroup();
-		assertThat( joinedGroup.getModelPart().getPartName(), is( "homeAddress" ) );
-		assertThat( joinedGroup.getModelPart(), instanceOf( EmbeddedAttributeMapping.class ) );
-		assertThat( joinedGroup, instanceOf( StandardVirtualTableGroup.class ) );
+		final TableGroup company = tableGroup.getTableGroupJoins().get( 0 ).getJoinedGroup();
+		assertThat( company.getModelPart().getPartName(), is( "company" ) );
+		assertThat( company.getModelPart(), instanceOf( ToOneAttributeMapping.class ) );
+		assertThat( company, instanceOf( LazyTableGroup.class ) );
+		assertThat( company.isInitialized(), is( false ) );
+
+		final TableGroup homeAddress = tableGroup.getTableGroupJoins().get( 1 ).getJoinedGroup();
+		assertThat( homeAddress.getModelPart().getPartName(), is( "homeAddress" ) );
+		assertThat( homeAddress.getModelPart(), instanceOf( EmbeddedAttributeMapping.class ) );
+		assertThat( homeAddress, instanceOf( StandardVirtualTableGroup.class ) );
 	}
 
 	// util methods for verifying 'domain-result' graph ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

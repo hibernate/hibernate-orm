@@ -37,7 +37,7 @@ public interface FetchParent extends DomainResultGraphNode {
 
 	default NavigablePath resolveNavigablePath(Fetchable fetchable) {
 		final String fetchableName = fetchable.getFetchableName();
-		if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( fetchableName ) || fetchable instanceof EntityIdentifierMapping ) {
+		if ( fetchable instanceof EntityIdentifierMapping ) {
 			return new EntityIdentifierNavigablePath( getNavigablePath(), fetchableName );
 		}
 		else {

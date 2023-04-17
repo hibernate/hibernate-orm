@@ -11,6 +11,8 @@ import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
 
@@ -25,11 +27,12 @@ public class AnonymousTupleBasicEntityIdentifierMapping
 	private final BasicEntityIdentifierMapping delegate;
 
 	public AnonymousTupleBasicEntityIdentifierMapping(
+			MappingType declaringType,
 			String selectionExpression,
 			SqmExpressible<?> expressible,
 			JdbcMapping jdbcMapping,
 			BasicEntityIdentifierMapping delegate) {
-		super( delegate.getAttributeName(), selectionExpression, expressible, jdbcMapping, -1 );
+		super( declaringType, delegate.getAttributeName(), selectionExpression, expressible, jdbcMapping, -1 );
 		this.delegate = delegate;
 	}
 
@@ -66,5 +69,10 @@ public class AnonymousTupleBasicEntityIdentifierMapping
 	@Override
 	public String getAttributeName() {
 		return getPartName();
+	}
+
+	@Override
+	public ManagedMappingType getDeclaringType() {
+		return (ManagedMappingType) super.getDeclaringType();
 	}
 }

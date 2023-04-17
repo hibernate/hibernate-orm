@@ -63,19 +63,10 @@ public class MutatingTableReferenceGroupWrapper implements TableGroup {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		return mutatingTableReference.getTableExpression().equals( tableExpression )
 				? mutatingTableReference
 				: null;
-	}
-
-	@Override
-	public TableReference resolveTableReference(
-			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
-		return getTableReference( navigablePath, tableExpression, allowFkOptimization, true );
 	}
 
 	@Override

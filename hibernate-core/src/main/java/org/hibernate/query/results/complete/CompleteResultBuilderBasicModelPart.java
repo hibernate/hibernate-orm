@@ -75,7 +75,7 @@ public class CompleteResultBuilderBasicModelPart
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
 
 		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
-		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, modelPart.getContainingTableExpression() );
+		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, modelPart, modelPart.getContainingTableExpression() );
 
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				ResultsHelper.resolveSqlExpression(

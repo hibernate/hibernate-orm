@@ -234,10 +234,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		// Virtual model parts use the owning entity as container which the fetch parent access provides.
 		// For an identifier or foreign key this is called during the resolveKey phase of the fetch parent,
 		// so we can't use the fetch parent access in that case.
-		if ( fetchParentAccess != null && embedded instanceof VirtualModelPart
-				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embedded.getFetchableName() )
-				&& !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
-				&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() ) ) {
+		if ( fetchParentAccess != null && embedded instanceof VirtualModelPart && !isPartOfKey ) {
 			fetchParentAccess.resolveInstance( processingState );
 			compositeInstance = fetchParentAccess.getInitializedInstance();
 			EntityInitializer entityInitializer = fetchParentAccess.asEntityInitializer();

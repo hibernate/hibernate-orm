@@ -21,6 +21,7 @@ import jakarta.persistence.Table;
 public class Key implements Serializable {
 	@Id
 	private String id;
+	private String name;
 
 	public Key(String id) {
 		this.id = id;

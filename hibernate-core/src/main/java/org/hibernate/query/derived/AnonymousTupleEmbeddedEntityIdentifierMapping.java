@@ -6,17 +6,26 @@
  */
 package org.hibernate.query.derived;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.sql.ast.spi.SqlSelection;
+
+import jakarta.persistence.metamodel.Attribute;
 
 /**
  * @author Christian Beikov
@@ -28,14 +37,23 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	private final CompositeIdentifierMapping delegate;
 
 	public AnonymousTupleEmbeddedEntityIdentifierMapping(
-			Map<String, ModelPart> modelParts,
+			SqmExpressible<?> sqmExpressible,
+			List<SqlSelection> sqlSelections,
+			int selectionIndex,
+			String selectionExpression,
+			Set<String> compatibleTableExpressions,
+			Set<Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
-			String componentName,
 			CompositeIdentifierMapping delegate) {
 		super(
-				modelParts,
+				sqmExpressible,
+				sqlSelections,
+				selectionIndex,
+				selectionExpression,
+				compatibleTableExpressions,
+				attributes,
 				domainType,
-				componentName,
+				delegate.getAttributeName(),
 				delegate,
 				-1
 		);
@@ -70,6 +88,11 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return ((SingleAttributeIdentifierMapping) delegate).getPropertyAccess();
+	}
+
+	@Override
+	public int compare(Object value1, Object value2) {
+		return super.compare( value1, value2 );
 	}
 
 	@Override

@@ -65,13 +65,11 @@ public interface TableReference extends SqlAstNode, ColumnReferenceQualifier {
 	@Override
 	TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization);
+			String tableExpression);
 
 	@Override
 	TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve);
 }

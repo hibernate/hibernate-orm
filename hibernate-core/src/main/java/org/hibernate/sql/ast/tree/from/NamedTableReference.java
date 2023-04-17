@@ -83,8 +83,7 @@ public class NamedTableReference extends AbstractTableReference {
 	@Override
 	public TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
+			String tableExpression) {
 		if ( tableExpression.equals( getTableExpression() ) ) {
 			return this;
 		}
@@ -104,12 +103,8 @@ public class NamedTableReference extends AbstractTableReference {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		if ( this.tableExpression.equals( tableExpression ) ) {
-			return this;
-		}
-		return null;
+		return this.tableExpression.equals( tableExpression ) ? this : null;
 	}
 
 	@Override

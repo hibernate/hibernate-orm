@@ -10,6 +10,7 @@ import java.util.function.IntFunction;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -42,7 +43,9 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 
 	ValuedModelPart getTargetPart();
 
-	default ModelPart getPart(Nature nature) {
+	boolean isKeyPart(ValuedModelPart modelPart);
+
+	default ValuedModelPart getPart(Nature nature) {
 		if ( nature == Nature.KEY ) {
 			return getKeyPart();
 		}
@@ -76,27 +79,45 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 
 	/**
 	 * Create a DomainResult for the referring-side of the fk
+	 * The table group must be the one containing the target.
 	 */
 	DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState);
+
+	/**
+	 * Create a DomainResult for the referring-side of the fk
+	 * The table group must be the one containing the target.
+	 * The {@link Nature} is the association side of the foreign key i.e. {@link Association#getSideNature()}.
+	 */
+	DomainResult<?> createKeyDomainResult(
+			NavigablePath navigablePath,
+			TableGroup targetTableGroup,
+			Nature fromSide,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState);
 
 	/**
 	 * Create a DomainResult for the target-side of the fk
+	 * The table group must be the one containing the target
 	 */
 	DomainResult<?> createTargetDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState);
 
-	DomainResult<?> createDomainResult(
+	/**
+	 * Create a DomainResult for the referring-side of the fk
+	 * The table group must be the one containing the target.
+	 */
+	@Override
+	<T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			Nature side,
-			FetchParent fetchParent,
+			TableGroup targetTableGroup,
+			String resultVariable,
 			DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(

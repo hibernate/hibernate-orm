@@ -25,6 +25,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * @author Christian Beikov
  */
@@ -41,9 +43,9 @@ public class ManyToOneJoinReuseTest {
 	@TestForIssue(jiraKey = "HHH-15648")
 	public void fetchAndImplicitPath(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
-		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
+					sqlStatementInterceptor.clear();
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					JpaCriteriaQuery<BookList> query = cb.createQuery( BookList.class );
 
@@ -52,7 +54,11 @@ public class ManyToOneJoinReuseTest {
 					query.where( root.get( "book" ).isNotNull() );
 
 					session.createQuery( query ).getResultList();
-					sqlStatementInterceptor.assertExecuted( "select b1_0.id,b2_0.isbn,b2_0.title from BookList b1_0 join book b2_0 on b2_0.isbn=b1_0.book_isbn where b2_0.isbn is not null" );
+					assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
+					assertEquals(
+							"select b1_0.id,b2_0.isbn,b2_0.title from BookList b1_0 join book b2_0 on b2_0.isbn=b1_0.book_isbn where b2_0.isbn is not null",
+							sqlStatementInterceptor.getSqlQueries().get( 0 )
+					);
 				}
 		);
 	}
@@ -61,9 +67,9 @@ public class ManyToOneJoinReuseTest {
 	@TestForIssue(jiraKey = "HHH-15645")
 	public void joinAndImplicitPath(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
-		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
+					sqlStatementInterceptor.clear();
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					JpaCriteriaQuery<BookList> query = cb.createQuery( BookList.class );
 
@@ -77,7 +83,11 @@ public class ManyToOneJoinReuseTest {
 					);
 
 					session.createQuery( query ).getResultList();
-					sqlStatementInterceptor.assertExecuted( "select b1_0.id,b1_0.book_isbn from BookList b1_0 join book b2_0 on b2_0.isbn=b1_0.book_isbn where b2_0.isbn is not null and b1_0.book_isbn is not null" );
+					assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
+					assertEquals(
+							"select b1_0.id,b1_0.book_isbn from BookList b1_0 join book b2_0 on b2_0.isbn=b1_0.book_isbn where b2_0.isbn is not null and b1_0.book_isbn is not null",
+							sqlStatementInterceptor.getSqlQueries().get( 0 )
+					);
 				}
 		);
 	}

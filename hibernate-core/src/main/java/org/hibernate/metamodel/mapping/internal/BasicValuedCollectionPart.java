@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -160,7 +159,7 @@ public class BasicValuedCollectionPart
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -173,7 +172,6 @@ public class BasicValuedCollectionPart
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			boolean allowFkOptimization,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver exprResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
@@ -189,8 +187,7 @@ public class BasicValuedCollectionPart
 		}
 		final TableReference tableReference = targetTableGroup.resolveTableReference(
 				navigablePath,
-				getContainingTableExpression(),
-				allowFkOptimization
+				getContainingTableExpression()
 		);
 		return exprResolver.resolveSqlSelection(
 				exprResolver.resolveSqlExpression(
@@ -206,7 +203,7 @@ public class BasicValuedCollectionPart
 	@Override
 	public void applySqlSelections(
 			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 	}
 
 	@Override
@@ -215,7 +212,7 @@ public class BasicValuedCollectionPart
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, true, null, creationState ), getJdbcMapping() );
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, null, creationState ), getJdbcMapping() );
 	}
 
 	@Override
@@ -272,7 +269,7 @@ public class BasicValuedCollectionPart
 		final TableGroup tableGroup = creationState.getSqlAstCreationState()
 				.getFromClauseAccess()
 				.findTableGroup( parentNavigablePath );
-		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, true, fetchParent, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
 
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),

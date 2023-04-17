@@ -89,7 +89,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 					statementInspector.assertExecutedCount( 3 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 1 );
 
 
 					assertTrue( Hibernate.isInitialized( system.getDataCenterUser() ) );
@@ -119,7 +119,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 					statementInspector.assertExecutedCount( 3 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 1 );
 					assertThat( system, is( notNullValue() ) );
 					DataCenterUser user = system.getDataCenterUser();
 					assertThat( user, is( notNullValue() ) );

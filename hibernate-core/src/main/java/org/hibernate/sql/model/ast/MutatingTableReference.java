@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
 
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -61,7 +62,9 @@ public class MutatingTableReference implements TableReference {
 	}
 
 	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression, boolean allowFkOptimization) {
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression) {
 		if ( getTableName().equals( tableExpression ) ) {
 			return this;
 		}
@@ -77,8 +80,36 @@ public class MutatingTableReference implements TableReference {
 	}
 
 	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression, boolean allowFkOptimization, boolean resolve) {
-		return resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression) {
+		if ( getTableName().equals( tableExpression ) ) {
+			return this;
+		}
+
+		throw new IllegalArgumentException(
+				String.format(
+						Locale.ROOT,
+						"Table-expression (%s) did not match mutating table name - %s",
+						tableExpression,
+						getTableName()
+				)
+		);
+	}
+
+	@Override
+	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression, boolean resolve) {
+		return getTableName().equals( tableExpression ) ? this : null;
+	}
+
+	@Override
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
+			String tableExpression,
+			boolean resolve) {
+		return getTableName().equals( tableExpression ) ? this : null;
 	}
 
 	@Override

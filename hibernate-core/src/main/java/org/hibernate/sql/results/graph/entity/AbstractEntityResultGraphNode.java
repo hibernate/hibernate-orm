@@ -6,15 +6,10 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -25,47 +20,37 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import static org.hibernate.query.results.ResultsHelper.attributeName;
-
 /**
  * AbstractFetchParent sub-class for entity-valued graph nodes
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent implements EntityResultGraphNode {
-	private final EntityValuedModelPart referencedModelPart;
 	private Fetch identifierFetch;
 	private BasicFetch<?> discriminatorFetch;
 	private DomainResult<Object> rowIdResult;
 
 	public AbstractEntityResultGraphNode(EntityValuedModelPart referencedModelPart, NavigablePath navigablePath) {
-		super( referencedModelPart.getEntityMappingType(), navigablePath );
-		this.referencedModelPart = referencedModelPart;
+		super( referencedModelPart, navigablePath );
 	}
 
 	@Override
 	public void afterInitialize(FetchParent fetchParent, DomainResultCreationState creationState) {
-		final EntityMappingType entityDescriptor = referencedModelPart.getEntityMappingType();
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		final NavigablePath navigablePath = getNavigablePath();
 		final TableGroup entityTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess()
 				.getTableGroup( navigablePath );
+		final EntityResultGraphNode entityResultGraphNode = (EntityResultGraphNode) fetchParent;
 		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection() ) {
 			identifierFetch = null;
-			visitIdentifierMapping(
-					new EntityIdentifierNavigablePath( navigablePath, attributeName( identifierMapping ) ),
-					creationState,
-					identifierMapping,
-					entityTableGroup
-			);
+			creationState.visitIdentifierFetch( entityResultGraphNode );
 		}
 		else {
-			identifierFetch = creationState.visitIdentifierFetch( this );
+			identifierFetch = creationState.visitIdentifierFetch( entityResultGraphNode );
 		}
 
-		discriminatorFetch = creationState.visitDiscriminatorFetch( this );
+		discriminatorFetch = creationState.visitDiscriminatorFetch( entityResultGraphNode );
 
-		final EntityRowIdMapping rowIdMapping = entityDescriptor.getRowIdMapping();
+		final EntityRowIdMapping rowIdMapping = getEntityValuedModelPart().getEntityMappingType().getRowIdMapping();
 		if ( rowIdMapping == null ) {
 			rowIdResult = null;
 		}
@@ -80,45 +65,6 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		super.afterInitialize( fetchParent, creationState );
 	}
 
-	private void visitIdentifierMapping(
-			EntityIdentifierNavigablePath navigablePath,
-			DomainResultCreationState creationState,
-			EntityIdentifierMapping identifierMapping,
-			TableGroup entityTableGroup) {
-		final MappingType mappingType = identifierMapping.getPartMappingType();
-		if ( mappingType instanceof ManagedMappingType ) {
-			( (ManagedMappingType) mappingType ).forEachAttributeMapping(
-					attributeMapping -> {
-						if ( attributeMapping instanceof ToOneAttributeMapping ) {
-							( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor()
-									.createKeyDomainResult(
-											navigablePath.getParent(),
-											entityTableGroup,
-											this,
-											creationState
-									);
-						}
-						else {
-							attributeMapping.createDomainResult(
-									navigablePath,
-									entityTableGroup,
-									null,
-									creationState
-							);
-						}
-					}
-			);
-		}
-		else {
-			identifierMapping.createDomainResult(
-					navigablePath,
-					entityTableGroup,
-					null,
-					creationState
-			);
-		}
-	}
-
 	@Override
 	public EntityMappingType getReferencedMappingContainer() {
 		return getEntityValuedModelPart().getEntityMappingType();
@@ -126,7 +72,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	@Override
 	public EntityValuedModelPart getEntityValuedModelPart() {
-		return referencedModelPart;
+		return (EntityValuedModelPart) getFetchContainer();
 	}
 
 	@Override
@@ -145,4 +91,5 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	public DomainResult<Object> getRowIdResult() {
 		return rowIdResult;
 	}
+
 }

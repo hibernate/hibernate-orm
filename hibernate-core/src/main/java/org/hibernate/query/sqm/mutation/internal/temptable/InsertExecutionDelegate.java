@@ -301,7 +301,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
 				tableExpression,
-				true,
 				true
 		);
 
@@ -661,7 +660,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
 				tableExpression,
-				true,
 				true
 		);
 

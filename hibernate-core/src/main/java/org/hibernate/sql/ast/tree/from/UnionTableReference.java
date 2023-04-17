@@ -39,8 +39,7 @@ public class UnionTableReference extends NamedTableReference {
 	@Override
 	public TableReference resolveTableReference(
 			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
+			String tableExpression) {
 		if ( hasTableExpression( tableExpression ) ) {
 			return this;
 		}
@@ -60,7 +59,6 @@ public class UnionTableReference extends NamedTableReference {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		if ( hasTableExpression( tableExpression ) ) {
 			return this;

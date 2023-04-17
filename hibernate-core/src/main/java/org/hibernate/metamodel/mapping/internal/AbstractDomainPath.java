@@ -63,7 +63,11 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SqlAstCreationState creationState) {
 		if ( referenceModelPart instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart selection = (BasicValuedModelPart) referenceModelPart;
-			final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
+			final TableReference tableReference = tableGroup.resolveTableReference(
+					getNavigablePath(),
+					selection,
+					selection.getContainingTableExpression()
+			);
 			return creationState.getSqlExpressionResolver().resolveSqlExpression(
 					createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 					processingState -> new ColumnReference(

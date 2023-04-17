@@ -225,7 +225,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
@@ -240,7 +240,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, tableGroup, true, null, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, null, creationState );
 	}
 
 	@Override
@@ -250,7 +250,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		selectionConsumer.accept(
-				resolveSqlSelection( navigablePath, tableGroup, true, null, creationState ),
+				resolveSqlSelection( navigablePath, tableGroup, null, creationState ),
 				getJdbcMapping()
 		);
 	}
@@ -258,14 +258,13 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			boolean allowFkOptimization,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
 		final TableReference rootTableReference;
 		try {
-			rootTableReference = tableGroup.resolveTableReference( navigablePath, rootTable, allowFkOptimization );
+			rootTableReference = tableGroup.resolveTableReference( navigablePath, rootTable );
 		}
 		catch (Exception e) {
 			throw new IllegalStateException(
@@ -315,12 +314,12 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public boolean isInsertable() {
-		return updateable;
+		return insertable;
 	}
 
 	@Override
 	public boolean isUpdateable() {
-		return insertable;
+		return updateable;
 	}
 
 	@Override
@@ -414,7 +413,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 		assert tableGroup != null;
 
-		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, false, fetchParent, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
 		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),

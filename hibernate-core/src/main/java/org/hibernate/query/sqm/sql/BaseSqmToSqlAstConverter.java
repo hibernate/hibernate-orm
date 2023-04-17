@@ -84,6 +84,7 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValueMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
@@ -182,6 +183,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.expression.Conversion;
@@ -2901,7 +2903,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		final int subclassTableSpan = persister.getSubclassTableSpan();
 		for ( int i = 0; i < subclassTableSpan; i++ ) {
-			tableGroup.resolveTableReference( null, persister.getSubclassTableName( i ), false );
+			tableGroup.resolveTableReference( null, persister.getSubclassTableName( i ) );
 		}
 	}
 
@@ -2927,7 +2929,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		final int subclassTableSpan = persister.getSubclassTableSpan();
 		for ( int i = 0; i < subclassTableSpan; i++ ) {
-			tableGroup.resolveTableReference( null, persister.getSubclassTableName( i ), false );
+			tableGroup.resolveTableReference( null, persister.getSubclassTableName( i ) );
 		}
 	}
 
@@ -3468,8 +3470,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 			}
 		}
-		else if ( path instanceof SqmFrom<?, ?> ) {
-			registerTreatUsage( (SqmFrom<?, ?>) path, tableGroup );
+		else {
+			if ( path instanceof SqmFrom<?, ?> ) {
+				registerTreatUsage( (SqmFrom<?, ?>) path, tableGroup );
+			}
+			if ( path instanceof SqmSimplePath<?> && CollectionPart.Nature.fromName( path.getNavigablePath().getLocalName() ) == null ) {
+				// If a table group for a selection already exists, we must make sure that the join type is INNER
+				fromClauseIndex.findTableGroup( path.getNavigablePath().getParent() )
+						.findTableGroupJoin( tableGroup )
+						.setJoinType( SqlAstJoinType.INNER );
+			}
 		}
 	}
 
@@ -3507,8 +3517,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			else {
 				// Check if we can reuse a table group join of the parent
-				final TableGroup compatibleTableGroup = findCompatibleJoinedGroup(
-						actualParentTableGroup,
+				final TableGroup compatibleTableGroup = actualParentTableGroup.findCompatibleJoinedGroup(
 						joinProducer,
 						SqlAstJoinType.INNER
 				);
@@ -3898,7 +3907,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					navigablePath,
 					tableGroupToUse == null ? tableGroup : tableGroupToUse,
 					expandToAllColumns ? null : resultModelPart,
-					true,
 					interpretationModelPart,
 					treatedMapping,
 					this
@@ -3908,7 +3916,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) actualModelPart;
 			result = new EmbeddableValuedPathInterpretation<>(
 					mapping.toSqlExpression(
-							tableGroup,
+							getFromClauseAccess().findTableGroup( path.getLhs().getNavigablePath() ),
 							currentClauseStack.getCurrent(),
 							this,
 							getSqlAstCreationState()
@@ -3923,6 +3931,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final BasicValuedModelPart mapping = (BasicValuedModelPart) actualModelPart;
 			final TableReference tableReference = tableGroup.resolveTableReference(
 					navigablePath.append( actualModelPart.getPartName() ),
+					mapping,
 					mapping.getContainingTableExpression()
 			);
 
@@ -4439,6 +4448,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							new ColumnReference(
 									tableGroup.resolveTableReference(
 											navigablePath,
+											(ValuedModelPart) modelPart,
 											selectionMapping.getContainingTableExpression()
 									),
 									selectionMapping
@@ -4564,6 +4574,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							final ColumnReference columnReference = new ColumnReference(
 									tableGroup.resolveTableReference(
 											navigablePath,
+											(ValuedModelPart) modelPart,
 											selectionMapping.getContainingTableExpression()
 									),
 									selectionMapping
@@ -7139,11 +7150,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
-		final EntityIdentifierMapping identifierMapping = fetchParent.getEntityValuedModelPart()
-				.getEntityMappingType()
+		final EntityIdentifierMapping identifierMapping = fetchParent.getReferencedMappingContainer()
 				.getIdentifierMapping();
-		final Fetchable fetchableIdentifierMapping = (Fetchable) identifierMapping;
-		return createFetch( fetchParent, fetchableIdentifierMapping, false );
+		return createFetch( fetchParent, (Fetchable) identifierMapping, false );
 	}
 
 	private Fetch createFetch(FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {

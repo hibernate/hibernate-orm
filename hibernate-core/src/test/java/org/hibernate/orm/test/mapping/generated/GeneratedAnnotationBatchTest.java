@@ -9,6 +9,7 @@ package org.hibernate.orm.test.mapping.generated;
 import java.time.Instant;
 import java.util.List;
 
+import org.hibernate.HibernateError;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.Generated;
@@ -81,7 +82,11 @@ public class GeneratedAnnotationBatchTest {
 					GeneratedEntity.class
 			).getResultList();
 			entities.forEach( ge -> ge.setName( "updated" ) );
+
+			//We need to wait a little to make sure the timestamps produced are different
+			waitALittle();
 			session.flush(); // force update and retrieval of generated values
+
 			entities.forEach( ge -> assertThat( ge.getName() ).isEqualTo( "updated" ) );
 			entities.forEach( ge -> assertThat( ge.getUpdateTimestamp() ).isAfter( originalInstant ) );
 		} );
@@ -123,6 +128,15 @@ public class GeneratedAnnotationBatchTest {
 
 		public Instant getUpdateTimestamp() {
 			return updateTimestamp;
+		}
+	}
+
+	private static void waitALittle() {
+		try {
+			Thread.sleep( 10 );
+		}
+		catch (InterruptedException e) {
+			throw new HibernateError( "Unexpected wakeup from test sleep" );
 		}
 	}
 }

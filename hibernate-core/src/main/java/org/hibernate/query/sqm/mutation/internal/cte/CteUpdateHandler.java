@@ -159,7 +159,6 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 						updatingTableGroup.getNavigablePath(),
 						tableExpression,
-						true,
 						true
 				);
 				final List<Assignment> assignmentList = assignmentsByTable.get( updatingTableReference );
@@ -272,7 +271,6 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 							updatingTableGroup.getNavigablePath(),
 							tableExpression,
-							true,
 							true
 					);
 					final List<Assignment> assignmentList = assignmentsByTable.get( updatingTableReference );

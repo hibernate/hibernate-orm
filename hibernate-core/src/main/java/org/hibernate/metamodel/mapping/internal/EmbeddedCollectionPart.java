@@ -41,6 +41,7 @@ import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -207,6 +208,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 					final TableReference tableReference = tableGroup.resolveTableReference(
 							tableGroup.getNavigablePath()
 									.append( getNavigableRole().getNavigableName() ),
+							this,
 							selection.getContainingTableExpression()
 					);
 					expressions.add(
@@ -320,6 +322,15 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public boolean containsTableReference(String tableExpression) {
+		if ( collectionDescriptor.isOneToMany() ) {
+			return ( (EntityCollectionPart) collectionDescriptor.getAttributeMapping().getElementDescriptor() )
+					.getPartMappingType().containsTableReference( tableExpression );
+		}
+		return collectionDescriptor.getAttributeMapping().containsTableReference( tableExpression );
 	}
 
 }

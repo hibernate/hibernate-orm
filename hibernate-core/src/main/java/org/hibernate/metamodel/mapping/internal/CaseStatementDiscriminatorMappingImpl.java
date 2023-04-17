@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -95,7 +94,6 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 				(tableName, tableDiscriminatorDetails) -> tableGroup.getTableReference(
 						fetchablePath,
 						tableName,
-						false,
 						true
 				)
 		);
@@ -244,7 +242,6 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 							final TableReference tableReference = entityTableGroup.getTableReference(
 									entityTableGroup.getNavigablePath(),
 									tableName,
-									false,
 									false
 							);
 

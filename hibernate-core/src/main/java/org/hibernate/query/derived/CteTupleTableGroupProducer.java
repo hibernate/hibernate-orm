@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
@@ -43,19 +44,24 @@ public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer
 		final BasicType<String> stringType = cteStatement.nodeBuilder()
 				.getTypeConfiguration()
 				.getBasicTypeForJavaType( String.class );
-		this.searchModelPart = createModelPart( cteStatement.getSearchAttributeName(), stringType );
+		this.searchModelPart = createModelPart( this, cteStatement.getSearchAttributeName(), stringType );
 		this.cycleMarkModelPart = createModelPart(
+				this,
 				cteStatement.getCycleMarkAttributeName(),
 				cteStatement.getCycleLiteral() == null
 						? null
 						: (BasicType<?>) cteStatement.getCycleLiteral().getNodeType()
 		);
-		this.cyclePathModelPart = createModelPart( cteStatement.getCyclePathAttributeName(), stringType );
+		this.cyclePathModelPart = createModelPart( this, cteStatement.getCyclePathAttributeName(), stringType );
 	}
 
-	private static AnonymousTupleBasicValuedModelPart createModelPart(String attributeName, BasicType<?> basicType) {
+	private static AnonymousTupleBasicValuedModelPart createModelPart(
+			MappingType declaringType,
+			String attributeName,
+			BasicType<?> basicType) {
 		if ( attributeName != null ) {
 			return new AnonymousTupleBasicValuedModelPart(
+					declaringType,
 					attributeName,
 					attributeName,
 					basicType,

@@ -1327,7 +1327,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			// Table references not appearing in this set can later be pruned away
 			for ( String subclassTableName : subclassTableNames ) {
 				final TableReference tableReference =
-						tableGroup.getTableReference( null, subclassTableName, false, false );
+						tableGroup.getTableReference( null, subclassTableName, false );
 				if ( tableReference == null ) {
 					throw new UnknownTableReferenceException( getRootTableName(), "Couldn't find table reference" );
 				}

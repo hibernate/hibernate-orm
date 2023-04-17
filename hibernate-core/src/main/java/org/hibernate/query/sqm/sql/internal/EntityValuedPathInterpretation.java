@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
@@ -44,8 +45,8 @@ import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 
-public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements SqlTupleContainer,
-		Assignable {
+public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
+		implements SqlTupleContainer, Assignable {
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -99,7 +100,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 								sqmPath.getNavigablePath(),
 								tableGroup,
 								pathMapping.getEntityMappingType().getIdentifierMapping(),
-								false,
 								pathMapping,
 								pathMapping,
 								sqlAstCreationState
@@ -149,7 +149,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			EntityValuedModelPart mapping,
 			MappingModelExpressible<?> inferredMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final boolean allowFkOptimization;
 		final ModelPart resultModelPart;
 		final TableGroup resultTableGroup;
 		// For association mappings where the FK optimization i.e. use of the parent table group is allowed,
@@ -220,7 +219,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					}
 					resultTableGroup = tableGroup;
 				}
-				allowFkOptimization = true;
 			}
 			else if ( inferredMapping == null && hasNotFound( mapping ) ) {
 				// This is necessary to allow expression like `where root.notFoundAssociation is null`
@@ -229,31 +227,26 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				resultModelPart = keyTargetMatchPart;
 				resultTableGroup = sqlAstCreationState.getFromClauseAccess()
 						.findTableGroup( tableGroup.getNavigablePath().getParent() );
-				allowFkOptimization = false;
 			}
 			else {
 				// If the mapping is an inverse association, use the PK and disallow FK optimizations
 				resultModelPart = ( (EntityAssociationMapping) mapping ).getAssociatedEntityMappingType().getIdentifierMapping();
 				resultTableGroup = tableGroup;
-				allowFkOptimization = false;
 			}
 		}
 		else if ( mapping instanceof AnonymousTupleEntityValuedModelPart ) {
 			resultModelPart = ( (AnonymousTupleEntityValuedModelPart) mapping ).getForeignKeyPart();
 			resultTableGroup = tableGroup;
-			allowFkOptimization = true;
 		}
 		else {
 			// If the mapping is not an association, use the PK and disallow FK optimizations
 			resultModelPart = mapping.getEntityMappingType().getIdentifierMapping();
 			resultTableGroup = tableGroup;
-			allowFkOptimization = false;
 		}
 		return from(
 				navigablePath,
 				resultTableGroup,
 				resultModelPart,
-				allowFkOptimization,
 				mapping,
 				mapping,
 				sqlAstCreationState
@@ -288,7 +281,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			ModelPart resultModelPart,
-			boolean allowFkOptimization,
 			EntityValuedModelPart mapping,
 			EntityValuedModelPart treatedMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
@@ -309,8 +301,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			final SelectableConsumer selectableConsumer = (selectionIndex, selectableMapping) -> {
 				final TableReference tableReference = parentTableGroup.resolveTableReference(
 						navigablePath,
-						selectableMapping.getContainingTableExpression(),
-						false
+						selectableMapping.getContainingTableExpression()
 				);
 				expressions.add(
 						sqlExprResolver.resolveSqlExpression( tableReference, selectableMapping )
@@ -333,8 +324,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				final BasicValuedModelPart basicValuedModelPart = (BasicValuedModelPart) resultModelPart;
 				final TableReference tableReference = tableGroup.resolveTableReference(
 						navigablePath,
-						basicValuedModelPart.getContainingTableExpression(),
-						allowFkOptimization
+						basicValuedModelPart,
+						basicValuedModelPart.getContainingTableExpression()
 				);
 				sqlExpression = sqlExprResolver.resolveSqlExpression( tableReference, basicValuedModelPart );
 			}
@@ -344,8 +335,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 						(selectionIndex, selectableMapping) -> {
 							final TableReference tableReference = tableGroup.resolveTableReference(
 									navigablePath,
-									selectableMapping.getContainingTableExpression(),
-									allowFkOptimization
+									(ValuedModelPart) resultModelPart,
+									selectableMapping.getContainingTableExpression()
 							);
 							expressions.add( sqlExprResolver.resolveSqlExpression( tableReference, selectableMapping ) );
 						}

@@ -199,7 +199,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		if ( dotIdentifierSequence == null ) {
 			return true;
 		}
-		if ( !getLocalName().equals( dotIdentifierSequence.getLocalName() ) ) {
+		if ( !localNamesMatch( dotIdentifierSequence ) ) {
 			return false;
 		}
 		return getParent() != null && getParent().isSuffix( dotIdentifierSequence.getParent() );

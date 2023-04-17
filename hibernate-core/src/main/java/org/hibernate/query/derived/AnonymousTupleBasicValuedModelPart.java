@@ -18,7 +18,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.OwnedValuedModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -41,9 +41,10 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingType, BasicValuedModelPart {
+public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart, MappingType, BasicValuedModelPart {
 
 	private static final FetchOptions FETCH_OPTIONS = FetchOptions.valueOf( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
+	private final MappingType declaringType;
 	private final String partName;
 	private final String selectionExpression;
 	private final SqmExpressible<?> expressible;
@@ -51,11 +52,13 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	private final int fetchableIndex;
 
 	public AnonymousTupleBasicValuedModelPart(
+			MappingType declaringType,
 			String partName,
 			String selectionExpression,
 			SqmExpressible<?> expressible,
 			JdbcMapping jdbcMapping,
 			int fetchableIndex) {
+		this.declaringType = declaringType;
 		this.partName = partName;
 		this.selectionExpression = selectionExpression;
 		this.expressible = expressible;
@@ -76,6 +79,11 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 	@Override
 	public JavaType<?> getMappedJavaType() {
 		return expressible.getExpressibleJavaType();
+	}
+
+	@Override
+	public MappingType getDeclaringType() {
+		return declaringType;
 	}
 
 	@Override
@@ -217,6 +225,7 @@ public class AnonymousTupleBasicValuedModelPart implements ModelPart, MappingTyp
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference(
 				navigablePath,
+				this,
 				getContainingTableExpression()
 		);
 		final Expression expression = expressionResolver.resolveSqlExpression( tableReference, this );

@@ -31,6 +31,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -42,10 +43,12 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
+import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -180,6 +183,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public boolean isKeyPart(ValuedModelPart modelPart) {
+		return this == modelPart || keySide.getModelPart() == modelPart;
+	}
+
+	@Override
 	public Side getKeySide() {
 		return keySide;
 	}
@@ -217,12 +225,32 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
+		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
-				navigablePath,
-				tableGroup,
+				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
+				targetTableGroup,
+				keySide.getModelPart(),
+				fetchParent,
+				creationState
+		);
+	}
+
+	@Override
+	public DomainResult<?> createKeyDomainResult(
+			NavigablePath navigablePath,
+			TableGroup targetTableGroup,
+			Nature fromSide,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState) {
+		assert fromSide == Nature.TARGET
+				? targetTableGroup.getTableReference( navigablePath, associationKey.getTable(), false ) != null
+				: isTargetTableGroup( targetTableGroup );
+		return createDomainResult(
+				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
+				targetTableGroup,
 				keySide.getModelPart(),
 				fetchParent,
 				creationState
@@ -232,12 +260,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public DomainResult<?> createTargetDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
+		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
-				navigablePath,
-				tableGroup,
+				navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME ),
+				targetTableGroup,
 				targetSide.getModelPart(),
 				fetchParent,
 				creationState
@@ -245,26 +274,39 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public DomainResult<?> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			Nature side,
-			FetchParent fetchParent, DomainResultCreationState creationState) {
-		if ( side == Nature.KEY ) {
-			return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), fetchParent, creationState );
-		}
-		else {
-			return createDomainResult( navigablePath, tableGroup, targetSide.getModelPart(), fetchParent, creationState );
-		}
-	}
-
-	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), null, creationState );
+		assert isTargetTableGroup( targetTableGroup );
+		return createDomainResult(
+				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
+				targetTableGroup,
+				keySide.getModelPart(),
+				null,
+				creationState
+		);
+	}
+
+	private boolean isTargetTableGroup(TableGroup tableGroup) {
+		tableGroup = getUnderlyingTableGroup( tableGroup );
+		final TableGroupProducer tableGroupProducer;
+		if ( tableGroup instanceof OneToManyTableGroup ) {
+			tableGroupProducer = (TableGroupProducer) ( (OneToManyTableGroup) tableGroup ).getElementTableGroup()
+					.getModelPart();
+		}
+		else {
+			tableGroupProducer = (TableGroupProducer) tableGroup.getModelPart();
+		}
+		return tableGroupProducer.containsTableReference( targetSide.getModelPart().getContainingTableExpression() );
+	}
+
+	private static TableGroup getUnderlyingTableGroup(TableGroup tableGroup) {
+		if ( tableGroup instanceof VirtualTableGroup ) {
+			tableGroup = getUnderlyingTableGroup( ( (VirtualTableGroup) tableGroup ).getUnderlyingTableGroup() );
+		}
+		return tableGroup;
 	}
 
 	@Override
@@ -287,23 +329,16 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	private <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			SelectableMapping selectableMapping,
+			BasicValuedModelPart selectableMapping,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-
-		final NavigablePath resultNavigablePath;
-		if ( selectableMapping == keySide.getModelPart() ) {
-			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.PART_NAME );
-		}
-		else {
-			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME );
-		}
 		final TableReference tableReference;
 		try {
 			tableReference = tableGroup.resolveTableReference(
-					resultNavigablePath,
+					navigablePath,
+					selectableMapping,
 					selectableMapping.getContainingTableExpression()
 			);
 		}
@@ -356,13 +391,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstCreationState creationState) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
-				targetSide.getModelPart().getContainingTableExpression(),
-				false
+				targetSide.getModelPart().getContainingTableExpression()
 		);
 		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
 				null,
-				keySide.getModelPart().getContainingTableExpression(),
-				false
+				keySide.getModelPart().getContainingTableExpression()
 		);
 
 		return generateJoinPredicate( lhsTableReference, rhsTableKeyReference, creationState );

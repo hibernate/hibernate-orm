@@ -108,7 +108,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 					assertTrue( Hibernate.isInitialized( system.getUser() ) );
 
 					statementInspector.assertExecutedCount( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 
 				}
 		);
@@ -147,7 +147,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 					assertTrue( Hibernate.isInitialized( system.getUser() ) );
 
 					statementInspector.assertExecutedCount( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 
 				}
 		);

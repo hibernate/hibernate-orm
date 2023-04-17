@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -87,24 +88,45 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		@Override
 		public TableReference resolveTableReference(
 				NavigablePath navigablePath,
-				String tableExpression,
-				boolean allowFkOptimization) {
+				String tableExpression) {
 			if ( tableExpression.equals( normalTableExpression ) ) {
 				tableExpression = auditTableExpression;
 			}
-			return super.resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
+			return super.resolveTableReference( navigablePath, tableExpression );
+		}
+
+		@Override
+		public TableReference resolveTableReference(
+				NavigablePath navigablePath,
+				ValuedModelPart modelPart,
+				String tableExpression) {
+			if ( tableExpression.equals( normalTableExpression ) ) {
+				return resolveTableReference( navigablePath, modelPart, auditTableExpression );
+			}
+			return super.resolveTableReference( navigablePath, modelPart, tableExpression );
 		}
 
 		@Override
 		public TableReference getTableReference(
 				NavigablePath navigablePath,
 				String tableExpression,
-				boolean allowFkOptimization,
 				boolean resolve) {
 			if ( tableExpression.equals( normalTableExpression ) ) {
 				tableExpression = auditTableExpression;
 			}
-			return super.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+			return super.getTableReference( navigablePath, tableExpression, resolve );
+		}
+
+		@Override
+		public TableReference getTableReference(
+				NavigablePath navigablePath,
+				ValuedModelPart modelPart,
+				String tableExpression,
+				boolean resolve) {
+			if ( tableExpression.equals( normalTableExpression ) ) {
+				return getTableReference( navigablePath, modelPart, auditTableExpression, resolve );
+			}
+			return super.getTableReference( navigablePath, modelPart, tableExpression, resolve );
 		}
 	}
 

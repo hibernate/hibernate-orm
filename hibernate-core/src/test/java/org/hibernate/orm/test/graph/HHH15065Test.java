@@ -46,7 +46,7 @@ class HHH15065Test {
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		List<String> sqlQueries = statementInspector.getSqlQueries();
 		assertEquals( 1, sqlQueries.size() );
-		assertEquals( "select b1_0.id,a1_0.id,c1_0.id,c2_0.id,e1_0.id" +
+		assertEquals( "select b1_0.id,a1_0.id,a1_0.name,c1_0.id,c1_0.name,c2_0.id,c2_0.name,e1_0.id,e1_0.name" +
 					 " from Book b1_0" +
 					 " left join Person a1_0 on a1_0.id=b1_0.author_id" +
 					 " left join Person c1_0 on c1_0.id=b1_0.coAuthor_id" +
@@ -73,9 +73,10 @@ class HHH15065Test {
 	}
 
 	@Entity(name = "Person")
-	public class Person {
+	public static class Person {
 		@Id
 		Long id;
+		String name;
 	}
 
 }

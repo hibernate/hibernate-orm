@@ -40,6 +40,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -59,6 +60,7 @@ import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -74,7 +76,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  */
 @Incubating
 public class AnonymousTupleEntityValuedModelPart
-		implements EntityValuedModelPart, EntityMappingType, TableGroupJoinProducer {
+		implements EntityValuedModelPart, EntityMappingType, TableGroupJoinProducer, ValuedModelPart,
+		LazyTableGroup.ParentTableGroupUseChecker {
 
 	private final EntityIdentifierMapping identifierMapping;
 	private final DomainType<?> domainType;
@@ -115,7 +118,7 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			if ( ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName().equals( name ) ) {
+			if ( identifierMapping.getAttributeName().equals( name ) ) {
 				return identifierMapping;
 			}
 		}
@@ -142,6 +145,11 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
+	public MappingType getMappedType() {
+		return getPartMappingType();
+	}
+
+	@Override
 	public JavaType<?> getJavaType() {
 		return domainType.getExpressibleJavaType();
 	}
@@ -149,6 +157,11 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public String getPartName() {
 		return componentName;
+	}
+
+	@Override
+	public String getContainingTableExpression() {
+		return "";
 	}
 
 	@Override
@@ -225,6 +238,11 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		return identifierMapping.forEachSelectable( offset, consumer );
+	}
+
+	@Override
+	public SelectableMapping getSelectable(int columnIndex) {
+		return identifierMapping.getSelectable( columnIndex );
 	}
 
 	@Override
@@ -375,8 +393,7 @@ public class AnonymousTupleEntityValuedModelPart
 								final SelectableMapping targetMapping = targetMappings.get( i );
 								final TableReference targetTableReference = tg.resolveTableReference(
 										null,
-										targetMapping.getContainingTableExpression(),
-										false
+										targetMapping.getContainingTableExpression()
 								);
 								predicateConsumer.accept(
 										new ComparisonPredicate(
@@ -444,7 +461,6 @@ public class AnonymousTupleEntityValuedModelPart
 				creationState.getSqlAliasBaseGenerator()
 		);
 		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();
-		final EntityPersister entityPersister = delegate.getEntityMappingType().getEntityPersister();
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,
@@ -457,23 +473,7 @@ public class AnonymousTupleEntityValuedModelPart
 						sqlAliasBase,
 						creationState
 				),
-				(np, tableExpression) -> {
-					if ( !tableExpression.isEmpty() && !entityPersister.containsTableReference( tableExpression ) ) {
-						return false;
-					}
-					if ( navigablePath.equals( np.getParent() ) ) {
-						return targetKeyPropertyNames.contains( np.getLocalName() );
-					}
-
-					final String relativePath = np.relativize( navigablePath );
-					if ( relativePath == null ) {
-						return false;
-					}
-
-					// Empty relative path means the navigable paths are equal,
-					// in which case we allow resolving the parent table group
-					return relativePath.isEmpty() || targetKeyPropertyNames.contains( relativePath );
-				},
+				this,
 				this,
 				explicitSourceAlias,
 				sqlAliasBase,
@@ -488,6 +488,22 @@ public class AnonymousTupleEntityValuedModelPart
 		}
 
 		return lazyTableGroup;
+	}
+
+	@Override
+	public boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart) {
+		final ModelPart foreignKeyPart = getForeignKeyPart();
+		if ( foreignKeyPart instanceof AnonymousTupleNonAggregatedEntityIdentifierMapping ) {
+			final AnonymousTupleNonAggregatedEntityIdentifierMapping identifierMapping = (AnonymousTupleNonAggregatedEntityIdentifierMapping) foreignKeyPart;
+			final int numberOfFetchables = identifierMapping.getNumberOfFetchables();
+			for ( int i = 0; i< numberOfFetchables; i++ ) {
+				if ( valuedModelPart == identifierMapping.getFetchable( i ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return foreignKeyPart == valuedModelPart;
 	}
 
 	@Override
@@ -706,5 +722,10 @@ public class AnonymousTupleEntityValuedModelPart
 		return delegate instanceof TableGroupJoinProducer
 				? ( (TableGroupJoinProducer) delegate ).isSimpleJoinPredicate( predicate )
 				: false;
+	}
+
+	@Override
+	public boolean containsTableReference(String tableExpression) {
+		return ( (TableGroupProducer) delegate ).containsTableReference( tableExpression );
 	}
 }

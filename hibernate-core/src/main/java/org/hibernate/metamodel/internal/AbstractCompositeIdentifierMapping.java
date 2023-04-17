@@ -291,4 +291,8 @@ public abstract class AbstractCompositeIdentifierMapping
 		return false;
 	}
 
+	@Override
+	public boolean containsTableReference(String tableExpression) {
+		return entityMapping.containsTableReference( tableExpression );
+	}
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.embeddable;
 
-import java.util.List;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -19,6 +17,7 @@ import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -32,7 +31,6 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
@@ -44,10 +42,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private final NavigablePath navigablePath;
 	private final EmbeddableValuedModelPart embedded;
 	private final FetchParentAccess fetchParentAccess;
+	private final boolean isPartOfKey;
 	private final boolean createEmptyCompositesEnabled;
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final List<DomainResultAssembler<?>> assemblers;
+	protected final DomainResultAssembler<?>[] assemblers;
 
 	// per-row state
 	private final Object[] rowState;
@@ -66,23 +65,28 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final EmbeddableMappingType embeddableTypeDescriptor = embedded.getEmbeddableTypeDescriptor();
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		this.rowState = new Object[ size ];
-		this.assemblers = arrayList( size );
 
+		this.isPartOfKey = isPartOfKey( navigablePath );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
-		createEmptyCompositesEnabled = !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
-				&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
-				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( navigablePath.getLocalName() )
-				&& embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
+		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 
-		sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
-		initializeAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
+		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
+		this.assemblers = createAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
 	}
 
-	protected void initializeAssemblers(
+	private static boolean isPartOfKey(NavigablePath navigablePath) {
+		return ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
+				|| navigablePath instanceof EntityIdentifierNavigablePath
+				|| navigablePath.getParent().getParent() != null && isPartOfKey( navigablePath.getParent() );
+	}
+
+	protected DomainResultAssembler<?>[] createAssemblers(
 			EmbeddableResultGraphNode resultDescriptor,
 			AssemblerCreationState creationState,
 			EmbeddableMappingType embeddableTypeDescriptor) {
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
+		final DomainResultAssembler<?>[] assemblers = new DomainResultAssembler[size];
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable stateArrayContributor = embeddableTypeDescriptor.getFetchable( i );
 			final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
@@ -91,8 +95,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
 					: fetch.createAssembler( this, creationState );
 
-			assemblers.add( stateAssembler );
+			assemblers[i] = stateAssembler;
 		}
+		return assemblers;
 	}
 
 	@Override
@@ -220,6 +225,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				else {
 					state = State.INJECTED;
 				}
+			case INJECTED:
+				// Nothing to do
 		}
 	}
 
@@ -253,15 +260,14 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	}
 
 	private boolean isParentInstanceNull() {
-		if ( embedded instanceof CompositeIdentifierMapping ) {
+		if ( isPartOfKey ) {
 			return false;
 		}
 		FetchParentAccess parentAccess = fetchParentAccess;
 
 		while ( parentAccess != null && parentAccess.isEmbeddableInitializer() ) {
-			if ( parentAccess.getInitializedPart() instanceof CompositeIdentifierMapping ) {
-				return false;
-			}
+			assert !( parentAccess.getInitializedPart() instanceof CompositeIdentifierMapping )
+					: "isPartOfKey should have been true in this case";
 			parentAccess = parentAccess.getFetchParentAccess();
 		}
 
@@ -278,11 +284,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	private void extractRowState(RowProcessingState processingState) {
 		boolean stateAllNull = true;
-		final boolean isKey = ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
-				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
-				|| EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embedded.getFetchableName() );
-		for ( int i = 0; i < assemblers.size(); i++ ) {
-			final DomainResultAssembler<?> assembler = assemblers.get( i );
+		for ( int i = 0; i < assemblers.length; i++ ) {
+			final DomainResultAssembler<?> assembler = assemblers[i];
 			final Object contributorValue = assembler.assemble(
 					processingState,
 					processingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
@@ -297,7 +300,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			if ( contributorValue != null ) {
 				stateAllNull = false;
 			}
-			else if ( isKey ) {
+			else if ( isPartOfKey ) {
 				// If this is a foreign key and there is a null part, the whole thing has to be turned into null
 				stateAllNull = true;
 				break;

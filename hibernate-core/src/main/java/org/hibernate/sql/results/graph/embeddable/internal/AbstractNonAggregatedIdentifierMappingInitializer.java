@@ -51,7 +51,7 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 	private final FetchParentAccess fetchParentAccess;
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final List<DomainResultAssembler<?>> assemblers;
+	private final DomainResultAssembler<?>[] assemblers;
 	private final boolean hasIdClass;
 
 
@@ -77,28 +77,30 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 		final int size = virtualIdEmbeddable.getNumberOfFetchables();
 		this.virtualIdState = new Object[ size ];
 		this.idClassState = new Object[ size ];
-		this.assemblers = arrayList( size );
 
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
-		initializeAssemblers( resultDescriptor, creationState, virtualIdEmbeddable );
+		this.assemblers = createAssemblers( this, resultDescriptor, creationState, virtualIdEmbeddable );
 	}
 
 
-	protected void initializeAssemblers(
+	protected static DomainResultAssembler<?>[] createAssemblers(
+			FetchParentAccess parentAccess,
 			EmbeddableResultGraphNode resultDescriptor,
 			AssemblerCreationState creationState,
 			EmbeddableMappingType embeddableTypeDescriptor) {
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
+		final DomainResultAssembler<?>[] assemblers = new DomainResultAssembler[size];
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable stateArrayContributor = embeddableTypeDescriptor.getFetchable( i );
 			final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
 
 			final DomainResultAssembler<?> stateAssembler = fetch == null
 					? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
-					: fetch.createAssembler( this, creationState );
+					: fetch.createAssembler( parentAccess, creationState );
 
-			assemblers.add( stateAssembler );
+			assemblers[i] = stateAssembler;
 		}
+		return assemblers;
 	}
 
 	@Override
@@ -209,13 +211,15 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 						state = State.INJECTED;
 					}
 				}
+			case INJECTED:
+				// Nothing to do
 		}
 	}
 
 	private void extractRowState(RowProcessingState processingState) {
 		state = State.NULL;
-		for ( int i = 0; i < assemblers.size(); i++ ) {
-			final DomainResultAssembler<?> assembler = assemblers.get( i );
+		for ( int i = 0; i < assemblers.length; i++ ) {
+			final DomainResultAssembler<?> assembler = assemblers[i];
 			final Object contributorValue = assembler.assemble(
 					processingState,
 					processingState.getJdbcValuesSourceProcessingState().getProcessingOptions()

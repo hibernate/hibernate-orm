@@ -1414,7 +1414,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return expressions;
 	}
 
-	private SqmExpression<?> resolveOrderByOrGroupByExpression(ParseTree child, boolean definedCollate) {
+	private SqmExpression<?> resolveOrderByOrGroupByExpression(
+			ParseTree child,
+			boolean definedCollate,
+			boolean allowPositionalOrAliases) {
 		final SqmCreationProcessingState processingState = getCurrentProcessingState();
 		final SqmQuery<?> processingQuery = processingState.getProcessingQuery();
 		final SqmQueryPart<?> queryPart;
@@ -1431,6 +1434,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( definedCollate ) {
 				// This is syntactically disallowed
 				throw new ParsingException( "COLLATE is not allowed for position based order-by or group-by items" );
+			}
+			else if ( !allowPositionalOrAliases ) {
+				// This is syntactically disallowed
+				throw new ParsingException( "Position based order-by is not allowed in OVER or WITHIN GROUP clauses" );
 			}
 
 			final int position = Integer.parseInt( child.getText() );
@@ -1508,8 +1515,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 			}
 			else {
-				final Integer correspondingPosition = processingState.getPathRegistry()
-						.findAliasedNodePosition( identifierText );
+				final Integer correspondingPosition = allowPositionalOrAliases ?
+						processingState.getPathRegistry().findAliasedNodePosition( identifierText ) :
+						null;
 				if ( correspondingPosition != null ) {
 					if ( definedCollate ) {
 						// This is syntactically disallowed
@@ -1546,7 +1554,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitGroupByExpression(HqlParser.GroupByExpressionContext ctx) {
-		return resolveOrderByOrGroupByExpression( ctx.getChild( 0 ), ctx.getChildCount() > 1 );
+		return resolveOrderByOrGroupByExpression( ctx.getChild( 0 ), ctx.getChildCount() > 1, true );
 	}
 
 	@Override
@@ -1556,6 +1564,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmOrderByClause visitOrderByClause(HqlParser.OrderByClauseContext ctx) {
+		return visitOrderByClause( ctx, true );
+	}
+
+	private SqmOrderByClause visitOrderByClause(HqlParser.OrderByClauseContext ctx, boolean allowPositionalOrAliases) {
 		final int size = ctx.getChildCount();
 		// Shift 1 bit instead of division by 2
 		final int estimateExpressionsCount = ( size >> 1 ) - 1;
@@ -1563,9 +1575,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		for ( int i = 0; i < size; i++ ) {
 			final ParseTree parseTree = ctx.getChild( i );
 			if ( parseTree instanceof HqlParser.SortSpecificationContext ) {
-				orderByClause.addSortSpecification(
-						visitSortSpecification( (HqlParser.SortSpecificationContext) parseTree )
-				);
+				orderByClause.addSortSpecification( visitSortSpecification(
+						(HqlParser.SortSpecificationContext) parseTree,
+						allowPositionalOrAliases
+				) );
 			}
 		}
 		return orderByClause;
@@ -1573,7 +1586,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmSortSpecification visitSortSpecification(HqlParser.SortSpecificationContext ctx) {
-		final SqmExpression<?> sortExpression = visitSortExpression( (HqlParser.SortExpressionContext) ctx.getChild( 0 ) );
+		return visitSortSpecification( ctx, true );
+	}
+
+	private SqmSortSpecification visitSortSpecification(
+			HqlParser.SortSpecificationContext ctx,
+			boolean allowPositionalOrAliases) {
+		final SqmExpression<?> sortExpression = visitSortExpression(
+				(HqlParser.SortExpressionContext) ctx.getChild( 0 ),
+				allowPositionalOrAliases
+		);
 		if ( sortExpression == null ) {
 			throw new ParsingException( "Could not resolve sort-expression : " + ctx.getChild( 0 ).getText() );
 		}
@@ -1629,7 +1651,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitSortExpression(HqlParser.SortExpressionContext ctx) {
-		return resolveOrderByOrGroupByExpression( ctx.getChild( 0 ), ctx.getChildCount() > 1 );
+		return visitSortExpression( ctx, true );
+	}
+
+	public SqmExpression<?> visitSortExpression(HqlParser.SortExpressionContext ctx, boolean allowPositionalOrAliases) {
+		return resolveOrderByOrGroupByExpression( ctx.getChild( 0 ), ctx.getChildCount() > 1, allowPositionalOrAliases );
 	}
 
 	private SqmQuerySpec<?> currentQuerySpec() {
@@ -4602,7 +4628,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 		if ( ctx != null ) {
-			return visitOrderByClause( (HqlParser.OrderByClauseContext) ctx.getChild( 3 ) );
+			return visitOrderByClause( (HqlParser.OrderByClauseContext) ctx.getChild( 3 ), false );
 		}
 		return null;
 	}
@@ -4670,7 +4696,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			partitions = Collections.emptyList();
 		}
 		if ( index < ctx.getChildCount() && ctx.getChild( index ) instanceof HqlParser.OrderByClauseContext ) {
-			orderList = visitOrderByClause( (HqlParser.OrderByClauseContext) ctx.getChild( index ) ).getSortSpecifications();
+			orderList = visitOrderByClause(
+					(HqlParser.OrderByClauseContext) ctx.getChild( index ),
+					false
+			).getSortSpecifications();
 			index++;
 		}
 		else {

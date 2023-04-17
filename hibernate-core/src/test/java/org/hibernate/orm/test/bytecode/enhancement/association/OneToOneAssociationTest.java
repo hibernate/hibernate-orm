@@ -49,6 +49,25 @@ public class OneToOneAssociationTest {
         Assert.assertEquals( user, user.getCustomer().getUser() );
     }
 
+    @Test
+    public void testSetNull() {
+        User user = new User();
+        user.setLogin( UUID.randomUUID().toString() );
+
+        Customer customer = new Customer();
+        customer.setUser( user );
+
+        Assert.assertEquals( customer, user.getCustomer() );
+
+        // check dirty tracking is set automatically with bi-directional association management
+        EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
+
+        user.setCustomer( null );
+
+        Assert.assertNull( user.getCustomer() );
+        Assert.assertNull( customer.getUser() );
+    }
+
     // --- //
 
     @Entity

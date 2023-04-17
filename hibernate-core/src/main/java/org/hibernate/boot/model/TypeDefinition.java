@@ -29,6 +29,7 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -221,62 +222,79 @@ public class TypeDefinition implements Serializable {
 		// Series of backward compatible special cases
 
 		if ( Serializable.class.isAssignableFrom( typeImplementorClass ) ) {
-			final JavaType<Serializable> jtd = typeConfiguration
-					.getJavaTypeRegistry()
-					.resolveDescriptor( typeImplementorClass );
-			final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARBINARY );
-			final BasicType<Serializable> resolved = InferredBasicValueResolver.resolveSqlTypeIndicators(
-					indicators,
-					typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType ),
-					jtd
-			);
 			@SuppressWarnings({"rawtypes", "unchecked"})
 			final SerializableType legacyType = new SerializableType( typeImplementorClass );
+			return createBasicTypeResolution( legacyType, typeImplementorClass, indicators, typeConfiguration );
+		}
 
-			return new BasicValue.Resolution<>() {
-				@Override
-				public JdbcMapping getJdbcMapping() {
-					return resolved;
-				}
-
-				@Override  @SuppressWarnings({"rawtypes", "unchecked"})
-				public BasicType getLegacyResolvedBasicType() {
-					return legacyType;
-				}
-
-				@Override @SuppressWarnings({"rawtypes", "unchecked"})
-				public JavaType getDomainJavaType() {
-					return resolved.getMappedJavaType();
-				}
-
-				@Override
-				public JavaType<?> getRelationalJavaType() {
-					return resolved.getMappedJavaType();
-				}
-
-				@Override
-				public JdbcType getJdbcType() {
-					return resolved.getJdbcType();
-				}
-
-				@Override
-				public BasicValueConverter getValueConverter() {
-					return resolved.getValueConverter();
-				}
-
-				@Override @SuppressWarnings({"rawtypes", "unchecked"})
-				public MutabilityPlan getMutabilityPlan() {
-					// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
-					return resolved.isMutable()
-							? getDomainJavaType().getMutabilityPlan()
-							: ImmutableMutabilityPlan.instance();
-				}
-			};
+		if ( indicators.getEnumeratedType() != null ) {
+			assert typeImplementorClass.isInterface();
+			return createBasicTypeResolution( new JavaObjectType(), typeImplementorClass, indicators, typeConfiguration );
 		}
 
 		throw new IllegalArgumentException(
 				"Named type [" + typeImplementorClass + "] did not implement BasicType nor UserType"
 		);
+	}
+
+	private static BasicValue.Resolution<Object> createBasicTypeResolution(
+			BasicType<?> type,
+			Class<?> typeImplementorClass,
+			JdbcTypeIndicators indicators,
+			TypeConfiguration typeConfiguration
+			) {
+		final JavaType<Serializable> jtd = typeConfiguration
+				.getJavaTypeRegistry()
+				.resolveDescriptor( typeImplementorClass );
+		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARBINARY );
+		final BasicType<Serializable> resolved = InferredBasicValueResolver.resolveSqlTypeIndicators(
+				indicators,
+				typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType ),
+				jtd
+		);
+
+		return new BasicValue.Resolution<>() {
+			@Override
+			public JdbcMapping getJdbcMapping() {
+				return resolved;
+			}
+
+			@Override
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			public BasicType getLegacyResolvedBasicType() {
+				return type;
+			}
+
+			@Override
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			public JavaType getDomainJavaType() {
+				return resolved.getMappedJavaType();
+			}
+
+			@Override
+			public JavaType<?> getRelationalJavaType() {
+				return resolved.getMappedJavaType();
+			}
+
+			@Override
+			public JdbcType getJdbcType() {
+				return resolved.getJdbcType();
+			}
+
+			@Override
+			public BasicValueConverter getValueConverter() {
+				return resolved.getValueConverter();
+			}
+
+			@Override
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			public MutabilityPlan getMutabilityPlan() {
+				// a TypeDefinition does not explicitly provide a MutabilityPlan (yet?)
+				return resolved.isMutable()
+						? getDomainJavaType().getMutabilityPlan()
+						: ImmutableMutabilityPlan.instance();
+			}
+		};
 	}
 
 	private static Object instantiateType(

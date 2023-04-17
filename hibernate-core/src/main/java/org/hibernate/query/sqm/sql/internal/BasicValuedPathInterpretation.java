@@ -108,6 +108,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 
 		final TableReference tableReference = tableGroup.resolveTableReference(
 				sqmPath.getNavigablePath(),
+				mapping,
 				mapping.getContainingTableExpression()
 		);
 

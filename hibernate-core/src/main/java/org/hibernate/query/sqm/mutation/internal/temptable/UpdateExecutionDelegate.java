@@ -243,7 +243,6 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
 				tableExpression,
-				true,
 				true
 		);
 

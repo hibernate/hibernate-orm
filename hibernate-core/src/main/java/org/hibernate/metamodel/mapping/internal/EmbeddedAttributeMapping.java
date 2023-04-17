@@ -298,12 +298,12 @@ public class EmbeddedAttributeMapping
 		}
 		final List<ColumnReference> columnReferences = CollectionHelper.arrayList( embeddableMappingType.getJdbcTypeCount() );
 		final NavigablePath navigablePath = tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() );
-		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
+		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, this, getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
 					final TableReference tableReference = getContainingTableExpression().equals( selection.getContainingTableExpression() )
 							? defaultTableReference
-							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
+							: tableGroup.resolveTableReference( navigablePath, this, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
 							tableReference,
 							selection
@@ -393,5 +393,18 @@ public class EmbeddedAttributeMapping
 	@Override
 	public boolean isSelectable() {
 		return selectable;
+	}
+
+	@Override
+	public boolean containsTableReference(String tableExpression) {
+		final ManagedMappingType declaringType = getDeclaringType();
+		final TableGroupProducer producer;
+		if ( declaringType instanceof TableGroupProducer ) {
+			producer = (TableGroupProducer) declaringType;
+		}
+		else {
+			producer = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
+		}
+		return producer.containsTableReference( tableExpression );
 	}
 }

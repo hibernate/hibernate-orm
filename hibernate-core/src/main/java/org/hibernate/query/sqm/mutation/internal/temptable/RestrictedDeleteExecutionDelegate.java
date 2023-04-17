@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.internal.util.MutableInteger;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -329,7 +328,6 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 							final NamedTableReference tableReference = (NamedTableReference) tableGroup.getTableReference(
 									tableGroup.getNavigablePath(),
 									tableExpression,
-									true,
 									true
 							);
 							final QuerySpec idMatchingSubQuerySpec;

@@ -47,6 +47,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.EntityType;
@@ -74,7 +75,8 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
  *
  * @author Steve Ebersole
  */
-public class ManyToManyCollectionPart extends AbstractEntityCollectionPart implements EntityAssociationMapping {
+public class ManyToManyCollectionPart extends AbstractEntityCollectionPart implements EntityAssociationMapping,
+		LazyTableGroup.ParentTableGroupUseChecker {
 	private ForeignKeyDescriptor foreignKey;
 	private ValuedModelPart fkTargetModelPart;
 
@@ -292,24 +294,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 						sqlAliasBase,
 						creationState
 				),
-				(np, tableExpression) -> {
-					if ( ! foreignKey.getKeyTable().equals( tableExpression ) ) {
-						return false;
-					}
-
-					if ( navigablePath.equals( np.getParent() ) ) {
-						return getTargetKeyPropertyNames().contains( np.getLocalName() );
-					}
-
-					final String relativePath = np.relativize( navigablePath );
-					if ( relativePath == null ) {
-						return false;
-					}
-
-					// Empty relative path means the navigable paths are equal,
-					// in which case we allow resolving the parent table group
-					return relativePath.isEmpty() || getTargetKeyPropertyNames().contains( relativePath );
-				},
+				this,
 				this,
 				explicitSourceAlias,
 				sqlAliasBase,
@@ -335,6 +320,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 
 		return lazyTableGroup;
+	}
+
+	@Override
+	public boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart) {
+		return foreignKey.isKeyPart( valuedModelPart );
 	}
 
 	@Override

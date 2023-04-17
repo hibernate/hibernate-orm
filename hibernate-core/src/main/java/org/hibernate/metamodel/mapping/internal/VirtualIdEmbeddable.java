@@ -89,7 +89,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 						selectableMappings,
 						inverseMappingType,
 						creationProcess,
-						valueMapping.getDeclaringType(),
+						this,
 						this.attributeMappings
 				)
 		);

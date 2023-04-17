@@ -54,15 +54,14 @@ public class TableGroupImpl extends AbstractTableGroup {
 	}
 
 	@Override
-	public TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		if ( primaryTableReference.getTableReference( navigablePath , tableExpression, allowFkOptimization, resolve ) != null ) {
+		if ( primaryTableReference.getTableReference( navigablePath , tableExpression, resolve ) != null ) {
 			return primaryTableReference;
 		}
-		return super.getTableReferenceInternal( navigablePath, tableExpression, allowFkOptimization, resolve );
+		return super.getTableReference( navigablePath, tableExpression, resolve );
 	}
 
 }

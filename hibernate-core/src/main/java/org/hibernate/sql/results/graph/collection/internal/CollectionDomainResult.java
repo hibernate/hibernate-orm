@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -53,10 +54,11 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 		this.loadingAttribute = loadingAttribute;
 		this.resultVariable = resultVariable;
 		this.tableGroup = tableGroup;
-
-		fkResult = loadingAttribute.getKeyDescriptor().createKeyDomainResult(
+		// The collection is always the target side
+		this.fkResult = loadingAttribute.getKeyDescriptor().createKeyDomainResult(
 				loadingPath,
 				tableGroup,
+				ForeignKeyDescriptor.Nature.TARGET,
 				this,
 				creationState
 		);

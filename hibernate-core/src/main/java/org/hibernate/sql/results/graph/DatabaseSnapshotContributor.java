@@ -24,9 +24,9 @@ public interface DatabaseSnapshotContributor extends Fetchable {
 	 */
 	default <T> DomainResult<T> createSnapshotDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup parentTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return createDomainResult( navigablePath, tableGroup, null, creationState );
+		return createDomainResult( navigablePath, parentTableGroup, null, creationState );
 	}
 }

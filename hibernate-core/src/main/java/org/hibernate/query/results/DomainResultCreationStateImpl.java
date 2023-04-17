@@ -374,8 +374,8 @@ public class DomainResultCreationStateImpl
 
 	@Override
 	public Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
-		final EntityValuedModelPart entityValuedFetchable = fetchParent.getEntityValuedModelPart();
-		final EntityIdentifierMapping identifierMapping = entityValuedFetchable.getEntityMappingType().getIdentifierMapping();
+		final EntityValuedModelPart parentModelPart = fetchParent.getEntityValuedModelPart();
+		final EntityIdentifierMapping identifierMapping = parentModelPart.getEntityMappingType().getIdentifierMapping();
 		final String identifierAttributeName = attributeName( identifierMapping );
 		final Map.Entry<String, NavigablePath> oldEntry = relativePathStack.getCurrent();
 		final String fullPath;
@@ -388,7 +388,7 @@ public class DomainResultCreationStateImpl
 					oldEntry.getKey() + "." + identifierAttributeName;
 		}
 
-		final Fetchable fetchable = (Fetchable) identifierMapping;
+		final Fetchable identifierFetchable = (Fetchable) identifierMapping;
 		final FetchBuilder explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
 				.getCurrent()
 				.apply( fullPath );
@@ -423,7 +423,7 @@ public class DomainResultCreationStateImpl
 			}
 			else {
 				if ( fetchBuilderLegacy == null ) {
-					fetchBuilder = Builders.implicitFetchBuilder( fetchPath, fetchable, this );
+					fetchBuilder = Builders.implicitFetchBuilder( fetchPath, identifierFetchable, this );
 				}
 				else {
 					fetchBuilder = fetchBuilderLegacy;

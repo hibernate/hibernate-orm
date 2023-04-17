@@ -13,7 +13,6 @@ import java.util.Map;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -155,7 +154,6 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 					final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 							updatingTableGroup.getNavigablePath(),
 							tableExpression,
-							true,
 							true
 					);
 					final NamedTableReference dmlTableReference = resolveUnionTableReference(

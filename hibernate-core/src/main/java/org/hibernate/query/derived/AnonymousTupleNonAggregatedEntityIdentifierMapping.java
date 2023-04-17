@@ -6,7 +6,9 @@
  */
 package org.hibernate.query.derived;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchStyle;
@@ -19,6 +21,10 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.sql.ast.spi.SqlSelection;
+
+import jakarta.persistence.metamodel.Attribute;
 
 /**
  * @author Christian Beikov
@@ -30,12 +36,22 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	private final NonAggregatedIdentifierMapping delegate;
 
 	public AnonymousTupleNonAggregatedEntityIdentifierMapping(
-			Map<String, ModelPart> modelParts,
+			SqmExpressible<?> sqmExpressible,
+			List<SqlSelection> sqlSelections,
+			int selectionIndex,
+			String selectionExpression,
+			Set<String> compatibleTableExpressions,
+			Set<Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
 			String componentName,
 			NonAggregatedIdentifierMapping delegate) {
 		super(
-				modelParts,
+				sqmExpressible,
+				sqlSelections,
+				selectionIndex,
+				selectionExpression,
+				compatibleTableExpressions,
+				attributes,
 				domainType,
 				componentName,
 				delegate,

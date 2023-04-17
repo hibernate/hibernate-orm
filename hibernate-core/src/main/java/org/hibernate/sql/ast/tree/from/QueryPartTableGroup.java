@@ -8,13 +8,11 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 /**
@@ -83,10 +81,9 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		if ( compatibleTableExpressions.contains( tableExpression ) ) {
 			return getPrimaryTableReference();
@@ -94,7 +91,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}
@@ -102,7 +99,7 @@ public class QueryPartTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}

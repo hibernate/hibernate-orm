@@ -99,9 +99,11 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 				fetchParent,
 				creationState
 		);
+		// The collection is always the target side
 		collectionValueKeyResult = keyDescriptor.createKeyDomainResult(
 				fetchedPath,
 				collectionTableGroup,
+				ForeignKeyDescriptor.Nature.TARGET,
 				fetchParent,
 				creationState
 		);

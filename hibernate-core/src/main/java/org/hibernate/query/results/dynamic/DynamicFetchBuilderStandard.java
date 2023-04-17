@@ -12,8 +12,11 @@ import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.spi.NavigablePath;
@@ -80,9 +83,108 @@ public class DynamicFetchBuilderStandard
 		final Fetchable attributeMapping = (Fetchable) parent.getReferencedMappingContainer().findSubPart( fetchableName, null );
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 
-		final SelectableConsumer selectableConsumer = (selectionIndex, selectableMapping) -> {
+		if ( attributeMapping instanceof BasicValuedModelPart ) {
+			attributeMapping.forEachSelectable(
+					getSelectableConsumer(
+							fetchPath,
+							jdbcResultsMetadata,
+							domainResultCreationState,
+							creationStateImpl,
+							ownerTableGroup,
+							sqlExpressionResolver,
+							(BasicValuedModelPart) attributeMapping
+					)
+			);
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					fetchPath,
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
+					creationStateImpl
+			);
+		}
+		else if ( attributeMapping instanceof EmbeddableValuedFetchable ) {
+			attributeMapping.forEachSelectable(
+					getSelectableConsumer(
+							fetchPath,
+							jdbcResultsMetadata,
+							domainResultCreationState,
+							creationStateImpl,
+							ownerTableGroup,
+							sqlExpressionResolver,
+							(EmbeddableValuedFetchable) attributeMapping
+					)
+			);
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					fetchPath,
+					FetchTiming.IMMEDIATE,
+					false,
+					null,
+					creationStateImpl
+			);
+		}
+		else if ( attributeMapping instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+			toOneAttributeMapping.getForeignKeyDescriptor().getPart( toOneAttributeMapping.getSideNature() )
+							.forEachSelectable(
+									getSelectableConsumer(
+											fetchPath,
+											jdbcResultsMetadata,
+											domainResultCreationState,
+											creationStateImpl,
+											ownerTableGroup,
+											sqlExpressionResolver,
+											toOneAttributeMapping.getForeignKeyDescriptor()
+									)
+							);
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					fetchPath,
+					FetchTiming.DELAYED,
+					false,
+					null,
+					creationStateImpl
+			);
+		}
+		else {
+			assert attributeMapping instanceof PluralAttributeMapping;
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
+			pluralAttributeMapping.getKeyDescriptor().visitTargetSelectables(
+					getSelectableConsumer(
+							fetchPath,
+							jdbcResultsMetadata,
+							domainResultCreationState,
+							creationStateImpl,
+							ownerTableGroup,
+							sqlExpressionResolver,
+							pluralAttributeMapping.getKeyDescriptor()
+					)
+			);
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					fetchPath,
+					FetchTiming.DELAYED,
+					false,
+					null,
+					creationStateImpl
+			);
+		}
+	}
+
+	private SelectableConsumer getSelectableConsumer(
+			NavigablePath fetchPath,
+			JdbcValuesMetadata jdbcResultsMetadata,
+			DomainResultCreationState domainResultCreationState,
+			DomainResultCreationStateImpl creationStateImpl,
+			TableGroup ownerTableGroup,
+			SqlExpressionResolver sqlExpressionResolver,
+			ValuedModelPart valuedModelPart) {
+		return (selectionIndex, selectableMapping) -> {
 			final TableReference tableReference = ownerTableGroup.resolveTableReference(
 					fetchPath,
+					valuedModelPart,
 					selectableMapping.getContainingTableExpression()
 			);
 			final String columnAlias = columnNames.get( selectionIndex );
@@ -102,54 +204,6 @@ public class DynamicFetchBuilderStandard
 							.getTypeConfiguration()
 			);
 		};
-		if ( attributeMapping instanceof BasicValuedMapping ) {
-			attributeMapping.forEachSelectable( selectableConsumer );
-			return parent.generateFetchableFetch(
-					attributeMapping,
-					fetchPath,
-					FetchTiming.IMMEDIATE,
-					true,
-					null,
-					creationStateImpl
-			);
-		}
-		else if ( attributeMapping instanceof EmbeddableValuedFetchable ) {
-			attributeMapping.forEachSelectable( selectableConsumer );
-			return parent.generateFetchableFetch(
-					attributeMapping,
-					fetchPath,
-					FetchTiming.IMMEDIATE,
-					false,
-					null,
-					creationStateImpl
-			);
-		}
-		else if ( attributeMapping instanceof ToOneAttributeMapping ) {
-			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
-			toOneAttributeMapping.getForeignKeyDescriptor().getPart( toOneAttributeMapping.getSideNature() )
-							.forEachSelectable( selectableConsumer );
-			return parent.generateFetchableFetch(
-					attributeMapping,
-					fetchPath,
-					FetchTiming.DELAYED,
-					false,
-					null,
-					creationStateImpl
-			);
-		}
-		else {
-			assert attributeMapping instanceof PluralAttributeMapping;
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
-			pluralAttributeMapping.getKeyDescriptor().visitTargetSelectables( selectableConsumer );
-			return parent.generateFetchableFetch(
-					attributeMapping,
-					fetchPath,
-					FetchTiming.DELAYED,
-					false,
-					null,
-					creationStateImpl
-			);
-		}
 	}
 
 	@Override

@@ -758,7 +758,6 @@ public class CteInsertHandler implements InsertHandler {
 		final TableReference rootTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
 				rootTableName,
-				true,
 				true
 		);
 
@@ -777,7 +776,6 @@ public class CteInsertHandler implements InsertHandler {
 			final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 					updatingTableGroup.getNavigablePath(),
 					tableExpression,
-					true,
 					true
 			);
 			final List<Map.Entry<List<CteColumn>, Assignment>> assignmentList = assignmentsByTable.get( updatingTableReference );

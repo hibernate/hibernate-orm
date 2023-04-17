@@ -332,7 +332,6 @@ public class InlineUpdateHandler implements UpdateHandler {
 		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 				updatingTableGroup.getNavigablePath(),
 				tableExpression,
-				true,
 				true
 		);
 

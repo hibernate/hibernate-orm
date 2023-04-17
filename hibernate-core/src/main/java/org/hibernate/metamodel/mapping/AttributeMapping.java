@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
  * @author Steve Ebersole
  */
 public interface AttributeMapping
-		extends ValuedModelPart, Fetchable, DatabaseSnapshotContributor, PropertyBasedMapping, MutabilityPlanExposer {
+		extends OwnedValuedModelPart, Fetchable, DatabaseSnapshotContributor, PropertyBasedMapping, MutabilityPlanExposer {
 	/**
 	 * The name of the mapped attribute
 	 */

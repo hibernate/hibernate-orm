@@ -55,10 +55,9 @@ public class FunctionTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		if ( tableExpression == null ) {
 			return getPrimaryTableReference();
@@ -66,7 +65,7 @@ public class FunctionTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}
@@ -74,7 +73,7 @@ public class FunctionTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}

@@ -121,7 +121,7 @@ public interface PluralAttributeMapping
 	@Override
 	default <T> DomainResult<T> createSnapshotDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup parentTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return new BasicResult( 0, null, getJavaType() );

@@ -7,8 +7,10 @@
 package org.hibernate.orm.test.bytecode.enhancement.association;
 
 import jakarta.persistence.*;
+
 import org.hibernate.Hibernate;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.junit.After;
@@ -16,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -41,8 +44,8 @@ public class OneToManyLazyAndEagerTest2 extends BaseEntityManagerFunctionalTestC
 		doInJPA( this::entityManagerFactory, em -> {
 			final User user = new User( "User 1", "Marco" );
 			final User targetUser = new User( "User 2", "Andrea" );
-			final Coupon coupon = new Coupon("Coupon 1", targetUser);
-			final Order order = new Order( "Order 1", user, targetUser, coupon);
+			final Coupon coupon = new Coupon( "Coupon 1", targetUser );
+			final Order order = new Order( "Order 1", user, targetUser, coupon );
 			em.persist( user );
 			em.persist( targetUser );
 			em.persist( coupon );
@@ -65,12 +68,20 @@ public class OneToManyLazyAndEagerTest2 extends BaseEntityManagerFunctionalTestC
 			final Order order = em.createQuery( "select o from Order o", Order.class )
 					.getResultList()
 					.get( 0 );
+
 			final User user = order.getUser();
 			assertTrue( "Proxy should be initialized", Hibernate.isInitialized( user ) );
 			assertEquals( "Marco", user.getName() );
+
 			final User targetUser = order.getTargetUser();
 			assertTrue( "Proxy should be initialized", Hibernate.isInitialized( targetUser ) );
 			assertEquals( "Andrea", targetUser.getName() );
+
+			final Coupon coupon = order.getCoupon();
+			assertTrue( "Proxy should be initialized", Hibernate.isInitialized( coupon ) );
+			assertThat( coupon.getTargetUser() ).isSameAs( targetUser );
+
+
 		} );
 	}
 
@@ -109,6 +120,10 @@ public class OneToManyLazyAndEagerTest2 extends BaseEntityManagerFunctionalTestC
 
 		public User getTargetUser() {
 			return targetUser;
+		}
+
+		public Coupon getCoupon() {
+			return coupon;
 		}
 	}
 
@@ -161,5 +176,6 @@ public class OneToManyLazyAndEagerTest2 extends BaseEntityManagerFunctionalTestC
 		public User getTargetUser() {
 			return targetUser;
 		}
+
 	}
 }

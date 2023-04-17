@@ -193,7 +193,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				lhs,
 				joinType,
 				isTerminal ? alias : allowReuse ? SqmCreationHelper.IMPLICIT_ALIAS : null,
-				fetch,
+				isTerminal && fetch,
 				creationState
 		);
 		lhs.addSqmJoin( join );

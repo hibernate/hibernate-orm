@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.FetchNotFoundException;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -133,7 +134,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		entityInstance = persistenceContext.getEntity( entityKey );
-		if ( entityInstance != null ) {
+		if ( entityInstance != null && Hibernate.isInitialized( entityInstance )) {
 			isInitialized = true;
 			return;
 		}

@@ -34,6 +34,7 @@ import net.bytebuddy.dynamic.scaffold.FieldLocator;
 import net.bytebuddy.dynamic.scaffold.InstrumentedType;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
@@ -55,8 +56,15 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		if ( targetEntity == null ) {
 			return implementation;
 		}
-		String mappedBy = getMappedBy( persistentField, targetEntity, enhancementContext );
-		if ( mappedBy == null || mappedBy.isEmpty() ) {
+		String mappedBy = getMappedBy( persistentField );
+		String bidirectionalAttributeName;
+		if ( mappedBy == null ) {
+			bidirectionalAttributeName = getMappedByManyToMany( persistentField, targetEntity, enhancementContext );
+		}
+		else {
+			bidirectionalAttributeName = mappedBy;
+		}
+		if ( bidirectionalAttributeName == null || bidirectionalAttributeName.isEmpty() ) {
 			log.infof(
 					"Could not find bi-directional association for field [%s#%s]",
 					managedCtClass.getName(),
@@ -66,15 +74,24 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		}
 
 		TypeDescription targetType = FieldLocator.ForClassHierarchy.Factory.INSTANCE.make( targetEntity )
-				.locate( mappedBy )
+				.locate( bidirectionalAttributeName )
 				.getField()
 				.getType()
 				.asErasure();
 
 		if ( persistentField.hasAnnotation( OneToOne.class ) ) {
 			implementation = Advice.withCustomMapping()
-					.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
-					.bind( CodeTemplates.MappedBy.class, mappedBy )
+					.bind(
+							// We need to make the fieldValue writable for one-to-one to avoid stack overflows
+							// when unsetting the inverse field
+							new Advice.OffsetMapping.ForField.Resolved.Factory<>(
+									CodeTemplates.FieldValue.class,
+									persistentField.getFieldDescription(),
+									false,
+									Assigner.Typing.DYNAMIC
+							)
+					)
+					.bind( CodeTemplates.InverseSide.class, mappedBy != null )
 					.to( CodeTemplates.OneToOneHandler.class )
 					.wrap( implementation );
 		}
@@ -82,7 +99,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		if ( persistentField.hasAnnotation( OneToMany.class ) ) {
 			implementation = Advice.withCustomMapping()
 					.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
-					.bind( CodeTemplates.MappedBy.class, mappedBy )
+					.bind( CodeTemplates.InverseSide.class, mappedBy != null )
 					.to( persistentField.getType().asErasure().isAssignableTo( Map.class )
 								? CodeTemplates.OneToManyOnMapHandler.class
 								: CodeTemplates.OneToManyOnCollectionHandler.class )
@@ -92,7 +109,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		if ( persistentField.hasAnnotation( ManyToOne.class ) ) {
 			implementation = Advice.withCustomMapping()
 					.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
-					.bind( CodeTemplates.MappedBy.class, mappedBy )
+					.bind( CodeTemplates.BidirectionalAttribute.class, bidirectionalAttributeName )
 					.to( CodeTemplates.ManyToOneHandler.class )
 					.wrap( implementation );
 		}
@@ -110,12 +127,13 @@ final class BiDirectionalAssociationHandler implements Implementation {
 
 			implementation = Advice.withCustomMapping()
 					.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
-					.bind( CodeTemplates.MappedBy.class, mappedBy )
+					.bind( CodeTemplates.InverseSide.class, mappedBy != null )
+					.bind( CodeTemplates.BidirectionalAttribute.class, bidirectionalAttributeName )
 					.to( CodeTemplates.ManyToManyHandler.class )
 					.wrap( implementation );
 		}
 
-		return new BiDirectionalAssociationHandler( implementation, targetEntity, targetType, mappedBy );
+		return new BiDirectionalAssociationHandler( implementation, managedCtClass, persistentField, targetEntity, targetType, bidirectionalAttributeName );
 	}
 
 	public static TypeDescription getTargetEntityClass(TypeDescription managedCtClass, AnnotatedFieldDescription persistentField) {
@@ -177,17 +195,14 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		}
 	}
 
-	private static String getMappedBy(AnnotatedFieldDescription target, TypeDescription targetEntity, ByteBuddyEnhancementContext context) {
-		String mappedBy = getMappedByNotManyToMany( target );
+	private static String getMappedBy(AnnotatedFieldDescription target) {
+		final String mappedBy = getMappedByFromAnnotation( target );
 		if ( mappedBy == null || mappedBy.isEmpty() ) {
-			return getMappedByManyToMany( target, targetEntity, context );
+			return null;
 		}
-		else {
-			return mappedBy;
-		}
+		return mappedBy;
 	}
-
-	private static String getMappedByNotManyToMany(AnnotatedFieldDescription target) {
+	private static String getMappedByFromAnnotation(AnnotatedFieldDescription target) {
 		try {
 			AnnotationDescription.Loadable<OneToOne> oto = target.getAnnotation( OneToOne.class );
 			if ( oto != null ) {
@@ -214,7 +229,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		for ( FieldDescription f : targetEntity.getDeclaredFields() ) {
 			AnnotatedFieldDescription annotatedF = new AnnotatedFieldDescription( context, f );
 			if ( context.isPersistentField( annotatedF )
-					&& target.getName().equals( getMappedByNotManyToMany( annotatedF ) )
+					&& target.getName().equals( getMappedBy( annotatedF ) )
 					&& target.getDeclaringType().asErasure().isAssignableTo( entityType( annotatedF.getType() ) ) ) {
 				log.debugf(
 						"mappedBy association for field [%s#%s] is [%s#%s]",
@@ -244,21 +259,28 @@ final class BiDirectionalAssociationHandler implements Implementation {
 
 	private final Implementation delegate;
 
+	private final TypeDescription entity;
+	private final AnnotatedFieldDescription field;
+
 	private final TypeDescription targetEntity;
 
 	private final TypeDescription targetType;
 
-	private final String mappedBy;
+	private final String bidirectionalAttributeName;
 
 	private BiDirectionalAssociationHandler(
 			Implementation delegate,
+			TypeDescription entity,
+			AnnotatedFieldDescription field,
 			TypeDescription targetEntity,
 			TypeDescription targetType,
-			String mappedBy) {
+			String bidirectionalAttributeName) {
 		this.delegate = delegate;
+		this.entity = entity;
+		this.field = field;
 		this.targetEntity = targetEntity;
 		this.targetType = targetType;
-		this.mappedBy = mappedBy;
+		this.bidirectionalAttributeName = bidirectionalAttributeName;
 	}
 
 	@Override
@@ -292,8 +314,18 @@ final class BiDirectionalAssociationHandler implements Implementation {
 							super.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									targetEntity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + mappedBy,
+									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + bidirectionalAttributeName,
 									Type.getMethodDescriptor( Type.getType( targetType.getDescriptor() ) ),
+									false
+							);
+						}
+						else if ( name.equals( "getterSelf" ) ) {
+							super.visitVarInsn( Opcodes.ALOAD, 0 );
+							super.visitMethodInsn(
+									Opcodes.INVOKEVIRTUAL,
+									entity.getInternalName(),
+									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + field.getName(),
+									Type.getMethodDescriptor( Type.getType( field.getDescriptor() ) ),
 									false
 							);
 						}
@@ -304,7 +336,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 							super.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									targetEntity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + mappedBy,
+									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + bidirectionalAttributeName,
 									Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( targetType.getDescriptor() ) ),
 									false
 							);
@@ -316,7 +348,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 							super.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									targetEntity.getInternalName(),
-									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + mappedBy,
+									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + bidirectionalAttributeName,
 									Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( targetType.getDescriptor() ) ),
 									false
 							);
@@ -345,11 +377,11 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		return Objects.equals( delegate, that.delegate ) &&
 			Objects.equals( targetEntity, that.targetEntity ) &&
 			Objects.equals( targetType, that.targetType ) &&
-			Objects.equals( mappedBy, that.mappedBy );
+			Objects.equals( bidirectionalAttributeName, that.bidirectionalAttributeName );
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( delegate, targetEntity, targetType, mappedBy );
+		return Objects.hash( delegate, targetEntity, targetType, bidirectionalAttributeName );
 	}
 }

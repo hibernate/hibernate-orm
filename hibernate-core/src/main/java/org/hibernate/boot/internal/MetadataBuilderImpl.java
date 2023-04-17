@@ -61,6 +61,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -70,14 +71,17 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
@@ -88,7 +92,9 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.SharedCacheMode;
 
+import static org.hibernate.cfg.AvailableSettings.JPA_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
 /**
  * @author Steve Ebersole
@@ -475,7 +481,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.implicitlyQuoteIdentifiers = configService.getSetting(
 					AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
@@ -623,30 +629,30 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
 			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
-			this.wrapperArrayHandling = resolveWrapperArrayHandling( configService );
+			this.wrapperArrayHandling = resolveWrapperArrayHandling( configService, serviceRegistry );
 			this.multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
 
 			this.xmlMappingEnabled = configService.getSetting(
 					AvailableSettings.XML_MAPPING_ENABLED,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					true
 			);
 
 			this.implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
 					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
 			this.explicitDiscriminatorsForJoinedInheritanceSupported = !configService.getSetting(
 					AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
 			this.implicitlyForceDiscriminatorInSelect = configService.getSetting(
 					AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
@@ -710,7 +716,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.specjProprietarySyntaxEnabled = configService.getSetting(
 					"hibernate.enable_specj_proprietary_syntax",
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
@@ -760,7 +766,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.useNationalizedCharacterData = configService.getSetting(
 					AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 
@@ -772,7 +778,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			allowExtensionsInCdi = configService.getSetting(
 					AvailableSettings.ALLOW_EXTENSIONS_IN_CDI,
-					StandardConverters.BOOLEAN,
+					BOOLEAN,
 					false
 			);
 		}
@@ -1011,19 +1017,38 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	private static WrapperArrayHandling resolveWrapperArrayHandling(
-			ConfigurationService configService) {
-		return configService.getSetting(
-				WRAPPER_ARRAY_HANDLING,
-				value -> {
-					if ( value == null ) {
-						throw new IllegalArgumentException( "Null value passed to convert" );
-					}
-
-					return value instanceof WrapperArrayHandling
-							? (WrapperArrayHandling) value
-							: WrapperArrayHandling.valueOf( value.toString().toUpperCase( Locale.ROOT ) );
-				},
-				WrapperArrayHandling.DISALLOW
+			ConfigurationService configService,
+			StandardServiceRegistry serviceRegistry) {
+		final WrapperArrayHandling setting = NullnessHelper.coalesceSuppliedValues(
+				() -> configService.getSetting(
+						WRAPPER_ARRAY_HANDLING,
+						WrapperArrayHandling::interpretExternalSettingLeniently
+				),
+				() -> resolveFallbackWrapperArrayHandling( configService, serviceRegistry )
 		);
+
+		if ( setting == WrapperArrayHandling.PICK ) {
+			final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+			if ( dialect.supportsStandardArrays()
+					&& ( dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY
+						|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {
+				return WrapperArrayHandling.ALLOW;
+			}
+
+			return WrapperArrayHandling.LEGACY;
+		}
+
+		return setting;
+	};
+
+	private static WrapperArrayHandling resolveFallbackWrapperArrayHandling(
+			ConfigurationService configService,
+			StandardServiceRegistry serviceRegistry) {
+		if ( configService.getSetting( JPA_COMPLIANCE, BOOLEAN ) == Boolean.TRUE ) {
+			// JPA compliance was enabled.  Use PICK
+			return WrapperArrayHandling.PICK;
+		}
+
+		return WrapperArrayHandling.DISALLOW;
 	}
 }

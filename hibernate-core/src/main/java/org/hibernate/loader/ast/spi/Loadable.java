@@ -28,6 +28,19 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 	 */
 	String getRootPathName();
 
+	default boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return isAffectedByEntityGraph( influencers )
+				|| isAffectedByEnabledFetchProfiles( influencers )
+				|| isAffectedByEnabledFilters( influencers );
+	}
+
+	default boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return !isAffectedByEntityGraph( influencers )
+				&& !isAffectedByEnabledFetchProfiles( influencers )
+				&& !isAffectedByEnabledFilters( influencers )
+				&& influencers.getEnabledCascadingFetchProfile() == null;
+	}
+
 	/**
 	 * Whether any of the "influencers" affect this loadable.
 	 */

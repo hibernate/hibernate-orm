@@ -41,7 +41,7 @@ import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Fetch;
-import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -145,7 +145,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  */
 @Internal
 public abstract class AbstractCollectionPersister
-		implements CollectionPersister, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, DeprecatedCollectionStuff {
+		implements CollectionPersister, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, FetchProfileAffectee, DeprecatedCollectionStuff {
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
@@ -232,6 +232,7 @@ public abstract class AbstractCollectionPersister
 	private CollectionElementLoaderByIndex collectionElementLoaderByIndex;
 
 	private PluralAttributeMapping attributeMapping;
+	private volatile Map<String, Fetch.Style> affectingFetchProfiles;
 
 
 	@Deprecated(since = "6.0")
@@ -752,42 +753,10 @@ public abstract class AbstractCollectionPersister
 		return generateCollectionLoader( loadQueryInfluencers );
 	}
 
-	// todo (batch-fetch) : `affectedByAnyInfluencers` requires collecting the fetch-profile details
-	//		affecting this collection.  Currently that is not collected, like it is with
-	//		`org.hibernate.persister.entity.AbstractEntityPersister.affectingFetchProfileNames` e.g.
-
-	//		- in SessionFactoryImpl, after building the fetchProfiles (or even while ideally), build
-	//			`Map<String, Map<String, Fetch.Style>>`.  The primary Map is keyed by the fetch role name and
-	//			refers to a nested Map, which is the fetch-style for the role, keyed by the profile-name.
-
-//	private boolean canUseReusableCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
-//		final boolean affectedByAnyInfluencers = hasDefinedFilters() || attributeMapping.hasDefinedFetchProfiles();
-//		if ( !affectedByAnyInfluencers ) {
-//			// short-cut to avoid checking all enabled filters and profiles - there will never be any
-//			return true;
-//		}
-//
-//		// we can reuse it so long as none of the enabled influencers affect it
-//		return !isAffectedByEnabledFilters( loadQueryInfluencers )
-//				&& !isAffectedByEnabledFetchProfiles( loadQueryInfluencers );
-//	}
 	private boolean canUseReusableCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		// we can reuse it so long as none of the enabled influencers affect it
-		return isNotInfluenced( loadQueryInfluencers );
+		return attributeMapping.isNotAffectedByInfluencers( loadQueryInfluencers );
 	}
-
-	private boolean isInfluenced(LoadQueryInfluencers loadQueryInfluencers) {
-		return isAffectedByEnabledFilters( loadQueryInfluencers )
-				|| isAffectedByEnabledFetchProfiles( loadQueryInfluencers )
-				|| isAffectedByEntityGraph( loadQueryInfluencers );
-	}
-
-	private boolean isNotInfluenced(LoadQueryInfluencers loadQueryInfluencers) {
-		return !isAffectedByEnabledFilters( loadQueryInfluencers )
-				&& !isAffectedByEnabledFetchProfiles( loadQueryInfluencers )
-				&& !isAffectedByEntityGraph( loadQueryInfluencers );
-	}
-
 
 	private CollectionLoader generateCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		final int batchSize = getBatchSize();
@@ -1554,6 +1523,29 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
+	public void registerAffectingFetchProfile(String fetchProfileName, Fetch.Style fetchStyle) {
+		if ( affectingFetchProfiles == null ) {
+			affectingFetchProfiles = new HashMap<>();
+		}
+		affectingFetchProfiles.put( fetchProfileName, fetchStyle );
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+		if ( affectingFetchProfiles == null ) {
+			return false;
+		}
+
+		for ( Map.Entry<String, Fetch.Style> entry : affectingFetchProfiles.entrySet() ) {
+			if ( influencers.isFetchProfileEnabled( entry.getKey() ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		if ( influencers.hasEnabledFilters() ) {
 			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
@@ -1567,21 +1559,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
 		// todo (6.0) : anything to do here?
-		return false;
-	}
-
-	@Override
-	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
-		if ( influencers.hasEnabledFetchProfiles() ) {
-			for ( String enabledFetchProfileName : influencers.getEnabledFetchProfileNames() ) {
-				final FetchProfile fetchProfile = getFactory().getFetchProfile( enabledFetchProfileName );
-				final Fetch fetch = fetchProfile.getFetchByRole( getRole() );
-				if ( fetch != null && fetch.getStyle() == Fetch.Style.JOIN ) {
-					return true;
-				}
-			}
-		}
-
 		return false;
 	}
 

@@ -7,11 +7,11 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -25,11 +25,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
-import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
@@ -123,7 +120,7 @@ public class CollectionBatchLoaderInPredicate
 			return singleKeyLoader.load( key, session );
 		}
 
-		initializeKeys( key, keysToInitialize, nonNullCounter.get(), session );
+		initializeKeys( key, keysToInitialize.toArray( keysToInitialize.toArray( new Object[0] ) ), nonNullCounter.get(), session );
 
 		final CollectionKey collectionKey = new CollectionKey( getLoadable().getCollectionDescriptor(), key );
 		return session.getPersistenceContext().getCollection( collectionKey );
@@ -137,7 +134,7 @@ public class CollectionBatchLoaderInPredicate
 
 	private <T> void initializeKeys(
 			T key,
-			List<T> keysToInitialize,
+			T[] keysToInitialize,
 			int nonNullKeysToInitializeCount,
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
@@ -149,82 +146,64 @@ public class CollectionBatchLoaderInPredicate
 			);
 		}
 
-		int numberOfKeysLeft = nonNullKeysToInitializeCount;
-		int start = 0;
-		while ( numberOfKeysLeft > 0 ) {
-			if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
-				MULTI_KEY_LOAD_LOGGER.debugf(
-						"Processing batch-fetch chunk (`%s#%s`) %s - %s",
-						getLoadable().getNavigableRole().getFullPath(),
-						key,
-						start,
-						start + (sqlBatchSize-1) );
-			}
-			initializeChunk( keysToInitialize, start, session );
-
-			start += sqlBatchSize;
-			numberOfKeysLeft -= sqlBatchSize;
-		}
-
-	}
-	private <T> void initializeChunk(
-			List<T> keysToInitialize,
-			int startIndex,
-			SharedSessionContractImplementor session) {
-		final int parameterCount = sqlBatchSize * keyColumnCount;
-
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterCount );
-		final MutableInteger nonNullCounter = new MutableInteger();
-		int bindCount = 0;
-		for ( int i = 0; i < sqlBatchSize; i++ ) {
-			final int keyPosition = i + startIndex;
-			final Object value;
-			if ( keyPosition >= keysToInitialize.size() ) {
-				value = null;
-			}
-			else {
-				value = keysToInitialize.get(keyPosition);
-			}
-			if ( value != null ) {
-				nonNullCounter.increment();
-			}
-			bindCount += jdbcParameterBindings.registerParametersForEachJdbcValue(
-					value,
-					bindCount,
-					getLoadable().getKeyDescriptor(),
-					jdbcParameters,
-					session
-			);
-		}
-		assert bindCount == jdbcParameters.size();
-
-		if ( nonNullCounter.get() == 0 ) {
-			// there are no non-null keys in the chunk
-			return;
-		}
-
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-				session.getPersistenceContext().getBatchFetchQueue(),
+		final MultiKeyLoadChunker<T> chunker = new MultiKeyLoadChunker<>(
+				sqlBatchSize,
+				keyColumnCount,
+				getLoadable().getKeyDescriptor(),
+				jdbcParameters,
 				sqlAst,
-				Collections.emptyList(),
-				jdbcParameterBindings
+				jdbcSelect
 		);
 
-		session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParameterBindings,
-				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
-				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
-		);
+		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
 
-		for ( int i = 0; i < sqlBatchSize; i++ ) {
-			final int keyPosition = i + startIndex;
-			if ( keyPosition < keysToInitialize.size() ) {
-				final T keyToInitialize = keysToInitialize.get( keyPosition );
-				finishInitializingKey( keyToInitialize, session );
-			}
-		}
+		chunker.processChunks(
+				keysToInitialize,
+				nonNullKeysToInitializeCount,
+				(jdbcParameterBindings, session1) -> {
+					// Create a RegistrationHandler for handling any subselect fetches we encounter handling this chunk
+					final SubselectFetch.RegistrationHandler registrationHandler = SubselectFetch.createRegistrationHandler(
+							batchFetchQueue,
+							sqlAst,
+							jdbcParameters,
+							jdbcParameterBindings
+					);
+					return new ExecutionContextWithSubselectFetchHandler( session, registrationHandler );
+				},
+				(key1, relativePosition, absolutePosition) -> {
+				},
+				(startIndex) -> {
+					if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+						MULTI_KEY_LOAD_LOGGER.debugf(
+								"Processing collection batch-fetch chunk (`%s#%s`) %s - %s",
+								getLoadable().getNavigableRole().getFullPath(),
+								key,
+								startIndex,
+								startIndex + (sqlBatchSize-1)
+						);
+					}
+				},
+				(startIndex, nonNullElementCount) -> {
+					if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+						MULTI_KEY_LOAD_LOGGER.debugf(
+								"Finishing collection batch-fetch chunk (`%s#%s`) %s - %s (%s)",
+								getLoadable().getNavigableRole().getFullPath(),
+								key,
+								startIndex,
+								startIndex + (sqlBatchSize-1),
+								nonNullElementCount
+						);
+					}
+					for ( int i = 0; i < nonNullElementCount; i++ ) {
+						final int keyPosition = i + startIndex;
+						if ( keyPosition < keysToInitialize.length ) {
+							final T keyToInitialize = keysToInitialize[keyPosition];
+							finishInitializingKey( keyToInitialize, session );
+						}
+					}
+				},
+				session
+		);
 	}
 
 }

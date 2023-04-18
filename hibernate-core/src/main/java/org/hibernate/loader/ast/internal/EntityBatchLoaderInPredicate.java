@@ -129,17 +129,74 @@ public class EntityBatchLoaderInPredicate<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		int numberOfIdsLeft = idsToInitialize.length;
-		int start = 0;
-		while ( numberOfIdsLeft > 0 ) {
-			if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
-				MULTI_KEY_LOAD_LOGGER.debugf( "Processing batch-fetch chunk (`%s#%s`) %s - %s", getLoadable().getEntityName(), pkValue, start, start + ( sqlBatchSize -1) );
-			}
-			initializeChunk( idsToInitialize, start, pkValue, entityInstance, lockOptions, readOnly, session );
+		final MultiKeyLoadChunker<Object> chunker = new MultiKeyLoadChunker<>(
+				sqlBatchSize,
+				getLoadable().getIdentifierMapping().getJdbcTypeCount(),
+				getLoadable().getIdentifierMapping(),
+				jdbcParameters,
+				sqlAst,
+				jdbcSelectOperation
+		);
 
-			start += sqlBatchSize;
-			numberOfIdsLeft -= sqlBatchSize;
-		}
+		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		final List<EntityKey> entityKeys = arrayList( sqlBatchSize );
+
+		chunker.processChunks(
+				idsToInitialize,
+				sqlBatchSize,
+				(jdbcParameterBindings, session1) -> {
+					// Create a RegistrationHandler for handling any subselect fetches we encounter handling this chunk
+					final SubselectFetch.RegistrationHandler registrationHandler = SubselectFetch.createRegistrationHandler(
+							batchFetchQueue,
+							sqlAst,
+							jdbcParameters,
+							jdbcParameterBindings
+					);
+					return new SingleIdExecutionContext(
+							pkValue,
+							entityInstance,
+							readOnly,
+							lockOptions,
+							registrationHandler,
+							session
+					);
+				},
+				(key, relativePosition, absolutePosition) -> {
+					if ( key != null ) {
+						entityKeys.add( session.generateEntityKey( key, getLoadable().getEntityPersister() ) );
+					}
+				},
+				(startIndex) -> {
+					if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+						MULTI_KEY_LOAD_LOGGER.debugf(
+								"Processing entity batch-fetch chunk (`%s#%s`) %s - %s",
+								getLoadable().getEntityName(),
+								pkValue,
+								startIndex,
+								startIndex + ( sqlBatchSize -1)
+						);
+					}
+				},
+				(startIndex, nonNullElementCount) -> {
+					entityKeys.forEach( batchFetchQueue::removeBatchLoadableEntityKey );
+					entityKeys.clear();
+				},
+				session
+		);
+
+
+
+//		int numberOfIdsLeft = idsToInitialize.length;
+//		int start = 0;
+//		while ( numberOfIdsLeft > 0 ) {
+//			if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+//				MULTI_KEY_LOAD_LOGGER.debugf( "Processing batch-fetch chunk (`%s#%s`) %s - %s", getLoadable().getEntityName(), pkValue, start, start + ( sqlBatchSize -1) );
+//			}
+//			initializeChunk( idsToInitialize, start, pkValue, entityInstance, lockOptions, readOnly, session );
+//
+//			start += sqlBatchSize;
+//			numberOfIdsLeft -= sqlBatchSize;
+//		}
 	}
 
 	private void initializeChunk(

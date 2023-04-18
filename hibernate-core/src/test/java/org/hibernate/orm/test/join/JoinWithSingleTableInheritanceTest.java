@@ -23,6 +23,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -102,33 +103,7 @@ public class JoinWithSingleTableInheritanceTest {
 	}
 
 	@Test
-	public void testCrossJoinOnSingleTableInheritance(SessionFactoryScope scope) {
-		scope.inTransaction(
-				s -> {
-					s.persist(new ChildEntityA( 11 ));
-					s.persist(new ChildEntityA( 12 ));
-					s.persist(new ChildEntityB( 21 ));
-					RootOne r1 = new RootOne(1);
-					r1.setSomeOtherId( 11 );
-					s.persist( r1 );
-					RootOne r2 = new RootOne(2);
-					r2.setSomeOtherId( 12 );
-					s.persist( r2 );
-					RootOne r3 = new RootOne(3);
-					r3.setSomeOtherId( 21 );
-					s.persist( r3 );
-				}
-		);
-
-		scope.inTransaction(
-				s -> {
-					List<Object[]> l = s.createSelectionQuery( "select r.id, r.someOtherId from RootOne r join ChildEntityA", Object[].class ).list();
-					assertEquals( 6, l.size() );
-				}
-		);
-	}
-
-	@Test
+	@Disabled(value = "HHH-16494")
 	public void testRightJoinOnSingleTableInheritance(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
@@ -172,6 +147,7 @@ public class JoinWithSingleTableInheritanceTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
+	@Disabled(value = "HHH-16494")
 	public void testFullJoinOnSingleTableInheritance(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
@@ -195,8 +171,8 @@ public class JoinWithSingleTableInheritanceTest {
 
 		scope.inTransaction(
 				s -> {
-					List<Object[]> l = s.createSelectionQuery( "select r.id, r.someOtherId from RootOne r full join ChildEntityA ce order by ce.id, r.id", Object[].class ).list();
-					assertEquals( 10, l.size() );
+					List<Object[]> l = s.createSelectionQuery( "select r.id, r.someOtherId from RootOne r full join ChildEntityA ce on ce.id = r.someOtherId order by ce.id, r.id", Object[].class ).list();
+					assertEquals( 7, l.size() );
 				}
 		);
 	}

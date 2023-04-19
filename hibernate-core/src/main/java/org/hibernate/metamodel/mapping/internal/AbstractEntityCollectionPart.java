@@ -12,6 +12,7 @@ import java.util.Set;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
@@ -194,6 +195,17 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		final TableGroup partTableGroup = resolveTableGroup( navigablePath, creationState );
 		return associatedEntityTypeDescriptor.createDomainResult( navigablePath, partTableGroup, resultVariable, creationState );
 	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
+
+		// should be an instance of the associated entity
+		return getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( value );
+	}
+
 
 	@Override
 	public EntityFetch generateFetch(

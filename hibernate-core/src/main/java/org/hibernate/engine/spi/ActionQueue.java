@@ -1029,10 +1029,6 @@ public class ActionQueue {
 	 * @author Jay Erb
 	 */
 	private static class InsertActionSorter implements ExecutableList.Sorter<AbstractEntityInsertAction> {
-		/**
-		 * Singleton access
-		 */
-		public static final InsertActionSorter INSTANCE = new InsertActionSorter();
 
 		private static class BatchIdentifier {
 
@@ -1111,7 +1107,8 @@ public class ActionQueue {
 			boolean hasParent(BatchIdentifier batchIdentifier) {
 				return (
 					parent == batchIdentifier
-					|| ( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
+//					|| ( parentEntityNames.contains( batchIdentifier.getEntityName() ) )
+					|| hasAnyParentEntityNames( batchIdentifier )
 					|| parent != null && parent.hasParent( batchIdentifier, new ArrayList<>() )
 				);
 			}
@@ -1123,7 +1120,8 @@ public class ActionQueue {
 				}
 				return (
 					parent == batchIdentifier
-					|| parentEntityNames.contains( batchIdentifier.getEntityName() )
+//					|| parentEntityNames.contains( batchIdentifier.getEntityName() )
+					|| hasAnyParentEntityNames( batchIdentifier )
 				);
 			}
 		}

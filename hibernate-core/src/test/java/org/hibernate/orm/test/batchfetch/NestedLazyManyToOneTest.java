@@ -11,8 +11,7 @@ import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.ast.internal.BatchLoaderHelper;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -127,7 +126,7 @@ public class NestedLazyManyToOneTest {
 			// 1 for Entity1, 1 for Entity2, 1 for Entity3
 			statementInspector.assertExecutedCount( 3 );
 			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 1, QUESTION_MARK, 1 );
-			if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
 				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 2 ), '?' ) ).isEqualTo( 1 );
 			}
 			else {
@@ -157,7 +156,7 @@ public class NestedLazyManyToOneTest {
 			// 1 for Entity1, 1 for Entity2, 2 for Entity3
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 4 );
 			assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 1 ), '?' ) ).isEqualTo( 1 );
-			if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
 				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 2 ), '?' ) ).isEqualTo( 1 );
 				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 3 ), '?' ) ).isEqualTo( 1 );
 			}

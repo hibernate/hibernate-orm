@@ -18,8 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.EntityBatchLoader;
-import org.hibernate.loader.ast.spi.SqlArrayMultiLoader;
-import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
+import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -49,7 +48,7 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  */
 public class EntityBatchLoaderArrayParam<T>
 		extends SingleIdEntityLoaderSupport<T>
-		implements EntityBatchLoader<T>, SqlArrayMultiLoader, Preparable {
+		implements EntityBatchLoader<T>, SqlArrayMultiKeyLoader, Preparable {
 	private final int domainBatchSize;
 
 	private BasicEntityIdentifierMapping identifierMapping;
@@ -185,7 +184,7 @@ public class EntityBatchLoaderArrayParam<T>
 		final BasicTypeRegistry basicTypeRegistry = sessionFactory.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<?> arrayBasicType = basicTypeRegistry.getRegisteredType( arrayClass );
 
-		arrayJdbcMapping = BatchLoaderHelper.INSTANCE.resolveArrayJdbcMapping(
+		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				arrayBasicType,
 				identifierMapping.getJdbcMapping(),
 				arrayClass,

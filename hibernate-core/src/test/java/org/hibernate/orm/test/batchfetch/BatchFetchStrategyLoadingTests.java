@@ -8,17 +8,13 @@ package org.hibernate.orm.test.batchfetch;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.ast.internal.BatchLoaderHelper;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +57,7 @@ public class BatchFetchStrategyLoadingTests {
 			assertThat( name ).isEqualTo( "thing-2.1" );
 
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
+			if ( MultiKeyLoadHelper.supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
 				assertThat( StringHelper.count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 1 );
 			}
 			else {

@@ -19,22 +19,16 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class BatchLoaderHelper {
-	/**
-	 * Singleton access
-	 */
-	public static final BatchLoaderHelper INSTANCE = new BatchLoaderHelper();
-
-
-	private BatchLoaderHelper() {
+public class MultiKeyLoadHelper {
+	private MultiKeyLoadHelper() {
 	}
 
-	public boolean supportsSqlArrayType(Dialect dialect) {
+	public static boolean supportsSqlArrayType(Dialect dialect) {
 		return dialect.supportsStandardArrays()
 				&& dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
 	}
 
-	public JdbcMapping resolveArrayJdbcMapping(
+	public static JdbcMapping resolveArrayJdbcMapping(
 			BasicType<?> arrayBasicType,
 			JdbcMapping keyMapping,
 			Class<?> arrayClass,

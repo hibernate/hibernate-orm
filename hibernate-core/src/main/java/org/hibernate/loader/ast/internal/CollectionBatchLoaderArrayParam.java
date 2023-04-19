@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
-import org.hibernate.loader.ast.spi.SqlArrayMultiLoader;
+import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
@@ -43,7 +43,7 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  */
 public class CollectionBatchLoaderArrayParam
 		extends AbstractCollectionBatchLoader
-		implements CollectionBatchLoader, SqlArrayMultiLoader {
+		implements CollectionBatchLoader, SqlArrayMultiKeyLoader {
 	private final  Class<?> arrayElementType;
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
@@ -73,7 +73,7 @@ public class CollectionBatchLoaderArrayParam
 		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
 				.getBasicTypeRegistry()
 				.getRegisteredType( arrayClass );
-		arrayJdbcMapping = BatchLoaderHelper.INSTANCE.resolveArrayJdbcMapping(
+		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				arrayBasicType,
 				keyDescriptor.getJdbcMapping(),
 				arrayClass,

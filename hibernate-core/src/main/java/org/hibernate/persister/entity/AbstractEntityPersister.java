@@ -117,7 +117,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.loader.ast.internal.BatchLoaderHelper;
+import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
@@ -807,7 +807,7 @@ public abstract class AbstractEntityPersister
 
 	private MultiIdEntityLoader<Object> buildMultiIdLoader(PersistentClass persistentClass) {
 		if ( persistentClass.getIdentifier() instanceof BasicValue
-				&& BatchLoaderHelper.INSTANCE.supportsSqlArrayType( factory.getServiceRegistry().getService( JdbcServices.class ).getDialect() ) ) {
+				&& MultiKeyLoadHelper.supportsSqlArrayType( factory.getServiceRegistry().getService( JdbcServices.class ).getDialect() ) ) {
 			return new MultiIdEntityLoaderArrayParam<>( this, factory );
 		}
 		return new MultiIdEntityLoaderStandard<>( this, persistentClass, factory );

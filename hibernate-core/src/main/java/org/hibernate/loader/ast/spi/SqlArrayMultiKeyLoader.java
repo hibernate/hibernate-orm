@@ -7,7 +7,11 @@
 package org.hibernate.loader.ast.spi;
 
 /**
+ * MultiKeyLoader implementation based on a SQL ARRAY valued parameter
+ *
+ * @see SqlInPredicateMultiKeyLoader
+ *
  * @author Steve Ebersole
  */
-public interface SqlArrayMultiLoader extends MultiKeyLoader {
+public interface SqlArrayMultiKeyLoader extends MultiKeyLoader {
 }

@@ -42,7 +42,7 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 		final int idColumnCount = identifierType.getColumnSpan( factory );
 
 		if ( idColumnCount == 1
-				&& BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect )
+				&& MultiKeyLoadHelper.supportsSqlArrayType( dialect )
 				&& identifierType instanceof BasicType ) {
 			// we can use a single ARRAY parameter to send all the ids
 			return new EntityBatchLoaderArrayParam<>( domainBatchSize, entityDescriptor, factory );

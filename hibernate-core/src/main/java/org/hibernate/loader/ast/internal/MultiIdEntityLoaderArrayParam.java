@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
@@ -26,7 +27,7 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.PersistenceContextEntry;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
-import org.hibernate.loader.ast.spi.SqlArrayMultiLoader;
+import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -43,10 +44,12 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+
 /**
  * @author Steve Ebersole
  */
-public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E> implements SqlArrayMultiLoader, Preparable {
+public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E> implements SqlArrayMultiKeyLoader, Preparable {
 	private JdbcMapping arrayJdbcMapping;
 	private JdbcParameter jdbcParameter;
 
@@ -94,7 +97,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 						getLoadable().getJavaType().getJavaTypeClass().getName(),
 						lockOptions,
 						session,
-						getReadOnlyFromLoadQueryInfluencers(session)
+						LoaderHelper.getReadOnlyFromLoadQueryInfluencers(session)
 				);
 
 				Object managedEntity = null;
@@ -229,9 +232,10 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				? new LockOptions( LockMode.NONE )
 				: loadOptions.getLockOptions();
 
+		//noinspection unchecked
 		final K[] idsToLoadFromDatabase = processResolvableEntities(
 				ids,
-				(index, entityKey, resolvedEntity) -> result.add( resolvedEntity ),
+				(index, entityKey, resolvedEntity) -> result.add( (E) resolvedEntity ),
 				loadOptions,
 				lockOptions,
 				session
@@ -292,6 +296,105 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 		return result;
 	}
+	public interface ResolutionConsumer<T> {
+		void consume(int position, EntityKey entityKey, T resolvedRef);
+	}
+
+	protected final <R,K> K[] processResolvableEntities(
+			K[] ids,
+			ResolutionConsumer<R> resolutionConsumer,
+			@NonNull MultiIdLoadOptions loadOptions,
+			@NonNull LockOptions lockOptions,
+			EventSource session) {
+		if ( !loadOptions.isSessionCheckingEnabled()
+				&& !loadOptions.isSecondLevelCacheCheckingEnabled() ) {
+			// we'll load all of them from the database
+			return ids;
+		}
+
+		final boolean coerce = !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
+
+		boolean foundAnyResolvedEntities = false;
+		List<K> nonResolvedIds = null;
+
+		for ( int i = 0; i < ids.length; i++ ) {
+			final Object id;
+			if ( coerce ) {
+				//noinspection unchecked
+				id = (K) getLoadable().getIdentifierMapping().getJavaType().coerce( ids[i], session );
+			}
+			else {
+				id = ids[i];
+			}
+
+			final EntityKey entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
+			final LoadEvent loadEvent = new LoadEvent(
+					id,
+					getLoadable().getJavaType().getJavaTypeClass().getName(),
+					lockOptions,
+					session,
+					LoaderHelper.getReadOnlyFromLoadQueryInfluencers( session )
+			);
+
+			Object resolvedEntity = null;
+
+			// look for it in the Session first
+			final PersistenceContextEntry persistenceContextEntry = CacheEntityLoaderHelper.loadFromSessionCacheStatic(
+					loadEvent,
+					entityKey,
+					LoadEventListener.GET
+			);
+			if ( loadOptions.isSessionCheckingEnabled() ) {
+				resolvedEntity = persistenceContextEntry.getEntity();
+
+				if ( resolvedEntity != null
+						&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
+						&& !persistenceContextEntry.isManaged() ) {
+					foundAnyResolvedEntities = true;
+					resolutionConsumer.consume( i, entityKey, null );
+					continue;
+				}
+			}
+
+			if ( resolvedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
+				resolvedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+						loadEvent,
+						getLoadable().getEntityPersister(),
+						entityKey
+				);
+			}
+
+			if ( resolvedEntity != null ) {
+				foundAnyResolvedEntities = true;
+
+				//noinspection unchecked
+				resolutionConsumer.consume( i, entityKey, (R) resolvedEntity);
+			}
+			else {
+				if ( nonResolvedIds == null ) {
+					nonResolvedIds = new ArrayList<>();
+				}
+				//noinspection unchecked,CastCanBeRemovedNarrowingVariableType
+				nonResolvedIds.add( (K) id );
+			}
+		}
+
+		if ( foundAnyResolvedEntities ) {
+			if ( isEmpty( nonResolvedIds ) ) {
+				// all the given ids were already associated with the Session
+				return null;
+			}
+
+			return nonResolvedIds.toArray( createTypedArray(0) );
+		}
+
+		return ids;
+	}
+
+	private  <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
+		//noinspection unchecked
+		return (X[]) Array.newInstance( getIdentifierMapping().getJavaType().getJavaTypeClass(), length );
+	}
 
 	@Override
 	public void prepare() {
@@ -302,18 +405,12 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		final BasicTypeRegistry basicTypeRegistry = getSessionFactory().getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<?> arrayBasicType = basicTypeRegistry.getRegisteredType( arrayClass );
 
-		arrayJdbcMapping = BatchLoaderHelper.INSTANCE.resolveArrayJdbcMapping(
+		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				arrayBasicType,
 				getIdentifierMapping().getJdbcMapping(),
 				arrayClass,
 				getSessionFactory()
 		);
 		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
-	}
-
-	@Override
-	protected <X> X[] createTypedArray(int length) {
-		//noinspection unchecked
-		return (X[]) Array.newInstance( getIdentifierMapping().getJavaType().getJavaTypeClass(), length );
 	}
 }

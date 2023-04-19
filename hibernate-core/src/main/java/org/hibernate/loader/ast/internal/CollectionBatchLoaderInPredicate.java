@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
-import org.hibernate.loader.ast.spi.SqlArrayMultiLoader;
+import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -38,7 +38,7 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  */
 public class CollectionBatchLoaderInPredicate
 		extends AbstractCollectionBatchLoader
-		implements CollectionBatchLoader, SqlArrayMultiLoader {
+		implements CollectionBatchLoader, SqlArrayMultiKeyLoader {
 	private final int keyColumnCount;
 	private final int sqlBatchSize;
 	private final List<JdbcParameter> jdbcParameters;

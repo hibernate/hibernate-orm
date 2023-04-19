@@ -13,7 +13,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.loader.ast.internal.BatchLoaderHelper;
+import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -129,7 +129,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 
 					// exactly how depends on whether the Dialect supports use of SQL ARRAY
 					final Dialect dialect = scope.getSessionFactory().getFastSessionServices().jdbcServices.getDialect();
-					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( Hibernate.isInitialized( list.get( 0 ).children ) ).isTrue();
 						assertThat( Hibernate.isInitialized( list.get( 50 ).children ) ).isTrue();
 						assertThat( Hibernate.isInitialized( list.get( 52 ).children ) ).isTrue();

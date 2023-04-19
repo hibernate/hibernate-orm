@@ -12,6 +12,7 @@ import org.hibernate.ObjectDeletedException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
@@ -79,5 +80,14 @@ public class LoaderHelper {
 			}
 
 		}
+	}
+
+	protected static Boolean getReadOnlyFromLoadQueryInfluencers(SharedSessionContractImplementor session) {
+		Boolean readOnly = null;
+		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+		if ( loadQueryInfluencers != null ) {
+			readOnly = loadQueryInfluencers.getReadOnly();
+		}
+		return readOnly;
 	}
 }

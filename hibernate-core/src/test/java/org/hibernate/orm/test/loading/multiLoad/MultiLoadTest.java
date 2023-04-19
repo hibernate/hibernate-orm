@@ -17,10 +17,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.ast.internal.BatchLoaderHelper;
+import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
@@ -107,7 +105,7 @@ public class MultiLoadTest {
 							.getFastSessionServices()
 							.jdbcServices
 							.getDialect();
-					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
 					else {
@@ -331,7 +329,7 @@ public class MultiLoadTest {
 							.getFastSessionServices()
 							.jdbcServices
 							.getDialect();
-					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
 					else {
@@ -396,7 +394,7 @@ public class MultiLoadTest {
 							.getFastSessionServices()
 							.jdbcServices
 							.getDialect();
-					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
 					else {
@@ -437,7 +435,7 @@ public class MultiLoadTest {
 							.getFastSessionServices()
 							.jdbcServices
 							.getDialect();
-					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
 					else {
@@ -484,7 +482,7 @@ public class MultiLoadTest {
 							.getFastSessionServices()
 							.jdbcServices
 							.getDialect();
-					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
 					else {
@@ -524,7 +522,7 @@ public class MultiLoadTest {
 							.getFastSessionServices()
 							.jdbcServices
 							.getDialect();
-					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
 					else {
@@ -570,7 +568,7 @@ public class MultiLoadTest {
 							.getFastSessionServices()
 							.jdbcServices
 							.getDialect();
-					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
 					else {

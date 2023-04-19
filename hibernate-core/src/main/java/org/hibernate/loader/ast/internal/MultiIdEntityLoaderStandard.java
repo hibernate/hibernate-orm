@@ -114,7 +114,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 						getLoadable().getJavaType().getJavaTypeClass().getName(),
 						lockOptions,
 						session,
-						getReadOnlyFromLoadQueryInfluencers(session)
+						LoaderHelper.getReadOnlyFromLoadQueryInfluencers(session)
 				);
 
 				Object managedEntity = null;
@@ -322,7 +322,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 						getLoadable().getJavaType().getJavaTypeClass().getName(),
 						lockOptions,
 						session,
-						getReadOnlyFromLoadQueryInfluencers( session )
+						LoaderHelper.getReadOnlyFromLoadQueryInfluencers( session )
 				);
 
 				Object managedEntity = null;

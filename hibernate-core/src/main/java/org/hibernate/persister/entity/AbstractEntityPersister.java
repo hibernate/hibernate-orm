@@ -75,6 +75,7 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CollectionKey;
@@ -116,10 +117,12 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
+import org.hibernate.loader.ast.internal.BatchLoaderHelper;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
+import org.hibernate.loader.ast.internal.MultiIdEntityLoaderArrayParam;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderStandard;
 import org.hibernate.loader.ast.internal.Preparable;
 import org.hibernate.loader.ast.internal.SingleIdArrayLoadPlan;
@@ -323,8 +326,8 @@ public abstract class AbstractEntityPersister
 
 	private final String sqlAliasStem;
 
-	private final SingleIdEntityLoader<?> singleIdEntityLoader;
-	private final MultiIdEntityLoader<?> multiIdEntityLoader;
+	private final SingleIdEntityLoader<?> singleIdLoader;
+	private final MultiIdEntityLoader<?> multiIdLoader;
 	private NaturalIdLoader<?> naturalIdLoader;
 	private MultiNaturalIdLoader<?> multiNaturalIdLoader;
 
@@ -530,16 +533,16 @@ public abstract class AbstractEntityPersister
 				throw new IllegalArgumentException( "Could not resolve named load-query [" + getEntityName()
 						+ "] : " + persistentClass.getLoaderName() );
 			}
-			singleIdEntityLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, namedQueryMemento );
+			singleIdLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, namedQueryMemento );
 		}
 		else if ( batchSize > 1 ) {
-			singleIdEntityLoader = createBatchingIdEntityLoader( this, batchSize, factory );
+			singleIdLoader = createBatchingIdEntityLoader( this, batchSize, factory );
 		}
 		else {
-			singleIdEntityLoader = new SingleIdEntityLoaderStandardImpl<>( this, factory );
+			singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( this, factory );
 		}
 
-		multiIdEntityLoader = new MultiIdEntityLoaderStandard<>( this, persistentClass, factory );
+		multiIdLoader = buildMultiIdLoader( persistentClass );
 
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
@@ -800,6 +803,14 @@ public abstract class AbstractEntityPersister
 
 //		fullDiscriminatorSQLValues = toStringArray( sqlValues );
 		fullDiscriminatorValues = toObjectArray( values );
+	}
+
+	private MultiIdEntityLoader<Object> buildMultiIdLoader(PersistentClass persistentClass) {
+		if ( persistentClass.getIdentifier() instanceof BasicValue
+				&& BatchLoaderHelper.INSTANCE.supportsSqlArrayType( factory.getServiceRegistry().getService( JdbcServices.class ).getDialect() ) ) {
+			return new MultiIdEntityLoaderArrayParam<>( this, factory );
+		}
+		return new MultiIdEntityLoaderStandard<>( this, persistentClass, factory );
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {
@@ -1840,7 +1851,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException {
-		return singleIdEntityLoader.loadDatabaseSnapshot( id, session );
+		return singleIdLoader.loadDatabaseSnapshot( id, session );
 	}
 
 	@Override
@@ -3326,8 +3337,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
-		prepareLoader( singleIdEntityLoader );
-		prepareLoader( multiIdEntityLoader );
+		prepareLoader( singleIdLoader );
+		prepareLoader( multiIdLoader );
 	}
 
 	private void prepareLoader(Loader loader) {
@@ -3367,15 +3378,15 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( optionalObject == null ) {
-			return singleIdEntityLoader.load( id, lockOptions, readOnly, session );
+			return singleIdLoader.load( id, lockOptions, readOnly, session );
 		}
 		else {
-			return singleIdEntityLoader.load( id, optionalObject, lockOptions, readOnly, session );
+			return singleIdLoader.load( id, optionalObject, lockOptions, readOnly, session );
 		}
 	}
 
-	public SingleIdEntityLoader<?> getSingleIdEntityLoader() {
-		return singleIdEntityLoader;
+	public SingleIdEntityLoader<?> getSingleIdLoader() {
+		return singleIdLoader;
 	}
 
 	@Override
@@ -3397,7 +3408,7 @@ public abstract class AbstractEntityPersister
 				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
 			}
 			if ( loaded == null ) {
-				loaded = singleIdEntityLoader.load( identifier, entity, LockOptions.NONE, session );
+				loaded = singleIdLoader.load( identifier, entity, LockOptions.NONE, session );
 			}
 
 			if ( loaded == null ) {
@@ -3429,7 +3440,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
-		return multiIdEntityLoader.load( ids, loadOptions, session );
+		return multiIdLoader.load( ids, loadOptions, session );
 	}
 
 	@Override

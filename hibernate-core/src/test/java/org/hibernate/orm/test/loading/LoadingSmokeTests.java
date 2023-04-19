@@ -60,7 +60,7 @@ public class LoadingSmokeTests {
 							.getRuntimeMetamodels().getMappingMetamodel()
 							.getEntityDescriptor( BasicEntity.class );
 
-					final SingleIdEntityLoader singleIdEntityLoader = entityDescriptor.getSingleIdEntityLoader();
+					final SingleIdEntityLoader singleIdEntityLoader = entityDescriptor.getSingleIdLoader();
 					assertThat( singleIdEntityLoader, instanceOf( SingleIdEntityLoaderStandardImpl.class ) );
 					assertThat(
 							( (SingleIdEntityLoaderStandardImpl) singleIdEntityLoader ).getNonReusablePlansGenerated().get(),

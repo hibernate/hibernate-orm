@@ -14,11 +14,13 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.ast.internal.BatchLoaderHelper;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
@@ -100,7 +102,17 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 5 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 5 ) );
+					}
 				}
 		);
 	}
@@ -314,7 +326,17 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				}
 		);
 	}
@@ -369,7 +391,17 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				}
 		);
 	}
@@ -400,7 +432,17 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				}
 		);
 	}
@@ -437,7 +479,17 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				} );
 	}
 
@@ -467,7 +519,17 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				} );
 	}
 
@@ -503,7 +565,17 @@ public class MultiLoadTest {
 							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
-					assertThat( paramCount, is( 2 ) );
+
+					final Dialect dialect = session.getSessionFactory()
+							.getFastSessionServices()
+							.jdbcServices
+							.getDialect();
+					if ( BatchLoaderHelper.INSTANCE.supportsSqlArrayType( dialect ) ) {
+						assertThat( paramCount, is( 1 ) );
+					}
+					else {
+						assertThat( paramCount, is( 2 ) );
+					}
 				} );
 	}
 

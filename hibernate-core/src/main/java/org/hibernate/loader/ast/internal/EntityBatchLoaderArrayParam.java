@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.EntityBatchLoader;
+import org.hibernate.loader.ast.spi.SqlArrayMultiLoader;
 import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -48,7 +49,7 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  */
 public class EntityBatchLoaderArrayParam<T>
 		extends SingleIdEntityLoaderSupport<T>
-		implements EntityBatchLoader<T>, SqlInPredicateMultiKeyLoader, Preparable {
+		implements EntityBatchLoader<T>, SqlArrayMultiLoader, Preparable {
 	private final int domainBatchSize;
 
 	private BasicEntityIdentifierMapping identifierMapping;

@@ -772,6 +772,9 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private boolean isSimpleRecord() {
 		// A simple record is given, when the properties match the order of the record component names
 		final Class<?> componentClass = resolveComponentClass();
+		if ( customInstantiator != null ) {
+			return false;
+		}
 		if ( componentClass == null || !ReflectHelper.isRecord( componentClass ) ) {
 			return false;
 		}

@@ -229,7 +229,39 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		return join;
 	}
 
+	/**
+	 * Embeddable classes can be defined using generics. For this reason, we must check
+	 * every property value and specially handle generic components by setting the property
+	 * as generic, to later be able to resolve its concrete type, and creating a new component
+	 * with correctly typed sub-properties for the metamodel.
+	 */
+	public static void handleGenericComponentProperty(Property property, MetadataBuildingContext context) {
+		final Value value = property.getValue();
+		if ( value instanceof Component ) {
+			final Component component = (Component) value;
+			if ( component.isGeneric() && context.getMetadataCollector()
+					.getGenericComponent( component.getComponentClass() ) == null ) {
+				// If we didn't already, register the generic component to use it later
+				// as the metamodel type for generic embeddable attributes
+				final Component copy = component.copy();
+				copy.setGeneric( false );
+				copy.getProperties().clear();
+				for ( Property prop : component.getProperties() ) {
+					prepareActualProperty(
+							prop,
+							component.getComponentClass(),
+							true,
+							context,
+							copy::addProperty
+					);
+				}
+				context.getMetadataCollector().registerGenericComponent( copy );
+			}
+		}
+	}
+
 	private void addPropertyToPersistentClass(Property property, XClass declaringClass) {
+		handleGenericComponentProperty( property, getContext() );
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
@@ -253,10 +285,10 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	private void addPropertyToMappedSuperclass(Property prop, XClass declaringClass) {
 		final Class<?> type = getContext().getBootstrapContext().getReflectionManager().toClass( declaringClass );
 		final MappedSuperclass superclass = getContext().getMetadataCollector().getMappedSuperclass( type );
-		prepareActualPropertyForSuperclass( prop, type, true, getContext(), superclass::addDeclaredProperty );
+		prepareActualProperty( prop, type, true, getContext(), superclass::addDeclaredProperty );
 	}
 
-	static void prepareActualPropertyForSuperclass(
+	static void prepareActualProperty(
 			Property prop,
 			Class<?> type,
 			boolean allowCollections,
@@ -322,14 +354,20 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					}
 					if ( value instanceof Component ) {
 						final Component component = ( (Component) value );
-						final Iterator<Property> propertyIterator = component.getPropertyIterator();
-						while ( propertyIterator.hasNext() ) {
-							Property property = propertyIterator.next();
-							try {
-								property.getGetter( component.getComponentClass() );
-							}
-							catch (PropertyNotFoundException e) {
-								propertyIterator.remove();
+						final Class<?> componentClass = component.getComponentClass();
+						if ( component.isGeneric() ) {
+							actualProperty.setValue( context.getMetadataCollector().getGenericComponent( componentClass ) );
+						}
+						else {
+							final Iterator<Property> propertyIterator = component.getPropertyIterator();
+							while ( propertyIterator.hasNext() ) {
+								Property property = propertyIterator.next();
+								try {
+									property.getGetter( componentClass );
+								}
+								catch (PropertyNotFoundException e) {
+									propertyIterator.remove();
+								}
 							}
 						}
 					}
@@ -366,9 +404,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		}
 		else if ( value instanceof Component ) {
 			final Component component = (Component) value;
-			// Avoid setting component class name to java.lang.Object
-			// for embeddable types with generic type parameters
-			if ( !typeName.equals( Object.class.getName() ) ) {
+			// Avoid setting type name for generic components
+			if ( !component.isGeneric() ) {
 				component.setComponentClassName( typeName );
 			}
 			if ( component.getTypeName() != null ) {

@@ -8,7 +8,6 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +28,6 @@ import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.PropertyNotFoundException;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.CompositeType;
@@ -71,6 +69,8 @@ import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.AnyBinder.bindAny;
 import static org.hibernate.boot.model.internal.BinderHelper.isCompositeId;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.prepareActualProperty;
 import static org.hibernate.boot.model.internal.CollectionBinder.bindCollection;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createForeignGenerator;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGenerator;
@@ -339,18 +339,13 @@ public class PropertyBinder {
 	}
 
 	private void setDeclaredIdentifier(RootClass rootClass, MappedSuperclass superclass, Property prop) {
+		handleGenericComponentProperty( prop, buildingContext );
 		if ( superclass == null ) {
 			rootClass.setDeclaredIdentifierProperty( prop );
 			return;
 		}
 		final Class<?> type = buildingContext.getBootstrapContext().getReflectionManager().toClass( declaringClass );
-		ClassPropertyHolder.prepareActualPropertyForSuperclass(
-				prop,
-				type,
-				false,
-				buildingContext,
-				superclass::setDeclaredIdentifierProperty
-		);
+		prepareActualProperty( prop, type, false, buildingContext, superclass::setDeclaredIdentifierProperty );
 	}
 
 	private Component getOrCreateCompositeId(RootClass rootClass) {

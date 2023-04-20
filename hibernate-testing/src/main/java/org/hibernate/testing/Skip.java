@@ -15,9 +15,12 @@ import java.lang.annotation.Target;
  * An annotation, used in combination with {@link Matcher}, to determine when/if tests should be skipped.
  *
  * @author Steve Ebersole
+ * @deprecated Use JUnit 5 and {@link org.junit.jupiter.api.condition.DisabledOnOs}
+ * or {@link org.junit.jupiter.api.condition.DisabledIf}.
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target({ ElementType.METHOD, ElementType.TYPE })
+@Deprecated(forRemoval = true)
 public @interface Skip {
 	/**
 	 * The condition which causes a skip

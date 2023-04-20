@@ -122,13 +122,11 @@ public class LoaderHelper {
 	 * If the array is already typed as the key type, {@code keys} is simply returned.
 	 * <p/>
 	 * Otherwise, a new typed array is created and the contents copied from {@code keys} to this new array.  If
-	 * key {@linkplain org.hibernate.cfg.AvailableSettings#JPA_LOAD_BY_ID_COMPLIANCE coercion) is enabled, the
+	 * key {@linkplain org.hibernate.cfg.AvailableSettings#JPA_LOAD_BY_ID_COMPLIANCE coercion} is enabled, the
 	 * values will be coerced to the key type.
 	 *
 	 * @param keys The keys to normalize
 	 * @param keyPart The ModelPart describing the key
-	 *
-	 * @return
 	 *
 	 * @param <K> The key type
 	 */

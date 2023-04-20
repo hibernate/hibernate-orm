@@ -61,7 +61,11 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public void verifyFlushState(Object id, Object[] currentState, Object[] loadedState, SharedSessionContractImplementor session) {
+	public void verifyFlushState(
+			Object id,
+			Object[] currentState,
+			Object[] loadedState,
+			SharedSessionContractImplementor session) {
 		if ( isMutable() ) {
 			// EARLY EXIT!!!
 			// the natural id is mutable (!immutable), no need to do the checks
@@ -76,7 +80,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 				? persistenceContext.getNaturalIdSnapshot( id, persister )
 				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
 
-		if ( ! areEqual( naturalId, snapshot, session ) ) {
+		if ( !areEqual( naturalId, snapshot, session ) ) {
 			throw new HibernateException(
 					String.format(
 							"An immutable natural identifier of entity %s was altered from `%s` to `%s`",
@@ -98,7 +102,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			return state[0];
 		}
 
-		return state[ attribute.getStateArrayPosition() ];
+		return state[attribute.getStateArrayPosition()];
 	}
 
 	@Override
@@ -121,7 +125,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			}
 		}
 
-		if ( ! getJavaType().getJavaTypeClass().isInstance( naturalIdValue ) ) {
+		if ( !getJavaType().getJavaTypeClass().isInstance( naturalIdValue ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							Locale.ROOT,
@@ -145,7 +149,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		return normalizeIncomingValue( incoming );
 	}
 
-	@SuppressWarnings( "rawtypes" )
+	@SuppressWarnings("rawtypes")
 	public Object normalizeIncomingValue(Object naturalIdToLoad) {
 		final Object normalizedValue;
 		if ( naturalIdToLoad instanceof Map ) {
@@ -153,11 +157,13 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 			assert valueMap.size() == 1;
 			assert valueMap.containsKey( getAttribute().getAttributeName() );
 			normalizedValue = valueMap.get( getAttribute().getAttributeName() );
-		} else if ( naturalIdToLoad instanceof Object[] ) {
+		}
+		else if ( naturalIdToLoad instanceof Object[] ) {
 			final Object[] values = (Object[]) naturalIdToLoad;
 			assert values.length == 1;
 			normalizedValue = values[0];
-		} else {
+		}
+		else {
 			normalizedValue = naturalIdToLoad;
 		}
 
@@ -192,7 +198,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
 		attribute.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 

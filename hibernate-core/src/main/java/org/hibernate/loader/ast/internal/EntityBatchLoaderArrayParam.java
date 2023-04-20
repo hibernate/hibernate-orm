@@ -63,7 +63,7 @@ public class EntityBatchLoaderArrayParam<T>
 	 *
 	 * @param domainBatchSize The number of domain model parts (up to)
 	 *
-	 * @implNote TLDR; We delay initializing the internal SQL AST state until first use.  Creating
+	 * @implNote We delay initializing the internal SQL AST state until first use.  Creating
 	 * the SQL AST internally relies on the entity's {@link EntityIdentifierMapping}. However, we
 	 * do create the static batch-loader for the entity in the persister constructor and
 	 * {@link EntityIdentifierMapping} is not available at that time.  On first use, we know we
@@ -127,35 +127,17 @@ public class EntityBatchLoaderArrayParam<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		assert jdbcSelectOperation != null;
-		assert jdbcParameter != null;
-
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
-		jdbcParameterBindings.addBinding(
-				jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, idsToInitialize )
-		);
-
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-				session.getPersistenceContext().getBatchFetchQueue(),
+		LoaderHelper.loadByArrayParameter(
+				idsToInitialize,
 				sqlAst,
-				Collections.singletonList( jdbcParameter ),
-				jdbcParameterBindings
-		);
-
-		session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelectOperation,
-				jdbcParameterBindings,
-				new SingleIdExecutionContext(
-						pkValue,
-						entityInstance,
-						readOnly,
-						lockOptions,
-						subSelectFetchableKeysHandler,
-						session
-				),
-				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				jdbcParameter,
+				arrayJdbcMapping,
+				pkValue,
+				entityInstance,
+				lockOptions,
+				readOnly,
+				session
 		);
 
 		//noinspection ForLoopReplaceableByForEach

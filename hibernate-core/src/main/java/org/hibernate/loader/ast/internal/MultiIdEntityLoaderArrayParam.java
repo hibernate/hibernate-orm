@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
@@ -43,6 +42,8 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
@@ -260,27 +261,19 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				.buildSelectTranslator( getSessionFactory(), sqlAst )
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
-		jdbcParameterBindings.addBinding(
-				jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, idsToLoadFromDatabase )
-		);
-
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-				session.getPersistenceContext().getBatchFetchQueue(),
+		final List<E> databaseResults = LoaderHelper.loadByArrayParameter(
+				idsToLoadFromDatabase,
 				sqlAst,
-				Collections.singletonList( jdbcParameter ),
-				jdbcParameterBindings
-		);
-
-		final List<E> jdbcResults = session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelectOperation,
-				jdbcParameterBindings,
-				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
-				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				jdbcParameter,
+				arrayJdbcMapping,
+				null,
+				null,
+				lockOptions,
+				session.isDefaultReadOnly(),
+				session
 		);
-		result.addAll( jdbcResults );
+		result.addAll( databaseResults );
 
 		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < idsToLoadFromDatabase.length; i++ ) {

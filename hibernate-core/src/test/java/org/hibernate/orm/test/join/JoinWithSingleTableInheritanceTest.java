@@ -13,11 +13,22 @@ import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,13 +43,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Jan Schatteman
  */
-@TestForIssue( jiraKey = "HHH-16435")
 @DomainModel(
 		annotatedClasses = {
 				JoinWithSingleTableInheritanceTest.AbstractSuperClass.class,
 				JoinWithSingleTableInheritanceTest.ChildEntityA.class,
 				JoinWithSingleTableInheritanceTest.ChildEntityB.class,
-				JoinWithSingleTableInheritanceTest.RootOne.class
+				JoinWithSingleTableInheritanceTest.RootOne.class,
+				JoinWithSingleTableInheritanceTest.MyEntity1.class,
+				JoinWithSingleTableInheritanceTest.MyEntity2.class,
+				JoinWithSingleTableInheritanceTest.MyEntity3.class,
+				JoinWithSingleTableInheritanceTest.MySubEntity2.class
 		}
 )
 @SessionFactory
@@ -50,11 +64,15 @@ public class JoinWithSingleTableInheritanceTest {
 				s -> {
 					s.createMutationQuery( "delete from RootOne" ).executeUpdate();
 					s.createMutationQuery( "delete from AbstractSuperClass" ).executeUpdate();
+					s.createMutationQuery( "delete from MyEntity1" ).executeUpdate();
+					s.createMutationQuery( "delete from MyEntity2" ).executeUpdate();
+					s.createMutationQuery( "delete from MyEntity3" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-16438")
 	public void testLeftJoinOnSingleTableInheritance(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> s.persist( new RootOne(1) )
@@ -69,6 +87,7 @@ public class JoinWithSingleTableInheritanceTest {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-16438")
 	public void testLeftJoinOnSingleTableInheritance2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
@@ -103,6 +122,7 @@ public class JoinWithSingleTableInheritanceTest {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-16438, HHH-16494")
 	@Disabled(value = "HHH-16494")
 	public void testRightJoinOnSingleTableInheritance(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -146,6 +166,7 @@ public class JoinWithSingleTableInheritanceTest {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-16438, HHH-16494")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
 	@Disabled(value = "HHH-16494")
 	public void testFullJoinOnSingleTableInheritance(SessionFactoryScope scope) {
@@ -173,6 +194,53 @@ public class JoinWithSingleTableInheritanceTest {
 				s -> {
 					List<Object[]> l = s.createSelectionQuery( "select r.id, r.someOtherId from RootOne r full join ChildEntityA ce on ce.id = r.someOtherId order by ce.id, r.id", Object[].class ).list();
 					assertEquals( 7, l.size() );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-16472")
+	@FailureExpected(reason = "Needs fix for HHH-16472")
+	public void testTreatedLeftJoinWithRestrictionOnEntity( SessionFactoryScope scope ) {
+		scope.inTransaction(
+				s -> {
+					MyEntity3 entity3 = new MyEntity3();
+					s.persist(entity3);
+
+					MyEntity2 entity2 = new MyEntity2();
+					s.persist(entity2);
+
+					MySubEntity2 subentity2 = new MySubEntity2();
+					subentity2.setRef3(entity3);
+					s.persist(subentity2);
+
+					MyEntity1 entity1a = new MyEntity1();
+					s.persist(entity1a);
+
+					MyEntity1 entity1b = new MyEntity1();
+					entity1b.setRef2(subentity2);
+					s.persist(entity1b);
+
+					s.flush();
+
+					CriteriaBuilder builder = s.getCriteriaBuilder();
+
+					CriteriaQuery<MyEntity1> criteria = builder.createQuery( MyEntity1.class);
+					Root<MyEntity1> root = criteria.from( MyEntity1.class);
+					criteria.select(root)
+							.where(
+									builder.or(
+											root.get("ref2").isNull(),
+											builder.and(
+													root.get("ref2").isNotNull(),
+													builder.equal(
+															builder.treat(
+																	root.join( "ref2", JoinType.LEFT), MySubEntity2.class).get( "ref3"),
+															entity3)
+											)
+									)
+							);
+					assertEquals(2, s.createQuery(criteria).getResultList().size());
 				}
 		);
 	}
@@ -226,6 +294,92 @@ public class JoinWithSingleTableInheritanceTest {
 
 		public void setSomeOtherId(Integer someOtherId) {
 			this.someOtherId = someOtherId;
+		}
+	}
+
+	@Entity(name = "MyEntity1")
+	public static class MyEntity1 {
+		@Id()
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		private Long id;
+
+		@ManyToOne
+		@JoinColumn(name = "ref2", nullable = true)
+		private MyEntity2 ref2;
+
+		public MyEntity1() {
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public MyEntity2 getRef2() {
+			return ref2;
+		}
+
+		public void setRef2(MyEntity2 ref2) {
+			this.ref2 = ref2;
+		}
+	}
+
+	@Entity(name = "MyEntity2")
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	public static class MyEntity2 {
+		@Id()
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		private Long id;
+
+		public MyEntity2() {
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+	}
+
+	@Entity(name = "MyEntity3")
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	public static class MyEntity3 {
+		@Id()
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		private Long id;
+
+		public MyEntity3() {
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+	}
+
+	@Entity(name = "MySubEntity2")
+	public static class MySubEntity2 extends MyEntity2 {
+		@ManyToOne
+		@JoinColumn(name = "ref3")
+		private MyEntity3 ref3;
+
+		public MySubEntity2() {
+		}
+
+		public MyEntity3 getRef3() {
+			return ref3;
+		}
+
+		public void setRef3(MyEntity3 ref3) {
+			this.ref3 = ref3;
 		}
 	}
 

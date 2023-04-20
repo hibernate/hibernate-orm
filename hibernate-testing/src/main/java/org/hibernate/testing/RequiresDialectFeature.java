@@ -16,9 +16,11 @@ import java.lang.annotation.Target;
  * specified feature.
  *
  * @author Hardy Ferentschik
+ * @deprecated Use JUnit 5 and {@link org.hibernate.testing.orm.junit.RequiresDialectFeature} instead.
  */
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
+@Deprecated(forRemoval = true)
 public @interface RequiresDialectFeature {
 	/**
 	 * @return Class which checks the necessary dialect feature

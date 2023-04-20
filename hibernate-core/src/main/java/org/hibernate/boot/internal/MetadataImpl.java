@@ -90,6 +90,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final List<Component> composites;
+	private final Map<Class<?>, Component> genericComponentsMap;
 	private final Map<Class<?>, MappedSuperclass> mappedSuperclassMap;
 	private final Map<String,Collection> collectionBindingMap;
 	private final Map<String, TypeDefinition> typeDefinitionMap;
@@ -110,6 +111,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			MetadataBuildingOptions metadataBuildingOptions,
 			Map<String, PersistentClass> entityBindingMap,
 			List<Component> composites,
+			Map<Class<?>, Component> genericComponentsMap,
 			Map<Class<?>, MappedSuperclass> mappedSuperclassMap,
 			Map<String, Collection> collectionBindingMap,
 			Map<String, TypeDefinition> typeDefinitionMap,
@@ -129,6 +131,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.metadataBuildingOptions = metadataBuildingOptions;
 		this.entityBindingMap = entityBindingMap;
 		this.composites = composites;
+		this.genericComponentsMap = genericComponentsMap;
 		this.mappedSuperclassMap = mappedSuperclassMap;
 		this.collectionBindingMap = collectionBindingMap;
 		this.typeDefinitionMap = typeDefinitionMap;
@@ -568,6 +571,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public void visitRegisteredComponents(Consumer<Component> consumer) {
 		composites.forEach( consumer );
+	}
+
+	@Override
+	public Component getGenericComponent(Class<?> componentClass) {
+		return genericComponentsMap.get( componentClass );
 	}
 
 	@Override

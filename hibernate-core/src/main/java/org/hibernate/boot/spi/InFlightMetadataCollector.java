@@ -84,6 +84,8 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void registerComponent(Component component);
 
+	void registerGenericComponent(Component component);
+
 	/**
 	 * Adds an import (for use in HQL).
 	 *

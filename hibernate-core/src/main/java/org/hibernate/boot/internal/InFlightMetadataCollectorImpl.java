@@ -141,6 +141,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final List<Component> composites = new ArrayList<>();
+	private final Map<Class<?>, Component> genericComponentsMap = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
@@ -280,6 +281,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	@Override
 	public void visitRegisteredComponents(Consumer<Component> consumer) {
 		composites.forEach( consumer );
+	}
+
+	@Override
+	public void registerGenericComponent(Component component) {
+		genericComponentsMap.put( component.getComponentClass(), component );
+	}
+
+	@Override
+	public Component getGenericComponent(Class<?> componentClass) {
+		return genericComponentsMap.get( componentClass );
 	}
 
 	@Override
@@ -2313,6 +2324,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 					options,
 					entityBindingMap,
 					composites,
+					genericComponentsMap,
 					mappedSuperClasses,
 					collectionBindingMap,
 					typeDefRegistry.copyRegistrationMap(),

@@ -67,6 +67,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private PersistentClass owner;
 	private boolean dynamic;
 	private boolean isKey;
+	private Boolean isGeneric;
 	private String roleName;
 
 	private final ArrayList<Property> properties = new ArrayList<>();
@@ -123,6 +124,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.parentProperty = original.parentProperty;
 		this.owner = original.owner;
 		this.dynamic = original.dynamic;
+		this.isGeneric = original.isGeneric;
 		this.metaAttributes = original.metaAttributes == null ? null : new HashMap<>(original.metaAttributes);
 		this.isKey = original.isKey;
 		this.roleName = original.roleName;
@@ -818,5 +820,16 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void setStructColumnNames(String[] structColumnNames) {
 		this.structColumnNames = structColumnNames;
+	}
+
+	public boolean isGeneric() {
+		if ( isGeneric == null ) {
+			isGeneric = getComponentClassName() != null && getComponentClass().getTypeParameters().length != 0;
+		}
+		return isGeneric;
+	}
+
+	public void setGeneric(boolean generic) {
+		isGeneric = generic;
 	}
 }

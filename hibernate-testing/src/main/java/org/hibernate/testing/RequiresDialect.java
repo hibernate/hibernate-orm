@@ -21,10 +21,12 @@ import org.hibernate.dialect.Dialect;
  * @see RequiresDialects
  *
  * @author Hardy Ferentschik
+ * @deprecated Use JUnit 5 and {@link org.hibernate.testing.orm.junit.RequiresDialect} instead.
  */
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(RequiresDialects.class)
+@Deprecated(forRemoval = true)
 public @interface RequiresDialect {
 	/**
 	 * The dialects against which to run the test

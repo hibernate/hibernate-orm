@@ -152,7 +152,7 @@ public class OracleDialect extends Dialect {
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private static final String yqmSelect =
-		"( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') + ( LEAST( EXTRACT( DAY FROM %2$s ), EXTRACT( DAY FROM LAST_DAY( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') ) ) ) - 1 ) )";
+		"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
 
 	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
@@ -189,8 +189,8 @@ public class OracleDialect extends Dialect {
 
 	protected static boolean isExtended(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
-				s.execute( "select cast('string' as varchar2(32000)) from dual" );
+			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
+				statement.execute( "select cast('string' as varchar2(32000)) from dual" );
 				// succeeded, so MAX_STRING_SIZE == EXTENDED
 				return true;
 			}
@@ -204,12 +204,9 @@ public class OracleDialect extends Dialect {
 
 	protected static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
-				// v$pdbs is available to any user on Autonomous database
-				try ( ResultSet rs = s.executeQuery( "select p.name, t.region, t.base_size, t.service, t.infrastructure\n" +
-						"from v$pdbs p, JSON_TABLE(p.cloud_identity, '$' COLUMNS (region path '$.REGION', base_size number path '$.BASE_SIZE', service path '$.SERVICE', infrastructure path '$.INFRASTRUCTURE')) t" ) ) {
-					return rs.next();
-				}
+			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
+				return statement.executeQuery( "select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JSON')" )
+						.next();
 			}
 			catch ( SQLException ex ) {
 				// Ignore

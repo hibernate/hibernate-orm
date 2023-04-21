@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.spi;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Optional;
@@ -28,9 +27,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * The {@link StreamDecorator} wraps a Java {@link Stream} and registers a {@code closeHandler}
@@ -298,6 +295,16 @@ public class StreamDecorator<R> implements Stream<R> {
 	}
 
 	@Override
+	public Stream<R> dropWhile(Predicate<? super R> predicate) {
+		return new StreamDecorator<>( delegate.dropWhile(predicate), closeHandler );
+	}
+
+	@Override
+	public Stream<R> takeWhile(Predicate<? super R> predicate) {
+		return new StreamDecorator<>( delegate.takeWhile(predicate), closeHandler );
+	}
+
+	@Override
 	public Stream<R> onClose(Runnable closeHandler) {
 		this.delegate.onClose( closeHandler );
 		return this;
@@ -308,31 +315,4 @@ public class StreamDecorator<R> implements Stream<R> {
 		delegate.close();
 	}
 
-	//Methods added to JDK 9
-
-	public Stream<R> takeWhile(Predicate<? super R> predicate) {
-		try {
-			@SuppressWarnings("unchecked")
-			Stream<R> result = (Stream<R>)
-					ReflectHelper.getMethod( Stream.class, "takeWhile", Predicate.class )
-							.invoke( delegate, predicate );
-			return new StreamDecorator<>( result, closeHandler );
-		}
-		catch (IllegalAccessException | InvocationTargetException e) {
-			throw new HibernateException( e );
-		}
-	}
-
-	public Stream<R> dropWhile(Predicate<? super R> predicate) {
-		try {
-			@SuppressWarnings("unchecked")
-			Stream<R> result = (Stream<R>)
-					ReflectHelper.getMethod( Stream.class, "dropWhile", Predicate.class )
-							.invoke( delegate, predicate );
-			return new StreamDecorator<>( result, closeHandler );
-		}
-		catch (IllegalAccessException | InvocationTargetException e) {
-			throw new HibernateException( e );
-		}
-	}
 }

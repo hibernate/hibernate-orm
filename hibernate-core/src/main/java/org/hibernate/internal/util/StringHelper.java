@@ -20,6 +20,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 public final class StringHelper {
 
 	private static final int ALIAS_TRUNCATE_LENGTH = 10;
@@ -825,7 +827,7 @@ public final class StringHelper {
 		}
 	}
 
-	public static String nullIfEmpty(String value) {
+	public static String nullIfEmpty(@Nullable String value) {
 		return isEmpty( value ) ? null : value;
 	}
 

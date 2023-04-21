@@ -12,6 +12,10 @@ import java.util.Objects;
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.StringHelper;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * A compound name where the root path element is an entity name or a collection role
  * and each the path sub-path from the root references a domain or mapping model part
@@ -23,9 +27,9 @@ import org.hibernate.internal.util.StringHelper;
 public class NavigablePath implements DotIdentifierSequence, Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 
-	private final NavigablePath parent;
+	private final @Nullable NavigablePath parent;
 	private final String localName;
-	private final String alias;
+	private final @Nullable String alias;
 	private final String identifierForTableGroup;
 	private final FullPathCalculator fullPathCalculator;
 	private final int hashCode;
@@ -34,7 +38,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		this( localName, null );
 	}
 
-	public NavigablePath(String rootName, String alias) {
+	public NavigablePath(String rootName, @Nullable String alias) {
 		this.parent = null;
 		this.alias = alias = StringHelper.nullIfEmpty( alias );
 		this.localName = rootName;
@@ -49,7 +53,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		this( parent, navigableName, null );
 	}
 
-	public NavigablePath(NavigablePath parent, String localName, String alias) {
+	public NavigablePath(NavigablePath parent, String localName, @Nullable String alias) {
 		assert parent != null;
 
 		this.parent = parent;
@@ -79,9 +83,9 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	public NavigablePath(
-			NavigablePath parent,
+			@Nullable NavigablePath parent,
 			String localName,
-			String alias,
+			@Nullable String alias,
 			String identifierForTableGroup,
 			FullPathCalculator fullPathCalculator,
 			int hashCode) {
@@ -94,7 +98,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	@Override
-	public NavigablePath getParent() {
+	public @Nullable NavigablePath getParent() {
 		return parent instanceof TreatedNavigablePath ? parent.getParent() : parent;
 	}
 
@@ -103,7 +107,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return localName;
 	}
 
-	public String getAlias() {
+	public @Nullable String getAlias() {
 		return alias;
 	}
 
@@ -121,7 +125,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		if ( this == other ) {
 			return true;
 		}
@@ -175,14 +179,14 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return new TreatedNavigablePath( this, entityName, alias );
 	}
 
-	public NavigablePath getRealParent() {
+	public @Nullable NavigablePath getRealParent() {
 		return parent;
 	}
 
 	/**
 	 * Determine whether this path is part of the given path's parent
 	 */
-	public boolean isParent(NavigablePath navigablePath) {
+	public boolean isParent(@Nullable NavigablePath navigablePath) {
 		while ( navigablePath != null ) {
 			if ( this.equals( navigablePath.getParent() ) ) {
 				return true;
@@ -195,14 +199,15 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	/**
 	 * Determine whether the given path is a suffix of this path
 	 */
-	public boolean isSuffix(DotIdentifierSequence dotIdentifierSequence) {
+	public boolean isSuffix(@Nullable DotIdentifierSequence dotIdentifierSequence) {
 		if ( dotIdentifierSequence == null ) {
 			return true;
 		}
 		if ( !localNamesMatch( dotIdentifierSequence ) ) {
 			return false;
 		}
-		return getParent() != null && getParent().isSuffix( dotIdentifierSequence.getParent() );
+		NavigablePath parent = getParent();
+		return parent != null && parent.isSuffix( dotIdentifierSequence.getParent() );
 	}
 
 	/**
@@ -216,15 +221,16 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	 * or null if the NavigablePath does not contain the suffix.
 	 *
 	 */
-	public NavigablePath trimSuffix(DotIdentifierSequence suffix) {
+	public @Nullable NavigablePath trimSuffix(@Nullable DotIdentifierSequence suffix) {
 		if ( suffix == null ) {
 			return this;
 		}
 		if ( !getLocalName().equals( suffix.getLocalName() ) ) {
 			return null;
 		}
-		if ( getParent() != null ) {
-			return getParent().trimSuffix( suffix.getParent() );
+		NavigablePath parent = getParent();
+		if ( parent != null ) {
+			return parent.trimSuffix( suffix.getParent() );
 		}
 		return null;
 	}
@@ -232,7 +238,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	/**
 	 * Determine whether this path is part of the given path's parent
 	 */
-	public boolean isParentOrEqual(NavigablePath navigablePath) {
+	public boolean isParentOrEqual(@Nullable NavigablePath navigablePath) {
 		while ( navigablePath != null ) {
 			if ( this.equals( navigablePath ) ) {
 				return true;
@@ -242,7 +248,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return false;
 	}
 
-	public boolean pathsMatch(NavigablePath p) {
+	public boolean pathsMatch(@Nullable NavigablePath p) {
 		return this == p || p != null && localName.equals( p.localName )
 				&& ( parent == null ? p.parent == null && Objects.equals( alias, p.alias ) : parent.pathsMatch( p.parent ) );
 	}
@@ -250,7 +256,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	/**
 	 * Ignores aliases in the resulting String
 	 */
-	public String relativize(NavigablePath base) {
+	public @Nullable String relativize(NavigablePath base) {
 		// e.g.
 		//	- base = Root.sub
 		//	- this = Root.sub.stuff
@@ -284,7 +290,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 			buffer.append( path );
 		}
 
-		public String resolve() {
+		public @Nullable String resolve() {
 			if ( buffer == null ) {
 				// Return an empty string instead of null in case the two navigable paths are equal
 				return matchedBase ? "" : null;
@@ -323,13 +329,13 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	 */
 	@FunctionalInterface
 	protected interface FullPathCalculator extends Serializable {
-		String calculateFullPath(NavigablePath parent, String localName, String alias);
+		String calculateFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias);
 	}
 
 	/**
 	 * The pattern used for root NavigablePaths
 	 */
-	protected static String calculateRootFullPath(NavigablePath parent, String rootName, String alias) {
+	protected static String calculateRootFullPath(@Nullable NavigablePath parent, String rootName, @Nullable String alias) {
 		assert parent == null;
 		return alias == null ? rootName : rootName + "(" + alias + ")";
 	}
@@ -337,10 +343,10 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	/**
 	 * The normal pattern used for the "full path"
 	 */
-	private static String calculateNormalFullPath(NavigablePath parent, String localName, String alias) {
+	private static String calculateNormalFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
 		assert parent != null;
 
-		final String parentFullPath = parent.getFullPath();
+		final String parentFullPath = castNonNull( parent ).getFullPath();
 		final String baseFullPath = StringHelper.isEmpty( parentFullPath )
 				? localName
 				: parentFullPath + "." + localName;
@@ -350,7 +356,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	/**
 	 * Pattern used for `_identifierMapper`
 	 */
-	protected static String calculateIdMapperFullPath(NavigablePath parent, String localName, String alias) {
+	protected static String calculateIdMapperFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
 		return parent != null ? parent.getFullPath() : "";
 	}
 }

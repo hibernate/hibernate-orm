@@ -1017,7 +1017,7 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 			MutableCacheKeyBuilder cacheKey,
 			Object value,
 			SharedSessionContractImplementor session) {
-		getIdentifierMapping().addToCacheKey( cacheKey, value, session );
+		getIdentifierMapping().addToCacheKey( cacheKey, getIdentifier( value, session ), session );
 	}
 
 	BytecodeEnhancementMetadata getInstrumentationMetadata();

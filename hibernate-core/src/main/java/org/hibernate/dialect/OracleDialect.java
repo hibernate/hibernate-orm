@@ -165,8 +165,11 @@ public class OracleDialect extends Dialect {
 			: new LegacyOracleLimitHandler( getVersion() );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
-	/** is it an Autonomous Database Cloud Service? */
+	// Is it an Autonomous Database Cloud Service?
 	protected final boolean autonomous;
+
+	// Is MAX_STRING_SIZE set to EXTENDED?
+	protected final boolean extended;
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -175,11 +178,28 @@ public class OracleDialect extends Dialect {
 	public OracleDialect(DatabaseVersion version) {
 		super(version);
 		autonomous = false;
+		extended = false;
 	}
 
 	public OracleDialect(DialectResolutionInfo info) {
 		super(info);
 		autonomous = isAutonomous( info.getDatabaseMetadata() );
+		extended = isExtended( info.getDatabaseMetadata() );
+	}
+
+	protected static boolean isExtended(DatabaseMetaData databaseMetaData) {
+		if ( databaseMetaData != null ) {
+			try ( java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
+				s.execute( "select cast('string' as varchar2(32000)) from dual" );
+				// succeeded, so MAX_STRING_SIZE == EXTENDED
+				return true;
+			}
+			catch ( SQLException ex ) {
+				// failed, so MAX_STRING_SIZE == STANDARD
+				// Ignore
+			}
+		}
+		return false;
 	}
 
 	protected static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
@@ -297,14 +317,13 @@ public class OracleDialect extends Dialect {
 	@Override
 	public int getMaxVarcharLength() {
 		//with MAX_STRING_SIZE=EXTENDED, changes to 32_767
-		//TODO: provide a way to change this without a custom Dialect
-		return 4000;
+		return extended ? 32_767 : 4000;
 	}
 
 	@Override
 	public int getMaxVarbinaryLength() {
 		//with MAX_STRING_SIZE=EXTENDED, changes to 32_767
-		return 2000;
+		return extended ? 32_767 : 2000;
 	}
 
 	@Override

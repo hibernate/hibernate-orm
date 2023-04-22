@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.service;
 
+import java.lang.reflect.Field;
 import java.util.Properties;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -35,7 +36,12 @@ import static org.junit.Assert.assertTrue;
 public class ServiceBootstrappingTest extends BaseUnitTestCase {
 
 	@Test
-	public void testBasicBuild() {
+	public void testBasicBuild() throws Exception{
+		Field globalProperties = Environment.class.getDeclaredField("GLOBAL_PROPERTIES");
+		globalProperties.setAccessible(true);
+		Properties props = (Properties) globalProperties.get(null);
+		Object showSql = props.remove(Environment.SHOW_SQL);
+
 		// this test requires that SHOW_SQL property isn't passed from the outside (eg. via Gradle)
 		final String showSqlPropertyFromOutside = System.getProperty(Environment.SHOW_SQL);
 		Assume.assumeFalse("true".equals(showSqlPropertyFromOutside));
@@ -54,6 +60,9 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 			assertFalse( jdbcServices.getSqlStatementLogger().isLogToStdout() );
 		}
 		finally {
+			if ( showSql != null ) {
+				props.put(Environment.SHOW_SQL, showSql);
+			}
 			serviceRegistry.destroy();
 		}
 	}

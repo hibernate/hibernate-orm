@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
@@ -550,7 +552,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 *
 	 * @throws MappingException If the property could not be found.
 	 */
-	public Property getReferencedProperty(String propertyPath) throws MappingException {
+	public @NonNull Property getReferencedProperty(String propertyPath) throws MappingException {
 		try {
 			return getRecursiveProperty( propertyPath, getReferenceableProperties() );
 		}

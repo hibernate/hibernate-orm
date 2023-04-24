@@ -27,7 +27,7 @@ public final class HighlightingFormatter implements Formatter {
 	private static final Set<String> KEYWORDS_LOWERCASED = new HashSet<>( new AnsiSqlKeywords().sql2003() );
 	static {
 		// additional keywords not reserved by ANSI SQL 2003
-		KEYWORDS_LOWERCASED.addAll( Arrays.asList( "key", "sequence", "cascade", "increment" ) );
+		KEYWORDS_LOWERCASED.addAll( Arrays.asList( "key", "sequence", "cascade", "increment", "boolean" ) );
 	}
 
 	public static final Formatter INSTANCE =
@@ -99,7 +99,7 @@ public final class HighlightingFormatter implements Formatter {
 					}
 					break;
 				default:
-					if ( KEYWORDS_LOWERCASED.contains( token.toLowerCase( Locale.ROOT ) ) ) {
+					if ( !inQuoted && KEYWORDS_LOWERCASED.contains( token.toLowerCase( Locale.ROOT ) ) ) {
 						result.append( keywordEscape ).append( token ).append( normalEscape );
 					}
 					else {

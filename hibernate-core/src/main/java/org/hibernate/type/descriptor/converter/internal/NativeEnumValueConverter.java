@@ -6,8 +6,6 @@
  */
 package org.hibernate.type.descriptor.converter.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
@@ -17,6 +15,8 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import java.io.Serializable;
+
 import static java.util.Collections.emptySet;
 
 /**
@@ -25,15 +25,15 @@ import static java.util.Collections.emptySet;
  *
  * @author Steve Ebersole
  */
-public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,String>, Serializable {
+public class NativeEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,Object>, Serializable {
 	private final EnumJavaType<E> domainTypeDescriptor;
 	private final JdbcType jdbcType;
-	private final JavaType<String> relationalTypeDescriptor;
+	private final JavaType<Object> relationalTypeDescriptor;
 
-	public NamedEnumValueConverter(
+	public NativeEnumValueConverter(
 			EnumJavaType<E> domainTypeDescriptor,
 			JdbcType jdbcType,
-			JavaType<String> relationalTypeDescriptor) {
+			JavaType<Object> relationalTypeDescriptor) {
 		this.domainTypeDescriptor = domainTypeDescriptor;
 		this.jdbcType = jdbcType;
 		this.relationalTypeDescriptor = relationalTypeDescriptor;
@@ -45,18 +45,20 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	}
 
 	@Override
-	public JavaType<String> getRelationalJavaType() {
+	public JavaType<Object> getRelationalJavaType() {
 		return relationalTypeDescriptor;
 	}
 
 	@Override
-	public E toDomainValue(String relationalForm) {
-		return domainTypeDescriptor.fromName( relationalForm );
+	public E toDomainValue(Object relationalForm) {
+		return relationalForm instanceof String
+				? domainTypeDescriptor.fromName( (String) relationalForm )
+				: (E) relationalForm;
 	}
 
 	@Override
-	public String toRelationalValue(E domainForm) {
-		return domainTypeDescriptor.toName( domainForm );
+	public Object toRelationalValue(E domainForm) {
+		return domainForm;
 	}
 
 	@Override

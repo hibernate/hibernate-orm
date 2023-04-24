@@ -151,22 +151,26 @@ class ColumnDefinitions {
 			Table table,
 			Metadata metadata,
 			Dialect dialect) {
-		final String columnType = column.getSqlType(metadata);
-		if ( isIdentityColumn(column, table, metadata, dialect) ) {
+		if ( isIdentityColumn( column, table, metadata, dialect) ) {
 			// to support dialects that have their own identity data type
 			if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-				definition.append( ' ' ).append( columnType );
+				definition.append( ' ' ).append( column.getSqlType( metadata ) );
 			}
 			final String identityColumnString = dialect.getIdentityColumnSupport()
-					.getIdentityColumnString( column.getSqlTypeCode(metadata) );
+					.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
 			definition.append( ' ' ).append( identityColumnString );
 		}
 		else {
+			final String columnType;
 			if ( column.hasSpecializedTypeDeclaration() ) {
-				definition.append( ' ' ).append( column.getSpecializedTypeDeclaration() );
-			}
-			else if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
+				columnType = column.getSpecializedTypeDeclaration();
 				definition.append( ' ' ).append( columnType );
+			}
+			else {
+				columnType = column.getSqlType( metadata );
+				if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
+					definition.append( ' ' ).append( columnType );
+				}
 			}
 
 			final String defaultValue = column.getDefaultValue();

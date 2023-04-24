@@ -23,18 +23,23 @@ import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializableType;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
+import org.hibernate.type.descriptor.converter.internal.NativeEnumValueConverter;
 import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
+import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.descriptor.jdbc.NativeEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -43,6 +48,7 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.isCharacterType;
 
 /**
  * BasicValue.Resolution resolver for cases where no explicit
@@ -331,28 +337,6 @@ public class InferredBasicValueResolver {
 			JdbcTypeIndicators stdIndicators,
 			MetadataBuildingContext context) {
 		final EnumType enumStyle = stdIndicators.getEnumeratedType();
-
-		if ( enumStyle == EnumType.STRING ) {
-			//noinspection unchecked
-			return (EnumeratedValueResolution<E, R>) stringEnumValueResolution(
-					enumJavaType,
-					explicitJavaType,
-					explicitJdbcType,
-					stdIndicators,
-					context
-			);
-		}
-
-		if ( enumStyle == EnumType.ORDINAL ) {
-			//noinspection unchecked
-			return (EnumeratedValueResolution<E, R>) ordinalEnumValueResolution(
-					enumJavaType,
-					(BasicJavaType<? extends Number>)explicitJavaType,
-					explicitJdbcType,
-					context
-			);
-		}
-
 		if ( enumStyle == null ) {
 			// NOTE : separate from the explicit ORDINAL check to facilitate
 			// handling native database enum types.  In theory anyway - atm
@@ -367,8 +351,27 @@ public class InferredBasicValueResolver {
 					context
 			);
 		}
-
-		throw new MappingException( "Unknown enumeration-style (JPA EnumType) : " + enumStyle );
+		switch ( enumStyle ) {
+			case STRING:
+				//noinspection unchecked
+				return (EnumeratedValueResolution<E, R>) stringEnumValueResolution(
+						enumJavaType,
+						explicitJavaType,
+						explicitJdbcType,
+						stdIndicators,
+						context
+				);
+			case ORDINAL:
+				//noinspection unchecked
+				return (EnumeratedValueResolution<E, R>) ordinalEnumValueResolution(
+						enumJavaType,
+						(BasicJavaType<? extends Number>)explicitJavaType,
+						explicitJdbcType,
+						context
+				);
+			default:
+				throw new MappingException( "Unknown enumeration-style (JPA EnumType) : " + enumStyle );
+		}
 	}
 
 	private static <E extends Enum<E>, N extends Number> EnumeratedValueResolution<E,N> ordinalEnumValueResolution(
@@ -378,11 +381,9 @@ public class InferredBasicValueResolver {
 			MetadataBuildingContext context) {
 		final JdbcType jdbcType = ordinalJdbcType( explicitJdbcType, enumJavaType, context );
 		final JavaType<N> relationalJavaType = ordinalJavaType( explicitJavaType, jdbcType, context );
-
 		return new EnumeratedValueResolution<>(
 				jdbcType,
-				new OrdinalEnumValueConverter<>( enumJavaType, jdbcType, relationalJavaType ),
-				context
+				new OrdinalEnumValueConverter<>( enumJavaType, jdbcType, relationalJavaType )
 		);
 	}
 
@@ -418,7 +419,7 @@ public class InferredBasicValueResolver {
 		}
 	}
 
-	private static <E extends Enum<E>> EnumeratedValueResolution<E,String> stringEnumValueResolution(
+	private static <E extends Enum<E>> EnumeratedValueResolution<E,?> stringEnumValueResolution(
 			EnumJavaType<E> enumJavaType,
 			BasicJavaType<?> explicitJavaType,
 			JdbcType explicitJdbcType,
@@ -427,19 +428,28 @@ public class InferredBasicValueResolver {
 		final JdbcType jdbcType = explicitJdbcType == null
 				? enumJavaType.getRecommendedJdbcType( stdIndicators )
 				: explicitJdbcType;
-		final JavaType<String> relationalJtd = stringJavaType( explicitJavaType, stdIndicators, context );
-
-		return new EnumeratedValueResolution<>(
-				jdbcType,
-				new NamedEnumValueConverter<>( enumJavaType, jdbcType, relationalJtd ),
-				context
-		);
-	}
-
-	private static JdbcType stringJdbcType(JdbcType explicitJdbcType, JdbcTypeIndicators stdIndicators, JavaType<String> relationalJtd) {
-		return explicitJdbcType != null
-				? explicitJdbcType
-				: relationalJtd.getRecommendedJdbcType( stdIndicators );
+		final EnumValueConverter<E,?> converter;
+		if ( jdbcType instanceof NativeEnumJdbcType ) {
+			converter = new NativeEnumValueConverter<>( enumJavaType, jdbcType, new ObjectJavaType() {
+				@Override
+				public <X> X unwrap(Object value, Class<X> type, WrapperOptions options) {
+					if ( String.class.equals(type) && value instanceof Enum) {
+						return (X) ((Enum<?>) value).name();
+					}
+					else {
+						return super.unwrap(value, type, options);
+					}
+				}
+			} );
+		}
+		else {
+			converter = new NamedEnumValueConverter<>(
+					enumJavaType,
+					jdbcType,
+					stringJavaType( explicitJavaType, stdIndicators, context )
+			);
+		}
+		return new EnumeratedValueResolution<>( jdbcType, converter );
 	}
 
 	private static JavaType<String> stringJavaType(

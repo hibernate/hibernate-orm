@@ -63,6 +63,7 @@ import org.hibernate.usertype.DynamicParameterizedType;
 
 import jakarta.persistence.AttributeConverter;
 
+import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.createLegacyIdentifierGenerator;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 
@@ -208,7 +209,7 @@ public abstract class SimpleValue implements KeyValue {
 	protected void justAddColumn(Column column, boolean insertable, boolean updatable) {
 		int index = columns.indexOf( column );
 		if ( index == -1 ) {
-			columns.add(column);
+			columns.add( column );
 			insertability.add( insertable );
 			updatability.add( updatable );
 		}
@@ -295,8 +296,8 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void setTypeName(String typeName) {
-		if ( typeName != null && typeName.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX ) ) {
-			final String converterClassName = typeName.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
+		if ( typeName != null && typeName.startsWith( TYPE_NAME_PREFIX ) ) {
+			final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
 			final ClassLoaderService cls = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
@@ -771,7 +772,7 @@ public abstract class SimpleValue implements KeyValue {
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 		return new ConvertedBasicTypeImpl<>(
-				ConverterDescriptor.TYPE_NAME_PREFIX
+				TYPE_NAME_PREFIX
 						+ jpaAttributeConverter.getConverterJavaType().getJavaType().getTypeName(),
 				String.format(
 						"BasicType adapter for AttributeConverter<%s,%s>",
@@ -822,11 +823,11 @@ public abstract class SimpleValue implements KeyValue {
 
 	public boolean isSame(SimpleValue other) {
 		return Objects.equals( columns, other.columns )
-				&& Objects.equals( typeName, other.typeName )
-				&& Objects.equals( typeParameters, other.typeParameters )
-				&& Objects.equals( table, other.table )
-				&& Objects.equals( foreignKeyName, other.foreignKeyName )
-				&& Objects.equals( foreignKeyDefinition, other.foreignKeyDefinition );
+			&& Objects.equals( typeName, other.typeName )
+			&& Objects.equals( typeParameters, other.typeParameters )
+			&& Objects.equals( table, other.table )
+			&& Objects.equals( foreignKeyName, other.foreignKeyName )
+			&& Objects.equals( foreignKeyDefinition, other.foreignKeyDefinition );
 	}
 
 	@Override

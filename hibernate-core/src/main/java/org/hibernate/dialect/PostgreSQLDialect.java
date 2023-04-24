@@ -385,6 +385,43 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean hasNativeEnums() {
+		return true;
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		return name;
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, Class<? extends Enum<?>> enumType) {
+		return null;
+	}
+
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "create type " )
+				.append( name )
+				.append( " as enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		type.append( ')' );
+		StringBuilder cast1 = new StringBuilder();
+		cast1.append("create cast (varchar as " )
+				.append( name )
+				.append( ") with inout as implicit" );
+		StringBuilder cast2 = new StringBuilder();
+		cast2.append("create cast (" )
+				.append( name )
+				.append( " as varchar) with inout as implicit" );
+		return new String[] { type.toString(), cast1.toString(), cast2.toString() };
+	}
+
+	@Override
 	public String currentTime() {
 		return "localtime";
 	}

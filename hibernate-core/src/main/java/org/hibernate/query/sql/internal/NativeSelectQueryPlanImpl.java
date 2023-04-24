@@ -13,9 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -96,10 +94,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				affectedTableNames
 		);
 
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
-		final JdbcServices jdbcServices = factory.getJdbcServices();
-		return jdbcServices.getJdbcSelectExecutor().list(
+		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),

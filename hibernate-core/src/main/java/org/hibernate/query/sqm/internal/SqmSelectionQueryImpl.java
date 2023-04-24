@@ -256,8 +256,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	protected List<R> doList() {
-		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
-
 		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
 		final boolean containsCollectionFetches = sqmStatement.containsCollectionFetches();
 		final boolean hasLimit = hasLimit( sqmStatement, getQueryOptions() );
@@ -330,8 +328,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 
 	@Override
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
-
 		return resolveQueryPlan().performScroll( scrollMode, this );
 	}
 

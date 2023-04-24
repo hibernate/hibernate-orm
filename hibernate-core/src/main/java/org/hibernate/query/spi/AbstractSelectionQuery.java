@@ -385,7 +385,9 @@ public abstract class AbstractSelectionQuery<R>
 	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
 
-		getSession().prepareForQueryExecution(false);
+		getSession().prepareForQueryExecution(
+				requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() )
+		);
 		prepareForExecution();
 
 		assert sessionFlushMode == null;
@@ -407,6 +409,14 @@ public abstract class AbstractSelectionQuery<R>
 	protected abstract void prepareForExecution();
 
 	protected void afterQuery(boolean success) {
+		afterQuery();
+		if ( !getSession().isTransactionInProgress() ) {
+			getSession().getJdbcCoordinator().getLogicalConnection().afterTransaction();
+		}
+		getSession().afterOperation( success );
+	}
+
+	protected void afterQuery() {
 		if ( sessionFlushMode != null ) {
 			getSession().setHibernateFlushMode( sessionFlushMode );
 			sessionFlushMode = null;
@@ -415,10 +425,6 @@ public abstract class AbstractSelectionQuery<R>
 			getSession().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
-		if ( !getSession().isTransactionInProgress() ) {
-			getSession().getJdbcCoordinator().getLogicalConnection().afterTransaction();
-		}
-		getSession().afterOperation( success );
 	}
 
 	protected boolean requiresTxn(LockMode lockMode) {
@@ -434,7 +440,13 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		return doScroll( scrollMode );
+		beforeQuery();
+		try {
+			return doScroll( scrollMode );
+		}
+		finally {
+			afterQuery();
+		}
 	}
 
 	protected abstract ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode);

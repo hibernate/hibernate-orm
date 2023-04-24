@@ -1343,8 +1343,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Using default transaction strategy (direct JDBC transactions)", id = 399)
 	void usingDefaultTransactionStrategy();
 
+	/**
+	 * @deprecated Use {@link org.hibernate.dialect.DialectLogging#usingDialect} instead
+	 */
 	@LogMessage(level = INFO)
 	@Message(value = "Using dialect: %s", id = 400)
+	@Deprecated
 	void usingDialect(Dialect dialect);
 
 	@LogMessage(level = ERROR)

@@ -15,12 +15,11 @@ import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DialectLogging;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -33,7 +32,6 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * @author Steve Ebersole
  */
 public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareService {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( "SQL dialect" );
 	private static final Set<String> LEGACY_DIALECTS = Set.of(
 			"org.hibernate.community.dialect.DB297Dialect",
 			"org.hibernate.community.dialect.DB2390Dialect",
@@ -92,7 +90,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	}
 
 	private static void logSelectedDialect(Dialect dialect) {
-		LOG.usingDialect( dialect );
+		DialectLogging.DIALECT_MESSAGE_LOGGER.usingDialect( dialect );
 
 		Class<? extends Dialect> dialectClass = dialect.getClass();
 		if ( dialectClass.isAnnotationPresent( Deprecated.class ) ) {

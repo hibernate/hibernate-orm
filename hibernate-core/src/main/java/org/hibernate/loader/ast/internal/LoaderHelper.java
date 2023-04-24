@@ -41,6 +41,11 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class LoaderHelper {
 
+	/**
+	 * Ensure the {@linkplain LockMode} associated with the entity in relation to a
+	 * persistence context is {@linkplain LockMode#greaterThan great or equal} to the
+	 * requested mode.
+	 */
 	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource session) {
 		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
@@ -169,6 +174,14 @@ public class LoaderHelper {
 		return (X[]) Array.newInstance( elementClass, length );
 	}
 
+	/**
+	 * Load one or more instances of a model part (an entity or collection)
+	 * based on a SQL ARRAY parameter to specify the keys (as opposed to the
+	 * more traditional SQL IN predicate approach).
+	 *
+	 * @param <R> The type of the model part to load
+	 * @param <K> The type of the keys
+	 */
 	public static <R,K> List<R> loadByArrayParameter(
 			K[] idsToInitialize,
 			SelectStatement sqlAst,

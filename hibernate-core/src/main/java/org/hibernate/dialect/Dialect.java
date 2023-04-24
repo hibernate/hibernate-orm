@@ -3775,6 +3775,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Return the limit that the underlying database places on the number of parameters
+	 * that can be defined for a PreparedStatement.  If the database defines no such
+	 * limits, simply return zero or a number smaller than zero.  By default, Dialect
+	 * returns the same value as {@link #getInExpressionCountLimit()}.
+	 *
+	 * @return The limit, or a non-positive integer to indicate no limit.
+	 */
+	public int getParameterCountLimit() {
+		return getInExpressionCountLimit();
+	}
+
+	/**
 	 * Must LOB values occur last in inserts and updates?
 	 *
 	 * @implNote Oracle is the culprit here, see HHH-4635.
@@ -4034,7 +4046,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		numberOfKeys = pad ? MathHelper.ceilingPowerOfTwo( numberOfKeys ) : numberOfKeys;
 
 		final long parameterCount = (long) numberOfColumns * numberOfKeys;
-		final int limit = getInExpressionCountLimit();
+		final int limit = getParameterCountLimit();
 
 		if ( limit > 0 ) {
 			// the Dialect reported a limit -  see if the parameter count exceeds the limit

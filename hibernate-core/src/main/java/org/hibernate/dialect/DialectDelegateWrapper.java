@@ -1155,6 +1155,11 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
+	public int getParameterCountLimit() {
+		return wrapped.getParameterCountLimit();
+	}
+
+	@Override
 	public boolean forceLobAsLastValue() {
 		return wrapped.forceLobAsLastValue();
 	}

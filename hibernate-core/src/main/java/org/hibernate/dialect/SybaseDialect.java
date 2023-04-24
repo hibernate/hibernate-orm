@@ -71,7 +71,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
 
 	//All Sybase dialects share an IN list size limit.
-	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
+	private static final int IN_LIST_SIZE_LIMIT = 250000;
+
+	private static final int PARAM_COUNT_LIMIT = 2000;
+
 	private final UniqueDelegate uniqueDelegate = new SkipNullableUniqueDelegate(this);
 
 	public SybaseDialect() {
@@ -160,7 +163,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public int getInExpressionCountLimit() {
-		return PARAM_LIST_SIZE_LIMIT;
+		return IN_LIST_SIZE_LIMIT;
+	}
+
+	@Override
+	public int getParameterCountLimit() {
+		return PARAM_COUNT_LIMIT;
 	}
 
 	@Override

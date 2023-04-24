@@ -199,6 +199,7 @@ import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static java.util.Arrays.sort;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
@@ -247,6 +248,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
+import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS. Every
@@ -736,6 +738,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 	}
 
+	public boolean hasNativeEnums() {
+		return false;
+	}
+
 	/**
 	 * If this database has a special MySQL-style {@code enum} column type,
 	 * return the type declaration for the given enumeration of values.
@@ -745,8 +751,24 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param values the enumerated values of the type
 	 * @return the DDL column type declaration
 	 */
-	public String getEnumTypeDeclaration(String[] values) {
+	public String getEnumTypeDeclaration(String name, String[] values) {
 		return null;
+	}
+
+	public String getEnumTypeDeclaration(Class<? extends Enum<?>> enumType) {
+		String[] values = getEnumeratedValues( enumType );
+		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
+		return getEnumTypeDeclaration( enumType.getSimpleName(), values );
+	}
+
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		return null;
+	}
+
+	public String[] getCreateEnumTypeCommand(Class<? extends Enum<?>> enumType) {
+		String[] values = getEnumeratedValues( enumType );
+		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
+		return getCreateEnumTypeCommand( enumType.getSimpleName(), values );
 	}
 
 	/**
@@ -764,6 +786,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			separator = ",";
 		}
 		return check.append( ')' ).toString();
+	}
+
+	public String getCheckCondition(String columnName, Class<? extends Enum<?>> enumType) {
+		return getCheckCondition( columnName, getEnumeratedValues( enumType ) );
 	}
 
 	/**

@@ -12,6 +12,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.descriptor.jdbc.NativeEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import static jakarta.persistence.EnumType.ORDINAL;
@@ -36,24 +37,26 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		final JdbcTypeRegistry registry = context.getTypeConfiguration().getJdbcTypeRegistry();
 		final EnumType type = context.getEnumeratedType();
+		int sqlType;
 		switch ( type == null ? ORDINAL : type ) {
-			case ORDINAL: {
-				return registry.getDescriptor( hasManyValues() ? SMALLINT : TINYINT );
-			}
-			case STRING: {
-				if ( context.getColumnLength() == 1 ) {
-					return context.isNationalized()
-							? registry.getDescriptor( NCHAR )
-							: registry.getDescriptor( CHAR );
+			case ORDINAL:
+				sqlType = hasManyValues() ? SMALLINT : TINYINT;
+				break;
+			case STRING:
+				if ( context.getDialect().hasNativeEnums() ) {
+					return NativeEnumJdbcType.INSTANCE;
 				}
-				return context.isNationalized()
-						? registry.getDescriptor( NVARCHAR )
-						: registry.getDescriptor( VARCHAR );
-			}
-			default: {
+				else if ( context.getColumnLength() == 1 ) {
+					sqlType = context.isNationalized() ? NCHAR : CHAR;
+				}
+				else {
+					sqlType = context.isNationalized() ? NVARCHAR : VARCHAR;
+				}
+				break;
+			default:
 				throw new AssertionFailure("unknown EnumType");
-			}
 		}
+		return registry.getDescriptor( sqlType );
 	}
 
 	public boolean hasManyValues() {
@@ -250,4 +253,5 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 				return false;
 		}
 	}
+
 }

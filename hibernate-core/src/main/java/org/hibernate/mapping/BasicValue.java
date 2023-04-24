@@ -27,6 +27,8 @@ import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.NamedConverterResolution;
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.model.process.internal.VersionResolution;
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -318,6 +320,19 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			resolveColumn( (Column) selectable, getDialect() );
 		}
 
+		Database database = getBuildingContext().getMetadataCollector().getDatabase();
+		BasicValueConverter<?, ?> valueConverter = resolution.getValueConverter();
+		if ( valueConverter != null ) {
+			AuxiliaryDatabaseObject udt = valueConverter.getAuxiliaryDatabaseObject(
+					resolution.getJdbcType(),
+					database.getDialect(),
+					database.getDefaultNamespace()
+			);
+			if ( udt != null ) {
+				database.addAuxiliaryDatabaseObject( udt );
+			}
+		}
+
 		return resolution;
 	}
 
@@ -333,7 +348,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		if ( resolution.getValueConverter() != null ) {
-			final String declaration = resolution.getLegacyResolvedBasicType().getSpecializedTypeDeclaration(dialect);
+			final String declaration = resolution.getLegacyResolvedBasicType().getSpecializedTypeDeclaration( dialect );
 			if ( declaration != null ) {
 				column.setSpecializedTypeDeclaration( declaration );
 			}

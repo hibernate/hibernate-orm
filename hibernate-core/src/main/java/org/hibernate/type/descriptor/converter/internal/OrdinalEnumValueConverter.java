@@ -62,8 +62,7 @@ public class OrdinalEnumValueConverter<E extends Enum<E>, N extends Number> impl
 
 	@Override
 	public String toSqlLiteral(Object value) {
-		//noinspection rawtypes
-		return Integer.toString( ( (Enum) value ).ordinal() );
+		return Integer.toString( ( (Enum<?>) value ).ordinal() );
 	}
 
 	@Override

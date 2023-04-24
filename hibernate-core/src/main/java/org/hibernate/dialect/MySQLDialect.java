@@ -870,7 +870,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getEnumTypeDeclaration(String[] values) {
+	public String getEnumTypeDeclaration(String name, String[] values) {
 		StringBuilder type = new StringBuilder();
 		type.append( "enum (" );
 		String separator = "";

@@ -52,7 +52,7 @@ public abstract class CharBooleanConverter
 
 	@Override
 	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
-		return dialect.getEnumTypeDeclaration( getValues() );
+		return dialect.getEnumTypeDeclaration( null, getValues() );
 	}
 
 	protected abstract String[] getValues();

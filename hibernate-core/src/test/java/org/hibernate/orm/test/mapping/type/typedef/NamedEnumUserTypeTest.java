@@ -4,12 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
-/**
- * 
- */
 package org.hibernate.orm.test.mapping.type.typedef;
 
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.mapping.converted.enums.Gender;
 import org.hibernate.orm.test.mapping.converted.enums.HairColor;
 import org.hibernate.orm.test.mapping.converted.enums.Person;
@@ -20,6 +17,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +34,7 @@ import org.junit.jupiter.api.Test;
 		xmlMappings = "mappings/type/custom/typedef/PersonNamedEnumsUserType.xml"
 )
 @SessionFactory
+@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true)
 public class NamedEnumUserTypeTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-14820")

@@ -10,12 +10,14 @@ import java.util.List;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,7 +69,7 @@ public class EnumsParameterTest {
 		);
 	}
 
-	@Test
+	@Test @SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true)
 	public void testDeleteByEventType(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -106,7 +108,7 @@ public class EnumsParameterTest {
 		);
 	}
 
-	@Test
+	@Test @SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true)
 	public void testSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

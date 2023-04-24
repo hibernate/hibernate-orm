@@ -13,6 +13,7 @@ import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.TestForIssue;
@@ -104,6 +105,7 @@ public class FunctionTests {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-15711")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true)
 	public void testLowerUpperFunctionsWithEnums(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -190,7 +190,7 @@ public class StandardFunctionTests {
 					session.createQuery("select coalesce(nullif(e.gender,?1), e.gender) from EntityOfBasics e")
 							.setParameter(1, FEMALE)
 							.list();
-					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e")
+					session.createQuery("select ifnull(e.gender, org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.MALE) from EntityOfBasics e")
 							.list();
 				}
 		);

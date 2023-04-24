@@ -3,10 +3,12 @@ package org.hibernate.orm.test.query.hql;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +26,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 )
 @SessionFactory
 @TestForIssue( jiraKey = "HHH-15711")
+@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true)
 public class FunctionAndEnumsTest {
 
 

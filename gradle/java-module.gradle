@@ -95,6 +95,7 @@ dependencies {
 	testRuntimeOnly dbLibs.oracleXml
 	testRuntimeOnly dbLibs.oracleXmlParser
 	testRuntimeOnly dbLibs.sybase
+	testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+

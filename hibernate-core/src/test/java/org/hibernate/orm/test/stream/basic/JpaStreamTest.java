@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.stream.basic;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +20,6 @@ import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 
 import org.hibernate.testing.TestForIssue;
@@ -41,7 +38,6 @@ import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -429,7 +425,7 @@ public class JpaStreamTest {
 
 		//Test call close explicitly
 		scope.inTransaction( session -> {
-			try (Stream<Long> stream = getLongStream(
+			try (Stream<Integer> stream = getIntegerStream(
 					prepare,
 					session,
 					onCloseCallbacks,
@@ -458,81 +454,67 @@ public class JpaStreamTest {
 
 		//Test Java 9 Stream methods
 		scope.inTransaction( session -> {
-			Method takeWhileMethod = ReflectHelper.getMethod( Stream.class, "takeWhile", Predicate.class );
+			try (Stream<Integer> stream = getIntegerStream(
+					prepare,
+					session,
+					onCloseCallbacks,
+					flatMapBefore,
+					flatMapAfter
+			)) {
 
-			if ( takeWhileMethod != null ) {
-				try (Stream<Long> stream = getLongStream(
-						prepare,
-						session,
-						onCloseCallbacks,
-						flatMapBefore,
-						flatMapAfter
-				)) {
+				ResourceRegistry resourceRegistry = resourceRegistry( session );
+				try {
 
-					ResourceRegistry resourceRegistry = resourceRegistry( session );
-					try {
+					Predicate<Integer> predicate = id -> id <= 5;
 
-						Predicate<Integer> predicate = id -> id <= 5;
+					Stream<Integer> takeWhileStream = stream.takeWhile( predicate );
 
-						Stream<Integer> takeWhileStream = (Stream<Integer>) takeWhileMethod.invoke( stream, predicate );
+					List<Integer> result = takeWhileStream.collect( Collectors.toList() );
+					assertTrue( resourceRegistry.hasRegisteredResources() );
 
-						List<Integer> result = takeWhileStream.collect( Collectors.toList() );
-						assertTrue( resourceRegistry.hasRegisteredResources() );
-
-						assertEquals( 5, result.size() );
-						assertTrue( result.contains( 1 ) );
-						assertTrue( result.contains( 3 ) );
-						assertTrue( result.contains( 5 ) );
-					}
-					finally {
-						stream.close();
-						assertFalse( resourceRegistry.hasRegisteredResources() );
-					}
-
-					onCloseAssertion.run();
+					assertEquals( 5, result.size() );
+					assertTrue( result.contains( 1 ) );
+					assertTrue( result.contains( 3 ) );
+					assertTrue( result.contains( 5 ) );
 				}
-				catch (IllegalAccessException | InvocationTargetException e) {
-					fail( "Could not execute takeWhile because of " + e.getMessage() );
+				finally {
+					stream.close();
+					assertFalse( resourceRegistry.hasRegisteredResources() );
 				}
+
+				onCloseAssertion.run();
 			}
 		} );
 
 		scope.inTransaction( session -> {
-			Method dropWhileMethod = ReflectHelper.getMethod( Stream.class, "dropWhile", Predicate.class );
+			try (Stream<Integer> stream = getIntegerStream(
+					prepare,
+					session,
+					onCloseCallbacks,
+					flatMapBefore,
+					flatMapAfter
+			)) {
 
-			if ( dropWhileMethod != null ) {
-				try (Stream<Long> stream = getLongStream(
-						prepare,
-						session,
-						onCloseCallbacks,
-						flatMapBefore,
-						flatMapAfter
-				)) {
+				ResourceRegistry resourceRegistry = resourceRegistry( session );
 
-					ResourceRegistry resourceRegistry = resourceRegistry( session );
+				Predicate<Integer> predicate = id -> id <= 5;
 
-					Predicate<Integer> predicate = id -> id <= 5;
+				Stream<Integer> dropWhileStream = stream.dropWhile( predicate );
+				try {
+					List<Integer> result = dropWhileStream.collect( Collectors.toList() );
+					assertTrue( resourceRegistry.hasRegisteredResources() );
 
-					Stream<Integer> dropWhileStream = (Stream<Integer>) dropWhileMethod.invoke( stream, predicate );
-					try {
-						List<Integer> result = dropWhileStream.collect( Collectors.toList() );
-						assertTrue( resourceRegistry.hasRegisteredResources() );
-
-						assertEquals( 5, result.size() );
-						assertTrue( result.contains( 6 ) );
-						assertTrue( result.contains( 8 ) );
-						assertTrue( result.contains( 10 ) );
-					}
-					finally {
-						stream.close();
-						assertFalse( resourceRegistry.hasRegisteredResources() );
-					}
-
-					onCloseAssertion.run();
+					assertEquals( 5, result.size() );
+					assertTrue( result.contains( 6 ) );
+					assertTrue( result.contains( 8 ) );
+					assertTrue( result.contains( 10 ) );
 				}
-				catch (IllegalAccessException | InvocationTargetException e) {
-					fail( "Could not execute takeWhile because of " + e.getMessage() );
+				finally {
+					stream.close();
+					assertFalse( resourceRegistry.hasRegisteredResources() );
 				}
+
+				onCloseAssertion.run();
 			}
 		} );
 	}
@@ -553,7 +535,7 @@ public class JpaStreamTest {
 		);
 	}
 
-	private static Stream<Long> getLongStream(
+	private static Stream<Integer> getIntegerStream(
 			Runnable prepare,
 			Session session,
 			List<Runnable> onCloseCallbacks,

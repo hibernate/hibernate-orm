@@ -45,7 +45,6 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.Type;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.id.IdentifierGeneratorHelper.POST_INSERT_INDICATOR;

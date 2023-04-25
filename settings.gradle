@@ -183,7 +183,7 @@ dependencyResolutionManagement {
             version( "h2gis", h2gisVersion )
             version( "hsqldb", hsqldbVersion )
             version( "derby", derbyVersion )
-            version( "pgsql", "42.5.0" )
+            version( "pgsql", "42.6.0" )
             version( "mysql", "8.0.27" )
             version( "oracle", "21.8.0.0" )
 

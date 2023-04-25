@@ -64,6 +64,7 @@ import org.hibernate.usertype.DynamicParameterizedType;
 import jakarta.persistence.AttributeConverter;
 
 import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.createLegacyIdentifierGenerator;
+import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 
 /**
  * A mapping model object that represents any value that maps to columns.
@@ -230,8 +231,8 @@ public abstract class SimpleValue implements KeyValue {
 	public void sortColumns(int[] originalOrder) {
 		if ( columns.size() > 1 ) {
 			final Selectable[] originalColumns = columns.toArray( new Selectable[0] );
-			final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
-			final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );
+			final boolean[] originalInsertability = toBooleanArray( insertability );
+			final boolean[] originalUpdatability = toBooleanArray( updatability );
 			for ( int i = 0; i < originalOrder.length; i++ ) {
 				final int originalIndex = originalOrder[i];
 				final Selectable selectable = originalColumns[i];

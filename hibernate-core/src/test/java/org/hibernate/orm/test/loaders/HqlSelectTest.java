@@ -9,9 +9,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.HQLSelect;
+import org.hibernate.dialect.SybaseASEDialect;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -23,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SessionFactory
 @DomainModel(annotatedClasses = {HqlSelectTest.WithHqlSelect.class, HqlSelectTest.UUID.class})
+@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Driver or DB omit trailing zero bytes of a varbinary, making this test fail intermittently")
 public class HqlSelectTest {
 
 	@Test

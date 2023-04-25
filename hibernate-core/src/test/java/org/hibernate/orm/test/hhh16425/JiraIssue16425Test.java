@@ -122,7 +122,7 @@ public class JiraIssue16425Test {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-16425")
-	//@DisplayName("Sum aggregate is not working")
+	@DisplayName("Sum aggregate using temporary table is not working")
 	void sumUsingTemporaryTable(SessionFactoryScope scope) {
 		final String SUM_QUERY_WITH_TEMP = "with temp as (select name as name, amount as amount from EntityB) select a.name, sum(a.amount) from temp as a group by a.name";
 		final List<Tuple> actual = scope.fromSession( session -> session.createQuery( SUM_QUERY_WITH_TEMP, Tuple.class )

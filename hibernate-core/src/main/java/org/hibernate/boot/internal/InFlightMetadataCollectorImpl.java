@@ -1020,8 +1020,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 
-	private Map<Identifier,Identifier> logicalToPhysicalTableNameMap = new HashMap<>();
-	private Map<Identifier,Identifier> physicalToLogicalTableNameMap = new HashMap<>();
+	private final Map<Identifier,Identifier> logicalToPhysicalTableNameMap = new HashMap<>();
+	private final Map<Identifier,Identifier> physicalToLogicalTableNameMap = new HashMap<>();
 
 	@Override
 	public void addTableNameBinding(Identifier logicalName, Table table) {
@@ -1204,7 +1204,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 				}
 			}
 
-			if ( DenormalizedTable.class.isInstance( currentTable ) ) {
+			if ( currentTable instanceof DenormalizedTable ) {
 				currentTable = ( (DenormalizedTable) currentTable ).getIncludedTable();
 			}
 			else {
@@ -1265,7 +1265,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 
 	@Override
-	public void addMappedSuperclass(Class type, MappedSuperclass mappedSuperclass) {
+	public void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass) {
 		if ( mappedSuperClasses == null ) {
 			mappedSuperClasses = new HashMap<>();
 		}
@@ -1273,7 +1273,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
-	public MappedSuperclass getMappedSuperclass(Class type) {
+	public MappedSuperclass getMappedSuperclass(Class<?> type) {
 		if ( mappedSuperClasses == null ) {
 			return null;
 		}
@@ -1421,13 +1421,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		);
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public void addUniqueConstraints(Table table, List uniqueConstraints) {
+	@Override @Deprecated(forRemoval = true)
+	public void addUniqueConstraints(Table table, List<String[]> uniqueConstraints) {
 		List<UniqueConstraintHolder> constraintHolders = new ArrayList<>( uniqueConstraints.size() );
 
 		int keyNameBase = determineCurrentNumberOfUniqueConstraintHolders( table );
-		for ( String[] columns : ( List<String[]> ) uniqueConstraints ) {
+		for ( String[] columns : uniqueConstraints ) {
 			final String keyName = "key" + keyNameBase++;
 			constraintHolders.add(
 					new UniqueConstraintHolder().setName( keyName ).setColumns( columns )
@@ -1438,9 +1437,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private int determineCurrentNumberOfUniqueConstraintHolders(Table table) {
 		List currentHolders = uniqueConstraintHoldersByTable == null ? null : uniqueConstraintHoldersByTable.get( table );
-		return currentHolders == null
-				? 0
-				: currentHolders.size();
+		return currentHolders == null ? 0 : currentHolders.size();
 	}
 
 	@Override
@@ -1514,7 +1511,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private static final class EntityTableXrefImpl implements EntityTableXref {
 		private final Identifier primaryTableLogicalName;
 		private final Table primaryTable;
-		private EntityTableXrefImpl superEntityTableXref;
+		private final EntityTableXrefImpl superEntityTableXref;
 
 		//annotations needs a Map<String,Join>
 		//private Map<Identifier,Join> secondaryTableJoinMap;
@@ -1972,6 +1969,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			throws MappingException {
 		table.createForeignKeys();
 
+		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
 		for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
 			if ( !done.contains( foreignKey ) ) {
 				done.add( foreignKey );
@@ -1998,7 +1996,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 				final Identifier nameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
 						.determineForeignKeyName( new ForeignKeyNameSource( foreignKey, table, buildingContext ) );
-				foreignKey.setName( nameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() ) );
+				foreignKey.setName( nameIdentifier.render( dialect ) );
 
 				foreignKey.alignColumns();
 			}
@@ -2017,14 +2015,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		return columnNames;
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<Identifier> extractColumnNames(List columns) {
+	private List<Identifier> extractColumnNames(List<Column> columns) {
 		if ( columns == null || columns.isEmpty() ) {
 			return emptyList();
 		}
 
 		final List<Identifier> columnNames = arrayList( columns.size() );
-		for ( Column column : (List<Column>) columns ) {
+		for ( Column column : columns ) {
 			columnNames.add( getDatabase().toIdentifier( column.getQuotedName() ) );
 		}
 		return columnNames;
@@ -2395,13 +2392,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			// exception to occur, the same exception will happen later as we build the SF.
 			log.debugf( "Ignoring exception thrown when trying to build IdentifierGenerator as part of Metadata building", e );
 		}
-	}
-
-	private String extractName(Identifier identifier, Dialect dialect) {
-		if ( identifier == null ) {
-			return null;
-		}
-		return identifier.render( dialect );
 	}
 
 	private class IndexOrUniqueKeyNameSource implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {

@@ -12,6 +12,9 @@ import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
  * @author Andrea Boriero
  */
 public class Teradata14IdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static Teradata14IdentityColumnSupport INSTANCE = new Teradata14IdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

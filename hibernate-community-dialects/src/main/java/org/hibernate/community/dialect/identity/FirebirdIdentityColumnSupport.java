@@ -13,6 +13,8 @@ import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
  */
 public class FirebirdIdentityColumnSupport extends IdentityColumnSupportImpl {
 
+	public static final FirebirdIdentityColumnSupport INSTANCE = new FirebirdIdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

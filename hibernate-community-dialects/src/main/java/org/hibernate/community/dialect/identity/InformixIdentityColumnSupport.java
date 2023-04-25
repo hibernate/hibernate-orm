@@ -15,6 +15,9 @@ import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
  * @author Andrea Boriero
  */
 public class InformixIdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final InformixIdentityColumnSupport INSTANCE = new InformixIdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

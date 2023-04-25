@@ -122,8 +122,8 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isSameOrAfter(7, 3)
-				? new DB2IdentityColumnSupport()
-				: new DB2zIdentityColumnSupport();
+				? DB2IdentityColumnSupport.INSTANCE
+				: DB2zIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

@@ -14,6 +14,9 @@ import org.hibernate.id.insert.GetGeneratedKeysDelegate;
  * @author Andrea Boriero
  */
 public class Oracle12cIdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final Oracle12cIdentityColumnSupport INSTANCE = new Oracle12cIdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

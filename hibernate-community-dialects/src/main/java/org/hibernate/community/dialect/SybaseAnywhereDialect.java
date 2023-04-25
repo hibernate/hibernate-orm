@@ -173,7 +173,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new SybaseAnywhereIdentityColumnSupport();
+		return SybaseAnywhereIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

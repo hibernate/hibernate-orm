@@ -16,6 +16,9 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.function.SybaseTruncFunction;
+import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.SybaseJconnIdentityColumnSupport;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -382,5 +385,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public boolean supportsAlterColumnType() {
 		return true;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return jtdsDriver
+				? AbstractTransactSQLIdentityColumnSupport.INSTANCE
+				: SybaseJconnIdentityColumnSupport.INSTANCE;
 	}
 }

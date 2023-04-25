@@ -1117,7 +1117,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new MySQLIdentityColumnSupport();
+		return MySQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

@@ -295,7 +295,7 @@ public class CacheDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new CacheIdentityColumnSupport();
+		return CacheIdentityColumnSupport.INSTANCE;
 	}
 
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

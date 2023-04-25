@@ -563,7 +563,7 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new DB2IdentityColumnSupport();
+		return DB2IdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

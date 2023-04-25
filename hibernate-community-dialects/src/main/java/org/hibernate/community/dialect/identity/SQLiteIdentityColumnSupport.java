@@ -16,6 +16,8 @@ import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
  */
 public class SQLiteIdentityColumnSupport extends IdentityColumnSupportImpl {
 
+	public static final SQLiteIdentityColumnSupport INSTANCE = new SQLiteIdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

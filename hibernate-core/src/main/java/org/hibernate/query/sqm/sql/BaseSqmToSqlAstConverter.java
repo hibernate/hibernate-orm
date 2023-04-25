@@ -3406,23 +3406,30 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			registerTreatUsage( (SqmFrom<?, ?>) parentPath, tableGroup );
 		}
 
-		if ( getCurrentClauseStack().getCurrent() != Clause.SELECT
+		if ( parentPath instanceof SqmSimplePath<?>
+				&& CollectionPart.Nature.fromName( parentPath.getNavigablePath().getLocalName() ) == null
+				&& getCurrentClauseStack().getCurrent() != Clause.SELECT
 				&& parentPath.getParentPath() != null
 				&& tableGroup.getModelPart() instanceof ToOneAttributeMapping ) {
 			// we need to handle the case of an implicit path involving a to-one
-			// association with not-found mapping where that path has been previously
-			// joined using left.  typically, this indicates that the to-one is being
+			// association that path has been previously joined using left.
+			// typically, this indicates that the to-one is being
 			// fetched - the fetch would use a left-join.  however, since the path is
 			// used outside the select-clause also, we need to force the join to be inner
-			final ToOneAttributeMapping toOneMapping = (ToOneAttributeMapping) tableGroup.getModelPart();
-			if ( toOneMapping.hasNotFoundAction() ) {
+			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) tableGroup.getModelPart();
+			final String partName = sqmPath.getResolvedModel().getPathName();
+			final ModelPart pathPart;
+			if ( !toOneAttributeMapping.isFkOptimizationAllowed()
+					|| !( ( pathPart = toOneAttributeMapping.findSubPart( partName ) ) instanceof ValuedModelPart )
+					|| !toOneAttributeMapping.getForeignKeyDescriptor().isKeyPart( (ValuedModelPart) pathPart ) ) {
 				final NavigablePath parentParentPath = parentPath.getParentPath().getNavigablePath();
 				final TableGroup parentParentTableGroup = fromClauseIndex.findTableGroup( parentParentPath );
-				parentParentTableGroup.visitTableGroupJoins( (join) -> {
-					if ( join.getNavigablePath().equals( parentPath.getNavigablePath() ) && join.isImplicit() ) {
-						join.setJoinType( SqlAstJoinType.INNER );
-					}
-				} );
+				final TableGroupJoin tableGroupJoin = parentParentTableGroup.findTableGroupJoin( tableGroup );
+				// We might get null here if the parentParentTableGroup is correlated and tableGroup is from the outer query
+				// In this case, we don't want to override the join type, though it is debatable if it's ok to reuse a join in this case
+				if ( tableGroupJoin != null ) {
+					tableGroupJoin.setJoinType( SqlAstJoinType.INNER );
+				}
 			}
 		}
 

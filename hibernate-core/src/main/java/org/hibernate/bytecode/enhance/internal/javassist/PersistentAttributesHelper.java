@@ -208,8 +208,11 @@ public class PersistentAttributesHelper {
 	}
 
 	public static String getMappedBy(CtField persistentField, CtClass targetEntity, JavassistEnhancementContext context) throws NotFoundException {
-		final String local = getMappedByFromAnnotation( persistentField );
-		return local.isEmpty() ? getMappedByFromTargetEntity( persistentField, targetEntity, context ) : local;
+		final String mappedBy = getMappedByFromAnnotation( persistentField );
+		if ( mappedBy == null || mappedBy.isEmpty() ) {
+			return null;
+		}
+		return mappedBy;
 	}
 
 	private static String getMappedByFromAnnotation(CtField persistentField) {
@@ -230,7 +233,7 @@ public class PersistentAttributesHelper {
 		return mtm == null ? "" : mtm.mappedBy();
 	}
 
-	private static String getMappedByFromTargetEntity(
+	public static String getMappedByFromTargetEntity(
 			CtField persistentField,
 			CtClass targetEntity,
 			JavassistEnhancementContext context) throws NotFoundException {

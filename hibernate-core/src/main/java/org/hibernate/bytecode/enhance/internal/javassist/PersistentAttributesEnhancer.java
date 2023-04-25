@@ -332,7 +332,15 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 			return;
 		}
 		final String mappedBy = PersistentAttributesHelper.getMappedBy( persistentField, targetEntity, enhancementContext );
-		if ( mappedBy == null || mappedBy.isEmpty() ) {
+		String bidirectionalAttributeName;
+		if ( mappedBy == null ) {
+			bidirectionalAttributeName = PersistentAttributesHelper.getMappedByFromTargetEntity( persistentField, targetEntity, enhancementContext );
+		}
+		else {
+			bidirectionalAttributeName = mappedBy;
+		}
+
+		if ( bidirectionalAttributeName == null || bidirectionalAttributeName.isEmpty() ) {
 			log.infof(
 					"Could not find bi-directional association for field [%s#%s]",
 					managedCtClass.getName(),
@@ -342,57 +350,97 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 		}
 
 		// create a temporary getter and setter on the target entity to be able to compile our code
-		final String mappedByGetterName = EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + mappedBy;
-		final String mappedBySetterName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + mappedBy;
+		final String getterName = EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName();
+		final String bidirectionalGetterName = EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + bidirectionalAttributeName;
+		final String bidirectionalSetterName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + bidirectionalAttributeName;
 		CtMethod getter;
 		CtMethod setter;
 		boolean tmpTargetMethods = false;
 		try {
-			getter = targetEntity.getDeclaredMethod( mappedByGetterName );
-			setter = targetEntity.getDeclaredMethod( mappedByGetterName );
+			getter = targetEntity.getDeclaredMethod( bidirectionalGetterName );
+			setter = targetEntity.getDeclaredMethod( bidirectionalGetterName );
 		}
 		catch ( NotFoundException nfe ) {
-			getter = MethodWriter.addGetter( targetEntity, mappedBy, mappedByGetterName );
-			setter = MethodWriter.addSetter( targetEntity, mappedBy, mappedBySetterName );
+			getter = MethodWriter.addGetter( targetEntity, bidirectionalAttributeName, bidirectionalGetterName );
+			setter = MethodWriter.addSetter( targetEntity, bidirectionalAttributeName, bidirectionalSetterName );
 			tmpTargetMethods = true;
 		}
 
 		// code fragments to check loaded state. We don't want to trigger lazy loading in association management code
+		String getterSelfNotNull = String.format(
+				"this.%s() != null",
+				getterName
+		);
 		String currentAssociationLoaded = String.format(
+				"%s.isInitialized(this.%s)",
+				Hibernate.class.getName(),
+				persistentField.getName()
+		);
+		String targetElementLoaded = String.format(
+				"%s.isInitialized(target)",
+				Hibernate.class.getName()
+		);
+		String newAssociationLoaded = String.format(
+				"%s.isInitialized($1)",
+				Hibernate.class.getName()
+		);
+		String currentAssociationInverseLoaded = String.format(
 				"%s.isPropertyInitialized(this.%s, \"%s\")",
 				Hibernate.class.getName(),
 				persistentField.getName(),
-				mappedBy
+				bidirectionalAttributeName
 		);
-		String targetElementLoaded = String.format(
+		String targetElementInverseLoaded = String.format(
 				"%s.isPropertyInitialized(target, \"%s\")",
 				Hibernate.class.getName(),
-				mappedBy
+				bidirectionalAttributeName
 		);
-		String newAssociationLoaded = String.format(
+		String newAssociationInverseLoaded = String.format(
 				"%s.isPropertyInitialized($1, \"%s\")",
 				Hibernate.class.getName(),
-				mappedBy
+				bidirectionalAttributeName
 		);
+		final boolean inverseSide = mappedBy != null;
 
 		if ( PersistentAttributesHelper.hasAnnotation( persistentField, OneToOne.class ) ) {
-			// only unset when $1 != null to avoid recursion
-			fieldWriter.insertBefore(
-					String.format(
-							"  if (this.%1$s != null && %2$s && $1 != null) { this.%1$s.%3$s(null); }%n",
-							persistentField.getName(),
-							currentAssociationLoaded,
-							mappedBySetterName
-					)
-			);
-			fieldWriter.insertAfter(
-					String.format(
-							"  if ($1 != null && %s && $1.%s() != this) { $1.%s(this); }%n",
-							newAssociationLoaded,
-							mappedByGetterName,
-							mappedBySetterName
-					)
-			);
+			if ( inverseSide ) {
+				fieldWriter.insertBefore(
+						String.format(
+								"  if (%1$s) { %2$s copy = this.%3$s; this.%3$s = null; copy.%4$s(null); }%n",
+								getterSelfNotNull,
+								persistentField.getType().getName(),
+								persistentField.getName(),
+								bidirectionalSetterName
+						)
+				);
+				fieldWriter.insertAfter(
+						String.format(
+								"  if ($1 != null && $1.%s() != this) { $1.%s(this); }%n",
+								bidirectionalGetterName,
+								bidirectionalSetterName
+						)
+				);
+			}
+			else {
+				fieldWriter.insertBefore(
+						String.format(
+								"  if (%1$s && %2$s) { %3$s copy = this.%4$s; this.%4$s = null; copy.%5$s(null); }%n",
+								currentAssociationLoaded,
+								getterSelfNotNull,
+								persistentField.getType().getName(),
+								persistentField.getName(),
+								bidirectionalSetterName
+						)
+				);
+				fieldWriter.insertAfter(
+						String.format(
+								"  if ($1 != null && %s.isInitialized($1) && $1.%s() != this) { $1.%s(this); }%n",
+								Hibernate.class.getName(),
+								bidirectionalGetterName,
+								bidirectionalSetterName
+						)
+				);
+			}
 		}
 		if ( PersistentAttributesHelper.hasAnnotation( persistentField, OneToMany.class ) ) {
 			boolean isMap = PersistentAttributesHelper.isAssignable( persistentField.getType(), Map.class.getName() );
@@ -400,47 +448,87 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 
 			// only remove elements not in the new collection or else we would loose those elements
 			// don't use iterator to avoid ConcurrentModException
-			fieldWriter.insertBefore(
-					String.format(
-							"  if (this.%3$s != null && %1$s) {%n" +
-									"    Object[] array = this.%3$s.%2$s;%n" +
-									"    for (int i = 0; i < array.length; i++) {%n" +
-									"      %4$s target = (%4$s) array[i];%n" +
-									"      if ($1 == null || !$1.contains(target)) { target.%5$s(null); }%n" +
-									"    }%n" +
-									"  }%n",
-							currentAssociationLoaded,
-							toArrayMethod,
-							persistentField.getName(),
-							targetEntity.getName(),
-							mappedBySetterName
-					)
-			);
-			fieldWriter.insertAfter(
-					String.format(
-							"  if ($1 != null && %1$s) {%n" +
-									"    Object[] array = $1.%2$s;%n" +
-									"    for (int i = 0; i < array.length; i++) {%n" +
-									"      %4$s target = (%4$s) array[i];%n" +
-									"      if (%3$s && target.%5$s() != this) { target.%6$s(this); }%n" +
-									"    }%n" +
-									"  }%n",
-							newAssociationLoaded,
-							toArrayMethod,
-							targetElementLoaded,
-							targetEntity.getName(),
-							mappedByGetterName,
-							mappedBySetterName
-					)
-			);
+			if ( inverseSide ) {
+				fieldWriter.insertBefore(
+						String.format(
+								"  if (%1$s) {%n" +
+										"    Object[] array = this.%3$s.%2$s;%n" +
+										"    for (int i = 0; i < array.length; i++) {%n" +
+										"      %4$s target = (%4$s) array[i];%n" +
+										"      if ($1 == null || !$1.%6$s(target)) { target.%5$s(null); }%n" +
+										"    }%n" +
+										"  }%n",
+								getterSelfNotNull,
+								toArrayMethod,
+								persistentField.getName(),
+								targetEntity.getName(),
+								bidirectionalSetterName,
+								isMap ? "containsValue" : "contains"
+						)
+				);
+				fieldWriter.insertAfter(
+						String.format(
+								"  if ($1 != null) {%n" +
+										"    Object[] array = $1.%1$s;%n" +
+										"    for (int i = 0; i < array.length; i++) {%n" +
+										"      %2$s target = (%2$s) array[i];%n" +
+										"      if (target.%3$s() != this) { target.%4$s(this); }%n" +
+										"    }%n" +
+										"  }%n",
+								toArrayMethod,
+								targetEntity.getName(),
+								bidirectionalGetterName,
+								bidirectionalSetterName
+						)
+				);
+			}
+			else {
+				fieldWriter.insertBefore(
+						String.format(
+								"  if (%1$s && %2$s) {%n" +
+										"    Object[] array = this.%4$s.%3$s;%n" +
+										"    for (int i = 0; i < array.length; i++) {%n" +
+										"      %5$s target = (%5$s) array[i];%n" +
+										"      if (%7$s.isInitialized(target) && ($1 == null || !$1.%8$s(target))) { target.%6$s(null); }%n" +
+										"    }%n" +
+										"  }%n",
+								currentAssociationLoaded,
+								getterSelfNotNull,
+								toArrayMethod,
+								persistentField.getName(),
+								targetEntity.getName(),
+								bidirectionalSetterName,
+								Hibernate.class.getName(),
+								isMap ? "containsValue" : "contains"
+						)
+				);
+				fieldWriter.insertAfter(
+						String.format(
+								"  if ($1 != null && %1$s) {%n" +
+										"    Object[] array = $1.%2$s;%n" +
+										"    for (int i = 0; i < array.length; i++) {%n" +
+										"      %4$s target = (%4$s) array[i];%n" +
+										"      if (%3$s && target.%5$s() != this) { target.%6$s(this); }%n" +
+										"    }%n" +
+										"  }%n",
+								newAssociationLoaded,
+								toArrayMethod,
+								targetElementLoaded,
+								targetEntity.getName(),
+								bidirectionalGetterName,
+								bidirectionalSetterName
+						)
+				);
+			}
 		}
 		if ( PersistentAttributesHelper.hasAnnotation( persistentField, ManyToOne.class ) ) {
 			fieldWriter.insertBefore(
 					String.format(
-							"  if (this.%2$s != null && %1$s && this.%2$s.%3$s() != null) { this.%2$s.%3$s().remove(this); }%n",
-							currentAssociationLoaded,
+							"  if (%1$s && %2$s) { java.util.Collection c = this.%3$s.%4$s(); if (c != null) { c.remove(this); } }%n",
+							getterSelfNotNull,
+							currentAssociationInverseLoaded,
 							persistentField.getName(),
-							mappedByGetterName
+							bidirectionalGetterName
 					)
 			);
 			// check .contains(this) to avoid double inserts (but preventing duplicates)
@@ -450,14 +538,14 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 									"    java.util.Collection c = $1.%s();%n" +
 									"    if (c != null && !c.contains(this)) { c.add(this); }%n" +
 									"  }%n",
-							newAssociationLoaded,
-							mappedByGetterName
+							newAssociationInverseLoaded,
+							bidirectionalGetterName
 					)
 			);
 		}
 		if ( PersistentAttributesHelper.hasAnnotation( persistentField, ManyToMany.class ) ) {
 			if ( PersistentAttributesHelper.isAssignable( persistentField.getType(), Map.class.getName() ) ||
-					PersistentAttributesHelper.isAssignable( targetEntity.getField( mappedBy ).getType(), Map.class.getName() ) ) {
+					PersistentAttributesHelper.isAssignable( targetEntity.getField( bidirectionalAttributeName ).getType(), Map.class.getName() ) ) {
 				log.infof(
 						"Bi-directional association for field [%s#%s] not managed: @ManyToMany in java.util.Map attribute not supported ",
 						managedCtClass.getName(),
@@ -465,40 +553,76 @@ public class PersistentAttributesEnhancer extends EnhancerImpl {
 				);
 				return;
 			}
-			fieldWriter.insertBefore(
-					String.format(
-							"  if (this.%2$s != null && %1$s) {%n" +
-									"    Object[] array = this.%2$s.toArray();%n" +
-									"    for (int i = 0; i < array.length; i++) {%n" +
-									"      %3$s target = (%3$s) array[i];%n" +
-									"      if ($1 == null || !$1.contains(target)) { target.%4$s().remove(this); }%n" +
-									"    }%n" +
-									"  }%n",
-							currentAssociationLoaded,
-							persistentField.getName(),
-							targetEntity.getName(),
-							mappedByGetterName
-					)
-			);
-			fieldWriter.insertAfter(
-					String.format(
-							"  if ($1 != null && %s) {%n" +
-									"    Object[] array = $1.toArray();%n" +
-									"    for (int i = 0; i < array.length; i++) {%n" +
-									"      %s target = (%s) array[i];%n" +
-									"	   if (%s) {%n" +
-									"        java.util.Collection c = target.%s();%n" +
-									"        if (c != this && c != null) { c.add(this); }%n" +
-									"      }%n" +
-									"    }%n" +
-									"  }%n",
-							newAssociationLoaded,
-							targetEntity.getName(),
-							targetEntity.getName(),
-							targetElementLoaded,
-							mappedByGetterName
-					)
-			);
+			if ( inverseSide ) {
+				fieldWriter.insertBefore(
+						String.format(
+								"  if (%1$s) {%n" +
+										"    Object[] array = this.%2$s.toArray();%n" +
+										"    for (int i = 0; i < array.length; i++) {%n" +
+										"      %3$s target = (%3$s) array[i];%n" +
+										"      if ($1 == null || !$1.contains(target)) { target.%4$s().remove(this); }%n" +
+										"    }%n" +
+										"  }%n",
+								getterSelfNotNull,
+								persistentField.getName(),
+								targetEntity.getName(),
+								bidirectionalGetterName
+						)
+				);
+				fieldWriter.insertAfter(
+						String.format(
+								"  if ($1 != null) {%n" +
+										"    Object[] array = $1.toArray();%n" +
+										"    for (int i = 0; i < array.length; i++) {%n" +
+										"      %s target = (%s) array[i];%n" +
+										"      java.util.Collection c = target.%s();%n" +
+										"      if (c != null && !c.contains(this)) { c.add(this); }%n" +
+										"    }%n" +
+										"  }%n",
+								targetEntity.getName(),
+								targetEntity.getName(),
+								bidirectionalGetterName
+						)
+				);
+			}
+			else {
+				fieldWriter.insertBefore(
+						String.format(
+								"  if (%1$s && %2$s) {%n" +
+										"    Object[] array = this.%3$s.toArray();%n" +
+										"    for (int i = 0; i < array.length; i++) {%n" +
+										"      %4$s target = (%4$s) array[i];%n" +
+										"      if (%5$s && ($1 == null || !$1.contains(target))) { target.%6$s().remove(this); }%n" +
+										"    }%n" +
+										"  }%n",
+								currentAssociationLoaded,
+								getterSelfNotNull,
+								persistentField.getName(),
+								targetEntity.getName(),
+								targetElementInverseLoaded,
+								bidirectionalGetterName
+						)
+				);
+				fieldWriter.insertAfter(
+						String.format(
+								"  if ($1 != null && %s) {%n" +
+										"    Object[] array = $1.toArray();%n" +
+										"    for (int i = 0; i < array.length; i++) {%n" +
+										"      %s target = (%s) array[i];%n" +
+										"	   if (%s) {%n" +
+										"        java.util.Collection c = target.%s();%n" +
+										"        if (c != null && !c.contains(this)) { c.add(this); }%n" +
+										"      }%n" +
+										"    }%n" +
+										"  }%n",
+								newAssociationLoaded,
+								targetEntity.getName(),
+								targetEntity.getName(),
+								targetElementInverseLoaded,
+								bidirectionalGetterName
+						)
+				);
+			}
 		}
 		// implementation note: association management @OneToMany and @ManyToMay works for add() operations but for remove() a snapshot of the collection is needed so we know what associations to break.
 		// another approach that could force that behavior would be to return Collections.unmodifiableCollection() ...

@@ -8,6 +8,7 @@ package org.hibernate.orm.test.mapping.basic;
 
 import java.net.InetAddress;
 
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -20,6 +21,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -35,6 +37,7 @@ import static org.hamcrest.Matchers.is;
  */
 @DomainModel(annotatedClasses = InetAddressMappingTests.EntityWithInetAddress.class)
 @SessionFactory
+@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Driver or DB omit trailing zero bytes of a varbinary, making this test fail intermittently")
 public class InetAddressMappingTests {
 
 	@Test

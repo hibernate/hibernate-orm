@@ -195,7 +195,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;

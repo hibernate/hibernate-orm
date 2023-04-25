@@ -11,6 +11,9 @@ import java.sql.Types;
 import org.hibernate.MappingException;
 
 public class CockroachDBIdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final CockroachDBIdentityColumnSupport INSTANCE = new CockroachDBIdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		// Full support requires setting the sql.defaults.serial_normalization=sql_sequence in CockroachDB.

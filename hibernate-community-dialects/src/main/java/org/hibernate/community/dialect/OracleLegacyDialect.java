@@ -840,7 +840,7 @@ public class OracleLegacyDialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isBefore( 12 )
 				? super.getIdentityColumnSupport()
-				: new Oracle12cIdentityColumnSupport();
+				: Oracle12cIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

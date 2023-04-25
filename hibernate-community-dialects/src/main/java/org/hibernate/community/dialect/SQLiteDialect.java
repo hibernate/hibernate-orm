@@ -94,8 +94,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class SQLiteDialect extends Dialect {
 
-	private static final SQLiteIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new SQLiteIdentityColumnSupport();
-
 	private final UniqueDelegate uniqueDelegate;
 
 	public SQLiteDialect(DialectResolutionInfo info) {
@@ -545,7 +543,7 @@ public class SQLiteDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return IDENTITY_COLUMN_SUPPORT;
+		return SQLiteIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

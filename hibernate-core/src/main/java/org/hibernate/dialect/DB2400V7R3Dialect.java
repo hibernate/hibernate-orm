@@ -50,6 +50,6 @@ public class DB2400V7R3Dialect extends DB2400Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new DB2IdentityColumnSupport();
+		return DB2IdentityColumnSupport.INSTANCE;
 	}
 }

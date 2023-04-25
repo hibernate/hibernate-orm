@@ -12,6 +12,9 @@ import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
  * @author Andrea Boriero
  */
 public class SybaseAnywhereIdentityColumnSupport extends AbstractTransactSQLIdentityColumnSupport {
+
+	public static final SybaseAnywhereIdentityColumnSupport INSTANCE = new SybaseAnywhereIdentityColumnSupport();
+
 	@Override
 	public boolean supportsInsertSelectIdentity() {
 		return false;

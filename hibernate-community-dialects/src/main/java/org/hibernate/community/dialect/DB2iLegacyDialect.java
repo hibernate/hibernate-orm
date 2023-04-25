@@ -128,8 +128,8 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isSameOrAfter(7, 3)
-				? new DB2IdentityColumnSupport()
-				: new DB2390IdentityColumnSupport();
+				? DB2IdentityColumnSupport.INSTANCE
+				: DB2390IdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

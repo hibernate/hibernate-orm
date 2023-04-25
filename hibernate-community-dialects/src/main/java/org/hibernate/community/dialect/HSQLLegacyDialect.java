@@ -100,9 +100,11 @@ public class HSQLLegacyDialect extends Dialect {
 			org.hibernate.community.dialect.HSQLLegacyDialect.class.getName()
 	);
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate( this );
+	private final HSQLIdentityColumnSupport identityColumnSupport;
 
 	public HSQLLegacyDialect(DialectResolutionInfo info) {
 		super( info );
+		this.identityColumnSupport = new HSQLIdentityColumnSupport( getVersion() );
 	}
 
 	public HSQLLegacyDialect() {
@@ -111,6 +113,7 @@ public class HSQLLegacyDialect extends Dialect {
 
 	public HSQLLegacyDialect(DatabaseVersion version) {
 		super( version.isSame( 1, 8 ) ? reflectedVersion( version ) : version );
+		this.identityColumnSupport = new HSQLIdentityColumnSupport( getVersion() );
 	}
 
 	@Override
@@ -770,7 +773,7 @@ public class HSQLLegacyDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new HSQLIdentityColumnSupport( this.getVersion() );
+		return identityColumnSupport;
 	}
 
 	@Override

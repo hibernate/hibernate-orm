@@ -13,6 +13,9 @@ import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
  * @author Andrea Boriero
  */
 public class CacheIdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final CacheIdentityColumnSupport INSTANCE = new CacheIdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

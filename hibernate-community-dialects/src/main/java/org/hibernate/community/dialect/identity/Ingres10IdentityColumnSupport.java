@@ -10,6 +10,9 @@ package org.hibernate.community.dialect.identity;
  * @author Andrea Boriero
  */
 public class Ingres10IdentityColumnSupport extends Ingres9IdentityColumnSupport {
+
+	public static final Ingres10IdentityColumnSupport INSTANCE = new Ingres10IdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

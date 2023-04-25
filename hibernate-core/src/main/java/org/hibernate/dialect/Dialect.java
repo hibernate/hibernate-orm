@@ -1784,8 +1784,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return the IdentityColumnSupport
 	 * @since 5.1
 	 */
-	public IdentityColumnSupport getIdentityColumnSupport(){
-		return new IdentityColumnSupportImpl();
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return IdentityColumnSupportImpl.INSTANCE;
 	}
 
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

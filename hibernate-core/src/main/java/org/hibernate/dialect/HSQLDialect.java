@@ -70,9 +70,11 @@ public class HSQLDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 6, 1 );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final HSQLIdentityColumnSupport identityColumnSupport;
 
 	public HSQLDialect(DialectResolutionInfo info) {
 		super( info );
+		this.identityColumnSupport = new HSQLIdentityColumnSupport( getVersion() );
 	}
 
 	public HSQLDialect() {
@@ -81,6 +83,7 @@ public class HSQLDialect extends Dialect {
 
 	public HSQLDialect(DatabaseVersion version) {
 		super( version );
+		this.identityColumnSupport = new HSQLIdentityColumnSupport( getVersion() );
 	}
 
 	@Override
@@ -589,7 +592,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new HSQLIdentityColumnSupport( this.getVersion() );
+		return identityColumnSupport;
 	}
 
 	@Override

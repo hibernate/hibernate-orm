@@ -510,7 +510,7 @@ class CodeTemplates {
 			// If this is the inverse side or the old collection is already initialized,
 			// we must remove self from the respective old collection elements inverse collections,
 			// because only the owning side is responsible for persisting the state.
-			if ( ( inverseSide || Hibernate.isInitialized( argument ) ) && getterSelf() != null ) {
+			if ( ( inverseSide || Hibernate.isInitialized( field ) ) && getterSelf() != null ) {
 				Object[] array = field.toArray();
 				for ( int i = 0; i < array.length; i++ ) {
 					if ( ( inverseSide || Hibernate.isPropertyInitialized( array[i], bidirectionalAttribute ) ) && ( argument == null || !argument.contains( array[i] ) ) ) {

@@ -10,6 +10,9 @@ package org.hibernate.dialect.identity;
  * @author Andrea Boriero
  */
 public class MySQLIdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final MySQLIdentityColumnSupport INSTANCE = new MySQLIdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

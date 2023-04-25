@@ -371,7 +371,7 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new CUBRIDIdentityColumnSupport();
+		return CUBRIDIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

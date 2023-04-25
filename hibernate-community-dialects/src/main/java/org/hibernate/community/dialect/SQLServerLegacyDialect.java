@@ -623,7 +623,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new SQLServerIdentityColumnSupport();
+		return SQLServerIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

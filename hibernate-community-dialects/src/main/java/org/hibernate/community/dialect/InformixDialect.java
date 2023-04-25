@@ -518,7 +518,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new InformixIdentityColumnSupport();
+		return InformixIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

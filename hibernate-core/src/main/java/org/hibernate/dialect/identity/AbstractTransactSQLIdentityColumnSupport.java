@@ -12,6 +12,8 @@ import org.hibernate.MappingException;
  * @author Andrea Boriero
  */
 public class AbstractTransactSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final AbstractTransactSQLIdentityColumnSupport INSTANCE = new AbstractTransactSQLIdentityColumnSupport();
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

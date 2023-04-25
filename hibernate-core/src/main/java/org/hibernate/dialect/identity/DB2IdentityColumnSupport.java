@@ -10,6 +10,9 @@ package org.hibernate.dialect.identity;
  * @author Andrea Boriero
  */
 public class DB2IdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final DB2IdentityColumnSupport INSTANCE = new DB2IdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

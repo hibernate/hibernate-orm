@@ -10,6 +10,8 @@ import org.hibernate.MappingException;
 
 public class HANAIdentityColumnSupport extends IdentityColumnSupportImpl {
 
+	public static final HANAIdentityColumnSupport INSTANCE = new HANAIdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

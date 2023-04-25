@@ -103,7 +103,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 public class CockroachLegacyDialect extends Dialect {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, CockroachLegacyDialect.class.getName() );
-	private static final CockroachDBIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new CockroachDBIdentityColumnSupport();
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
 
@@ -513,7 +512,7 @@ public class CockroachLegacyDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return IDENTITY_COLUMN_SUPPORT;
+		return CockroachDBIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

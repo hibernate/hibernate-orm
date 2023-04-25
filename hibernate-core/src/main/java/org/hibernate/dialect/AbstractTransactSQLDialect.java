@@ -375,7 +375,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new AbstractTransactSQLIdentityColumnSupport();
+		return AbstractTransactSQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

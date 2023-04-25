@@ -399,10 +399,10 @@ public class IngresDialect extends Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		if ( getVersion().isSameOrAfter( 10 ) ) {
-			return new Ingres10IdentityColumnSupport();
+			return Ingres10IdentityColumnSupport.INSTANCE;
 		}
 		else if ( getVersion().isSameOrAfter( 9, 3 ) ) {
-			return new Ingres9IdentityColumnSupport();
+			return Ingres9IdentityColumnSupport.INSTANCE;
 		}
 		else {
 			return super.getIdentityColumnSupport();

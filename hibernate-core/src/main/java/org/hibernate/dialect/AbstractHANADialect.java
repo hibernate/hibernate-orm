@@ -1075,7 +1075,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new HANAIdentityColumnSupport();
+		return HANAIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

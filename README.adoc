@@ -188,9 +188,13 @@ The following table illustrates a list of commands for various databases that ca
 |`./docker_db.sh mssql`
 |`./gradlew test -Pdb=mssql_ci`
 
-|Sybase ASE
+|Sybase ASE (jTDS)
 |`./docker_db.sh sybase`
 |`./gradlew test -Pdb=sybase_ci`
+
+|Sybase ASE (jConnect)
+|`./docker_db.sh sybase`
+|`./gradlew test -Pdb=sybase_jconn_ci`
 
 |SAP HANA
 |`./docker_db.sh hana`

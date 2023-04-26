@@ -47,6 +47,7 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -96,18 +97,26 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
-			case BOOLEAN:
+			case BOOLEAN: {
 				// On Sybase ASE, the 'bit' type cannot be null,
 				// and cannot have indexes (while we don't use
 				// tinyint to store signed bytes, we can use it
 				// to store boolean values)
 				return "tinyint";
-			case DATE:
+			}
+			case DATE: {
 				return "date";
-			case TIME:
+			}
+			case TIME: {
 				return "time";
-			default:
+			}
+			case NCLOB: {
+				// Sybase uses `unitext` instead of the T-SQL `ntext` type name
+				return "unitext";
+			}
+			default: {
 				return super.columnType( sqlTypeCode );
+			}
 		}
 	}
 

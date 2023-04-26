@@ -54,7 +54,7 @@ public class ReferencedSuperclassColumnTest {
 	@DiscriminatorColumn(name = "branch_type", discriminatorType = DiscriminatorType.STRING)
 	public static class Branch {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		Long id;
 
 		@Column(unique = true, name = "branch_id")

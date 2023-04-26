@@ -17,6 +17,8 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.property.access.spi.PropertyAccess;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * This BytecodeProvider represents the "no-op" enhancer; mostly useful
  * as an optimisation when not needing any byte code optimisation applied,
@@ -44,12 +46,12 @@ public final class BytecodeProviderImpl implements BytecodeProvider {
 	}
 
 	@Override
-	public ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap) {
+	public @Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap) {
 		throw new HibernateException( "Using the ReflectionOptimizer is not possible when the configured BytecodeProvider is 'none'. Disable " + AvailableSettings.USE_REFLECTION_OPTIMIZER + " or use a different BytecodeProvider");
 	}
 
 	@Override
-	public Enhancer getEnhancer(EnhancementContext enhancementContext) {
+	public @Nullable Enhancer getEnhancer(EnhancementContext enhancementContext) {
 		return null;
 	}
 }

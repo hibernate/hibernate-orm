@@ -13,6 +13,8 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.service.Service;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Contract for providers of bytecode services to Hibernate.
  * <p>
@@ -54,7 +56,7 @@ public interface BytecodeProvider extends Service {
 	 * @param propertyAccessMap The ordered property access map
 	 * @return The reflection optimization delegate.
 	 */
-	ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap);
+	@Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap);
 
 	/**
 	 * Returns a byte code enhancer that implements the enhancements described in the supplied enhancement context.
@@ -63,7 +65,7 @@ public interface BytecodeProvider extends Service {
 	 *
 	 * @return An enhancer to perform byte code manipulations.
 	 */
-	Enhancer getEnhancer(EnhancementContext enhancementContext);
+	@Nullable Enhancer getEnhancer(EnhancementContext enhancementContext);
 
 	/**
 	 * Some BytecodeProvider implementations will have classloader specific caching.

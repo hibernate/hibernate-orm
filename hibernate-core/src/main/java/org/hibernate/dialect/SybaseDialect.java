@@ -361,8 +361,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
+		// Default to MIXED because the jconn driver doesn't seem to report anything useful
+		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		if ( dbMetaData == null ) {
-			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 

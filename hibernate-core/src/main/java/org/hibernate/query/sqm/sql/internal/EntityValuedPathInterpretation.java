@@ -208,13 +208,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 							.findTableGroup( tableGroup.getNavigablePath().getParent() );
 				}
 				else {
-					if ( isCorrelated( tableGroup, sqlAstCreationState )
-							|| !tableGroup.getNavigablePath().isParentOrEqual( navigablePath ) ) {
-						// Access to the parent table group is forbidden for correlated table groups. For more details,
-						// see: `ToOneAttributeMapping.createRootTableGroupJoin`
-						// Due to that, we forcefully use the model part to which this association points to i.e. the target
-
-						// Also force the use of the FK target key if the navigable path for this entity valued path is
+					if ( !tableGroup.getNavigablePath().isParentOrEqual( navigablePath ) ) {
+						// Force the use of the FK target key if the navigable path for this entity valued path is
 						// not equal to or a child of the table group navigable path.
 						// This can happen when using an implicit join path e.g. `where root.association.id is null`,
 						// yet also an explicit join was made which is compatible e.g. `join fetch root.association`.
@@ -259,21 +254,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				mapping,
 				sqlAstCreationState
 		);
-	}
-
-	private static boolean isCorrelated(TableGroup tableGroup, SqmToSqlAstConverter sqlAstCreationState) {
-		final SqlAstProcessingState processingState = sqlAstCreationState.getCurrentProcessingState();
-		if ( !( processingState instanceof SqlAstQueryPartProcessingState )
-				|| ( (SqlAstQueryPartProcessingState) processingState ).getInflightQueryPart().isRoot() ) {
-			return false;
-		}
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-
-		TableGroup realParentTableGroup = fromClauseAccess.findTableGroup( tableGroup.getNavigablePath().getParent() );
-		while ( realParentTableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
-			realParentTableGroup = fromClauseAccess.findTableGroup( realParentTableGroup.getNavigablePath().getParent() );
-		}
-		return realParentTableGroup instanceof CorrelatedTableGroup;
 	}
 
 	private static boolean hasNotFound(EntityValuedModelPart mapping) {

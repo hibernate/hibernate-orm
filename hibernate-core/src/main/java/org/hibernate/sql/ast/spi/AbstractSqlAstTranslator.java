@@ -5127,7 +5127,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				separator = renderFromClauseRoot( tableGroupJoin.getJoinedGroup(), separator );
 			}
 		}
-		else {
+		else if ( root.isInitialized() ) {
 			appendSql( separator );
 			renderRootTableGroup( root, null );
 			separator = COMA_SEPARATOR;

@@ -235,6 +235,7 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.isCharacterType;
 import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isVarbinaryType;
@@ -1473,7 +1474,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
 //			|| isIntegral(typeCode1) && isIntegral(typeCode2)
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
-			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
+			|| isCharacterType(typeCode1) && isCharacterType(typeCode2)
 			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2)
 			|| sameColumnType(typeCode1, typeCode2);
 	}

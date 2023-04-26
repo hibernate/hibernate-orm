@@ -78,7 +78,7 @@ public class EnumeratedAndGenericsTest {
 		}
 	}
 
-	@Entity
+	@Entity(name="TestEntity")
 	public static class TestEntity extends GenericBaseEntity<TestEnum> {
 
 		@Id
@@ -93,7 +93,7 @@ public class EnumeratedAndGenericsTest {
 
 	}
 
-	@Entity
+	@Entity(name="AnotherTestEntity")
 	public static class AnotherTestEntity extends GenericBaseEntity<AnotherTestEnum> {
 
 		@Id

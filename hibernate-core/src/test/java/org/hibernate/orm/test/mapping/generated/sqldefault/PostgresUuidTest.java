@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @SessionFactory
 @DomainModel(annotatedClasses = PostgresUuidTest.It.class)
-@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 13)
 public class PostgresUuidTest {
 
 	@Test

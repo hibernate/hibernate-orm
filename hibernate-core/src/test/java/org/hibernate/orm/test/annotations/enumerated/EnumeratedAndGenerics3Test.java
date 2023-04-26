@@ -67,7 +67,7 @@ public class EnumeratedAndGenerics3Test {
 		}
 	}
 
-	@Entity
+	@Entity(name="TestEntity")
 	public static class TestEntity extends GenericBaseEntity<TestEnum> {
 
 		@Id

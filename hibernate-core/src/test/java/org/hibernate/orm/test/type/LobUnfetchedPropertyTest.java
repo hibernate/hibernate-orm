@@ -29,11 +29,16 @@ import jakarta.persistence.Lob;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.dialect.SybaseDialect;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -102,6 +107,9 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsNClob.class)
+	@SkipForDialect(
+			dialectClass = SybaseDialect.class, matchSubTypes = true,
+			reason = "jConnect does not support Connection#createNClob which is ultimately used by LobHelper#createNClob" )
 	public void testNClob() {
 		final int id = doInHibernate( this::sessionFactory, s -> {
 			FileNClob file = new FileNClob();
@@ -216,6 +224,36 @@ public class LobUnfetchedPropertyTest extends BaseCoreFunctionalTestCase {
 		}
 
 		public void setClob(NClob clob) {
+			this.clob = clob;
+		}
+	}
+
+	@Entity(name = "FileNClob2")
+	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, includeLazy = false)
+	public static class FileNClob2 {
+
+		private int id;
+
+		private String clob;
+
+		@Id
+		@GeneratedValue
+		public int getId() {
+			return id;
+		}
+
+		public void setId(int id) {
+			this.id = id;
+		}
+
+		@Column(name = "filedata", length = 1024 * 1024)
+		@Lob
+		@Basic(fetch = FetchType.LAZY)
+		public String getClob() {
+			return clob;
+		}
+
+		public void setClob(String clob) {
 			this.clob = clob;
 		}
 	}

@@ -57,7 +57,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Emmanuel Bernard
  */
 public class TableBinder {
-	//TODO move it to a getter/setter strategy
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, TableBinder.class.getName() );
 
 	private MetadataBuildingContext buildingContext;
@@ -550,6 +549,12 @@ public class TableBinder {
 			// if columns are implicit, then create the columns based
 			// on the referenced entity id columns
 			bindImplicitColumns( referencedEntity, joinColumns, value );
+			if ( value instanceof ToOne ) {
+				// in the case of implicit foreign-keys, make sure the columns making up
+				// the foreign-key do not get resorted since the order is already properly
+				// ascertained from the referenced identifier
+				( (ToOne) value ).setSorted( true );
+			}
 		}
 		else {
 			bindExplicitColumns( referencedEntity, joinColumns, value, buildingContext, associatedClass );
@@ -586,7 +591,6 @@ public class TableBinder {
 			PersistentClass associatedClass) {
 		//implicit case, we hope PK and FK columns are in the same order
 		if ( joinColumns.getColumns().size() != referencedEntity.getIdentifier().getColumnSpan() ) {
-			// TODO: what about secondary tables?? associatedClass is null?
 			throw new AnnotationException(
 					"An association that targets entity '" + referencedEntity.getEntityName()
 							+ "' from entity '" + associatedClass.getEntityName()
@@ -669,7 +673,7 @@ public class TableBinder {
 						columns = referencedTable.getPrimaryKey().getColumns();
 						break;
 					}
-					catch ( MappingException i ) {
+					catch (MappingException ignore) {
 					}
 				}
 				if ( referencedColumn == null ) {

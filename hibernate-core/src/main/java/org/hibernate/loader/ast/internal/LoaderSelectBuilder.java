@@ -884,8 +884,8 @@ public class LoaderSelectBuilder {
 				bagRole = null;
 			}
 
-			if ( joined && previousBagRole != null && bagRole != null ) {
-				// Avoid join fetching multiple bags to prevent result multiplication
+			if ( joined && previousBagRole != null && isFetchablePluralAttributeMapping ) {
+				// Avoid join fetching multiple collections if there was a bag to prevent result multiplication
 				joined = false;
 			}
 

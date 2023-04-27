@@ -66,5 +66,13 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 		);
 		loggingTask.dependsOn( indexerTask );
 		groupingTask.dependsOn( loggingTask );
+
+		final DialectReportTask dialectTask = project.getTasks().create(
+				"generateDialectReport",
+				DialectReportTask.class,
+				indexManager
+		);
+		dialectTask.dependsOn( indexerTask );
+		groupingTask.dependsOn( dialectTask );
 	}
 }

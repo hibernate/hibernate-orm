@@ -239,7 +239,6 @@ import static org.hibernate.type.SqlTypes.isCharacterType;
 import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isVarbinaryType;
-import static org.hibernate.type.SqlTypes.isVarcharType;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;

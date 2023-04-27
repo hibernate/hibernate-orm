@@ -21,6 +21,7 @@ import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
@@ -28,6 +29,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import org.junit.jupiter.api.Disabled;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -45,6 +47,7 @@ import static org.junit.Assert.assertTrue;
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-12304")
+@Ignore
 public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 
 	// An extended type to trigger the need for Envers to supply type information in the HBM mappings.

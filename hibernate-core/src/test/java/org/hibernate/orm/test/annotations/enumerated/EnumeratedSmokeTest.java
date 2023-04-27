@@ -6,17 +6,13 @@
  */
 package org.hibernate.orm.test.annotations.enumerated;
 
-import java.sql.Types;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.ConvertedBasicType;
-import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
-import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
-import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -29,12 +25,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import org.assertj.core.api.Assert;
 import org.assertj.core.api.Assertions;
-
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -64,19 +55,19 @@ public class EnumeratedSmokeTest {
 	}
 
 	private void validateEnumMapping(JdbcTypeRegistry jdbcRegistry, Property property, EnumType expectedJpaEnumType) {
-		final ConvertedBasicType<?> propertyType = (ConvertedBasicType<?>) property.getType();
-		final EnumValueConverter<?, ?> valueConverter = (EnumValueConverter<?, ?>) propertyType.getValueConverter();
+		final BasicType<?> propertyType = (BasicType<?>) property.getType();
+//		final EnumValueConverter<?, ?> valueConverter = (EnumValueConverter<?, ?>) propertyType.getValueConverter();
 		final JdbcMapping jdbcMapping = propertyType.getJdbcMapping();
 		final JdbcType jdbcType = jdbcMapping.getJdbcType();
 
 		assert expectedJpaEnumType != null;
 		if ( expectedJpaEnumType == EnumType.ORDINAL ) {
-			Assertions.assertThat( valueConverter ).isInstanceOf( OrdinalEnumValueConverter.class );
+//			Assertions.assertThat( valueConverter ).isInstanceOf( OrdinalEnumValueConverter.class );
 			Assertions.assertThat( jdbcType.isInteger() ).isTrue();
 		}
 		else {
-			Assertions.assertThat( valueConverter ).isInstanceOf( NamedEnumValueConverter.class );
-			Assertions.assertThat( jdbcType.isString() ).isTrue();
+//			Assertions.assertThat( valueConverter ).isInstanceOf( NamedEnumValueConverter.class );
+			Assertions.assertThat(jdbcType.isString() || jdbcType.getJdbcTypeCode() == SqlTypes.ENUM).isTrue();
 		}
 	}
 

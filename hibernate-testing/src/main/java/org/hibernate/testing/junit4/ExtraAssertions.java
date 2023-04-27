@@ -23,8 +23,8 @@ public final class ExtraAssertions {
 	private ExtraAssertions() {
 	}
 
-	public static void assertClassAssignability(Class expected, Class actual) {
-		if ( ! expected.isAssignableFrom( actual ) ) {
+	public static void assertClassAssignability(Class<?> expected, Class<?> actual) {
+		if ( !expected.isAssignableFrom( actual ) ) {
 			Assert.fail(
 					"Expected class [" + expected.getName() + "] was not assignable from actual [" +
 							actual.getName() + "]"
@@ -34,7 +34,7 @@ public final class ExtraAssertions {
 
 	@SuppressWarnings("unchecked")
 	public static <T> T assertTyping(Class<T> expectedType, Object value) {
-		if ( ! expectedType.isInstance( value ) ) {
+		if ( !expectedType.isInstance( value ) ) {
 			Assert.fail(
 					String.format(
 							"Expecting value of type [%s], but found [%s]",
@@ -61,10 +61,25 @@ public final class ExtraAssertions {
 		}
 	}
 
-	private static Map<Integer,String> jdbcTypeCodeMap;
+	public static void assertJdbcTypeCode(int[] expected, int actual) {
+		for ( int code : expected ) {
+			if ( code == actual ) {
+				return;
+			}
+		}
+		final String message = String.format(
+				"JDBC type codes did not match...\n" +
+						"Actual  : %s (%s)",
+				jdbcTypeCodeMap().get( actual ),
+				actual
+		);
+		fail( message );
+	}
 
-	private static synchronized Map<Integer,String> jdbcTypeCodeMap() {
-		if ( jdbcTypeCodeMap == null ) {
+	private static Map<Integer, String> jdbcTypeCodeMap;
+
+	private static synchronized Map<Integer, String> jdbcTypeCodeMap() {
+		if (jdbcTypeCodeMap == null) {
 			jdbcTypeCodeMap = generateJdbcTypeCache();
 		}
 		return jdbcTypeCodeMap;

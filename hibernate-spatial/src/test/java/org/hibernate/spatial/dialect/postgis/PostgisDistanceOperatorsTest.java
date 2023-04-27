@@ -33,7 +33,9 @@ import org.geolatte.geom.crs.CoordinateReferenceSystems;
 
 import static org.geolatte.geom.builder.DSL.c;
 import static org.geolatte.geom.builder.DSL.point;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -73,7 +75,7 @@ public class PostgisDistanceOperatorsTest {
 					List<Neighbor> results = query.getResultList();
 					assertFalse( results.isEmpty() );
 					String sql = inspector.getSqlQueries().get( 0 );
-					assertTrue(sql.matches(".*order by.*point\\w*<->.*"), "<-> operator is not rendered correctly");
+					assertTrue( sql.matches( ".*order by.*point\\w*<->.*" ), "<-> operator is not rendered correctly" );
 				}
 		);
 	}
@@ -90,7 +92,7 @@ public class PostgisDistanceOperatorsTest {
 					List<Neighbor> results = query.getResultList();
 					assertFalse( results.isEmpty() );
 					String sql = inspector.getSqlQueries().get( 0 );
-					assertTrue(sql.matches(".*order by.*point\\w*<#>.*"), "<#> operator is not rendered correctly");
+					assertTrue( sql.matches( ".*order by.*point\\w*<#>.*" ), "<#> operator is not rendered correctly" );
 				}
 		);
 	}
@@ -107,9 +109,41 @@ public class PostgisDistanceOperatorsTest {
 					List<Neighbor> results = query.getResultList();
 					assertFalse( results.isEmpty() );
 					String sql = inspector.getSqlQueries().get( 0 );
-					assertTrue(sql.matches(".*order by.*point\\w*<<->>.*"), "<<->>> operator is not rendered correctly");
+					assertTrue(
+							sql.matches( ".*order by.*point\\w*<<->>.*" ),
+							"<<->>> operator is not rendered correctly"
+					);
 				}
 		);
+	}
+
+	@Test
+	public void testInvalidArguments(SessionFactoryScope scope) {
+		SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		IllegalArgumentException thrown = assertThrows( IllegalArgumentException.class, () ->
+				scope.inTransaction(
+						session -> {
+							TypedQuery<Neighbor> query = session.createQuery(
+											"select n from Neighbor n order by distance_2d_bbox(n.point, :pnt )",
+											Neighbor.class
+									)
+									.setParameter( "pnt", 130 );
+							List<Neighbor> results = query.getResultList();
+							assertFalse( results.isEmpty() );
+							String sql = inspector.getSqlQueries().get( 0 );
+							assertTrue(
+									sql.matches( ".*order by.*point\\w*<#>.*" ),
+									"<#> operator is not rendered correctly"
+							);
+						}
+				)
+		);
+		assertEquals(
+				"Parameter 1 of function distance_2d_bbox() has type SPATIAL, but argument is of type java.lang.Integer",
+				thrown.getMessage()
+		);
+
 	}
 
 	@AfterEach

@@ -38,7 +38,6 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -64,7 +63,7 @@ import jakarta.persistence.AttributeConverter;
  *
  * @since 5.0
  */
-public interface InFlightMetadataCollector extends Mapping, MetadataImplementor {
+public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
 
 	/**

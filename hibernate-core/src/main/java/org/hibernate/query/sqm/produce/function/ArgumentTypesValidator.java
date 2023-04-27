@@ -39,6 +39,7 @@ import static org.hibernate.type.SqlTypes.isCharacterOrClobType;
 import static org.hibernate.type.SqlTypes.isCharacterType;
 import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericType;
+import static org.hibernate.type.SqlTypes.isSpatialType;
 import static org.hibernate.type.SqlTypes.isTemporalType;
 
 
@@ -240,6 +241,10 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 					throwError(type, javaType, functionName, count);
 				}
 				break;
+			case SPATIAL:
+				if ( !isSpatialType( code ) ) {
+					throwError( type, javaType, functionName, count );
+				}
 		}
 	}
 

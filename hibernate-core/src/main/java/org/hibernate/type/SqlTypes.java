@@ -752,4 +752,20 @@ public class SqlTypes {
 				return false;
 		}
 	}
+
+	/**
+	 * Does the typecode represent a spatial (Geometry or Geography) type.
+	 *
+	 * @param typeCode - a JDBC type code
+	 */
+	public static boolean isSpatialType(int typeCode) {
+		switch ( typeCode ) {
+			case GEOMETRY:
+			case POINT:
+			case GEOGRAPHY:
+				return true;
+			default:
+				return false;
+		}
+	}
 }

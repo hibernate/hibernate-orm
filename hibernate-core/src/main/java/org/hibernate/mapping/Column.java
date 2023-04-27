@@ -273,8 +273,9 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			try {
 				final Type type = getValue().getType();
 				sqlTypeName = isArray( type )
+						//TODO: remove the special case for array types, this should be handled by the DdlType!
 						? dialect.getArrayTypeName( getArrayElementTypeName( dialect, ddlTypeRegistry, getArrayElementType( type ) ) )
-						: ddlTypeRegistry.getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
+						: ddlTypeRegistry.getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ), getUnderlyingType( mapping, type, typeIndex ) );
 			}
 			catch ( Exception cause ) {
 				throw new MappingException(
@@ -289,6 +290,27 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			}
 		}
 		return sqlTypeName;
+	}
+
+	private static Type getUnderlyingType(Mapping mapping, Type type, int typeIndex) {
+		if ( type.isComponentType() ) {
+			int cols = 0;
+			for ( Type subtype : ((ComponentType) type).getSubtypes() ) {
+				int columnSpan = subtype.getColumnSpan( mapping );
+				if ( cols+columnSpan > typeIndex ) {
+					return getUnderlyingType( mapping, subtype, typeIndex-cols );
+				}
+				cols += columnSpan;
+			}
+			throw new IndexOutOfBoundsException();
+		}
+		else if ( type.isEntityType() ) {
+			Type idType = ((EntityType) type).getIdentifierOrUniqueKeyType(mapping);
+			return getUnderlyingType( mapping, idType, typeIndex );
+		}
+		else {
+			return type;
+		}
 	}
 
 	private String getArrayElementTypeName(Dialect dialect, DdlTypeRegistry ddlTypeRegistry, BasicType<?> elementType) {

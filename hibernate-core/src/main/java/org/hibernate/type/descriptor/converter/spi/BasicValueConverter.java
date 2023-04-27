@@ -7,8 +7,6 @@
 package org.hibernate.type.descriptor.converter.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -66,11 +64,6 @@ public interface BasicValueConverter<D,R> {
 
 	@Incubating
 	default String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
-		return null;
-	}
-
-	@Incubating
-	default AuxiliaryDatabaseObject getAuxiliaryDatabaseObject(JdbcType jdbcType, Dialect dialect, Namespace defaultNamespace) {
 		return null;
 	}
 }

@@ -64,11 +64,6 @@ public class DdlTypeImpl implements DdlType {
 	}
 
 	@Override
-	public String getTypeNamePattern() {
-		return typeNamePattern;
-	}
-
-	@Override
 	public String getTypeName(Long size, Integer precision, Integer scale) {
 		return replace( typeNamePattern, size, precision, scale );
 	}

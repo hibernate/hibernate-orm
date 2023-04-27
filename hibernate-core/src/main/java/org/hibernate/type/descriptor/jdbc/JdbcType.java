@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.sqm.CastType;
@@ -22,6 +23,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -155,12 +157,13 @@ public interface JdbcType extends Serializable {
 	 * definition in generated DDL.
 	 *
 	 * @param columnName the name of the column
-	 * @param javaType the {@link JavaType} of the mapped column
-	 * @param dialect the SQL {@link Dialect}
+	 * @param javaType   the {@link JavaType} of the mapped column
+	 * @param converter  the converter, if any, or null
+	 * @param dialect    the SQL {@link Dialect}
 	 * @return a check constraint condition or null
 	 * @since 6.2
 	 */
-	default String getCheckCondition(String columnName, JavaType<?> javaType, Dialect dialect) {
+	default String getCheckCondition(String columnName, JavaType<?> javaType, BasicValueConverter<?, ?> converter, Dialect dialect) {
 		return null;
 	}
 
@@ -321,5 +324,9 @@ public interface JdbcType extends Serializable {
 	 */
 	default void registerOutParameter(CallableStatement callableStatement, int index) throws SQLException {
 		callableStatement.registerOutParameter( index, getJdbcTypeCode() );
+	}
+
+	@Incubating
+	default void addAuxiliaryDatabaseObjects(JavaType<?> javaType, InFlightMetadataCollector metadataCollector) {
 	}
 }

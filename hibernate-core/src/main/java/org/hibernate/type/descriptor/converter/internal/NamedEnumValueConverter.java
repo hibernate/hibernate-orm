@@ -8,23 +8,20 @@ package org.hibernate.type.descriptor.converter.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-
-import static java.util.Collections.emptySet;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
  * JPA {@link jakarta.persistence.EnumType#STRING} strategy (storing the name)
  *
  * @author Steve Ebersole
+ *
+ * @deprecated we no longer use converters to handle enum mappings
  */
+@Deprecated(since="6.3", forRemoval=true)
 public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,String>, Serializable {
 	private final EnumJavaType<E> domainTypeDescriptor;
 	private final JdbcType jdbcType;
@@ -67,29 +64,5 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	@Override
 	public String toSqlLiteral(Object value) {
 		return "'" + ( (Enum<?>) value ).name() + "'";
-	}
-
-	@Override
-	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
-		return dialect.getCheckCondition( columnName, getDomainJavaType().getJavaTypeClass() );
-	}
-
-	@Override
-	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
-		return dialect.getEnumTypeDeclaration( getDomainJavaType().getJavaTypeClass() );
-	}
-
-	@Override
-	public AuxiliaryDatabaseObject getAuxiliaryDatabaseObject(JdbcType jdbcType, Dialect dialect, Namespace defaultNamespace) {
-		Class<? extends Enum<?>> enumClass = getDomainJavaType().getJavaTypeClass();
-		String name = enumClass.getSimpleName();
-		String[] create = dialect.getCreateEnumTypeCommand( enumClass );
-		if ( create != null ) {
-			String[] drop = new String[] { "drop type " + name + " cascade" }; //TODO: move to Dialect
-			return new NamedAuxiliaryDatabaseObject( name, defaultNamespace, create, drop, emptySet(), true );
-		}
-		else {
-			return null;
-		}
 	}
 }

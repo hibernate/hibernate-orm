@@ -204,6 +204,7 @@ import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -762,13 +763,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	public String[] getCreateEnumTypeCommand(String name, String[] values) {
-		return null;
+		return EMPTY_STRING_ARRAY;
 	}
 
 	public String[] getCreateEnumTypeCommand(Class<? extends Enum<?>> enumType) {
 		String[] values = getEnumeratedValues( enumType );
 		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
 		return getCreateEnumTypeCommand( enumType.getSimpleName(), values );
+	}
+
+	public String[] getDropEnumTypeCommand(String name) {
+		return EMPTY_STRING_ARRAY;
+	}
+
+	public String[] getDropEnumTypeCommand(Class<? extends Enum<?>> enumType) {
+		return getDropEnumTypeCommand( enumType.getSimpleName() );
 	}
 
 	/**

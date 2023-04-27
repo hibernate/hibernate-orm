@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.converter.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -19,7 +18,10 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * JPA {@link jakarta.persistence.EnumType#ORDINAL} strategy (storing the ordinal)
  *
  * @author Steve Ebersole
+ *
+ * @deprecated we no longer use converters to handle enum mappings
  */
+@Deprecated(since="6.3", forRemoval=true)
 public class OrdinalEnumValueConverter<E extends Enum<E>, N extends Number> implements EnumValueConverter<E, N>, Serializable {
 
 	private final EnumJavaType<E> enumJavaType;
@@ -63,11 +65,5 @@ public class OrdinalEnumValueConverter<E extends Enum<E>, N extends Number> impl
 	@Override
 	public String toSqlLiteral(Object value) {
 		return Integer.toString( ( (Enum<?>) value ).ordinal() );
-	}
-
-	@Override
-	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
-		int max = getDomainJavaType().getJavaTypeClass().getEnumConstants().length - 1;
-		return dialect.getCheckCondition( columnName, 0, max );
 	}
 }

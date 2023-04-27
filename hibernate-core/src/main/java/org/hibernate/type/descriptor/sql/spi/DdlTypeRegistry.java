@@ -16,6 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -179,9 +180,26 @@ public class DdlTypeRegistry implements Serializable {
 	 *
 	 * @return the associated type name with the smallest capacity that accommodates
 	 *         the given size, if available, and the default type name otherwise
+	 *
+	 * @deprecated not appropriate for named enum or array types
 	 */
+	@Deprecated(since = "6.3")
 	public String getTypeName(int typeCode, Size size) {
 		return getTypeName( typeCode, size.getLength(), size.getPrecision(), size.getScale() );
+	}
+
+	public String getTypeName(int typeCode, Size columnSize, Type type) {
+		final DdlType descriptor = getDescriptor( typeCode );
+		if ( descriptor == null ) {
+			throw new HibernateException(
+					String.format(
+							"No type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
+							typeCode,
+							JdbcTypeNameMapper.getTypeName( typeCode )
+					)
+			);
+		}
+		return descriptor.getTypeName( columnSize, type.getReturnedClass() );
 	}
 
 	/**
@@ -197,7 +215,10 @@ public class DdlTypeRegistry implements Serializable {
 	 *
 	 * @return the associated type name with the smallest capacity that accommodates
 	 *         the given size, if available, and the default type name otherwise
+	 *
+	 * @deprecated not appropriate for named enum or array types
 	 */
+	@Deprecated(since = "6.3")
 	public String getTypeName(int typeCode, Long size, Integer precision, Integer scale) {
 		final DdlType descriptor = getDescriptor( typeCode );
 		if ( descriptor == null ) {
@@ -230,5 +251,4 @@ public class DdlTypeRegistry implements Serializable {
 
 		return false;
 	}
-
 }

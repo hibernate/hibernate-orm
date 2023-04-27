@@ -20,13 +20,19 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import jakarta.persistence.ParameterMode;
 
 /**
- * Special implementation of CallableStatementSupport for the jTDS driver.
- * Apparently, jTDS doesn't like the JDBC standard named parameter notation with the ':' prefix,
- * and instead requires that we render this as `@param=?`.
+ * Sybase implementation of CallableStatementSupport.
+ *
+ * The JDBC driver of Sybase doesn't support function invocations, so we have to render a select statement instead.
  */
-public class JTDSCallableStatementSupport extends AbstractStandardCallableStatementSupport {
-
-	public static final JTDSCallableStatementSupport INSTANCE = new JTDSCallableStatementSupport();
+public class SybaseCallableStatementSupport extends AbstractStandardCallableStatementSupport {
+	/**
+	 * Singleton access
+	 */
+	public static final SybaseCallableStatementSupport INSTANCE = new SybaseCallableStatementSupport();
+	private static final String FUNCTION_SYNTAX_START = "select ";
+	private static final String FUNCTION_SYNTAX_END = ") from (select 1) t1(c1)";
+	private static final String CALL_SYNTAX_START = "{call ";
+	private static final String CALL_SYNTAX_END = ")}";
 
 	@Override
 	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
@@ -47,10 +53,15 @@ public class JTDSCallableStatementSupport extends AbstractStandardCallableStatem
 		final StringBuilder buffer;
 		final int offset;
 		if ( functionReturn != null ) {
-			throw new QueryException( "The jTDS driver does not support calling functions through the JDBC CallableStatement API" );
+			offset = 1;
+			buffer = new StringBuilder( FUNCTION_SYNTAX_START.length() + FUNCTION_SYNTAX_END.length() + procedureName.length() + paramStringSizeEstimate )
+					.append( FUNCTION_SYNTAX_START );
 		}
-		offset = 1;
-		buffer = new StringBuilder( 9 + procedureName.length() + paramStringSizeEstimate ).append( "{call " );
+		else {
+			offset = 1;
+			buffer = new StringBuilder( CALL_SYNTAX_START.length() + CALL_SYNTAX_END.length() + procedureName.length() + paramStringSizeEstimate )
+					.append( CALL_SYNTAX_START );
+		}
 
 		buffer.append( procedureName );
 
@@ -70,17 +81,20 @@ public class JTDSCallableStatementSupport extends AbstractStandardCallableStatem
 						procedureCall
 				);
 				if ( registration.getName() != null ) {
-					buffer.append( '@' ).append( registration.getName() ).append( "=?" );
+					throw new QueryException( "The JDBC driver does not support named parameters" );
 				}
-				else {
-					buffer.append( "?" );
-				}
+				buffer.append( "?" );
 				sep = ',';
 				builder.addParameterRegistration( registration );
 			}
 		}
 
-		buffer.append( ")}" );
+		if ( functionReturn != null ) {
+			buffer.append( FUNCTION_SYNTAX_END );
+		}
+		else {
+			buffer.append( CALL_SYNTAX_END );
+		}
 
 		builder.setCallableName( buffer.toString() );
 		return builder.buildJdbcCall();

@@ -138,9 +138,6 @@ public class H2Dialect extends Dialect {
 		this( MINIMUM_VERSION );
 	}
 
-	public static void main(String[] args) {
-		System.out.println( new H2Dialect().getMinimumSupportedVersion() );
-	}
 	public H2Dialect(DatabaseVersion version) {
 		super(version);
 

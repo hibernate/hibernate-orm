@@ -13,6 +13,7 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -192,6 +193,15 @@ public class CriteriaPerformanceTest {
 				"Simple Query HQL",
 				Duration.between( startTime, Instant.now() )
 		) );
+	}
+
+	@AfterEach
+	public void cleanUpTestData(EntityManagerFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createQuery( "delete Book" ).executeUpdate();
+			session.createQuery( "delete Author" ).executeUpdate();
+			session.createQuery( "delete Other" ).executeUpdate();
+		} );
 	}
 
 	public void populateData(EntityManager entityManager) {

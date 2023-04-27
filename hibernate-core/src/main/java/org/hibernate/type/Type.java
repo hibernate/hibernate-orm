@@ -18,6 +18,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Defines a mapping between a Java type and one or more JDBC {@linkplain java.sql.Types types},
  * as well as describing the in-memory semantics of the given Java type, including:
@@ -320,7 +322,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	String toLoggableString(Object value, SessionFactoryImplementor factory)
+	String toLoggableString(@Nullable Object value, SessionFactoryImplementor factory)
 	throws HibernateException;
 
 	/**

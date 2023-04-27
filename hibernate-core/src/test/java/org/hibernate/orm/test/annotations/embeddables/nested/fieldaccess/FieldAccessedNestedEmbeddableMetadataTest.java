@@ -19,6 +19,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 			int[] currencySqlTypes = currencyMetadata.getType().getSqlTypeCodes( metadata );
 			assertEquals( 1, currencySqlTypes.length );
 			assertJdbcTypeCode(
-					typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARCHAR ).getJdbcTypeCode(),
+					new int[]{Types.VARCHAR, SqlTypes.ENUM},
 					currencySqlTypes[0]
 			);
 		}

@@ -119,7 +119,7 @@ Postgresql::
 The Postgresql dialect has support for the https://postgis.net/[Postgis spatial extension], but not the Geometric types mentioned in the
 https://www.postgresql.org/docs/current/datatype-geometric.html[Postgresql documentation].
 
-In addition tot he common spatial functions, the following functions are supported:
+In addition to the common spatial functions, the following functions are supported:
 
 
 .Additional Postgis function support

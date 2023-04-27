@@ -11,8 +11,10 @@ import java.util.List;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.spatial.BaseSqmFunctionDescriptors;
 import org.hibernate.spatial.FunctionKey;
@@ -24,7 +26,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
-import static org.hibernate.query.sqm.produce.function.StandardArgumentsValidators.exactly;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.SPATIAL;
 
 public class PostgisSqmFunctionDescriptors extends BaseSqmFunctionDescriptors {
 
@@ -47,7 +49,7 @@ public class PostgisSqmFunctionDescriptors extends BaseSqmFunctionDescriptors {
 				new PostgisOperator(
 						name,
 						operator,
-						exactly( 2 ),
+						new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), SPATIAL ),
 						StandardFunctionReturnTypeResolvers.invariant( typeRegistry.resolve(
 								StandardBasicTypes.DOUBLE )
 						)

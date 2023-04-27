@@ -96,7 +96,9 @@ public class ArrayJdbcType implements JdbcType {
 		}
 		else {
 			//noinspection unchecked
-			elementJavaType = ( (BasicPluralJavaType<T>) javaTypeDescriptor ).getElementJavaType();
+			elementJavaType = javaTypeDescriptor instanceof BasicPluralJavaType
+					? ( (BasicPluralJavaType<T>) javaTypeDescriptor ).getElementJavaType()
+					: null; //TODO: what should really happen here?
 		}
 		final JdbcLiteralFormatter<T> elementFormatter = elementJdbcType.getJdbcLiteralFormatter( elementJavaType );
 		return new JdbcLiteralFormatterArray<>( javaTypeDescriptor, elementFormatter );

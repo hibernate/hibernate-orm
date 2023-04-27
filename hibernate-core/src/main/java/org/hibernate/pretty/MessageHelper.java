@@ -15,6 +15,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * MessageHelper methods for rendering log messages relating to managed
  * entities and collections typically used in log statements and exception
@@ -39,7 +41,7 @@ public final class MessageHelper {
 	 * @param id The entity id value.
 	 * @return An info string, in the form [FooBar#1].
 	 */
-	public static String infoString(String entityName, Object id) {
+	public static String infoString(@Nullable String entityName, @Nullable Object id) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if ( entityName == null ) {
@@ -70,9 +72,9 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			EntityPersister persister,
-			Object id, 
-			SessionFactoryImplementor factory) {
+			@Nullable EntityPersister persister,
+			@Nullable Object id,
+			@Nullable SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		Type idType;
@@ -118,8 +120,8 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			EntityPersister persister, 
-			Object id, 
+			@Nullable EntityPersister persister,
+			@Nullable Object id,
 			Type identifierType,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
@@ -152,7 +154,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#&lt;1,2,3&gt;]
 	 */
 	public static String infoString(
-			EntityPersister persister,
+			@Nullable EntityPersister persister,
 			Object[] ids,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
@@ -183,7 +185,7 @@ public final class MessageHelper {
 	 * @param persister The persister.
 	 * @return An info string, in the form [FooBar]
 	 */
-	public static String infoString(EntityPersister persister) {
+	public static String infoString(@Nullable EntityPersister persister) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if ( persister == null ) {
@@ -205,7 +207,7 @@ public final class MessageHelper {
 	 * @param key The property value.
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
-	public static String infoString(String entityName, String propertyName, Object key) {
+	public static String infoString(String entityName, String propertyName, @Nullable Object key) {
 		StringBuilder s = new StringBuilder()
 				.append( '[' )
 				.append( entityName )
@@ -238,8 +240,8 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
 	public static String collectionInfoString(
-			CollectionPersister persister,
-			PersistentCollection<?> collection,
+			@Nullable CollectionPersister persister,
+			@Nullable PersistentCollection<?> collection,
 			Object collectionKey,
 			SharedSessionContractImplementor session ) {
 		
@@ -284,7 +286,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#&lt;1,2,3&gt;]
 	 */
 	public static String collectionInfoString(
-			CollectionPersister persister,
+			@Nullable CollectionPersister persister,
 			Object[] ids,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
@@ -317,8 +319,8 @@ public final class MessageHelper {
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
 	public static String collectionInfoString(
-			CollectionPersister persister,
-			Object id,
+			@Nullable CollectionPersister persister,
+			@Nullable Object id,
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
@@ -374,7 +376,7 @@ public final class MessageHelper {
 	 * @param id The id value of the owner
 	 * @return An info string, in the form [Foo.bars#1]
 	 */
-	public static String collectionInfoString(String role, Object id) {
+	public static String collectionInfoString(@Nullable String role, @Nullable Object id) {
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if( role == null ) {

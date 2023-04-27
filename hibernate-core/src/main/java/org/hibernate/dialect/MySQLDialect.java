@@ -76,6 +76,7 @@ import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -378,6 +379,8 @@ public class MySQLDialect extends Dialect {
 						.withTypeCapacity( maxLobLen, "text" )
 						.build()
 		);
+
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl(this) );
 	}
 
 	@Deprecated
@@ -641,6 +644,8 @@ public class MySQLDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
 	}
 
 	@Override
@@ -867,6 +872,11 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean supportsColumnCheck() {
 		return getMySQLVersion().isSameOrAfter( 8, 0, 16 );
+	}
+
+	@Override
+	public boolean hasNativeEnums() {
+		return true;
 	}
 
 	@Override

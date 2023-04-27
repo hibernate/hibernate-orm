@@ -36,32 +36,46 @@ public interface DdlType extends Serializable {
 	 */
 	int getSqlTypeCode();
 
+	default String getTypeName(Size columnSize, Class<?> returnedClass) {
+		return getTypeName( columnSize );
+	}
+
 	/**
 	 * Returns the default type name without precision/length and scale parameters.
+	 *
+	 * @deprecated not appropriate for named enum or array types
 	 */
+	@Deprecated(since = "6.3")
 	String getRawTypeName();
 
 	/**
 	 * Returns all type names without precision/length and scale parameters.
+	 *
+	 * @deprecated not appropriate for named enum or array types
 	 */
 	@Incubating
+	@Deprecated(since = "6.3")
 	default String[] getRawTypeNames() {
 		return new String[] { getRawTypeName() };
 	}
 
-	String getTypeNamePattern();
-
 	/**
 	 * Return a type with length, precision, and scale specified by the given
 	 * {@linkplain Size size object}.
+	 *
+	 * @deprecated not appropriate for named enum or array types
 	 */
+	@Deprecated(since = "6.3")
 	default String getTypeName(Size size) {
 		return getTypeName( size.getLength(), size.getPrecision(), size.getScale() );
 	}
 
 	/**
 	 * Return a type with the given length, precision, and scale.
+	 *
+	 * @deprecated not appropriate for named enum or array types
 	 */
+	@Deprecated(since = "6.3")
 	String getTypeName(Long size, Integer precision, Integer scale);
 
 	/**

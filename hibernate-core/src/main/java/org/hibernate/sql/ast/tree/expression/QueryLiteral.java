@@ -13,7 +13,6 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -33,7 +32,6 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	private final BasicValuedMapping type;
 
 	public QueryLiteral(T value, BasicValuedMapping type) {
-		assert value == null || type.getJdbcMapping().getJdbcJavaType().isInstance( value );
 		this.value = value;
 		this.type = type;
 	}
@@ -62,17 +60,16 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	public DomainResult<T> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState()
-				.getSqlExpressionResolver();
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				this,
-				type.getJdbcMapping().getJdbcJavaType(),
-				null,
-				creationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory()
-						.getTypeConfiguration()
-		);
+		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver()
+				.resolveSqlSelection(
+						this,
+						type.getJdbcMapping().getJdbcJavaType(),
+						null,
+						creationState.getSqlAstCreationState()
+								.getCreationContext()
+								.getSessionFactory()
+								.getTypeConfiguration()
+				);
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),

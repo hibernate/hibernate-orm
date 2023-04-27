@@ -522,6 +522,13 @@ public class SqlTypes {
 	 */
 	public static final int GEOGRAPHY = 3250;
 
+	/**
+	 * A type code representing a SQL {@code ENUM} type.
+	 *
+	 * @since 6.3
+	 */
+	public static final int ENUM = 6000;
+
 	private SqlTypes() {
 	}
 

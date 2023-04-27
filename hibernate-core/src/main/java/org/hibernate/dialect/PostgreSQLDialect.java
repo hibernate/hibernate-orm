@@ -87,6 +87,7 @@ import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -271,6 +272,8 @@ public class PostgreSQLDialect extends Dialect {
 
 		// Prefer jsonb if possible
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -419,6 +422,11 @@ public class PostgreSQLDialect extends Dialect {
 				.append( name )
 				.append( " as varchar) with inout as implicit" );
 		return new String[] { type.toString(), cast1.toString(), cast2.toString() };
+	}
+
+	@Override
+	public String[] getDropEnumTypeCommand(String name) {
+		return new String[] { "drop type if exists " + name + " cascade" };
 	}
 
 	@Override
@@ -1408,6 +1416,8 @@ public class PostgreSQLDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		jdbcTypeRegistry.addDescriptor( new PostgreSQLEnumJdbcType() );
 	}
 
 	@Override

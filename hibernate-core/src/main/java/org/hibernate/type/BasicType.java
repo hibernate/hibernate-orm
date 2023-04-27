@@ -159,6 +159,15 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 			checkCondition = getJdbcType().getCheckCondition(
 					columnName,
 					getMappedJavaType(),
+					valueConverter,
+					dialect
+			);
+		}
+		if ( checkCondition == null ) {
+			checkCondition = getMappedJavaType().getCheckCondition(
+					columnName,
+					getJdbcType(),
+					valueConverter,
 					dialect
 			);
 		}

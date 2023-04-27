@@ -20,15 +20,12 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.boot.model.process.internal.EnumeratedValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.NamedConverterResolution;
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.model.process.internal.VersionResolution;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -320,18 +317,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			resolveColumn( (Column) selectable, getDialect() );
 		}
 
-		Database database = getBuildingContext().getMetadataCollector().getDatabase();
-		BasicValueConverter<?, ?> valueConverter = resolution.getValueConverter();
-		if ( valueConverter != null ) {
-			AuxiliaryDatabaseObject udt = valueConverter.getAuxiliaryDatabaseObject(
-					resolution.getJdbcType(),
-					database.getDialect(),
-					database.getDefaultNamespace()
-			);
-			if ( udt != null ) {
-				database.addAuxiliaryDatabaseObject( udt );
-			}
-		}
+		resolution.getJdbcType()
+				.addAuxiliaryDatabaseObjects(
+						resolution.getRelationalJavaType(),
+						getBuildingContext().getMetadataCollector()
+				);
 
 		return resolution;
 	}
@@ -605,9 +595,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			);
 		}
 
-		if ( name.startsWith( EnumeratedValueResolution.PREFIX ) ) {
-			return EnumeratedValueResolution.fromName( name, stdIndicators, context );
-		}
+//		if ( name.startsWith( EnumeratedValueResolution.PREFIX ) ) {
+//			return EnumeratedValueResolution.fromName( name, stdIndicators, context );
+//		}
 
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
 			final BasicTypeImpl<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );

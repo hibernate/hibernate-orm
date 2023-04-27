@@ -10,7 +10,7 @@ package org.hibernate.type.descriptor.converter.internal;
  * @author Gavin King
  */
 public class EnumHelper {
-	public static final String[] getEnumeratedValues(Class<? extends Enum<?>> enumClass) {
+	public static String[] getEnumeratedValues(Class<? extends Enum<?>> enumClass) {
 		Enum<?>[] values = enumClass.getEnumConstants();
 		String[] names = new String[values.length];
 		for ( int i = 0; i < values.length; i++ ) {

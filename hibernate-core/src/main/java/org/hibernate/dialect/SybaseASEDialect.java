@@ -127,7 +127,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 		// According to Wikipedia bigdatetime and bigtime were added in 15.5
 		// But with jTDS we can't use them as the driver can't handle the types
-		if ( !jtdsDriver ) {
+		if ( getDriverKind() != SybaseDriverKind.JTDS ) {
 			ddlTypeRegistry.addDescriptor(
 					CapacityDependentDdlType.builder( DATE, "bigdatetime", "bigdatetime", this )
 							.withTypeCapacity( 3, "datetime" )
@@ -234,7 +234,7 @@ public class SybaseASEDialect extends SybaseDialect {
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
 		// At least the jTDS driver does not support this type code
-		if ( jtdsDriver ) {
+		if ( getDriverKind() == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 		}
 	}

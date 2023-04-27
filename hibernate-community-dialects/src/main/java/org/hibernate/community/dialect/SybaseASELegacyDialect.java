@@ -17,6 +17,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;
@@ -123,7 +124,7 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 
 		// According to Wikipedia bigdatetime and bigtime were added in 15.5
 		// But with jTDS we can't use them as the driver can't handle the types
-		if ( getVersion().isSameOrAfter( 15, 5 ) && !jtdsDriver ) {
+		if ( getVersion().isSameOrAfter( 15, 5 ) && getDriverKind() != SybaseDriverKind.JTDS ) {
 			ddlTypeRegistry.addDescriptor(
 					CapacityDependentDdlType.builder( DATE, "bigdatetime", "bigdatetime", this )
 							.withTypeCapacity( 3, "datetime" )
@@ -230,7 +231,7 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
 		// At least the jTDS driver does not support this type code
-		if ( jtdsDriver ) {
+		if ( getDriverKind() == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 		}
 	}

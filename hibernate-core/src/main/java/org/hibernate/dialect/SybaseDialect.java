@@ -29,6 +29,7 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.internal.JTDSCallableStatementSupport;
+import org.hibernate.procedure.internal.SybaseCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -69,8 +70,6 @@ import jakarta.persistence.TemporalType;
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
 
-	protected final boolean jtdsDriver;
-
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
 
 	//All Sybase dialects share an IN list size limit.
@@ -79,6 +78,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_COUNT_LIMIT = 2000;
 
 	private final UniqueDelegate uniqueDelegate = new SkipNullableUniqueDelegate(this);
+	private final SybaseDriverKind driverKind;
+
+	@Deprecated(forRemoval = true)
+	protected final boolean jtdsDriver;
 
 	public SybaseDialect() {
 		this( MINIMUM_VERSION );
@@ -86,18 +89,23 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	public SybaseDialect(DatabaseVersion version) {
 		super(version);
-		jtdsDriver = true;
+		this.driverKind = SybaseDriverKind.OTHER;
+		this.jtdsDriver = true;
 	}
 
 	public SybaseDialect(DialectResolutionInfo info) {
 		super(info);
-		jtdsDriver = info.getDriverName() != null
-				&& info.getDriverName().contains( "jTDS" );
+		this.driverKind = SybaseDriverKind.determineKind( info );
+		this.jtdsDriver = driverKind == SybaseDriverKind.JTDS;
 	}
 
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
+	}
+
+	public SybaseDriverKind getDriverKind() {
+		return driverKind;
 	}
 
 	@Override
@@ -179,7 +187,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		super.contributeTypes(typeContributions, serviceRegistry);
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-		if ( jtdsDriver ) {
+		if ( driverKind == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
@@ -217,7 +225,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
-		return jtdsDriver ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
+		return driverKind == SybaseDriverKind.JTDS ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
 	}
 
 	@Override
@@ -372,7 +380,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( jtdsDriver ) {
+		if ( driverKind == SybaseDriverKind.JTDS ) {
 			return NameQualifierSupport.CATALOG;
 		}
 		else {
@@ -387,7 +395,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return jtdsDriver ? JTDSCallableStatementSupport.INSTANCE : super.getCallableStatementSupport();
+		return driverKind == SybaseDriverKind.JTDS ?
+				JTDSCallableStatementSupport.INSTANCE :
+				SybaseCallableStatementSupport.INSTANCE;
+	}
+
+	@Override
+	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+		// Only the jTDS driver supports named parameters properly
+		return driverKind == SybaseDriverKind.JTDS && super.supportsNamedParameters( databaseMetaData );
 	}
 
 	@Override
@@ -402,7 +418,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return jtdsDriver
+		return driverKind == SybaseDriverKind.JTDS
 				? AbstractTransactSQLIdentityColumnSupport.INSTANCE
 				: SybaseJconnIdentityColumnSupport.INSTANCE;
 	}

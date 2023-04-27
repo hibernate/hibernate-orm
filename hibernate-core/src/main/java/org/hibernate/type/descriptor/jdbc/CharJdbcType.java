@@ -33,24 +33,13 @@ public class CharJdbcType extends VarcharJdbcType {
 		return Types.CHAR;
 	}
 
-
 	@Override
-	public JdbcType resolveIndicatedType(
-			JdbcTypeIndicators indicators,
-			JavaType<?> domainJtd) {
-		assert domainJtd != null;
-
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-
-		final int jdbcTypeCode;
+	protected int resolveIndicatedJdbcTypeCode(JdbcTypeIndicators indicators) {
 		if ( indicators.isLob() ) {
-			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+			return indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
 		}
 		else {
-			jdbcTypeCode = indicators.isNationalized() ? Types.NCHAR : Types.CHAR;
+			return indicators.isNationalized() ? Types.NCHAR : Types.CHAR;
 		}
-
-		return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
 	}
 }

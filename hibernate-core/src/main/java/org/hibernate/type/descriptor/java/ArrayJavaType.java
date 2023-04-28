@@ -303,13 +303,11 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			return (X) value;
 		}
 		else if ( type == byte[].class ) {
-			// byte[] can only be requested if the value should be serialized
-			return (X) SerializationHelper.serialize( value );
+			return (X) toBytes( value );
 		}
 		else if ( type == BinaryStream.class ) {
-			// BinaryStream can only be requested if the value should be serialized
 			//noinspection unchecked
-			return (X) new BinaryStreamImpl( SerializationHelper.serialize( value ) );
+			return (X) new BinaryStreamImpl( toBytes( value ) );
 		}
 		else if ( type.isArray() ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -360,17 +358,50 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			return wrapped;
 		}
 		else if ( value instanceof byte[] ) {
-			// When the value is a byte[], this is a deserialization request
-			//noinspection unchecked
-			return (T[]) SerializationHelper.deserialize( (byte[]) value );
+			return fromBytes( (byte[]) value );
 		}
 		else if ( value instanceof BinaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			//noinspection unchecked
-			return (T[]) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() );
+			return fromBytes( ( (BinaryStream) value ).getBytes() );
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	private static <T> byte[] toBytes(T[] value) {
+		if ( value.getClass().getComponentType().isEnum() ) {
+			final byte[] array = new byte[value.length];
+			for (int i = 0; i < value.length; i++ ) {
+				// encode null enum value as -1
+				array[i] = value[i] == null ? -1 : (byte) ((Enum<?>) value[i]).ordinal();
+			}
+			return array;
+
+		}
+		else {
+			// byte[] can only be requested if the value should be serialized
+			return SerializationHelper.serialize( value );
+		}
+	}
+
+	private T[] fromBytes(byte[] value) {
+		Class<T> elementClass = getElementJavaType().getJavaTypeClass();
+		byte[] bytes = value;
+		if ( elementClass.isEnum() ) {
+			final Object[] array = (Object[]) Array.newInstance( elementClass, bytes.length );
+			for (int i = 0; i < bytes.length; i++ ) {
+				// null enum value was encoded as -1
+				array[i] = bytes[i] == -1 ? null : elementClass.getEnumConstants()[bytes[i]];
+			}
+			//noinspection unchecked
+			return (T[]) array;
+
+		}
+		else {
+			// When the value is a byte[], this is a deserialization request
+			//noinspection unchecked
+			return (T[]) SerializationHelper.deserialize(value);
+		}
 	}
 
 	private static class ArrayMutabilityPlan<T> implements MutabilityPlan<T[]> {

@@ -116,6 +116,9 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		else if ( value instanceof Byte ) {
 			return fromByte( (Byte) value );
 		}
+		else if ( value instanceof Number ) {
+			return fromLong( ((Number) value).longValue() );
+		}
 
 		return (T) value;
 	}

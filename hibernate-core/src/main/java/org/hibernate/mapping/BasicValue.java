@@ -338,11 +338,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			column.setSqlTypeCode( resolution.getJdbcType().getDdlTypeCode() );
 		}
 
-		if ( resolution.getValueConverter() != null ) {
-			final String declaration = resolution.getLegacyResolvedBasicType().getSpecializedTypeDeclaration( dialect );
-			if ( declaration != null ) {
-				column.setSpecializedTypeDeclaration( declaration );
-			}
+		final String declaration = resolution.getLegacyResolvedBasicType().getSpecializedTypeDeclaration( dialect );
+		if ( declaration != null ) {
+			column.setSpecializedTypeDeclaration( declaration );
 		}
 
 		if ( dialect.supportsColumnCheck() ) {

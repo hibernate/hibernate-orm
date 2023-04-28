@@ -146,28 +146,17 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	 */
 	@Incubating
 	default String getCheckCondition(String columnName, Dialect dialect) {
-		final BasicValueConverter<T, ?> valueConverter = getValueConverter();
-		String checkCondition = null;
-		if ( valueConverter != null ) {
-			checkCondition = valueConverter.getCheckCondition(
-					columnName,
-					getJdbcType(),
-					dialect
-			);
-		}
-		if ( checkCondition == null ) {
-			checkCondition = getJdbcType().getCheckCondition(
-					columnName,
-					getMappedJavaType(),
-					valueConverter,
-					dialect
-			);
-		}
+		String checkCondition = getJdbcType().getCheckCondition(
+				columnName,
+				getMappedJavaType(),
+				getValueConverter(),
+				dialect
+		);
 		if ( checkCondition == null ) {
 			checkCondition = getMappedJavaType().getCheckCondition(
 					columnName,
 					getJdbcType(),
-					valueConverter,
+					getValueConverter(),
 					dialect
 			);
 		}
@@ -176,8 +165,7 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 
 	@Incubating
 	default String getSpecializedTypeDeclaration(Dialect dialect) {
-		final BasicValueConverter<T, ?> valueConverter = getValueConverter();
-		return valueConverter == null ? null : valueConverter.getSpecializedTypeDeclaration( getJdbcType(), dialect );
+		return getMappedJavaType().getSpecializedTypeDeclaration( getJdbcType(), getValueConverter(), dialect );
 	}
 
 	@Override

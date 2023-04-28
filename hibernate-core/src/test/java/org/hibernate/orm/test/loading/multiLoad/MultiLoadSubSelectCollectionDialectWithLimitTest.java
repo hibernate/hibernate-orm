@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		settingProviders = @SettingProvider( provider = MultiLoadSubSelectCollectionDialectWithLimitTest.TestSettingProvider.class, settingName = AvailableSettings.DIALECT)
 )
 @SessionFactory(generateStatistics = true, useCollectingStatementInspector = true)
-@RequiresDialect( H2Dialect.class )
+@RequiresDialect( value = H2Dialect.class, majorVersion = 2 )
 public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 
 

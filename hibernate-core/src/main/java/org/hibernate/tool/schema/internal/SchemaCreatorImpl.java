@@ -227,14 +227,14 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			Dialect dialect,
 			Formatter formatter,
 			GenerationTarget... targets) {
-		final SqlStringGenerationContext context = createSqlStringGenerationContext( options, metadata );
-		final Set<String> exportIdentifiers = setOfSize( 50 );
+		final SqlStringGenerationContext context = createSqlStringGenerationContext(options, metadata);
+		final Set<String> exportIdentifiers = setOfSize(50);
 
-		createSchemasAndCatalogs( metadata, options, dialect, formatter, context, targets );
-		// next, create all UDTs
-		createUserDefinedTypes( metadata, options, dialect, formatter, context, targets );
+		createSchemasAndCatalogs(metadata, options, dialect, formatter, context, targets);
 		// next, create all "before table" auxiliary objects
-		createAuxiliaryObjectsBeforeTables( metadata, options, dialect, formatter, context, exportIdentifiers, targets );
+		createAuxiliaryObjectsBeforeTables(metadata, options, dialect, formatter, context, exportIdentifiers, targets);
+		// next, create all UDTs
+		createUserDefinedTypes(metadata, options, dialect, formatter, context, targets);
 		// then, create all schema objects (tables, sequences, constraints, etc) in each schema
 		createSequencesTablesConstraints(
 				metadata,

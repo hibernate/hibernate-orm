@@ -54,10 +54,11 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -191,12 +192,20 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
 
 		// Sybase requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
-						ObjectNullAsNullTypeJdbcType.INSTANCE,
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
+		typeContributions.contributeType(
+				new NullType(
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
@@ -356,9 +365,8 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( getVersion().isSameOrAfter( 15 ) ) {
-			return NameQualifierSupport.BOTH;
-		}
+		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
+		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
 		return NameQualifierSupport.CATALOG;
 	}
 

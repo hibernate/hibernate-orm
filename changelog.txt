@@ -3,6 +3,61 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.2.Final (April 28, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32149
+
+** Bug
+    * [HHH-16528] - Revert SybaseDialect NameQualifierSupport to CATALOG only
+    * [HHH-16507] - Hibernate 6.0+ use the wrong logger name for logging the SQL dialect
+    * [HHH-16493] - OneToManyCollectionPart doesn't disassemble properly embeddable IdClass
+    * [HHH-16492] - Hibernate 6 does not auto flush when calling Query.stream() with NativeQuery
+    * [HHH-16488] - Hibernate ORM 6.2.1 / Wrong select clause generated / OneToOne between the same entity
+    * [HHH-16485] - Insert ordering doesn't consider root entity names
+    * [HHH-16479] - Generic enum in @MappedSuperclass fails with java.lang.IllegalArgumentException: Named type  [...] did not implement BasicType nor UserType
+    * [HHH-16477] - LAZY @ManyToOne may again break EAGER @ManyToOne when used on the same entity in a different parent with Bytecode Enhancement
+    * [HHH-16473] - Join fetch a recursive relationship with EmbeddedId fetches wrong values
+    * [HHH-16471] - Entities serialized in QueryKey causes java.lang.ClassCastException
+    * [HHH-16458] - JDBC statement is not closed when DeferredResultSetAccess fails to execute a query
+    * [HHH-16457] - Values returned in ValueAccess.getValues() and getValue(…) not alphabetical for Java records
+    * [HHH-16438] - Left outer joins do not work with polymorphic entities due to use of discriminator in the main query condition
+    * [HHH-16409] - SQLGrammarException when selecting property of grouped join association
+    * [HHH-16397] - Wrong SQL when HQL has subquery using FK attribute of parent query root
+    * [HHH-16392] - @Where annotation generates bad query with entity name instead of alias in association subquery
+    * [HHH-16382] - Self referential association with key-many-to-one fails to load
+    * [HHH-16366] - UnknownTableReferenceException when selecting entity using IdClass
+    * [HHH-16363] - OneToMany object properties not set when EmbeddedId and it holds an OneToOne relationship to itself
+    * [HHH-16362] - SemanticException while checking JOIN FETCH owners for nested associations
+    * [HHH-16347] - The ORDER BY clause in a Window Function doesn't work when using multiple columns
+    * [HHH-16321] - Hibernate maps NCLOB to ntext on Sybase
+    * [HHH-16314] - Skip NativeQueryResultTypeAutoDiscoveryTest#dateTimeTypes for Sybase
+    * [HHH-16304] - unquotedCaseStrategy defaults to UPPER with Sybase
+    * [HHH-16271] - BulkManipulationTest fails on Sybase with JZ0NK: Generated keys are not available because either the Statement.NO_GENERATED_KEYS was used or no keys were automatically generated.
+    * [HHH-16270] - Support for null Query parameters on Sybase
+    * [HHH-16261] - JPA metamodel generator is not considering Java 14's records
+    * [HHH-15833] - Sybase - store procedure unsupported named parameter
+    * [HHH-15602] - ByteBuddy enhancement generates faulty code with many-to-many associations
+
+** Deprecation
+    * [HHH-16441] - Improve support for @BatchSize
+
+** Improvement
+    * [HHH-16511] - Ability to drop-in extra JDBC drivers
+    * [HHH-16509] - Split parameter limit and IN element limit
+    * [HHH-16500] - Avoid unnecessary reflection in StreamDecorator
+    * [HHH-16482] - Convert Functions in StandardConverters to static methods that can be used as method references
+    * [HHH-16481] - Add a new WrapperArrayHandling for enabled JPA compliance
+    * [HHH-16468] - Don't create fetch for _identifierMapper anymore 
+    * [HHH-16466] - ARRAY parameter support for multi-key loads
+
+** Remove Feature
+    * [HHH-16508] - Remove StreamDecorators
+
+** Task
+    * [HHH-16497] - Deprecate JUnit 4 testing annotations
+
+
 Changes in 6.2.1.Final (April 14, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

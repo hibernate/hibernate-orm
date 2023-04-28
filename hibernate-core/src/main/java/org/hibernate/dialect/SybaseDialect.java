@@ -53,6 +53,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -220,6 +221,14 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 								.getDescriptor( Object.class )
 				)
 		);
+		typeContributions.contributeType(
+				new NullType(
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
 	}
 
 	@Override
@@ -380,12 +389,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( driverKind == SybaseDriverKind.JTDS ) {
-			return NameQualifierSupport.CATALOG;
-		}
-		else {
-			return NameQualifierSupport.BOTH;
-		}
+		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
+		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
+		return NameQualifierSupport.CATALOG;
 	}
 
 	@Override

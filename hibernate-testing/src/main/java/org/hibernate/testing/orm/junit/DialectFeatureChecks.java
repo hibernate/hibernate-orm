@@ -658,4 +658,10 @@ abstract public class DialectFeatureChecks {
 			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;
 		}
 	}
+
+	public static class SupportsCommentOn implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsCommentOn();
+		}
+	}
 }

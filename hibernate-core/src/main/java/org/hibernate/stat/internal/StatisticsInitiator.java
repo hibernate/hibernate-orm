@@ -19,6 +19,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
@@ -49,7 +51,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 
 	private StatisticsImplementor initiateServiceInternal(
 			SessionFactoryImplementor sessionFactory,
-			Object configValue,
+			@Nullable Object configValue,
 			ServiceRegistryImplementor registry) {
 
 		final StatisticsFactory statisticsFactory;

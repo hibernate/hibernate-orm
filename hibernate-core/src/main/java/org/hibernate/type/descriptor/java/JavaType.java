@@ -344,7 +344,16 @@ public interface JavaType<T> extends Serializable {
 	 * @return a check constraint condition or null
 	 * @since 6.2
 	 */
+	@Incubating
 	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+		return null;
+	}
+
+	/**
+	 * @deprecated this was an experimental approach that we have moved away from
+	 */
+	@Incubating @Deprecated
+	default String getSpecializedTypeDeclaration(JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
 		return null;
 	}
 }

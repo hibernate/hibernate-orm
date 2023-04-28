@@ -48,7 +48,7 @@ public class Boy {
 	private Map<String, Integer> scorePerPreferredName = new HashMap<>();
 	private int[] favoriteNumbers;
 	private Set<Toy> favoriteToys = new HashSet<>();
-	private Set<Character> characters = new HashSet<>();
+	private Set<CharacterTrait> characters = new HashSet<>();
 	private Map<String, FavoriteFood> foods = new HashMap<>();
 	private Set<CountryAttitude> countryAttitudes = new HashSet<>();
 
@@ -155,11 +155,11 @@ public class Boy {
 	@ElementCollection
 	@Enumerated(EnumType.STRING)
     @Column(name = "`characters`")
-	public Set<Character> getCharacters() {
+	public Set<CharacterTrait> getCharacters() {
 		return characters;
 	}
 
-	public void setCharacters(Set<Character> characters) {
+	public void setCharacters(Set<CharacterTrait> characters) {
 		this.characters = characters;
 	}
 

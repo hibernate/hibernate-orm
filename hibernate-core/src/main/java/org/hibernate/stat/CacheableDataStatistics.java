@@ -8,6 +8,8 @@ package org.hibernate.stat;
 
 import java.io.Serializable;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
@@ -17,7 +19,7 @@ public interface CacheableDataStatistics extends Serializable {
 	/**
 	 * The name of the region where this data is cached.
 	 */
-	String getCacheRegionName();
+	@Nullable String getCacheRegionName();
 
 	/**
 	 * The number of times this data has been into its configured cache region

@@ -10,7 +10,7 @@ package org.hibernate.orm.test.annotations.collectionelement;
 /**
  * @author Emmanuel Bernard
  */
-public enum Character {
+public enum CharacterTrait {
 	GENTLE,
 	NORMAL,
 	AGGRESSIVE,

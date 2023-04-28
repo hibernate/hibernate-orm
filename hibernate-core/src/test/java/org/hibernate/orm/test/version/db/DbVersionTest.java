@@ -14,6 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 
 import static org.junit.Assert.assertFalse;
@@ -93,6 +94,10 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		Timestamp steveTimestamp = steve.getTimestamp();
+		if ( getDialect() instanceof SybaseDialect ) {
+			// Sybase has 1/300th sec precision, but not for the `getdate()` function which we use for DB generation
+			steveTimestamp = new Timestamp( steveTimestamp.getTime() );
+		}
 
 		s = openSession();
 		t = s.beginTransaction();

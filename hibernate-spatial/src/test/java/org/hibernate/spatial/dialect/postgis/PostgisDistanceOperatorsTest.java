@@ -140,7 +140,7 @@ public class PostgisDistanceOperatorsTest {
 				)
 		);
 		assertEquals(
-				"Parameter 1 of function distance_2d_bbox() has type SPATIAL, but argument is of type java.lang.Integer",
+				"org.hibernate.QueryException: Parameter 1 of function distance_2d_bbox() has type SPATIAL, but argument is of type java.lang.Integer",
 				thrown.getMessage()
 		);
 

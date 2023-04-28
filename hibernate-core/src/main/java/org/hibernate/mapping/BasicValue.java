@@ -64,6 +64,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
+import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
@@ -370,9 +371,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	protected Resolution<?> buildResolution() {
 		Properties typeParameters = getTypeParameters();
-		if ( typeParameters != null
-				&& Boolean.parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
-				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+		if (typeParameters != null
+				&& parseBoolean(typeParameters.getProperty(DynamicParameterizedType.IS_DYNAMIC))
+				&& typeParameters.get(DynamicParameterizedType.PARAMETER_TYPE) == null ) {
 			createParameterImpl();
 		}
 		if ( explicitTypeName != null ) {
@@ -830,10 +831,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 
 			if ( typeInstance instanceof DynamicParameterizedType ) {
-				if ( Boolean.parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
-					if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+				if (parseBoolean(properties.getProperty(DynamicParameterizedType.IS_DYNAMIC))) {
+					if (properties.get(DynamicParameterizedType.PARAMETER_TYPE) == null) {
 						final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
-						properties.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
+						properties.put(DynamicParameterizedType.PARAMETER_TYPE, parameterType);
 					}
 				}
 			}

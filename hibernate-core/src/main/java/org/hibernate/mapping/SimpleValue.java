@@ -45,7 +45,6 @@ import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -63,6 +62,7 @@ import org.hibernate.usertype.DynamicParameterizedType;
 
 import jakarta.persistence.AttributeConverter;
 
+import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.createLegacyIdentifierGenerator;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
@@ -930,7 +930,7 @@ public abstract class SimpleValue implements KeyValue {
 			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = xProperty == null
-					? null
+					? new Annotation[0]
 					: xProperty.getAnnotations();
 
 			final ClassLoaderService classLoaderService = getMetadata()
@@ -941,13 +941,13 @@ public abstract class SimpleValue implements KeyValue {
 					DynamicParameterizedType.PARAMETER_TYPE,
 					new ParameterTypeImpl(
 							classLoaderService.classForTypeName(
-									typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS )
+									typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)
 							),
 							annotations,
 							table.getCatalog(),
 							table.getSchema(),
 							table.getName(),
-							Boolean.parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
+							parseBoolean(typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY)),
 							columnNames,
 							columnLengths
 					)
@@ -974,7 +974,7 @@ public abstract class SimpleValue implements KeyValue {
 			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = xProperty == null
-					? null
+					? new Annotation[0]
 					: xProperty.getAnnotations();
 
 			final ClassLoaderService classLoaderService = getMetadata()
@@ -983,12 +983,12 @@ public abstract class SimpleValue implements KeyValue {
 					.getService( ClassLoaderService.class );
 
 			return new ParameterTypeImpl(
-					classLoaderService.classForTypeName( typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS ) ),
+					classLoaderService.classForTypeName(typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)),
 					annotations,
 					table.getCatalog(),
 					table.getSchema(),
 					table.getName(),
-					Boolean.parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
+					parseBoolean(typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY)),
 					columnNames,
 					columnLengths
 			);

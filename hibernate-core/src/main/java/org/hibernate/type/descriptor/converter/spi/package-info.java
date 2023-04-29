@@ -12,13 +12,9 @@
  * <p>
  * The main contract is
  * {@link org.hibernate.type.descriptor.converter.spi.BasicValueConverter},
- * with specializations:
- * <ul>
- * <li>{@link org.hibernate.type.descriptor.converter.spi.EnumValueConverter}
- *     for Java {@code enum} conversions, and
- * <li>{@link org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter}
- *     for adapting for JPA {@link jakarta.persistence.AttributeConverter}.
- * </ul>
+ * which is specialized by
+ * {@link org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter}
+ * for adapting for JPA {@link jakarta.persistence.AttributeConverter}s.
  *
  * @see org.hibernate.type.descriptor.converter.spi.BasicValueConverter
  */

@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -68,14 +67,13 @@ public class EnumType<T extends Enum<T>>
 	public EnumType() {
 	}
 
-	@Override
-	public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
-		return jdbcType;
+	public Class<T> getEnumClass() {
+		return enumClass;
 	}
 
 	@Override
-	public BasicValueConverter<T, Object> getValueConverter() {
-		return null;
+	public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
+		return jdbcType;
 	}
 
 	/**
@@ -125,9 +123,6 @@ public class EnumType<T extends Enum<T>>
 		}
 		else if ( reader != null ) {
 			enumClass = (Class<T>) reader.getReturnedClass().asSubclass( Enum.class );
-		}
-		else {
-			throw new AssertionFailure( "No enum class" );
 		}
 
 		final JavaType<T> descriptor = typeConfiguration.getJavaTypeRegistry().getDescriptor( enumClass );
@@ -185,7 +180,7 @@ public class EnumType<T extends Enum<T>>
 
 	private boolean isNationalized(ParameterType reader) {
 		return typeConfiguration.getCurrentBaseSqlTypeIndicators().isNationalized()
-			|| getAnnotation( reader.getAnnotationsMethod(), Nationalized.class ) != null;
+			|| reader!=null && getAnnotation( reader.getAnnotationsMethod(), Nationalized.class ) != null;
 	}
 
 	@SuppressWarnings("unchecked")

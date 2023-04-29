@@ -146,7 +146,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new DB2390IdentityColumnSupport();
+		return DB2390IdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

@@ -16,6 +16,8 @@ import static org.hibernate.internal.util.StringHelper.unquote;
  * @author Andrea Boriero
  */
 public class PostgreSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final PostgreSQLIdentityColumnSupport INSTANCE = new PostgreSQLIdentityColumnSupport();
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

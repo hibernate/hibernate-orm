@@ -20,6 +20,7 @@ public class CardField implements Serializable {
 
 	@EmbeddedId
 	private PrimaryKey primaryKey;
+	private String name;
 
 	CardField(Card card, Key key) {
 		this.primaryKey = new PrimaryKey( card, key);

@@ -11,13 +11,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.BitSet;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -48,13 +48,15 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 /**
@@ -146,7 +148,7 @@ public class ActionQueue {
 					ExecutableList<AbstractEntityInsertAction> init(ActionQueue instance) {
 						if ( instance.isOrderInsertsEnabled() ) {
 							return instance.insertions = new ExecutableList<>(
-									new InsertActionSorter()
+									InsertActionSorter.INSTANCE
 							);
 						}
 						else {
@@ -1040,11 +1042,13 @@ public class ActionQueue {
 	 * directionality of foreign-keys. So even though we will be changing the ordering here, we need to make absolutely
 	 * certain that we do not circumvent this FK ordering to the extent of causing constraint violations.
 	 * <p>
-	 * Sorts the insert actions using more hashes.
-	 *
-	 * @implNote This class is not thread-safe.
-	 *
-	 * @author Jay Erb
+	 * The algorithm first discovers the transitive incoming dependencies for every insert action
+	 * and groups all inserts by the entity name.
+	 * Finally, it schedules these groups one by one, as long as all the dependencies of the groups are fulfilled.
+	 * </p>
+	 * The implementation will only produce an optimal insert order for the insert groups that can be perfectly scheduled serially.
+	 * Scheduling serially means, that there is an order which doesn't violate the FK constraint dependencies.
+	 * The inserts of insert groups which can't be scheduled, are going to be inserted in the original order.
 	 */
 	private static class InsertActionSorter implements ExecutableList.Sorter<AbstractEntityInsertAction> {
 		/**
@@ -1052,104 +1056,144 @@ public class ActionQueue {
 		 */
 		public static final InsertActionSorter INSTANCE = new InsertActionSorter();
 
-		private static class BatchIdentifier {
+		private static class InsertInfo {
+			private final AbstractEntityInsertAction insertAction;
+			// Inserts in this set must be executed before this insert
+			private Set<InsertInfo> transitiveIncomingDependencies;
+			// Child dependencies of i.e. one-to-many or inverse one-to-one
+			// It's necessary to have this for unidirectional associations, to propagate incoming dependencies
+			private Set<InsertInfo> outgoingDependencies;
+			// The current index of the insert info within an insert schedule
+			private int index;
 
-			private final String entityName;
-			private final String rootEntityName;
-
-			private final Set<String> parentEntityNames = new HashSet<>( );
-
-			private final Set<String> childEntityNames = new HashSet<>( );
-
-			private BatchIdentifier parent;
-
-			BatchIdentifier(String entityName, String rootEntityName) {
-				this.entityName = entityName;
-				this.rootEntityName = rootEntityName;
+			public InsertInfo(AbstractEntityInsertAction insertAction, int index) {
+				this.insertAction = insertAction;
+				this.index = index;
 			}
 
-			public BatchIdentifier getParent() {
-				return parent;
+			public void buildDirectDependencies(IdentityHashMap<Object, InsertInfo> insertInfosByEntity) {
+				final Object[] propertyValues = insertAction.getState();
+				final Type[] propertyTypes = insertAction.getPersister().getPropertyTypes();
+				for (int i = 0, propertyTypesLength = propertyTypes.length; i < propertyTypesLength; i++) {
+					addDirectDependency(propertyTypes[i], propertyValues[i], insertInfosByEntity);
+				}
 			}
 
-			public void setParent(BatchIdentifier parent) {
-				this.parent = parent;
+			public void propagateChildDependencies() {
+				if ( outgoingDependencies != null ) {
+					for (InsertInfo childDependency : outgoingDependencies) {
+						if (childDependency.transitiveIncomingDependencies == null) {
+							childDependency.transitiveIncomingDependencies = new HashSet<>();
+						}
+						childDependency.transitiveIncomingDependencies.add(this);
+					}
+				}
+			}
+
+			public void buildTransitiveDependencies(Set<InsertInfo> visited) {
+				if (transitiveIncomingDependencies != null) {
+					visited.addAll(transitiveIncomingDependencies);
+					for (InsertInfo insertInfo : transitiveIncomingDependencies.toArray(new InsertInfo[0])) {
+						insertInfo.addTransitiveDependencies(this, visited);
+					}
+					visited.clear();
+				}
+			}
+
+			public void addTransitiveDependencies(InsertInfo origin, Set<InsertInfo> visited) {
+				if (transitiveIncomingDependencies != null) {
+					for (InsertInfo insertInfo : transitiveIncomingDependencies) {
+						if (visited.add(insertInfo)) {
+							origin.transitiveIncomingDependencies.add(insertInfo);
+							insertInfo.addTransitiveDependencies(origin, visited);
+						}
+					}
+				}
+			}
+
+			private void addDirectDependency(Type type, Object value, IdentityHashMap<Object, InsertInfo> insertInfosByEntity) {
+				if ( type.isEntityType() && value != null ) {
+					final EntityType entityType = (EntityType) type;
+					final InsertInfo insertInfo = insertInfosByEntity.get(value);
+					if (insertInfo != null) {
+						if (entityType.isOneToOne() && OneToOneType.class.cast( entityType).getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT) {
+							if (!entityType.isReferenceToPrimaryKey()) {
+								if (outgoingDependencies == null) {
+									outgoingDependencies = new HashSet<>();
+								}
+								outgoingDependencies.add(insertInfo);
+							}
+						}
+						else {
+							if (transitiveIncomingDependencies == null) {
+								transitiveIncomingDependencies = new HashSet<>();
+							}
+							transitiveIncomingDependencies.add(insertInfo);
+						}
+					}
+				}
+				else if ( type.isCollectionType() && value != null ) {
+					CollectionType collectionType = (CollectionType) type;
+					final PluralAttributeMapping pluralAttributeMapping = insertAction.getSession()
+							.getFactory()
+							.getMappingMetamodel()
+							.getCollectionDescriptor( collectionType.getRole() )
+							.getAttributeMapping();
+					// We only care about mappedBy one-to-many associations, because for these, the elements depend on the collection owner
+					if ( pluralAttributeMapping.getCollectionDescriptor().isOneToMany()
+							&& pluralAttributeMapping.getElementDescriptor() instanceof EntityCollectionPart ) {
+						final Iterator<?> elementsIterator = collectionType.getElementsIterator( value );
+						while ( elementsIterator.hasNext() ) {
+							final Object element = elementsIterator.next();
+							final InsertInfo insertInfo = insertInfosByEntity.get( element );
+							if ( insertInfo != null ) {
+								if ( outgoingDependencies == null ) {
+									outgoingDependencies = new HashSet<>();
+								}
+								outgoingDependencies.add( insertInfo );
+							}
+						}
+					}
+				}
+				else if ( type.isComponentType() && value != null ) {
+					// Support recursive checks of composite type properties for associations and collections.
+					CompositeType compositeType = (CompositeType) type;
+					final SharedSessionContractImplementor session = insertAction.getSession();
+					Object[] componentValues = compositeType.getPropertyValues( value, session );
+					for ( int j = 0; j < componentValues.length; ++j ) {
+						Type componentValueType = compositeType.getSubtypes()[j];
+						Object componentValue = componentValues[j];
+						addDirectDependency( componentValueType, componentValue, insertInfosByEntity);
+					}
+				}
 			}
 
 			@Override
 			public boolean equals(Object o) {
-				if ( this == o ) {
+				if (this == o)  {
 					return true;
 				}
-				if ( !( o instanceof BatchIdentifier ) ) {
+				if (o == null || getClass() != o.getClass()) {
 					return false;
 				}
-				BatchIdentifier that = (BatchIdentifier) o;
-				return Objects.equals( entityName, that.entityName );
+
+				InsertInfo that = (InsertInfo) o;
+
+				return insertAction.equals(that.insertAction);
 			}
 
 			@Override
 			public int hashCode() {
-				return Objects.hash( entityName );
+				return insertAction.hashCode();
 			}
 
-			String getEntityName() {
-				return entityName;
-			}
-
-			String getRootEntityName() {
-				return rootEntityName;
-			}
-
-			Set<String> getParentEntityNames() {
-				return parentEntityNames;
-			}
-
-			Set<String> getChildEntityNames() {
-				return childEntityNames;
-			}
-
-			boolean hasAnyParentEntityNames(BatchIdentifier batchIdentifier) {
-				return parentEntityNames.contains( batchIdentifier.getEntityName() ) ||
-						parentEntityNames.contains( batchIdentifier.getRootEntityName() );
-			}
-
-			boolean hasAnyChildEntityNames(BatchIdentifier batchIdentifier) {
-				return childEntityNames.contains( batchIdentifier.getEntityName() );
-			}
-
-			/**
-			 * Check if this {@link BatchIdentifier} has a parent or grand parent
-			 * matching the given {@link BatchIdentifier} reference.
-			 *
-			 * @param batchIdentifier {@link BatchIdentifier} reference
-			 *
-			 * @return This {@link BatchIdentifier} has a parent matching the given {@link BatchIdentifier} reference
-			 */
-			boolean hasParent(BatchIdentifier batchIdentifier) {
-				return (
-					parent == batchIdentifier
-					|| parentEntityNames.contains( batchIdentifier.getEntityName() )
-					|| ( parentEntityNames.contains( batchIdentifier.getRootEntityName() )
-							&& !this.getEntityName().equals( batchIdentifier.getRootEntityName() ) )
-					|| parent != null && parent.hasParent( batchIdentifier, new ArrayList<>() )
-				);
-			}
-
-			private boolean hasParent(BatchIdentifier batchIdentifier, List<BatchIdentifier> stack) {
-				if ( !stack.contains( this ) && parent != null ) {
-					stack.add( this );
-					return parent.hasParent( batchIdentifier, stack );
-				}
-				return (
-					parent == batchIdentifier
-					|| parentEntityNames.contains( batchIdentifier.getEntityName() )
-				);
+			@Override
+			public String toString() {
+				return "InsertInfo{" +
+					"insertAction=" + insertAction +
+					'}';
 			}
 		}
-
-		// the map of batch numbers to EntityInsertAction lists
-		private Map<BatchIdentifier, List<AbstractEntityInsertAction>> actionBatches;
 
 		public InsertActionSorter() {
 		}
@@ -1158,221 +1202,144 @@ public class ActionQueue {
 		 * Sort the insert actions.
 		 */
 		public void sort(List<AbstractEntityInsertAction> insertions) {
-			// optimize the hash size to eliminate a rehash.
-			this.actionBatches = new HashMap<>();
-
-			// the mapping of entity names to their latest batch numbers.
-			final List<BatchIdentifier> latestBatches = new ArrayList<>();
-
-			for ( AbstractEntityInsertAction action : insertions ) {
-				BatchIdentifier batchIdentifier = new BatchIdentifier(
-						action.getEntityName(),
-						action.getSession()
-								.getFactory()
-								.getRuntimeMetamodels()
-								.getMappingMetamodel()
-								.getEntityDescriptor( action.getEntityName() )
-								.getRootEntityName()
-				);
-
-				int index = latestBatches.indexOf( batchIdentifier );
-
-				if ( index != -1 )  {
-					batchIdentifier = latestBatches.get( index );
-				}
-				else {
-					latestBatches.add( batchIdentifier );
-				}
-				addParentChildEntityNames( action, batchIdentifier );
-				addToBatch( batchIdentifier, action );
+			final int insertInfoCount = insertions.size();
+			// Build up dependency metadata for insert actions
+			final InsertInfo[] insertInfos = new InsertInfo[insertInfoCount];
+			// A map of all insert infos keyed by the entity instance
+			// This is needed to discover insert infos for direct dependencies
+			final IdentityHashMap<Object, InsertInfo> insertInfosByEntity = new IdentityHashMap<>( insertInfos.length );
+			// Construct insert infos and build a map for that, keyed by entity instance
+			for (int i = 0; i < insertInfoCount; i++) {
+				final AbstractEntityInsertAction insertAction = insertions.get(i);
+				final InsertInfo insertInfo = new InsertInfo(insertAction, i);
+				insertInfosByEntity.put(insertAction.getInstance(), insertInfo);
+				insertInfos[i] = insertInfo;
 			}
-
-			// Examine each entry in the batch list, and build the dependency graph.
-			for ( int i = 0; i < latestBatches.size(); i++ ) {
-				BatchIdentifier batchIdentifier = latestBatches.get( i );
-
-				for ( int j = i - 1; j >= 0; j-- ) {
-					BatchIdentifier prevBatchIdentifier = latestBatches.get( j );
-					if ( prevBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
-						prevBatchIdentifier.parent = batchIdentifier;
-					}
-					else if ( batchIdentifier.hasAnyChildEntityNames( prevBatchIdentifier ) ) {
-						prevBatchIdentifier.parent = batchIdentifier;
-					}
-				}
-
-				for ( int j = i + 1; j < latestBatches.size(); j++ ) {
-					BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
-
-					if ( nextBatchIdentifier.hasAnyParentEntityNames( batchIdentifier ) ) {
-						nextBatchIdentifier.parent = batchIdentifier;
-						nextBatchIdentifier.getParentEntityNames().add( batchIdentifier.getEntityName() );
-					}
-					else if ( batchIdentifier.hasAnyChildEntityNames( nextBatchIdentifier ) ) {
-						nextBatchIdentifier.parent = batchIdentifier;
-						nextBatchIdentifier.getParentEntityNames().add( batchIdentifier.getEntityName() );
-					}
-				}
+			// First we must discover the direct dependencies
+			for (int i = 0; i < insertInfoCount; i++) {
+				insertInfos[i].buildDirectDependencies(insertInfosByEntity);
 			}
+			// Then we can propagate child dependencies to the insert infos incoming dependencies
+			for (int i = 0; i < insertInfoCount; i++) {
+				insertInfos[i].propagateChildDependencies();
+			}
+			// Finally, we add all the transitive incoming dependencies
+			// and then group insert infos into EntityInsertGroup keyed by entity name
+			final Set<InsertInfo> visited = new HashSet<>();
+			final Map<String, EntityInsertGroup> insertInfosByEntityName = new LinkedHashMap<>();
+			for (int i = 0; i < insertInfoCount; i++) {
+				final InsertInfo insertInfo = insertInfos[i];
+				insertInfo.buildTransitiveDependencies( visited );
 
-			boolean sorted = false;
-
-			long maxIterations = latestBatches.size() * latestBatches.size();
-			long iterations = 0;
-
-			sort:
+				final String entityName = insertInfo.insertAction.getPersister().getEntityName();
+				EntityInsertGroup entityInsertGroup = insertInfosByEntityName.get(entityName);
+				if (entityInsertGroup == null) {
+					insertInfosByEntityName.put(entityName, entityInsertGroup = new EntityInsertGroup(entityName));
+				}
+				entityInsertGroup.add(insertInfo);
+			}
+			// Now we can go through the EntityInsertGroups and schedule all the ones
+			// for which we have already scheduled all the dependentEntityNames
+			final Set<String> scheduledEntityNames = new HashSet<>(insertInfosByEntityName.size());
+			int schedulePosition = 0;
+			int lastScheduleSize;
 			do {
-				// Examine each entry in the batch list, sorting them based on parent/child association
-				// as depicted by the dependency graph.
-				iterations++;
-
-				for ( int i = 0; i < latestBatches.size(); i++ ) {
-					BatchIdentifier batchIdentifier = latestBatches.get( i );
-
-					// Iterate next batches and make sure that children types are after parents.
-					// Since the outer loop looks at each batch entry individually and the prior loop will reorder
-					// entries as well, we need to look and verify if the current batch is a child of the next
-					// batch or if the current batch is seen as a parent or child of the next batch.
-					for ( int j = i + 1; j < latestBatches.size(); j++ ) {
-						BatchIdentifier nextBatchIdentifier = latestBatches.get( j );
-
-						if ( batchIdentifier.hasParent( nextBatchIdentifier ) ) {
-							if ( nextBatchIdentifier.hasParent( batchIdentifier ) ) {
-								//cycle detected, no need to continue
-								break sort;
-							}
-
-							latestBatches.remove( batchIdentifier );
-							latestBatches.add( j, batchIdentifier );
-
-							continue sort;
-						}
+				lastScheduleSize = scheduledEntityNames.size();
+				final Iterator<EntityInsertGroup> iterator = insertInfosByEntityName.values().iterator();
+				while (iterator.hasNext()) {
+					final EntityInsertGroup insertGroup = iterator.next();
+					if (scheduledEntityNames.containsAll(insertGroup.dependentEntityNames)) {
+						schedulePosition = schedule(insertInfos, insertGroup.insertInfos, schedulePosition);
+						scheduledEntityNames.add(insertGroup.entityName);
+						iterator.remove();
 					}
 				}
-				sorted = true;
+				// we try to schedule entity groups over and over again, until we can't schedule any further
+			} while (lastScheduleSize != scheduledEntityNames.size());
+			if ( !insertInfosByEntityName.isEmpty() ) {
+				LOG.warn("The batch containing " + insertions.size() + " statements could not be sorted. " +
+					"This might indicate a circular entity relationship.");
 			}
-			while ( !sorted && iterations <= maxIterations );
-
-			if ( iterations > maxIterations ) {
-				LOG.warn( "The batch containing "
-						+ latestBatches.size()
-						+ " statements could not be sorted after "
-						+ maxIterations
-						+ " iterations. "
-						+ "This might indicate a circular entity relationship." );
-			}
-
-			// Now, rebuild the insertions list. There is a batch for each entry in the name list.
-			if ( sorted ) {
-				insertions.clear();
-
-				for ( BatchIdentifier rootIdentifier : latestBatches ) {
-					List<AbstractEntityInsertAction> batch = actionBatches.get( rootIdentifier );
-					insertions.addAll( batch );
-				}
+			insertions.clear();
+			for (InsertInfo insertInfo : insertInfos) {
+				insertions.add(insertInfo.insertAction);
 			}
 		}
 
-		/**
-		 * Add parent and child entity names so that we know how to rearrange dependencies
-		 *
-		 * @param action The action being sorted
-		 * @param batchIdentifier The batch identifier of the entity affected by the action
-		 */
-		private void addParentChildEntityNames(AbstractEntityInsertAction action, BatchIdentifier batchIdentifier) {
-			final Object[] propertyValues = action.getState();
-			final Type[] propertyTypes = action.getPersister().getPropertyTypes();
-			final Type identifierType = action.getPersister().getIdentifierType();
-
-			for ( int i = 0; i < propertyValues.length; i++ ) {
-				Object value = propertyValues[i];
-				if ( value != null ) {
-					Type type = propertyTypes[i];
-					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, value );
+		private int schedule(InsertInfo[] insertInfos, List<InsertInfo> insertInfosToSchedule, int schedulePosition) {
+			final InsertInfo[] newInsertInfos = new InsertInfo[insertInfos.length];
+			// The bitset is there to quickly query if an index is already scheduled
+			final BitSet bitSet = new BitSet(insertInfos.length);
+			// Remember the smallest index of the insertInfosToSchedule to check if we actually need to reorder anything
+			int smallestScheduledIndex = -1;
+			// The biggestScheduledIndex is needed as upper bound for shifting elements that were replaced by insertInfosToSchedule
+			int biggestScheduledIndex = -1;
+			for (int i = 0; i < insertInfosToSchedule.size(); i++) {
+				final int index = insertInfosToSchedule.get(i).index;
+				bitSet.set(index);
+				smallestScheduledIndex = Math.min(smallestScheduledIndex, index);
+				biggestScheduledIndex = Math.max(biggestScheduledIndex, index);
+			}
+			final int nextSchedulePosition = schedulePosition + insertInfosToSchedule.size();
+			if (smallestScheduledIndex == schedulePosition && biggestScheduledIndex == nextSchedulePosition) {
+				// In this case, the order is already correct and we can skip some copying
+				return nextSchedulePosition;
+			}
+			// The index to which we start to shift elements that appear within the range of [schedulePosition, nextSchedulePosition)
+			int shiftSchedulePosition = nextSchedulePosition;
+			for (int i = 0; i < insertInfosToSchedule.size(); i++) {
+				final InsertInfo insertInfoToSchedule = insertInfosToSchedule.get(i);
+				final int targetSchedulePosition = schedulePosition + i;
+				newInsertInfos[targetSchedulePosition] = insertInfoToSchedule;
+				insertInfoToSchedule.index = targetSchedulePosition;
+				final InsertInfo oldInsertInfo = insertInfos[targetSchedulePosition];
+				// Move the insert info previously located at the target schedule position to the current shift position
+				if (!bitSet.get(targetSchedulePosition)) {
+					oldInsertInfo.index = shiftSchedulePosition;
+					// Also set this index in the bitset to skip copying the value later, as it is considered scheduled
+					bitSet.set(targetSchedulePosition);
+					newInsertInfos[shiftSchedulePosition++]= oldInsertInfo;
 				}
 			}
-
-			if ( identifierType.isComponentType() ) {
-				CompositeType compositeType = (CompositeType) identifierType;
-				Type[] compositeIdentifierTypes = compositeType.getSubtypes();
-
-				for ( Type type : compositeIdentifierTypes ) {
-					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, type, null );
+			// We have to shift all the elements up to the biggestMovedIndex + 1
+			biggestScheduledIndex++;
+			for (int i = bitSet.nextClearBit(schedulePosition); i < biggestScheduledIndex; i++) {
+				// Only copy the old insert info over if it wasn't already scheduled
+				if (!bitSet.get(i)) {
+					final InsertInfo insertInfo = insertInfos[i];
+					insertInfo.index = shiftSchedulePosition;
+					newInsertInfos[shiftSchedulePosition++] = insertInfo;
 				}
 			}
+			// Copy over the newly reordered array part into the main array
+			System.arraycopy(newInsertInfos, schedulePosition, insertInfos, schedulePosition, biggestScheduledIndex - schedulePosition);
+			return nextSchedulePosition;
 		}
 
-		private void addParentChildEntityNameByPropertyAndValue(
-				AbstractEntityInsertAction action,
-				BatchIdentifier batchIdentifier,
-				Type type,
-				Object value) {
-			final MappingMetamodelImplementor mappingMetamodel = action.getSession()
-					.getFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel();
-			if ( type.isEntityType() ) {
-				final EntityType entityType = (EntityType) type;
-				final String entityName = entityType.getName();
-				final String rootEntityName = mappingMetamodel.getEntityDescriptor( entityName ).getRootEntityName();
+		public static class EntityInsertGroup {
+			private final String entityName;
+			private final List<InsertInfo> insertInfos = new ArrayList<>();
+			private final Set<String> dependentEntityNames = new HashSet<>();
 
-				if ( entityType.isOneToOne() && entityType.getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
-					if ( !entityType.isReferenceToPrimaryKey() ) {
-						batchIdentifier.getChildEntityNames().add( entityName );
-					}
-					if ( !rootEntityName.equals( entityName ) ) {
-						batchIdentifier.getChildEntityNames().add( rootEntityName );
-					}
-				}
-				else {
-					if ( !batchIdentifier.getEntityName().equals( entityName ) ) {
-						batchIdentifier.getParentEntityNames().add( entityName );
-					}
-					if ( value != null ) {
-						String valueClass = value.getClass().getName();
-						if ( !valueClass.equals( entityName ) ) {
-							batchIdentifier.getParentEntityNames().add( valueClass );
-						}
-					}
-					if ( !rootEntityName.equals( entityName ) ) {
-						batchIdentifier.getParentEntityNames().add( rootEntityName );
-					}
-				}
+			public EntityInsertGroup(String entityName) {
+				this.entityName = entityName;
 			}
-			else if ( type.isCollectionType() ) {
-				CollectionType collectionType = (CollectionType) type;
-				final SessionFactoryImplementor sessionFactory = action.getSession().getSessionFactory();
-				if ( collectionType.getElementType( sessionFactory ).isEntityType()
-						&& !mappingMetamodel.getCollectionDescriptor( collectionType.getRole() ).isManyToMany() ) {
-					final String entityName = collectionType.getAssociatedEntityName( sessionFactory );
-					final String rootEntityName = mappingMetamodel.getEntityDescriptor( entityName ).getRootEntityName();
-					batchIdentifier.getChildEntityNames().add( entityName );
-					if ( !rootEntityName.equals( entityName ) ) {
-						batchIdentifier.getChildEntityNames().add( rootEntityName );
-					}
-				}
-			}
-			else if ( type.isComponentType() && value != null ) {
-				// Support recursive checks of composite type properties for associations and collections.
-				CompositeType compositeType = (CompositeType) type;
-				final SharedSessionContractImplementor session = action.getSession();
-				Object[] componentValues = compositeType.getPropertyValues( value, session );
-				for ( int j = 0; j < componentValues.length; ++j ) {
-					Type componentValueType = compositeType.getSubtypes()[j];
-					Object componentValue = componentValues[j];
-					addParentChildEntityNameByPropertyAndValue( action, batchIdentifier, componentValueType, componentValue );
-				}
-			}
-		}
 
-		private void addToBatch(BatchIdentifier batchIdentifier, AbstractEntityInsertAction action) {
-			List<AbstractEntityInsertAction> actions = actionBatches.get( batchIdentifier );
-
-			if ( actions == null ) {
-				actions = new LinkedList<>();
-				actionBatches.put( batchIdentifier, actions );
+			public void add(InsertInfo insertInfo) {
+				insertInfos.add(insertInfo);
+				if (insertInfo.transitiveIncomingDependencies != null) {
+					for (InsertInfo dependency : insertInfo.transitiveIncomingDependencies) {
+						dependentEntityNames.add(dependency.insertAction.getEntityName());
+					}
+				}
 			}
-			actions.add( action );
+
+			@Override
+			public String toString() {
+				return "EntityInsertGroup{" +
+					"entityName='" + entityName + '\'' +
+					'}';
+			}
 		}
 
 	}

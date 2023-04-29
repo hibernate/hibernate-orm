@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
@@ -86,7 +87,11 @@ public class CompleteFetchBuilderEntityValuedModelPart
 		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
 		modelPart.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, selectableMapping.getContainingTableExpression() );
+					final TableReference tableReference = tableGroup.resolveTableReference(
+							navigablePath,
+							(ValuedModelPart) modelPart,
+							selectableMapping.getContainingTableExpression()
+					);
 					final String columnAlias = columnAliases.get( selectionIndex );
 					creationStateImpl.resolveSqlSelection(
 							ResultsHelper.resolveSqlExpression(

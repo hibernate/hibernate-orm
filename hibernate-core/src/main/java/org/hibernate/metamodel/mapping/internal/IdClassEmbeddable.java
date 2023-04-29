@@ -139,7 +139,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						selectableMappings,
 						inverseMappingType,
 						creationProcess,
-						valueMapping.getDeclaringType(),
+						this,
 						this.attributeMappings
 				)
 		);

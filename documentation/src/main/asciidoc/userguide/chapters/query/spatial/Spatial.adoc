@@ -62,10 +62,9 @@ For Maven, you need to add the following dependency:
 ====
 
 
-Not all databases support all the functions defined by Hibernate Spatial.
-The table below provides an overview of the functions provided by each database. If the function is defined in the
-https://portal.opengeospatial.org/files/?artifact_id=829[Simple Feature Specification], the description references the
-relevant section.
+Hibernate defines common spatial functions uniformly over all databases. These
+functions largely correspond to those specified in the https://portal.opengeospatial.org/files/?artifact_id=829[Simple Feature Specification]. Not all databases are capable of supporting every function, however. The table below details which functions are supported by various database systems.
+
 
 :yes: icon:check[role="green"]
 :no: icon:times[role="red"]
@@ -110,13 +109,31 @@ relevant section.
 |================================
 ^(1)^ Argument Geometries need to have the same dimensionality.
 
-[NOTE]
-====
-In previous versions Hibernate Spatial registered the SFS spatial functions under names without the "st_" prefix. Starting
-from Hibernate 6.0, the functions are registered both with and without the prefix. So, e.g., both `st_dimension(geom)` and
-`dimension(geom)` will work.
-====
+Note that beyond the common spatial functions mentioned above, Hibernate may define additional spatial functions for each database dialect. These will be documented in the
+Database notes below.
+
 === Database notes
+[[spatial-configuration-dialect-postgresql]]
+Postgresql::
+
+The Postgresql dialect has support for the https://postgis.net/[Postgis spatial extension], but not the Geometric types mentioned in the
+https://www.postgresql.org/docs/current/datatype-geometric.html[Postgresql documentation].
+
+In addition to the common spatial functions, the following functions are supported:
+
+
+.Additional Postgis function support
+
+|===
+| Function | Purpose | Syntax | Postgis function operator
+|`distance_2d` | 2D distance between two geometries|`distance_2d(geom,geom)`| https://postgis.net/docs/manual-3.3/geometry_distance_knn.html[\<\->]
+|`distance_2d_bbox` | 2D distance between the bounding boxes of tow geometries|`distance_2d_bbox(geom,geom)`| https://postgis.net/docs/manual-3.3/geometry_distance_box.html[<#>]
+|`distance_cpa` | 3D distance between 2 trajectories|`distance_cpa(geom,geom)`| https://postgis.net/docs/manual-3.3/geometry_distance_cpa.html[\|=\|]
+|`distance_centroid_nd` | the n-D distance between the centroids of the bounding boxes of two geometries|`distance_centroid_nd(geom,geom)`| https://postgis.net/docs/manual-3.3/geometry_distance_centroid_nd.html[<\<\->>]
+
+|===
+
+
 
 [[spatial-configuration-dialect-mysql]]
 MySQL::
@@ -201,10 +218,6 @@ create transform for db2gse.st_geometry db2_program (
 
 [[spatial-types]]
 === Types
-
-Hibernate Spatial comes with the following types:
-
-TODO
 
 It suffices to declare a property as either a JTS or a Geolatte-geom `Geometry` and Hibernate Spatial will map it using the
 relevant type.

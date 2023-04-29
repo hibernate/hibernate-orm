@@ -11,9 +11,12 @@ import java.util.List;
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
@@ -88,8 +91,7 @@ public interface DomainResultCreationState {
 	ModelPart resolveModelPart(NavigablePath navigablePath);
 
 	default Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
-		final EntityIdentifierMapping identifierMapping = fetchParent.getEntityValuedModelPart()
-				.getEntityMappingType()
+		final EntityIdentifierMapping identifierMapping = fetchParent.getReferencedMappingContainer()
 				.getIdentifierMapping();
 		return fetchParent.generateFetchableFetch(
 				(Fetchable) identifierMapping,

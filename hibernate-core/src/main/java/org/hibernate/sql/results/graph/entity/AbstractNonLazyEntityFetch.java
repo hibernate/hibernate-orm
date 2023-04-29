@@ -22,20 +22,18 @@ import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
  */
 public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent implements EntityFetch {
 	private final FetchParent fetchParent;
-	private final EntityValuedFetchable referencedModelPart;
 
 	public AbstractNonLazyEntityFetch(
 			FetchParent fetchParent,
 			EntityValuedFetchable fetchedPart,
 			NavigablePath navigablePath) {
-		super( fetchedPart.getEntityMappingType(), navigablePath );
-		this.referencedModelPart = fetchedPart;
+		super( fetchedPart, navigablePath );
 		this.fetchParent = fetchParent;
 	}
 
 	@Override
 	public EntityValuedFetchable getEntityValuedModelPart() {
-		return referencedModelPart;
+		return (EntityValuedFetchable) getFetchContainer();
 	}
 
 	@Override

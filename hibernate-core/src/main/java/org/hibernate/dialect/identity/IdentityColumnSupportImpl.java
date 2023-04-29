@@ -16,6 +16,8 @@ import org.hibernate.id.insert.GetGeneratedKeysDelegate;
  */
 public class IdentityColumnSupportImpl implements IdentityColumnSupport {
 
+	public static final IdentityColumnSupportImpl INSTANCE = new IdentityColumnSupportImpl();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return false;

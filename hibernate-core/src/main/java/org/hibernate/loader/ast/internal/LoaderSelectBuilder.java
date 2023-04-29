@@ -40,6 +40,7 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -65,6 +66,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -99,13 +101,12 @@ public class LoaderSelectBuilder {
 	private static final Logger log = Logger.getLogger( LoaderSelectBuilder.class );
 
 	/**
-	 * Create an SQL AST select-statement for a select by unique key based on matching one-or-more keys
+	 * Create an SQL AST select-statement for loading by unique key
 	 *
 	 * @param loadable The root Loadable
 	 * @param partsToSelect Parts of the Loadable to select.  Null/empty indicates to select the Loadable itself
 	 * @param restrictedPart Part to base the where-clause restriction on
 	 * @param cachedDomainResult DomainResult to be used.  Null indicates to generate the DomainResult
-	 * @param numberOfKeysToLoad How many keys should be accounted for in the where-clause restriction?
 	 * @param loadQueryInfluencers Any influencers (entity graph, fetch profile) to account for
 	 * @param lockOptions Pessimistic lock options to apply
 	 * @param jdbcParameterConsumer Consumer for all JdbcParameter references created
@@ -116,7 +117,6 @@ public class LoaderSelectBuilder {
 			List<? extends ModelPart> partsToSelect,
 			ModelPart restrictedPart,
 			DomainResult<?> cachedDomainResult,
-			int numberOfKeysToLoad,
 			LoadQueryInfluencers loadQueryInfluencers,
 			LockOptions lockOptions,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
@@ -127,7 +127,7 @@ public class LoaderSelectBuilder {
 				partsToSelect,
 				singletonList( restrictedPart ),
 				cachedDomainResult,
-				numberOfKeysToLoad,
+				1,
 				loadQueryInfluencers,
 				lockOptions,
 				determineGraphTraversalState( loadQueryInfluencers ),
@@ -136,6 +136,86 @@ public class LoaderSelectBuilder {
 		);
 
 		return process.generateSelect();
+	}
+
+	/**
+	 * Create a select-statement (SQL AST) for loading by multiple keys using a single SQL ARRAY parameter
+	 */
+	public static SelectStatement createSelectBySingleArrayParameter(
+			Loadable loadable,
+			BasicValuedModelPart restrictedPart,
+			LoadQueryInfluencers influencers,
+			LockOptions lockOptions,
+			JdbcParameter jdbcArrayParameter,
+			SessionFactoryImplementor sessionFactory) {
+		final LoaderSelectBuilder builder = new LoaderSelectBuilder(
+				sessionFactory,
+				loadable,
+				null,
+				singletonList( restrictedPart ),
+				null,
+				-1,
+				influencers,
+				lockOptions,
+				determineGraphTraversalState( influencers ),
+				true,
+				null
+		);
+
+		final QuerySpec rootQuerySpec = new QuerySpec( true );
+		final LoaderSqlAstCreationState sqlAstCreationState = builder.createSqlAstCreationState( rootQuerySpec );
+
+		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
+		final TableGroup rootTableGroup = builder.buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
+
+		final DomainResult<?> domainResult = loadable.createDomainResult(
+				rootNavigablePath,
+				rootTableGroup,
+				null,
+				sqlAstCreationState
+		);
+
+		final List<DomainResult<?>> domainResults = singletonList( domainResult );
+
+		applyArrayParamRestriction(
+				rootQuerySpec,
+				rootNavigablePath,
+				rootTableGroup,
+				restrictedPart,
+				jdbcArrayParameter,
+				sqlAstCreationState
+		);
+
+
+		if ( loadable instanceof PluralAttributeMapping ) {
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+			builder.applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
+			builder.applyOrdering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
+		}
+		else {
+			builder.applyFiltering( rootQuerySpec, rootTableGroup, (Restrictable) loadable, sqlAstCreationState );
+		}
+
+		return new SelectStatement( rootQuerySpec, domainResults );
+	}
+
+	private static void applyArrayParamRestriction(
+			QuerySpec rootQuerySpec,
+			NavigablePath rootNavigablePath,
+			TableGroup rootTableGroup,
+			BasicValuedModelPart restrictedPart,
+			JdbcParameter jdbcArrayParameter,
+			LoaderSqlAstCreationState sqlAstCreationState) {
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final SelectableMapping restrictedPartMapping = restrictedPart.getSelectable( 0 );
+		final NavigablePath restrictionPath = rootNavigablePath.append( restrictedPart.getNavigableRole().getNavigableName() );
+		final TableReference tableReference = rootTableGroup.resolveTableReference( restrictionPath, restrictedPartMapping.getContainingTableExpression() );
+		final ColumnReference columnRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
+				tableReference,
+				restrictedPartMapping
+		);
+
+		rootQuerySpec.applyPredicate( new InArrayPredicate( columnRef, jdbcArrayParameter ) );
 	}
 
 	/**
@@ -372,90 +452,24 @@ public class LoaderSelectBuilder {
 		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
+		final LoaderSqlAstCreationState sqlAstCreationState = createSqlAstCreationState( rootQuerySpec );
+
+		final TableGroup rootTableGroup = buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
+
 		final List<DomainResult<?>> domainResults;
-
-		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
-				rootQuerySpec,
-				new SqlAliasBaseManager(),
-				new SimpleFromClauseAccessImpl(),
-				lockOptions,
-				this::visitFetches,
-				forceIdentifierSelection,
-				loadQueryInfluencers,
-				creationContext
-		);
-
-		final TableGroup rootTableGroup = loadable.createRootTableGroup(
-				true,
-				rootNavigablePath,
-				null,
-				null,
-				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState
-		);
-
-		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
-		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
-		registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), rootTableGroup );
-
 		if ( partsToSelect != null && !partsToSelect.isEmpty() ) {
-			domainResults = new ArrayList<>( partsToSelect.size() );
-			for ( ModelPart part : partsToSelect ) {
-				final NavigablePath navigablePath = rootNavigablePath.append( part.getPartName() );
-				final TableGroup tableGroup;
-				if ( part instanceof TableGroupJoinProducer ) {
-					final TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) part;
-					final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
-							navigablePath,
-							rootTableGroup,
-							null,
-							null,
-							SqlAstJoinType.LEFT,
-							true,
-							false,
-							sqlAstCreationState
-					);
-					rootTableGroup.addTableGroupJoin( tableGroupJoin );
-					tableGroup = tableGroupJoin.getJoinedGroup();
-					sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
-					registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), tableGroup );
-				}
-				else {
-					tableGroup = rootTableGroup;
-				}
-				domainResults.add(
-						part.createDomainResult(
-								navigablePath,
-								tableGroup,
-								null,
-								sqlAstCreationState
-						)
-				);
-			}
+			domainResults = buildRequestedDomainResults( rootNavigablePath, sqlAstCreationState, rootTableGroup );
+		}
+		else if ( this.cachedDomainResult != null ) {
+			domainResults = singletonList( this.cachedDomainResult );
 		}
 		else {
-			// use the one passed to the constructor or create one (maybe always create and pass?)
-			//		allows re-use as they can be re-used to save on memory - they
-			//		do not share state between
-
-			//noinspection rawtypes
-			final DomainResult domainResult;
-
-			if ( this.cachedDomainResult != null ) {
-				// used the one passed to the constructor
-				domainResult = this.cachedDomainResult;
-			}
-			else {
-				// create one
-				domainResult = loadable.createDomainResult(
-						rootNavigablePath,
-						rootTableGroup,
-						null,
-						sqlAstCreationState
-				);
-			}
-
-			//noinspection unchecked
+			final DomainResult<?> domainResult = loadable.createDomainResult(
+					rootNavigablePath,
+					rootTableGroup,
+					null,
+					sqlAstCreationState
+			);
 			domainResults = singletonList( domainResult );
 		}
 
@@ -485,19 +499,87 @@ public class LoaderSelectBuilder {
 		return new SelectStatement( rootQuerySpec, domainResults );
 	}
 
+	private List<DomainResult<?>> buildRequestedDomainResults(NavigablePath rootNavigablePath, LoaderSqlAstCreationState sqlAstCreationState, TableGroup rootTableGroup) {
+		final List<DomainResult<?>> domainResults;
+		domainResults = new ArrayList<>( partsToSelect.size() );
+		for ( ModelPart part : partsToSelect ) {
+			final NavigablePath navigablePath = rootNavigablePath.append( part.getPartName() );
+			final TableGroup tableGroup;
+			if ( part instanceof TableGroupJoinProducer ) {
+				final TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) part;
+				final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
+						navigablePath,
+						rootTableGroup,
+						null,
+						null,
+						SqlAstJoinType.LEFT,
+						true,
+						false,
+						sqlAstCreationState
+				);
+				rootTableGroup.addTableGroupJoin( tableGroupJoin );
+				tableGroup = tableGroupJoin.getJoinedGroup();
+				sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+				registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), tableGroup );
+			}
+			else {
+				tableGroup = rootTableGroup;
+			}
+			domainResults.add(
+					part.createDomainResult(
+							navigablePath,
+							tableGroup,
+							null,
+							sqlAstCreationState
+					)
+			);
+		}
+		return domainResults;
+	}
+
+	private TableGroup buildRootTableGroup(NavigablePath rootNavigablePath, QuerySpec rootQuerySpec, LoaderSqlAstCreationState sqlAstCreationState) {
+		final TableGroup rootTableGroup = loadable.createRootTableGroup(
+				true,
+				rootNavigablePath,
+				null,
+				null,
+				() -> rootQuerySpec::applyPredicate,
+				sqlAstCreationState
+		);
+
+		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
+		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
+		registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), rootTableGroup );
+		return rootTableGroup;
+	}
+
+	private LoaderSqlAstCreationState createSqlAstCreationState(QuerySpec rootQuerySpec) {
+		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
+				rootQuerySpec,
+				new SqlAliasBaseManager(),
+				new SimpleFromClauseAccessImpl(),
+				lockOptions,
+				this::visitFetches,
+				forceIdentifierSelection,
+				loadQueryInfluencers,
+				creationContext
+		);
+		return sqlAstCreationState;
+	}
+
 	private void applyRestriction(
 			QuerySpec rootQuerySpec,
 			NavigablePath rootNavigablePath,
 			TableGroup rootTableGroup,
-			ModelPart modelPart,
+			ModelPart restrictedPart,
 			int numberColumns,
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			LoaderSqlAstCreationState sqlAstCreationState) {
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final NavigablePath navigablePath = rootNavigablePath.append( modelPart.getNavigableRole().getNavigableName() );
+		final NavigablePath navigablePath = rootNavigablePath.append( restrictedPart.getNavigableRole().getNavigableName() );
 
 		if ( numberColumns == 1 ) {
-			modelPart.forEachSelectable(
+			restrictedPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference(
 								navigablePath, selection.getContainingTableExpression() );
@@ -532,7 +614,7 @@ public class LoaderSelectBuilder {
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( numberColumns );
 
-			modelPart.forEachSelectable(
+			restrictedPart.forEachSelectable(
 					(columnIndex, selection) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 						columnReferences.add(
@@ -544,7 +626,7 @@ public class LoaderSelectBuilder {
 					}
 			);
 
-			final SqlTuple tuple = new SqlTuple( columnReferences, modelPart );
+			final SqlTuple tuple = new SqlTuple( columnReferences, restrictedPart );
 			final InListPredicate predicate = new InListPredicate( tuple );
 
 			for ( int i = 0; i < numberOfKeysToLoad; i++ ) {
@@ -555,7 +637,7 @@ public class LoaderSelectBuilder {
 					jdbcParameterConsumer.accept( jdbcParameter );
 					tupleParams.add( jdbcParameter );
 				}
-				final SqlTuple paramTuple = new SqlTuple( tupleParams, modelPart );
+				final SqlTuple paramTuple = new SqlTuple( tupleParams, restrictedPart );
 				predicate.addExpression( paramTuple );
 			}
 
@@ -974,18 +1056,7 @@ public class LoaderSelectBuilder {
 				creationContext
 		);
 
-		final TableGroup rootTableGroup = loadable.createRootTableGroup(
-				true,
-				rootNavigablePath,
-				null,
-				null,
-				() -> rootQuerySpec::applyPredicate,
-				sqlAstCreationState
-		);
-
-		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
-		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
-		registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), rootTableGroup );
+		final TableGroup rootTableGroup = buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
 
 		// generate and apply the restriction
 		applySubSelectRestriction(

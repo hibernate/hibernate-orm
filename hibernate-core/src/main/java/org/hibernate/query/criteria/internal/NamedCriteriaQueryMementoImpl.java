@@ -86,7 +86,7 @@ public class NamedCriteriaQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public SqmStatement getSqmStatement() {
+	public SqmStatement<?> getSqmStatement() {
 		return sqmStatement;
 	}
 

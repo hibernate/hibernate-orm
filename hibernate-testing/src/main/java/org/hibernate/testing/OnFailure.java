@@ -15,8 +15,10 @@ import java.lang.annotation.Target;
  * Annotation used to identify a method as a callback to be executed on test failures.
  *
  * @author Steve Ebersole
+ * @deprecated No replacement with JUnit 5 at the moment.
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( ElementType.METHOD )
+@Deprecated(forRemoval = true)
 public @interface OnFailure {
 }

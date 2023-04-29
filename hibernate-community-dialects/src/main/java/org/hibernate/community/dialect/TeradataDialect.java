@@ -618,7 +618,7 @@ public class TeradataDialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isBefore( 14 )
 				? super.getIdentityColumnSupport()
-				: new Teradata14IdentityColumnSupport();
+				: Teradata14IdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

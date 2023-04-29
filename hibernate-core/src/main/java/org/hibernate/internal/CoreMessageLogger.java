@@ -26,6 +26,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.env.internal.LobCreationLogging;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.spi.CollectionKey;
@@ -1358,8 +1359,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Using default transaction strategy (direct JDBC transactions)", id = 399)
 	void usingDefaultTransactionStrategy();
 
+	/**
+	 * @deprecated Use {@link org.hibernate.dialect.DialectLogging#usingDialect} instead
+	 */
 	@LogMessage(level = INFO)
 	@Message(value = "Using dialect: %s", id = 400)
+	@Deprecated
 	void usingDialect(Dialect dialect);
 
 	@LogMessage(level = ERROR)
@@ -1425,21 +1430,40 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Closing un-released batch", id = 420)
 	void closingUnreleasedBatch();
 
+
+	/**
+	 * @deprecated Use {@link LobCreationLogging#disablingContextualLOBCreation} instead
+	 */
 	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as %s is true", id = 421)
+	@Deprecated
 	void disablingContextualLOBCreation(String nonContextualLobCreation);
 
+	/**
+	 * @deprecated Use {@link LobCreationLogging#disablingContextualLOBCreationSinceConnectionNull} instead
+	 */
 	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as connection was null", id = 422)
+	@Deprecated
 	void disablingContextualLOBCreationSinceConnectionNull();
 
+	/**
+	 * @deprecated Use {@link LobCreationLogging#nonContextualLobCreationJdbcVersion} instead
+	 */
 	@LogMessage(level = DEBUG)
-	@Message(value = "Disabling contextual LOB creation as JDBC driver reported JDBC version [%s] less than 4",
-			id = 423)
+	@Message(value = "Disabling contextual LOB creation as JDBC driver reported JDBC version [%s] less than 4", id = 423)
+	@Deprecated
 	void disablingContextualLOBCreationSinceOldJdbcVersion(int jdbcMajorVersion);
 
+	/**
+	 * @deprecated Use {@link LobCreationLogging#contextualClobCreationFailed} instead
+	 *
+	 * @see LobCreationLogging#contextualClobCreationFailed
+	 * @see LobCreationLogging#contextualNClobCreationFailed
+	 */
 	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as createClob() method threw error : %s", id = 424)
+	@Deprecated
 	void disablingContextualLOBCreationSinceCreateClobFailed(Throwable t);
 
 	@LogMessage(level = INFO)

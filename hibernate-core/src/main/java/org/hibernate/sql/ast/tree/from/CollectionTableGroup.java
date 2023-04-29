@@ -79,15 +79,13 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
-		final TableReference tableReference = super.getTableReferenceInternal(
+		final TableReference tableReference = super.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 		if ( tableReference != null ) {
@@ -97,7 +95,6 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 			final TableReference indexTableReference = indexTableGroup.getTableReference(
 					navigablePath,
 					tableExpression,
-					allowFkOptimization,
 					resolve
 			);
 			if ( indexTableReference != null ) {
@@ -108,7 +105,6 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 			final TableReference elementTableReference = elementTableGroup.getTableReference(
 					navigablePath,
 					tableExpression,
-					allowFkOptimization,
 					resolve
 			);
 			if ( elementTableReference != null ) {

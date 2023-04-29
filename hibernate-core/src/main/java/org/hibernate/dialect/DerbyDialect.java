@@ -131,6 +131,11 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
+	}
+
+	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case TINYINT:
@@ -563,7 +568,7 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new DB2IdentityColumnSupport();
+		return DB2IdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -626,6 +631,14 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
+	}
+
+	@Override
+	public int getInExpressionCountLimit() {
+		// Derby does not have a limit on the number of expressions/parameters per-se (it may, I just
+		// don't know). It does, however, have a limit on the size of the SQL text it will accept as a
+		// PreparedStatement; so let's limit this to a sensible value to avoid that.
+		return 512;
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -158,5 +159,38 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	 */
 	default boolean isInitialized() {
 		return true;
+	}
+
+	default TableGroup findCompatibleJoinedGroup(
+			TableGroupJoinProducer joinProducer,
+			SqlAstJoinType requestedJoinType) {
+		// We don't look into nested table group joins as that wouldn't be "compatible"
+		for ( TableGroupJoin join : getTableGroupJoins() ) {
+			// Compatibility obviously requires the same model part but also join type compatibility
+			// Note that if the requested join type is left, we can also use an existing inner join
+			// The other case, when the requested join type is inner and there is an existing left join,
+			// is not compatible though because the cardinality is different.
+			// We could reuse the join though if we alter the join type to INNER, but that's an optimization for later
+			final SqlAstJoinType joinType = join.getJoinType();
+			if ( join.getJoinedGroup().getModelPart() == joinProducer
+					&& ( requestedJoinType == joinType || requestedJoinType == SqlAstJoinType.LEFT && joinType == SqlAstJoinType.INNER ) ) {
+				// If there is an existing inner join, we can always use that as a new join can never produce results
+				// regardless of the join type or predicate since the LHS is the same table group
+				// If this is a left join though, we have to check if the predicate is simply the association predicate
+				if ( joinType == SqlAstJoinType.INNER || joinProducer.isSimpleJoinPredicate( join.getPredicate() ) ) {
+					return join.getJoinedGroup();
+				}
+			}
+		}
+		return null;
+	}
+
+	default TableGroupJoin findTableGroupJoin(TableGroup tableGroup) {
+		for ( TableGroupJoin join : getTableGroupJoins() ) {
+			if ( join.getJoinedGroup() == tableGroup ) {
+				return join;
+			}
+		}
+		return null;
 	}
 }

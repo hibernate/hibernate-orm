@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.annotations.onetoone;
 
 import java.util.Iterator;
+import java.util.List;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -27,6 +28,10 @@ import org.hibernate.orm.test.annotations.Customer;
 import org.hibernate.orm.test.annotations.Discount;
 import org.hibernate.orm.test.annotations.Passport;
 import org.hibernate.orm.test.annotations.Ticket;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -414,6 +419,36 @@ public class OneToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 					.setParameter( "owner", customer ).getSingleResult();
 
 			assertThat( p, is( notNullValue() ) );
+		} );
+	}
+
+	@Test
+	public void testDereferenceOneToOne() {
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			Client c1 = new Client();
+			c1.setName( "C1" );
+			Client c2 = new Client();
+			c2.setName( "C2" );
+			Client c3 = new Client();
+			c3.setName( "C3" );
+			Address a = new Address();
+			a.setCity( "Vienna" );
+			c1.setAddress( a );
+			c3.setAddress( new Address() );
+			session.persist( c1 );
+			session.persist( c2 );
+			session.persist( c3 );
+		} );
+
+		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			JpaCriteriaQuery<Client> query = cb.createQuery( Client.class );
+			JpaRoot<Client> root = query.from( Client.class );
+			query.where( root.get( "address" ).get( "city" ).isNull() );
+			List<Client> resultList = session.createQuery( query ).getResultList();
+
+			assertEquals( 1, resultList.size() );
+			assertEquals( "C3", resultList.get( 0 ).getName() );
 		} );
 	}
 	

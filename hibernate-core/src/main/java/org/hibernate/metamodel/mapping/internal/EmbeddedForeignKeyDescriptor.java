@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -24,9 +25,11 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
@@ -35,10 +38,12 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -172,6 +177,27 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
+	public boolean isKeyPart(ValuedModelPart modelPart) {
+		final EmbeddableValuedModelPart keyPart = getKeyPart();
+		if ( this == modelPart || keyPart == modelPart ) {
+			return true;
+		}
+		else if ( keyPart instanceof NonAggregatedIdentifierMapping ) {
+			final AttributeMappingsList attributeMappings = ( (NonAggregatedIdentifierMapping) keyPart ).getVirtualIdEmbeddable()
+					.getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				if ( modelPart == attributeMappings.get( i ) ) {
+					return true;
+				}
+			}
+		}
+		else if ( keyPart.isVirtual() && keyPart.getNumberOfFetchables() == 1 ) {
+			return keyPart.getFetchable( 0 ) == modelPart;
+		}
+		return false;
+	}
+
+	@Override
 	public Side getKeySide() {
 		return keySide;
 	}
@@ -209,15 +235,35 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
+		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath,
-				tableGroup,
+				targetTableGroup,
 				null,
-				keyTable,
-				keySide.getModelPart(),
+				Nature.KEY,
+				fetchParent,
+				creationState
+		);
+	}
+
+	@Override
+	public DomainResult<?> createKeyDomainResult(
+			NavigablePath navigablePath,
+			TableGroup targetTableGroup,
+			Nature fromSide,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState) {
+		assert fromSide == Nature.TARGET
+				? targetTableGroup.getTableReference( navigablePath, associationKey.getTable(), false ) != null
+				: isTargetTableGroup( targetTableGroup );
+		return createDomainResult(
+				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
+				targetTableGroup,
+				null,
+				Nature.KEY,
 				fetchParent,
 				creationState
 		);
@@ -226,68 +272,55 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public DomainResult<?> createTargetDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( navigablePath, targetTable ) != null;
-
+		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath,
-				tableGroup,
+				targetTableGroup,
 				null,
-				targetTable,
-				targetSide.getModelPart(),
+				Nature.TARGET,
 				fetchParent,
 				creationState
 		);
 	}
 
 	@Override
-	public DomainResult<?> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			Nature side,
-			FetchParent fetchParent,
-			DomainResultCreationState creationState) {
-		if ( side == Nature.KEY ) {
-			return createDomainResult(
-					navigablePath,
-					tableGroup,
-					null,
-					keyTable,
-					keySide.getModelPart(),
-					fetchParent,
-					creationState
-			);
-		}
-		else {
-			return createDomainResult(
-					navigablePath,
-					tableGroup,
-					null,
-					targetTable,
-					targetSide.getModelPart(),
-					fetchParent,
-					creationState
-			);
-		}
-	}
-
-	@Override
 	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
-			TableGroup tableGroup,
+			TableGroup targetTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		assert isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath,
-				tableGroup,
+				targetTableGroup,
 				resultVariable,
-				keyTable,
-				keySide.getModelPart(),
+				Nature.KEY,
 				null,
 				creationState
 		);
+	}
+
+	private boolean isTargetTableGroup(TableGroup tableGroup) {
+		tableGroup = getUnderlyingTableGroup( tableGroup );
+		final TableGroupProducer tableGroupProducer;
+		if ( tableGroup instanceof OneToManyTableGroup ) {
+			tableGroupProducer = (TableGroupProducer) ( (OneToManyTableGroup) tableGroup ).getElementTableGroup()
+					.getModelPart();
+		}
+		else {
+			tableGroupProducer = (TableGroupProducer) tableGroup.getModelPart();
+		}
+		return tableGroupProducer.containsTableReference( targetSide.getModelPart().getContainingTableExpression() );
+	}
+
+	private static TableGroup getUnderlyingTableGroup(TableGroup tableGroup) {
+		if ( tableGroup instanceof VirtualTableGroup ) {
+			tableGroup = getUnderlyingTableGroup( ( (VirtualTableGroup) tableGroup ).getUnderlyingTableGroup() );
+		}
+		return tableGroup;
 	}
 
 	@Override
@@ -311,15 +344,17 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
-			String columnContainingTable,
-			EmbeddableValuedModelPart modelPart,
+			Nature nature,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
+		final EmbeddableValuedModelPart modelPart;
 		final NavigablePath resultNavigablePath;
-		if ( modelPart == keySide.getModelPart() ) {
+		if ( nature == Nature.KEY ) {
+			modelPart = keySide.getModelPart();
 			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.PART_NAME );
 		}
 		else {
+			modelPart = targetSide.getModelPart();
 			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME );
 		}
 
@@ -343,7 +378,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 		final Nature currentForeignKeyResolvingKey = creationState.getCurrentlyResolvingForeignKeyPart();
 		try {
-			creationState.setCurrentlyResolvingForeignKeyPart( keySide.getModelPart() == modelPart ? Nature.KEY : Nature.TARGET );
+			creationState.setCurrentlyResolvingForeignKeyPart( nature );
 			return new EmbeddableForeignKeyResultImpl<>(
 					resultNavigablePath,
 					modelPart,
@@ -364,13 +399,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			SqlAstCreationState creationState) {
 		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
-				targetTable,
-				false
+				targetTable
 		);
 		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
 				null,
-				keyTable,
-				false
+				keyTable
 		);
 
 		return generateJoinPredicate( lhsTableReference, rhsTableKeyReference, creationState );

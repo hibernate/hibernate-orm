@@ -41,7 +41,7 @@ import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Fetch;
-import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -58,11 +58,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
-import org.hibernate.loader.ast.internal.CollectionLoaderBatchKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
 import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
+import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -145,7 +145,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  */
 @Internal
 public abstract class AbstractCollectionPersister
-		implements CollectionPersister, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, DeprecatedCollectionStuff {
+		implements CollectionPersister, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, FetchProfileAffectee, DeprecatedCollectionStuff {
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
@@ -232,6 +232,7 @@ public abstract class AbstractCollectionPersister
 	private CollectionElementLoaderByIndex collectionElementLoaderByIndex;
 
 	private PluralAttributeMapping attributeMapping;
+	private volatile Map<String, Fetch.Style> affectingFetchProfiles;
 
 
 	@Deprecated(since = "6.0")
@@ -738,13 +739,32 @@ public abstract class AbstractCollectionPersister
 		);
 	}
 
+	private CollectionLoader reusableCollectionLoader;
+
 	protected CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
-		final int batchSize = getBatchSize();
-		if ( batchSize > 1 ) {
-			return new CollectionLoaderBatchKey( attributeMapping, batchSize, loadQueryInfluencers, getFactory() );
+		if ( canUseReusableCollectionLoader( loadQueryInfluencers ) ) {
+			if ( reusableCollectionLoader == null ) {
+				reusableCollectionLoader = generateCollectionLoader( LoadQueryInfluencers.NONE );
+			}
+			return reusableCollectionLoader;
 		}
 
+		// create a one-off
+		return generateCollectionLoader( loadQueryInfluencers );
+	}
 
+	private boolean canUseReusableCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+		// we can reuse it so long as none of the enabled influencers affect it
+		return attributeMapping.isNotAffectedByInfluencers( loadQueryInfluencers );
+	}
+
+	private CollectionLoader generateCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+		final int batchSize = getBatchSize();
+		if ( batchSize > 1 ) {
+			return getFactory().getServiceRegistry()
+					.getService( BatchLoaderFactory.class )
+					.createCollectionBatchLoader( batchSize, loadQueryInfluencers, attributeMapping, getFactory() );
+		}
 		return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, getFactory() );
 	}
 
@@ -1503,6 +1523,29 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
+	public void registerAffectingFetchProfile(String fetchProfileName, Fetch.Style fetchStyle) {
+		if ( affectingFetchProfiles == null ) {
+			affectingFetchProfiles = new HashMap<>();
+		}
+		affectingFetchProfiles.put( fetchProfileName, fetchStyle );
+	}
+
+	@Override
+	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
+		if ( affectingFetchProfiles == null ) {
+			return false;
+		}
+
+		for ( Map.Entry<String, Fetch.Style> entry : affectingFetchProfiles.entrySet() ) {
+			if ( influencers.isFetchProfileEnabled( entry.getKey() ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		if ( influencers.hasEnabledFilters() ) {
 			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
@@ -1516,21 +1559,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
 		// todo (6.0) : anything to do here?
-		return false;
-	}
-
-	@Override
-	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
-		if ( influencers.hasEnabledFetchProfiles() ) {
-			for ( String enabledFetchProfileName : influencers.getEnabledFetchProfileNames() ) {
-				final FetchProfile fetchProfile = getFactory().getFetchProfile( enabledFetchProfileName );
-				final Fetch fetch = fetchProfile.getFetchByRole( getRole() );
-				if ( fetch != null && fetch.getStyle() == Fetch.Style.JOIN ) {
-					return true;
-				}
-			}
-		}
-
 		return false;
 	}
 

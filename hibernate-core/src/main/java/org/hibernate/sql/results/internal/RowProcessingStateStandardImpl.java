@@ -7,6 +7,8 @@
 package org.hibernate.sql.results.internal;
 
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -15,6 +17,7 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -139,6 +142,11 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	}
 
 	@Override
+	public boolean isScrollResult(){
+		return executionContext.isScrollResult();
+	}
+
+	@Override
 	public Callback getCallback() {
 		return executionContext.getCallback();
 	}
@@ -146,6 +154,31 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	@Override
 	public CollectionKey getCollectionKey() {
 		return executionContext.getCollectionKey();
+	}
+
+	@Override
+	public Object getEntityInstance() {
+		return executionContext.getEntityInstance();
+	}
+
+	@Override
+	public Object getEntityId() {
+		return executionContext.getEntityId();
+	}
+
+	@Override
+	public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+		executionContext.registerLoadingEntityEntry( entityKey, entry );
+	}
+
+	@Override
+	public void afterStatement(LogicalConnectionImplementor logicalConnection) {
+		executionContext.afterStatement( logicalConnection );
+	}
+
+	@Override
+	public boolean hasQueryExecutionToBeAddedToStatistics() {
+		return executionContext.hasQueryExecutionToBeAddedToStatistics();
 	}
 
 	@Override

@@ -145,7 +145,7 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 	}
 
 	@Override
-	public SqmStatement getSqmStatement() {
+	public SqmStatement<?> getSqmStatement() {
 		return null;
 	}
 

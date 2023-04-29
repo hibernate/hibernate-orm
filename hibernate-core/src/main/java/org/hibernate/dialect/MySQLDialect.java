@@ -72,7 +72,6 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
@@ -113,7 +112,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
  * A {@linkplain Dialect SQL dialect} for MySQL 5.7 and above.
@@ -1202,7 +1200,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new MySQLIdentityColumnSupport();
+		return MySQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

@@ -6,8 +6,7 @@
 Some high-level Hibernate class diagrams
 
 :numbered:
-== Query
-
+== org.hibernate.query.Query
 
 [plantuml,query,png]
 .Query class diagram
@@ -46,5 +45,30 @@ NativeQueryImpl .right.> NativeQueryImplementor
 
 @enduml
 ----
+== org.hibernate.spi.NavigablePath
+
+[plantuml,path,png]
+.DotIdentifierSequence class diagram
+----
+@startuml
+
+interface DotIdentifierSequence
+class NavigablePath
+class TreatedNavigablePath extends NavigablePath
+class EntityIdentifierNavigablePath extends NavigablePath
+class o.h.metamodel.mapping.SelectablePath
+interface o.h.query.hql.internal.FullyQualifiedReflectivePathSource extends DotIdentifierSequence, o.h.query.hql.spi.SemanticPathPart
+class o.h.query.hql.internal.FullyQualifiedReflectivePath
+class o.h.query.hql.internal.FullyQualifiedReflectivePathTerminal
+
+NavigablePath .up.> DotIdentifierSequence
+o.h.metamodel.mapping.SelectablePath .up.> DotIdentifierSequence
+o.h.query.hql.internal.FullyQualifiedReflectivePath .up.> o.h.query.hql.internal.FullyQualifiedReflectivePathSource
+o.h.query.hql.internal.FullyQualifiedReflectivePathTerminal -up-|> o.h.query.hql.internal.FullyQualifiedReflectivePath
+
+@enduml
+----
+
+
 
 ==

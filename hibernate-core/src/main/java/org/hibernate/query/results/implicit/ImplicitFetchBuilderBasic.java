@@ -97,7 +97,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 		final Expression expression = ResultsHelper.resolveSqlExpression(
 				creationStateImpl,
 				jdbcResultsMetadata,
-				parentTableGroup.resolveTableReference( fetchPath, table ),
+				parentTableGroup.resolveTableReference( fetchPath, fetchable, table ),
 				fetchable,
 				column
 		);

@@ -16,9 +16,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -165,7 +163,7 @@ public class QuerySqmImpl<R>
 				(s) -> queryEngine.getHqlTranslator().translate( hql, expectedResultType )
 		);
 
-		this.sqm = hqlInterpretation.getSqmStatement();
+		this.sqm = (SqmStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
@@ -184,7 +182,7 @@ public class QuerySqmImpl<R>
 			NamedCriteriaQueryMementoImpl memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
-		this( memento.getSqmStatement(), resultType, session );
+		this( (SqmStatement<R>) memento.getSqmStatement(), resultType, session );
 
 		applyOptions( memento );
 	}
@@ -202,7 +200,7 @@ public class QuerySqmImpl<R>
 		this.hql = hql;
 		this.resultType = resultType;
 
-		this.sqm = hqlInterpretation.getSqmStatement();
+		this.sqm = (SqmStatement<R>) hqlInterpretation.getSqmStatement();
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
@@ -508,7 +506,6 @@ public class QuerySqmImpl<R>
 
 	protected List<R> doList() {
 		verifySelect();
-		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
 
 		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
 		final boolean containsCollectionFetches = sqmStatement.containsCollectionFetches() || AppliedGraphs.containsCollectionFetches(
@@ -629,7 +626,6 @@ public class QuerySqmImpl<R>
 
 	@Override
 	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
-		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
@@ -1073,46 +1069,6 @@ public class QuerySqmImpl<R>
 	public SqmQueryImplementor<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic) {
 		getQueryOptions().applyGraph( (RootGraphImplementor<?>) graph, semantic );
 		return this;
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// select execution
-
-	@Override
-	public List<R> list() {
-		return super.list();
-	}
-
-	@Override
-	public ScrollableResultsImplementor<R> scroll() {
-		return super.scroll();
-	}
-
-	@Override
-	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		return super.scroll( scrollMode );
-	}
-
-	@Override
-	public Stream<R> stream() {
-		//noinspection unchecked
-		return super.stream();
-	}
-
-	@Override
-	public R uniqueResult() {
-		return super.uniqueResult();
-	}
-
-	@Override
-	public R getSingleResult() {
-		return super.getSingleResult();
-	}
-
-	@Override
-	public Optional<R> uniqueResultOptional() {
-		return super.uniqueResultOptional();
 	}
 
 

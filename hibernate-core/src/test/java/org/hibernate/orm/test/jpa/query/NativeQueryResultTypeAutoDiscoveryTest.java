@@ -286,6 +286,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Test
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps DATE and TIME to TIMESTAMP")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "EDB maps DATE and TIME to TIMESTAMP")
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Sybase maps DATE and TIME to TIMESTAMP", matchSubTypes = true)
 	public void dateTimeTypes() {
 		createEntityManagerFactory(
 				DateEntity.class,

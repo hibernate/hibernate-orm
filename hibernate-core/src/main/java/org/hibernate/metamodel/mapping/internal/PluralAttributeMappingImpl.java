@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -75,7 +76,7 @@ import org.jboss.logging.Logger;
  */
 public class PluralAttributeMappingImpl
 		extends AbstractAttributeMapping
-		implements PluralAttributeMapping, FetchOptions {
+		implements PluralAttributeMapping, FetchProfileAffectee, FetchOptions {
 	private static final Logger log = Logger.getLogger( PluralAttributeMappingImpl.class );
 
 	/**
@@ -892,6 +893,13 @@ public class PluralAttributeMappingImpl
 	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEntityGraph( influencers );
+	}
+
+	@Override
+	public void registerAffectingFetchProfile(String fetchProfileName, org.hibernate.engine.profile.Fetch.Style fetchStyle) {
+		if ( collectionDescriptor instanceof FetchProfileAffectee ) {
+			( (FetchProfileAffectee) collectionDescriptor ).registerAffectingFetchProfile( fetchProfileName, fetchStyle );
+		}
 	}
 
 	@Override

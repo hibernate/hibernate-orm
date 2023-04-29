@@ -80,6 +80,17 @@ public class BatchFetchQueueHelper {
 		batchFetchQueue.removeBatchLoadableEntityKey( entityKey );
 	}
 
+	/**
+	 * Remove the entity key with the specified {@code id} and {@code persister} from
+	 * the batch loadable entities {@link BatchFetchQueue}.
+	 */
+	public static void removeBatchLoadableEntityKey(
+			EntityKey entityKey,
+			SharedSessionContractImplementor session) {
+		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		batchFetchQueue.removeBatchLoadableEntityKey( entityKey );
+	}
+
 	public static void removeBatchLoadableEntityKey(
 			Object id,
 			EntityMappingType entityMappingType,

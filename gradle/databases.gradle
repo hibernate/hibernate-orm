@@ -82,6 +82,15 @@ ext {
                         'jdbc.url'   : 'jdbc:jtds:sybase://' + dbHost + ':5000/hibernate_orm_test;maxStatements=0;cacheMetaData=false',
                         'connection.init_sql' : 'set ansinull on'
                 ],
+                sybase_jconn_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.SybaseASEDialect',
+                        'jdbc.driver': 'com.sybase.jdbc4.jdbc.SybDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        // Disable prepared statement caching to avoid issues with changing schemas
+                        'jdbc.url'   : 'jdbc:sybase:Tds:' + dbHost + ':5000/hibernate_orm_test',
+                        'connection.init_sql' : 'set ansinull on set quoted_identifier on'
+                ],
                 mysql : [
                         'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
                         'jdbc.driver': 'com.mysql.cj.jdbc.Driver',

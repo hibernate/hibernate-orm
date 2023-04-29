@@ -165,15 +165,13 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		final TableReference tableReference = elementTableGroup.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 		if ( tableReference != null || indexTableGroup == null
@@ -184,7 +182,6 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 		return indexTableGroup.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 	}

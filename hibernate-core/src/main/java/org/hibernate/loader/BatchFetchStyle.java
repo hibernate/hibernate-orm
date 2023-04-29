@@ -7,6 +7,9 @@
 package org.hibernate.loader;
 
 import java.util.Locale;
+
+import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -16,7 +19,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  *
- * @deprecated see {@link BatchLoadSizingStrategy} instead
+ * @deprecated see {@link MultiKeyLoadSizingStrategy} instead
  */
 @Deprecated(since = "6.0")
 public enum BatchFetchStyle {

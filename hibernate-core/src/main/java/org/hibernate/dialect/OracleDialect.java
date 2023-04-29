@@ -81,7 +81,6 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
@@ -153,7 +152,7 @@ public class OracleDialect extends Dialect {
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private static final String yqmSelect =
-		"( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') + ( LEAST( EXTRACT( DAY FROM %2$s ), EXTRACT( DAY FROM LAST_DAY( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') ) ) ) - 1 ) )";
+		"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
 
 	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
@@ -166,8 +165,11 @@ public class OracleDialect extends Dialect {
 			: new LegacyOracleLimitHandler( getVersion() );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
-	/** is it an Autonomous Database Cloud Service? */
+	// Is it an Autonomous Database Cloud Service?
 	protected final boolean autonomous;
+
+	// Is MAX_STRING_SIZE set to EXTENDED?
+	protected final boolean extended;
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -176,21 +178,35 @@ public class OracleDialect extends Dialect {
 	public OracleDialect(DatabaseVersion version) {
 		super(version);
 		autonomous = false;
+		extended = false;
 	}
 
 	public OracleDialect(DialectResolutionInfo info) {
 		super(info);
 		autonomous = isAutonomous( info.getDatabaseMetadata() );
+		extended = isExtended( info.getDatabaseMetadata() );
+	}
+
+	protected static boolean isExtended(DatabaseMetaData databaseMetaData) {
+		if ( databaseMetaData != null ) {
+			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
+				statement.execute( "select cast('string' as varchar2(32000)) from dual" );
+				// succeeded, so MAX_STRING_SIZE == EXTENDED
+				return true;
+			}
+			catch ( SQLException ex ) {
+				// failed, so MAX_STRING_SIZE == STANDARD
+				// Ignore
+			}
+		}
+		return false;
 	}
 
 	protected static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
-				// v$pdbs is available to any user on Autonomous database
-				try ( ResultSet rs = s.executeQuery( "select p.name, t.region, t.base_size, t.service, t.infrastructure\n" +
-						"from v$pdbs p, JSON_TABLE(p.cloud_identity, '$' COLUMNS (region path '$.REGION', base_size number path '$.BASE_SIZE', service path '$.SERVICE', infrastructure path '$.INFRASTRUCTURE')) t" ) ) {
-					return rs.next();
-				}
+			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
+				return statement.executeQuery( "select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JSON')" )
+						.next();
 			}
 			catch ( SQLException ex ) {
 				// Ignore
@@ -298,14 +314,13 @@ public class OracleDialect extends Dialect {
 	@Override
 	public int getMaxVarcharLength() {
 		//with MAX_STRING_SIZE=EXTENDED, changes to 32_767
-		//TODO: provide a way to change this without a custom Dialect
-		return 4000;
+		return extended ? 32_767 : 4000;
 	}
 
 	@Override
 	public int getMaxVarbinaryLength() {
 		//with MAX_STRING_SIZE=EXTENDED, changes to 32_767
-		return 2000;
+		return extended ? 32_767 : 2000;
 	}
 
 	@Override
@@ -860,7 +875,7 @@ public class OracleDialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isBefore( 12 )
 				? super.getIdentityColumnSupport()
-				: new Oracle12cIdentityColumnSupport();
+				: Oracle12cIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -1451,5 +1466,10 @@ public class OracleDialect extends Dialect {
 			SessionFactoryImplementor factory) {
 		final OracleSqlAstTranslator<?> translator = new OracleSqlAstTranslator<>( factory, optionalTableUpdate );
 		return translator.createMergeOperation( optionalTableUpdate );
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 }

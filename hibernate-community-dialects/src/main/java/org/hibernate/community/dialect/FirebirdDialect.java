@@ -625,7 +625,7 @@ public class FirebirdDialect extends Dialect {
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return getVersion().isBefore( 3, 0 )
 				? super.getIdentityColumnSupport()
-				: new FirebirdIdentityColumnSupport();
+				: FirebirdIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

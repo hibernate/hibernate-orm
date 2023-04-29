@@ -16,6 +16,9 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.function.SybaseTruncFunction;
+import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.SybaseJconnIdentityColumnSupport;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -26,6 +29,7 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.internal.JTDSCallableStatementSupport;
+import org.hibernate.procedure.internal.SybaseCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -49,10 +53,11 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -66,13 +71,18 @@ import jakarta.persistence.TemporalType;
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
 
-	protected final boolean jtdsDriver;
-
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
 
 	//All Sybase dialects share an IN list size limit.
-	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
+	private static final int IN_LIST_SIZE_LIMIT = 250000;
+
+	private static final int PARAM_COUNT_LIMIT = 2000;
+
 	private final UniqueDelegate uniqueDelegate = new SkipNullableUniqueDelegate(this);
+	private final SybaseDriverKind driverKind;
+
+	@Deprecated(forRemoval = true)
+	protected final boolean jtdsDriver;
 
 	public SybaseDialect() {
 		this( MINIMUM_VERSION );
@@ -80,18 +90,23 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	public SybaseDialect(DatabaseVersion version) {
 		super(version);
-		jtdsDriver = true;
+		this.driverKind = SybaseDriverKind.OTHER;
+		this.jtdsDriver = true;
 	}
 
 	public SybaseDialect(DialectResolutionInfo info) {
 		super(info);
-		jtdsDriver = info.getDriverName() != null
-				&& info.getDriverName().contains( "jTDS" );
+		this.driverKind = SybaseDriverKind.determineKind( info );
+		this.jtdsDriver = driverKind == SybaseDriverKind.JTDS;
 	}
 
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
+	}
+
+	public SybaseDriverKind getDriverKind() {
+		return driverKind;
 	}
 
 	@Override
@@ -160,7 +175,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public int getInExpressionCountLimit() {
-		return PARAM_LIST_SIZE_LIMIT;
+		return IN_LIST_SIZE_LIMIT;
+	}
+
+	@Override
+	public int getParameterCountLimit() {
+		return PARAM_COUNT_LIMIT;
 	}
 
 	@Override
@@ -168,7 +188,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		super.contributeTypes(typeContributions, serviceRegistry);
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-		if ( jtdsDriver ) {
+		if ( driverKind == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
@@ -179,19 +199,31 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, ClobJdbcType.CLOB_BINDING );
 		}
 		else {
-			// Some Sybase drivers cannot support getClob.  See HHH-7889
+			// jConnect driver only conditionally supports getClob/getNClob depending on a server setting. See
+			//		- https://help.sap.com/doc/e3cb6844decf441e85e4670e1cf48c9b/16.0.3.6/en-US/SAP_jConnect_Programmers_Reference_en.pdf
+			// 		- https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc20155.1570/html/OS_SDK_nf/CIHJFDDH.htm
+			//		- HHH-7889
 			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.STREAM_BINDING_EXTRACTING );
+			jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.STREAM_BINDING_EXTRACTING );
 		}
 
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
 
 		// Sybase requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
-						ObjectNullAsNullTypeJdbcType.INSTANCE,
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
+		typeContributions.contributeType(
+				new NullType(
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
@@ -202,7 +234,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
-		return jtdsDriver ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
+		return driverKind == SybaseDriverKind.JTDS ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
 	}
 
 	@Override
@@ -346,8 +378,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
+		// Default to MIXED because the jconn driver doesn't seem to report anything useful
+		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		if ( dbMetaData == null ) {
-			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
@@ -356,12 +389,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( jtdsDriver ) {
-			return NameQualifierSupport.CATALOG;
-		}
-		else {
-			return NameQualifierSupport.BOTH;
-		}
+		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
+		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
+		return NameQualifierSupport.CATALOG;
 	}
 
 	@Override
@@ -371,7 +401,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return jtdsDriver ? JTDSCallableStatementSupport.INSTANCE : super.getCallableStatementSupport();
+		return driverKind == SybaseDriverKind.JTDS ?
+				JTDSCallableStatementSupport.INSTANCE :
+				SybaseCallableStatementSupport.INSTANCE;
+	}
+
+	@Override
+	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+		// Only the jTDS driver supports named parameters properly
+		return driverKind == SybaseDriverKind.JTDS && super.supportsNamedParameters( databaseMetaData );
 	}
 
 	@Override
@@ -382,5 +420,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public boolean supportsAlterColumnType() {
 		return true;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return driverKind == SybaseDriverKind.JTDS
+				? AbstractTransactSQLIdentityColumnSupport.INSTANCE
+				: SybaseJconnIdentityColumnSupport.INSTANCE;
 	}
 }

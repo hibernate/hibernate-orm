@@ -26,6 +26,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -649,6 +650,18 @@ abstract public class DialectFeatureChecks {
 			catch (Exception e) {
 				return false;
 			}
+		}
+	}
+
+	public static class IsJtds implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;
+		}
+	}
+
+	public static class SupportsCommentOn implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsCommentOn();
 		}
 	}
 }

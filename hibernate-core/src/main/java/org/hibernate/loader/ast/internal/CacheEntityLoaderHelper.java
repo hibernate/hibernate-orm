@@ -123,6 +123,32 @@ public class CacheEntityLoaderHelper {
 	 *
 	 * @throws HibernateException Generally indicates problems applying a lock-mode.
 	 */
+	public static PersistenceContextEntry loadFromSessionCacheStatic(
+			final LoadEvent event,
+			final EntityKey keyToLoad,
+			final LoadEventListener.LoadType options) {
+		return INSTANCE.loadFromSessionCache( event, keyToLoad, options );
+	}
+
+	/**
+	 * Attempts to locate the entity in the session-level cache.
+	 * <p>
+	 * If allowed to return nulls, then if the entity happens to be found in
+	 * the session cache, we check the entity type for proper handling
+	 * of entity hierarchies.
+	 * <p>
+	 * If checkDeleted was set to true, then if the entity is found in the
+	 * session-level cache, its current status within the session cache
+	 * is checked to see if it has previously been scheduled for deletion.
+	 *
+	 * @param event The load event
+	 * @param keyToLoad The EntityKey representing the entity to be loaded.
+	 * @param options The load options.
+	 *
+	 * @return The entity from the session-level cache, or null.
+	 *
+	 * @throws HibernateException Generally indicates problems applying a lock-mode.
+	 */
 	public PersistenceContextEntry loadFromSessionCache(
 			final LoadEvent event,
 			final EntityKey keyToLoad,

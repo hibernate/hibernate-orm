@@ -28,7 +28,7 @@ public interface NamedSqmQueryMemento extends NamedQueryMemento {
 
 	String getHqlString();
 
-	SqmStatement getSqmStatement();
+	SqmStatement<?> getSqmStatement();
 
 	Integer getFirstResult();
 

@@ -82,7 +82,7 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Basi
 		final String mappedTable = referencedModelPart.getContainingTableExpression();
 
 		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( parent.getNavigablePath() );
-		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, mappedTable );
+		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, referencedModelPart, mappedTable );
 
 		final String selectedAlias;
 		final int jdbcPosition;

@@ -12,6 +12,9 @@ import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
  * @author Andrea Boriero
  */
 public class CUBRIDIdentityColumnSupport extends IdentityColumnSupportImpl {
+
+	public static final CUBRIDIdentityColumnSupport INSTANCE = new CUBRIDIdentityColumnSupport();
+
 	@Override
 	public boolean supportsIdentityColumns() {
 		return true;

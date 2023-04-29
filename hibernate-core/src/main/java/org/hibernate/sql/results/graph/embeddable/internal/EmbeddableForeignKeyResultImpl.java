@@ -10,6 +10,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -98,7 +99,9 @@ public class EmbeddableForeignKeyResultImpl<T>
 		final EmbeddableInitializer initializer = creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),
-				() -> new EmbeddableResultInitializer( this, parentAccess, creationState )
+				() -> getReferencedModePart() instanceof NonAggregatedIdentifierMapping
+						? new NonAggregatedIdentifierMappingResultInitializer( this, null, creationState )
+						: new EmbeddableResultInitializer( this, null, creationState )
 		).asEmbeddableInitializer();
 
 		assert initializer != null;

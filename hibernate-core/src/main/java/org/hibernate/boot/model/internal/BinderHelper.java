@@ -444,7 +444,7 @@ public class BinderHelper {
 		// properties for each column.)
 		if ( columnOwner instanceof PersistentClass ) {
 			PersistentClass persistentClass = (PersistentClass) columnOwner;
-			for ( Property property : persistentClass.getProperties() ) {
+			for ( Property property : persistentClass.getReferenceableProperties() ) {
 				matchColumnsByProperty( property, columnsToProperty );
 			}
 			if ( persistentClass.hasIdentifierProperty() ) {

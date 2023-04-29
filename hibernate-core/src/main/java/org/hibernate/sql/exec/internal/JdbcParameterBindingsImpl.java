@@ -55,7 +55,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 
 			final Dialect dialect = factory.getJdbcServices().getDialect();
 			final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
-			final int inExprLimit = dialect.getInExpressionCountLimit();
+			final int inExprLimit = dialect.getParameterCountLimit();
 
 			for ( ParameterOccurrence occurrence : parameterOccurrences ) {
 				final QueryParameterImplementor<?> param = occurrence.getParameter();

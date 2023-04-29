@@ -6,6 +6,9 @@
  */
 package org.hibernate.type;
 
+import java.util.Locale;
+
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 
@@ -21,7 +24,8 @@ public enum WrapperArrayHandling {
 	/**
 	 * Throw an informative and actionable error if the types are used explicitly in the domain model
 	 *
-	 * @implNote The default behavior
+	 * @implNote The default behavior; unless {@linkplain AvailableSettings#JPA_COMPLIANCE JPA compliance}
+	 * is enabled - see {@linkplain #PICK}
 	 */
 	DISALLOW,
 
@@ -42,5 +46,37 @@ public enum WrapperArrayHandling {
 	 * @apiNote Hibernate recommends users who want the legacy semantic change the domain model to use
 	 * {@code byte[]} and {@code char[]} rather than using this setting.
 	 */
-	LEGACY
+	LEGACY,
+
+	/**
+	 * Hibernate will pick between {@linkplain #ALLOW} and {@linkplain #LEGACY} depending on
+	 * whether the Dialect supports SQL {@code ARRAY} types.
+	 *
+	 * @implNote The default if {@linkplain AvailableSettings#JPA_COMPLIANCE JPA compliance} is enabled.
+	 */
+	PICK;
+
+	public static WrapperArrayHandling interpretExternalSetting(Object value) {
+		if ( value == null ) {
+			throw new IllegalArgumentException( "Null value passed to convert" );
+		}
+
+		return value instanceof WrapperArrayHandling
+				? (WrapperArrayHandling) value
+				: valueOf( value.toString().toUpperCase( Locale.ROOT ) );
+	}
+
+	/**
+	 * Form of {@link #interpretExternalSetting(Object)} which allows incoming {@code null} values and
+	 * simply returns {@code null}.  Useful for chained resolutions
+	 */
+	public static WrapperArrayHandling interpretExternalSettingLeniently(Object value) {
+		if ( value == null ) {
+			return null;
+		}
+
+		return value instanceof WrapperArrayHandling
+				? (WrapperArrayHandling) value
+				: valueOf( value.toString().toUpperCase( Locale.ROOT ) );
+	}
 }

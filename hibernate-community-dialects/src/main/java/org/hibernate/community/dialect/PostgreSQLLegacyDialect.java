@@ -148,8 +148,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class PostgreSQLLegacyDialect extends Dialect {
 
-	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
-
 	protected final PostgreSQLDriverKind driverKind;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
@@ -1007,7 +1005,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return IDENTITY_COLUMN_SUPPORT;
+		return PostgreSQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

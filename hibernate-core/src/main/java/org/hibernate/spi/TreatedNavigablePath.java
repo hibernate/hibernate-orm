@@ -8,6 +8,10 @@ package org.hibernate.spi;
 
 import org.hibernate.Incubating;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * An implementation of {@link NavigablePath} with special handling for treated paths.
  *
@@ -20,7 +24,7 @@ public class TreatedNavigablePath extends NavigablePath {
 		this( parent, entityTypeName, null );
 	}
 
-	public TreatedNavigablePath(NavigablePath parent, String entityTypeName, String alias) {
+	public TreatedNavigablePath(NavigablePath parent, String entityTypeName, @Nullable String alias) {
 		super(
 				parent,
 				"#" + entityTypeName,
@@ -32,7 +36,7 @@ public class TreatedNavigablePath extends NavigablePath {
 		assert !( parent instanceof TreatedNavigablePath );
 	}
 
-	protected static String calculateTreatedFullPath(NavigablePath parent, String localName, String alias) {
+	protected static String calculateTreatedFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
 		return alias == null
 				? "treat(" + parent + " as " + localName + ")"
 				: "treat(" + parent + " as " + localName + ")(" + alias + ")";
@@ -40,12 +44,12 @@ public class TreatedNavigablePath extends NavigablePath {
 
 	@Override
 	public NavigablePath treatAs(String entityName) {
-		return new TreatedNavigablePath( getRealParent(), entityName );
+		return new TreatedNavigablePath( castNonNull( getRealParent() ), entityName );
 	}
 
 	@Override
 	public NavigablePath treatAs(String entityName, String alias) {
-		return new TreatedNavigablePath( getRealParent(), entityName, alias );
+		return new TreatedNavigablePath( castNonNull( getRealParent() ), entityName, alias );
 	}
 
 //	@Override

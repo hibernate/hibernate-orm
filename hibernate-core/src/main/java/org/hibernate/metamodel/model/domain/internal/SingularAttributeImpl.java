@@ -16,6 +16,7 @@ import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -196,6 +197,13 @@ public class SingularAttributeImpl<D,J>
 			NavigablePath navigablePath = parent.getNavigablePath();
 			if ( parent.getReferencedPathSource() instanceof PluralPersistentAttribute<?, ?, ?> ) {
 				navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
+			}
+			if ( getDeclaringType() instanceof IdentifiableDomainType<?> ) {
+				final IdentifiableDomainType<?> declaringType = (IdentifiableDomainType<?>) getDeclaringType();
+				if ( !declaringType.hasSingleIdAttribute() ) {
+					return new EntityIdentifierNavigablePath( navigablePath, null )
+							.append( getName(), SqmCreationHelper.determineAlias( alias ) );
+				}
 			}
 			return new EntityIdentifierNavigablePath( navigablePath, SqmCreationHelper.determineAlias( alias ), getName() );
 		}

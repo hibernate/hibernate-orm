@@ -223,7 +223,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private void handleRootElementAnnotationMirrors(final Element element) {
 		List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
 		for ( AnnotationMirror mirror : annotationMirrors ) {
-			if ( !ElementKind.CLASS.equals( element.getKind() ) ) {
+			if ( !element.getKind().isClass() || ElementKind.ENUM.equals( element.getKind() ) ) {
 				continue;
 			}
 
@@ -254,7 +254,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private @Nullable MetaEntity tryGettingExistingEntityFromContext(AnnotationMirror mirror, String fqn) {
 		MetaEntity alreadyExistingMetaEntity = null;
 		if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ENTITY )
-				|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MAPPED_SUPERCLASS )) {
+				|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MAPPED_SUPERCLASS ) ) {
 			alreadyExistingMetaEntity = context.getMetaEntity( fqn );
 		}
 		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.EMBEDDABLE ) ) {

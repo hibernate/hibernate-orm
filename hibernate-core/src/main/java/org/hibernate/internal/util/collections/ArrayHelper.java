@@ -13,6 +13,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -286,33 +289,66 @@ public final class ArrayHelper {
 	public static final Type[] EMPTY_TYPE_ARRAY = {};
 	public static final byte[] EMPTY_BYTE_ARRAY = {};
 
-//	public static int[] getBatchSizes(int maxBatchSize) {
-//		int batchSize = maxBatchSize;
-//		int n = 1;
-//		while ( batchSize > 1 ) {
-//			batchSize = getNextBatchSize( batchSize );
-//			n++;
-//		}
-//		int[] result = new int[n];
-//		batchSize = maxBatchSize;
-//		for ( int i = 0; i < n; i++ ) {
-//			result[i] = batchSize;
-//			batchSize = getNextBatchSize( batchSize );
-//		}
-//		return result;
-//	}
-//
-//	private static int getNextBatchSize(int batchSize) {
-//		if ( batchSize <= 10 ) {
-//			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
-//		}
-//		else if ( batchSize / 2 < 10 ) {
-//			return 10;
-//		}
-//		else {
-//			return batchSize / 2;
-//		}
-//	}
+	/**
+	 * Calculate the batch partitions needed to handle the {@code mappedBatchSize}.
+	 *
+	 * @param mappedBatchSize The {@link org.hibernate.annotations.BatchSize batch-size}.  Internally
+	 * this is capped at {@code 256}
+	 *
+	 * @implNote The max batch size is capped at {@code 256}
+	 *
+	 * @return The upper bound for the partitions
+	 */
+	public static int[] calculateBatchPartitions(int mappedBatchSize) {
+		final SortedSet<Integer> partitionSizes = new TreeSet<>( Integer::compareTo );
+		int batchSize = Math.min( mappedBatchSize, 256 );
+		while ( batchSize > 1 ) {
+			partitionSizes.add( batchSize );
+			batchSize = calculateNextBatchPartitionLimit( batchSize );
+		}
+
+		return ArrayHelper.toIntArray( partitionSizes );
+	}
+
+	private static int calculateNextBatchPartitionLimit(int batchSize) {
+		if ( batchSize <= 10 ) {
+			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
+		}
+		else if ( batchSize / 2 < 10 ) {
+			return 10;
+		}
+		else {
+			return batchSize / 2;
+		}
+	}
+
+	public static int[] getBatchSizes(int maxBatchSize) {
+		int batchSize = maxBatchSize;
+		int n = 1;
+		while ( batchSize > 1 ) {
+			batchSize = getNextBatchSize( batchSize );
+			n++;
+		}
+		int[] result = new int[n];
+		batchSize = maxBatchSize;
+		for ( int i = 0; i < n; i++ ) {
+			result[i] = batchSize;
+			batchSize = getNextBatchSize( batchSize );
+		}
+		return result;
+	}
+
+	private static int getNextBatchSize(int batchSize) {
+		if ( batchSize <= 10 ) {
+			return batchSize - 1; //allow 9,8,7,6,5,4,3,2,1
+		}
+		else if ( batchSize / 2 < 10 ) {
+			return 10;
+		}
+		else {
+			return batchSize / 2;
+		}
+	}
 
 	private static final int SEED = 23;
 	private static final int PRIME_NUMBER = 37;
@@ -437,5 +473,10 @@ public final class ArrayHelper {
 		for ( int i = 0; i < array.length; i++ ) {
 			consumer.accept( array[ i ] );
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T[] newInstance(Class<T> elementType, int length) {
+		return (T[]) Array.newInstance( elementType, length );
 	}
 }

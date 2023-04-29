@@ -18,4 +18,11 @@ public interface BasicEntityIdentifierMapping extends SingleAttributeIdentifierM
 	default int getFetchableKey() {
 		return -1;
 	}
+
+	@Override
+	boolean isNullable();
+
+	@Override
+	boolean isInsertable();
+
 }

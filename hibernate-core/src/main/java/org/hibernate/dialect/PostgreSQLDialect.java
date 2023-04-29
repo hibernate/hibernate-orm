@@ -138,7 +138,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 public class PostgreSQLDialect extends Dialect {
 	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
 
-	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	protected final PostgreSQLDriverKind driverKind;
@@ -616,13 +615,13 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	/**
-	 * Whether PostgreSQL supports `min(uuid)`/`max(uuid)` which it doesn't by default.
-	 * Since the emulation is not very performant, this can be overridden by users which
-	 * make sure that an aggregate function for uuid exists on their database.
-	 *
+	 * Whether PostgreSQL supports {@code min(uuid)}/{@code max(uuid)},
+	 * which it doesn't by default. Since the emulation does not perform well,
+	 * this method may be overridden by any user who ensures that aggregate
+	 * functions for handling uuids exist in the database.
+	 * <p>
 	 * The following definitions can be used for this purpose:
-	 *
-	 * <code>
+	 * <code><pre>
 	 * create or replace function min(uuid, uuid)
 	 *     returns uuid
 	 *     immutable parallel safe
@@ -658,7 +657,7 @@ public class PostgreSQLDialect extends Dialect {
 	 *     parallel = safe,
 	 *     sortop = operator (&gt;)
 	 *     );
-	 * </code>
+	 * </pre></code>
 	 */
 	protected boolean supportsMinMaxOnUuid() {
 		return false;
@@ -986,7 +985,9 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return getVersion().isSameOrAfter( 11 ) ? PostgreSQLCallableStatementSupport.INSTANCE : PostgreSQLCallableStatementSupport.V10_INSTANCE;
+		return getVersion().isSameOrAfter( 11 )
+				? PostgreSQLCallableStatementSupport.INSTANCE
+				: PostgreSQLCallableStatementSupport.V10_INSTANCE;
 	}
 
 	@Override
@@ -1009,7 +1010,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return IDENTITY_COLUMN_SUPPORT;
+		return PostgreSQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -1305,9 +1306,7 @@ public class PostgreSQLDialect extends Dialect {
 		super.augmentRecognizedTableTypes( tableTypesList );
 		tableTypesList.add( "MATERIALIZED VIEW" );
 
-		/*
-			PostgreSQL 10 and later adds support for Partition table.
-		 */
+		//PostgreSQL 10 and later adds support for Partition table.
 		tableTypesList.add( "PARTITIONED TABLE" );
 	}
 
@@ -1319,15 +1318,14 @@ public class PostgreSQLDialect extends Dialect {
 
 	/**
 	 * Allow for extension points to override this only
-	 * @param typeContributions
-	 * @param serviceRegistry
 	 */
 	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
-		// <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
-		// For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
+		// For discussion of BLOB support in Postgres, as of 8.4, see:
+		//     http://jdbc.postgresql.org/documentation/84/binary-data.html
+		// For how this affects Hibernate, see:
+		//     http://in.relation.to/15492.lace
 
 		// Force BLOB binding.  Otherwise, byte[] fields annotated
 		// with @Lob will attempt to use
@@ -1339,9 +1337,8 @@ public class PostgreSQLDialect extends Dialect {
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
+		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE ); // HHH-9562
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
-			// HHH-9562
-			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
@@ -1356,7 +1353,6 @@ public class PostgreSQLDialect extends Dialect {
 			}
 		}
 		else {
-			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );

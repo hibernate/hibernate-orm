@@ -65,6 +65,6 @@ public class DB2390Dialect extends DB2LegacyDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new DB2zIdentityColumnSupport();
+		return DB2zIdentityColumnSupport.INSTANCE;
 	}
 }

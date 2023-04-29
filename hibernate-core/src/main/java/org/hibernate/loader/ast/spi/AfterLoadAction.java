@@ -7,11 +7,25 @@
 package org.hibernate.loader.ast.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.Loadable;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 
 /**
+ * An action to be performed after an entity has been loaded.  E.g. applying locks
+ *
 * @author Steve Ebersole
 */
 public interface AfterLoadAction {
-	void afterLoad(SharedSessionContractImplementor session, Object entity, Loadable persister);
+	/**
+	 * The action trigger - the {@code entity} is being loaded
+	 */
+	void afterLoad(Object entity, EntityMappingType entityMappingType, SharedSessionContractImplementor session);
+
+	/**
+	 * @deprecated Use the {@linkplain #afterLoad(Object, EntityMappingType, SharedSessionContractImplementor) updated form}
+	 */
+	@SuppressWarnings("removal")
+	@Deprecated(since = "6", forRemoval = true)
+	default void afterLoad(SharedSessionContractImplementor session, Object entity, org.hibernate.persister.entity.Loadable persister) {
+		afterLoad( entity, persister, session );
+	}
 }

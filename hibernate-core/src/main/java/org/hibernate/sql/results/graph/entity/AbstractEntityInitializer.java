@@ -52,6 +52,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableAssembler;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -524,6 +525,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				// look to see if another initializer from a parent load context or an earlier
 				// initializer is already loading the entity
 				entityInstance = resolveInstance( entityIdentifier, existingLoadingEntry, rowProcessingState );
+				if ( isOwningInitializer && !isInitialized && identifierAssembler instanceof EmbeddableAssembler ) {
+					// If this is the owning initializer and the returned object is not initialized,
+					// this means that the entity instance was just instantiated.
+					// In this case, we want to call "assemble" and hence "initializeInstance" on the initializer
+					// for possibly non-aggregated identifier mappings, so inject the virtual id representation
+					identifierAssembler.assemble( rowProcessingState );
+				}
 			}
 
 			upgradeLockMode( rowProcessingState );

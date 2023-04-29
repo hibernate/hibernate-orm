@@ -15,9 +15,11 @@ import java.lang.annotation.Target;
  * A documentation annotation for notating what JIRA issue is being tested.
  *
  * @author Steve Ebersole
+ * @deprecated Use {@link org.hibernate.testing.orm.junit.JiraKey} instead.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })
+@Deprecated(forRemoval = true)
 public @interface TestForIssue {
 	/**
 	 * The key of a JIRA issue tested.

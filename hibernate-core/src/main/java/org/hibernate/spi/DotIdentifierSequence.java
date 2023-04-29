@@ -9,7 +9,9 @@ package org.hibernate.spi;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.internal.util.NullnessUtil;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A compound name.
@@ -26,7 +28,7 @@ public interface DotIdentifierSequence {
 	 * Given the sequence {@code a.b.c}, returns the sequence
 	 * {@code a.b}.
 	 */
-	DotIdentifierSequence getParent();
+	@Nullable DotIdentifierSequence getParent();
 
 	/**
 	 * The name of this leaf sequence part.
@@ -64,8 +66,9 @@ public interface DotIdentifierSequence {
 	}
 
 	private void parts(List<DotIdentifierSequence> list) {
-		if ( getParent() != null ) {
-			getParent().parts( list );
+		DotIdentifierSequence parent = getParent();
+		if ( parent != null ) {
+			parent.parts( list );
 		}
 		list.add( this );
 	}

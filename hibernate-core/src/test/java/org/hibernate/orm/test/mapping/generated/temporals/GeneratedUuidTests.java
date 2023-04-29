@@ -19,6 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.tuple.GenerationTiming;
@@ -27,6 +28,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = GeneratedUuidTests.GeneratedUuidEntity.class )
 @SessionFactory
+@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Driver or DB omit trailing zero bytes of a varbinary, making this test fail intermittently")
 public class GeneratedUuidTests {
 	@Test
 	public void test(SessionFactoryScope scope) {

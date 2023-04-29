@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -71,15 +72,15 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	protected TableReference getTableReferenceInternal(
+	public TableReference getTableReference(
 			NavigablePath navigablePath,
+			ValuedModelPart modelPart,
 			String tableExpression,
-			boolean allowFkOptimization,
 			boolean resolve) {
 		final TableReference tableReference = correlatedTableGroup.getTableReference(
 				navigablePath,
+				modelPart,
 				tableExpression,
-				allowFkOptimization,
 				resolve
 		);
 		if ( tableReference != null ) {
@@ -88,7 +89,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, modelPart, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}
@@ -96,7 +97,39 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
+					.getTableReference( navigablePath, modelPart, tableExpression, resolve );
+			if ( groupTableReference != null ) {
+				return groupTableReference;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean resolve) {
+		final TableReference tableReference = correlatedTableGroup.getTableReference(
+				navigablePath,
+				tableExpression,
+				resolve
+		);
+		if ( tableReference != null ) {
+			return tableReference;
+		}
+		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
+			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
+					.getPrimaryTableReference()
+					.getTableReference( navigablePath, tableExpression, resolve );
+			if ( groupTableReference != null ) {
+				return groupTableReference;
+			}
+		}
+		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
+			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
+					.getPrimaryTableReference()
+					.getTableReference( navigablePath, tableExpression, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
 			}

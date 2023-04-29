@@ -12,6 +12,7 @@ import java.util.Set;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
@@ -196,6 +197,17 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	}
 
 	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
+
+		// should be an instance of the associated entity
+		return getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( value );
+	}
+
+
+	@Override
 	public EntityFetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
@@ -296,7 +308,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 	@Override
 	public boolean containsTableReference(String tableExpression) {
-		return getCollectionDescriptor().getAttributeMapping().containsTableReference( tableExpression );
+		return getAssociatedEntityMappingType().containsTableReference( tableExpression );
 	}
 
 	public TableGroup createTableGroupInternal(
@@ -307,7 +319,6 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			final SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
 		final SqlAstCreationContext creationContext = creationState.getCreationContext();
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 		final TableReference primaryTableReference = getEntityMappingType().createPrimaryTableReference(
 				sqlAliasBase,
 				creationState
@@ -377,7 +388,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				final CompositeType compositeType;
 				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
-					ToOneAttributeMapping.addPrefixedPropertyNames(
+					ToOneAttributeMapping.addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							compositeType.getPropertyNames()[0],
 							compositeType.getSubtypes()[0],
@@ -385,36 +396,24 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 					);
 					ToOneAttributeMapping.addPrefixedPropertyNames(
 							targetKeyPropertyNames,
-							ForeignKeyDescriptor.PART_NAME,
-							compositeType.getSubtypes()[0],
+							EntityIdentifierMapping.ROLE_LOCAL_NAME,
+							propertyType,
 							creationProcess.getCreationContext().getSessionFactory()
 					);
 				}
 				else {
-					ToOneAttributeMapping.addPrefixedPropertyNames(
+					ToOneAttributeMapping.addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							null,
-							propertyType,
-							creationProcess.getCreationContext().getSessionFactory()
-					);
-					ToOneAttributeMapping.addPrefixedPropertyNames(
-							targetKeyPropertyNames,
-							ForeignKeyDescriptor.PART_NAME,
 							propertyType,
 							creationProcess.getCreationContext().getSessionFactory()
 					);
 				}
 			}
 			else {
-				ToOneAttributeMapping.addPrefixedPropertyNames(
+				ToOneAttributeMapping.addPrefixedPropertyPaths(
 						targetKeyPropertyNames,
 						entityBinding.getIdentifierProperty().getName(),
-						propertyType,
-						creationProcess.getCreationContext().getSessionFactory()
-				);
-				ToOneAttributeMapping.addPrefixedPropertyNames(
-						targetKeyPropertyNames,
-						ForeignKeyDescriptor.PART_NAME,
 						propertyType,
 						creationProcess.getCreationContext().getSessionFactory()
 				);
@@ -430,15 +429,9 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			// todo (PropertyMapping) : the problem here is timing.  this needs to be delayed.
 			final Type propertyType = ( (PropertyMapping) elementTypeDescriptor.getEntityPersister() )
 					.toType( referencedPropertyName );
-			ToOneAttributeMapping.addPrefixedPropertyNames(
+			ToOneAttributeMapping.addPrefixedPropertyPaths(
 					targetKeyPropertyNames,
 					referencedPropertyName,
-					propertyType,
-					creationProcess.getCreationContext().getSessionFactory()
-			);
-			ToOneAttributeMapping.addPrefixedPropertyNames(
-					targetKeyPropertyNames,
-					ForeignKeyDescriptor.PART_NAME,
 					propertyType,
 					creationProcess.getCreationContext().getSessionFactory()
 			);
@@ -450,7 +443,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {
 				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
-				ToOneAttributeMapping.addPrefixedPropertyNames(
+				ToOneAttributeMapping.addPrefixedPropertyPaths(
 						targetKeyPropertyNames,
 						compositeType.getPropertyNames()[0],
 						compositeType.getSubtypes()[0],
@@ -458,34 +451,34 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				);
 				ToOneAttributeMapping.addPrefixedPropertyNames(
 						targetKeyPropertyNames,
-						ForeignKeyDescriptor.PART_NAME,
-						compositeType.getSubtypes()[0],
+						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						propertyType,
 						creationProcess.getCreationContext().getSessionFactory()
 				);
 				return targetKeyPropertyNames;
 			}
 			else {
+				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
+				targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+				targetKeyPropertyNames.add( referencedPropertyName );
 				final String mapsIdAttributeName;
 				if ( ( mapsIdAttributeName = ToOneAttributeMapping.findMapsIdPropertyName( elementTypeDescriptor, referencedPropertyName ) ) != null ) {
-					final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
-					targetKeyPropertyNames.add( referencedPropertyName );
-					ToOneAttributeMapping.addPrefixedPropertyNames(
+					ToOneAttributeMapping.addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							mapsIdAttributeName,
 							elementTypeDescriptor.getEntityPersister().getIdentifierType(),
 							creationProcess.getCreationContext().getSessionFactory()
 					);
-					ToOneAttributeMapping.addPrefixedPropertyNames(
-							targetKeyPropertyNames,
-							ForeignKeyDescriptor.PART_NAME,
-							elementTypeDescriptor.getEntityPersister().getIdentifierType(),
-							creationProcess.getCreationContext().getSessionFactory()
-					);
-					return targetKeyPropertyNames;
 				}
 				else {
-					return Set.of( referencedPropertyName, ForeignKeyDescriptor.PART_NAME );
+					ToOneAttributeMapping.addPrefixedPropertyPaths(
+							targetKeyPropertyNames,
+							null,
+							propertyType,
+							creationProcess.getCreationContext().getSessionFactory()
+					);
 				}
+				return targetKeyPropertyNames;
 			}
 		}
 	}

@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
@@ -153,6 +154,7 @@ import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate.FilterFragmentParameter;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate.FilterFragmentPredicate;
 import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
+import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -5126,7 +5128,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				separator = renderFromClauseRoot( tableGroupJoin.getJoinedGroup(), separator );
 			}
 		}
-		else {
+		else if ( root.isInitialized() ) {
 			appendSql( separator );
 			renderRootTableGroup( root, null );
 			separator = COMA_SEPARATOR;
@@ -5477,13 +5479,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	public static boolean rendersTableReferenceAlias(Clause clause) {
+	protected boolean rendersTableReferenceAlias(Clause clause) {
 		// todo (6.0) : For now we just skip the alias rendering in the delete and update clauses
 		//  We need some dialect support if we want to support joins in delete and update statements
 		switch ( clause ) {
 			case DELETE:
 			case UPDATE:
-				return false;
+				return getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 		}
 		return true;
 	}
@@ -6017,19 +6019,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitColumnReference(ColumnReference columnReference) {
 		final String dmlTargetTableAlias = getDmlTargetTableAlias();
 		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
-			// todo (6.0) : use the Dialect to determine how to handle column references
-			//		- specifically should they use the table-alias, the table-expression
-			//			or neither for its qualifier
-
-			final String tableExpression = getCurrentDmlStatement().getTargetTable().getTableExpression();
-			// Qualify the column reference with the table expression only in subqueries
-			final boolean qualifyColumn = !queryPartStack.isEmpty();
+			final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
+			final String qualifier;
+			if ( qualifierSupport == DmlTargetColumnQualifierSupport.TABLE_ALIAS ) {
+				qualifier = dmlTargetTableAlias;
+			}
+			// Qualify the column reference with the table expression also when in subqueries
+			else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !queryPartStack.isEmpty() ) {
+				qualifier = getCurrentDmlStatement().getTargetTable().getTableExpression();
+			}
+			else {
+				qualifier = null;
+			}
 			if ( columnReference.isColumnExpressionFormula() ) {
 				// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
 				// This is fine for now as this is only temporary anyway until we render aliases for table references
 				final String replacement;
-				if ( qualifyColumn ) {
-					replacement = "$1" + tableExpression + ".$3";
+				if ( qualifier != null ) {
+					replacement = "$1" + qualifier + ".$3";
 				}
 				else {
 					replacement = "$1$3";
@@ -6040,7 +6047,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 			}
 			else {
-				columnReference.appendReadExpression( this, qualifyColumn ? tableExpression : null );
+				columnReference.appendReadExpression( this, qualifier );
 			}
 		}
 		else {
@@ -6053,10 +6060,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final String dmlTargetTableAlias = getDmlTargetTableAlias();
 		final ColumnReference columnReference = aggregateColumnWriteExpression.getColumnReference();
 		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
-			final String tableExpression = getCurrentDmlStatement().getTargetTable().getTableExpression();
-			// Qualify the column reference with the table expression only in subqueries
-			final boolean qualifyColumn = !queryPartStack.isEmpty();
-			aggregateColumnWriteExpression.appendWriteExpression( this, this, qualifyColumn ? tableExpression : null );
+			final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
+			final String qualifier;
+			if ( qualifierSupport == DmlTargetColumnQualifierSupport.TABLE_ALIAS ) {
+				qualifier = dmlTargetTableAlias;
+			}
+			// Qualify the column reference with the table expression also when in subqueries
+			else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !queryPartStack.isEmpty() ) {
+				qualifier = getCurrentDmlStatement().getTargetTable().getTableExpression();
+			}
+			else {
+				qualifier = null;
+			}
+			aggregateColumnWriteExpression.appendWriteExpression( this, this, qualifier );
 		}
 		else {
 			aggregateColumnWriteExpression.appendWriteExpression( this, this );
@@ -6874,6 +6890,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	@Override
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		sqlBuffer.append( "array_contains(" );
+		inArrayPredicate.getArrayParameter().accept( this );
+		sqlBuffer.append( "," );
+		inArrayPredicate.getTestExpression().accept( this );
+		sqlBuffer.append( ')' );
 	}
 
 	@Override

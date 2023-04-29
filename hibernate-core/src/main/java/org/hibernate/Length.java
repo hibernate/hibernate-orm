@@ -40,6 +40,15 @@ public final class Length {
 	 * declared using
 	 * {@code @JdbcTypeCode(Types.LONGVARCHAR)} or
 	 * {@code @JdbcTypeCode(Types.LONGVARBINARY)}.
+	 * <p>
+	 * For example, {@code @Column(length=LONG)} results
+	 * in the column type:
+	 * <table>
+	 * <tr><td>{@code varchar(32600)}</td><td>on h2, Db2, and PostgreSQL</td>
+	 * <tr><td>{@code text}</td><td>on MySQL</td>
+	 * <tr><td>{@code clob}</td><td>on Oracle</td>
+	 * <tr><td>{@code varchar(max)}</td><td>on SQL Server</td></tr>
+	 * </table>
 	 *
 	 * @see org.hibernate.type.descriptor.java.JavaType#getLongSqlLength
 	 *
@@ -52,6 +61,15 @@ public final class Length {
 	 * Used to select a variable-length SQL type large
 	 * enough to accommodate values of maximum length
 	 * {@value Short#MAX_VALUE}.
+	 * <p>
+	 * For example, {@code @Column(length=LONG16)} results
+	 * in the column type:
+	 * <table>
+	 * <tr><td>{@code varchar(32767)}</td><td>on h2 and PostgreSQL</td>
+	 * <tr><td>{@code text}</td><td>on MySQL</td>
+	 * <tr><td>{@code clob}</td><td>on Oracle and Db2</td>
+	 * <tr><td>{@code varchar(max)}</td><td>on SQL Server</td></tr>
+	 * </table>
 	 */
 	public static final int LONG16 = Short.MAX_VALUE;
 	/**
@@ -65,6 +83,15 @@ public final class Length {
 	 * declared using
 	 * {@code @JdbcTypeCode(SqlTypes.LONG32VARCHAR)} or
 	 * {@code @JdbcTypeCode(SqlTypes.LONG32VARBINARY)}.
+	 * <p>
+	 * For example, {@code @Column(length=LONG32)} results
+	 * in the column type:
+	 * <table>
+	 * <tr><td>{@code text}</td><td>on PostgreSQL</td>
+	 * <tr><td>{@code longtext}</td><td>on MySQL</td>
+	 * <tr><td>{@code clob}</td><td>on h2, Oracle, and Db2</td>
+	 * <tr><td>{@code varchar(max)}</td><td>on SQL Server</td></tr>
+	 * </table>
 	 *
 	 * @see org.hibernate.type.SqlTypes#LONG32VARCHAR
 	 * @see org.hibernate.type.SqlTypes#LONG32VARBINARY

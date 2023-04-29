@@ -266,7 +266,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						selectableMappings,
 						inverseMappingType,
 						creationProcess,
-						valueMapping.getDeclaringType(),
+						this,
 						attributeMappings
 				)
 		);

@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
  * @author Steve Ebersole
  */
 public interface HqlInterpretation {
-	SqmStatement getSqmStatement();
+	SqmStatement<?> getSqmStatement();
 
 	ParameterMetadataImplementor getParameterMetadata();
 

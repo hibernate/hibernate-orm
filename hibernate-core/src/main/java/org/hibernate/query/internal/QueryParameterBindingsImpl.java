@@ -12,6 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
@@ -22,8 +23,8 @@ import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -169,9 +170,13 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
 		final MutableCacheKeyImpl mutableCacheKey = new MutableCacheKeyImpl(parameterBindingMap.size());
 
-		for ( QueryParameterBinding<?> binding : parameterBindingMap.values() ) {
-			final MappingModelExpressible<?> mappingType = determineMappingType( binding, persistenceContext );
-			assert mappingType instanceof JavaTypedExpressible;
+		for ( Map.Entry<QueryParameter<?>, QueryParameterBinding<?>> entry : parameterBindingMap.entrySet() ) {
+			final QueryParameterBinding<?> binding = entry.getValue();
+			final MappingModelExpressible<?> mappingType = determineMappingType(
+					binding,
+					entry.getKey(),
+					persistenceContext
+			);
 
 			if ( binding.isMultiValued() ) {
 				for ( Object bindValue : binding.getBindValues() ) {
@@ -188,26 +193,24 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		return mutableCacheKey.build();
 	}
 
-	private MappingModelExpressible<?> determineMappingType(QueryParameterBinding<?> binding, SharedSessionContractImplementor session) {
-		if ( binding.getBindType() != null ) {
-			if ( binding.getBindType() instanceof MappingModelExpressible) {
+	private MappingModelExpressible<?> determineMappingType(final QueryParameterBinding<?> binding, final QueryParameter<?> queryParameter, final SharedSessionContractImplementor session) {
+		final BindableType<?> bindType = binding.getBindType();
+		if ( bindType != null ) {
+			if ( bindType instanceof MappingModelExpressible ) {
 				//noinspection unchecked
-				return (MappingModelExpressible<Object>) binding.getBindType();
+				return (MappingModelExpressible<Object>) bindType;
 			}
 		}
 
 		final MappingModelExpressible<?> type = binding.getType();
 		if ( type != null ) {
-			if ( type instanceof EntityMappingType ) {
-				return ( (EntityMappingType) type ).getIdentifierMapping();
-			}
 			return type;
 		}
 
 		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
 
-		if ( binding.getBindType() instanceof JavaTypedExpressible) {
-			final JavaTypedExpressible<?> javaTypedExpressible = (JavaTypedExpressible<?>) binding.getBindType();
+		if ( bindType instanceof JavaTypedExpressible) {
+			final JavaTypedExpressible<?> javaTypedExpressible = (JavaTypedExpressible<?>) bindType;
 			final JavaType<?> jtd = javaTypedExpressible.getExpressibleJavaType();
 			if ( jtd.getJavaTypeClass() != null ) {
 				// avoid dynamic models
@@ -228,7 +231,16 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		else if ( binding.getBindValue() != null ) {
 			return typeConfiguration.getBasicTypeForJavaType( binding.getBindValue().getClass() );
 		}
-		return typeConfiguration.getBasicTypeForJavaType( binding.getBindType().getBindableJavaType() );
+
+		if ( bindType == null ) {
+			if ( queryParameter.getName() != null ) {
+				throw new QueryException( "Cannot determine mapping type for parameter : " + queryParameter.getName() );
+			}
+			else {
+				throw new QueryException( "Cannot determine mapping type for parameter : " + queryParameter.getPosition() );
+			}
+		}
+		return typeConfiguration.getBasicTypeForJavaType( bindType.getBindableJavaType() );
 	}
 
 	private static class MutableCacheKeyImpl implements MutableCacheKeyBuilder {

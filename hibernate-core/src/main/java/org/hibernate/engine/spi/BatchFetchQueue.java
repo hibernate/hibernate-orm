@@ -16,8 +16,11 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -184,6 +187,61 @@ public class BatchFetchQueue {
 	}
 
 	/**
+	 * A "collector" form of {@link #getBatchLoadableEntityIds}.  Useful
+	 * in cases where we want a specially created array/container - allows
+	 * creation of concretely typed array for ARRAY param binding to ensure
+	 * the driver does not need to cast/copy the values array.
+	 */
+	public <T> void collectBatchLoadableEntityIds(
+			final int domainBatchSize,
+			IndexedConsumer<T> collector,
+			final T loadingId,
+			final EntityMappingType entityDescriptor) {
+		// make sure we load the id being loaded in the batch!
+		collector.accept( 0, loadingId );
+
+		if ( batchLoadableEntityKeys == null ) {
+			return;
+		}
+
+		final LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( entityDescriptor.getEntityName() );
+		if ( set == null ) {
+			return;
+		}
+
+		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+
+		int batchPosition = 1;
+		int end = -1;
+		boolean checkForEnd = false;
+
+		for ( EntityKey key : set ) {
+			if ( checkForEnd && batchPosition == end ) {
+				// the first id found after the given id
+				return;
+			}
+
+			if ( identifierMapping.areEqual( loadingId, key.getIdentifier(), context.getSession() ) ) {
+				end = batchPosition;
+			}
+			else {
+				if ( !isCached( key, entityDescriptor.getEntityPersister() ) ) {
+					//noinspection unchecked
+					collector.accept( batchPosition++, (T) key.getIdentifier() );
+				}
+			}
+
+			if ( batchPosition == domainBatchSize ) {
+				// end of array, start filling again from start
+				batchPosition = 1;
+				if ( end != -1 ) {
+					checkForEnd = true;
+				}
+			}
+		}
+	}
+
+	/**
 	 * Get a batch of unloaded identifiers for this class, using a slightly
 	 * complex algorithm that tries to grab keys registered immediately after
 	 * the given key.
@@ -290,6 +348,88 @@ public class BatchFetchQueue {
 		if ( map != null ) {
 			map.remove( ce );
 		}
+	}
+
+
+	/**
+	 * A "collector" form of {@link #getCollectionBatch}.  Useful
+	 * in cases where we want a specially created array/container - allows
+	 * creation of concretely typed array for ARRAY param binding to ensure
+	 * the driver does not need to cast/copy the values array.
+	 */
+	public <T> void collectBatchLoadableCollectionKeys(
+			int batchSize,
+			IndexedConsumer<T> collector,
+			T keyBeingLoaded,
+			PluralAttributeMapping pluralAttributeMapping) {
+		collector.accept( 0, keyBeingLoaded );
+
+		if ( batchLoadableCollections == null ) {
+			return;
+		}
+
+		int i = 1;
+		int end = -1;
+		boolean checkForEnd = false;
+
+		final LinkedHashMap<CollectionEntry, PersistentCollection<?>> map = batchLoadableCollections.get( pluralAttributeMapping.getNavigableRole().getFullPath() );
+		if ( map == null ) {
+			return;
+		}
+
+		for ( Entry<CollectionEntry, PersistentCollection<?>> me : map.entrySet() ) {
+			final CollectionEntry ce = me.getKey();
+			final PersistentCollection<?> collection = me.getValue();
+
+			if ( ce.getLoadedKey() == null ) {
+				// the loadedKey of the collectionEntry might be null as it might have been reset to null
+				// (see for example Collections.processDereferencedCollection()
+				// and CollectionEntry.afterAction())
+				// though we clear the queue on flush, it seems like a good idea to guard
+				// against potentially null loadedKeys (which leads to various NPEs as demonstrated in HHH-7821).
+				continue;
+			}
+
+			if ( collection.wasInitialized() ) {
+				// should never happen
+				LOG.warn( "Encountered initialized collection in BatchFetchQueue, this should not happen." );
+				continue;
+			}
+
+			if ( checkForEnd && i == end ) {
+				// the first key found after the given key
+				return;
+			}
+
+			final boolean isEqual = pluralAttributeMapping.getKeyDescriptor().areEqual(
+					keyBeingLoaded,
+					ce.getLoadedKey(),
+					context.getSession()
+			);
+//			final boolean isEqual = collectionPersister.getKeyType().isEqual(
+//					id,
+//					ce.getLoadedKey(),
+//					collectionPersister.getFactory()
+//			);
+
+			if ( isEqual ) {
+				end = i;
+			}
+			else if ( !isCached( ce.getLoadedKey(), pluralAttributeMapping.getCollectionDescriptor() ) ) {
+				//noinspection unchecked
+				collector.accept( i++, (T) ce.getLoadedKey() );
+			}
+
+			if ( i == batchSize ) {
+				//end of array, start filling again from start
+				i = 1;
+				if ( end != -1 ) {
+					checkForEnd = true;
+				}
+			}
+		}
+
+		//we ran out of keys to try
 	}
 
 	/**

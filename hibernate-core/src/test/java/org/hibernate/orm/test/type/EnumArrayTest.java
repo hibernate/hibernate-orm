@@ -13,7 +13,6 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.internal.util.SerializationHelper;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -146,12 +145,11 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			return array;
 		}
 		else {
-			// We have to always serialize the Byte[] since it can contain nulls, but VARBINARY can't
-			final Byte[] array = new Byte[enums.length];
+			final byte[] array = new byte[enums.length];
 			for ( int i = 0; i < enums.length; i++ ) {
-				array[i] = enums[i] == null ? null : (byte) enums[i].ordinal();
+				array[i] = enums[i] == null ? -1 : (byte) enums[i].ordinal();
 			}
-			return SerializationHelper.serialize( array );
+			return array;
 		}
 	}
 

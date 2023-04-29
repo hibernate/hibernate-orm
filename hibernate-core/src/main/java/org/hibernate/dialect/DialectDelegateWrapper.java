@@ -217,8 +217,8 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String getEnumTypeDeclaration(String[] values) {
-		return wrapped.getEnumTypeDeclaration( values );
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		return wrapped.getEnumTypeDeclaration( name, values );
 	}
 
 	@Override

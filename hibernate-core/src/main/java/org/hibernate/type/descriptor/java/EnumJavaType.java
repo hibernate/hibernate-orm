@@ -9,13 +9,16 @@ package org.hibernate.type.descriptor.java;
 import jakarta.persistence.EnumType;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import static jakarta.persistence.EnumType.ORDINAL;
 import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.ENUM;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.SMALLINT;
@@ -34,26 +37,28 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		final JdbcTypeRegistry registry = context.getTypeConfiguration().getJdbcTypeRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
 		final EnumType type = context.getEnumeratedType();
+		int sqlType;
 		switch ( type == null ? ORDINAL : type ) {
-			case ORDINAL: {
-				return registry.getDescriptor( hasManyValues() ? SMALLINT : TINYINT );
-			}
-			case STRING: {
-				if ( context.getColumnLength() == 1 ) {
-					return context.isNationalized()
-							? registry.getDescriptor( NCHAR )
-							: registry.getDescriptor( CHAR );
+			case ORDINAL:
+				sqlType = hasManyValues() ? SMALLINT : TINYINT;
+				break;
+			case STRING:
+				if ( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
+					sqlType = ENUM;
 				}
-				return context.isNationalized()
-						? registry.getDescriptor( NVARCHAR )
-						: registry.getDescriptor( VARCHAR );
-			}
-			default: {
+				else if ( context.getColumnLength() == 1 ) {
+					sqlType = context.isNationalized() ? NCHAR : CHAR;
+				}
+				else {
+					sqlType = context.isNationalized() ? NVARCHAR : VARCHAR;
+				}
+				break;
+			default:
 				throw new AssertionFailure("unknown EnumType");
-			}
 		}
+		return jdbcTypeRegistry.getDescriptor( sqlType );
 	}
 
 	public boolean hasManyValues() {
@@ -112,6 +117,9 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		}
 		else if ( value instanceof Byte ) {
 			return fromByte( (Byte) value );
+		}
+		else if ( value instanceof Number ) {
+			return fromLong( ((Number) value).longValue() );
 		}
 
 		return (T) value;
@@ -248,6 +256,24 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 				return true;
 			default:
 				return false;
+		}
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+		if ( converter != null ) {
+			//TODO: actually convert the enum values to create the check constraint
+			return null;
+		}
+		else if ( jdbcType.isInteger() ) {
+			int max = getJavaTypeClass().getEnumConstants().length - 1;
+			return dialect.getCheckCondition( columnName, 0, max );
+		}
+		else if ( jdbcType.isString() ) {
+			return dialect.getCheckCondition( columnName, getJavaTypeClass() );
+		}
+		else {
+			return null;
 		}
 	}
 }

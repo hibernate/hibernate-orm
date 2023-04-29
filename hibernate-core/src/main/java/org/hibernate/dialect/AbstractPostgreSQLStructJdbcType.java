@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,7 +22,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.TimeZone;
 
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -33,16 +30,14 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -492,6 +487,14 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 										options
 								);
 							}
+							else if ( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
+									&& jdbcMapping.getJdbcType().isInteger() ) {
+								values[column] =  fromRawObject(
+										jdbcMapping,
+										IntegerJavaType.INSTANCE.fromEncodedString( string, start, i ),
+										options
+								);
+							}
 							else {
 								values[column] = fromString(
 										jdbcMapping,
@@ -761,6 +764,10 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 					appender.append( (Boolean) subValue ? '1' : '0' );
 					break;
 				}
+				if ( subValue instanceof Enum ) {
+					appender.appendSql( ((Enum<?>) subValue).ordinal() );
+					break;
+				}
 			case SqlTypes.BOOLEAN:
 			case SqlTypes.BIT:
 			case SqlTypes.BIGINT:
@@ -791,6 +798,8 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 			case SqlTypes.LONGNVARCHAR:
 			case SqlTypes.LONG32VARCHAR:
 			case SqlTypes.LONG32NVARCHAR:
+			case SqlTypes.ENUM:
+			case SqlTypes.NAMED_ENUM:
 				appender.quoteStart();
 				jdbcJavaType.appendEncodedString(
 						appender,

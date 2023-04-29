@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TruthValue;
@@ -67,7 +68,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String customWrite;
 	private String customRead;
 	private Size columnSize;
-	private String specializedTypeDeclaration;
+//	private String specializedTypeDeclaration;
 	private java.util.List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	public Column() {
@@ -273,8 +274,9 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			try {
 				final Type type = getValue().getType();
 				sqlTypeName = isArray( type )
+						//TODO: remove the special case for array types, this should be handled by the DdlType!
 						? dialect.getArrayTypeName( getArrayElementTypeName( dialect, ddlTypeRegistry, getArrayElementType( type ) ) )
-						: ddlTypeRegistry.getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
+						: ddlTypeRegistry.getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ), getUnderlyingType( mapping, type, typeIndex ) );
 			}
 			catch ( Exception cause ) {
 				throw new MappingException(
@@ -289,6 +291,27 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			}
 		}
 		return sqlTypeName;
+	}
+
+	private static Type getUnderlyingType(Mapping mapping, Type type, int typeIndex) {
+		if ( type.isComponentType() ) {
+			int cols = 0;
+			for ( Type subtype : ((ComponentType) type).getSubtypes() ) {
+				int columnSpan = subtype.getColumnSpan( mapping );
+				if ( cols+columnSpan > typeIndex ) {
+					return getUnderlyingType( mapping, subtype, typeIndex-cols );
+				}
+				cols += columnSpan;
+			}
+			throw new IndexOutOfBoundsException();
+		}
+		else if ( type.isEntityType() ) {
+			Type idType = ((EntityType) type).getIdentifierOrUniqueKeyType(mapping);
+			return getUnderlyingType( mapping, idType, typeIndex );
+		}
+		else {
+			return type;
+		}
 	}
 
 	private String getArrayElementTypeName(Dialect dialect, DdlTypeRegistry ddlTypeRegistry, BasicType<?> elementType) {
@@ -480,17 +503,20 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return getClass().getSimpleName() + '(' + getName() + ')';
 	}
 
-	public void setSpecializedTypeDeclaration(String specializedTypeDeclaration) {
-		this.specializedTypeDeclaration = specializedTypeDeclaration;
-	}
-
-	public String getSpecializedTypeDeclaration() {
-		return specializedTypeDeclaration;
-	}
-
-	public boolean hasSpecializedTypeDeclaration() {
-		return specializedTypeDeclaration != null;
-	}
+//	@Incubating
+//	public void setSpecializedTypeDeclaration(String specializedTypeDeclaration) {
+//		this.specializedTypeDeclaration = specializedTypeDeclaration;
+//	}
+//
+//	@Incubating
+//	public String getSpecializedTypeDeclaration() {
+//		return specializedTypeDeclaration;
+//	}
+//
+//	@Incubating
+//	public boolean hasSpecializedTypeDeclaration() {
+//		return specializedTypeDeclaration != null;
+//	}
 
 	public void addCheckConstraint(CheckConstraint checkConstraint) {
 		if ( !checkConstraints.contains( checkConstraint) ) {
@@ -688,7 +714,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.assignmentExpression = assignmentExpression;
 		copy.customRead = customRead;
 		copy.customWrite = customWrite;
-		copy.specializedTypeDeclaration = specializedTypeDeclaration;
+//		copy.specializedTypeDeclaration = specializedTypeDeclaration;
 		copy.columnSize = columnSize;
 		return copy;
 	}

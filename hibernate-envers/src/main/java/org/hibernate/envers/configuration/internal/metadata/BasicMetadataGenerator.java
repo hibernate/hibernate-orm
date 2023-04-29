@@ -16,13 +16,9 @@ import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
 
 /**
  * Generates metadata for basic properties: immutable types (including enums).
@@ -44,7 +40,7 @@ public final class BasicMetadataGenerator {
 			boolean key) {
 		if ( value.getType() instanceof BasicType ) {
 			if ( attributeContainer != null ) {
-				BasicAttribute attribute = buildProperty(propertyAuditingData, value, insertable, key );
+				BasicAttribute attribute = buildProperty( propertyAuditingData, value, insertable, key );
 				attributeContainer.addAttribute( attribute );
 
 				if ( isAddNestedType( value ) ) {
@@ -64,21 +60,18 @@ public final class BasicMetadataGenerator {
 		return false;
 	}
 
-	private void mapEnumerationType(TypeSpecification typeDefinition, Type type, Properties parameters) {
+	private void mapEnumerationType(TypeSpecification typeDefinition, EnumType type, Properties parameters) {
 		if ( parameters.getProperty( EnumType.ENUM ) != null ) {
 			typeDefinition.setParameter( EnumType.ENUM, parameters.getProperty( EnumType.ENUM ) );
 		}
 		else {
-			typeDefinition.setParameter( EnumType.ENUM, type.getReturnedClass().getName() );
+			typeDefinition.setParameter( EnumType.ENUM, type.getEnumClass().getName() );
 		}
 		if ( parameters.getProperty( EnumType.NAMED ) != null ) {
 			typeDefinition.setParameter( EnumType.NAMED, parameters.getProperty( EnumType.NAMED ) );
 		}
 		else {
-			final ConvertedBasicType<?> convertedType = (ConvertedBasicType<?>) type;
-			final EnumValueConverter<?, ?> valueConverter = (EnumValueConverter<?, ?>) convertedType.getValueConverter();
-			final boolean isNamed = valueConverter instanceof NamedEnumValueConverter;
-			typeDefinition.setParameter( EnumType.NAMED, Boolean.toString( isNamed ) );
+			typeDefinition.setParameter( EnumType.NAMED, Boolean.toString( !type.isOrdinal() ) );
 		}
 	}
 
@@ -105,12 +98,13 @@ public final class BasicMetadataGenerator {
 		final Properties typeParameters = value.getTypeParameters();
 		final String typeName = getBasicTypeName( value.getType() );
 
-		final TypeSpecification type = new TypeSpecification(typeName );
-		attribute.setType( type );
+		final TypeSpecification typeSpecification = new TypeSpecification( typeName );
+		attribute.setType( typeSpecification );
 
-		if ( isEnumType( value.getType(), typeName ) ) {
-			// Proper handling of enumeration type
-			mapEnumerationType( type, value.getType(), typeParameters );
+		Type type = value.getType();
+		if ( type instanceof CustomType && ((CustomType<?>) type).getUserType() instanceof EnumType ) {
+			// Proper handling of nasty legacy EnumType
+			mapEnumerationType( typeSpecification, (EnumType) ((CustomType<?>) type).getUserType(), typeParameters );
 		}
 		else {
 			// By default, copying all Hibernate properties
@@ -118,7 +112,7 @@ public final class BasicMetadataGenerator {
 				final String keyType = (String) object;
 				final String property = typeParameters.getProperty( keyType );
 				if ( property != null ) {
-					type.setParameter( keyType, property );
+					typeSpecification.setParameter( keyType, property );
 				}
 			}
 		}
@@ -132,11 +126,4 @@ public final class BasicMetadataGenerator {
 		return typeName;
 	}
 
-	private boolean isEnumType(Type type, String typeName) {
-		if ( type instanceof ConvertedBasicType ) {
-			final ConvertedBasicType<?> convertedType = (ConvertedBasicType<?>) type;
-			return convertedType.getValueConverter() instanceof EnumValueConverter;
-		}
-		return false;
-	}
 }

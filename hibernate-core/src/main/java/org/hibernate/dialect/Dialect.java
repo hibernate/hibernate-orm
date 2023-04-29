@@ -199,10 +199,12 @@ import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static java.util.Arrays.sort;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -247,6 +249,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
+import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS. Every
@@ -745,8 +748,32 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param values the enumerated values of the type
 	 * @return the DDL column type declaration
 	 */
-	public String getEnumTypeDeclaration(String[] values) {
+	public String getEnumTypeDeclaration(String name, String[] values) {
 		return null;
+	}
+
+	public String getEnumTypeDeclaration(Class<? extends Enum<?>> enumType) {
+		String[] values = getEnumeratedValues( enumType );
+		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
+		return getEnumTypeDeclaration( enumType.getSimpleName(), values );
+	}
+
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		return EMPTY_STRING_ARRAY;
+	}
+
+	public String[] getCreateEnumTypeCommand(Class<? extends Enum<?>> enumType) {
+		String[] values = getEnumeratedValues( enumType );
+		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
+		return getCreateEnumTypeCommand( enumType.getSimpleName(), values );
+	}
+
+	public String[] getDropEnumTypeCommand(String name) {
+		return EMPTY_STRING_ARRAY;
+	}
+
+	public String[] getDropEnumTypeCommand(Class<? extends Enum<?>> enumType) {
+		return getDropEnumTypeCommand( enumType.getSimpleName() );
 	}
 
 	/**
@@ -766,6 +793,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return check.append( ')' ).toString();
 	}
 
+	public String getCheckCondition(String columnName, Class<? extends Enum<?>> enumType) {
+		return getCheckCondition( columnName, getEnumeratedValues( enumType ) );
+	}
+
 	/**
 	 * Render a SQL check condition for a column that represents an enumerated value.
 	 * by its {@linkplain jakarta.persistence.EnumType#ORDINAL ordinal representation}.
@@ -774,6 +805,23 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getCheckCondition(String columnName, long min, long max) {
 		return columnName + " between " + min + " and " + max;
+	}
+
+	/**
+	 * Render a SQL check condition for a column that represents an enumerated value
+	 * by its {@linkplain jakarta.persistence.EnumType#ORDINAL ordinal representation}.
+	 *
+	 * @return a SQL expression that will occur in a {@code check} constraint
+	 */
+	public String getCheckCondition(String columnName, long[] values) {
+		StringBuilder check = new StringBuilder();
+		check.append( columnName ).append( " in (" );
+		String separator = "";
+		for ( long value : values ) {
+			check.append( separator ).append( value );
+			separator = ",";
+		}
+		return check.append( ')' ).toString();
 	}
 
 	@Override

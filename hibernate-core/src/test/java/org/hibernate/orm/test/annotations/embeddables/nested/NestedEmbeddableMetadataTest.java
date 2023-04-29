@@ -20,6 +20,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.jupiter.api.Test;
@@ -56,11 +57,8 @@ public class NestedEmbeddableMetadataTest {
 			Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
 			SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
 			int[] currencySqlTypes = currencyMetadata.getType().getSqlTypeCodes( metadata );
-			assertEquals( 1, currencySqlTypes.length );
-			assertJdbcTypeCode(
-					typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARCHAR ).getJdbcTypeCode(),
-					currencySqlTypes[0]
-			);
+			assertEquals(1, currencySqlTypes.length);
+			assertJdbcTypeCode(new int[]{Types.VARCHAR, SqlTypes.ENUM}, currencySqlTypes[0]);
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );

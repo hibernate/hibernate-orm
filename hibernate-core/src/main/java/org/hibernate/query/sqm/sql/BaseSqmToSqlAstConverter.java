@@ -392,14 +392,11 @@ import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.internal.ConvertedBasicTypeImpl;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
@@ -410,6 +407,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 
+import static java.util.Collections.singletonList;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
@@ -2213,7 +2211,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( selectionNode instanceof SqmPath<?> ) {
 				prepareForSelection( (SqmPath<?>) selectionNode );
 			}
-			resultProducers = Collections.singletonList(
+			resultProducers = singletonList(
 					new AbstractMap.SimpleEntry<>(
 						sqmSelection.getAlias(),
 						(DomainResultProducer<?>) selectionNode.accept( this )
@@ -4236,7 +4234,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final Expression expression = new SelfRenderingAggregateFunctionSqlAstExpression(
 					functionDescriptor.getName(),
 					functionDescriptor,
-					Collections.singletonList( new QueryLiteral<>( 1, integerType ) ),
+					singletonList( new QueryLiteral<>( 1, integerType ) ),
 					null,
 					integerType,
 					integerType
@@ -4585,7 +4583,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						arguments = subQueryColumns;
 					}
 					else {
-						arguments = Collections.singletonList( new SqlTuple( subQueryColumns, modelPart ) );
+						arguments = singletonList( new SqlTuple( subQueryColumns, modelPart ) );
 					}
 					final Expression expression = new SelfRenderingAggregateFunctionSqlAstExpression(
 							functionDescriptor.getName(),
@@ -4707,7 +4705,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new SelfRenderingFunctionSqlAstExpression(
 					pathName,
 					(sqlAppender, sqlAstArguments, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
-					Collections.singletonList(
+					singletonList(
 							new ColumnReference(
 									identifierVariable,
 									tableReference.getColumnNames().get( 0 ),
@@ -4871,9 +4869,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				mappingModelExpressible = determineCurrentExpressible( literal );
 			}
 			if ( mappingModelExpressible instanceof BasicValuedMapping ) {
-				return new QueryLiteral<>( null, (BasicValuedMapping) mappingModelExpressible);
+				return new QueryLiteral<>( null, (BasicValuedMapping) mappingModelExpressible );
 			}
-			final MappingModelExpressible<?> keyExpressible = getKeyExpressible(mappingModelExpressible);
+			final MappingModelExpressible<?> keyExpressible = getKeyExpressible( mappingModelExpressible );
 			if ( keyExpressible == null ) {
 				// Default to the Object type
 				return new QueryLiteral<>( null, basicType( Object.class ) );
@@ -4897,10 +4895,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else {
 				keyExpressible.forEachJdbcType(
 						(index, jdbcMapping) -> expressions.add(
-								new QueryLiteral<>(
-										null,
-										(BasicValuedMapping) jdbcMapping
-								)
+								new QueryLiteral<>( null, (BasicValuedMapping) jdbcMapping )
 						)
 				);
 			}
@@ -4951,10 +4946,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							)
 					);
 				}
-				return new QueryLiteral<>(
-						sqlLiteralValue,
-						basicValuedMapping
-				);
+				return new QueryLiteral<>( sqlLiteralValue, basicValuedMapping );
 			}
 		}
 
@@ -6472,35 +6464,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral) {
-		final BasicValuedMapping inferrableType = (BasicValuedMapping) resolveInferredType();
-		if ( inferrableType != null ) {
-			final Object jdbcValue = inferrableType.getJdbcMapping().convertToRelationalValue( sqmEnumLiteral.getEnumValue() );
-			return new QueryLiteral<>( jdbcValue, inferrableType );
+		final BasicValuedMapping inferredType = (BasicValuedMapping) resolveInferredType();
+		if ( inferredType != null ) {
+			return new QueryLiteral<>(
+					inferredType.getJdbcMapping().convertToRelationalValue( sqmEnumLiteral.getEnumValue() ),
+					inferredType
+			);
 		}
 		else {
 			// This can only happen when selecting an enum literal, in which case we default to ordinal encoding
-			final EnumJavaType<?> enumJtd = sqmEnumLiteral.getExpressibleJavaType();
-			final TypeConfiguration typeConfiguration = getTypeConfiguration();
-			final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SMALLINT );
-			final JavaType<Number> relationalJtd = typeConfiguration.getJavaTypeRegistry().getDescriptor( Integer.class );
-
-			return queryLiteral( sqmEnumLiteral, enumJtd, typeConfiguration, jdbcType, relationalJtd );
+			return queryLiteral( sqmEnumLiteral, getTypeConfiguration() );
 		}
 	}
 
-	private static <T extends Enum<T>, N extends Number> QueryLiteral<Integer> queryLiteral(
-			SqmEnumLiteral<?> sqmEnumLiteral,
-			EnumJavaType<T> enumJtd,
-			TypeConfiguration typeConfiguration,
-			JdbcType jdbcType,
-			JavaType<N> relationalJtd) {
+	private static <T extends Enum<T>> QueryLiteral<T> queryLiteral(
+			SqmEnumLiteral<T> sqmEnumLiteral,
+			TypeConfiguration typeConfiguration) {
 		return new QueryLiteral<>(
-				sqmEnumLiteral.getEnumValue().ordinal(),
-				new ConvertedBasicTypeImpl<>(
-						null,
-						"Query literal implicit Enum type descriptor",
-						jdbcType,
-						new OrdinalEnumValueConverter<>( enumJtd, jdbcType, relationalJtd )
+				sqmEnumLiteral.getEnumValue(),
+				new BasicTypeImpl<>(
+						sqmEnumLiteral.getExpressibleJavaType(),
+						typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SMALLINT )
 				)
 		);
 	}

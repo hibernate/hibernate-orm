@@ -75,6 +75,7 @@ public class BasicFormatterImpl implements Formatter {
 				switch (lcToken) {
 
 					case "'":
+					case "`":
 					case "\"":
 						String t;
 						do {

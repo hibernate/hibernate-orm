@@ -54,6 +54,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
 
+import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -409,9 +410,15 @@ public class FunctionTests {
 	public void testCoalesceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select coalesce(nullif('',''), e.gender, e.convertedGender) from EntityOfBasics e", EntityOfBasics.Gender.class)
+					//Derby does not like literal nulls :-/
+//					session.createQuery("select coalesce(null, e.gender, org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.MALE) from EntityOfBasics e", EntityOfBasics.Gender.class)
+//							.list();
+					session.createQuery("select coalesce(nullif(e.gender,org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.FEMALE), e.gender) from EntityOfBasics e", EntityOfBasics.Gender.class)
 							.list();
-					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e", EntityOfBasics.Gender.class)
+					session.createQuery("select coalesce(nullif(e.gender,?1), e.gender) from EntityOfBasics e", EntityOfBasics.Gender.class)
+							.setParameter(1, FEMALE)
+							.list();
+					session.createQuery("select ifnull(e.gender, org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.FEMALE) from EntityOfBasics e", EntityOfBasics.Gender.class)
 							.list();
 					assertThat( session.createQuery("select coalesce(nullif('',''), nullif('bye','bye'), 'hello', 'oops')", String.class).getSingleResult(), is("hello") );
 					assertThat( session.createQuery("select ifnull(nullif('bye','bye'), 'hello')", String.class).getSingleResult(), is("hello") );

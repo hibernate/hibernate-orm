@@ -522,6 +522,24 @@ public class SqlTypes {
 	 */
 	public static final int GEOGRAPHY = 3250;
 
+	/**
+	 * A type code representing a SQL {@code ENUM} type for databases like
+	 * {@link org.hibernate.dialect.MySQLDialect MySQL} where {@code ENUM}
+	 * types do not have names.
+	 *
+	 * @since 6.3
+	 */
+	public static final int ENUM = 6000;
+
+	/**
+	 * A type code representing a SQL {@code ENUM} type for databases like
+	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} where
+	 * {@code ENUM} types must have names.
+	 *
+	 * @since 6.3
+	 */
+	public static final int NAMED_ENUM = 6001;
+
 	private SqlTypes() {
 	}
 
@@ -763,6 +781,16 @@ public class SqlTypes {
 			case GEOMETRY:
 			case POINT:
 			case GEOGRAPHY:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	public static boolean isEnumType(int typeCode) {
+		switch ( typeCode ) {
+			case ENUM:
+			case NAMED_ENUM:
 				return true;
 			default:
 				return false;

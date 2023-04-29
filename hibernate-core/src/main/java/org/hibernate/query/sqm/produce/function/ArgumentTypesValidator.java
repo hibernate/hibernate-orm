@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -37,6 +38,7 @@ import static org.hibernate.type.SqlTypes.hasDatePart;
 import static org.hibernate.type.SqlTypes.hasTimePart;
 import static org.hibernate.type.SqlTypes.isCharacterOrClobType;
 import static org.hibernate.type.SqlTypes.isCharacterType;
+import static org.hibernate.type.SqlTypes.isEnumType;
 import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericType;
 import static org.hibernate.type.SqlTypes.isSpatialType;
@@ -200,7 +202,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 				}
 				break;
 			case STRING:
-				if ( !isCharacterType(code) && code != ENUM_UNKNOWN_JDBC_TYPE ) {
+				if ( !isCharacterType(code) && !isEnumType(code) && code != ENUM_UNKNOWN_JDBC_TYPE) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;

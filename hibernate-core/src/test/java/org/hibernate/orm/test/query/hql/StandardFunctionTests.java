@@ -36,6 +36,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
+import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
 
 /**
  * @author Steve Ebersole
@@ -181,9 +182,15 @@ public class StandardFunctionTests {
 	public void testCoalesceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select coalesce(nullif('',''), e.gender, e.convertedGender) from EntityOfBasics e")
+					//Derby does not like literal nulls :-/
+//					session.createQuery("select coalesce(null, e.gender, org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.MALE) from EntityOfBasics e")
+//							.list();
+					session.createQuery("select coalesce(nullif(e.gender,org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.FEMALE), e.gender) from EntityOfBasics e")
 							.list();
-					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e")
+					session.createQuery("select coalesce(nullif(e.gender,?1), e.gender) from EntityOfBasics e")
+							.setParameter(1, FEMALE)
+							.list();
+					session.createQuery("select ifnull(e.gender, org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.MALE) from EntityOfBasics e")
 							.list();
 				}
 		);

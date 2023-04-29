@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.annotations.enumerated.mappedSuperclass;
 
 import java.io.Serializable;
-import java.sql.Types;
 import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -26,17 +25,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.ConvertedBasicType;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
+import org.hibernate.type.BasicType;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.SqlTypes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static jakarta.persistence.EnumType.STRING;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -75,16 +72,16 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 
 		final Property natureProperty = addressLevelBinding.getProperty( "nature" );
 		//noinspection unchecked
-		ConvertedBasicType<Nature> natureMapping = (ConvertedBasicType<Nature>) natureProperty.getType();
-		assertEquals( Types.VARCHAR, natureMapping.getJdbcType().getJdbcTypeCode() );
+		BasicType<Nature> natureMapping = (BasicType<Nature>) natureProperty.getType();
+		assertEquals( SqlTypes.VARCHAR, natureMapping.getJdbcType().getJdbcTypeCode() );
 
 		try ( SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory() ) {
 			EntityPersister p = sf.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( AddressLevel.class.getName() );
 			//noinspection unchecked
-			ConvertedBasicType<Nature> runtimeType = (ConvertedBasicType<Nature>) p.getPropertyType( "nature" );
-			assertEquals( Types.VARCHAR, runtimeType.getJdbcType().getJdbcTypeCode() );
+			BasicType<Nature> runtimeType = (BasicType<Nature>) p.getPropertyType( "nature" );
+			assertEquals( SqlTypes.VARCHAR, runtimeType.getJdbcType().getJdbcTypeCode() );
 		}
 	}
 

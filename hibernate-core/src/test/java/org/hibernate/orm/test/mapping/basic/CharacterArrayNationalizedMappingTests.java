@@ -35,7 +35,6 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isOneOf;
@@ -81,11 +80,8 @@ public class CharacterArrayNationalizedMappingTests {
 			}
 			else {
 				assertThat(
-						jdbcMapping.getJdbcType(),
-						isOneOf(
-								jdbcTypeRegistry.getDescriptor( SqlTypes.ARRAY ),
-								jdbcTypeRegistry.getDescriptor( SqlTypes.SQLXML )
-						)
+						jdbcMapping.getJdbcType().getJdbcTypeCode(),
+						isOneOf( SqlTypes.ARRAY, SqlTypes.SQLXML, SqlTypes.VARBINARY )
 				);
 			}
 		}

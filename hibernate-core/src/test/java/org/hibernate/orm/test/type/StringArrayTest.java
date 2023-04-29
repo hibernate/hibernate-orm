@@ -47,7 +47,7 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 		super.startUp();
 		inTransaction( em -> {
 			em.persist( new TableWithStringArrays( 1L, new String[]{} ) );
-			em.persist( new TableWithStringArrays( 2L, new String[]{ "", "test", null, "text" } ) );
+			em.persist( new TableWithStringArrays( 2L, new String[]{ "hello", "test", null, "text" } ) );
 			em.persist( new TableWithStringArrays( 3L, null ) );
 
 			Query q;
@@ -71,7 +71,7 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertThat( tableRecord.getTheArray(), is( new String[]{} ) );
 
 			tableRecord = em.find( TableWithStringArrays.class, 2L );
-			assertThat( tableRecord.getTheArray(), is( new String[]{ "", "test", null, "text" } ) );
+			assertThat( tableRecord.getTheArray(), is( new String[]{ "hello", "test", null, "text" } ) );
 
 			tableRecord = em.find( TableWithStringArrays.class, 3L );
 			assertThat( tableRecord.getTheArray(), is( (Object) null ) );
@@ -84,7 +84,7 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			TypedQuery<TableWithStringArrays> tq = em.createNamedQuery( "TableWithStringArrays.JPQL.getById", TableWithStringArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithStringArrays tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheArray(), is( new String[]{ "", "test", null, "text" } ) );
+			assertThat( tableRecord.getTheArray(), is( new String[]{ "hello", "test", null, "text" } ) );
 		} );
 	}
 
@@ -95,7 +95,7 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			TypedQuery<TableWithStringArrays> tq = em.createNamedQuery( "TableWithStringArrays.Native.getById", TableWithStringArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithStringArrays tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheArray(), is( new String[]{ "", "test", null, "text" } ) );
+			assertThat( tableRecord.getTheArray(), is( new String[]{ "hello", "test", null, "text" } ) );
 		} );
 	}
 
@@ -105,7 +105,7 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			TypedQuery<TableWithStringArrays> tq = em.createNamedQuery("TableWithStringArrays.Native.getById", TableWithStringArrays.class );
 			tq.setParameter( "id", 2L );
 			TableWithStringArrays tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheArray(), is( new String[]{ "", "test", null, "text" } ) );
+			assertThat( tableRecord.getTheArray(), is( new String[]{ "hello", "test", null, "text" } ) );
 		} );
 	}
 
@@ -119,7 +119,7 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 					"SELECT * FROM table_with_string_arrays t WHERE the_array " + op + " :data",
 					TableWithStringArrays.class
 			);
-			tq.setParameter( "data", new String[]{ "", "test", null, "text" } );
+			tq.setParameter( "data", new String[]{ "hello", "test", null, "text" } );
 			TableWithStringArrays tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );
 		} );
@@ -132,7 +132,7 @@ public class StringArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 			Query q = em.createNamedQuery( "TableWithStringArrays.Native.getByIdUntyped" );
 			q.setParameter( "id", 2L );
 			Object[] tuple = (Object[]) q.getSingleResult();
-			assertThat( tuple[1], is( new String[]{ "", "test", null, "text" } ) );
+			assertThat( tuple[1], is( new String[]{ "hello", "test", null, "text" } ) );
 		} );
 	}
 

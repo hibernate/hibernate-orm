@@ -21,6 +21,7 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<T>
@@ -53,7 +54,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			return ( (ArrayJdbcType) jdbcType ).resolveType(
 					typeConfiguration,
 					indicators.getDialect(),
-					recommendedComponentJdbcType,
+					new BasicTypeImpl<>( getElementJavaType(), recommendedComponentJdbcType ),
 					ColumnTypeInformation.EMPTY
 			);
 		}

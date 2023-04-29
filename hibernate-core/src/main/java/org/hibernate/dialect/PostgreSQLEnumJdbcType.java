@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -17,6 +17,7 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -114,15 +115,19 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 	}
 
 	@Override
-	public void addAuxiliaryDatabaseObjects(JavaType<?> javaType, InFlightMetadataCollector metadataCollector) {
-		Database database = metadataCollector.getDatabase();
-		Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
-		String name = enumClass.getSimpleName();
-		String[] create = database.getDialect().getCreateEnumTypeCommand( enumClass );
+	public void addAuxiliaryDatabaseObjects(
+			JavaType<?> javaType,
+			Size columnSize,
+			Database database,
+			TypeConfiguration typeConfiguration) {
+		final Dialect dialect = database.getDialect();
+		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
+		final String enumTypeName = enumClass.getSimpleName();
+		final String[] create = dialect.getCreateEnumTypeCommand( enumClass );
 		if ( create != null ) {
-			String[] drop = database.getDialect().getDropEnumTypeCommand( enumClass );
+			final String[] drop = dialect.getDropEnumTypeCommand( enumClass );
 			database.addAuxiliaryDatabaseObject(
-					new NamedAuxiliaryDatabaseObject( name, database.getDefaultNamespace(), create, drop, emptySet(), true )
+					new NamedAuxiliaryDatabaseObject( enumTypeName, database.getDefaultNamespace(), create, drop, emptySet(), true )
 			);
 		}
 	}

@@ -8,15 +8,24 @@ package org.hibernate.type.descriptor.sql.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.type.SqlTypes.ENUM;
 
 /**
+ * A {@link DdlType} representing a SQL {@code enum} type that
+ * may be treated as {@code varchar} for most purposes.
+ *
+ * @see org.hibernate.type.SqlTypes#ENUM
+ * @see Dialect#getEnumTypeDeclaration(Class)
+ *
  * @author Gavin King
  */
+
 public class NativeEnumDdlTypeImpl implements DdlType {
 	private final Dialect dialect;
 
@@ -29,9 +38,9 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 		return ENUM;
 	}
 
-	@Override
-	public String getTypeName(Size columnSize, Class<?> returnedClass) {
-		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) returnedClass );
+	@Override @SuppressWarnings("unchecked")
+	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
+		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) type.getReturnedClass() );
 	}
 
 	@Override

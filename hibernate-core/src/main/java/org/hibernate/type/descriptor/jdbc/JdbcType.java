@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.sqm.CastType;
@@ -327,6 +327,15 @@ public interface JdbcType extends Serializable {
 	}
 
 	@Incubating
-	default void addAuxiliaryDatabaseObjects(JavaType<?> javaType, InFlightMetadataCollector metadataCollector) {
+	default void addAuxiliaryDatabaseObjects(
+			JavaType<?> javaType,
+			Size columnSize,
+			Database database,
+			TypeConfiguration typeConfiguration) {
+	}
+
+	@Incubating
+	default String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
+		return "";
 	}
 }

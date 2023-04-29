@@ -22,7 +22,6 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -115,7 +114,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
 			for ( int i = 0; i < sqmArguments.size(); i++ ) {
 				sqlAstArguments.add(
-						(SqlAstNode) ( (SqmVisitableNode) sqmArguments.get( i ) ).accept( walker )
+						(SqlAstNode) sqmArguments.get( i ).accept( walker )
 				);
 			}
 			return sqlAstArguments;
@@ -129,7 +128,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		for ( int i = 0; i < sqmArguments.size(); i++ ) {
 			typeAccess.argumentIndex = i;
 			sqlAstArguments.add(
-					(SqlAstNode) walker.visitWithInferredType( (SqmVisitableNode) sqmArguments.get( i ), typeAccess )
+					(SqlAstNode) walker.visitWithInferredType( sqmArguments.get( i ), typeAccess )
 			);
 		}
 		return sqlAstArguments;

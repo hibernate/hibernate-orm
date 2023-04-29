@@ -152,6 +152,7 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
@@ -188,6 +189,7 @@ import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -441,6 +443,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARCHAR ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32NVARCHAR ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARBINARY ) );
+
+		if ( supportsStandardArrays() ) {
+			ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
+		}
 	}
 
 	private DdlTypeImpl simpleSqlType(int sqlTypeCode) {
@@ -701,7 +707,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 							jdbcTypeRegistry.getTypeConfiguration(),
 							this,
 							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-							null
+							ColumnTypeInformation.EMPTY
 					);
 				}
 			}
@@ -4183,7 +4189,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @since 6.1
 	 */
-	public String getArrayTypeName(String elementTypeName) {
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName) {
 		return supportsStandardArrays() ? elementTypeName + " array" : null;
 	}
 
@@ -4917,6 +4923,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			}
 
 			switch ( ddlTypeCode ) {
+				case SqlTypes.ARRAY:
+					break;
 				case SqlTypes.BIT:
 				case SqlTypes.CHAR:
 				case SqlTypes.NCHAR:
@@ -4965,10 +4973,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				case SqlTypes.DECIMAL:
 				case SqlTypes.INTERVAL_SECOND:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
+					size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
 					break;
 			}
-
-			size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
 
 			if ( precision != null ) {
 				size.setPrecision( precision );

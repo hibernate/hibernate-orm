@@ -87,6 +87,7 @@ import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -685,6 +686,8 @@ public class OracleDialect extends Dialect {
 		else if ( getVersion().isSameOrAfter( 12 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
 		}
+
+		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -781,11 +784,8 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getArrayTypeName(String elementTypeName) {
-		// Return null to signal that there is no array type since Oracle only has named array types
-		// TODO: discuss if it makes sense to parse a config parameter to a map which we can query here
-		//  e.g. `hibernate.oracle.array_types=numeric(10,0)=intarray,...`
-		return null;
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName) {
+		return javaElementTypeName + "Array";
 	}
 
 	@Override

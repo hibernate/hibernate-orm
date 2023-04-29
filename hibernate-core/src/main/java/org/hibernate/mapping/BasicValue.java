@@ -31,6 +31,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -314,17 +315,36 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		final Selectable selectable = getColumn();
+		final Size size;
 		if ( selectable instanceof Column ) {
-			resolveColumn( (Column) selectable, getDialect() );
+			Column column = (Column) selectable;
+			resolveColumn( column, getDialect() );
+			size = column.calculateColumnSize( getDialect(), getBuildingContext().getMetadataCollector() );
+		}
+		else {
+			size = Size.nil();
 		}
 
 		resolution.getJdbcType()
 				.addAuxiliaryDatabaseObjects(
 						resolution.getRelationalJavaType(),
-						getBuildingContext().getMetadataCollector()
+						size,
+						getBuildingContext().getMetadataCollector().getDatabase(),
+						getTypeConfiguration()
 				);
 
 		return resolution;
+	}
+
+	@Override
+	public String getExtraCreateTableInfo() {
+		return resolution.getJdbcType()
+				.getExtraCreateTableInfo(
+						resolution.getRelationalJavaType(),
+						getColumn().getText(),
+						getTable().getName(),
+						getBuildingContext().getMetadataCollector().getDatabase()
+				);
 	}
 
 	@Override

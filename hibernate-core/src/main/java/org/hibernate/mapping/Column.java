@@ -13,7 +13,6 @@ import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TruthValue;
@@ -26,12 +25,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
-import org.hibernate.type.BasicPluralType;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -272,11 +268,11 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String getSqlTypeName(DdlTypeRegistry ddlTypeRegistry, Dialect dialect, Mapping mapping) {
 		if ( sqlTypeName == null ) {
 			try {
-				final Type type = getValue().getType();
-				sqlTypeName = isArray( type )
-						//TODO: remove the special case for array types, this should be handled by the DdlType!
-						? dialect.getArrayTypeName( getArrayElementTypeName( dialect, ddlTypeRegistry, getArrayElementType( type ) ) )
-						: ddlTypeRegistry.getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ), getUnderlyingType( mapping, type, typeIndex ) );
+				sqlTypeName = ddlTypeRegistry.getTypeName(
+						getSqlTypeCode( mapping ),
+						getColumnSize( dialect, mapping ),
+						getUnderlyingType( mapping, getValue().getType(), typeIndex )
+				);
 			}
 			catch ( Exception cause ) {
 				throw new MappingException(
@@ -312,29 +308,6 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		else {
 			return type;
 		}
-	}
-
-	private String getArrayElementTypeName(Dialect dialect, DdlTypeRegistry ddlTypeRegistry, BasicType<?> elementType) {
-		return ddlTypeRegistry.getTypeName(
-				elementType.getJdbcType().getDdlTypeCode(),
-				dialect.getSizeStrategy().resolveSize(
-						elementType.getJdbcMapping().getJdbcType(),
-						elementType.getJavaTypeDescriptor(),
-						precision,
-						scale,
-						length
-				)
-		);
-	}
-
-	private static BasicType<?> getArrayElementType(Type arrayType) {
-		final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) arrayType;
-		return containerType.getElementType();
-	}
-
-	private static boolean isArray(Type type) {
-		return type instanceof BasicPluralType<?,?>
-			&& ((BasicType<?>) type).getJdbcType() instanceof ArrayJdbcType;
 	}
 
 	/**
@@ -402,26 +375,30 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	public Size getColumnSize(Dialect dialect, Mapping mapping) {
 		if ( columnSize == null ) {
-			Type type = getValue().getType();
-			if ( type instanceof EntityType ) {
-				type = getTypeForEntityValue( mapping, type, getTypeIndex() );
-			}
-			if ( type instanceof ComponentType ) {
-				type = getTypeForComponentValue( mapping, type, getTypeIndex() );
-			}
-			if ( type == null ) {
-				throw new AssertionFailure( "no typing information available to determine column size" );
-			}
-			final JdbcMapping jdbcMapping = (JdbcMapping) type;
-			columnSize = dialect.getSizeStrategy().resolveSize(
-					jdbcMapping.getJdbcType(),
-					jdbcMapping.getJdbcJavaType(),
-					precision,
-					scale,
-					length
-			);
+			columnSize = calculateColumnSize( dialect, mapping );
 		}
 		return columnSize;
+	}
+
+	Size calculateColumnSize(Dialect dialect, Mapping mapping) {
+		Type type = getValue().getType();
+		if ( type instanceof EntityType ) {
+			type = getTypeForEntityValue( mapping, type, getTypeIndex() );
+		}
+		if ( type instanceof ComponentType ) {
+			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
+		}
+		if ( type == null ) {
+			throw new AssertionFailure( "no typing information available to determine column size" );
+		}
+		final JdbcMapping jdbcMapping = (JdbcMapping) type;
+		return dialect.getSizeStrategy().resolveSize(
+				jdbcMapping.getJdbcType(),
+				jdbcMapping.getJdbcJavaType(),
+				precision,
+				scale,
+				length
+		);
 	}
 
 	private Type getTypeForComponentValue(Mapping mapping, Type type, int typeIndex) {

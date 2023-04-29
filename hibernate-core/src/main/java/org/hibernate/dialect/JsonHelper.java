@@ -152,6 +152,7 @@ public class JsonHelper {
 				case SqlTypes.LONG32VARCHAR:
 				case SqlTypes.LONG32NVARCHAR:
 				case SqlTypes.ENUM:
+				case SqlTypes.NAMED_ENUM:
 					// These literals can contain the '"' character, so we need to escape it
 					appender.append( '"' );
 					appender.startEscaping();

@@ -89,8 +89,5 @@ public class JdbcTypeBaseline {
 		target.addDescriptor( new LongVarcharJdbcType(SqlTypes.LONG32NVARCHAR) );
 
 		target.addDescriptor( RowIdJdbcType.INSTANCE );
-
-		// by default, map named enums to varchar columns
-		target.addDescriptor( SqlTypes.ENUM, VarcharJdbcType.INSTANCE );
 	}
 }

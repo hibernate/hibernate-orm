@@ -38,6 +38,7 @@ import static org.hibernate.type.SqlTypes.hasDatePart;
 import static org.hibernate.type.SqlTypes.hasTimePart;
 import static org.hibernate.type.SqlTypes.isCharacterOrClobType;
 import static org.hibernate.type.SqlTypes.isCharacterType;
+import static org.hibernate.type.SqlTypes.isEnumType;
 import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericType;
 import static org.hibernate.type.SqlTypes.isSpatialType;
@@ -201,7 +202,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 				}
 				break;
 			case STRING:
-				if ( !isCharacterType(code) && code != SqlTypes.ENUM && code != ENUM_UNKNOWN_JDBC_TYPE) {
+				if ( !isCharacterType(code) && !isEnumType(code) && code != ENUM_UNKNOWN_JDBC_TYPE) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;

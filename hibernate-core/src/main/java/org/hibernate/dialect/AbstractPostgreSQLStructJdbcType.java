@@ -799,6 +799,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 			case SqlTypes.LONG32VARCHAR:
 			case SqlTypes.LONG32NVARCHAR:
 			case SqlTypes.ENUM:
+			case SqlTypes.NAMED_ENUM:
 				appender.quoteStart();
 				jdbcJavaType.appendEncodedString(
 						appender,

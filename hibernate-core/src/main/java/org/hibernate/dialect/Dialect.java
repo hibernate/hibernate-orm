@@ -739,10 +739,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 	}
 
-	public boolean hasNativeEnums() {
-		return false;
-	}
-
 	/**
 	 * If this database has a special MySQL-style {@code enum} column type,
 	 * return the type declaration for the given enumeration of values.

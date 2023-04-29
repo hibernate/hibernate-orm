@@ -24,6 +24,14 @@ import java.sql.SQLException;
 import static org.hibernate.type.SqlTypes.ENUM;
 
 /**
+ * Represents an {@code enum} type on MySQL.
+ * <p>
+ * Hibernate will automatically use this for enums mapped
+ * as {@link jakarta.persistence.EnumType#STRING}.
+ *
+ * @see org.hibernate.type.SqlTypes#ENUM
+ * @see MySQLDialect#getEnumTypeDeclaration(String, String[])
+ *
  * @author Gavin King
  */
 public class MySQLEnumJdbcType implements JdbcType {

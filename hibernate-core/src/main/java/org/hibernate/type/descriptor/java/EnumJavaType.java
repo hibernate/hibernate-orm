@@ -14,6 +14,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import static jakarta.persistence.EnumType.ORDINAL;
 import static org.hibernate.type.SqlTypes.CHAR;
@@ -36,6 +37,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
+		final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
 		final EnumType type = context.getEnumeratedType();
 		int sqlType;
 		switch ( type == null ? ORDINAL : type ) {
@@ -43,7 +45,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 				sqlType = hasManyValues() ? SMALLINT : TINYINT;
 				break;
 			case STRING:
-				if ( context.getDialect().hasNativeEnums() ) {
+				if ( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
 					sqlType = ENUM;
 				}
 				else if ( context.getColumnLength() == 1 ) {
@@ -56,7 +58,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 			default:
 				throw new AssertionFailure("unknown EnumType");
 		}
-		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( sqlType );
+		return jdbcTypeRegistry.getDescriptor( sqlType );
 	}
 
 	public boolean hasManyValues() {

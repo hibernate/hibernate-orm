@@ -807,12 +807,6 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, String[] values) {
-		//not needed, because we use an 'enum' type
-		return null;
-	}
-
-	@Override
 	public String getQueryHintString(String query, String hints) {
 		return getMySQLVersion().isBefore( 5 )
 				? super.getQueryHintString( query, hints )

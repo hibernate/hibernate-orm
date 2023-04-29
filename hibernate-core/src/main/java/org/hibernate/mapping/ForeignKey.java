@@ -141,7 +141,6 @@ public class ForeignKey extends Constraint {
 				referencingColumn.setLength( referencedColumn.getLength() );
 				referencingColumn.setScale( referencedColumn.getScale() );
 				referencingColumn.setPrecision( referencedColumn.getPrecision() );
-				referencingColumn.setSpecializedTypeDeclaration( referencedColumn.getSpecializedTypeDeclaration() );
 			}
 		}
 	}

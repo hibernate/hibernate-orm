@@ -163,13 +163,13 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 		return checkCondition;
 	}
 
-	@Incubating
-	default String getSpecializedTypeDeclaration(Dialect dialect) {
-		return getMappedJavaType().getSpecializedTypeDeclaration( getJdbcType(), getValueConverter(), dialect );
-	}
-
 	@Override
 	default int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
 		return compare( x, y );
 	}
+
+//	@Incubating
+//	default String getSpecializedTypeDeclaration(Dialect dialect) {
+//		return getMappedJavaType().getSpecializedTypeDeclaration( getJdbcType(), getValueConverter(), dialect );
+//	}
 }

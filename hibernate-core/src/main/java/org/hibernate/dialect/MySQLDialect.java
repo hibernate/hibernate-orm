@@ -875,11 +875,6 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean hasNativeEnums() {
-		return true;
-	}
-
-	@Override
 	public String getEnumTypeDeclaration(String name, String[] values) {
 		StringBuilder type = new StringBuilder();
 		type.append( "enum (" );
@@ -889,12 +884,6 @@ public class MySQLDialect extends Dialect {
 			separator = ",";
 		}
 		return type.append( ')' ).toString();
-	}
-
-	@Override
-	public String getCheckCondition(String columnName, String[] values) {
-		//not needed, because we use an 'enum' type
-		return null;
 	}
 
 	@Override

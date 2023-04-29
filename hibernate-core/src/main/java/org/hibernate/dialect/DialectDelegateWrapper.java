@@ -1295,8 +1295,8 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String getArrayTypeName(String elementTypeName) {
-		return wrapped.getArrayTypeName( elementTypeName );
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName) {
+		return wrapped.getArrayTypeName( javaElementTypeName, elementTypeName );
 	}
 
 	@Override

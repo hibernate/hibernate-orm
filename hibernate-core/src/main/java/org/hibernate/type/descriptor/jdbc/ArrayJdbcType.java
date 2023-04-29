@@ -7,7 +7,6 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -111,7 +110,7 @@ public class ArrayJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		return new BasicBinder<>( javaTypeDescriptor, this ) {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
@@ -197,7 +196,7 @@ public class ArrayJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+		return new BasicExtractor<>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( rs.getArray( paramIndex ), options );
@@ -230,7 +229,7 @@ public class ArrayJdbcType implements JdbcType {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(o instanceof ArrayJdbcType) ) {
 			return false;
 		}
 

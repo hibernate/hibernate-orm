@@ -133,13 +133,25 @@ public class MySQLDialect extends Dialect {
 				Integer scale,
 				Long length) {
 			switch ( jdbcType.getDdlTypeCode() ) {
-				case Types.BIT:
+				case BIT:
 					// MySQL allows BIT with a length up to 64 (less the default length 255)
 					if ( length != null ) {
 						return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
 					}
+				case FLOAT:
+				case DOUBLE:
+				case REAL:
+					//MySQL doesn't let you cast to DOUBLE/FLOAT
+					//but don't just return 'decimal' because
+					//the default scale is 0 (no decimal places)
+					Size size = super.resolveSize( jdbcType, javaType, precision, scale, length );
+					//cast() on MySQL does not behave sensibly if
+					//we set scale > 20
+					size.setScale( Math.min( size.getPrecision(), 20 ) );
+					return size;
+				default:
+					return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
-			return super.resolveSize( jdbcType, javaType, precision, scale, length );
 		}
 	};
 

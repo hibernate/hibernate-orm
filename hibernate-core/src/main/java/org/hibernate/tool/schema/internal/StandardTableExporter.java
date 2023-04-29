@@ -56,6 +56,8 @@ public class StandardTableExporter implements Exporter<Table> {
 		try {
 			final String formattedTableName = context.format( tableName );
 
+			final StringBuilder extra = new StringBuilder();
+
 			final StringBuilder createTable =
 					new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
 							.append( ' ' )
@@ -71,6 +73,8 @@ public class StandardTableExporter implements Exporter<Table> {
 					createTable.append( ", " );
 				}
 				appendColumn( createTable, column, table, metadata, dialect, context );
+
+				extra.append( column.getValue().getExtraCreateTableInfo() );
 			}
 			if ( table.getRowId() != null ) {
 				String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
@@ -87,6 +91,8 @@ public class StandardTableExporter implements Exporter<Table> {
 			applyTableCheck( table, createTable );
 
 			createTable.append( ')' );
+
+			createTable.append( extra );
 
 			if ( table.getComment() != null ) {
 				createTable.append( dialect.getTableComment( table.getComment() ) );

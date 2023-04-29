@@ -174,4 +174,9 @@ public interface Value extends Serializable {
 	boolean isColumnInsertable(int index);
 
 	boolean isColumnUpdateable(int index);
+
+	@Incubating
+	default String getExtraCreateTableInfo() {
+		return "";
+	}
 }

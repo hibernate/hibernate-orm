@@ -183,6 +183,10 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 								executionContext.getSession()
 						);
 					}
+					@Override
+					public String toString() {
+						return "JdbcParameter(" + name + ")";
+					}
 				};
 			}
 		}

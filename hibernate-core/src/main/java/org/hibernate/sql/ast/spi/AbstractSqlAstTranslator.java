@@ -204,6 +204,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -6117,6 +6118,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final SqlExpressible expressionType = (SqlExpressible) castTarget.getExpressionType();
 			if ( expressionType instanceof BasicPluralType<?, ?> ) {
 				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
+				final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) containerType.getJavaTypeDescriptor();
 				final BasicType<?> elementType = containerType.getElementType();
 				final String elementTypeName = sessionFactory.getTypeConfiguration().getDdlTypeRegistry()
 						.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
@@ -6126,7 +6128,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								castTarget.getPrecision(),
 								castTarget.getScale()
 						);
-				final String arrayTypeName = dialect.getArrayTypeName( elementTypeName );
+				final String arrayTypeName = dialect.getArrayTypeName(
+						javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
+						elementTypeName
+				);
 				if ( arrayTypeName != null ) {
 					appendSql( arrayTypeName );
 					return;

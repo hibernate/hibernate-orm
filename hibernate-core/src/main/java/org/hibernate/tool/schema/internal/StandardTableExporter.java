@@ -51,7 +51,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			Table table,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
-		final QualifiedName tableName = getTableName(table);
+		final QualifiedName tableName = getTableName( table );
 
 		try {
 			final String formattedTableName = context.format( tableName );
@@ -101,7 +101,8 @@ public class StandardTableExporter implements Exporter<Table> {
 			return sqlStrings.toArray( EMPTY_STRINGS );
 		}
 		catch (Exception e) {
-			throw new MappingException( "Error creating SQL create commands for table : " + tableName, e );
+			throw new MappingException( "Error creating SQL 'create' commands for table '"
+					+ table.getName() + "' [" + e.getMessage() + "]" , e );
 		}
 	}
 

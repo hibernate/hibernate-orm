@@ -97,34 +97,7 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.type.SqlTypes.ARRAY;
-import static org.hibernate.type.SqlTypes.BINARY;
-import static org.hibernate.type.SqlTypes.BLOB;
-import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.FLOAT;
-import static org.hibernate.type.SqlTypes.GEOGRAPHY;
-import static org.hibernate.type.SqlTypes.GEOMETRY;
-import static org.hibernate.type.SqlTypes.INET;
-import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
-import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
-import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.OTHER;
-import static org.hibernate.type.SqlTypes.SQLXML;
-import static org.hibernate.type.SqlTypes.STRUCT;
-import static org.hibernate.type.SqlTypes.TIME;
-import static org.hibernate.type.SqlTypes.TIMESTAMP;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TIME_UTC;
-import static org.hibernate.type.SqlTypes.TINYINT;
-import static org.hibernate.type.SqlTypes.UUID;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -273,7 +246,7 @@ public class PostgreSQLDialect extends Dialect {
 		// Prefer jsonb if possible
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
 
-		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( NAMED_ENUM, new NamedNativeEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -388,20 +361,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean hasNativeEnums() {
-		return true;
-	}
-
-	@Override
 	public String getEnumTypeDeclaration(String name, String[] values) {
 		return name;
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, Class<? extends Enum<?>> enumType) {
-		return null;
-	}
-
 	public String[] getCreateEnumTypeCommand(String name, String[] values) {
 		StringBuilder type = new StringBuilder();
 		type.append( "create type " )

@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TruthValue;
@@ -67,7 +68,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String customWrite;
 	private String customRead;
 	private Size columnSize;
-	private String specializedTypeDeclaration;
+//	private String specializedTypeDeclaration;
 	private java.util.List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	public Column() {
@@ -502,17 +503,20 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return getClass().getSimpleName() + '(' + getName() + ')';
 	}
 
-	public void setSpecializedTypeDeclaration(String specializedTypeDeclaration) {
-		this.specializedTypeDeclaration = specializedTypeDeclaration;
-	}
-
-	public String getSpecializedTypeDeclaration() {
-		return specializedTypeDeclaration;
-	}
-
-	public boolean hasSpecializedTypeDeclaration() {
-		return specializedTypeDeclaration != null;
-	}
+//	@Incubating
+//	public void setSpecializedTypeDeclaration(String specializedTypeDeclaration) {
+//		this.specializedTypeDeclaration = specializedTypeDeclaration;
+//	}
+//
+//	@Incubating
+//	public String getSpecializedTypeDeclaration() {
+//		return specializedTypeDeclaration;
+//	}
+//
+//	@Incubating
+//	public boolean hasSpecializedTypeDeclaration() {
+//		return specializedTypeDeclaration != null;
+//	}
 
 	public void addCheckConstraint(CheckConstraint checkConstraint) {
 		if ( !checkConstraints.contains( checkConstraint) ) {
@@ -710,7 +714,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.assignmentExpression = assignmentExpression;
 		copy.customRead = customRead;
 		copy.customWrite = customWrite;
-		copy.specializedTypeDeclaration = specializedTypeDeclaration;
+//		copy.specializedTypeDeclaration = specializedTypeDeclaration;
 		copy.columnSize = columnSize;
 		return copy;
 	}

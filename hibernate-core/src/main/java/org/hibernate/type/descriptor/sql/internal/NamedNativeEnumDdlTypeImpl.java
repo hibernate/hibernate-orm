@@ -15,6 +15,12 @@ import org.hibernate.type.descriptor.sql.DdlType;
 import static org.hibernate.type.SqlTypes.ENUM;
 
 /**
+ * A {@link DdlType} representing a native SQL {@code enum} type.
+ *
+ * @see org.hibernate.type.SqlTypes#ENUM
+ * @see org.hibernate.type.SqlTypes#NAMED_ENUM
+ * @see Dialect#getEnumTypeDeclaration(Class)
+ *
  * @author Gavin King
  */
 public class NamedNativeEnumDdlTypeImpl implements DdlType {
@@ -26,6 +32,7 @@ public class NamedNativeEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public int getSqlTypeCode() {
+		// note: also used for NAMED_ENUM
 		return ENUM;
 	}
 

@@ -1865,8 +1865,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	private <T> boolean inlineValue(T value) {
-		return criteriaValueHandlingMode == ValueHandlingMode.INLINE || value instanceof Enum
-			&& queryEngine.getCriteriaBuilder().getSessionFactory().getJdbcServices().getDialect().hasNativeEnums();
+		return criteriaValueHandlingMode == ValueHandlingMode.INLINE;
+//			|| is a literal enum mapped to a PostgreSQL named 'enum' type
 	}
 
 	@Override

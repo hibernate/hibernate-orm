@@ -25,16 +25,29 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import static java.util.Collections.emptySet;
-import static org.hibernate.type.SqlTypes.ENUM;
+import static org.hibernate.type.SqlTypes.NAMED_ENUM;
 
 /**
+ * Represents a named {@code enum} type on PostgreSQL.
+ * <p>
+ * Hibernate does <em>not</em> automatically use this for enums
+ * mapped as {@link jakarta.persistence.EnumType#STRING}, and
+ * instead this type must be explicitly requested using:
+ * <pre>
+ * &#64;JdbcTypeCode(SqlTypes.NAMED_ENUM)
+ * </pre>
+ *
+ * @see org.hibernate.type.SqlTypes#NAMED_ENUM
+ * @see PostgreSQLDialect#getEnumTypeDeclaration(String, String[])
+ * @see PostgreSQLDialect#getCreateEnumTypeCommand(String, String[])
+ *
  * @author Gavin King
  */
 public class PostgreSQLEnumJdbcType implements JdbcType {
 
 	@Override
 	public int getJdbcTypeCode() {
-		return ENUM;
+		return NAMED_ENUM;
 	}
 
 	@Override

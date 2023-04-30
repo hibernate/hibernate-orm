@@ -6770,7 +6770,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( inListPredicate.isNegated() ) {
 						appendSql( " not" );
 					}
-					appendSql( " in(" );
+					appendSql( " in (" );
 					String separator = NO_SEPARATOR;
 					for ( Expression expression : listExpressions ) {
 						appendSql( separator );
@@ -6802,7 +6802,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( inListPredicate.isNegated() ) {
 			appendSql( " not" );
 		}
-		appendSql( " in(" );
+		appendSql( " in (" );
 		String separator = NO_SEPARATOR;
 
 		int bindValueCount = listExpressions.size();
@@ -6868,7 +6868,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				if ( inListPredicate.isNegated() ) {
 					appendSql( " not" );
 				}
-				appendSql( " in(" );
+				appendSql( " in (" );
 				separator = NO_SEPARATOR;
 				itemNumber = 0;
 				while ( iterator.hasNext() && itemNumber < inExprLimit ) {
@@ -7421,7 +7421,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( operator == ComparisonOperator.NOT_EQUAL ) {
 						appendSql( " not" );
 					}
-					appendSql( " in(" );
+					appendSql( " in (" );
 					renderExpressionsAsSubquery( rhsTuple.getExpressions() );
 					appendSql( CLOSE_PARENTHESIS );
 				}

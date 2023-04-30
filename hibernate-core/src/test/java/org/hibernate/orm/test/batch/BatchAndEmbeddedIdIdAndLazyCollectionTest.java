@@ -108,8 +108,8 @@ public class BatchAndEmbeddedIdIdAndLazyCollectionTest {
 						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "?" );
 					}
 					else {
-						Assertions.assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
-						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
 					}
 				}
 		);

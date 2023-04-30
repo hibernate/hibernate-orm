@@ -238,7 +238,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			if ( inListPredicate.isNegated() ) {
 				appendSql( " not" );
 			}
-			appendSql( " in(" );
+			appendSql( " in (" );
 			renderCommaSeparated( listExpressions );
 			appendSql( CLOSE_PARENTHESIS );
 		}

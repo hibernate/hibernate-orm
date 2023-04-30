@@ -98,8 +98,8 @@ public class BatchAndEmbeddedIdIdTest {
 				assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "?" );
 			}
 			else {
-				assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
-				assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
+				assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
+				assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
 			}
 
 			statementInspector.clear();

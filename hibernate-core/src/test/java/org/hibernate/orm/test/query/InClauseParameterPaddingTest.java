@@ -54,16 +54,16 @@ public class InClauseParameterPaddingTest {
 
 	@Test
 	public void testInClauseParameterPadding(EntityManagerFactoryScope scope) {
-		validateInClauseParameterPadding( scope, "in(?)", 1 );
-		validateInClauseParameterPadding( scope, "in(?,?)", 1, 2 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?)", 1, 2, 3 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?)", 1, 2, 3, 4 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8, 9 );
-		validateInClauseParameterPadding( scope, "in(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 );
+		validateInClauseParameterPadding( scope, "in (?)", 1 );
+		validateInClauseParameterPadding( scope, "in (?,?)", 1, 2 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?)", 1, 2, 3 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?)", 1, 2, 3, 4 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8, 9 );
+		validateInClauseParameterPadding( scope, "in (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 );
 	}
 
 	private void validateInClauseParameterPadding(

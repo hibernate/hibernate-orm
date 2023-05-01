@@ -72,7 +72,8 @@ public interface DdlType extends Serializable {
 	 * Return a type with length, precision, and scale specified by the given
 	 * {@linkplain Size size object}.
 	 *
-	 * @deprecated not appropriate for named enum or array types
+	 * @deprecated not appropriate for named enum or array types,
+	 *             use {@link #getTypeName(Size, Type, DdlTypeRegistry)} instead
 	 */
 	@Deprecated(since = "6.3")
 	default String getTypeName(Size size) {
@@ -82,7 +83,8 @@ public interface DdlType extends Serializable {
 	/**
 	 * Return a type with the given length, precision, and scale.
 	 *
-	 * @deprecated not appropriate for named enum or array types
+	 * @deprecated not appropriate for named enum or array types,
+	 *             use {@link #getTypeName(Size, Type, DdlTypeRegistry)} instead
 	 */
 	@Deprecated(since = "6.3")
 	String getTypeName(Long size, Integer precision, Integer scale);

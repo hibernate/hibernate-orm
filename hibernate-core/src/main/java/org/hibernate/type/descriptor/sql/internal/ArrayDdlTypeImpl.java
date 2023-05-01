@@ -39,7 +39,8 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 								columnSize.getPrecision(),
 								columnSize.getScale(),
 								columnSize.getLength()
-						)
+						),
+						elementType
 				);
 		return dialect.getArrayTypeName(
 				javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),

@@ -122,12 +122,18 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 			TypeConfiguration typeConfiguration) {
 		final Dialect dialect = database.getDialect();
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
-		final String enumTypeName = enumClass.getSimpleName();
 		final String[] create = dialect.getCreateEnumTypeCommand( enumClass );
-		if ( create != null ) {
-			final String[] drop = dialect.getDropEnumTypeCommand( enumClass );
+		final String[] drop = dialect.getDropEnumTypeCommand( enumClass );
+		if ( create != null && create.length>0 ) {
 			database.addAuxiliaryDatabaseObject(
-					new NamedAuxiliaryDatabaseObject( enumTypeName, database.getDefaultNamespace(), create, drop, emptySet(), true )
+					new NamedAuxiliaryDatabaseObject(
+							enumClass.getSimpleName(),
+							database.getDefaultNamespace(),
+							create,
+							drop,
+							emptySet(),
+							true
+					)
 			);
 		}
 	}

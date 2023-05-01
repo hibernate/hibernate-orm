@@ -13,6 +13,7 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypeTemplate;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -46,6 +47,10 @@ public interface TypeContributions {
 	 */
 	default void contributeJdbcType(JdbcType descriptor) {
 		getTypeConfiguration().getJdbcTypeRegistry().addDescriptor( descriptor );
+	}
+
+	default void contributeJdbcTypeConstructor(JdbcTypeConstructor typeConstructor) {
+		getTypeConfiguration().getJdbcTypeRegistry().addTypeConstructor( typeConstructor );
 	}
 
 	/**

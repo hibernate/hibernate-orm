@@ -793,7 +793,7 @@ public class OracleLegacyDialect extends Dialect {
 		}
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
-			typeContributions.contributeJdbcType( OracleJdbcHelper.getArrayJdbcType( serviceRegistry ) );
+			typeContributions.contributeJdbcTypeConstructor( OracleJdbcHelper.getArrayJdbcTypeConstructor( serviceRegistry ) );
 		}
 		else {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );

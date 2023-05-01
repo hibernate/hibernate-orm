@@ -27,12 +27,14 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import oracle.jdbc.OracleConnection;
 
 import static java.sql.Types.ARRAY;
 import static java.util.Collections.emptySet;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * Descriptor for {@link Types#ARRAY ARRAY} handling.
@@ -59,7 +61,10 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public JdbcType resolveType(TypeConfiguration typeConfiguration, Dialect dialect, BasicType<?> elementType, ColumnTypeInformation columnTypeInformation) {
+	public JdbcType resolveType(
+			TypeConfiguration typeConfiguration,
+			Dialect dialect, BasicType<?> elementType,
+			ColumnTypeInformation columnTypeInformation) {
 		String typeName = columnTypeInformation.getTypeName();
 		if ( typeName == null || typeName.isBlank() ) {
 			typeName = getTypeName( elementType.getJavaTypeDescriptor(), dialect );
@@ -73,7 +78,11 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public JdbcType resolveType(TypeConfiguration typeConfiguration, Dialect dialect, JdbcType elementType, ColumnTypeInformation columnTypeInformation) {
+	public JdbcType resolveType(
+			TypeConfiguration typeConfiguration,
+			Dialect dialect,
+			JdbcType elementType,
+			ColumnTypeInformation columnTypeInformation) {
 		// a bit wrong!
 		return new OracleArrayJdbcType( elementType, columnTypeInformation.getTypeName() );
 	}
@@ -114,10 +123,8 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 				}
 			}
 
-			private java.sql.Array getArray(
-					X value,
-					BasicPluralJavaType<X> containerJavaType,
-					WrapperOptions options) throws SQLException {
+			private java.sql.Array getArray(X value, BasicPluralJavaType<X> containerJavaType, WrapperOptions options)
+					throws SQLException {
 				//noinspection unchecked
 				final Class<Object[]> arrayClass = (Class<Object[]>) Array.newInstance(
 						getElementJdbcType().getPreferredJavaTypeClass( options ),
@@ -159,27 +166,43 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 			TypeConfiguration typeConfiguration) {
 		final Dialect dialect = database.getDialect();
 		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
-		final String elementTypeName = typeName==null
-				? getTypeName( pluralJavaType.getElementJavaType(), dialect )
-				: typeName;
+		final JavaType<?> elementJavaType = pluralJavaType.getElementJavaType();
+		final String elementTypeName = typeName==null ? getTypeName( elementJavaType, dialect ) : typeName;
 		final String elementType =
 				typeConfiguration.getDdlTypeRegistry().getTypeName(
 						getElementJdbcType().getDdlTypeCode(),
 						dialect.getSizeStrategy().resolveSize(
 								getElementJdbcType(),
-								pluralJavaType.getElementJavaType(),
+								elementJavaType,
 								columnSize.getPrecision(),
 								columnSize.getScale(),
 								columnSize.getLength()
-						)
+						),
+						new BasicTypeImpl<>( elementJavaType, getElementJdbcType() )
 				);
-		final String[] create = new String[] { "create or replace type " + elementTypeName + " as varying array(255) of " + elementType };
-		final String[] drop = new String[] {
-//				"drop type " + elementTypeName
-		};
 		database.addAuxiliaryDatabaseObject(
-				new NamedAuxiliaryDatabaseObject( elementTypeName, database.getDefaultNamespace(), create, drop, emptySet(), true )
+				new NamedAuxiliaryDatabaseObject(
+						elementTypeName,
+						database.getDefaultNamespace(),
+						getCreateArrayTypeCommand( elementTypeName, elementType ),
+						getDropArrayTypeCommand( elementTypeName ),
+						emptySet(),
+						true
+				)
 		);
+	}
+
+	String[] getCreateArrayTypeCommand(String elementTypeName, String elementType) {
+		return new String[]{
+				"create or replace type " + elementTypeName
+						+ " as varying array(255) of " + elementType
+		};
+	}
+
+	String[] getDropArrayTypeCommand(String elementTypeName) {
+		// for some weird reason dropping the type declarations causes problem in the test suite
+//		return new String[] { "drop type " + elementTypeName };
+		return EMPTY_STRING_ARRAY;
 	}
 
 //	@Override

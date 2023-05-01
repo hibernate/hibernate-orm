@@ -187,7 +187,8 @@ public class DdlTypeRegistry implements Serializable {
 	 * @return the associated type name with the smallest capacity that accommodates
 	 *         the given size, if available, and the default type name otherwise
 	 *
-	 * @deprecated not appropriate for named enum or array types
+	 * @deprecated not appropriate for named enum or array types,
+	 *             use {@link #getTypeName(int, Size, Type)} instead
 	 */
 	@Deprecated(since = "6.3")
 	public String getTypeName(int typeCode, Size size) {
@@ -238,7 +239,8 @@ public class DdlTypeRegistry implements Serializable {
 	 * @return the associated type name with the smallest capacity that accommodates
 	 *         the given size, if available, and the default type name otherwise
 	 *
-	 * @deprecated not appropriate for named enum or array types
+	 * @deprecated not appropriate for named enum or array types,
+	 *             use {@link #getTypeName(int, Size, Type)} instead
 	 */
 	@Deprecated(since = "6.3")
 	public String getTypeName(int typeCode, Long size, Integer precision, Integer scale) {

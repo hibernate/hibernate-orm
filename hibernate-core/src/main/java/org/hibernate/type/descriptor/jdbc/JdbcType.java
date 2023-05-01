@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -92,7 +93,7 @@ public interface JdbcType extends Serializable {
 	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type to
 	 * be used for schema generation.
 	 * <p>
-	 * This value is passed to {@link DdlTypeRegistry#getTypeName(int, Size)}
+	 * This value is passed to {@link DdlTypeRegistry#getTypeName(int, Size, Type)}
 	 * to obtain the SQL column type.
 	 *
 	 * @return a JDBC type code

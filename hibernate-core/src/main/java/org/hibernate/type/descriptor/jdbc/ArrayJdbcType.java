@@ -14,11 +14,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -39,28 +36,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class ArrayJdbcType implements JdbcType {
 
-	public static final ArrayJdbcType INSTANCE = new ArrayJdbcType( ObjectJdbcType.INSTANCE );
-
 	private final JdbcType elementJdbcType;
 
 	public ArrayJdbcType(JdbcType elementJdbcType) {
 		this.elementJdbcType = elementJdbcType;
-	}
-
-	public JdbcType resolveType(
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			BasicType<?> elementType,
-			ColumnTypeInformation columnTypeInformation) {
-		return resolveType( typeConfiguration, dialect, elementType.getJdbcType(), columnTypeInformation );
-	}
-
-	public JdbcType resolveType(
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			JdbcType elementType,
-			ColumnTypeInformation columnTypeInformation) {
-		return new ArrayJdbcType( elementType );
 	}
 
 	@Override
@@ -219,6 +198,6 @@ public class ArrayJdbcType implements JdbcType {
 
 	@Override
 	public String toString() {
-		return "ArrayTypeDescriptor(" + getFriendlyName() + ")";
+		return "ArrayTypeDescriptor";
 	}
 }

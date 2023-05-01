@@ -99,6 +99,7 @@ import static org.hibernate.LockOptions.NO_WAIT;
 import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
+import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
@@ -831,7 +832,7 @@ public class OracleDialect extends Dialect {
 		}
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
-			typeContributions.contributeJdbcType( OracleJdbcHelper.getArrayJdbcType( serviceRegistry ) );
+			typeContributions.contributeJdbcTypeConstructor( getArrayJdbcTypeConstructor( serviceRegistry ) );
 		}
 		else {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );

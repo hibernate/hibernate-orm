@@ -175,11 +175,12 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
@@ -694,25 +695,27 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
-		if ( jdbcTypeCode == Types.ARRAY && jdbcType instanceof ArrayJdbcType ) {
-			// Special handling for array types, because we need the proper element/component type
-			// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
-			final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
-			if ( arraySuffixIndex != -1 ) {
-				final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
-				final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
-				if ( sqlTypeCode != null ) {
-					return ( (ArrayJdbcType) jdbcType ).resolveType(
-							jdbcTypeRegistry.getTypeConfiguration(),
-							this,
-							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-							ColumnTypeInformation.EMPTY
-					);
+		if ( jdbcTypeCode == ARRAY ) {
+			final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
+			if ( jdbcTypeConstructor != null ) {
+				// Special handling for array types, because we need the proper element/component type
+				// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
+				final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
+				if ( arraySuffixIndex != -1 ) {
+					final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
+					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+					if ( sqlTypeCode != null ) {
+						return jdbcTypeConstructor.resolveType(
+								jdbcTypeRegistry.getTypeConfiguration(),
+								this,
+								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+								ColumnTypeInformation.EMPTY
+						);
+					}
 				}
 			}
 		}
-		return jdbcType;
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	/**
@@ -1626,7 +1629,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 
 		if ( supportsStandardArrays() ) {
-			jdbcTypeRegistry.addDescriptor( ArrayJdbcType.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructor( ArrayJdbcTypeConstructor.INSTANCE );
 		}
 		if ( supportsMaterializedLobAccess() ) {
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );

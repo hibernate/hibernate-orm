@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
@@ -17,14 +18,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -42,17 +42,38 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_A
  * @author Christian Beikov
  * @author Jordan Gigov
  */
-public class OracleArrayJdbcType extends ArrayJdbcType {
+public class OracleArrayJdbcType implements JdbcType {
 
+	private final JdbcType elementJdbcType;
 	private final String typeName;
 
-	public OracleArrayJdbcType() {
-		this( null, null );
+	public OracleArrayJdbcType(JdbcType elementJdbcType, String typeName) {
+		this.elementJdbcType = elementJdbcType;
+		this.typeName = typeName;
 	}
 
-	public OracleArrayJdbcType(JdbcType elementJdbcType, String typeName) {
-		super( elementJdbcType );
-		this.typeName = typeName;
+	@Override
+	public int getJdbcTypeCode() {
+		return Types.ARRAY;
+	}
+
+	public JdbcType getElementJdbcType() {
+		return elementJdbcType;
+	}
+
+	@Override
+	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
+			Integer precision,
+			Integer scale,
+			TypeConfiguration typeConfiguration) {
+		final JavaType<Object> elementJavaType = elementJdbcType.getJdbcRecommendedJavaTypeMapping(
+				precision,
+				scale,
+				typeConfiguration
+		);
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
+				Array.newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass()
+		);
 	}
 
 	@Override
@@ -61,30 +82,8 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
-	public JdbcType resolveType(
-			TypeConfiguration typeConfiguration,
-			Dialect dialect, BasicType<?> elementType,
-			ColumnTypeInformation columnTypeInformation) {
-		String typeName = columnTypeInformation.getTypeName();
-		if ( typeName == null || typeName.isBlank() ) {
-			typeName = getTypeName( elementType.getJavaTypeDescriptor(), dialect );
-		}
-//		if ( typeName == null ) {
-//			// Fallback to XML type for the representation of arrays as the native JSON type was only introduced in 21
-//			// Also, use the XML type if the Oracle JDBC driver classes are not visible
-//			return typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.SQLXML );
-//		}
-		return new OracleArrayJdbcType( elementType.getJdbcType(), typeName );
-	}
-
-	@Override
-	public JdbcType resolveType(
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			JdbcType elementType,
-			ColumnTypeInformation columnTypeInformation) {
-		// a bit wrong!
-		return new OracleArrayJdbcType( elementType, columnTypeInformation.getTypeName() );
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return java.sql.Array.class;
 	}
 
 	@Override
@@ -146,12 +145,32 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 		};
 	}
 
-	private static String getTypeName(WrapperOptions options, BasicPluralJavaType<?> containerJavaType) {
+	@Override
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
+		return new BasicExtractor<>( javaTypeDescriptor, this ) {
+			@Override
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( rs.getArray( paramIndex ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getArray( index ), options );
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return javaTypeDescriptor.wrap( statement.getArray( name ), options );
+			}
+		};
+	}
+
+	static String getTypeName(WrapperOptions options, BasicPluralJavaType<?> containerJavaType) {
 		Dialect dialect = options.getSessionFactory().getJdbcServices().getDialect();
 		return getTypeName( containerJavaType.getElementJavaType(), dialect );
 	}
 
-	private static String getTypeName(JavaType<?> elementJavaType, Dialect dialect) {
+	static String getTypeName(JavaType<?> elementJavaType, Dialect dialect) {
 		return dialect.getArrayTypeName(
 				elementJavaType.getJavaTypeClass().getSimpleName(),
 				null // not needed by OracleDialect.getArrayTypeName()
@@ -212,4 +231,14 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 //		String elementTypeName = getTypeName( pluralJavaType.getElementJavaType(), dialect );
 //		return " nested table " + columnName + " store as " + tableName + columnName + elementTypeName;
 //	}
+	@Override
+	public String getFriendlyName() {
+		return typeName;
+	}
+
+	@Override
+	public String toString() {
+		return "OracleArrayTypeDescriptor(" + typeName + ")";
+	}
 }
+

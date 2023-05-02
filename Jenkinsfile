@@ -181,7 +181,7 @@ stage('Build') {
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
 								case "edb":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:14.5-3.2-postgis').pull()
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:15.2-3.3-postgis').pull()
 									sh "./docker_db.sh edb"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;

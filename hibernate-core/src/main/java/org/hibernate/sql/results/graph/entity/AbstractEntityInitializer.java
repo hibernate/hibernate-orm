@@ -513,8 +513,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( existingEntity != null ) {
 				entityInstance = existingEntity;
 				if ( existingLoadingEntry == null && isExistingEntityInitialized( existingEntity ) ) {
-					notifyResolutionListeners( entityInstance );
 					this.isInitialized = true;
+					notifyResolutionListeners( entityInstance );
 				}
 			}
 			else if ( entityInstanceFromExecutionContext != null ) {

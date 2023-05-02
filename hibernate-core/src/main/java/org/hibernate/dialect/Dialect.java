@@ -4192,8 +4192,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @since 6.1
 	 */
-	public String getArrayTypeName(String javaElementTypeName, String elementTypeName) {
-		return supportsStandardArrays() ? elementTypeName + " array" : null;
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
+		if ( supportsStandardArrays() ) {
+			return maxLength == null
+					? elementTypeName + " array"
+					: elementTypeName + " array[" + maxLength + "]";
+		}
+		else {
+			return null;
+		}
 	}
 
 	/**

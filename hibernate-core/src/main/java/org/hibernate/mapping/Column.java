@@ -48,6 +48,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private Long length;
 	private Integer precision;
 	private Integer scale;
+	private Integer arrayLength;
 	private Value value;
 	private int typeIndex;
 	private String name;
@@ -84,6 +85,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	public void setLength(Integer length) {
 		this.length = length.longValue();
+	}
+
+	public Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	public void setArrayLength(Integer arrayLength) {
+		this.arrayLength = arrayLength;
 	}
 
 	public Value getValue() {
@@ -392,13 +401,15 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			throw new AssertionFailure( "no typing information available to determine column size" );
 		}
 		final JdbcMapping jdbcMapping = (JdbcMapping) type;
-		return dialect.getSizeStrategy().resolveSize(
+		Size size = dialect.getSizeStrategy().resolveSize(
 				jdbcMapping.getJdbcType(),
 				jdbcMapping.getJdbcJavaType(),
 				precision,
 				scale,
 				length
 		);
+		size.setArrayLength( arrayLength );
+		return size;
 	}
 
 	private Type getTypeForComponentValue(Mapping mapping, Type type, int typeIndex) {
@@ -675,6 +686,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		copy.length = length;
 		copy.precision = precision;
 		copy.scale = scale;
+		copy.arrayLength = arrayLength;
 		copy.value = value;
 		copy.typeIndex = typeIndex;
 		copy.name = name;

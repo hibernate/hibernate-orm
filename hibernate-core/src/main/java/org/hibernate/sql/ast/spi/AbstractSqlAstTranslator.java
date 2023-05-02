@@ -6130,7 +6130,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						);
 				final String arrayTypeName = dialect.getArrayTypeName(
 						javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
-						elementTypeName
+						elementTypeName,
+						null
 				);
 				if ( arrayTypeName != null ) {
 					appendSql( arrayTypeName );

@@ -785,7 +785,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getArrayTypeName(String javaElementTypeName, String elementTypeName) {
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
 		return javaElementTypeName + "Array";
 	}
 

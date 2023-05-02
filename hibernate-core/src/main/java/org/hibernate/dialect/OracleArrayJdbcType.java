@@ -66,11 +66,8 @@ public class OracleArrayJdbcType implements JdbcType {
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		final JavaType<Object> elementJavaType = elementJdbcType.getJdbcRecommendedJavaTypeMapping(
-				precision,
-				scale,
-				typeConfiguration
-		);
+		final JavaType<Object> elementJavaType =
+				elementJdbcType.getJdbcRecommendedJavaTypeMapping( precision, scale, typeConfiguration );
 		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
 				Array.newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass()
 		);
@@ -173,6 +170,7 @@ public class OracleArrayJdbcType implements JdbcType {
 	static String getTypeName(JavaType<?> elementJavaType, Dialect dialect) {
 		return dialect.getArrayTypeName(
 				elementJavaType.getJavaTypeClass().getSimpleName(),
+				null, // not needed by OracleDialect.getArrayTypeName()
 				null // not needed by OracleDialect.getArrayTypeName()
 		);
 	}
@@ -199,11 +197,12 @@ public class OracleArrayJdbcType implements JdbcType {
 						),
 						new BasicTypeImpl<>( elementJavaType, getElementJdbcType() )
 				);
+		int arrayLength = columnSize.getArrayLength() == null ? 127 : columnSize.getArrayLength();
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						elementTypeName,
 						database.getDefaultNamespace(),
-						getCreateArrayTypeCommand( elementTypeName, elementType ),
+						getCreateArrayTypeCommand( elementTypeName, arrayLength, elementType ),
 						getDropArrayTypeCommand( elementTypeName ),
 						emptySet(),
 						true
@@ -211,10 +210,10 @@ public class OracleArrayJdbcType implements JdbcType {
 		);
 	}
 
-	String[] getCreateArrayTypeCommand(String elementTypeName, String elementType) {
+	String[] getCreateArrayTypeCommand(String elementTypeName, int length, String elementType) {
 		return new String[]{
 				"create or replace type " + elementTypeName
-						+ " as varying array(255) of " + elementType
+						+ " as varying array(" + length + ") of " + elementType
 		};
 	}
 

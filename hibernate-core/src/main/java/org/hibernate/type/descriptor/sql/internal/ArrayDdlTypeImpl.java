@@ -44,7 +44,8 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 				);
 		return dialect.getArrayTypeName(
 				javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
-				arrayElementTypeName
+				arrayElementTypeName,
+				columnSize.getArrayLength()
 		);
 	}
 

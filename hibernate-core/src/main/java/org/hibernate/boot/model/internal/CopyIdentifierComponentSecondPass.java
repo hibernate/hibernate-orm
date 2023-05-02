@@ -247,5 +247,6 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		mappingColumn.setLength( column.getLength() );
 		mappingColumn.setPrecision( column.getPrecision() );
 		mappingColumn.setScale( column.getScale() );
+		mappingColumn.setArrayLength( column.getArrayLength() );
 	}
 }

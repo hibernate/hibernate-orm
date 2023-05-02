@@ -235,6 +235,7 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
@@ -3698,6 +3699,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		throw new InterpretationException( "SqmEntityJoin not yet resolved to TableGroup" );
 	}
 
+	private boolean isJoinWithPredicate(SqmFrom<?, ?> path) {
+		return path instanceof SqmQualifiedJoin && ( (SqmQualifiedJoin<?, ?>) path ).getJoinPredicate() != null;
+	}
+
 	private Expression visitTableGroup(TableGroup tableGroup, SqmFrom<?, ?> path) {
 		final ModelPartContainer tableGroupModelPart = tableGroup.getModelPart();
 
@@ -3722,9 +3727,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( inferredEntityMapping == null ) {
 				// When the inferred mapping is null, we try to resolve to the FK by default, which is fine because
 				// expansion to all target columns for select and group by clauses is handled in EntityValuedPathInterpretation
-				if ( entityValuedModelPart instanceof EntityAssociationMapping && ( (EntityAssociationMapping) entityValuedModelPart ).isFkOptimizationAllowed() ) {
+				if ( entityValuedModelPart instanceof EntityAssociationMapping
+						&& ( (EntityAssociationMapping) entityValuedModelPart ).isFkOptimizationAllowed()
+						&& !isJoinWithPredicate( path ) ) {
 					// If the table group uses an association mapping that is not a one-to-many,
-					// we make use of the FK model part
+					// we make use of the FK model part - unless the path is a join with an explicit predicate,
+					// for which we should always use the target's identifier to preserve semantics
 					final EntityAssociationMapping associationMapping = (EntityAssociationMapping) entityValuedModelPart;
 					final ModelPart targetPart = associationMapping.getForeignKeyDescriptor().getPart(
 							associationMapping.getSideNature()

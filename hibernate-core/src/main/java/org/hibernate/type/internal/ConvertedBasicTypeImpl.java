@@ -88,6 +88,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 		this.converter = converter;
 		this.jdbcType = jdbcType;
 		this.sqlTypes = new int[] { jdbcType.getDdlTypeCode() };
+		//TODO: these type casts look completely bogus
 		this.jdbcValueBinder = (ValueBinder<J>) jdbcType.getBinder( converter.getRelationalJavaType() );
 		this.jdbcValueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( converter.getRelationalJavaType() );
 		this.jdbcLiteralFormatter = (JdbcLiteralFormatter<J>) jdbcType.getJdbcLiteralFormatter( converter.getRelationalJavaType() );

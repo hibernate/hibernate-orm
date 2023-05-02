@@ -287,9 +287,10 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 				throw new MappingException(
 						String.format(
 								Locale.ROOT,
-								"Unable to determine SQL type name for column '%s' of table '%s'",
+								"Unable to determine SQL type name for column '%s' of table '%s': %s",
 								getName(),
-								getValue().getTable().getName()
+								getValue().getTable().getName(),
+								cause.getMessage()
 						),
 						cause
 				);

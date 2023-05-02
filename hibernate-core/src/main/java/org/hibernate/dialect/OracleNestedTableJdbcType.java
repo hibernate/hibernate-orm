@@ -6,18 +6,12 @@
  */
 package org.hibernate.dialect;
 
-import java.lang.reflect.Array;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
-
+import oracle.jdbc.OracleConnection;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -30,7 +24,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import oracle.jdbc.OracleConnection;
+import java.lang.reflect.Array;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Locale;
 
 import static java.sql.Types.ARRAY;
 import static java.util.Collections.emptySet;
@@ -42,12 +42,12 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_A
  * @author Christian Beikov
  * @author Jordan Gigov
  */
-public class OracleArrayJdbcType implements JdbcType {
+public class OracleNestedTableJdbcType implements JdbcType {
 
 	private final JdbcType elementJdbcType;
 	private final String typeName;
 
-	public OracleArrayJdbcType(JdbcType elementJdbcType, String typeName) {
+	public OracleNestedTableJdbcType(JdbcType elementJdbcType, String typeName) {
 		this.elementJdbcType = elementJdbcType;
 		this.typeName = typeName;
 	}
@@ -55,6 +55,11 @@ public class OracleArrayJdbcType implements JdbcType {
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.ARRAY;
+	}
+
+	@Override
+	public int getDdlTypeCode() {
+		return SqlTypes.TABLE;
 	}
 
 	public JdbcType getElementJdbcType() {
@@ -66,8 +71,11 @@ public class OracleArrayJdbcType implements JdbcType {
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		final JavaType<Object> elementJavaType =
-				elementJdbcType.getJdbcRecommendedJavaTypeMapping( precision, scale, typeConfiguration );
+		final JavaType<Object> elementJavaType = elementJdbcType.getJdbcRecommendedJavaTypeMapping(
+				precision,
+				scale,
+				typeConfiguration
+		);
 		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
 				Array.newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass()
 		);
@@ -170,7 +178,7 @@ public class OracleArrayJdbcType implements JdbcType {
 	static String getTypeName(JavaType<?> elementJavaType, Dialect dialect) {
 		return dialect.getArrayTypeName(
 				elementJavaType.getJavaTypeClass().getSimpleName(),
-				null, // not needed by OracleDialect.getArrayTypeName()
+				null, // not needed by OracleDialect.getArrayTypeName(),
 				null // not needed by OracleDialect.getArrayTypeName()
 		);
 	}
@@ -197,12 +205,11 @@ public class OracleArrayJdbcType implements JdbcType {
 						),
 						new BasicTypeImpl<>( elementJavaType, getElementJdbcType() )
 				);
-		int arrayLength = columnSize.getArrayLength() == null ? 127 : columnSize.getArrayLength();
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
 						elementTypeName,
 						database.getDefaultNamespace(),
-						getCreateArrayTypeCommand( elementTypeName, arrayLength, elementType ),
+						getCreateArrayTypeCommand( elementTypeName, elementType ),
 						getDropArrayTypeCommand( elementTypeName ),
 						emptySet(),
 						true
@@ -210,10 +217,10 @@ public class OracleArrayJdbcType implements JdbcType {
 		);
 	}
 
-	String[] getCreateArrayTypeCommand(String elementTypeName, int length, String elementType) {
+	String[] getCreateArrayTypeCommand(String elementTypeName, String elementType) {
 		return new String[]{
 				"create or replace type " + elementTypeName
-						+ " as varying array(" + length + ") of " + elementType
+						+ " as table of " + elementType
 		};
 	}
 
@@ -221,6 +228,15 @@ public class OracleArrayJdbcType implements JdbcType {
 		// for some weird reason dropping the type declarations causes problem in the test suite
 //		return new String[] { "drop type " + elementTypeName };
 		return EMPTY_STRING_ARRAY;
+	}
+
+	@Override
+	public String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
+		final Dialect dialect = database.getDialect();
+		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
+		String elementTypeName = getTypeName( pluralJavaType.getElementJavaType(), dialect );
+		return " nested table " + columnName
+				+ " store as \"" + tableName + " " + columnName + " " + elementTypeName + "\"";
 	}
 
 	@Override

@@ -9,8 +9,6 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
@@ -19,17 +17,11 @@ import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
-import org.hibernate.type.descriptor.converter.internal.ArrayConverter;
-import org.hibernate.type.BasicArrayType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.ConvertedBasicArrayType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -75,7 +67,8 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			}
 		}
 		final Class<?> elementJavaTypeClass = elementType.getJavaTypeDescriptor().getJavaTypeClass();
-		if ( elementType instanceof BasicPluralType<?, ?> || elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
+		if ( elementType instanceof BasicPluralType<?, ?>
+				|| elementJavaTypeClass != null && elementJavaTypeClass.isArray() ) {
 			return null;
 		}
 		final ArrayJavaType<T> arrayJavaType;
@@ -88,52 +81,9 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( arrayJavaType );
 		}
 		final BasicValueConverter<T, ?> valueConverter = elementType.getValueConverter();
-		if ( valueConverter == null ) {
-			final Function<JavaType<T[]>, BasicType<T[]>> creator = javaType -> {
-				final JdbcType arrayJdbcType =
-						getArrayJdbcType( typeConfiguration, dialect, Types.ARRAY, elementType, columnTypeInformation );
-				return new BasicArrayType<>( elementType, arrayJdbcType, javaType );
-			};
-			if ( typeConfiguration.getBasicTypeRegistry().getRegisteredType( elementType.getName() ) == elementType ) {
-				return typeConfiguration.standardBasicTypeForJavaType( arrayJavaType.getJavaType(), creator );
-			}
-			return creator.apply( arrayJavaType );
-		}
-		else {
-			final JavaType<Object> relationalJavaType = typeConfiguration.getJavaTypeRegistry().getDescriptor(
-					Array.newInstance( valueConverter.getRelationalJavaType().getJavaTypeClass(), 0 ).getClass()
-			);
-			//noinspection unchecked,rawtypes
-			return new ConvertedBasicArrayType(
-					elementType,
-					getArrayJdbcType( typeConfiguration, dialect, Types.ARRAY, elementType, columnTypeInformation ),
-					arrayJavaType,
-					new ArrayConverter( valueConverter, arrayJavaType, relationalJavaType )
-			);
-		}
-	}
-
-	//TODO: copy/pasted from AbstractArrayJavaType
-	private static JdbcType getArrayJdbcType(
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			int preferredSqlTypeCodeForArray,
-			BasicType<?> elementType,
-			ColumnTypeInformation columnTypeInformation) {
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-		final JdbcTypeConstructor arrayJdbcTypeConstructor =
-				jdbcTypeRegistry.getConstructor( preferredSqlTypeCodeForArray );
-		if ( arrayJdbcTypeConstructor != null ) {
-			return arrayJdbcTypeConstructor.resolveType(
-					typeConfiguration,
-					dialect,
-					elementType,
-					columnTypeInformation
-			);
-		}
-		else {
-			return jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForArray );
-		}
+		return valueConverter == null
+				? createType( typeConfiguration, dialect, arrayJavaType, elementType, columnTypeInformation, stdIndicators )
+				: createTypeUsingConverter( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, valueConverter );
 	}
 
 	@Override

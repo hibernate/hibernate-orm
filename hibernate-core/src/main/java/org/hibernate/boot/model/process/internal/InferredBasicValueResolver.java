@@ -72,7 +72,7 @@ public class InferredBasicValueResolver {
 
 		final BasicType<T> jdbcMapping;
 
-		if (explicitJavaType != null) {
+		if ( explicitJavaType != null ) {
 			// we have an explicit JavaType
 			if ( isTemporal( explicitJavaType ) ) {
 				return fromTemporal(
@@ -85,26 +85,21 @@ public class InferredBasicValueResolver {
 			}
 			else if ( explicitJdbcType != null ) {
 				// we also have an explicit JdbcType
-				jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
-						explicitJavaType,
-						explicitJdbcType
-				);
+				jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( explicitJavaType, explicitJdbcType );
 			}
 			else {
 				// we need to infer the JdbcType and use that to build the value-mapping
 				final JdbcType inferredJdbcType = explicitJavaType.getRecommendedJdbcType( stdIndicators );
-				if ( inferredJdbcType instanceof ObjectJdbcType && ( explicitJavaType instanceof SerializableJavaType
-						|| explicitJavaType.getJavaType() instanceof Serializable ) ) {
+				if ( inferredJdbcType instanceof ObjectJdbcType
+						&& ( explicitJavaType instanceof SerializableJavaType
+							|| explicitJavaType.getJavaType() instanceof Serializable ) ) {
 					// Use the SerializableType if possible since ObjectJdbcType is our fallback
 					jdbcMapping = new SerializableType( explicitJavaType );
 				}
 				else {
 					jdbcMapping = resolveSqlTypeIndicators(
 							stdIndicators,
-							typeConfiguration.getBasicTypeRegistry().resolve(
-									explicitJavaType,
-									inferredJdbcType
-							),
+							typeConfiguration.getBasicTypeRegistry().resolve( explicitJavaType, inferredJdbcType ),
 							explicitJavaType
 					);
 				}
@@ -201,10 +196,7 @@ public class InferredBasicValueResolver {
 					if ( recommendedJdbcType != null ) {
 						jdbcMapping = resolveSqlTypeIndicators(
 								stdIndicators,
-								typeConfiguration.getBasicTypeRegistry().resolve(
-										reflectedJtd,
-										recommendedJdbcType
-								),
+								typeConfiguration.getBasicTypeRegistry().resolve( reflectedJtd, recommendedJdbcType ),
 								reflectedJtd
 						);
 					}
@@ -241,18 +233,11 @@ public class InferredBasicValueResolver {
 					}
 				}
 
-				final JavaType<T> recommendedJtd = explicitJdbcType.getJdbcRecommendedJavaTypeMapping(
-						length,
-						scale,
-						typeConfiguration
-				);
-
+				final JavaType<T> recommendedJtd =
+						explicitJdbcType.getJdbcRecommendedJavaTypeMapping( length, scale, typeConfiguration );
 				jdbcMapping = resolveSqlTypeIndicators(
 						stdIndicators,
-						typeConfiguration.getBasicTypeRegistry().resolve(
-								recommendedJtd,
-								explicitJdbcType
-						),
+						typeConfiguration.getBasicTypeRegistry().resolve( recommendedJtd, explicitJdbcType ),
 						recommendedJtd
 				);
 			}

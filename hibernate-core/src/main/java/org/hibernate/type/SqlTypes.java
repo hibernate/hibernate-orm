@@ -278,6 +278,13 @@ public class SqlTypes {
 	public final static int ARRAY = Types.ARRAY;
 
 	/**
+	 * A type code representing an Oracle-style nested table.
+	 *
+	 * @see org.hibernate.dialect.OracleNestedTableJdbcType
+	 */
+	public final static int TABLE = 4000;
+
+	/**
 	 * A type code representing the generic SQL type {@code BLOB}.
 	 *
 	 * @see Types#BLOB
@@ -527,6 +534,8 @@ public class SqlTypes {
 	 * {@link org.hibernate.dialect.MySQLDialect MySQL} where {@code ENUM}
 	 * types do not have names.
 	 *
+	 * @see org.hibernate.dialect.MySQLEnumJdbcType
+	 *
 	 * @since 6.3
 	 */
 	public static final int ENUM = 6000;
@@ -535,6 +544,8 @@ public class SqlTypes {
 	 * A type code representing a SQL {@code ENUM} type for databases like
 	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} where
 	 * {@code ENUM} types must have names.
+	 *
+	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
 	 *
 	 * @since 6.3
 	 */

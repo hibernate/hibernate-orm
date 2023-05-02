@@ -74,14 +74,17 @@ public class ArrayJdbcType implements JdbcType {
 			//noinspection unchecked
 			elementJavaType = (JavaType<T>) ByteJavaType.INSTANCE;
 		}
-		else {
+		else if (javaTypeDescriptor instanceof BasicPluralJavaType) {
 			//noinspection unchecked
-			elementJavaType = javaTypeDescriptor instanceof BasicPluralJavaType
-					? ( (BasicPluralJavaType<T>) javaTypeDescriptor ).getElementJavaType()
-					: null; //TODO: what should really happen here?
+			elementJavaType = ((BasicPluralJavaType<T>) javaTypeDescriptor).getElementJavaType();
 		}
-		final JdbcLiteralFormatter<T> elementFormatter = elementJdbcType.getJdbcLiteralFormatter( elementJavaType );
-		return new JdbcLiteralFormatterArray<>( javaTypeDescriptor, elementFormatter );
+		else {
+			throw new IllegalArgumentException("not a BasicPluralJavaType");
+		}
+		return new JdbcLiteralFormatterArray<>(
+				javaTypeDescriptor,
+				elementJdbcType.getJdbcLiteralFormatter( elementJavaType )
+		);
 	}
 
 	@Override

@@ -574,7 +574,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected JdbcLockStrategy getJdbcLockStrategy() {
-		return lockOptions == null ? JdbcLockStrategy.FOLLOW_ON : JdbcLockStrategy.NONE;
+		if ( lockOptions == null ) {
+			return JdbcLockStrategy.AUTO;
+		}
+
+		if ( lockOptions.getFollowOnLocking() == Boolean.TRUE ) {
+			return JdbcLockStrategy.FOLLOW_ON;
+		}
+
+		return JdbcLockStrategy.NONE;
 	}
 
 	protected JdbcParameterBindings getJdbcParameterBindings() {

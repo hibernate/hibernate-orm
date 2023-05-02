@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa;
 
+import org.hibernate.sql.exec.spi.JdbcLockStrategy;
+
 /**
  * List of Hibernate-specific (extension) hints available to query,
  * load, and lock scenarios.
@@ -102,12 +104,14 @@ public interface HibernateHints {
 	String HINT_COMMENT = "org.hibernate.comment";
 
 	/**
-	 * Hint to enable or disable the follow-on locking mechanism provided
-	 * by {@link org.hibernate.dialect.Dialect#useFollowOnLocking}.
-	 * <p>
-	 * A value of {@code true} enables follow-on-locking, whereas a value
-	 * of {@code false} disables it. If the value is {@code null}, the
-	 * dialect itself will determine whether follow-on locking is used.
+	 * Defines explicit handling for follow-on locking, where Hibernate uses
+	 * subsequent selects for {@linkplain SpecHints#HINT_SPEC_LOCK_SCOPE extended locking}.
+	 * <p/>
+	 * Expected values are :<ol>
+	 *     <li>{@code true} - use follow-on locking
+	 *     <li>{@code false} - do not use follow-on locking
+	 *     <li>{@code null} (default) - ask the {@linkplain org.hibernate.dialect.Dialect#useFollowOnLocking Dialect}
+	 * </ol>
 	 *
 	 * @see org.hibernate.LockOptions#setFollowOnLocking(Boolean)
 	 *

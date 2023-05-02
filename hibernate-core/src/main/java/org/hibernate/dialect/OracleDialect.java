@@ -100,6 +100,7 @@ import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
+import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
@@ -125,6 +126,7 @@ import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.SQLXML;
 import static org.hibernate.type.SqlTypes.STRUCT;
+import static org.hibernate.type.SqlTypes.TABLE;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
@@ -689,6 +691,7 @@ public class OracleDialect extends Dialect {
 		}
 
 		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -833,6 +836,7 @@ public class OracleDialect extends Dialect {
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcTypeConstructor( getArrayJdbcTypeConstructor( serviceRegistry ) );
+			typeContributions.contributeJdbcTypeConstructor( getNestedTableJdbcTypeConstructor( serviceRegistry ) );
 		}
 		else {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );

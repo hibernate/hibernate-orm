@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -98,6 +99,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Resolved state - available after `#resolve`
 	private Resolution<?> resolution;
+	private Integer jdbcTypeCode;
 
 
 	public BasicValue(MetadataBuildingContext buildingContext) {
@@ -389,8 +391,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	protected Resolution<?> buildResolution() {
 		Properties typeParameters = getTypeParameters();
-		if (typeParameters != null
-				&& parseBoolean(typeParameters.getProperty(DynamicParameterizedType.IS_DYNAMIC))
+		if ( typeParameters != null
+				&& parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_DYNAMIC) )
 				&& typeParameters.get(DynamicParameterizedType.PARAMETER_TYPE) == null ) {
 			createParameterImpl();
 		}
@@ -410,13 +412,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 
 		if ( isVersion() ) {
-			return VersionResolution.from(
-					implicitJavaTypeAccess,
-					timeZoneStorageType,
-					getBuildingContext()
-			);
+			return VersionResolution.from( implicitJavaTypeAccess, timeZoneStorageType, getBuildingContext() );
 		}
-
 
 		// determine JavaType if we can
 
@@ -451,8 +448,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 			if ( javaType instanceof BasicPluralJavaType<?>
 					&& !attributeConverterDescriptor.getDomainValueResolvedType()
-					.getErasedType()
-					.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+							.getErasedType()
+							.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				// In this case, the converter applies to the element of a BasicPluralJavaType
 				final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) javaType;
 				final BasicType registeredElementType = converterResolution.getLegacyResolvedBasicType();
@@ -620,7 +617,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
 			final BasicTypeImpl<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );
-
 			return new NamedBasicTypeResolution<>(
 					basicType.getJavaTypeDescriptor(),
 					basicType,
@@ -894,6 +890,16 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	private boolean isWrapperByteOrCharacterArray() {
 		final Class<?> javaTypeClass = getResolution().getDomainJavaType().getJavaTypeClass();
 		return javaTypeClass == Byte[].class || javaTypeClass == Character[].class;
+	}
+
+	@Incubating
+	public void setExplicitJdbcTypeCode(Integer jdbcTypeCode) {
+		this.jdbcTypeCode = jdbcTypeCode;
+	}
+
+	@Override
+	public Integer getExplicitJdbcTypeCode() {
+		return jdbcTypeCode == null ? getPreferredSqlTypeCodeForArray() : jdbcTypeCode;
 	}
 
 	/**

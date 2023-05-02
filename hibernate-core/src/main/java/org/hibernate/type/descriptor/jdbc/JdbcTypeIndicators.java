@@ -10,6 +10,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Incubating;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
@@ -149,6 +150,17 @@ public interface JdbcTypeIndicators {
 	 */
 	default int getColumnScale() {
 		return NO_COLUMN_SCALE;
+	}
+
+	/**
+	 * Used (for now) only to choose a container {@link JdbcType} for
+	 * SQL arrays.
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	default Integer getExplicitJdbcTypeCode() {
+		return getPreferredSqlTypeCodeForArray();
 	}
 
 	/**

@@ -38,11 +38,15 @@ public class OracleJdbcHelper {
 		return create( serviceRegistry, "org.hibernate.dialect.OracleArrayJdbcTypeConstructor" );
 	}
 
+	public static JdbcTypeConstructor getNestedTableJdbcTypeConstructor(ServiceRegistry serviceRegistry) {
+		return create( serviceRegistry, "org.hibernate.dialect.OracleNestedTableJdbcTypeConstructor" );
+	}
+
 	public static JdbcType getStructJdbcType(ServiceRegistry serviceRegistry) {
 		return create( serviceRegistry, "org.hibernate.dialect.OracleStructJdbcType" );
 	}
 
-	public static <X> X create(ServiceRegistry serviceRegistry, String className) {
+	private static <X> X create(ServiceRegistry serviceRegistry, String className) {
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		try {
 			return classLoaderService.<X>classForName( className ).getConstructor().newInstance();

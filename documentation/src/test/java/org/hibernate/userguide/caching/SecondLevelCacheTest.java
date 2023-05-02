@@ -256,7 +256,7 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-14944") // "this worked in Hibernate 5.4
+	@TestForIssue( jiraKey = "HHH-14944") // issue is also reproduceable in Hibernate 5.4
 	public void testCacheVerifyHits() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.persist( new Person() );

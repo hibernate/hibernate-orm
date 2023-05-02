@@ -411,7 +411,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	// Update handling
 
 	private JdbcMutationOperation generateUpdateRowOperation(MutatingTableReference tableReference) {
-		if ( getIdentifierTableMapping().getInsertDetails().getCustomSql() != null ) {
+		if ( getIdentifierTableMapping().getUpdateDetails().getCustomSql() != null ) {
 			return buildCustomSqlUpdateRowOperation( tableReference );
 		}
 
@@ -437,9 +437,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return new JdbcUpdateMutation(
 				getCollectionTableMapping(),
 				this,
-				getCollectionTableMapping().getDeleteDetails().getCustomSql(),
-				getCollectionTableMapping().getDeleteDetails().isCallable(),
-				getCollectionTableMapping().getDeleteDetails().getExpectation(),
+				getCollectionTableMapping().getUpdateDetails().getCustomSql(),
+				getCollectionTableMapping().getUpdateDetails().isCallable(),
+				getCollectionTableMapping().getUpdateDetails().getExpectation(),
 				parameterBinders
 		);
 	}

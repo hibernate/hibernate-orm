@@ -10,7 +10,6 @@ import jakarta.persistence.AttributeConverter;
 import org.hibernate.Incubating;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.StandardBasicTypeTemplate;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;

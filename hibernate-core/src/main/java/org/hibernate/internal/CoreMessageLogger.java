@@ -334,7 +334,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "GUID identifier generated: %s", id = 113)
 	void guidGenerated(String result);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Handling transient entity in delete processing", id = 114)
 	void handlingTransientEntity();
 
@@ -469,7 +469,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			String sfJNDIName,
 			@Cause ClassCastException e);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Lazy property fetching available for: %s", id = 157)
 	void lazyPropertyFetchingAvailable(String name);
 

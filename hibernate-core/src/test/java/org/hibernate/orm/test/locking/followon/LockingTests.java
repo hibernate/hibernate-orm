@@ -9,11 +9,13 @@ package org.hibernate.orm.test.locking.followon;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.SpecHints;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -71,7 +73,7 @@ public class LockingTests {
 				assertThat( dependentLockMode ).isIn( LockModeType.READ, LockModeType.OPTIMISTIC );
 			}
 
-			if ( useFollowOnLocking ) {
+			if ( useFollowOnLocking == Boolean.TRUE ) {
 				// * the Query
 				// * load DependentEntity#1
 				// * lock SomeEntity#1
@@ -123,7 +125,7 @@ public class LockingTests {
 				assertThat( dependentLockMode ).isIn( LockModeType.PESSIMISTIC_READ, LockModeType.PESSIMISTIC_WRITE );
 			}
 
-			if ( useFollowOnLocking ) {
+			if ( useFollowOnLocking == Boolean.TRUE ) {
 				// * the Query
 				// * SomeEntity#1 lock
 				// * SomeEntity#2 lock

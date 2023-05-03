@@ -13,19 +13,24 @@ import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Base for types which map associations to persistent entities.
@@ -341,7 +346,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
 		final EntityPersister persister = getAssociatedEntityPersister( factory );
 		final Object id;
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( x );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( x );
 		if ( lazyInitializer != null ) {
 			id = lazyInitializer.getInternalIdentifier();
 		}
@@ -370,7 +375,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		final EntityPersister persister = getAssociatedEntityPersister( factory );
 		final Class<?> mappedClass = persister.getMappedClass();
 		Object xid;
-		final LazyInitializer lazyInitializerX = HibernateProxy.extractLazyInitializer( x );
+		final LazyInitializer lazyInitializerX = extractLazyInitializer( x );
 		if ( lazyInitializerX != null ) {
 			xid = lazyInitializerX.getInternalIdentifier();
 		}
@@ -385,7 +390,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		Object yid;
-		final LazyInitializer lazyInitializerY = HibernateProxy.extractLazyInitializer( y );
+		final LazyInitializer lazyInitializerY = extractLazyInitializer( y );
 		if ( lazyInitializerY != null ) {
 			yid = lazyInitializerY.getInternalIdentifier();
 		}
@@ -460,14 +465,34 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return null;
 		}
 		else {
-			EntityPersister entityPersister = getAssociatedEntityPersister( session.getFactory() );
-			Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
+			final LazyInitializer lazyInitializer = extractLazyInitializer( value );
+			if ( lazyInitializer != null ) {
+			/*
+				If the value is a Proxy and the property access is field, the value returned by
+			 	`attributeMapping.getAttributeMetadata().getPropertyAccess().getGetter().get( object )`
+			 	is always null except for the id, we need the to use the proxy implementation to
+			 	extract the property value.
+			 */
+				value = lazyInitializer.getImplementation();
+			}
+			else if ( isPersistentAttributeInterceptable( value ) ) {
+				/*
+					If the value is an instance of PersistentAttributeInterceptable, and it is not initialized
+					we need to force initialization the get the property value
+				 */
+				final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( value ).$$_hibernate_getInterceptor();
+				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+					( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( value, null );
+				}
+			}
+			final EntityPersister entityPersister = getAssociatedEntityPersister( session.getFactory() );
+			final Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
 			// We now have the value of the property-ref we reference.  However,
 			// we need to dig a little deeper, as that property might also be
 			// an entity type, in which case we need to resolve its identifier
-			Type type = entityPersister.getPropertyType( uniqueKeyPropertyName );
+			final Type type = entityPersister.getPropertyType( uniqueKeyPropertyName );
 			if ( type.isEntityType() ) {
-				propertyValue = ( (EntityType) type ).getIdentifier( propertyValue, session );
+				return ( (EntityType) type ).getIdentifier( propertyValue, session );
 			}
 
 			return propertyValue;
@@ -526,7 +551,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 		if ( persister.hasIdentifierProperty() ) {
 			final Object id;
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( value );
+			final LazyInitializer lazyInitializer = extractLazyInitializer( value );
 			if ( lazyInitializer != null ) {
 				id = lazyInitializer.getInternalIdentifier();
 			}
@@ -673,7 +698,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				isNullable()
 		);
 
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( proxyOrEntity );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( proxyOrEntity );
 		if ( lazyInitializer != null ) {
 			lazyInitializer.setUnwrap( isProxyUnwrapEnabled );
 		}

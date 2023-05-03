@@ -12,6 +12,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,6 +58,7 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 
 import static java.lang.Boolean.TRUE;
@@ -76,6 +78,7 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
@@ -84,6 +87,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_SCOPE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
@@ -419,6 +423,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			case HINT_NATIVE_LOCKMODE:
 				applyLockModeHint( value );
 				return true;
+			case HINT_SPEC_LOCK_SCOPE:
+				applyLockScopeHint( value );
+			case HINT_JAVAEE_LOCK_SCOPE:
+				DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_SCOPE, HINT_SPEC_LOCK_SCOPE );
+				applyLockScopeHint( value );
 			default:
 				if ( hintName.startsWith( HINT_NATIVE_LOCKMODE ) ) {
 					applyAliasSpecificLockModeHint( hintName, value );
@@ -485,6 +494,20 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	protected void applyFollowOnLockingHint(Boolean followOnLocking) {
 		getQueryOptions().getLockOptions().setFollowOnLocking( followOnLocking );
+	}
+
+	protected void applyLockScopeHint(Object scope) {
+		getQueryOptions().getLockOptions().setLockScope( interpretLockScope( scope ) );
+	}
+
+	private static PessimisticLockScope interpretLockScope(Object value) {
+		if ( value == null ) {
+			return PessimisticLockScope.NORMAL;
+		}
+		if ( value instanceof PessimisticLockScope ) {
+			return ( (PessimisticLockScope) value );
+		}
+		return PessimisticLockScope.valueOf( value.toString().toUpperCase( Locale.ROOT ) );
 	}
 
 	protected boolean applyAdditionalPossibleHints(String hintName, Object value) {

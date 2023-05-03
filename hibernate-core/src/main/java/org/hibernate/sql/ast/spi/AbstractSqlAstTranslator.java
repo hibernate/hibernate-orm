@@ -58,7 +58,6 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
-import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
@@ -212,6 +211,7 @@ import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
+import static org.hibernate.sql.ast.internal.SqlAstTranslationLogging.SQL_AST_TRANSLATE_LOGGER;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomainResultGraph;
 
@@ -1399,71 +1399,65 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			QuerySpec querySpec,
 			ForUpdateClause forUpdateClause,
 			Boolean followOnLocking) {
-		LockStrategy strategy = LockStrategy.CLAUSE;
+		// perform a number of checks about the SQL; and in some cases force follow-on locking
+
+		// Locking with GROUP BY
 		if ( !querySpec.getGroupByClauseExpressions().isEmpty() ) {
-			if ( Boolean.FALSE.equals( followOnLocking ) ) {
-				throw new IllegalQueryOperationException( "Locking with GROUP BY is not supported" );
-			}
-			strategy = LockStrategy.FOLLOW_ON;
+			SQL_AST_TRANSLATE_LOGGER.debug( "Locking with GROUP BY : using follow-on locking" );
+			return LockStrategy.FOLLOW_ON;
 		}
+
 		if ( querySpec.getHavingClauseRestrictions() != null ) {
-			if ( Boolean.FALSE.equals( followOnLocking ) ) {
-				throw new IllegalQueryOperationException( "Locking with HAVING is not supported" );
-			}
-			strategy = LockStrategy.FOLLOW_ON;
+			SQL_AST_TRANSLATE_LOGGER.debug( "Locking with HAVING : using follow-on locking" );
+			return LockStrategy.FOLLOW_ON;
 		}
+
 		if ( querySpec.getSelectClause().isDistinct() ) {
-			if ( Boolean.FALSE.equals( followOnLocking ) ) {
-				throw new IllegalQueryOperationException( "Locking with DISTINCT is not supported" );
-			}
-			strategy = LockStrategy.FOLLOW_ON;
+			SQL_AST_TRANSLATE_LOGGER.debug( "Locking with DISTINCT : using follow-on locking" );
+			return LockStrategy.FOLLOW_ON;
 		}
+
 		if ( !dialect.supportsOuterJoinForUpdate() ) {
 			if ( forUpdateClause.hasAliases() ) {
 				// Only need to visit the TableGroupJoins for which the alias is registered
-				if ( querySpec.getFromClause().queryTableGroupJoins(
-						tableGroupJoin -> {
-							final TableGroup group = tableGroupJoin.getJoinedGroup();
-							if ( forUpdateClause.hasAlias( group.getSourceAlias() ) ) {
-								if ( tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
-									if ( Boolean.FALSE.equals( followOnLocking ) ) {
-										throw new IllegalQueryOperationException(
-												"Locking with OUTER joins is not supported" );
-									}
-									return Boolean.TRUE;
-								}
+				final Boolean hasNonInnerTableGroupJoin = querySpec.getFromClause().queryTableGroupJoins( (tableGroupJoin) -> {
+					final TableGroup group = tableGroupJoin.getJoinedGroup();
+						if ( forUpdateClause.hasAlias( group.getSourceAlias() ) ) {
+							if ( tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
+								return true;
 							}
-							return null;
 						}
-				) != null ) {
-					strategy = LockStrategy.FOLLOW_ON;
+						return null;
+				} );
+				if ( hasNonInnerTableGroupJoin == Boolean.TRUE ) {
+					SQL_AST_TRANSLATE_LOGGER.debug( "Locking with OUTER JOIN : using follow-on locking" );
+					return LockStrategy.FOLLOW_ON;
 				}
 			}
 			else {
 				// Visit TableReferenceJoin and TableGroupJoin to see if all use INNER
-				if ( querySpec.getFromClause().queryTableJoins(
-						tableJoin -> {
-							if ( tableJoin.getJoinType() != SqlAstJoinType.INNER && !( tableJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
-								if ( Boolean.FALSE.equals( followOnLocking ) ) {
-									throw new IllegalQueryOperationException(
-											"Locking with OUTER joins is not supported" );
-								}
-								return Boolean.TRUE;
-							}
-							return null;
-						}
-				) != null ) {
-					strategy = LockStrategy.FOLLOW_ON;
+				final Boolean hasNonInnerTableGroupJoin = querySpec.getFromClause().queryTableGroupJoins( (tableGroupJoin) -> {
+					if ( tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( tableGroupJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
+						return true;
+					}
+					// NOTE: if there are more joins to check, the {@code null} returned here indicates to continue checking;
+					// if no more, null will ultimately be the value of `hasNonInnerTableGroupJoin`
+					return null;
+				} );
+				if ( hasNonInnerTableGroupJoin == Boolean.TRUE ) {
+					SQL_AST_TRANSLATE_LOGGER.debug( "Locking with OUTER JOIN : using follow-on locking" );
+					return LockStrategy.FOLLOW_ON;
 				}
+
 			}
 		}
+
 		if ( hasAggregateFunctions( querySpec ) ) {
-			if ( Boolean.FALSE.equals( followOnLocking ) ) {
-				throw new IllegalQueryOperationException( "Locking with aggregate functions is not supported" );
-			}
-			strategy = LockStrategy.FOLLOW_ON;
+			SQL_AST_TRANSLATE_LOGGER.debug( "Locking with aggregate functions : using follow-on locking" );
+			return LockStrategy.FOLLOW_ON;
 		}
-		return strategy;
+
+		return LockStrategy.CLAUSE;
 	}
 
 	protected void visitReturningColumns(Supplier<List<ColumnReference>> returningColumnsAccess) {

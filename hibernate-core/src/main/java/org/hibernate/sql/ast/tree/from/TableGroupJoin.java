@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.Locale;
+
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -105,5 +107,15 @@ public class TableGroupJoin implements TableJoin, DomainResultProducer {
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		getJoinedGroup().applySqlSelections( creationState );
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				Locale.ROOT,
+				"TableGroupJoin(%s : %s)",
+				joinType.getText(),
+				navigablePath
+		);
 	}
 }

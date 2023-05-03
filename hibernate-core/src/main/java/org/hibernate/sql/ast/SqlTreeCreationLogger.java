@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
@@ -17,6 +18,7 @@ import org.jboss.logging.Logger;
 		name = SqlTreeCreationLogger.LOGGER_NAME,
 		description = "Logging related to the creation of SQL AST trees"
 )
+@Internal
 public interface SqlTreeCreationLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".sql.ast.create";
 

@@ -20,6 +20,9 @@ import org.hibernate.query.TupleTransformer;
 
 public abstract class QueryOptionsAdapter implements QueryOptions {
 
+	public QueryOptionsAdapter() {
+	}
+
 	@Override
 	public Limit getLimit() {
 		return Limit.NONE;

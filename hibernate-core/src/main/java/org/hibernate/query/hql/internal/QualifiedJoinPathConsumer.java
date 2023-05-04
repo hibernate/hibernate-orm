@@ -18,7 +18,6 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -247,8 +246,8 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 		@Override
 		public void consumeTreat(String entityName, boolean isTerminal) {
-			final EntityDomainType<Object> entityDomainType = creationState.getCreationContext().getJpaMetamodel()
-					.entity( entityName );
+			final EntityDomainType<Object> entityDomainType = creationState.getCreationContext().getNodeBuilder()
+					.getDomainModel().entity( entityName );
 			if ( isTerminal ) {
 				currentPath = currentPath.treatAs( entityDomainType, alias );
 			}
@@ -301,8 +300,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			path.append( identifier );
 			if ( isTerminal ) {
 				final String fullPath = path.toString();
-				final EntityDomainType<?> joinedEntityType = creationState.getCreationContext()
-						.getJpaMetamodel()
+				final EntityDomainType<?> joinedEntityType = creationState.getCreationContext().getJpaMetamodel()
 						.resolveHqlEntityReference( fullPath );
 				if ( joinedEntityType == null ) {
 					final SqmCteStatement<?> cteStatement = creationState.findCteStatement( fullPath );

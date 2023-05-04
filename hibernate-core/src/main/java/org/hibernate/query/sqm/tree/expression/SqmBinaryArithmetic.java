@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -26,11 +27,11 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			JpaMetamodel domainModel,
+			TypeConfiguration typeConfiguration,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(SqmExpressible<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
+				(SqmExpressible<T>) typeConfiguration.resolveArithmeticType(
 						lhsOperand.getNodeType(),
 						rhsOperand.getNodeType(),
 						operator

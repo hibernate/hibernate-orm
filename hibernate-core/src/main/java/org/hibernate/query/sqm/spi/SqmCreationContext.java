@@ -8,9 +8,11 @@ package org.hibernate.query.sqm.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * The context in which all SQM creations occur (think SessionFactory).
@@ -35,5 +37,13 @@ public interface SqmCreationContext {
 
 	default NodeBuilder getNodeBuilder() {
 		return getQueryEngine().getCriteriaBuilder();
+	}
+
+	default MappingMetamodelImplementor getMappingMetamodel() {
+		return getJpaMetamodel().getMappingMetamodel();
+	}
+
+	default TypeConfiguration getTypeConfiguration() {
+		return getQueryEngine().getTypeConfiguration();
 	}
 }

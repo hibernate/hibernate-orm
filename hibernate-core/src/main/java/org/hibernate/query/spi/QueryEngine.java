@@ -68,14 +68,14 @@ public class QueryEngine {
 				metadata.getTypeConfiguration(),
 				resolveHqlTranslator( options, dialect, sessionFactory, new SqmCreationOptionsStandard( options ) ),
 				resolveSqmTranslatorFactory( options, dialect ),
-				createFunctionRegistry( sessionFactory, metadata, options, dialect ),
+				createFunctionRegistry( sessionFactory.getServiceRegistry(), metadata, options, dialect ),
 				metadata.buildNamedQueryRepository( sessionFactory ),
 				buildInterpretationCache( sessionFactory::getStatistics, sessionFactory.getProperties() )
 		);
 	}
 
 	private static SqmFunctionRegistry createFunctionRegistry(
-			SessionFactoryImplementor sessionFactory,
+			ServiceRegistry serviceRegistry,
 			MetadataImplementor metadata,
 			QueryEngineOptions queryEngineOptions,
 			Dialect dialect) {
@@ -90,11 +90,11 @@ public class QueryEngine {
 
 		//TODO: probably better to turn this back into an anonymous class
 		final FunctionContributions functionContributions = new FunctionContributionsImpl(
-				sessionFactory.getServiceRegistry(),
+				serviceRegistry,
 				metadata.getTypeConfiguration(),
 				sqmFunctionRegistry
 		);
-		for ( FunctionContributor contributor : sortedFunctionContributors( sessionFactory.getServiceRegistry() ) ) {
+		for ( FunctionContributor contributor : sortedFunctionContributors( serviceRegistry ) ) {
 			contributor.contributeFunctions( functionContributions );
 		}
 

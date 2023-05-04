@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -24,13 +23,12 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
-import org.hibernate.type.descriptor.java.TemporalJavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
@@ -50,14 +48,15 @@ public class SqmExpressionHelper {
 //		return toSqmType( anticipatedType, typeConfiguration.getSessionFactory() );
 //	}
 
-	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
+	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, SqmCreationContext creationContext) {
 		if ( anticipatedType == null ) {
 			return null;
 		}
-		final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible( sessionFactory );
-		assert sqmExpressible != null;
-
-		return sqmExpressible;
+		else {
+			final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible( creationContext );
+			assert sqmExpressible != null;
+			return sqmExpressible;
+		}
 
 	}
 
@@ -68,7 +67,7 @@ public class SqmExpressionHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Timestamp.class ),
+				creationState.getCreationContext().getTypeConfiguration().standardBasicTypeForJavaType( Timestamp.class ),
 				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
@@ -95,7 +94,7 @@ public class SqmExpressionHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Date.class ),
+				creationState.getCreationContext().getTypeConfiguration().standardBasicTypeForJavaType( Date.class ),
 				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
 		);
 	}
@@ -104,10 +103,11 @@ public class SqmExpressionHelper {
 		final LocalTime localTime = LocalTime.from( JdbcTimeJavaType.LITERAL_FORMATTER.parse( literalText ) );
 		final Time literal = Time.valueOf( localTime );
 
+		SqmCreationContext creationContext = creationState.getCreationContext();
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Time.class ),
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationContext.getTypeConfiguration().standardBasicTypeForJavaType( Time.class ),
+				creationContext.getQueryEngine().getCriteriaBuilder()
 		);
 	}
 

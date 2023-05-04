@@ -22,6 +22,7 @@ import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
@@ -88,6 +89,12 @@ public interface SessionFactoryImplementor
 	default MappingMetamodelImplementor getMappingMetamodel() {
 		return getRuntimeMetamodels().getMappingMetamodel();
 	}
+
+	/**
+	 * Access to the domain model metadata
+	 */
+	@Override
+	JpaMetamodelImplementor getJpaMetamodel();
 
 	QueryEngine getQueryEngine();
 

@@ -9,6 +9,7 @@ package org.hibernate.query;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
 
 /**
  * Types that can be used to handle binding {@link Query} parameters
@@ -32,5 +33,9 @@ public interface BindableType<J> {
 	/**
 	 * Resolve this parameter type to the corresponding SqmExpressible
 	 */
-	SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory);
+	default SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory) {
+		return resolveExpressible( (SqmCreationContext) sessionFactory );
+	}
+
+	SqmExpressible<J> resolveExpressible(SqmCreationContext creationContext);
 }

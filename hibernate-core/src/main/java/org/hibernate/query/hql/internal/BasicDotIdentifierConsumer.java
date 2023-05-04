@@ -181,7 +181,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( importableName != null ) {
 				final EntityDomainType<?> entityDomainType = creationContext.getJpaMetamodel().entity( importableName );
 				if ( entityDomainType != null ) {
-					return new SqmLiteralEntityType( entityDomainType, creationContext.getNodeBuilder() );
+					return new SqmLiteralEntityType<>( entityDomainType, creationContext.getNodeBuilder() );
 				}
 			}
 
@@ -222,9 +222,8 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 							.getService( ClassLoaderService.class )
 							.classForName( prefix );
 					if ( namedClass != null ) {
-						final JavaTypeRegistry javaTypeRegistry = creationContext.getJpaMetamodel()
-								.getTypeConfiguration()
-								.getJavaTypeRegistry();
+						final JavaTypeRegistry javaTypeRegistry =
+								creationContext.getTypeConfiguration().getJavaTypeRegistry();
 
 						if ( namedClass.isEnum() ) {
 							return new SqmEnumLiteral(

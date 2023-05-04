@@ -29,6 +29,7 @@ import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
@@ -646,5 +647,5 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	BasicType<Character> getCharacterType();
 
-	SessionFactoryImplementor getSessionFactory();
+	SqmCreationContext getSessionFactory();
 }

@@ -950,11 +950,12 @@ public interface PersistenceContext {
 		/**
 		 * Called on {@link org.hibernate.Session#evict} to give a chance to clean up natural-id cross refs.
 		 *
-		 * @param object The entity instance.
-		 * @param persister The entity persister
-		 * @param identifier The entity identifier
+		 * @param object         The entity instance.
+		 * @param persister      The entity persister
+		 * @param identifier     The entity identifier
+		 * @param removeOnNaturalIdCache remove the entry on shared cache too
 		 */
-		void handleEviction(Object object, EntityPersister persister, Serializable identifier);
+		void handleEviction(Object object, EntityPersister persister, Serializable identifier, boolean removeOnNaturalIdCache);
 	}
 
 	/**

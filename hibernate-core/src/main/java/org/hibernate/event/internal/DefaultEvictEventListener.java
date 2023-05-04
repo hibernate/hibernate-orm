@@ -113,8 +113,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			persistenceContext.getNaturalIdHelper().handleEviction(
 					object,
 					persister,
-					key.getIdentifier()
-			);
+					key.getIdentifier(),
+					false);
 		}
 
 		// remove all collections for the entity from the session-level cache

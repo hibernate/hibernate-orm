@@ -318,13 +318,17 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			//Remove the entity from the persistence context
 			Long id = person.getId();
 
-			entityManager.detach(person); // Still it should resolve from second level cache
+			entityManager.detach(person); // still it should resolve from second level cache after this
 
 			log.info("Native load by natural-id, generate 4. hit");
 			person = session.bySimpleNaturalId(Person.class).load("unique-code");
 			log.info("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
-			assertEquals("we expected now 4 hits" , 4, sfi.getStatistics().getNaturalIdCacheHitCount()); // fails
+			assertEquals("we expected now 4 hits" , 4, sfi.getStatistics().getNaturalIdCacheHitCount());
 			assertNotNull(person);
+			session.delete(person); // evicts natural-id from first & second level cache
+			person = session.bySimpleNaturalId(Person.class).load("unique-code");
+			assertEquals(4, sfi.getStatistics().getNaturalIdCacheHitCount()); // thus hits should not increment
+
 			//end::caching-entity-natural-id-example[]
 		});
 	}

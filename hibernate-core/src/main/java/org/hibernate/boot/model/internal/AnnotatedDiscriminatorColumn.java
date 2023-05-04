@@ -94,6 +94,10 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 				case CHAR:
 					column.setDiscriminatorTypeName( "character" );
 					column.setImplicit( false );
+					if ( discriminatorColumn != null && discriminatorColumn.length() != 1 && discriminatorColumn.length() != 31 ) {
+						throw new AssertionFailure( "Length for CHAR discriminator should always be 1" );
+					}
+					column.setLength( 1L );
 					break;
 				case INTEGER:
 					column.setDiscriminatorTypeName( "integer" );

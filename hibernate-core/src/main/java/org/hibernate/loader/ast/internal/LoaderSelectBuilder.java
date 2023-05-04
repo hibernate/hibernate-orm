@@ -751,39 +751,27 @@ public class LoaderSelectBuilder {
 		}
 
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
-		final FetchableConsumer<Fetchable, Boolean, Boolean> processor = createFetchableConsumer( fetchParent, creationState, fetches );
+		final FetchableConsumer processor = createFetchableConsumer( fetchParent, creationState, fetches );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
-
-		final List<Fetchable> bagKeyFetchables = new ArrayList();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
 			final int size = referencedMappingContainer.getNumberOfKeyFetchables();
 			for ( int i = 0; i < size; i++ ) {
-				Fetchable keyFetchable = referencedMappingContainer.getKeyFetchable( i );
-				if ( isBag( keyFetchable ) ) {
-					bagKeyFetchables.add( keyFetchable );
-				}
-				else {
-					processor.accept( keyFetchable, true, false );
-				}
+				processor.accept( referencedMappingContainer.getKeyFetchable( i ), true, false );
 			}
 		}
 
 		final int size = referencedMappingContainer.getNumberOfFetchables();
-		final List<Fetchable> bagFetchables = new ArrayList();
-
+		final List<Fetchable> bagFetchables = new ArrayList<>();
 		for ( int i = 0; i < size; i++ ) {
-			Fetchable fetchable = referencedMappingContainer.getFetchable( i );
+			final Fetchable fetchable = referencedMappingContainer.getFetchable( i );
 			if ( isBag( fetchable ) ) {
+				// Delay processing of bag fetchables at last since they cannot be joined and will create subsequent selects
 				bagFetchables.add( fetchable );
 			}
 			else {
 				processor.accept( fetchable, false, false );
 			}
-		}
-
-		for ( Fetchable fetchable : bagKeyFetchables ) {
-			processor.accept( fetchable, true, true );
 		}
 		for ( Fetchable fetchable : bagFetchables ) {
 			processor.accept( fetchable, false, true );
@@ -792,20 +780,22 @@ public class LoaderSelectBuilder {
 	}
 
 	private boolean isBag(Fetchable fetchable) {
-		if ( fetchable instanceof PluralAttributeMapping ) {
-			return ( (PluralAttributeMapping) fetchable ).getMappedType()
+		return isPluralAttributeMapping( fetchable ) && ( (PluralAttributeMapping) fetchable ).getMappedType()
 					.getCollectionSemantics()
 					.getCollectionClassification() == CollectionClassification.BAG;
-		}
-		return false;
+	}
+
+	private boolean isPluralAttributeMapping(Fetchable fetchable) {
+		final AttributeMapping attributeMapping = fetchable.asAttributeMapping();
+		return attributeMapping != null && attributeMapping.isPluralAttributeMapping();
 	}
 
 	@FunctionalInterface
-	private interface FetchableConsumer<F,T,V>{
-		void accept(F fetchable, T isKeyFetchable, V isABag);
+	private interface FetchableConsumer {
+		void accept(Fetchable fetchable, boolean isKeyFetchable, boolean isABag);
 	}
 
-	private FetchableConsumer<Fetchable, Boolean, Boolean> createFetchableConsumer(
+	private FetchableConsumer createFetchableConsumer(
 			FetchParent fetchParent,
 			LoaderSqlAstCreationState creationState,
 			ImmutableFetchList.Builder fetches) {
@@ -860,7 +850,7 @@ public class LoaderSelectBuilder {
 			boolean explicitFetch = false;
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
-			final boolean isFetchablePluralAttributeMapping = fetchable instanceof PluralAttributeMapping;
+			final boolean isFetchablePluralAttributeMapping = isABag || isPluralAttributeMapping( fetchable );
 			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
 
 			if ( !( fetchable instanceof CollectionPart ) ) {
@@ -911,8 +901,8 @@ public class LoaderSelectBuilder {
 				}
 			}
 			final String previousBagRole = currentBagRole;
-			// whenever there is a joined bag if nay another collection is joined then the bag will contain duplicate results
 			if ( isABag ) {
+				// Avoid joining bag collections to other bags or if any other collection was joined to avoid result duplication
 				if ( joined && ( hasCollectionJoinFetches || currentBagRole != null ) ) {
 					joined = false;
 				}

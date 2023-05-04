@@ -218,7 +218,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
-		final TypeConfiguration typeConfiguration = factory.getJpaMetamodel().getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = factory.getTypeConfiguration();
 		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
 				arg,
 				null,

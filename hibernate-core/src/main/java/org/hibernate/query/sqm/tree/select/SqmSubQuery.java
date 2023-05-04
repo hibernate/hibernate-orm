@@ -52,7 +52,6 @@ import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.Tuple;
@@ -584,9 +583,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	private void applyInferableType(Class<T> type) {
-		final EntityDomainType<T> entityDescriptor = nodeBuilder().getSessionFactory().getRuntimeMetamodels()
-				.getJpaMetamodel()
-				.findEntityType( type );
+		final EntityDomainType<T> entityDescriptor = nodeBuilder().getDomainModel().findEntityType( type );
 		if ( entityDescriptor != null ) {
 			this.expressibleType = entityDescriptor;
 		}

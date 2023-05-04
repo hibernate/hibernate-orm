@@ -40,8 +40,6 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;

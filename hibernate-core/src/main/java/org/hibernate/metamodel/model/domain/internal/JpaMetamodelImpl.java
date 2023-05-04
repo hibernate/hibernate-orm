@@ -46,6 +46,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.service.ServiceRegistry;
@@ -83,7 +84,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	private final TypeConfiguration typeConfiguration;
-	private final MappingMetamodel mappingMetamodel;
+	private final MappingMetamodelImplementor mappingMetamodel;
 	private final ServiceRegistry serviceRegistry;
 
 	private final Map<String, EntityDomainType<?>> jpaEntityTypeMap = new TreeMap<>(); // Need ordering for deterministic implementers list in SqmPolymorphicRootDescriptor
@@ -104,7 +105,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	public JpaMetamodelImpl(
 			TypeConfiguration typeConfiguration,
-			MappingMetamodel mappingMetamodel,
+			MappingMetamodelImplementor mappingMetamodel,
 			ServiceRegistry serviceRegistry) {
 		this.typeConfiguration = typeConfiguration;
 		this.mappingMetamodel = mappingMetamodel;
@@ -498,7 +499,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public MappingMetamodel getMappingMetamodel() {
+	public MappingMetamodelImplementor getMappingMetamodel() {
 		return mappingMetamodel;
 	}
 

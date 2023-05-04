@@ -100,7 +100,7 @@ public class FullyQualifiedReflectivePathTerminal
 					if ( namedClass.isEnum() ) {
 						return new SqmEnumLiteral(
 								Enum.valueOf( namedClass, getLocalName() ),
-								(EnumJavaType) creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
+								(EnumJavaType) creationState.getCreationContext().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
 										namedClass,
 										() -> new EnumJavaType( namedClass )
 								),
@@ -112,7 +112,7 @@ public class FullyQualifiedReflectivePathTerminal
 						final Field field = namedClass.getField( getLocalName() );
 						return new SqmFieldLiteral(
 								field,
-								creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
+								creationState.getCreationContext().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
 										namedClass,
 										() -> new EnumJavaType( namedClass )
 								),

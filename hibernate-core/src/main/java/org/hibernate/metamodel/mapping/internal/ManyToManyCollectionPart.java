@@ -79,6 +79,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		LazyTableGroup.ParentTableGroupUseChecker {
 	private ForeignKeyDescriptor foreignKey;
 	private ValuedModelPart fkTargetModelPart;
+	private boolean[] isInsertable;
+	private boolean[] isUpdatable;
 
 	public ManyToManyCollectionPart(
 			Nature nature,
@@ -159,6 +161,32 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		foreignKey.getKeyPart().forEachSelectable( offset, consumer );
 		return getJdbcTypeCount();
+	}
+
+	@Override
+	public void forEachInsertable(SelectableConsumer consumer) {
+		forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( ! isInsertable[selectionIndex] || selectableMapping.isFormula() ) {
+						return;
+					}
+
+					consumer.accept( selectionIndex, selectableMapping );
+				}
+		);
+	}
+
+	@Override
+	public void forEachUpdatable(SelectableConsumer consumer) {
+		forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( !isUpdatable[selectionIndex] || selectableMapping.isFormula() ) {
+						return;
+					}
+
+					consumer.accept( selectionIndex, selectableMapping );
+				}
+		);
 	}
 
 	@Override
@@ -418,23 +446,42 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 
 		if ( getNature() == Nature.ELEMENT ) {
+			final Value element = bootCollectionDescriptor.getElement();
 			foreignKey = createForeignKeyDescriptor(
-					bootCollectionDescriptor.getElement(),
+					element,
 					(EntityType) collectionDescriptor.getElementType(),
 					fkTargetModelPart,
 					creationProcess,
 					collectionDescriptor.getFactory().getJdbcServices().getDialect()
 			);
+			if ( element.getType().isComponentType() ) {
+				isInsertable = element.getColumnInsertability();
+				isUpdatable = element.getColumnUpdateability();
+			}
+			else {
+				/**
+				 * see how {@link org.hibernate.persister.collection.AbstractCollectionPersister#elementColumnIsSettable} is determined
+				 */
+				int size = element.getSelectables().size();
+				isInsertable = new boolean[size];
+				for ( int i = 0; i < size; i++ ) {
+					isInsertable[i] = true;
+				}
+				isUpdatable = isInsertable;
+			}
 		}
 		else {
 			assert bootCollectionDescriptor.isIndexed();
+			final Value index = ( (IndexedCollection) bootCollectionDescriptor ).getIndex();
 			foreignKey = createForeignKeyDescriptor(
-					( (IndexedCollection) bootCollectionDescriptor ).getIndex(),
+					index,
 					(EntityType) collectionDescriptor.getIndexType(),
 					fkTargetModelPart,
 					creationProcess,
 					collectionDescriptor.getFactory().getJdbcServices().getDialect()
 			);
+			isInsertable = index.getColumnInsertability();
+			isUpdatable = index.getColumnUpdateability();
 		}
 
 		return true;

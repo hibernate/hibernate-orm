@@ -209,14 +209,15 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			TableGroupProducer declaringTableGroupProducer,
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess) {
+		final SelectableMapping selectableMapping = selectableMappingAccess.apply( 0 );
 		return new SimpleForeignKeyDescriptor(
 				declaringType,
 				keySide.getModelPart(),
 				( (PropertyBasedMapping) keySide.getModelPart() ).getPropertyAccess(),
-				selectableMappingAccess.apply( 0 ),
+				selectableMapping,
 				targetSide.getModelPart(),
-				keySide.getModelPart().isInsertable(),
-				keySide.getModelPart().isUpdateable(),
+				selectableMapping.isInsertable(),
+				selectableMapping.isUpdateable(),
 				refersToPrimaryKey,
 				hasConstraint
 		);

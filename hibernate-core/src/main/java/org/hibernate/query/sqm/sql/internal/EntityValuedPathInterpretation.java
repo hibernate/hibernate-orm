@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -37,16 +36,12 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
@@ -163,14 +158,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		// we try to make use of it and the FK model part if possible based on the inferred mapping
 		if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ModelPart associationKeyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
-			final ModelPart keyTargetMatchPart;
-			if ( associationKeyTargetMatchPart instanceof ToOneAttributeMapping ) {
-				keyTargetMatchPart = ( (ToOneAttributeMapping) associationKeyTargetMatchPart ).getKeyTargetMatchPart();
-			}
-			else {
-				keyTargetMatchPart = associationKeyTargetMatchPart;
-			}
+			final ModelPart keyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
 
 			if ( associationMapping.isFkOptimizationAllowed() ) {
 				final boolean forceUsingForeignKeyAssociationSidePart;
@@ -197,13 +185,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					forceUsingForeignKeyAssociationSidePart = false;
 				}
 				if ( forceUsingForeignKeyAssociationSidePart ) {
-					if ( associationKeyTargetMatchPart instanceof ToOneAttributeMapping ) {
-						resultModelPart = keyTargetMatchPart;
-					}
-					else {
-						resultModelPart = associationMapping.getForeignKeyDescriptor()
-								.getPart( associationMapping.getSideNature() );
-					}
+					resultModelPart = associationMapping.getForeignKeyDescriptor()
+							.getPart( associationMapping.getSideNature() );
 					resultTableGroup = sqlAstCreationState.getFromClauseAccess()
 							.findTableGroup( tableGroup.getNavigablePath().getParent() );
 				}

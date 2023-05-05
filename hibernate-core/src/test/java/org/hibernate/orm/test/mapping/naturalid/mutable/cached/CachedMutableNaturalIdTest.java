@@ -12,6 +12,7 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -180,41 +181,29 @@ public abstract class CachedMutableNaturalIdTest {
 	}
 
 	@Test
+	@JiraKey("HHH-16558")
 	public void testCacheVerifyHits(SessionFactoryScope scope) {
 		scope.inTransaction((session) -> {
-
 			AllCached aAllCached = new AllCached();
 			aAllCached.setName("John Doe");
-
 			session.persist(aAllCached);
-
 			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
 			sfi.getStatistics().clear();
-
 		});
 
 		scope.inTransaction((session) -> {
 			System.out.println("Native load by natural-id, generate first hit");
-
-
 			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
-			//tag::caching-entity-natural-id-example[]
-			AllCached person = session
-					.byNaturalId(AllCached.class)
-					.using("name", "John Doe")
-					.load();
-
+			AllCached person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
 			assertNotNull(person);
 			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
 			System.out.println("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
 			assertEquals(1, sfi.getStatistics().getNaturalIdCacheHitCount());
 			assertEquals(1, sfi.getStatistics().getSecondLevelCacheHitCount());
-
 		});
 
 		scope.inTransaction((session) -> {
 			System.out.println("Native load by natural-id, generate second hit");
-
 
 			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
 			//tag::caching-entity-natural-id-example[]

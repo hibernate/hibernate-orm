@@ -8,9 +8,11 @@ package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
 import org.hibernate.LockOptions;
 import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -157,7 +159,7 @@ public abstract class CachedMutableNaturalIdTest {
 				}
 		);
 	}
-	
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-12657" )
 	public void testBySimpleNaturalIdResolveEntityFrom2LCacheSubClass(SessionFactoryScope scope) {
@@ -176,6 +178,69 @@ public abstract class CachedMutableNaturalIdTest {
 					assertNotNull( byConcrete );
 				}
 		);
+	}
+
+	@Test
+	@JiraKey("HHH-16558")
+	public void testCacheVerifyHits(SessionFactoryScope scope) {
+		scope.inTransaction((session) -> {
+			AllCached aAllCached = new AllCached();
+			aAllCached.setName("John Doe");
+			session.persist(aAllCached);
+			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
+			sfi.getStatistics().clear();
+		});
+
+		scope.inTransaction((session) -> {
+			System.out.println("Native load by natural-id, generate first hit");
+			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
+			AllCached person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
+			assertNotNull(person);
+			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
+			System.out.println("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
+			assertEquals(1, sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertEquals(1, sfi.getStatistics().getSecondLevelCacheHitCount());
+		});
+
+		scope.inTransaction((session) -> {
+			System.out.println("Native load by natural-id, generate second hit");
+
+			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
+			//tag::caching-entity-natural-id-example[]
+			AllCached person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
+			assertNotNull(person);
+
+			// resolve in persistence context (first level cache)
+			session.bySimpleNaturalId(AllCached.class).load("John Doe");
+			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
+			System.out.println("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
+			assertEquals(2, sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertEquals(2, sfi.getStatistics().getSecondLevelCacheHitCount());
+
+			session.clear();
+			//  persistence context (first level cache) empty, should resolve from second level cache
+			System.out.println("Native load by natural-id, generate third hit");
+			person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
+			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
+			System.out.println("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
+			assertNotNull(person);
+			assertEquals(3, sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertEquals(3, sfi.getStatistics().getSecondLevelCacheHitCount());
+
+			//Remove the entity from the persistence context
+			Integer id = person.getId();
+
+			session.detach(person); // still it should resolve from second level cache after this
+
+			System.out.println("Native load by natural-id, generate 4. hit");
+			person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
+			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertEquals("we expected now 4 hits", 4, sfi.getStatistics().getNaturalIdCacheHitCount());
+			assertNotNull(person);
+			session.remove(person); // evicts natural-id from first & second level cache
+			person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
+			assertEquals(4, sfi.getStatistics().getNaturalIdCacheHitCount()); // thus hits should not increment
+		});
 	}
 	
 	@Test

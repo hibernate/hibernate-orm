@@ -10,7 +10,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -133,7 +134,7 @@ public abstract class CachedMutableNaturalIdTest {
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-7245" )
+	@JiraKey("HHH-7245")
 	public void testNaturalIdChangeAfterResolveEntityFrom2LCache(SessionFactoryScope scope) {
 
 		final Integer id = scope.fromTransaction(
@@ -157,9 +158,43 @@ public abstract class CachedMutableNaturalIdTest {
 				}
 		);
 	}
+
+	@Test
+	@JiraKey("HHH-16557")
+	public void testCreateDeleteRecreate(SessionFactoryScope scope) {
+
+		final Integer id = scope.fromTransaction(
+				(session) -> {
+					AllCached it = new AllCached( "it" );
+					session.persist(it);
+					session.remove(it);
+					// insert-remove might happen in an app driven by users GUI interactions
+					return it.getId();
+				}
+		);
+
+		// now recreate with same naturalId value
+		scope.inTransaction(
+				(session) -> {
+					AllCached it = new AllCached( "it" );
+					session.persist(it);
+					// resolving from first level cache
+					assertNotNull(session.bySimpleNaturalId( AllCached.class ).load( "it" ));
+				}
+		);
+
+		scope.inTransaction(
+				(session) -> {
+					// should resolve from second level cache
+					final AllCached shouldBeThere = session.bySimpleNaturalId( AllCached.class ).load( "it" );
+					assertNotNull( shouldBeThere );
+					assert(shouldBeThere.getId() != id);
+				}
+		);
+	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-12657" )
+	@JiraKey( value = "HHH-12657" )
 	public void testBySimpleNaturalIdResolveEntityFrom2LCacheSubClass(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> session.save( new SubClass( "it" ) )

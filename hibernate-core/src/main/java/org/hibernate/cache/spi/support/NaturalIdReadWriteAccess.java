@@ -74,7 +74,7 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 		try {
 			writeLock().lock();
 			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
-			if ( item == null ) {
+			if ( item == null || item.getValue() != value) {
 				getStorageAccess().putIntoCache(
 						key,
 						new Item( value, null, getRegion().getRegionFactory().nextTimestamp() ),

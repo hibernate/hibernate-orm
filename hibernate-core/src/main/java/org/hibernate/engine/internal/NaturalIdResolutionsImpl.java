@@ -138,18 +138,6 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			}
 		}
 
-		if ( persister.hasNaturalIdCache() ) {
-			final NaturalIdDataAccess naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
-			final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalId, persister, session() );
-			naturalIdCacheAccessStrategy.evict( naturalIdCacheKey );
-
-			if ( sessionCachedNaturalIdValues != null
-					&& ! naturalIdMapping.areEqual( sessionCachedNaturalIdValues, naturalId, session() ) ) {
-				final Object sessionNaturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( sessionCachedNaturalIdValues, persister, session() );
-				naturalIdCacheAccessStrategy.evict( sessionNaturalIdCacheKey );
-			}
-		}
-
 		return sessionCachedNaturalIdValues;
 	}
 

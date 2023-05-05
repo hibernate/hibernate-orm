@@ -14,6 +14,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,19 +24,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @SessionFactory
-@DomainModel(annotatedClasses = {OracleNestedTableTest.Container.class})
+@DomainModel(annotatedClasses = {OracleSqlArrayTest.Container.class})
 @RequiresDialect(OracleDialect.class)
-public class OracleNestedTableTest {
+public class OracleSqlArrayTest {
 
 	@Test public void test(SessionFactoryScope scope) {
 		Container container = new Container();
-		container.activityTypes = new ActivityType[] { ActivityType.Work, ActivityType.Play };
-		container.strings = new String[] { "hello", "world" };
+		container.activityKinds = new ActivityKind[] { ActivityKind.Work, ActivityKind.Play };
+		container.bigIntegers = new BigInteger[] { new BigInteger("123"), new BigInteger("345") };
 		scope.inTransaction( s -> s.persist( container ) );
-		Container c = scope.fromTransaction( s-> s.createQuery("from ContainerWithArrays where strings = ?1", Container.class ).setParameter(1, new String[] { "hello", "world" }).getSingleResult() );
-		assertArrayEquals( c.activityTypes, new ActivityType[] { ActivityType.Work, ActivityType.Play } );
-		assertArrayEquals( c.strings, new String[] { "hello", "world" } );
-		c = scope.fromTransaction( s-> s.createQuery("from ContainerWithArrays where activityTypes = ?1", Container.class ).setParameter(1, new ActivityType[] { ActivityType.Work, ActivityType.Play }).getSingleResult() );
+		Container c = scope.fromTransaction( s-> s.createQuery("from ContainerWithArrays where bigIntegers = ?1", Container.class ).setParameter(1, new BigInteger[] { new BigInteger("123"), new BigInteger("345") }).getSingleResult() );
+		assertArrayEquals( c.activityKinds, new ActivityKind[] { ActivityKind.Work, ActivityKind.Play } );
+		assertArrayEquals( c.bigIntegers, new BigInteger[] { new BigInteger("123"), new BigInteger("345") } );
+		c = scope.fromTransaction( s-> s.createQuery("from ContainerWithArrays where activityKinds = ?1", Container.class ).setParameter(1, new ActivityKind[] { ActivityKind.Work, ActivityKind.Play }).getSingleResult() );
 	}
 
 	@Test public void testSchema(SessionFactoryScope scope) {
@@ -48,13 +49,13 @@ public class OracleNestedTableTest {
 				throw new RuntimeException(e);
 			}
 			try {
-				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "STRINGS" );
+				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "BIGINTEGERS" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
-					assertEquals( "STRINGARRAY", type );
+					assertEquals( "BIGINTEGERARRAY", type );
 					return;
 				}
-				fail("nested table column not exported");
+				fail("named array column not exported");
 			}
 			catch (SQLException e) {
 				throw new RuntimeException(e);
@@ -76,13 +77,13 @@ public class OracleNestedTableTest {
 				throw new RuntimeException(e);
 			}
 			try {
-				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "ACTIVITYTYPES" );
+				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "ACTIVITYKINDS" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
-					assertEquals( "ACTIVITYTYPEARRAY", type );
+					assertEquals( "ACTIVITYKINDARRAY", type );
 					return;
 				}
-				fail("nested table column not exported");
+				fail("named array column not exported");
 			}
 			catch (SQLException e) {
 				throw new RuntimeException(e);
@@ -97,7 +98,7 @@ public class OracleNestedTableTest {
 		});
 	}
 
-	public enum ActivityType { Work, Play, Sleep }
+	public enum ActivityKind { Work, Play, Sleep }
 
 	@Entity(name = "ContainerWithArrays")
 	public static class Container {
@@ -106,12 +107,12 @@ public class OracleNestedTableTest {
 
 		@Array(length = 33)
 		@Column(length = 25)
-		@JdbcTypeCode(SqlTypes.TABLE)
-		String[] strings;
+		@JdbcTypeCode(SqlTypes.ARRAY)
+		BigInteger[] bigIntegers;
 
 		@Array(length = 2)
-		@JdbcTypeCode(SqlTypes.TABLE)
-		ActivityType[] activityTypes;
+		@JdbcTypeCode(SqlTypes.ARRAY)
+		ActivityKind[] activityKinds;
 
 	}
 

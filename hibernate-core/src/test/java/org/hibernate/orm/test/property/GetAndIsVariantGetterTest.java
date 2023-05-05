@@ -57,21 +57,23 @@ public class GetAndIsVariantGetterTest {
 				.addResource( "org/hibernate/property/TheEntity.hbm.xml" )
 				.buildMetadata();
 		PersistentClass entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );
+		assertNotNull( entityBinding.getIdentifier() );
+		assertNotNull( entityBinding.getIdentifierProperty() );
 		assertThat( entityBinding.getIdentifier().getType().getReturnedClass() ).isEqualTo( Integer.class );
+		assertThat( entityBinding.getIdentifierProperty().getType().getReturnedClass() ).isEqualTo( Integer.class );
 	}
 
 	@Test
 	@JiraKey("HHH-10172")
 	public void testAnnotations() {
-		try {
-			new MetadataSources( ssr )
-					.addAnnotatedClass( TheEntity.class )
-					.buildMetadata();
-			fail( "Expecting a failure" );
-		}
-		catch (MappingException e) {
-			assertThat( e.getMessage()).startsWith( "HHH000474: Ambiguous persistent property methods detected on" ) ;
-		}
+		Metadata metadata = new MetadataSources( ssr )
+				.addAnnotatedClass( TheEntity.class )
+				.buildMetadata();
+		PersistentClass entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );
+		assertNotNull( entityBinding.getIdentifier() );
+		assertNotNull( entityBinding.getIdentifierProperty() );
+		assertThat( entityBinding.getIdentifier().getType().getReturnedClass() ).isEqualTo( Integer.class );
+		assertThat( entityBinding.getIdentifierProperty().getType().getReturnedClass() ).isEqualTo( Integer.class );
 	}
 
 	@Test

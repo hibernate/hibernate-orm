@@ -546,10 +546,22 @@ public final class ReflectHelper {
 				final String stemName = methodName.substring( 3 );
 				final String decapitalizedStemName = Introspector.decapitalize( stemName );
 				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					verifyNoIsVariantExists( containerClass, propertyName, method, stemName );
-					return method;
+					try {
+						final Class<?> fieldType = containerClass.getDeclaredField( propertyName ).getType();
+						if ( areMethodReturnTypesCompatible( method.getReturnType(), fieldType ) ) {
+							return method;
+						}
+						else {
+							verifyNoIsVariantExists( containerClass, propertyName, method, stemName );
+							return method;
+						}
+					}
+					catch (Exception e) {
+						// cannot get the field type
+						verifyNoIsVariantExists( containerClass, propertyName, method, stemName );
+						return method;
+					}
 				}
-
 			}
 
 			// if not "get", then try "is"
@@ -557,8 +569,21 @@ public final class ReflectHelper {
 				final String stemName = methodName.substring( 2 );
 				String decapitalizedStemName = Introspector.decapitalize( stemName );
 				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					verifyNoGetVariantExists( containerClass, propertyName, method, stemName );
-					return method;
+					try {
+						final Class<?> fieldType = containerClass.getDeclaredField( propertyName ).getType();
+						if ( areMethodReturnTypesCompatible( method.getReturnType(), fieldType ) ) {
+							return method;
+						}
+						else {
+							verifyNoIsVariantExists( containerClass, propertyName, method, stemName );
+							return method;
+						}
+					}
+					catch (Exception e) {
+						// cannot get the field type
+						verifyNoGetVariantExists( containerClass, propertyName, method, stemName );
+						return method;
+					}
 				}
 			}
 		}
@@ -882,5 +907,57 @@ public final class ReflectHelper {
 		else {
 			throw new AssertionFailure("member should have been a method or field");
 		}
+	}
+
+	private static boolean areMethodReturnTypesCompatible(Class<?> methodReturnType, Class<?> fieldType) {
+		final boolean methodReturnTypePrimitive = methodReturnType.isPrimitive();
+		final boolean fieldTypePrimitive = fieldType.isPrimitive();
+		if ( methodReturnTypePrimitive == fieldTypePrimitive ) {
+			return methodReturnType.equals( fieldType );
+		}
+		else if ( methodReturnTypePrimitive ) {
+			return isPrimitiveWrapper( methodReturnType, fieldType );
+		}
+		else {
+			return isPrimitiveWrapper( fieldType, methodReturnType );
+		}
+	}
+
+	private static boolean isPrimitiveWrapper(Class<?> primitiveClazz, Class<?> wrapperClazz) {
+
+		if ( boolean.class == primitiveClazz ) {
+			return wrapperClazz == Boolean.class;
+		}
+
+		if ( char.class == primitiveClazz ) {
+			return wrapperClazz == Character.class;
+		}
+
+		if ( byte.class == primitiveClazz ) {
+			return wrapperClazz == Byte.class;
+		}
+
+		if ( short.class == primitiveClazz ) {
+			return wrapperClazz == Short.class;
+		}
+
+		if ( int.class == primitiveClazz ) {
+			return wrapperClazz == Integer.class;
+		}
+
+		if ( long.class == primitiveClazz ) {
+			return wrapperClazz == Long.class;
+		}
+
+		if ( float.class == primitiveClazz ) {
+			return wrapperClazz == Float.class;
+		}
+
+		if ( double.class == primitiveClazz ) {
+			return wrapperClazz == Double.class;
+		}
+
+
+		throw new IllegalArgumentException( "Unrecognized primitive type class : " + primitiveClazz.getName() );
 	}
 }

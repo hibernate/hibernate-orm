@@ -242,20 +242,33 @@ public class PropertyContainer {
 			}
 		}
 		else {
+			final Map<String,XProperty> fieldsByName = new HashMap<>(fields.size());
+			for ( XProperty field : fields ) {
+				fieldsByName.put( field.getName(), field );
+			}
+
 			for ( XProperty getter : getters ) {
 				final String name = getter.getName();
 
 				// HHH-10242 detect registration of the same property getter twice - eg boolean isId() + UUID getId()
 				final XProperty previous = persistentAttributesFromGetters.get( name );
 				if ( previous != null ) {
-					throw new MappingException(
-							LOG.ambiguousPropertyMethods(
-									xClass.getName(),
-									HCANNHelper.annotatedElementSignature( previous ),
-									HCANNHelper.annotatedElementSignature( getter )
-							),
-							new Origin( SourceType.ANNOTATION, xClass.getName() )
-					);
+					final XProperty xProperty = fieldsByName.get( name );
+					if ( areTypeCompatible( xProperty, getter ) ) {
+						if ( areTypeCompatible( xProperty, previous ) ) {
+							throw new MappingException(
+									LOG.ambiguousPropertyMethods(
+											xClass.getName(),
+											HCANNHelper.annotatedElementSignature( previous ),
+											HCANNHelper.annotatedElementSignature( getter )
+									),
+									new Origin( SourceType.ANNOTATION, xClass.getName() )
+							);
+						}
+						else {
+							persistentAttributeMap.remove( name );
+						}
+					}
 				}
 
 				if ( persistentAttributeMap.containsKey( name ) ) {
@@ -278,6 +291,36 @@ public class PropertyContainer {
 				persistentAttributesFromComponents.put( name, recordComponent );
 			}
 		}
+	}
+
+	private static boolean areTypeCompatible(XProperty property, XProperty getter) {
+		final String propertyType = property.getType().getName();
+		final String getterType = getter.getType().getName();
+		if ( propertyType.equals( getterType ) ) {
+			return true;
+		}
+		else {
+			if ( areCompatibleTo( propertyType, getterType, Boolean.class, boolean.class )
+					|| areCompatibleTo( propertyType, getterType, Character.class, char.class )
+					|| areCompatibleTo( propertyType, getterType, Byte.class, byte.class )
+					|| areCompatibleTo( propertyType, getterType, Short.class, byte.class )
+					|| areCompatibleTo( propertyType, getterType, Integer.class, int.class )
+					|| areCompatibleTo( propertyType, getterType, Long.class, long.class )
+					|| areCompatibleTo( propertyType, getterType, Float.class, float.class )
+					|| areCompatibleTo( propertyType, getterType, Double.class, double.class ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean areCompatibleTo(
+			String propertyType,
+			String getterType,
+			Class<?> integerClass,
+			Class<?> intClass) {
+		return ( propertyType.equals( integerClass.getName() ) || propertyType.equals( intClass.getName() ) )
+				&& ( getterType.equals( integerClass.getName() ) || getterType.equals( intClass.getName() ) );
 	}
 
 	public XClass getEntityAtStake() {

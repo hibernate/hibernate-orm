@@ -18,15 +18,15 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.PersistentClass;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.startsWith;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -51,21 +51,17 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10172" )
+	@JiraKey("HHH-10172")
 	public void testHbmXml() {
-		try {
-			new MetadataSources( ssr )
-					.addResource( "org/hibernate/property/TheEntity.hbm.xml" )
-					.buildMetadata();
-			fail( "Expecting a failure" );
-		}
-		catch (MappingException e) {
-			assertThat( e.getMessage(), startsWith( "In trying to locate getter for property [id]" ) );
-		}
+		Metadata metadata = new MetadataSources( ssr )
+				.addResource( "org/hibernate/property/TheEntity.hbm.xml" )
+				.buildMetadata();
+		PersistentClass entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );
+		assertThat( entityBinding.getIdentifier().getType().getReturnedClass() ).isEqualTo( Integer.class );
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10172" )
+	@JiraKey("HHH-10172")
 	public void testAnnotations() {
 		try {
 			new MetadataSources( ssr )
@@ -74,12 +70,12 @@ public class GetAndIsVariantGetterTest {
 			fail( "Expecting a failure" );
 		}
 		catch (MappingException e) {
-			assertThat( e.getMessage(), startsWith( "HHH000474: Ambiguous persistent property methods detected on" ) );
+			assertThat( e.getMessage()).startsWith( "HHH000474: Ambiguous persistent property methods detected on" ) ;
 		}
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10242" )
+	@JiraKey(  "HHH-10242" )
 	public void testAnnotationsCorrected() {
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( TheEntity2.class )
@@ -89,7 +85,19 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10309" )
+	@JiraKey(  "HHH-10242" )
+	public void testAnnotationsCorrected2() {
+		Metadata metadata = new MetadataSources( ssr )
+				.addAnnotatedClass( TheEntity3.class )
+				.buildMetadata();
+		PersistentClass entityBinding = metadata.getEntityBinding( TheEntity3.class.getName() );
+		assertNotNull( entityBinding.getIdentifier() );
+		assertNotNull( entityBinding.getIdentifierProperty() );
+		assertThat( entityBinding.getIdentifier().getType().getReturnedClass() ).isEqualTo( Integer.class );
+	}
+
+	@Test
+	@JiraKey(  "HHH-10309" )
 	public void testAnnotationsFieldAccess() {
 		// this one should be ok because the AccessType is FIELD
 		Metadata metadata = new MetadataSources( ssr )
@@ -100,7 +108,7 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12046" )
+	@JiraKey(  "HHH-12046" )
 	public void testInstanceStaticConflict() {
 		Metadata metadata = new MetadataSources( ssr )
 				.addAnnotatedClass( InstanceStaticEntity.class )
@@ -130,6 +138,25 @@ public class GetAndIsVariantGetterTest {
 	}
 
 	@Entity
+	public static class TheEntity3 {
+		@Id
+		private Integer id;
+
+		public boolean isId() {
+			return false;
+		}
+
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+	}
+
+	@Entity
 	public static class TheEntity2 {
 		private Integer id;
 
@@ -147,6 +174,7 @@ public class GetAndIsVariantGetterTest {
 			this.id = id;
 		}
 	}
+
 
 	@Entity
 	@Access(AccessType.PROPERTY)

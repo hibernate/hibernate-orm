@@ -16,6 +16,7 @@ dependencies {
 
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb
+    implementation jakartaLibs.annotation
     implementation libs.hcann
     implementation libs.jandex
 

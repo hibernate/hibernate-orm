@@ -142,7 +142,7 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 					.plus( sourceSet.getCompileClasspath() )
 					.plus( sourceSet.getRuntimeClasspath() );
 			if ( ormDsl.getJpaMetamodel().getApplyGeneratedAnnotation().getOrElse( true ) ) {
-				final Dependency jakartaAnnotationsDep = project.getDependencies().create( "jakarta.annotation:jakarta.annotation-api:2.0.0" );
+				final Dependency jakartaAnnotationsDep = project.getDependencies().create( "jakarta.annotation:jakarta.annotation-api:2.1.1" );
 				metamodelCompileClasspath = metamodelCompileClasspath.plus(
 						project.getConfigurations().detachedConfiguration( jakartaAnnotationsDep )
 				);

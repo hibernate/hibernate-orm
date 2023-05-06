@@ -113,6 +113,7 @@ dependencyResolutionManagement {
             alias( "validation" ).to( "jakarta.validation", "jakarta.validation-api" ).version( "3.0.2" )
             alias( "jacc" ).to( "jakarta.authorization", "jakarta.authorization-api" ).version( "2.1.0" )
             alias( "cdi" ).to( "jakarta.enterprise", "jakarta.enterprise.cdi-api" ).version( "4.0.1" )
+            alias( "annotation" ).to( "jakarta.annotation", "jakarta.annotation-api" ).version( "2.1.1" )
             alias( "interceptors" ).to( "jakarta.interceptor", "jakarta.interceptor-api" ).version( "2.1.0" )
             alias( "jsonbApi" ).to( "jakarta.json.bind", "jakarta.json.bind-api" ).version( "3.0.0" )
             alias( "jsonb" ).to( "org.eclipse", "yasson" ).versionRef( "jsonbRuntime" )

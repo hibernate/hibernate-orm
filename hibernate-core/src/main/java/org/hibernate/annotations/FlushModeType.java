@@ -16,7 +16,10 @@ package org.hibernate.annotations;
  *
  * @see NamedQuery
  * @see NamedNativeQuery
+ *
+ * @deprecated use {@link org.hibernate.ForcedFlushMode}
  */
+@Deprecated(since="6")
 public enum FlushModeType {
 	/**
 	 * Corresponds to {@link org.hibernate.FlushMode#ALWAYS}.

@@ -12,6 +12,7 @@ import jakarta.persistence.FlushModeType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.MappingException;
 
 import org.jboss.logging.Logger;
@@ -28,33 +29,69 @@ public class FlushModeTypeHelper {
 	}
 
 	public static FlushModeType getFlushModeType(FlushMode flushMode) {
-		if ( flushMode == FlushMode.ALWAYS ) {
-			log.debug( "Interpreting Hibernate FlushMode#ALWAYS to JPA FlushModeType#AUTO; may cause problems if relying on FlushMode#ALWAYS-specific behavior" );
-			return FlushModeType.AUTO;
+		if ( flushMode == null ) {
+			return null;
 		}
-		else if ( flushMode == FlushMode.MANUAL ) {
-			log.debug( "Interpreting Hibernate FlushMode#MANUAL to JPA FlushModeType#COMMIT; may cause problems if relying on FlushMode#MANUAL-specific behavior" );
-			return FlushModeType.COMMIT;
+		switch ( flushMode ) {
+			case ALWAYS:
+				log.debug( "Interpreting Hibernate FlushMode#ALWAYS to JPA FlushModeType#AUTO; may cause problems if relying on FlushMode#ALWAYS-specific behavior" );
+				return FlushModeType.AUTO;
+			case MANUAL:
+				log.debug( "Interpreting Hibernate FlushMode#MANUAL to JPA FlushModeType#COMMIT; may cause problems if relying on FlushMode#MANUAL-specific behavior" );
+				return FlushModeType.COMMIT;
+			case COMMIT:
+				return FlushModeType.COMMIT;
+			case AUTO:
+				return FlushModeType.AUTO;
+			default:
+				throw new AssertionFailure( "unhandled FlushMode " + flushMode );
 		}
-		else if ( flushMode == FlushMode.COMMIT ) {
-			return FlushModeType.COMMIT;
-		}
-		else if ( flushMode == FlushMode.AUTO ) {
-			return FlushModeType.AUTO;
-		}
+	}
 
-		throw new AssertionFailure( "unhandled FlushMode " + flushMode );
+	public static ForcedFlushMode getForcedFlushMode(FlushMode flushMode) {
+		if ( flushMode == null ) {
+			return ForcedFlushMode.NO_FORCING;
+		}
+		switch ( flushMode ) {
+			case ALWAYS:
+				return ForcedFlushMode.FORCE_FLUSH;
+			case COMMIT:
+			case MANUAL:
+				return ForcedFlushMode.FORCE_NO_FLUSH;
+			case AUTO:
+				// this is not precisely correctly correct, but good enough
+				return ForcedFlushMode.NO_FORCING;
+			default:
+				throw new AssertionFailure( "unhandled FlushMode " + flushMode );
+		}
 	}
 
 	public static FlushMode getFlushMode(FlushModeType flushModeType) {
-		if ( flushModeType == FlushModeType.AUTO ) {
-			return FlushMode.AUTO;
+		if ( flushModeType == null ) {
+			return null;
 		}
-		else if ( flushModeType == FlushModeType.COMMIT ) {
-			return FlushMode.COMMIT;
+		switch ( flushModeType ) {
+			case AUTO:
+				return FlushMode.AUTO;
+			case COMMIT:
+				return FlushMode.COMMIT;
+			default:
+				throw new AssertionFailure( "unhandled FlushModeType " + flushModeType );
 		}
+	}
 
-		throw new AssertionFailure( "unhandled FlushModeType " + flushModeType );
+	public static FlushMode getFlushMode(ForcedFlushMode forcedFlushMode) {
+		if ( forcedFlushMode == null ) {
+			return null;
+		}
+		switch ( forcedFlushMode ) {
+			case FORCE_FLUSH:
+				return FlushMode.ALWAYS;
+			case FORCE_NO_FLUSH:
+				return FlushMode.MANUAL;
+			default:
+				return null;
+		}
 	}
 
 	public static FlushMode interpretFlushMode(Object value) {

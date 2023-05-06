@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -854,6 +855,9 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	@Override
 	Query<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	Query<R> setForcedFlushMode(ForcedFlushMode forcedFlushMode);
 
 	@Override
 	Query<R> setCacheable(boolean cacheable);

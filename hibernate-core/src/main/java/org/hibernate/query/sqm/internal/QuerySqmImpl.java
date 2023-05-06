@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -956,6 +957,12 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
+	public SqmQueryImplementor<R> setForcedFlushMode(ForcedFlushMode forcedFlushMode) {
+		super.setForcedFlushMode( forcedFlushMode );
+		return this;
+	}
+
+	@Override
 	public SqmQueryImplementor<R> setFlushMode(FlushModeType flushMode) {
 		applyJpaFlushMode( flushMode );
 		return this;
@@ -1094,7 +1101,7 @@ public class QuerySqmImpl<R>
 					isCacheable(),
 					getCacheRegion(),
 					getCacheMode(),
-					getHibernateFlushMode(),
+					getQueryOptions().getFlushMode(),
 					isReadOnly(),
 					getLockOptions(),
 					getTimeout(),
@@ -1113,7 +1120,7 @@ public class QuerySqmImpl<R>
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
-				getHibernateFlushMode(),
+				getQueryOptions().getFlushMode(),
 				isReadOnly(),
 				getLockOptions(),
 				getTimeout(),

@@ -23,6 +23,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -556,6 +557,9 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	@Override
 	NativeQuery<T> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	NativeQuery<T> setForcedFlushMode(ForcedFlushMode forcedFlushMode);
 
 	@Override
 	NativeQuery<T> setFlushMode(FlushModeType flushMode);

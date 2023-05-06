@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.Map;
 
 import org.hibernate.FlushMode;
+import org.hibernate.ForcedFlushMode;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.Parameter;
@@ -195,4 +196,7 @@ public interface MutationQuery extends CommonQueryContract {
 
 	@Override
 	MutationQuery setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	MutationQuery setForcedFlushMode(ForcedFlushMode forcedFlushMode);
 }

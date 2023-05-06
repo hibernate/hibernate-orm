@@ -391,10 +391,13 @@ import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
@@ -4872,8 +4875,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			final MappingModelExpressible<?> keyExpressible = getKeyExpressible( mappingModelExpressible );
 			if ( keyExpressible == null ) {
-				// Default to the Object type
-				return new QueryLiteral<>( null, basicType( Object.class ) );
+				// treat Void as the bottom type, the class of null
+				return new QueryLiteral<>( null, new JavaObjectType(NullJdbcType.INSTANCE, new AbstractClassJavaType<>(Void.class) {
+					@Override
+					public <X> X unwrap(Object value, Class<X> type, WrapperOptions options) {
+						return null;
+					}
+					@Override
+					public <X> Void wrap(X value, WrapperOptions options) {
+						return null;
+					}
+				} ) );
 			}
 
 			final List<Expression> expressions = new ArrayList<>( keyExpressible.getJdbcTypeCount() );

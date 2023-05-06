@@ -9,6 +9,7 @@ dependencies {
     testImplementation project( ':hibernate-testing' )
 
     testAnnotationProcessor project( ':hibernate-jpamodelgen' )
+    testCompileOnly jakartaLibs.annotation
 }
 
 sourceSets {

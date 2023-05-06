@@ -29,6 +29,7 @@ dependencies {
     testImplementation project( ':hibernate-core' )
 
     testImplementation jakartaLibs.validation
+    testImplementation jakartaLibs.annotation
 }
 
 sourceSets.main {

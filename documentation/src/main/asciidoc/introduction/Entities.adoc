@@ -1,0 +1,163 @@
+[[entities]]
+== Entities
+
+An _entity_ is a Java class which represents data in a relational database table.
+We say that the entity _maps_ or _maps to_ the table.
+
+NOTE: Much less commonly, an entity might aggregate data from multiple tables, but we'll get to that later.
+
+An entity has _attributes_&mdash;properties or fields&mdash;which map to columns of the table.
+In particular, every entity must have an _identifier_ or _id_, which maps to the primary key of the table.
+The id allows us to uniquely associate a row of the table with an instance of the Java class, at least within a given _persistence context_.
+
+TIP: We'll explore the idea of a persistence context later. For now, just think of it as a one-to-one mapping between ids and entity instances.
+
+An instance of a Java class cannot outlive the virtual machine to which it belongs.
+But we may think of an entity instance as having a lifecycle which transcends a particular instantiation in memory.
+By providing its id to Hibernate, we may re-materialize the instance in a new persistence context, as long as the associated row is present in the database.
+Therefore, the operations `persist()` and `remove()` may be thought of as demarcating the beginning and end of the lifecycle of an entity.
+
+An entity usually has associations to other entities.
+Typically, an association between two entities maps to a foreign key in one of the database tables.
+A group of mutually associated entities is often called a _domain model_, though _data model_ is also a perfectly good term.
+
+[[entity-clases]]
+=== Entity classes
+
+An entity must:
+
+- be a non-`final` class,
+- with a non-`private` constructor with no parameters.
+
+On the other hand, the entity class may be concrete or `abstract`, and it may have any number of additional constructors.
+
+Every entity class must be annotated `@Entity`.
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+    ...
+}
+----
+
+Alternatively, when XML-based mappings are used, the `<entity>` element is used to declare an entity class:
+
+[source,xml]
+----
+<package>org.hibernate.example</package>
+
+<entity class="Book"> ... </entity>
+----
+
+Each entity class has a default _access type_, either:
+
+- direct _field access_, or
+- _property access_.
+
+Hibernate automatically determines the access type from the location of attribute-level annotations.
+Concretely:
+
+- if a field is annotated `@Id`, field access is used, or
+- if a getter method is annotated `@Id`, property access is used.
+
+[NOTE]
+.Explicit access type
+====
+The access type may be specified explicitly using the `@Access` annotation, but we strongly discourage this, since it's ugly and never necessary.
+====
+
+[identifier-attributes]
+=== Identifier attributes
+
+Every entity must have an identifier attribute.
+The attribute is usually a field:
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    @Id
+    Long id;
+    
+    ...
+}
+----
+
+But it may be a property:
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    private Long id;
+    
+    @Id
+    Long getId() { return id; }
+    void setId(Long id) { this.id = id; }
+
+    ...
+}
+----
+
+An identifier is often system-generated, in which case it should be annotated `@GeneratedValue`:
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    @Id @GeneratedValue
+    Long id;
+
+    ...
+}
+----
+
+JPA defines the following strategies for generating ids, which are enumerated by `GenerationType`:
+
+|===
+| Strategy                  | Java type | Implementation
+
+| `GenerationType.UUID`     | `UUID` or `String`  | A Java `UUID`.
+| `GenerationType.IDENTITY` | `Long` or `Integer` | An identity or autoincrement column.
+| `GenerationType.SEQUENCE` | `Long` or `Integer` | A database sequence.
+| `GenerationType.TABLE`    | `Long` or `Integer` | A database table.
+| `GenerationType.AUTO`     | `Long` or `Integer` | Selects `SEQUENCE` `TABLE`, or `UUID` based on the identifier type and capabilities of the database.
+|===
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    @Id @GeneratedValue(strategy=IDENTITY)
+    Long id;
+
+    ...
+}
+----
+
+The `@SequenceGenerator` and `@TableGenerator` annotations allow further control over id generation:
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    @Id @GeneratedValue(strategy=SEQUENCE, generator="bookSeq")
+    @SequenceGenerator(name="bookSeq", sequenceName="seq_book",
+                       allocationSize=10)
+    Long id;
+
+    ...
+}
+----

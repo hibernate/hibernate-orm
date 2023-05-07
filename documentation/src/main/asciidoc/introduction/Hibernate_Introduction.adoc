@@ -45,7 +45,7 @@ Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API
 .The early history of Hibernate and JPA
 ====
 The Hibernate project began in 2001, when Gavin King's frustration with Entity Beans in EJB 2 boiled over.
-It quickly overtook other open source and commercial contenders to become the most popular persistence solution for Java, and the book _Hibernate in Action_, written with Christian Bauer, was an influential best-seller.
+It quickly overtook other open source and commercial contenders to become the most popular persistence solution for Java, and the book _Hibernate in Action_, written with Christian Bauer, was an influential bestseller.
 
 In 2004, Gavin and Christian joined a tiny startup called JBoss, and other early Hibernate contributors soon followed: Max Rydahl Andersen, Emmanuel Bernard, Steve Ebersole, and Sanne Grinovero.
 

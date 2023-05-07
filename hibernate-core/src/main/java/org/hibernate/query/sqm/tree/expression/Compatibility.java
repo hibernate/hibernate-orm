@@ -57,7 +57,7 @@ public class Compatibility {
 		assert to != null;
 		assert from != null;
 
-		if ( from == Void.class ) {
+		if ( from == Void.class && !to.isPrimitive() ) {
 			// treat Void as the bottom type, the class of null
 			return true;
 		}

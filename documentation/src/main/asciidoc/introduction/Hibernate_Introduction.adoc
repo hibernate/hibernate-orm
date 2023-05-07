@@ -92,4 +92,5 @@ This introduction will guide you through the basic tasks involved in developing 
 Naturally, we'll start at the top of this list, with the least-interesting topic: configuration.
 
 include::Configuration.adoc[]
+include::Entities.adoc[]
 

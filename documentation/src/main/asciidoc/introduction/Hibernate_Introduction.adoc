@@ -16,8 +16,9 @@ So a better description might be:
 
 > Hibernate makes *relational data* visible to a program written in Java, in a *natural* and *typesafe* form,
 >
-> 1. making it easy to write complex queries and work with their results, and
-> 2. allowing the program to easily synchronize changes made in memory with the database, respecting the ACID properties of transactions.
+> 1. making it easy to write complex queries and work with their results,
+> 2. letting the program easily synchronize changes made in memory with the database, respecting the ACID properties of transactions, and
+> 3. allowing performance optimizations to be made after the basic persistence logic has already been written.
 
 Here the relational data is the focus, along with the importance of typesafety.
 The goal of _Object/relational mapping_ (ORM) is to eliminate fragile and untypesafe code, and make large programs easier to maintain in the long run.
@@ -49,14 +50,14 @@ It quickly overtook other open source and commercial contenders to become the mo
 
 In 2004, Gavin and Christian joined a tiny startup called JBoss, and other early Hibernate contributors soon followed: Max Rydahl Andersen, Emmanuel Bernard, Steve Ebersole, and Sanne Grinovero.
 
-Soon after, Gavin joined the EJB 3 expert group and convinced the group to deprecate Entity Beans in favor of a persistence model based on Hibernate.
+Soon after, Gavin joined the EJB 3 expert group and convinced the group to deprecate Entity Beans in favor of brand new persistence API modelled after Hibernate.
 Later, members of the TopLink team got involved, and the Java Persistence API evolved as a collaboration between&mdash;primarily&mdash;Sun, JBoss, Oracle, and Sybase, under the leadership of Linda Demichiel.
 
 Over the intervening two decades, _many_ other talented people have contributed to the development of Hibernate.
 Special credit must go to Steve, who has led the project for many years, since Gavin stepped back to focus in other work.
 ====
 
-We can think of the library in terms of three basic elements:
+We can think of the API of Hibernate in terms of three basic elements:
 
 - an implementation of the JPA-defined APIs, most importantly, of the interfaces `EntityManagerFactory` and `EntityManager`, and of the JPA-defined O/R mapping annotations,
 - a _native API_ exposing the full set of available functionality, centered around the interfaces `SessionFactory`, which extends `EntityManagerFactory`, and `Session`, which extends `EntityManager`, and

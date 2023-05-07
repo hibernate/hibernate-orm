@@ -7,16 +7,26 @@ include::Preface.adoc[]
 
 :numbered:
 
-[[overview]]
-== Overview
+[[introduction]]
+== Introduction
 
-Hibernate is a library that makes it easy to map Java classes to relational database tables.
-Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of this specification.
+Hibernate is usually described as a library that makes it easy to map Java classes to relational database tables.
+But this formulation does no justice to the central role played by the relational data itself.
+So a better description might be:
 
-_Object/relational mapping_ takes the pain out persistence by relieving the developer of the need to hand-write tedious, repetitive, and fragile code for flattening graphs of objects to database tables and rebuilding graphs of objects from flat SQL query result sets.
+> Hibernate makes *relational data* visible to a program written in Java, in a *natural* and *typesafe* form,
+>
+> 1. making it easy to write complex queries and work with their results, and
+> 2. allowing the program to easily synchronize changes made in memory with the database, respecting the ACID properties of transactions.
+
+Here the relational data is the focus, along with the importance of typesafety.
+The goal of _Object/relational mapping_ (ORM) is to eliminate fragile and untypesafe code, and make large programs easier to maintain in the long run.
+
+ORM takes the pain out of persistence by relieving the developer of the need to hand-write tedious, repetitive, and fragile code for flattening graphs of objects to database tables and rebuilding graphs of objects from flat SQL query result sets.
 Even better, ORM makes it much easier to tune performance later, after the basic persistence logic has already been written.
 
 [TIP]
+.ORM or SQL?
 ====
 A perennial question is: should I use ORM, or plain SQL?
 The answer is usually: _use both_.
@@ -24,6 +34,26 @@ JPA and Hibernate were designed to work _in conjunction with_ handwritten SQL.
 You see, most programs with nontrivial data access logic will benefit from the use of ORM at least _somewhere_.
 But if Hibernate is making things more difficult, for some particularly tricky piece of data access logic, the only sensible thing to do is to use something better suited to the problem!
 Just because you're using Hibernate for persistence doesn't mean you have to use it for _everything_.
+====
+
+[[hibernate-and-jpa]]
+=== Hibernate and JPA
+
+Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of this specification.
+
+[NOTE]
+.The early history of Hibernate and JPA
+====
+The Hibernate project began in 2001, when Gavin King's frustration with Entity Beans in EJB 2 boiled over.
+It quickly overtook other open source and commercial contenders to become the most popular persistence solution for Java, and the book _Hibernate in Action_, written with Christian Bauer, was an influential best-seller.
+
+In 2004, Gavin and Christian joined a tiny startup called JBoss, and other early Hibernate contributors soon followed: Max Rydahl Andersen, Emmanuel Bernard, Steve Ebersole, and Sanne Grinovero.
+
+Soon after, Gavin joined the EJB 3 expert group and convinced the group to deprecate Entity Beans in favor of a persistence model based on Hibernate.
+Later, members of the TopLink team got involved, and the Java Persistence API evolved as a collaboration between&mdash;primarily&mdash;Sun, JBoss, Oracle, and Sybase, under the leadership of Linda Demichiel.
+
+Over the intervening two decades, _many_ other talented people have contributed to the development of Hibernate.
+Special credit must go to Steve, who has led the project for many years, since Gavin stepped back to focus in other work.
 ====
 
 We can think of the library in terms of three basic elements:
@@ -40,9 +70,15 @@ As an application developer, you must decide whether to:
 Whichever path you take, you will use the JPA-defined mapping annotations most of the time, and the Hibernate-defined annotations for more advanced mapping problems.
 
 [TIP]
+.Developing with "pure" JPA
+====
 You might wonder if it's possible to develop an application using _only_ JPA-defined APIs, and, indeed, that's possible in principle.
 JPA is a great baseline that really nails the basics of the object/relational mapping problem.
 But without the native APIs, and extended mapping annotations, you miss out on much of the power of Hibernate.
+====
+
+[[overview]]
+=== Overview
 
 This introduction will guide you through the basic tasks involved in developing a program that uses Hibernate for persistence:
 

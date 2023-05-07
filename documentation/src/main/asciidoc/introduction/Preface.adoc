@@ -4,7 +4,7 @@
 == Preface
 
 Hibernate 6 is a major redesign of the world's most popular and feature-rich ORM solution.
-The redesign has touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and query language.
+The redesign has touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and the query language.
 This new Hibernate is more powerful, more robust, and more typesafe.
 
 Unfortunately, the changes in Hibernate 6 have obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.

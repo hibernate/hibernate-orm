@@ -309,14 +309,17 @@ annotations which we'll discuss below in <<mapping-entity-classes>>:
 | `hibernate.default_schema`            | A default schema name for entities which do not explicitly declare one
 | `hibernate.default_catalog`           | A default catalog name for entities which do not explicitly declare one
 | `hibernate.physical_naming_strategy`  | A `PhysicalNamingStrategy` implementing your database naming standards
+| `hibernate.implicit_naming_strategy`  | An `ImplicitNamingStrategy` which specifies how "logical" names of
+                                          relational objects should be inferred when no name is specified in
+                                          annotations
 |===
 
 [TIP]
 .Implement your naming standards as a `PhysicalNamingStrategy`
 ====
-Writing your own `PhysicalNamingStrategy` is an especially good
-way to reduce the clutter of annotations on your entity classes, and
-we think you should do it for any nontrivial data model.
+Writing your own `PhysicalNamingStrategy` and/or `ImplicitNamingStrategy` is an especially good way to reduce the clutter of annotations on your entity classes, and  we think you should do it for any nontrivial data model.
+
+Please refer to the Javadoc for these interfaces for more information about the division of responsibility between them.
 ====
 
 === Nationalized character data in SQL Server

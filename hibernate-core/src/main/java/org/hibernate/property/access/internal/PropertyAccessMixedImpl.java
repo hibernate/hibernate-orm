@@ -12,6 +12,8 @@ import java.lang.reflect.Method;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
+
+import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
@@ -88,25 +90,39 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 		}
 	}
 
-	protected static AccessType getAccessType(Class<?> containerJavaType, String propertyName) {
-		Field field = fieldOrNull( containerJavaType, propertyName );
-		AccessType fieldAccessType = getAccessTypeOrNull( field );
+	protected Method getterOrNull(Class<?> containerJavaType, String propertyName) {
+		try {
+			return ReflectHelper.getterMethodOrNull( containerJavaType, propertyName );
+		}
+		catch (PropertyNotFoundException e) {
+			return null;
+		}
+	}
+
+	protected AccessType getAccessType(Class<?> containerJavaType, String propertyName) {
+		final Field field = fieldOrNull( containerJavaType, propertyName );
+		final AccessType fieldAccessType = getAccessTypeOrNull( field );
 		if ( fieldAccessType != null ) {
 			return fieldAccessType;
 		}
-		AccessType methodAccessType = getAccessTypeOrNull( getterMethodOrNull( containerJavaType, propertyName ) );
-		if ( methodAccessType != null ) {
-			return methodAccessType;
+
+		final Method getter = getterOrNull( containerJavaType, propertyName );
+		final AccessType getterAccessType = getAccessTypeOrNull( getter );
+		if ( getterAccessType != null ) {
+			return getterAccessType;
 		}
+
 		// No @Access on property or field; check to see if containerJavaType has an explicit @Access
 		AccessType classAccessType = getAccessTypeOrNull( containerJavaType );
 		if ( classAccessType != null ) {
 			return classAccessType;
 		}
+
+		// prefer using the field for getting if we can
 		return field != null ? AccessType.FIELD : AccessType.PROPERTY;
 	}
 
-	private static AccessType getAccessTypeOrNull(AnnotatedElement element) {
+	protected static AccessType getAccessTypeOrNull(AnnotatedElement element) {
 		if ( element == null ) {
 			return null;
 		}

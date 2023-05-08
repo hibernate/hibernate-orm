@@ -20,6 +20,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
@@ -37,6 +38,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -48,6 +50,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole, Jan Martiska
@@ -244,6 +247,40 @@ public class EntityJoinTest {
         );
     }
 
+    @Test
+    @Jira( "https://hibernate.atlassian.net/browse/HHH-16495" )
+    public void testEntityJoinWithoutPredicate(SessionFactoryScope scope) {
+        scope.inTransaction( (session) -> {
+            try {
+                // this should throw an exception since it's not a cross join
+                final List<Object[]> result = session.createQuery(
+                        "select r.id, u.id, u.username " +
+                        "from FinancialRecord r join User u",
+                        Object[].class
+                ).getResultList();
+                fail( "Should've thrown SemanticException" );
+            }
+            catch (Exception expected) {
+                assertThat( expected.getCause(), instanceOf( SemanticException.class ) );
+                assertThat( expected.getMessage(), CoreMatchers.containsString( "Entity join did not specify a predicate" ) );
+            }
+        } );
+    }
+
+    @Test
+    @Jira( "https://hibernate.atlassian.net/browse/HHH-16495" )
+    public void testEntityCrossJoinWithoutPredicate(SessionFactoryScope scope) {
+        scope.inTransaction(
+                (session) -> {
+                    final List<Object[]> result = session.createQuery(
+                            "select r.id, u.id, u.username " +
+                            "from FinancialRecord r cross join User u",
+                            Object[].class
+                    ).getResultList();
+                    assertThat( result.size(), is( 4 ) );
+                }
+        );
+    }
 
     @BeforeEach
     public void createTestData(SessionFactoryScope scope) {

@@ -379,8 +379,8 @@ The JPA specification defines a quite limited set of basic types:
 | Strings | `java.lang` | `String`
 | Arbitrary-precision numeric types | `java.math` | `BigInteger`, `BigDecimal`
 | Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`
-| Deprecated date/time types | `java.util` | `Date`, `Calendar`
-| Deprecated JDBC date/time types | `java.sql` | `Date`, `Time`, `Timestamp`
+| Deprecated date/time types 💀 | `java.util` | `Date`, `Calendar`
+| Deprecated JDBC date/time types 💀 | `java.sql` | `Date`, `Time`, `Timestamp`
 | Binary and character arrays | | `byte[]`, `char[]`
 | UUIDs | `java.util` | `UUID`
 | Enumerated types | | Any `enum`
@@ -391,6 +391,13 @@ The JPA specification defines a quite limited set of basic types:
 .Please don't use `Date`!
 ====
 We're begging you to use types from the `java.time` package instead of anything which inherits `java.util.Date`.
+====
+
+[CAUTION]
+.Serialization is usually a bad idea
+====
+Serializing a Java object and storing its binary representation in the database is usually wrong.
+As we'll soon see, Hibernate has much better ways to handle complex Java objects.
 ====
 
 The `@Basic` annotation explicitly specifies that an attribute is basic, but it's often not needed, since attributes are assumed basic by default.
@@ -404,7 +411,7 @@ String middleName; // may be null
 ----
 
 [TIP]
-.`optional` vs `nullable` in JPA
+.Should I use `optional=false` or `nullable=false` in JPA?
 ====
 There are two ways to mark a mapped column `not null` in JPA:
 
@@ -451,7 +458,7 @@ public static class BitSetConverter implements AttributeConverter<BitSet,byte[]>
 }
 ----
 
-On the other hand, if you don't set `autoapply=true`, then you must explicitly apply the converter using the `@Convert` annotation:
+On the other hand, if you _don't_ set `autoapply=true`, then you must explicitly apply the converter using the `@Convert` annotation:
 
 [source,java]
 ----
@@ -463,6 +470,88 @@ BitSet bitset;
 All this is nice, but it probably won't surprise you that Hibernate goes beyond what is required by JPA.
 
 === Compositional basic types
+
+Hibernate considers a "basic type" to be formed by the marriage of two objects:
+
+- a `JavaType`, which models the semantics of a certain Java class, and
+- a `JdbcType`, representing a SQL type which is understood by JDBC.
+
+An instance of `org.hibernate.type.descriptor.java.JavaType` represents a particular Java class.
+It is able to:
+
+- compare instances of the class to determine if an attribute of that class type is dirty (modified),
+- produce a useful hash code for an instance of the class,
+- coerce values to other types, and, in particular,
+- convert an instance of the class to one of several other equivalent Java representations at the request of its partner `JdbcType`.
+
+For example, `IntegerJavaType` knows how to convert an `Integer` or `int` value to the types `Long`, `BigInteger`, and `String`, among others.
+
+We may explicitly specify a Java type using the `@JavaType` annotation, but for the built-in ``JavaType``s this is never necessary.
+
+[source,java]
+----
+@JavaType(LongJavaType.class) // not needed, this is the default JavaType for long
+long currentTimeMillis;
+----
+
+For a user-written `JavaType`, the annotation is more useful:
+
+[source,java]
+----
+@JavaType(BitSetJavaType.class)
+BitSet bitSet;
+----
+
+Alternatively, the `@JavaTypeRegistration` may be used to register `BitSetJavaType` as the default `JavaType` for `BitSet`.
+
+A `org.hibernate.type.descriptor.jdbc.JdbcType` is able to read and write a single Java type from and to JDBC.
+
+For example, `VarcharJdbcType` takes care of:
+
+- writing Java strings to JDBC ``PreparedStatement``s by calling `setString()`, and
+- reading Java strings from JDBC ``ResultSet``s using `getString()`.
+
+By pairing `LongJavaType` with `VarcharJdbcType` in holy matrimony, we produce a basic type which maps ``Long``s and primitive ``longs``s to the SQL type `VARCHAR`.
+
+We may explicitly specify a JDBC type using the `@JdbcType` annotation.
+
+[source,java]
+----
+@JdbcType(VarcharJdbcType.class)
+long currentTimeMillis;
+----
+
+Alternatively, we may specify a JDBC type code:
+
+[source,java]
+----
+@JdbcTypeCode(Types.VARCHAR)
+long currentTimeMillis;
+----
+
+The `@JdbcTypeRegistration` annotation may be used to register a user-written `JdbcType` as the default for a given SQL type code.
+
+[NOTE]
+.JDBC types and JDBC type codes
+====
+The types defined by the JDBC specification are enumerated by the integer type codes in the class `java.sql.Types`.
+Each JDBC type is an abstraction of a commonly-available type in SQL.
+For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on Oracle).
+
+Since Hibernate understand more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
+====
+
+If a given `JavaType` does not know how to convert its instances to the type required by its partner `JdbcType`, we must help it out be providing a JPA `AttributeConverter` to perform the conversion.
+
+For example, to form a basic type using `LongJavaType` and `TimestampJdbcType`, we would provide an `AttributeConverter<Long,Timestamp>`.
+
+[source,java]
+----
+@JdbcType(TimestampJdbcType.class)
+@Convert(converter = LongToTimestampConverter.class)
+long currentTimeMillis;
+----
+
 
 === `equals()` and `hashCode()`
 

@@ -96,7 +96,7 @@ We don't recommend doing this.
 
 Every entity must have an identifier attribute.
 
-[identifier-attributes]
+[[identifier-attributes]]
 === Identifier attributes
 
 An identifier attribute is usually a field:
@@ -139,7 +139,7 @@ Identifier values may be:
 - assigned by the application, that is, by your Java code, or
 - generated and assigned by Hibernate.
 
-[generated-identifiers]
+[[generated-identifiers]]
 === Generated identifiers
 
 An identifier is often system-generated, in which case it should be annotated `@GeneratedValue`:
@@ -250,7 +250,7 @@ Not every id maps to a (system-generated) surrogate key.
 Primary keys which are meaningful to the user of the system are called _natural keys_.
 Of particular interest are natural keys which comprise more than one database column, and such natural keys are called _composite keys_.
 
-[composite-identifiers]
+[[composite-identifiers]]
 === Composite identifiers
 
 If your database uses composite keys, you'll need more than one identifier attribute.
@@ -364,3 +364,140 @@ Either way, we may now use `BookId` to obtain instances of `Book`:
 ----
 Book book = session.find(Book.class, new BookId(isbn, printing));
 ----
+
+[[basic-attributes]]
+=== Basic attributes
+
+A _basic_ attribute of an entity is a field or property which maps to a single column of the associated database table.
+The JPA specification defines a quite limited set of basic types:
+
+|====
+| Classification | Package | Types
+
+| Primitive types | | `boolean`, `int`, `double`, etc
+| Primitive wrappers | `java.lang` | `Boolean`, `Integer`, `Double`, etc
+| Strings | `java.lang` | `String`
+| Arbitrary-precision numeric types | `java.math` | `BigInteger`, `BigDecimal`
+| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`
+| Deprecated date/time types | `java.util` | `Date`, `Calendar`
+| Deprecated JDBC date/time types | `java.sql` | `Date`, `Time`, `Timestamp`
+| Binary and character arrays | | `byte[]`, `char[]`
+| UUIDs | `java.util` | `UUID`
+| Enumerated types | | Any `enum`
+| Serializable types | | Any type which implements `java.io.Serializable`
+|====
+
+[IMPORTANT]
+.Please don't use `Date`!
+====
+We're begging you to use types from the `java.time` package instead of anything which inherits `java.util.Date`.
+====
+
+The `@Basic` annotation explicitly specifies that an attribute is basic, but it's often not needed, since attributes are assumed basic by default.
+On the other hand, if an attribute cannot be null, use of `@Basic(optional=false)` is highly recommended.
+
+[source,java]
+----
+@Basic(optional=false) String firstName;
+@Basic(optional=false) String lastName;
+String middleName; // may be null
+----
+
+[TIP]
+.`optional` vs `nullable` in JPA
+====
+There are two ways to mark a mapped column `not null` in JPA:
+
+- using `@Basic(optional=false)`, or
+- using `@Column(nullable=false)`.
+
+You might wonder what the difference is.
+
+Well, it's perhaps not obvious to a casual user of the JPA annotations, but they actually come in two "layers":
+
+- annotations like `@Entity`, `@Id`, and `@Basic` belong to the _logical_ layer&mdash;they specify the semantics of your Java domain model, whereas
+- annotations like `@Table` and `@Column` belong to the _mapping_ layer&mdash;they specify how elements of the domain model map to objects in the relational database.
+
+Information may be inferred from the logical layer down to the mapping layer, but is never inferred in the opposite direction.
+
+Now, the `@Column` annotation belongs to the _mapping_ layer, and so its `nullable` member only affects schema generation (resulting in a `not null` constraint in the generated DDL).
+The `@Basic` annotation belongs to the logical layer, and so an attribute marked `optional=false` is checked by Hibernate before it even writes an entity to the database.
+Note that:
+
+- `optional=false` implies `nullable=false`, but
+- `nullable=false` _does not_ imply `optional=false`.
+
+Therefore, we recommend `@Basic(optional=false)` in preference to `@Column(nullable=false)` in most circumstances.
+====
+
+JPA provides the `AttributeConverter` interface, and the `@Converter` annotation to convert any Java type to one of the types listed above, or perform whatever other sort of pre- and post-processing you need on a basic attribute before writing and reading it to or from the database.
+Converters substantially widen the set of attribute types that can be handled.
+
+For example, the following converter will be automatically applied to any attribute of type `BitSet`, and takes care of persisting the `BitSet` to a column of type `varbinary`:
+
+[source,java]
+----
+@Converter(autoApply = true)
+public static class BitSetConverter implements AttributeConverter<BitSet,byte[]> {
+    @Override
+    public byte[] convertToDatabaseColumn(BitSet bitSet) {
+        return bitSet.toByteArray();
+    }
+
+    @Override
+    public BitSet convertToEntityAttribute(byte[] bytes) {
+        return BitSet.valueOf(bytes);
+    }
+}
+----
+
+On the other hand, if you don't set `autoapply=true`, then you must explicitly apply the converter using the `@Convert` annotation:
+
+[source,java]
+----
+@Convert(converter = BitSetConverter.class)
+@Basic(optional = false)
+BitSet bitset;
+----
+
+All this is nice, but it probably won't surprise you that Hibernate goes beyond what is required by JPA.
+
+=== Compositional basic types
+
+=== `equals()` and `hashCode()`
+
+Entity classes should override `equals()` and `hashCode()`. People new to
+Hibernate or JPA are often confused by exactly which fields should be
+included in the `hashCode()`, so please keep the following principles in
+mind:
+
+- You should not include mutable fields in the hashcode, since that would
+require rehashing any collection containing the entity whenever the field
+is mutated.
+- It's not completely wrong to include a generated identifier (surrogate
+key) in the hashcode, but since the identifier is not generated until
+the entity instance is made persistent, you must take great care to not
+add it to any hashed collection before the identifier is generated. We
+therefore advise against including any database-generated field in the
+hashcode.
+
+It's OK to include any immutable, non-generated field in the hashcode.
+
+TIP: We therefore recommend identifying a _natural key_ for each entity,
+that is, a combination of fields that uniquely identifies an instance of
+the entity, from the perspective of the data model of the program. The
+business key should correspond to a unique constraint on the database,
+and to the fields which are included in `equals()` and `hashCode()`.
+
+That said, an implementation of `equals()` and `hashCode()` based on the
+generated identifier of the entity can work _if you're careful_.
+
+IMPORTANT: If you can't identify a natural key, it might be a sign that
+you need to think more carefully about some aspect of your data model.
+If an entity doesn't have a meaningful unique key, then it's impossible
+to say what event or object it represents in the "real world" outside
+your program.
+
+Note that even when you've identified a natural key, we still recommend
+the use of a generated surrogate key in foreign keys, since this makes
+your data model _much_ easier to change.

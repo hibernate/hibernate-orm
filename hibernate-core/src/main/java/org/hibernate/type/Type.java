@@ -297,8 +297,8 @@ public interface Type extends Serializable {
 
 	/**
 	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class}
-	 * to the given JDBC {@link PreparedStatement}, ignoring some columns as dictated by the
-	 * {@code settable} parameter. Implementors should handle the possibility of null values.
+	 * to the given JDBC {@link PreparedStatement}.
+	 * Implementors should handle the possibility of null values.
 	 * A multi-column type should bind parameters starting from {@code index}.
 	 *
 	 * @param st The JDBC prepared statement to which to bind
@@ -311,6 +311,26 @@ public interface Type extends Serializable {
 	 */
 	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 	throws HibernateException, SQLException;
+
+	/**
+	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class}
+	 * to the given JDBC {@link PreparedStatement}.
+	 * Implementors should handle the possibility of null values.
+	 * A multi-column type should bind parameters starting from {@code index}.
+	 *
+	 * @param st The JDBC prepared statement to which to bind
+	 * @param id identifier for the owner/entity
+	 * @param value the object to write
+	 * @param index starting parameter bind index
+	 * @param session The originating session
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from JDBC driver
+	 */
+	default void nullSafeSet(PreparedStatement st, Serializable id, Object value, int index,
+							SharedSessionContractImplementor session) throws HibernateException, SQLException{
+		nullSafeSet(st, value,index,session);
+	}
 
 	/**
 	 * Generate a representation of the given value for logging purposes.

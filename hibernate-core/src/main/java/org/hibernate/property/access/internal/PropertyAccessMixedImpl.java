@@ -106,7 +106,8 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 			return fieldAccessType;
 		}
 
-		final Method getter = getterOrNull( containerJavaType, propertyName );
+		// use the lenient resolution here because we are just trying to look for explicit @Access, etc. at this point
+		final Method getter = ReflectHelper.lenientlyGetGetterOrNull( containerJavaType, propertyName );
 		final AccessType getterAccessType = getAccessTypeOrNull( getter );
 		if ( getterAccessType != null ) {
 			return getterAccessType;

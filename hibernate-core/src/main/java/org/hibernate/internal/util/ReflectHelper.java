@@ -17,7 +17,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Locale;
-import jakarta.persistence.Transient;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -30,6 +29,8 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
+
+import jakarta.persistence.Transient;
 
 /**
  * Utility class for various reflection operations.
@@ -511,7 +512,17 @@ public final class ReflectHelper {
 		return getter;
 	}
 
-	private static Method getGetterOrNull(Class containerClass, String propertyName) {
+	/**
+	 * Find the method that can be used as the setter for this property.
+	 *
+	 * @param containerClass The Class which contains the property
+	 * @param propertyName The name of the property
+	 *
+	 * @return The getter method, or {@code null} if there is none.
+	 *
+	 * @throws MappingException If the {@code containerClass} has both a get- and an is- form.
+	 */
+	public static Method getGetterOrNull(Class containerClass, String propertyName) {
 		if ( isRecord( containerClass ) ) {
 			try {
 				return containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
@@ -520,6 +531,7 @@ public final class ReflectHelper {
 				// Ignore
 			}
 		}
+
 		for ( Method method : containerClass.getDeclaredMethods() ) {
 			// if the method has parameters, skip it
 			if ( method.getParameterCount() != 0 ) {
@@ -557,6 +569,8 @@ public final class ReflectHelper {
 				final String stemName = methodName.substring( 2 );
 				String decapitalizedStemName = Introspector.decapitalize( stemName );
 				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
+					// not sure that this can ever really happen given the handling of "get" above.
+					// but be safe
 					verifyNoGetVariantExists( containerClass, propertyName, method, stemName );
 					return method;
 				}
@@ -566,8 +580,8 @@ public final class ReflectHelper {
 		return null;
 	}
 
-	private static void verifyNoIsVariantExists(
-			Class containerClass,
+	public static void verifyNoIsVariantExists(
+			Class<?> containerClass,
 			String propertyName,
 			Method getMethod,
 			String stemName) {
@@ -584,7 +598,8 @@ public final class ReflectHelper {
 		}
 	}
 
-	private static void checkGetAndIsVariants(
+
+	public static void checkGetAndIsVariants(
 			Class containerClass,
 			String propertyName,
 			Method getMethod,
@@ -606,7 +621,7 @@ public final class ReflectHelper {
 		}
 	}
 
-	private static void verifyNoGetVariantExists(
+	public static void verifyNoGetVariantExists(
 			Class containerClass,
 			String propertyName,
 			Method isMethod,

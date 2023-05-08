@@ -29,7 +29,7 @@ An entity must:
 - be a non-`final` class,
 - with a non-`private` constructor with no parameters.
 
-On the other hand, the entity class may be concrete or `abstract`, and it may have any number of additional constructors.
+On the other hand, the entity class may be either concrete or `abstract`, and it may have any number of additional constructors.
 
 Every entity class must be annotated `@Entity`.
 
@@ -42,14 +42,28 @@ class Book {
 }
 ----
 
-Alternatively, when XML-based mappings are used, the `<entity>` element is used to declare an entity class:
+Alternatively, the class may be identified as an entity type by providing an XML-based mapping for the class.
+
+[TIP]
+.Mapping entities using XML
+====
+When XML-based mappings are used, the `<entity>` element is used to declare an entity class:
 
 [source,xml]
 ----
-<package>org.hibernate.example</package>
+<entity-mappings>
+    <package>org.hibernate.example</package>
 
-<entity class="Book"> ... </entity>
+    <entity class="Book">
+        <attributes> ... </attributes>
+    </entity>
+
+    ...
+</entity-mappings>
 ----
+We won't have much more to say about XML-based mappings in this Introduction, since it's not our preferred way to do things.
+But since the `orm.xml` mapping file format defined by the JPA specification was modelled closely on the annotation-based mappings, it's usually easy to go back and forth between the two options.
+====
 
 Each entity class has a default _access type_, either:
 
@@ -62,17 +76,30 @@ Concretely:
 - if a field is annotated `@Id`, field access is used, or
 - if a getter method is annotated `@Id`, property access is used.
 
+Back when Hibernate was just a baby, property access was quite popular in the Hibernate community.
+Today, however, field access is _much_ more common.
+
 [NOTE]
 .Explicit access type
 ====
-The access type may be specified explicitly using the `@Access` annotation, but we strongly discourage this, since it's ugly and never necessary.
+The default access type may be specified explicitly using the `@Access` annotation, but we strongly discourage this, since it's ugly and never necessary.
 ====
+
+[IMPORTANT]
+.Mapping annotations should be placed consistently
+====
+If the `@Id` annotation occurs on a field, the other mapping annotations should also be applied to field; or, if the `@Id` annotation occurs on a getter, the other mapping annotations should be applied to getters.
+
+It is in principle possible to mix field and property access using explicit `@Access` annotations at the attribute level.
+We don't recommend doing this.
+====
+
+Every entity must have an identifier attribute.
 
 [identifier-attributes]
 === Identifier attributes
 
-Every entity must have an identifier attribute.
-The attribute is usually a field:
+An identifier attribute is usually a field:
 
 [source,java]
 ----
@@ -105,20 +132,31 @@ class Book {
 }
 ----
 
+An identifier attribute must be annotated `@Id` or `@EmbeddedId`.
+
+Identifier values may be:
+
+- assigned by the application, that is, by your Java code, or
+- generated and assigned by Hibernate.
+
+[generated-identifiers]
+=== Generated identifiers
+
 An identifier is often system-generated, in which case it should be annotated `@GeneratedValue`:
 
 [source,java]
 ----
-@Entity
-class Book {
-    Book() {}
-
-    @Id @GeneratedValue
-    Long id;
-
-    ...
-}
+@Id @GeneratedValue
+Long id;
 ----
+
+[TIP]
+.Using surrogate keys
+====
+System-generated identifiers, or _surrogate keys_ make it easier to evolve or refactor the relational data model.
+If you have the freedom to define the relational schema, we recommend the use of surrogate keys.
+On the other hand, if, as is more common, you're working with a pre-existing database schema, you might not have the option.
+====
 
 JPA defines the following strategies for generating ids, which are enumerated by `GenerationType`:
 
@@ -132,32 +170,197 @@ JPA defines the following strategies for generating ids, which are enumerated by
 | `GenerationType.AUTO`     | `Long` or `Integer` | Selects `SEQUENCE` `TABLE`, or `UUID` based on the identifier type and capabilities of the database.
 |===
 
+For example, the following id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
+
+[source,java]
+----
+@Id @GeneratedValue(strategy=IDENTITY)
+Long id;
+----
+
+The `@SequenceGenerator` and `@TableGenerator` annotations allow further control over `SEQUENCE` and `TABLE` generation respectively.
+
+Consider this sequence generator:
+
+[source,java]
+----
+@SequenceGenerator(name="bookSeq", sequenceName="seq_book",
+                   initialValue = 5, allocationSize=10)
+----
+
+Values are generated using a database sequence defined as follows:
+
+[source,sql]
+----
+create sequence seq_book start with 5 increment by 10
+----
+
+[IMPORTANT]
+.Check the `initialValue` and `allocationSize`
+====
+If you let Hibernate export your database schema, the sequence definition will have the right `start with` and `increment` values.
+But if you're working with a database schema managed outside of Hibernate, makes sure the `initialValue` and `allocationSize` members of `@SequenceGenerator` match the `start with` and `increment` specified in the DDL.
+====
+
+Any identifier attribute may now make use of the generator named `bookSeq`:
+
+[source,java]
+----
+@Id @GeneratedValue(strategy=SEQUENCE, generator="bookSeq")
+Long id;
+----
+
+Actually, it's extremely common to place the `@SequenceGenerator` annotation on the `@Id` attribute that makes use of it:
+
+[source,java]
+----
+@Id @GeneratedValue(strategy=SEQUENCE, generator="bookSeq")
+@SequenceGenerator(name="bookSeq", sequenceName="seq_book",
+                   initialValue = 5, allocationSize=10)
+Long id;
+----
+
+[NOTE]
+.JPA id generators may be shared between entities
+====
+A `@SequenceGenerator` or `@TableGenerator` must have a name, and may be shared between multiple id attributes.
+This fits somewhat uncomfortably with the common practice of annotating the `@Id` attribute which makes use of the generator!
+====
+
+As you can see, JPA provides quite adequate support for the most common strategies for system-generated ids.
+However, the annotations themselves are a little more intrusive than they should be, and there's no well-defined way to extend this framework to support custom strategies for id generation.
+Nor may `@GeneratedValue` be used on a property not annotated `@Id`.
+Since custom id generation is a rather common requirement, Hibernate provides a very carefully-designed framework for user-defined ``Generator``s.
+
+[TIP]
+.Defining your own id generators
+====
+JPA doesn't define a standard way to extend the set of id generation strategies, but Hibernate does:
+
+- the `Generator` hierarchy of interfaces in the package `org.hibernate.generator` lets you define new generators, and
+- the `@IdGeneratorType` meta-annotation from the package `org.hibernate.annotations` lets you write an annotation which associates a `Generator` type with identifier attributes.
+
+Furthermore, the `@ValueGenerationType` meta-annotation lets you write an annotation which associates a `Generator` type with a non-`@Id` attribute.
+
+These APIs are new in Hibernate 6, and supersede the classic `IdentifierGenerator` interface from older versions of Hibernate.
+You can find out more from the Javadoc for `@IdGeneratorType` and for `org.hibernate.generator`.
+====
+
+Not every id maps to a (system-generated) surrogate key.
+Primary keys which are meaningful to the user of the system are called _natural keys_.
+Of particular interest are natural keys which comprise more than one database column, and such natural keys are called _composite keys_.
+
+[composite-identifiers]
+=== Composite identifiers
+
+If your database uses composite keys, you'll need more than one identifier attribute.
+There are two ways to map composite keys in JPA:
+
+- using an `@IdClass`, or
+- using an `@EmbeddedId`.
+
+Perhaps the most immediately-natural way to represent this in an entity class is with multiple fields annotated `@Id`, for example:
+
+[source,java]
+----
+@Entity
+@IdClass(BookId.class)
+class Book {
+    Book() {}
+
+    @Id
+    String isbn;
+
+    @Id
+    int printing;
+
+    ...
+}
+----
+
+But this approach comes with a problem: what object can we use to identify a `Book` and pass to methods like `find()` which accept an identifier?
+
+The solution is to write a separate class with fields that match the identifier attributes of the entity.
+The `@IdClass` annotation of the `Book` entity identifies the id class to use for that entity:
+
+[source,java]
+----
+class BookId {
+    
+    String isbn;
+    int printing;
+
+    BookId() {}
+
+    BookId(String isbn, int printing) {
+        this.isbn = isbn;
+        this.printing = printing;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof BookId) {
+            BookId bookId = (BookId) other;
+            return bookId.isbn.equals(isbn)
+                && bookId.printing == printing;
+        }
+        else {
+            return false;
+        }
+    }
+    
+    @Override
+    public int hashCode() {
+        return isbn.hashCode();
+    }
+}
+----
+
+IMPORTANT: Every id class should override `equals()` and `hashCode()`.
+
+This is not our preferred approach.
+Instead, we recommend that the `BookId` class be declared as an `@Embeddable` type:
+
+[source,java]
+----
+@Embeddable
+class BookId {
+    
+    String isbn;
+
+    int printing;
+
+    BookId() {}
+
+    BookId(String isbn, int printing) {
+        this.isbn = isbn;
+        this.printing = printing;
+    }
+
+    ...
+}
+----
+
+And now the entity class may reuse this definition using `@EmbeddedId`:
+
 [source,java]
 ----
 @Entity
 class Book {
     Book() {}
 
-    @Id @GeneratedValue(strategy=IDENTITY)
-    Long id;
+    @EmbeddedId
+    BookId bookId;
 
     ...
 }
 ----
 
-The `@SequenceGenerator` and `@TableGenerator` annotations allow further control over id generation:
+This second approach eliminates some duplicated code.
+
+Either way, we may now use `BookId` to obtain instances of `Book`:
 
 [source,java]
 ----
-@Entity
-class Book {
-    Book() {}
-
-    @Id @GeneratedValue(strategy=SEQUENCE, generator="bookSeq")
-    @SequenceGenerator(name="bookSeq", sequenceName="seq_book",
-                       allocationSize=10)
-    Long id;
-
-    ...
-}
+Book book = session.find(Book.class, new BookId(isbn, printing));
 ----

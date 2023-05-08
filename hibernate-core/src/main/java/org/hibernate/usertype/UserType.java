@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -298,6 +299,25 @@ public interface UserType<J> {
 	 */
 	void nullSafeSet(PreparedStatement st, J value, int index, SharedSessionContractImplementor session)
 			throws SQLException;
+
+	/**
+	 * Bind a value represented by an instance of the
+	 * to the given JDBC {@link PreparedStatement}.
+	 * Implementors should handle the possibility of null values.
+	 * A multi-column type should bind parameters starting from {@code index}.
+	 *
+	 * @param st The JDBC prepared statement to which to bind
+	 * @param value the object to write
+	 * @param index starting parameter bind index
+	 * @param session The originating session
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
+	 */
+	default void nullSafeSet(PreparedStatement st, Serializable id, J value, int index,
+							SharedSessionContractImplementor session) throws HibernateException, SQLException{
+		nullSafeSet(st, value, index, session);
+	}
 
 	/**
 	 * Return a clone of the given instance of the Java class mapped

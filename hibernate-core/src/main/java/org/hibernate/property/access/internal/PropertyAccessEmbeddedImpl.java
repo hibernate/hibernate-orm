@@ -67,6 +67,7 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 			return owner;
 		}
 
+		@SuppressWarnings("rawtypes")
 		@Override
 		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 			return owner;

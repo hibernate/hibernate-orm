@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -25,6 +26,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 /**
  * @author Steve Ebersole
  */
+@Internal
 public class GetterMethodImpl implements Getter {
 	private static final CoreMessageLogger LOG = messageLogger( GetterMethodImpl.class );
 
@@ -74,6 +76,7 @@ public class GetterMethodImpl implements Getter {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );

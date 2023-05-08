@@ -3403,12 +3403,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				predicate.get()
 		);
 
-		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
 			tableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
 			currentlyProcessingJoin = oldJoin;
+		}
+		else if ( correspondingSqlJoinType != SqlAstJoinType.CROSS ) {
+			throw new SemanticException(
+					"Entity join did not specify a predicate, " +
+					"please define an on clause or use an explicit cross join: " + sqmJoin
+			);
 		}
 
 		// Note that we add the entity join after processing the predicate because implicit joins needed in there

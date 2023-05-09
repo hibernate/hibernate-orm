@@ -222,6 +222,6 @@ class ColumnDefinitions {
 
 	private static String stripArgs(String string) {
 		int i = string.indexOf('(');
-		return i>0 ? string.substring(0,i) : string;
+		return i>0 ? string.substring(0,i).trim() : string;
 	}
 }

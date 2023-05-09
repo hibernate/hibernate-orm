@@ -25,7 +25,7 @@ public class DdlTypeImpl implements DdlType {
 	private final String typeNamePattern;
 	private final String castTypeNamePattern;
 	private final boolean castTypeNameIsStatic;
-	private final Dialect dialect;
+	final Dialect dialect;
 
 	public DdlTypeImpl(int sqlTypeCode, String typeNamePattern, Dialect dialect) {
 		this( sqlTypeCode, typeNamePattern, typeNamePattern, dialect );

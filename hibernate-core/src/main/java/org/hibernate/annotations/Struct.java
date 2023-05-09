@@ -7,7 +7,6 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.hibernate.Incubating;
@@ -15,33 +14,33 @@ import org.hibernate.Incubating;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies the UDT (user defined type) name for the annotated embeddable or embedded.
- *
+ * Specifies the UDT (user defined type) name for the annotated embeddable
+ * type or embedded attribute.
+ * <p>
+ * This annotation may be applied to an embeddable class:
  * <pre>
- *    Example:
- *
- *    {@code @Embeddable}
- *    {@code Struct(name = "CUST")}
- *    public class Customer { ... }
+ * {@code @Embeddable}
+ * {@code @Struct(name = "CUST")}
+ * public class Customer { ... }
  * </pre>
- *
+ * <p>
+ * Alternatively, it may be applied to an embedded attribute:
  * <pre>
- *    Example:
- *
- *    public class Order {
- *        {@code Embedded}
- *        {@code Struct(name = "CUST")}
- *        private Customer customer;
- *    }
+ * public class Order {
+ *     {@code @Embedded}
+ *     {@code @Struct(name = "CUST")}
+ *     private Customer customer;
+ * }
  * </pre>
  *
  * @since 6.2
  */
 @Incubating
 @Target({TYPE, FIELD, METHOD})
-@Retention( RetentionPolicy.RUNTIME )
+@Retention( RUNTIME )
 public @interface Struct {
 	/**
 	 * The name of the UDT (user defined type).

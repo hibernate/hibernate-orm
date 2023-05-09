@@ -23,6 +23,7 @@ public class AggregateColumn extends Column {
 		setLength( column.getLength() );
 		setPrecision( column.getPrecision() );
 		setScale( column.getScale() );
+		setArrayLength( column.getArrayLength() );
 		setValue( column.getValue() );
 		setTypeIndex( column.getTypeIndex() );
 		setName( column.getQuotedName() );

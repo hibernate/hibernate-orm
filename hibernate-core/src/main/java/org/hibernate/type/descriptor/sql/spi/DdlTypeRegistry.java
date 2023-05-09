@@ -148,6 +148,12 @@ public class DdlTypeRegistry implements Serializable {
 	public String getTypeName(int typeCode, Dialect dialect) {
 		// explicitly enforce dialect's default precisions
 		switch ( typeCode ) {
+			case SqlTypes.CHAR:
+			case SqlTypes.NCHAR:
+			case SqlTypes.VARCHAR:
+			case SqlTypes.NVARCHAR:
+			case SqlTypes.VARBINARY:
+				return getTypeName( typeCode, Size.length( Size.DEFAULT_LENGTH ) );
 			case SqlTypes.DECIMAL:
 			case SqlTypes.NUMERIC:
 				return getTypeName( typeCode, Size.precision( dialect.getDefaultDecimalPrecision() ) );
@@ -181,13 +187,30 @@ public class DdlTypeRegistry implements Serializable {
 	 * @return the associated type name with the smallest capacity that accommodates
 	 *         the given size, if available, and the default type name otherwise
 	 *
-	 * @deprecated not appropriate for named enum or array types
+	 * @deprecated not appropriate for named enum or array types,
+	 *             use {@link #getTypeName(int, Size, Type)} instead
 	 */
 	@Deprecated(since = "6.3")
 	public String getTypeName(int typeCode, Size size) {
 		return getTypeName( typeCode, size.getLength(), size.getPrecision(), size.getScale() );
 	}
 
+	/**
+	 * Get the SQL type name for the specified {@link java.sql.Types JDBC type code}
+	 * and size, filling in the placemarkers {@code $l}, {@code $p}, and {@code $s}
+	 * with the length, precision, and scale determined by the given {@linkplain Size
+	 * size object}. The returned type name should be of a SQL type large enough to
+	 * accommodate values of the specified size.
+	 *
+	 * @param typeCode the JDBC type code
+	 * @param columnSize an object which determines the length, precision, and scale
+	 * @param type the {@link Type} mapped to the column
+	 *
+	 * @return the associated type name with the smallest capacity that accommodates
+	 *         the given size, if available, and the default type name otherwise
+	 *
+	 * @since 6.3
+	 */
 	public String getTypeName(int typeCode, Size columnSize, Type type) {
 		final DdlType descriptor = getDescriptor( typeCode );
 		if ( descriptor == null ) {
@@ -199,7 +222,7 @@ public class DdlTypeRegistry implements Serializable {
 					)
 			);
 		}
-		return descriptor.getTypeName( columnSize, type.getReturnedClass() );
+		return descriptor.getTypeName( columnSize, type, this );
 	}
 
 	/**
@@ -216,7 +239,8 @@ public class DdlTypeRegistry implements Serializable {
 	 * @return the associated type name with the smallest capacity that accommodates
 	 *         the given size, if available, and the default type name otherwise
 	 *
-	 * @deprecated not appropriate for named enum or array types
+	 * @deprecated not appropriate for named enum or array types,
+	 *             use {@link #getTypeName(int, Size, Type)} instead
 	 */
 	@Deprecated(since = "6.3")
 	public String getTypeName(int typeCode, Long size, Integer precision, Integer scale) {

@@ -9,6 +9,10 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -62,6 +66,11 @@ import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 
 /**
@@ -313,14 +322,93 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		if ( to == CastType.STRING ) {
 			switch ( from ) {
 				case DATE:
-					return "str_replace(convert(varchar,?1,102),'.','-')";
+					return "substring(convert(varchar,?1,23),1,10)";
 				case TIME:
-					return "convert(varchar,?1,108)";
+					return "convert(varchar,?1,8)";
 				case TIMESTAMP:
-					return "str_replace(convert(varchar,?1,23),'T',' ')";
+					return "convert(varchar,?1,140)";
 			}
 		}
 		return super.castPattern( from, to );
+	}
+
+	/* Something odd is going on with the jConnect driver when using JDBC escape syntax, so let's use native functions */
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "convert(date,'" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( "',140)" );
+				break;
+			case TIME:
+				appender.appendSql( "convert(time,'" );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( "',8)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "convert(datetime,'" );
+				appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( "',140)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "convert(date,'" );
+				appendAsDate( appender, date );
+				appender.appendSql( "',140)" );
+				break;
+			case TIME:
+				appender.appendSql( "convert(time,'" );
+				appendAsLocalTime( appender, date );
+				appender.appendSql( "',8)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "convert(datetime,'" );
+				appendAsTimestampWithMillis( appender, date, jdbcTimeZone );
+				appender.appendSql( "',140)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "convert(date,'" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( "',140)" );
+				break;
+			case TIME:
+				appender.appendSql( "convert(time,'" );
+				appendAsLocalTime( appender, calendar );
+				appender.appendSql( "',8)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "convert(datetime,'" );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+				appender.appendSql( "',140)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override

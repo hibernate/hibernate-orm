@@ -746,11 +746,8 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public String getArrayTypeName(String elementTypeName) {
-		// Return null to signal that there is no array type since Oracle only has named array types
-		// TODO: discuss if it makes sense to parse a config parameter to a map which we can query here
-		//  e.g. `hibernate.oracle.array_types=numeric(10,0)=intarray,...`
-		return null;
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
+		return javaElementTypeName + "Array";
 	}
 
 	@Override
@@ -796,7 +793,7 @@ public class OracleLegacyDialect extends Dialect {
 		}
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
-			typeContributions.contributeJdbcType( OracleJdbcHelper.getArrayJdbcType( serviceRegistry ) );
+			typeContributions.contributeJdbcTypeConstructor( OracleJdbcHelper.getArrayJdbcTypeConstructor( serviceRegistry ) );
 		}
 		else {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );

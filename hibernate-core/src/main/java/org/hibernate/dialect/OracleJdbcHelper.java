@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.HibernateError;
@@ -14,6 +13,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 
 /**
  * The following class provides some convenience methods for accessing JdbcType instance,
@@ -34,20 +34,22 @@ public class OracleJdbcHelper {
 		}
 	}
 
-	public static JdbcType getArrayJdbcType(ServiceRegistry serviceRegistry) {
-		return createJdbcType( serviceRegistry, "org.hibernate.dialect.OracleArrayJdbcType" );
+	public static JdbcTypeConstructor getArrayJdbcTypeConstructor(ServiceRegistry serviceRegistry) {
+		return create( serviceRegistry, "org.hibernate.dialect.OracleArrayJdbcTypeConstructor" );
+	}
+
+	public static JdbcTypeConstructor getNestedTableJdbcTypeConstructor(ServiceRegistry serviceRegistry) {
+		return create( serviceRegistry, "org.hibernate.dialect.OracleNestedTableJdbcTypeConstructor" );
 	}
 
 	public static JdbcType getStructJdbcType(ServiceRegistry serviceRegistry) {
-		return createJdbcType( serviceRegistry, "org.hibernate.dialect.OracleStructJdbcType" );
+		return create( serviceRegistry, "org.hibernate.dialect.OracleStructJdbcType" );
 	}
 
-	public static JdbcType createJdbcType(ServiceRegistry serviceRegistry, String className) {
+	private static <X> X create(ServiceRegistry serviceRegistry, String className) {
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		try {
-			final Class<?> clazz = classLoaderService.classForName( className );
-			final Constructor<?> constructor = clazz.getConstructor();
-			return (JdbcType) constructor.newInstance();
+			return classLoaderService.<X>classForName( className ).getConstructor().newInstance();
 		}
 		catch (NoSuchMethodException e) {
 			throw new HibernateError( "Class does not have an empty constructor", e );

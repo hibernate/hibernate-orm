@@ -139,7 +139,8 @@ public class TemporaryTable implements Exportable, Contributable {
 					uuidType,
 					typeConfiguration.getDdlTypeRegistry().getTypeName(
 							uuidType.getJdbcType().getDdlTypeCode(),
-							size
+							size,
+							uuidType
 					),
 					size
 			);
@@ -442,7 +443,8 @@ public class TemporaryTable implements Exportable, Contributable {
 											null,
 											null,
 											null
-									)
+									),
+									integerBasicType
 							);
 						}
 						else if ( dialect.getIdentityColumnSupport().supportsIdentityColumns() ) {
@@ -454,7 +456,8 @@ public class TemporaryTable implements Exportable, Contributable {
 											null,
 											null,
 											null
-									)
+									),
+									integerBasicType
 							) + " " + dialect.getIdentityColumnSupport()
 									.getIdentityColumnString( integerBasicType.getJdbcType().getDdlTypeCode() );
 						}
@@ -468,7 +471,8 @@ public class TemporaryTable implements Exportable, Contributable {
 											null,
 											null,
 											null
-									)
+									),
+									integerBasicType
 							);
 						}
 						columns.add(

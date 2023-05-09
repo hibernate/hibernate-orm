@@ -18,6 +18,7 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.query.NamedQueryValidationException;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -211,14 +212,16 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	public void validateNamedQueries(QueryEngine queryEngine) {
 		final Map<String, HibernateException> errors = checkNamedQueries( queryEngine );
 		if ( !errors.isEmpty() ) {
+			int i = 0;
 			final StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-			String sep = "";
 			for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
 				QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
-				failingQueries.append( sep ).append( entry.getKey() );
-				sep = ", ";
+				failingQueries.append( "\n" )
+						.append("  [").append(++i).append("] Error in query named '").append( entry.getKey() ).append("'")
+						.append(": ").append( entry.getValue().getMessage() );
 			}
-			final HibernateException exception = new HibernateException( failingQueries.toString() );
+			final NamedQueryValidationException exception =
+					new NamedQueryValidationException( failingQueries.toString(), errors );
 			errors.values().forEach( exception::addSuppressed );
 			throw exception;
 		}

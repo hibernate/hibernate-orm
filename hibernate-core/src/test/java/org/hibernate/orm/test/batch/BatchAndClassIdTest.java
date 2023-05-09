@@ -100,8 +100,8 @@ public class BatchAndClassIdTest {
 						Assertions.assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "?" );
 					}
 					else {
-						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
-						Assertions.assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "in(?,?,?,?,?)" );
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
+						Assertions.assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "in (?,?,?,?,?)" );
 					}
 
 					statementInspector.clear();

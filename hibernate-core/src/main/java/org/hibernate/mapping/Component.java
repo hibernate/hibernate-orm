@@ -46,6 +46,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.id.IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 
@@ -122,7 +123,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.parentProperty = original.parentProperty;
 		this.owner = original.owner;
 		this.dynamic = original.dynamic;
-		this.metaAttributes = original.metaAttributes == null ? null : new HashMap<>(original.metaAttributes);
+		this.metaAttributes = original.metaAttributes == null ? null : new HashMap<>( original.metaAttributes );
 		this.isKey = original.isKey;
 		this.roleName = original.roleName;
 		this.customInstantiator = original.customInstantiator;
@@ -182,8 +183,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public List<Selectable> getSelectables() {
 		if ( cachedSelectables == null ) {
 			cachedSelectables = properties.stream()
-					.flatMap(p -> p.getSelectables().stream())
-					.collect(Collectors.toList());
+					.flatMap( p -> p.getSelectables().stream() )
+					.collect( toList() );
 		}
 		return cachedSelectables;
 	}
@@ -196,7 +197,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		else {
 			this.cachedColumns = properties.stream()
 					.flatMap( p -> p.getValue().getColumns().stream() )
-					.collect( Collectors.toList() );
+					.collect( toList() );
 			return cachedColumns;
 		}
 	}
@@ -429,14 +430,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public boolean isSame(Component other) {
 		return super.isSame( other )
-				&& Objects.equals( properties, other.properties )
-				&& Objects.equals( componentClassName, other.componentClassName )
-				&& embedded == other.embedded
-				&& Objects.equals( aggregateColumn, other.aggregateColumn )
-				&& Objects.equals( parentAggregateColumn, other.parentAggregateColumn )
-				&& Objects.equals( structName, other.structName )
-				&& Objects.equals( parentProperty, other.parentProperty )
-				&& Objects.equals( metaAttributes, other.metaAttributes );
+			&& Objects.equals( properties, other.properties )
+			&& Objects.equals( componentClassName, other.componentClassName )
+			&& embedded == other.embedded
+			&& Objects.equals( aggregateColumn, other.aggregateColumn )
+			&& Objects.equals( parentAggregateColumn, other.parentAggregateColumn )
+			&& Objects.equals( structName, other.structName )
+			&& Objects.equals( parentProperty, other.parentProperty )
+			&& Objects.equals( metaAttributes, other.metaAttributes );
 	}
 
 	@Override

@@ -695,7 +695,7 @@ public class MetadataBuildingProcess {
 			ddlTypeRegistry.addDescriptorIfAbsent(
 					new DdlTypeImpl(
 							SqlTypes.GEOGRAPHY,
-							geometryType.getTypeName( null, null, null ),
+							geometryType.getTypeName( (Long) null, (Integer) null, (Integer) null ),
 							dialect
 					)
 			);

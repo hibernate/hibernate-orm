@@ -8,16 +8,18 @@ package org.hibernate.type.descriptor.sql.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import static org.hibernate.type.SqlTypes.ENUM;
+import static org.hibernate.type.SqlTypes.NAMED_ENUM;
 
 /**
- * A {@link DdlType} representing a native SQL {@code enum} type.
+ * A {@link DdlType} representing a named native SQL {@code enum} type,
+ * one that often <em>cannot</em> be treated as a {@code varchar}.
  *
- * @see org.hibernate.type.SqlTypes#ENUM
  * @see org.hibernate.type.SqlTypes#NAMED_ENUM
  * @see Dialect#getEnumTypeDeclaration(Class)
  *
@@ -33,17 +35,16 @@ public class NamedNativeEnumDdlTypeImpl implements DdlType {
 	@Override
 	public int getSqlTypeCode() {
 		// note: also used for NAMED_ENUM
-		return ENUM;
+		return NAMED_ENUM;
 	}
 
-	@Override
-	public String getTypeName(Size columnSize, Class<?> returnedClass) {
-		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) returnedClass );
+	@Override @SuppressWarnings("unchecked")
+	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
+		return dialect.getEnumTypeDeclaration( (Class<? extends Enum<?>>) type.getReturnedClass() );
 	}
 
 	@Override
 	public String getRawTypeName() {
-		// this
 		return "enum";
 	}
 

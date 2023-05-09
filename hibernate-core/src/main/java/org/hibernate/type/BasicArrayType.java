@@ -16,21 +16,21 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * @author Jordan Gigov
  * @author Christian Beikov
  */
-public class BasicArrayType<T>
-		extends AbstractSingleColumnStandardBasicType<T[]>
-		implements AdjustableBasicType<T[]>, BasicPluralType<T[], T> {
+public class BasicArrayType<T,E>
+		extends AbstractSingleColumnStandardBasicType<T>
+		implements AdjustableBasicType<T>, BasicPluralType<T, E> {
 
-	private final BasicType<T> baseDescriptor;
+	private final BasicType<E> baseDescriptor;
 	private final String name;
 
-	public BasicArrayType(BasicType<T> baseDescriptor, JdbcType arrayJdbcType, JavaType<T[]> arrayTypeDescriptor) {
+	public BasicArrayType(BasicType<E> baseDescriptor, JdbcType arrayJdbcType, JavaType<T> arrayTypeDescriptor) {
 		super( arrayJdbcType, arrayTypeDescriptor );
 		this.baseDescriptor = baseDescriptor;
 		this.name = baseDescriptor.getName() + "[]";
 	}
 
 	@Override
-	public BasicType<T> getElementType() {
+	public BasicType<E> getElementType() {
 		return baseDescriptor;
 	}
 

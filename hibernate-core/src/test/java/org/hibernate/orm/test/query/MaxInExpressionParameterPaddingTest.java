@@ -83,7 +83,7 @@ public class MaxInExpressionParameterPaddingTest {
 			);
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in(?" );
+		expectedInClause.append( "in (?" );
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
@@ -109,7 +109,7 @@ public class MaxInExpressionParameterPaddingTest {
 		);
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in(?" );
+		expectedInClause.append( "in (?" );
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
@@ -134,12 +134,12 @@ public class MaxInExpressionParameterPaddingTest {
 		);
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in(?" );
+		expectedInClause.append( "in (?" );
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in(?)" );
+		expectedInClause.append( " or p1_0.id in (?)" );
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
 	}
@@ -160,12 +160,12 @@ public class MaxInExpressionParameterPaddingTest {
 		);
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in(?" );
+		expectedInClause.append( "in (?" );
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in(?,?,?,?)" );
+		expectedInClause.append( " or p1_0.id in (?,?,?,?)" );
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
 	}
@@ -186,17 +186,17 @@ public class MaxInExpressionParameterPaddingTest {
 		);
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in(?" );
+		expectedInClause.append( "in (?" );
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in(?");
+		expectedInClause.append( " or p1_0.id in (?");
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in(?,?,?,?)" );
+		expectedInClause.append( " or p1_0.id in (?,?,?,?)" );
 
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );

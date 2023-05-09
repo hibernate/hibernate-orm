@@ -8,7 +8,6 @@ package org.hibernate.dialect;
 
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -21,7 +20,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
@@ -31,7 +29,6 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
@@ -442,10 +439,40 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				rhs.accept( this );
 				appendSql( ')' );
 				break;
+			case SqlTypes.ARRAY:
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "decode(" );
+						arrayToString( lhs );
+						appendSql( ',' );
+						arrayToString( rhs );
+						appendSql( ",0,1)=1" );
+						break;
+					case NOT_DISTINCT_FROM:
+						appendSql( "decode(" );
+						arrayToString( lhs );
+						appendSql( ',' );
+						arrayToString( rhs );
+						appendSql( ",0,1)=0" );
+						break;
+					default:
+						arrayToString( lhs );
+						appendSql( operator.sqlText() );
+						arrayToString( rhs );
+				}
+				break;
 			default:
 				renderComparisonEmulateDecode( lhs, operator, rhs );
 				break;
 		}
+	}
+
+	private void arrayToString(Expression expression) {
+		appendSql("case when ");
+		expression.accept( this );
+		appendSql(" is not null then (select listagg(column_value||',')||';' from table(");
+		expression.accept( this );
+		appendSql(")) else null end");
 	}
 
 	@Override

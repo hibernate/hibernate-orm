@@ -152,6 +152,7 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
@@ -174,11 +175,12 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
@@ -188,6 +190,7 @@ import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -441,6 +444,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARCHAR ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32NVARCHAR ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARBINARY ) );
+
+		if ( supportsStandardArrays() ) {
+			ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
+		}
 	}
 
 	private DdlTypeImpl simpleSqlType(int sqlTypeCode) {
@@ -688,25 +695,27 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
-		if ( jdbcTypeCode == Types.ARRAY && jdbcType instanceof ArrayJdbcType ) {
-			// Special handling for array types, because we need the proper element/component type
-			// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
-			final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
-			if ( arraySuffixIndex != -1 ) {
-				final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
-				final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
-				if ( sqlTypeCode != null ) {
-					return ( (ArrayJdbcType) jdbcType ).resolveType(
-							jdbcTypeRegistry.getTypeConfiguration(),
-							this,
-							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-							null
-					);
+		if ( jdbcTypeCode == ARRAY ) {
+			final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
+			if ( jdbcTypeConstructor != null ) {
+				// Special handling for array types, because we need the proper element/component type
+				// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
+				final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
+				if ( arraySuffixIndex != -1 ) {
+					final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
+					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+					if ( sqlTypeCode != null ) {
+						return jdbcTypeConstructor.resolveType(
+								jdbcTypeRegistry.getTypeConfiguration(),
+								this,
+								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+								ColumnTypeInformation.EMPTY
+						);
+					}
 				}
 			}
 		}
-		return jdbcType;
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	/**
@@ -1620,7 +1629,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 
 		if ( supportsStandardArrays() ) {
-			jdbcTypeRegistry.addDescriptor( ArrayJdbcType.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructor( ArrayJdbcTypeConstructor.INSTANCE );
 		}
 		if ( supportsMaterializedLobAccess() ) {
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );
@@ -4183,8 +4192,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @since 6.1
 	 */
-	public String getArrayTypeName(String elementTypeName) {
-		return supportsStandardArrays() ? elementTypeName + " array" : null;
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
+		if ( supportsStandardArrays() ) {
+			return maxLength == null
+					? elementTypeName + " array"
+					: elementTypeName + " array[" + maxLength + "]";
+		}
+		else {
+			return null;
+		}
 	}
 
 	/**
@@ -4917,6 +4933,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			}
 
 			switch ( ddlTypeCode ) {
+				case SqlTypes.ARRAY:
+					break;
 				case SqlTypes.BIT:
 				case SqlTypes.CHAR:
 				case SqlTypes.NCHAR:
@@ -4965,10 +4983,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				case SqlTypes.DECIMAL:
 				case SqlTypes.INTERVAL_SECOND:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
+					size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
 					break;
 			}
-
-			size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
 
 			if ( precision != null ) {
 				size.setPrecision( precision );

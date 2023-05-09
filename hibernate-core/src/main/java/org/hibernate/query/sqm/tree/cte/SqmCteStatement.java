@@ -42,7 +42,7 @@ import jakarta.persistence.criteria.Subquery;
 public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableNode, JpaCteCriteria<T> {
 	private final SqmCteContainer cteContainer;
 	private final SqmCteTable<T> cteTable;
-	private final SqmSelectQuery<?> cteDefinition;
+	private SqmSelectQuery<?> cteDefinition;
 	private CteMaterialization materialization;
 	private CteSearchClauseKind searchClauseKind;
 	private List<JpaSearchOrder> searchBySpecifications;
@@ -146,13 +146,13 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		if ( existing != null ) {
 			return existing;
 		}
-		return context.registerCopy(
+		final SqmCteStatement<T> copy = context.registerCopy(
 				this,
 				new SqmCteStatement<>(
 						nodeBuilder(),
 						cteContainer,
 						cteTable,
-						cteDefinition.copy( context ),
+						null,
 						materialization,
 						searchClauseKind,
 						searchBySpecifications,
@@ -164,6 +164,10 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 						noCycleValue == null ? null : noCycleValue.copy( context )
 				)
 		);
+		// We have to copy the definition object after registering the copy of this because for recursive CTEs
+		// the select query from clause may contain the current cte statement itself
+		copy.cteDefinition = cteDefinition.copy( context );
+		return copy;
 	}
 
 	@Override

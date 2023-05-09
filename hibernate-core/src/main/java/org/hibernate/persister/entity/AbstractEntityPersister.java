@@ -1160,7 +1160,14 @@ public abstract class AbstractEntityPersister
 					jdbcParameters::add,
 					factory
 			);
-			return new SingleIdArrayLoadPlan( getIdentifierMapping(), select, jdbcParameters, LockOptions.NONE, factory );
+			return new SingleIdArrayLoadPlan(
+					this,
+					getIdentifierMapping(),
+					select,
+					jdbcParameters,
+					LockOptions.NONE,
+					factory
+			);
 		}
 	}
 

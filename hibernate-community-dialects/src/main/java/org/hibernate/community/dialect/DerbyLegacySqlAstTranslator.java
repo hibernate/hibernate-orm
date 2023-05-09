@@ -210,7 +210,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 			if ( inListPredicate.isNegated() ) {
 				appendSql( " not" );
 			}
-			appendSql( " in(" );
+			appendSql( " in (" );
 			renderCommaSeparated( listExpressions );
 			appendSql( CLOSE_PARENTHESIS );
 		}

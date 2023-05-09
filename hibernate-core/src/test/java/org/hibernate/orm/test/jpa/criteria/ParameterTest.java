@@ -17,6 +17,8 @@ import jakarta.persistence.criteria.Root;
 
 import java.util.Arrays;
 
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;

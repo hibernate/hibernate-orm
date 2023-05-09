@@ -7,7 +7,6 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 
 /**
  * Enumerates various access strategies for accessing entity values.
@@ -18,28 +17,22 @@ public enum AccessType {
 	/**
 	 * Default access strategy is property
 	 */
-	DEFAULT( "property" ),
+	DEFAULT,
 
 	/**
 	 * Access to value via property
 	 */
-	PROPERTY( "property" ),
+	PROPERTY,
 
 	/**
 	 * Access to value via field
 	 */
-	FIELD( "field" ),
+	FIELD,
 
 	/**
 	 * Access to value via record component accessor
 	 */
-	RECORD( "record" );
-
-	private final String accessType;
-
-	AccessType(String type) {
-		this.accessType = type;
-	}
+	RECORD;
 
 	/**
 	 * Retrieves the external name for this access type
@@ -47,7 +40,17 @@ public enum AccessType {
 	 * @return The external name
 	 */
 	public String getType() {
-		return accessType;
+		switch (this) {
+			case DEFAULT:
+			case PROPERTY:
+				return "property";
+			case FIELD:
+				return "field";
+			case RECORD:
+				return "record";
+			default:
+				throw new AssertionFailure("Unknown AccessType");
+		}
 	}
 
 	/**
@@ -63,7 +66,7 @@ public enum AccessType {
 			return DEFAULT;
 		}
 		for ( AccessType value : values() ) {
-			if ( value.accessType.equals( externalName ) ) {
+			if ( value.getType().equals( externalName ) ) {
 				return value;
 			}
 		}

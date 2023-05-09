@@ -11,11 +11,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.LockOptions;
-import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
@@ -30,6 +28,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -330,8 +329,7 @@ public class LoaderSelectBuilder {
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
-	private boolean hasCollectionJoinFetches;
-	private String currentBagRole;
+	private RowCardinality rowCardinality = RowCardinality.SINGLE;
 
 	private LoaderSelectBuilder(
 			SqlAstCreationContext creationContext,
@@ -444,8 +442,10 @@ public class LoaderSelectBuilder {
 	private SelectStatement generateSelect() {
 		if ( loadable instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
-			if ( pluralAttributeMapping.getMappedType().getCollectionSemantics() instanceof BagSemantics ) {
-				currentBagRole = pluralAttributeMapping.getNavigableRole().getNavigableName();
+			if ( pluralAttributeMapping.getMappedType()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.BAG ) {
+				rowCardinality = RowCardinality.BAG;
 			}
 		}
 
@@ -750,27 +750,60 @@ public class LoaderSelectBuilder {
 		}
 
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchParent.getReferencedMappingContainer() );
-		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer( fetchParent, creationState, fetches );
+		final FetchableConsumer processor = createFetchableConsumer( fetchParent, creationState, fetches );
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		if ( fetchParent.getNavigablePath().getParent() != null ) {
 			final int size = referencedMappingContainer.getNumberOfKeyFetchables();
 			for ( int i = 0; i < size; i++ ) {
-				processor.accept( referencedMappingContainer.getKeyFetchable( i ), true );
+				processor.accept( referencedMappingContainer.getKeyFetchable( i ), true, false );
 			}
 		}
+
 		final int size = referencedMappingContainer.getNumberOfFetchables();
+		List<Fetchable> bagFetchables = null;
 		for ( int i = 0; i < size; i++ ) {
-			processor.accept( referencedMappingContainer.getFetchable( i ), false );
+			final Fetchable fetchable = referencedMappingContainer.getFetchable( i );
+			if ( isBag( fetchable ) ) {
+				if ( bagFetchables == null ) {
+					bagFetchables = new ArrayList<>();
+				}
+				// Delay processing of bag fetchables at last since they cannot be joined and will create subsequent selects
+				bagFetchables.add( fetchable );
+			}
+			else {
+				processor.accept( fetchable, false, false );
+			}
+		}
+		if ( bagFetchables != null ) {
+			for ( Fetchable fetchable : bagFetchables ) {
+				processor.accept( fetchable, false, true );
+			}
 		}
 		return fetches.build();
 	}
 
-	private BiConsumer<Fetchable, Boolean> createFetchableBiConsumer(
+	private boolean isBag(Fetchable fetchable) {
+		return isPluralAttributeMapping( fetchable ) && ( (PluralAttributeMapping) fetchable ).getMappedType()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.BAG;
+	}
+
+	private boolean isPluralAttributeMapping(Fetchable fetchable) {
+		final AttributeMapping attributeMapping = fetchable.asAttributeMapping();
+		return attributeMapping != null && attributeMapping.isPluralAttributeMapping();
+	}
+
+	@FunctionalInterface
+	private interface FetchableConsumer {
+		void accept(Fetchable fetchable, boolean isKeyFetchable, boolean isABag);
+	}
+
+	private FetchableConsumer createFetchableConsumer(
 			FetchParent fetchParent,
 			LoaderSqlAstCreationState creationState,
 			ImmutableFetchList.Builder fetches) {
-		return (fetchable, isKeyFetchable) -> {
+		return (fetchable, isKeyFetchable, isABag) -> {
 			if ( !fetchable.isSelectable() ) {
 				return;
 			}
@@ -821,7 +854,7 @@ public class LoaderSelectBuilder {
 			boolean explicitFetch = false;
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
-			final boolean isFetchablePluralAttributeMapping = fetchable instanceof PluralAttributeMapping;
+			final boolean isFetchablePluralAttributeMapping = isABag || isPluralAttributeMapping( fetchable );
 			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
 
 			if ( !( fetchable instanceof CollectionPart ) ) {
@@ -863,7 +896,7 @@ public class LoaderSelectBuilder {
 						fetchTiming = FetchTiming.IMMEDIATE;
 						// In 5.x the CascadeEntityJoinWalker only join fetched the first collection fetch
 						if ( isFetchablePluralAttributeMapping ) {
-							joined = !hasCollectionJoinFetches;
+							joined = rowCardinality == RowCardinality.SINGLE;
 						}
 						else {
 							joined = true;
@@ -872,21 +905,15 @@ public class LoaderSelectBuilder {
 				}
 			}
 
-			final String previousBagRole = currentBagRole;
-			final String bagRole;
-			if ( isFetchablePluralAttributeMapping
-					&& ( (PluralAttributeMapping) fetchable ).getMappedType()
-					.getCollectionSemantics()
-					.getCollectionClassification() == CollectionClassification.BAG ) {
-				bagRole = fetchable.getNavigableRole().getNavigableName();
-			}
-			else {
-				bagRole = null;
-			}
-
-			if ( joined && previousBagRole != null && bagRole != null ) {
-				// Avoid join fetching multiple bags to prevent result multiplication
-				joined = false;
+			if ( joined && isFetchablePluralAttributeMapping ) {
+				switch ( rowCardinality ) {
+					case SET:
+						joined = !isABag;
+						break;
+					case BAG:
+						joined = false;
+						break;
+				}
 			}
 
 			try {
@@ -919,15 +946,9 @@ public class LoaderSelectBuilder {
 						}
 					}
 				}
-				if ( joined ) {
-					// For join fetches we remember the currentBagRole so that we can avoid multiple bag fetches
-					if ( bagRole != null ) {
-						currentBagRole = bagRole;
-					}
-				}
-				else {
-					// For non-join fetches, we reset the currentBagRole and set it to the previous value in the finally block
-					currentBagRole = null;
+
+				if ( joined && isFetchablePluralAttributeMapping ) {
+					rowCardinality = isABag ? RowCardinality.BAG : RowCardinality.SET;
 				}
 
 				final Fetch fetch = fetchParent.generateFetchableFetch(
@@ -942,7 +963,6 @@ public class LoaderSelectBuilder {
 				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && isFetchablePluralAttributeMapping ) {
 					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 					if ( joined ) {
-						hasCollectionJoinFetches = true;
 						final TableGroup joinTableGroup = creationState.getFromClauseAccess()
 								.getTableGroup( fetchablePath );
 						final QuerySpec querySpec = creationState.getInflightQueryPart().getFirstQuerySpec();
@@ -966,11 +986,6 @@ public class LoaderSelectBuilder {
 			finally {
 				if ( fetchable.incrementFetchDepth() ) {
 					fetchDepth--;
-				}
-				// Only set the currentBagRole to the previous value for non-join fetches,
-				// otherwise we could run into a multiple bag fetch situation
-				if ( !joined ) {
-					currentBagRole = previousBagRole;
 				}
 				if ( entityGraphTraversalState != null && traversalResult != null ) {
 					entityGraphTraversalState.backtrack( traversalResult );
@@ -1207,6 +1222,26 @@ public class LoaderSelectBuilder {
 				);
 			}
 		}
+	}
+
+	/**
+	 * Describes the JDBC result set cardinality per entity result object.
+	 */
+	private enum RowCardinality {
+		/**
+		 * Means that there is a single JDBC result row per entity result object.
+		 */
+		SINGLE,
+		/**
+		 * Means there are multiple JDBC result rows per entity result object,
+		 * but the aggregation of rows is not affected the result cardinality.
+		 */
+		SET,
+		/**
+		 * Means there are multiple JDBC result rows per entity result object,
+		 * but the aggregation of rows is dependent on the result cardinality.
+		 */
+		BAG
 	}
 }
 

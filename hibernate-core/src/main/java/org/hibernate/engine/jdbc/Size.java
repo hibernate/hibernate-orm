@@ -47,6 +47,7 @@ public class Size implements Serializable {
 	private Integer scale;
 
 	private Long length;
+	private Integer arrayLength;
 	private LobMultiplier lobMultiplier;
 
 	public Size() {
@@ -106,6 +107,10 @@ public class Size implements Serializable {
 		return length;
 	}
 
+	public Integer getArrayLength() {
+		return arrayLength;
+	}
+
 	public LobMultiplier getLobMultiplier() {
 		return lobMultiplier;
 	}
@@ -128,6 +133,11 @@ public class Size implements Serializable {
 
 	public Size setLength(Long length) {
 		this.length = length;
+		return this;
+	}
+
+	public Size setArrayLength(Integer arrayLength) {
+		this.arrayLength = arrayLength;
 		return this;
 	}
 

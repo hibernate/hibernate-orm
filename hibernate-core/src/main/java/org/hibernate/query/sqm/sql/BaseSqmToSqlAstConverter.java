@@ -279,7 +279,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -390,6 +389,7 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BottomType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -4873,8 +4873,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			final MappingModelExpressible<?> keyExpressible = getKeyExpressible( mappingModelExpressible );
 			if ( keyExpressible == null ) {
-				// Default to the Object type
-				return new QueryLiteral<>( null, basicType( Object.class ) );
+				// treat Void as the bottom type, the class of null
+				return new QueryLiteral<>( null, BottomType.INSTANCE );
 			}
 
 			final List<Expression> expressions = new ArrayList<>( keyExpressible.getJdbcTypeCount() );

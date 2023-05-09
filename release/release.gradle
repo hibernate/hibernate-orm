@@ -310,6 +310,17 @@ task stageOrmLoggingReport(type: Copy) { task ->
 }
 
 
+task stageOrmDialectReport(type: Copy) { task ->
+    group 'Release'
+
+    dependsOn ':documentation:renderDialectReport'
+    tasks.stageOrmReports.dependsOn task
+
+    from project( ":documentation" ).tasks.renderDialectReport.outputDir
+    into "${buildDir}/documentation/dialect"
+}
+
+
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
  *

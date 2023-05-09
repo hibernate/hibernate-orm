@@ -34,7 +34,7 @@ public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		throw new JdbcTypeRecommendationException(
-				"Could not determine recommended JdbcType for `" + getJavaType().getTypeName() + "`"
+				"Could not determine recommended JdbcType for Java type '" + getJavaType().getTypeName() + "'"
 		);
 	}
 

@@ -8,6 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
@@ -164,6 +165,11 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	@Override
 	public Object getEntityId() {
 		return executionContext.getEntityId();
+	}
+
+	@Override
+	public EntityMappingType getRootEntityDescriptor() {
+		return executionContext.getRootEntityDescriptor();
 	}
 
 	@Override

@@ -131,26 +131,27 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private Object nativeEnumArray(MyEnum... enums) {
-		// We also have to pass a Short[] for Oracle because that serializes to XML by default
-		if ( getDialect().supportsStandardArrays() || getDialect() instanceof OracleDialect ) {
-			// For native queries we must bind a Short[] instead of Byte[] even if we can use the "tinyint array" DDL type.
-			// This is because the JavaType we have registered for Byte[] does not implement BasicPluralJavaType.
-			// We can't make it implement that though, because that would be backwards incompatible,
-			// leading to Byte[] uses in the domain being treated as "tinyint array" or "smallint array" instead of varbinary.
-			// Luckily, JDBC drivers that support standard arrays are capable to coerce a Short[] to Byte[]
-			final Short[] array = new Short[enums.length];
-			for ( int i = 0; i < enums.length; i++ ) {
-				array[i] = enums[i] == null ? null : (short) enums[i].ordinal();
-			}
-			return array;
-		}
-		else {
-			final byte[] array = new byte[enums.length];
-			for ( int i = 0; i < enums.length; i++ ) {
-				array[i] = enums[i] == null ? -1 : (byte) enums[i].ordinal();
-			}
-			return array;
-		}
+		return enums;
+//		// We also have to pass a Short[] for Oracle because that serializes to XML by default
+//		if ( getDialect().supportsStandardArrays() || getDialect() instanceof OracleDialect ) {
+//			// For native queries we must bind a Short[] instead of Byte[] even if we can use the "tinyint array" DDL type.
+//			// This is because the JavaType we have registered for Byte[] does not implement BasicPluralJavaType.
+//			// We can't make it implement that though, because that would be backwards incompatible,
+//			// leading to Byte[] uses in the domain being treated as "tinyint array" or "smallint array" instead of varbinary.
+//			// Luckily, JDBC drivers that support standard arrays are capable to coerce a Short[] to Byte[]
+//			final Short[] array = new Short[enums.length];
+//			for ( int i = 0; i < enums.length; i++ ) {
+//				array[i] = enums[i] == null ? null : (short) enums[i].ordinal();
+//			}
+//			return array;
+//		}
+//		else {
+//			final byte[] array = new byte[enums.length];
+//			for ( int i = 0; i < enums.length; i++ ) {
+//				array[i] = enums[i] == null ? -1 : (byte) enums[i].ordinal();
+//			}
+//			return array;
+//		}
 	}
 
 	@Entity( name = "TableWithEnumArrays" )

@@ -21,43 +21,43 @@ public class DuplicateMappingException extends MappingException {
 		/**
 		 * A duplicate entity definition was encountered.
 		 */
-		ENTITY( "entity" ),
+		ENTITY( "entity definition" ),
 		/**
 		 * A duplicate collection role was encountered
 		 */
-		COLLECTION( "collection" ),
+		COLLECTION( "collection definition" ),
 		/**
 		 * A duplicate table definition was encountered.
 		 */
-		TABLE( "table" ),
+		TABLE( "table mapping" ),
 		/**
 		 * A duplicate property/attribute definition was encountered.
 		 */
-		PROPERTY( "property" ),
+		PROPERTY( "property mapping" ),
 		/**
 		 * A duplicate column definition was encountered.
 		 */
-		COLUMN( "column" ),
+		COLUMN( "column mapping" ),
 		/**
 		 * A duplicate column definition was encountered.
 		 */
-		COLUMN_BINDING( "column-binding" ),
+		COLUMN_BINDING( "physical column name mapping for logical column name" ),
 		/**
 		 * A duplicate named entity graph was encountered
 		 */
-		NAMED_ENTITY_GRAPH( "NamedEntityGraph" ),
+		NAMED_ENTITY_GRAPH( "named entity graph" ),
 		/**
 		 * A duplicate named query (ql or native) was encountered
 		 */
-		QUERY( "query" ),
+		QUERY( "named query" ),
 		/**
 		 * A duplicate ResultSetMapping was encountered
 		 */
-		RESULT_SET_MAPPING( "ResultSetMapping" ),
+		RESULT_SET_MAPPING( "SQL result set mapping" ),
 		/**
 		 * A duplicate NamedStoredProcedureQuery was encountered
 		 */
-		PROCEDURE( "NamedStoredProcedureQuery" );
+		PROCEDURE( "named stored procedure" );
 
 		private final String text;
 
@@ -76,7 +76,7 @@ public class DuplicateMappingException extends MappingException {
 	 * @param name The name of the duplicated thing.
 	 */
 	public DuplicateMappingException(Type type, String name) {
-		this ( "Duplicate " + type.text + " mapping " + name, type, name );
+		this ( "Duplicate " + type.text + " '" + name + "'", type, name );
 	}
 
 	/**

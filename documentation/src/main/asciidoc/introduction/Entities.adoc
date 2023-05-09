@@ -13,9 +13,12 @@ The id allows us to uniquely associate a row of the table with an instance of th
 TIP: We'll explore the idea of a persistence context later. For now, just think of it as a one-to-one mapping between ids and entity instances.
 
 An instance of a Java class cannot outlive the virtual machine to which it belongs.
-But we may think of an entity instance as having a lifecycle which transcends a particular instantiation in memory.
+But we may think of an entity instance having a lifecycle which transcends a particular instantiation in memory.
 By providing its id to Hibernate, we may re-materialize the instance in a new persistence context, as long as the associated row is present in the database.
-Therefore, the operations `persist()` and `remove()` may be thought of as demarcating the beginning and end of the lifecycle of an entity.
+Therefore, the operations `persist()` and `remove()` may be thought of as demarcating the beginning and end of the lifecycle of an entity, at least with respect to persistence.
+
+Thus, an id represents the _persistent identity_ of an entity, an identity that outlives a particular instantiation in memory.
+And this is an important difference between entity class itself and the values of its attributes&mdash;the entity has a persistent identity, and a well-defined lifecycle with respect to persistence, whereas a `String` or `List` representing one of its attribute values doesn't.
 
 An entity usually has associations to other entities.
 Typically, an association between two entities maps to a foreign key in one of the database tables.
@@ -341,7 +344,9 @@ class BookId {
 }
 ----
 
-And now the entity class may reuse this definition using `@EmbeddedId`:
+We'll learn more about <<embeddable-objects>> below.
+
+Now the entity class may reuse this definition using `@EmbeddedId`:
 
 [source,java]
 ----
@@ -552,7 +557,81 @@ For example, to form a basic type using `LongJavaType` and `TimestampJdbcType`, 
 long currentTimeMillis;
 ----
 
+[[embeddable-objects]]
+=== Embeddable objects
 
+An embeddable object is a Java class whose state maps to multiple columns of a table, but which does not itself have a persistent identity.
+That is, it's a class with mapped attributes, but no `@Id` attribute.
+
+An embeddable object can only be made persistent by assigning it to the attribute of an entity.
+Since the embeddable object does not have its own persistent identity, its lifecycle with respect to persistence is completely determined by the lifecycle of the entity to which it belongs.
+
+An embeddable class must be annotated `@Embeddable` instead of `@Entity`.
+
+[source,java]
+----
+@Embeddable
+class Name {
+    
+    @Basic(optional=false)
+    String firstName;
+
+    @Basic(optional=false)
+    String lastName;
+    
+    String middleName;
+    
+    Name() {}
+
+    Name(String firstName, String middleName, String lastName) {
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.lastName = lastName;
+    }
+    
+    ...
+}
+----
+
+An embeddable class must satisfy the same requirements that entity classes satisfy, with the exception that an embeddable class has no `@Id` attribute.
+In particular, it must have a constructor with no parameters.
+
+Alternatively, and embeddable type may be defined as a Java record type:
+
+[source,java]
+----
+@Embeddable
+record Name(String firstName, String middleName, String lastName) {}
+----
+
+In this case, the requirement for a constructor with no parameters is relaxed.
+
+We may now use our `Name` class (or record) as the type of an entity attribute:
+
+[source,java]
+----
+@Entity
+class Author {
+    Author() {}
+    
+    @Id @GeneratedValue
+    Long id;
+    
+    Name name;
+    
+    ...
+}
+----
+
+[TIP]
+.The `@Embedded` annotation is not required
+====
+JPA provides an `@Embedded` annotation to identify an attribute of an entity that refers to an embeddable type.
+This annotation is completely optional, and so we don't usually use it.
+====
+
+
+[[equals-and-hash]]
 === `equals()` and `hashCode()`
 
 Entity classes should override `equals()` and `hashCode()`. People new to

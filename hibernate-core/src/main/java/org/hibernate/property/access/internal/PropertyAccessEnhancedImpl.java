@@ -6,18 +6,24 @@
  */
 package org.hibernate.property.access.internal;
 
-import org.hibernate.MappingException;
-import org.hibernate.PropertyNotFoundException;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.EnhancedSetterImpl;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.GetterFieldImpl;
+import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessBuildingException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.SetterMethodImpl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import jakarta.persistence.AccessType;
+
+import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;
+import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.fieldOrNull;
 
 /**
  * A {@link PropertyAccess} for byte code enhanced entities. Enhanced setter methods ( if available ) are used for
@@ -26,29 +32,77 @@ import jakarta.persistence.AccessType;
  * @author Steve Ebersole
  * @author Luis Barreiro
  */
-public class PropertyAccessEnhancedImpl extends PropertyAccessMixedImpl {
+public class PropertyAccessEnhancedImpl implements PropertyAccess {
+	private final PropertyAccessStrategy strategy;
+
+	private final Getter getter;
+	private final Setter setter;
 
 	public PropertyAccessEnhancedImpl(
 			PropertyAccessStrategy strategy,
 			Class<?> containerJavaType,
-			String propertyName) {
-		super( strategy, containerJavaType, propertyName );
+			String propertyName,
+			AccessType getterAccessType) {
+		this.strategy = strategy;
+
+		final AccessType propertyAccessType = resolveAccessType( getterAccessType, containerJavaType, propertyName );
+
+		switch ( propertyAccessType ) {
+			case FIELD: {
+				final Field field = fieldOrNull( containerJavaType, propertyName );
+				if ( field == null ) {
+					throw new PropertyAccessBuildingException(
+							"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+					);
+				}
+				this.getter = new GetterFieldImpl( containerJavaType, propertyName, field );
+				this.setter = new EnhancedSetterImpl( containerJavaType, propertyName, field );
+				break;
+			}
+			case PROPERTY: {
+				final Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+				if ( getterMethod == null ) {
+					throw new PropertyAccessBuildingException(
+							"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+					);
+				}
+				final Method setterMethod = findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
+
+				this.getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
+				this.setter = new SetterMethodImpl( containerJavaType, propertyName, setterMethod );
+				break;
+			}
+			default: {
+				throw new PropertyAccessBuildingException(
+						"Invalid access type " + propertyAccessType + " for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+				);
+			}
+		}
+	}
+
+	private AccessType resolveAccessType(AccessType getterAccessType, Class<?> containerJavaType, String propertyName) {
+		if ( getterAccessType != null ) {
+			// this should indicate FIELD access
+			return getterAccessType;
+		}
+
+		// prefer using the field for getting if we can
+		final Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
+		return field != null ? AccessType.FIELD : AccessType.PROPERTY;
 	}
 
 	@Override
-	protected Method getterOrNull(Class<?> containerJavaType, String propertyName) {
-		// expand catch from PropertyNotFoundException to the broader MappingException
-
-		try {
-			return ReflectHelper.getterMethodOrNull( containerJavaType, propertyName );
-		}
-		catch (MappingException e) {
-			return null;
-		}
+	public PropertyAccessStrategy getPropertyAccessStrategy() {
+		return strategy;
 	}
 
 	@Override
-	protected Setter fieldSetter(Class<?> containerJavaType, String propertyName, Field field) {
-		return new EnhancedSetterImpl( containerJavaType, propertyName, field );
+	public Getter getGetter() {
+		return getter;
+	}
+
+	@Override
+	public Setter getSetter() {
+		return setter;
 	}
 }

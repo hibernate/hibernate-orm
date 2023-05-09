@@ -6,16 +6,9 @@
  */
 package org.hibernate.property.access.internal;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
-
-import org.hibernate.MappingException;
-import org.hibernate.PropertyNotFoundException;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
@@ -26,8 +19,10 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.property.access.spi.SetterMethodImpl;
 
-import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
+import jakarta.persistence.AccessType;
+
 import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;
+import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
 
 /**
  * A {@link PropertyAccess} based on mix of getter/setter method and/or field.
@@ -40,20 +35,16 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 	private final Getter getter;
 	private final Setter setter;
 
-	public PropertyAccessMixedImpl(
-			PropertyAccessStrategy strategy,
-			Class<?> containerJavaType,
-			String propertyName) {
+	public PropertyAccessMixedImpl(PropertyAccessStrategy strategy, Class<?> containerJavaType, String propertyName) {
 		this.strategy = strategy;
 
-		AccessType propertyAccessType = getAccessType( containerJavaType, propertyName );
-
+		final AccessType propertyAccessType = AccessStrategyHelper.getAccessType( containerJavaType, propertyName );
 		switch ( propertyAccessType ) {
 			case FIELD: {
-				Field field = fieldOrNull( containerJavaType, propertyName );
+				Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
 				if ( field == null ) {
 					throw new PropertyAccessBuildingException(
-						"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+							"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
 				this.getter = fieldGetter( containerJavaType, propertyName, field );
@@ -64,7 +55,7 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 				Method getterMethod = getterMethodOrNull( containerJavaType, propertyName );
 				if ( getterMethod == null ) {
 					throw new PropertyAccessBuildingException(
-						"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+							"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
 				Method setterMethod = findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
@@ -75,60 +66,10 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 			}
 			default: {
 				throw new PropertyAccessBuildingException(
-					"Invalid access type " + propertyAccessType + " for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+						"Invalid access type " + propertyAccessType + " for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 				);
 			}
 		}
-	}
-
-	protected static Field fieldOrNull(Class<?> containerJavaType, String propertyName) {
-		try {
-			return ReflectHelper.findField( containerJavaType, propertyName );
-		}
-		catch (PropertyNotFoundException e) {
-			return null;
-		}
-	}
-
-	protected Method getterOrNull(Class<?> containerJavaType, String propertyName) {
-		try {
-			return ReflectHelper.getterMethodOrNull( containerJavaType, propertyName );
-		}
-		catch (PropertyNotFoundException e) {
-			return null;
-		}
-	}
-
-	protected AccessType getAccessType(Class<?> containerJavaType, String propertyName) {
-		final Field field = fieldOrNull( containerJavaType, propertyName );
-		final AccessType fieldAccessType = getAccessTypeOrNull( field );
-		if ( fieldAccessType != null ) {
-			return fieldAccessType;
-		}
-
-		// use the lenient resolution here because we are just trying to look for explicit @Access, etc. at this point
-		final Method getter = ReflectHelper.lenientlyGetGetterOrNull( containerJavaType, propertyName );
-		final AccessType getterAccessType = getAccessTypeOrNull( getter );
-		if ( getterAccessType != null ) {
-			return getterAccessType;
-		}
-
-		// No @Access on property or field; check to see if containerJavaType has an explicit @Access
-		AccessType classAccessType = getAccessTypeOrNull( containerJavaType );
-		if ( classAccessType != null ) {
-			return classAccessType;
-		}
-
-		// prefer using the field for getting if we can
-		return field != null ? AccessType.FIELD : AccessType.PROPERTY;
-	}
-
-	protected static AccessType getAccessTypeOrNull(AnnotatedElement element) {
-		if ( element == null ) {
-			return null;
-		}
-		Access elementAccess = element.getAnnotation( Access.class );
-		return elementAccess == null ? null : elementAccess.value();
 	}
 
 	// --- //

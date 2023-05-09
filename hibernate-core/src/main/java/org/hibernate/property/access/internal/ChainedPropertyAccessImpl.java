@@ -51,6 +51,7 @@ public class ChainedPropertyAccessImpl implements PropertyAccess, Getter, Setter
 		return owner;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		for ( int i = 0; i < propertyAccesses.length; i++ ) {

@@ -7,6 +7,7 @@
 package org.hibernate.property.access.internal;
 
 import org.hibernate.property.access.spi.EnhancedSetterImpl;
+import org.hibernate.property.access.spi.EnhancedSetterMethodImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
@@ -69,7 +70,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 				final Method setterMethod = findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
 
 				this.getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
-				this.setter = new SetterMethodImpl( containerJavaType, propertyName, setterMethod );
+				this.setter = new EnhancedSetterMethodImpl( containerJavaType, propertyName, setterMethod );
 				break;
 			}
 			default: {

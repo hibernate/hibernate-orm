@@ -425,6 +425,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				return true;
 			case HINT_SPEC_LOCK_SCOPE:
 				applyLockScopeHint( value );
+				return true;
 			case HINT_JAVAEE_LOCK_SCOPE:
 				DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_SCOPE, HINT_SPEC_LOCK_SCOPE );
 				applyLockScopeHint( value );

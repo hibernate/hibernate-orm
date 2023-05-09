@@ -16,6 +16,7 @@ import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
@@ -34,6 +35,8 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePath;
 
 /**
  * @author Emmanuel Bernard
@@ -159,6 +162,28 @@ public class SingularAttributeImpl<D,J>
 		);
 	}
 
+	@Override
+	public NavigablePath createNavigablePath(SqmPath parent, String alias) {
+		if ( parent == null ) {
+			throw new IllegalArgumentException(
+					"`lhs` cannot be null for a sub-navigable reference - " + getName()
+			);
+		}
+		final SqmPathSource<?> parentPathSource = parent.getReferencedPathSource();
+		NavigablePath navigablePath = parent.getNavigablePath();
+		if ( parentPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) {
+			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
+		}
+		final DomainType<?> parentType = parentPathSource.getSqmPathType();
+		if ( parentType != getDeclaringType() && parentType instanceof EntityDomainType &&
+				( (EntityDomainType<?>) parentType ).findSingularAttribute( getName() ) == null ) {
+			// If the parent path is an entity type which does not contain the joined attribute
+			// add an implicit treat to the parent's navigable path
+			navigablePath = navigablePath.treatAs( getDeclaringType().getTypeName() );
+		}
+		return buildSubNavigablePath( navigablePath, getName(), alias );
+	}
+
 	/**
 	 * Subclass used to simplify instantiation of singular attributes representing an entity's
 	 * identifier.
@@ -191,7 +216,7 @@ public class SingularAttributeImpl<D,J>
 		public NavigablePath createNavigablePath(SqmPath parent, String alias) {
 			if ( parent == null ) {
 				throw new IllegalArgumentException(
-						"`lhs` cannot be null for a sub-navigable reference - " + parent
+						"`lhs` cannot be null for a sub-navigable reference - " + getName()
 				);
 			}
 			NavigablePath navigablePath = parent.getNavigablePath();

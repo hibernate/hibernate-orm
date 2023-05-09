@@ -764,6 +764,8 @@ In particular, the `List` may not contain duplicate elements, and its order will
 Collection<Book> books;
 ----
 
+(We'll see how to map a collection with a persistent order later.)
+
 [NOTE]
 .`Set`, `List`, or `Collection`?
 ====
@@ -785,6 +787,8 @@ In hindsight, we could have done more to make clear that this was always a viabl
 
 The simplest sort of one to one association is almost exactly line a `@ManyToOne` association, except that it maps to a foreign key column with a `UNIQUE` constraint.
 
+A one to one association must be annotated `@OneToOne`:
+
 [source,java]
 ----
 @Entity
@@ -795,7 +799,7 @@ static class Author {
     @OneToOne(optional=false, fetch=LAZY)
     Person author;
 
-	...
+    ...
 }
 ----
 
@@ -811,7 +815,7 @@ static class Person {
     @OneToOne(mappedBy = "person")
     Author author;
 
-	...
+    ...
 }
 ----
 
@@ -841,7 +845,6 @@ This is not the only sort of one to one association.
 === One to one (second way)
 
 An arguably more elegant way to represent such a relationship is to share a primary key between the two tables.
-That is, the foreign key would be the primary key.
 
 To use this approach, the `Author` class must be annotated like this:
 
@@ -856,7 +859,7 @@ static class Author {
     @MapsId
     Person author;
 
-	...
+    ...
 }
 ----
 
@@ -867,6 +870,55 @@ That is, that the foreign key column referring to the `Author` table is also the
 The `Person` class does not change.
 If the association is bidirectional, we annotate the unowned side `@OneToOne(mappedBy = "person")` just as before.
 
+[[many-to-many]]
+=== Many to many
+
+A unidirectional many to many association is represented as a collection-valued attribute.
+It maps to a separate _association table_ in the database.
+
+A many to many association must be annotated `@ManyToMany`:
+
+[source,java]
+----
+class Book {
+    @Id @GeneratedValue
+    Long id;
+    
+    @ManyToMany
+    Set<Author> authors;
+    
+    ...
+}
+----
+
+If the association is bidirectional, we add a very similar-looking attribute to `Book`, but this time we must specify `mappedBy` to indicate that this is unowned side of the association:
+
+[source,java]
+----
+class Book {
+    @Id @GeneratedValue
+    Long id;
+
+    @ManyToMany(mappedBy="authors")
+    Set<Author> authors;
+    
+    ...
+}
+----
+
+We've again used ``Set``s to represent the association.
+As before, we have the option to `Collection` or `List`, but in this case it _does_ make a difference to the semantics of the association.
+
+[NOTE]
+.Sets and bags
+====
+A many to many association represented as a `Collection` or `List` may contain duplicate elements.
+However, as before, the order of the elements is not persistent.
+That is, the collection is a _bag_, not a set.
+====
+
+[[element-collections]]
+=== `@ElementCollection`
 
 [[equals-and-hash]]
 === `equals()` and `hashCode()`

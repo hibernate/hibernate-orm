@@ -659,6 +659,109 @@ JPA provides an `@Embedded` annotation to identify an attribute of an entity tha
 This annotation is completely optional, and so we don't usually use it.
 ====
 
+An attribute of embeddable type represents a relationship between a Java object with a persistent identity, and a Java object with no persistent identity.
+You can think of it as a whole-part relationship.
+The embeddable object belongs to the entity, and can't be shared with other entity instances.
+
+Now we'll discuss a different kind of relationship: a relationship between Java objects that each have their persistent identity and persistence lifecycle.
+
+[[associations]]
+=== Associations
+
+An _association_ is a relationship between entities.
+We usually classify associations based on their _multiplicity_.
+If `E` and `F` are both entity classes, then:
+
+- a _one to one_ association relates at most one unique instance `E` with at most one unique instance of `F`,
+- a _many to one_ association relates zero or more instances of `E` with a unique instance of `F`, and
+- a _many to many_ association relates zero or more instances of `E` with zero or more instance of `F`.
+
+An association between entity classes may be either:
+
+- _unidirectional_, navigable from `E` to `F` but not from `F` to `E`, or
+- _bidirectional_, and navigable in either direction.
+
+Let's begin with the most common association multiplicity.
+
+[[many-to-one-unidirectional]]
+=== Many to one
+
+A many to one association is the most basic sort of association we can imagine.
+It maps completely naturally to a foreign key in the database.
+
+The `@ManyToOne` annotation marks the "one" side of the association, and so a unidirectional many to one association looks like this:
+
+[source,java]
+----
+class Book {
+    ...
+    @ManyToOne
+    Publisher publisher;
+    ...
+}
+----
+
+To make this association bidirectional, we need to add a collection-valued attribute to the `Publisher` class, and annotate it `@OneToMany`, using the `mappedBy` member to refer back to `Book.publisher`.
+
+[source,java]
+----
+class Publisher {
+    ...
+    @OneToMany(mappedBy="publisher")
+    Set<Book> books;
+    ...
+}
+----
+
+The `Publisher.books` field is called the _unowned_ side of the association.
+
+[WARNING]
+.To modify a bidirectional association, you must change the _owning side_!
+====
+Changes made to the unowned side of an association are never synchronized to the database.
+If we desire to change an association in the database, we must change it from the owning side.
+Here, we must set `Book.publisher`.
+
+In fact, it's often necessary to change _both sides_ of a bidirectional association.
+For example, if the collection `Publisher.books` was stored in the second-level cache, we must also modify the collection, to ensure that the second-level cache remains synchronized with the database.
+
+That said, it's not a hard requirement to update the unowned side, at least if you're sure you know what you're doing.
+====
+
+[TIP]
+.Unidirectional `@OneToMany`?
+====
+In principle Hibernate _does_ allow you to have a unidirectional one to many, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
+In practice, this mapping is unnatural, and does not work very well.
+Avoid it.
+====
+
+Here we've used `Set` as the type of the collection, but Hibernate also allows the use of `List` or `Collection` here, with almost no difference in semantics.
+In particular, the `List` may not contain duplicate elements, and its order will not be persistent.
+
+[source,java]
+----
+@OneToMany(mappedBy="publisher")
+Collection<Book> books;
+----
+
+[NOTE]
+.`Set`, `List`, or `Collection`?
+====
+A one to many association mapped to a foreign key can never contain duplicate elements, so `Set` seems like the most semantically correct Java collection type to use here, and so that's the conventional practice in the Hibernate community.
+
+The catch associated with using a set is that we must carefully ensure that `Book` has a high-quality implementation of <<equals-and-hash>>.
+Now, that's not necessarily a bad thing, since a quality `equals()` is independently useful.
+
+But what if we used `Collection` or `List` instead?
+Then our code would be much less sensitive to how `equals()` and `hashCode()` were implemented.
+
+In the past, we were perhaps too dogmatic in recommending the use of `Set`.
+Now? I guess we're happy to let you guys decide.
+In hindsight, we could have done more to make clear that this was always a viable option.
+====
+
+
 
 [[equals-and-hash]]
 === `equals()` and `hashCode()`

@@ -155,6 +155,7 @@ public class EntityBatchLoaderInPredicate<T>
 					return new SingleIdExecutionContext(
 							pkValue,
 							entityInstance,
+							getLoadable().getRootEntityDescriptor(),
 							readOnly,
 							lockOptions,
 							registrationHandler,
@@ -284,6 +285,7 @@ public class EntityBatchLoaderInPredicate<T>
 				new SingleIdExecutionContext(
 						pkValue,
 						entityInstance,
+						entityMapping.getRootEntityDescriptor(),
 						readOnly,
 						lockOptions,
 						subSelectFetchableKeysHandler,

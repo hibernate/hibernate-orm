@@ -269,6 +269,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				arrayJdbcMapping,
 				null,
 				null,
+				null,
 				lockOptions,
 				session.isDefaultReadOnly(),
 				session

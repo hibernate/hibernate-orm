@@ -546,11 +546,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	protected Object getEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState) {
 		final ExecutionContext executionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
 				.getExecutionContext();
-		final Object entityInstanceFromExecutionContext = executionContext.getEntityInstance();
-		if ( entityInstanceFromExecutionContext != null
-				&& getConcreteDescriptor().getJavaType().isInstance( entityInstanceFromExecutionContext )
+		if ( rootEntityDescriptor == executionContext.getRootEntityDescriptor()
 				&& getEntityKey().getIdentifier().equals( executionContext.getEntityId() ) ) {
-			return entityInstanceFromExecutionContext;
+			return executionContext.getEntityInstance();
 		}
 		return null;
 	}

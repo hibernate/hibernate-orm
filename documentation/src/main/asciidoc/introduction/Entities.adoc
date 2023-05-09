@@ -142,6 +142,8 @@ Identifier values may be:
 - assigned by the application, that is, by your Java code, or
 - generated and assigned by Hibernate.
 
+We'll discuss the second option first.
+
 [[generated-identifiers]]
 === Generated identifiers
 
@@ -202,7 +204,7 @@ create sequence seq_book start with 5 increment by 10
 .Check the `initialValue` and `allocationSize`
 ====
 If you let Hibernate export your database schema, the sequence definition will have the right `start with` and `increment` values.
-But if you're working with a database schema managed outside of Hibernate, makes sure the `initialValue` and `allocationSize` members of `@SequenceGenerator` match the `start with` and `increment` specified in the DDL.
+But if you're working with a database schema managed outside of Hibernate, make sure the `initialValue` and `allocationSize` members of `@SequenceGenerator` match the `start with` and `increment` specified in the DDL.
 ====
 
 Any identifier attribute may now make use of the generator named `bookSeq`:
@@ -235,9 +237,9 @@ However, the annotations themselves are a little more intrusive than they should
 Nor may `@GeneratedValue` be used on a property not annotated `@Id`.
 Since custom id generation is a rather common requirement, Hibernate provides a very carefully-designed framework for user-defined ``Generator``s.
 
-[TIP]
-.Defining your own id generators
-====
+[[user-defined-generators]]
+=== User-defined generators
+
 JPA doesn't define a standard way to extend the set of id generation strategies, but Hibernate does:
 
 - the `Generator` hierarchy of interfaces in the package `org.hibernate.generator` lets you define new generators, and
@@ -245,12 +247,23 @@ JPA doesn't define a standard way to extend the set of id generation strategies,
 
 Furthermore, the `@ValueGenerationType` meta-annotation lets you write an annotation which associates a `Generator` type with a non-`@Id` attribute.
 
-These APIs are new in Hibernate 6, and supersede the classic `IdentifierGenerator` interface from older versions of Hibernate.
-You can find out more from the Javadoc for `@IdGeneratorType` and for `org.hibernate.generator`.
+[NOTE]
+.The older APIs are still available in Hibernate 6
 ====
+These APIs are new in Hibernate 6, and supersede the classic `IdentifierGenerator` interface and `@GenericGenerator` annotation from older versions of Hibernate.
+However, the older APIs are still available and custom ``IdentifierGenerator``s written for older versions of Hibernate continue to work in Hibernate 6.
+====
+
+You can find out more from the Javadoc for `@IdGeneratorType` and for `org.hibernate.generator`.
+
+[[natural-identifiers]]
+=== Natural identifiers
 
 Not every id maps to a (system-generated) surrogate key.
 Primary keys which are meaningful to the user of the system are called _natural keys_.
+
+When the primary key of a table is a natural key, we don't annotate the identifier attribute `@GeneratedValue`, and it's the responsibility of the application code to assign a value to the identifier attribute.
+
 Of particular interest are natural keys which comprise more than one database column, and such natural keys are called _composite keys_.
 
 [[composite-identifiers]]
@@ -402,7 +415,7 @@ We're begging you to use types from the `java.time` package instead of anything 
 .Serialization is usually a bad idea
 ====
 Serializing a Java object and storing its binary representation in the database is usually wrong.
-As we'll soon see, Hibernate has much better ways to handle complex Java objects.
+As we'll soon see in <<embeddable-objects>>, Hibernate has much better ways to handle complex Java objects.
 ====
 
 The `@Basic` annotation explicitly specifies that an attribute is basic, but it's often not needed, since attributes are assumed basic by default.
@@ -442,8 +455,22 @@ Note that:
 Therefore, we recommend `@Basic(optional=false)` in preference to `@Column(nullable=false)` in most circumstances.
 ====
 
-JPA provides the `AttributeConverter` interface, and the `@Converter` annotation to convert any Java type to one of the types listed above, or perform whatever other sort of pre- and post-processing you need on a basic attribute before writing and reading it to or from the database.
-Converters substantially widen the set of attribute types that can be handled.
+This limited set of pre-defined basic attribute types can be extended by supplying a _converter_.
+
+[[converters]]
+=== Converters
+
+A JPA `AttributeConverter` is responsible for:
+
+- converting a given Java type to one of the types listed above, and/or
+- perform any other sort of pre- and post-processing you might need to perform on a basic attribute value before writing and reading it to or from the database.
+
+Converters substantially widen the set of attribute types that can be handled by JPA.
+
+There are two ways to apply a converter:
+
+- the `@Convert` annotation applies an `AttributeConverter` to a particular entity attribute, or
+- the `@Converter` annotation registers an `AttributeConverter` for automatic application to all attributes of a given type.
 
 For example, the following converter will be automatically applied to any attribute of type `BitSet`, and takes care of persisting the `BitSet` to a column of type `varbinary`:
 
@@ -463,7 +490,7 @@ public static class BitSetConverter implements AttributeConverter<BitSet,byte[]>
 }
 ----
 
-On the other hand, if you _don't_ set `autoapply=true`, then you must explicitly apply the converter using the `@Convert` annotation:
+On the other hand, if we _don't_ set `autoapply=true`, then we must explicitly apply the converter using the `@Convert` annotation:
 
 [source,java]
 ----
@@ -507,7 +534,7 @@ For a user-written `JavaType`, the annotation is more useful:
 BitSet bitSet;
 ----
 
-Alternatively, the `@JavaTypeRegistration` may be used to register `BitSetJavaType` as the default `JavaType` for `BitSet`.
+Alternatively, the `@JavaTypeRegistration` annotation may be used to register `BitSetJavaType` as the default `JavaType` for `BitSet`.
 
 A `org.hibernate.type.descriptor.jdbc.JdbcType` is able to read and write a single Java type from and to JDBC.
 
@@ -546,7 +573,7 @@ For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on
 Since Hibernate understand more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
 ====
 
-If a given `JavaType` does not know how to convert its instances to the type required by its partner `JdbcType`, we must help it out be providing a JPA `AttributeConverter` to perform the conversion.
+If a given `JavaType` does not know how to convert its instances to the type required by its partner `JdbcType`, we must help it out by providing a JPA `AttributeConverter` to perform the conversion.
 
 For example, to form a basic type using `LongJavaType` and `TimestampJdbcType`, we would provide an `AttributeConverter<Long,Timestamp>`.
 
@@ -556,6 +583,8 @@ For example, to form a basic type using `LongJavaType` and `TimestampJdbcType`, 
 @Convert(converter = LongToTimestampConverter.class)
 long currentTimeMillis;
 ----
+
+Let's abandon our analogy right here, before we start calling this basic type a "throuple".
 
 [[embeddable-objects]]
 === Embeddable objects

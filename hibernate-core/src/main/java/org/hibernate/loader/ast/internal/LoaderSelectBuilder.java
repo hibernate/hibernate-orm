@@ -329,8 +329,7 @@ public class LoaderSelectBuilder {
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
-	private boolean hasCollectionJoinFetches;
-	private String currentBagRole;
+	private RowCardinality rowCardinality = RowCardinality.SINGLE;
 
 	private LoaderSelectBuilder(
 			SqlAstCreationContext creationContext,
@@ -446,7 +445,7 @@ public class LoaderSelectBuilder {
 			if ( pluralAttributeMapping.getMappedType()
 					.getCollectionSemantics()
 					.getCollectionClassification() == CollectionClassification.BAG ) {
-				currentBagRole = pluralAttributeMapping.getNavigableRole().getNavigableName();
+				rowCardinality = RowCardinality.BAG;
 			}
 		}
 
@@ -762,10 +761,13 @@ public class LoaderSelectBuilder {
 		}
 
 		final int size = referencedMappingContainer.getNumberOfFetchables();
-		final List<Fetchable> bagFetchables = new ArrayList<>();
+		List<Fetchable> bagFetchables = null;
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable fetchable = referencedMappingContainer.getFetchable( i );
 			if ( isBag( fetchable ) ) {
+				if ( bagFetchables == null ) {
+					bagFetchables = new ArrayList<>();
+				}
 				// Delay processing of bag fetchables at last since they cannot be joined and will create subsequent selects
 				bagFetchables.add( fetchable );
 			}
@@ -773,8 +775,10 @@ public class LoaderSelectBuilder {
 				processor.accept( fetchable, false, false );
 			}
 		}
-		for ( Fetchable fetchable : bagFetchables ) {
-			processor.accept( fetchable, false, true );
+		if ( bagFetchables != null ) {
+			for ( Fetchable fetchable : bagFetchables ) {
+				processor.accept( fetchable, false, true );
+			}
 		}
 		return fetches.build();
 	}
@@ -892,7 +896,7 @@ public class LoaderSelectBuilder {
 						fetchTiming = FetchTiming.IMMEDIATE;
 						// In 5.x the CascadeEntityJoinWalker only join fetched the first collection fetch
 						if ( isFetchablePluralAttributeMapping ) {
-							joined = !hasCollectionJoinFetches;
+							joined = rowCardinality == RowCardinality.SINGLE;
 						}
 						else {
 							joined = true;
@@ -900,16 +904,16 @@ public class LoaderSelectBuilder {
 					}
 				}
 			}
-			final String previousBagRole = currentBagRole;
-			if ( isABag ) {
-				// Avoid joining bag collections to other bags or if any other collection was joined to avoid result duplication
-				if ( joined && ( hasCollectionJoinFetches || currentBagRole != null ) ) {
-					joined = false;
+
+			if ( joined && isFetchablePluralAttributeMapping ) {
+				switch ( rowCardinality ) {
+					case SET:
+						joined = !isABag;
+						break;
+					case BAG:
+						joined = false;
+						break;
 				}
-				currentBagRole = fetchable.getNavigableRole().getNavigableName();
-			}
-			else if ( joined && isFetchablePluralAttributeMapping && currentBagRole != null ) {
-				joined = false;
 			}
 
 			try {
@@ -943,6 +947,10 @@ public class LoaderSelectBuilder {
 					}
 				}
 
+				if ( joined && isFetchablePluralAttributeMapping ) {
+					rowCardinality = isABag ? RowCardinality.BAG : RowCardinality.SET;
+				}
+
 				final Fetch fetch = fetchParent.generateFetchableFetch(
 						fetchable,
 						fetchablePath,
@@ -955,7 +963,6 @@ public class LoaderSelectBuilder {
 				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && isFetchablePluralAttributeMapping ) {
 					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 					if ( joined ) {
-						hasCollectionJoinFetches = true;
 						final TableGroup joinTableGroup = creationState.getFromClauseAccess()
 								.getTableGroup( fetchablePath );
 						final QuerySpec querySpec = creationState.getInflightQueryPart().getFirstQuerySpec();
@@ -977,9 +984,6 @@ public class LoaderSelectBuilder {
 				fetches.add( fetch );
 			}
 			finally {
-				if ( isABag ) {
-					currentBagRole = previousBagRole;
-				}
 				if ( fetchable.incrementFetchDepth() ) {
 					fetchDepth--;
 				}
@@ -1218,6 +1222,26 @@ public class LoaderSelectBuilder {
 				);
 			}
 		}
+	}
+
+	/**
+	 * Describes the JDBC result set cardinality per entity result object.
+	 */
+	private enum RowCardinality {
+		/**
+		 * Means that there is a single JDBC result row per entity result object.
+		 */
+		SINGLE,
+		/**
+		 * Means there are multiple JDBC result rows per entity result object,
+		 * but the aggregation of rows is not affected the result cardinality.
+		 */
+		SET,
+		/**
+		 * Means there are multiple JDBC result rows per entity result object,
+		 * but the aggregation of rows is dependent on the result cardinality.
+		 */
+		BAG
 	}
 }
 

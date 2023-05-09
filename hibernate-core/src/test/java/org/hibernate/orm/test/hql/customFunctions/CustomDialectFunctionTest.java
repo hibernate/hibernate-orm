@@ -5,7 +5,9 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
 
@@ -14,7 +16,7 @@ import java.sql.Statement;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
-//@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class CustomDialectFunctionTest extends BaseCoreFunctionalTestCase {
 
     @Override
@@ -23,11 +25,6 @@ public class CustomDialectFunctionTest extends BaseCoreFunctionalTestCase {
 
         configuration.addAnnotatedClass(Employee.class);
         configuration.setProperty(AvailableSettings.DIALECT, "org.hibernate.orm.test.hql.customFunctions.ExtendedPGDialect");
-
-        configuration.setProperty(Environment.DRIVER, "org.postgresql.Driver");
-        configuration.setProperty(Environment.URL, "jdbc:postgresql://localhost:5555/postgres");
-        configuration.setProperty(Environment.USER, "postgres");
-        configuration.setProperty(Environment.PASS, "postgres");
     }
 
     @Override

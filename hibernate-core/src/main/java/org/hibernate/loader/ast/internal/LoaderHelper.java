@@ -24,6 +24,7 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -190,6 +191,7 @@ public class LoaderHelper {
 			JdbcMapping arrayJdbcMapping,
 			Object entityId,
 			Object entityInstance,
+			EntityMappingType rootEntityDescriptor,
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
@@ -215,6 +217,7 @@ public class LoaderHelper {
 				new SingleIdExecutionContext(
 						entityId,
 						entityInstance,
+						rootEntityDescriptor,
 						readOnly,
 						lockOptions,
 						subSelectFetchableKeysHandler,

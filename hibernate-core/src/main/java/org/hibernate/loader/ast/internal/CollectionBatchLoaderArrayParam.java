@@ -145,13 +145,9 @@ public class CollectionBatchLoaderArrayParam
 		session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelectOperation,
 				jdbcParameterBindings,
-				new SingleIdExecutionContext(
-						null,
-						null,
-						null,
-						LockOptions.NONE,
-						subSelectFetchableKeysHandler,
-						session
+				new ExecutionContextWithSubselectFetchHandler(
+						session,
+						subSelectFetchableKeysHandler
 				),
 				RowTransformerStandardImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER

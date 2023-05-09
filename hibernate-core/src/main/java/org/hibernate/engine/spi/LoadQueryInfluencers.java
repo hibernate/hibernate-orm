@@ -97,12 +97,7 @@ public class LoadQueryInfluencers implements Serializable {
 	 * Set the effective {@linkplain #getEnabledCascadingFetchProfile() cascading fetch-profile}
 	 */
 	public void setEnabledCascadingFetchProfile(CascadingFetchProfile enabledCascadingFetchProfile) {
-		if ( sessionFactory == null ) {
-			// that's the signal that this is the immutable, context-less
-			// variety
-			throw new IllegalStateException( "Cannot modify context-less LoadQueryInfluencers" );
-		}
-
+		checkMutability();
 		this.enabledCascadingFetchProfile = enabledCascadingFetchProfile;
 	}
 
@@ -166,6 +161,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Filter enableFilter(String filterName) {
+		checkMutability();
 		FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
 			this.enabledFilters = new HashMap<>();
@@ -216,7 +212,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	private void checkFetchProfileName(String name) {
-		if ( !sessionFactory.containsFetchProfileDefinition( name ) ) {
+		if ( sessionFactory != null && !sessionFactory.containsFetchProfileDefinition( name ) ) {
 			throw new UnknownProfileException( name );
 		}
 	}
@@ -227,6 +223,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public void enableFetchProfile(String name) throws UnknownProfileException {
+		checkMutability();
 		checkFetchProfileName( name );
 		if ( enabledFetchProfileNames == null ) {
 			this.enabledFetchProfileNames = new HashSet<>();
@@ -251,5 +248,13 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public void setReadOnly(Boolean readOnly) {
 		this.readOnly = readOnly;
+	}
+
+	private void checkMutability() {
+		if ( sessionFactory == null ) {
+			// that's the signal that this is the immutable, context-less
+			// variety
+			throw new IllegalStateException( "Cannot modify context-less LoadQueryInfluencers" );
+		}
 	}
 }

@@ -150,3 +150,51 @@ is a bad idea, since it's impossible to create a foreign key constraint that tar
 // Hibernate doesn't support mixing ``InheritanceType``s within a single entity hierarchy.
 // However, it's possible to emulate a mix of `SINGLE_TABLE` and `JOINED` inheritance using the `@SecondaryTable` annotation.
 
+[[table-mappings]]
+=== Mapping to tables
+
+The following annotations specify exactly how elements of the domain model map to tables of the relational model:
+
+|===
+| Annotation | Purpose
+
+| `@Table` | Map an entity class to its primary table
+| `@SecondaryTable` | Define a secondary table for an entity class
+| `@JoinTable` | Map a many-to-many association to its association table
+| `@CollectionTable` | Map an `@ElementCollection` to its table
+|===
+
+By default, an entity maps to a single table, which may be specified using `@Table`:
+
+[source,java]
+----
+@Entity
+@Table(name="People")
+class Person { ... }
+----
+
+However, the `@SecondaryTable` annotation allows us to spread its attributes across multiple _secondary tables_.
+
+[source,java]
+----
+@Entity
+@Table(name="Books")
+@SecondaryTable(name="Editions")
+class Book { ... }
+----
+
+[[column-mappings]]
+=== Mapping to columns
+
+These annotations specify how elements of the domain model map to columns of tables in the relational model:
+
+|===
+| Annotation | Purpose
+
+| `@Column` | Map an attribute to a column
+| `@JoinColumn` | Map an association to a foreign key column
+| `@PrimaryKeyJoinColumn` | Map the primary key used to join a secondary table with its primary, or a subclass table in `JOINED` inheritance with its root class table
+| `@OrderColumn` | Specifies a column that should be used to maintain the order of a `List`.
+| `@MapKeyColumn` | Specified a column that should be used to persist the keys of a `Map`.
+|===
+

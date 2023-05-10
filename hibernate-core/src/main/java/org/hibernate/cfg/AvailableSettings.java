@@ -2585,6 +2585,20 @@ public interface AvailableSettings {
 	String JPA_LOAD_BY_ID_COMPLIANCE = "hibernate.jpa.compliance.load_by_id";
 
 	/**
+	 * JPA specifies that an {@link IllegalStateException} must be thrown by
+	 * {@link jakarta.persistence.EntityManager#remove} if the entity is a
+	 * detached entity ( or the transaction commit will fail).
+	 * <p>
+	 * If the {@link jakarta.persistence.Entity} is a removed entity,
+	 * it is ignored by the remove operation.
+	 *
+	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaDeleteComplianceEnabled
+	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaDeleteCompliance
+	 *
+	 */ 
+	String JPA_DELETE_COMPLIANCE = "hibernate.jpa.compliance.delete";
+
+	/**
 	 * Determines if the identifier value stored in the database table backing a
 	 * {@linkplain jakarta.persistence.TableGenerator table generator} is the last
 	 * value returned by the identifier generator, or the next value to be returned.

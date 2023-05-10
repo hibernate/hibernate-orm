@@ -417,6 +417,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder enableJpaDeleteCompliance(boolean enabled) {
+		this.optionsBuilder.enableJpaDeleteCompliance( enabled );
+		return this;
+	}
+
+	@Override
 	public void disableRefreshDetachedEntity() {
 		this.optionsBuilder.disableRefreshDetachedEntity();
 	}

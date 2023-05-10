@@ -32,7 +32,7 @@ In <<entity-inheritance>> we saw that entity classes may exist within an inherit
 There's three basic strategies for mapping an entity hierarchy to relational tables.
 Let's put them in a table, so we can more easily compare the points of difference between them.
 
-
+.Entity inheritance mapping strategies
 |===
 | Strategy | Mapping | Polymorphic queries | Constraints | Normalization | When to use it
 
@@ -155,6 +155,7 @@ is a bad idea, since it's impossible to create a foreign key constraint that tar
 
 The following annotations specify exactly how elements of the domain model map to tables of the relational model:
 
+.Annotations for mapping tables
 |===
 | Annotation | Purpose
 
@@ -183,11 +184,50 @@ However, the `@SecondaryTable` annotation allows us to spread its attributes acr
 class Book { ... }
 ----
 
+The `@Table` annotation can do more than just specify a name:
+
+.`@Table` annotation members
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped table
+| `schema` 💀 | The schema to which the table belongs
+| `catalog` 💀 | The catalog to which the table belongs
+| `uniqueConstraints` | One or more `@UniqueConstraint` annotations declaring multi-column unique constraints
+| `indexes` | One or more `@Index` annotations each declaring an index
+|===
+
+[TIP]
+.Don't hardcode the schema and catalog
+====
+It's very often a bad idea to hardcode the schema and catalog in a `@Table` annotation.
+It's usually better to set the configuration properties `hibernate.default_schema` and `hibernate.default_catalog`, or simply ensure that your JDBC connection URL specifies the schema and catalog.
+====
+
+
+The `@SecondaryTable` annotation is even more interesting:
+
+.`@SecondaryTable` annotation members
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped table
+| `schema` 💀 | The schema to which the table belongs
+| `catalog` 💀 | The catalog to which the table belongs
+| `uniqueConstraints` | One or more `@UniqueConstraint` annotations declaring multi-column unique constraints
+| `indexes` | One or more `@Index` annotations each declaring an index
+| `pkJoinColumns` | One or more `@PrimaryKeyJoinColumn` annotations, specifying <<primary-key-column-mappings,primary key column mappings>>
+| `foreignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``@PrimaryKeyJoinColumn``s
+|===
+
+To understand this annotation better, we must first discuss column mappings in general.
+
 [[column-mappings]]
 === Mapping to columns
 
 These annotations specify how elements of the domain model map to columns of tables in the relational model:
 
+.Annotations for mapping columns
 |===
 | Annotation | Purpose
 
@@ -205,6 +245,7 @@ We use the `@Column` annotation to map basic attributes.
 
 The `@Column` annotation is not only useful for specifying the column name.
 
+.`@Column` annotation members
 |===
 | Annotation member | Purpose
 
@@ -257,6 +298,7 @@ We don't use `@Column` to map associations.
 
 The `@JoinColumn` annotation is used to customize a foreign key column.
 
+.`@JoinColumn` annotation members
 |===
 | Annotation member | Purpose
 
@@ -303,6 +345,7 @@ The `@PrimaryKeyJoinColumn` is a special-purpose annotation for mapping:
 - the primary key column of a `@SecondaryTable`&mdash;which is also a foreign key referencing the primary table, or
 - the primary key column of the primary table mapped by a subclass in a `JOINED` inheritance hierarchy&mdash;which is also a foreign key referencing the primary table mapped by the root entity.
 
+.`@PrimaryKeyJoinColumn` annotation members
 |===
 | Annotation member | Purpose
 
@@ -323,7 +366,7 @@ class Person { ... }
 
 @Entity
 @Table(name="Authors")
-@PrimaryKeyJoinColumn(name="personId") // the name of the primary key of the Authors table
+@PrimaryKeyJoinColumn(name="personId") // the primary key of the Authors table
 class Author { ... }
 ----
 
@@ -334,7 +377,7 @@ But to map a secondary table primary key, the `@PrimaryKeyJoinColumn` annotation
 @Entity
 @Table(name="Books")
 @SecondaryTable(name="Editions",
-                pkJoinColumns = @PrimaryKeyJoinColumn(name="bookId")) // the name of the primary key of the Editions table
+                pkJoinColumns = @PrimaryKeyJoinColumn(name="bookId")) // the primary key of the Editions table
 class Book {
     @Id @GeneratedValue
     @Column(name="bookId") // the name of the primary key of the Books table

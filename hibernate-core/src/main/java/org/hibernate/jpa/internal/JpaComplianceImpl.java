@@ -21,6 +21,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 	private final boolean closedCompliance;
 	private final boolean cachingCompliance;
 	private final boolean loadByIdCompliance;
+	private final boolean deleteCompliance;
 
 	public JpaComplianceImpl(
 			boolean listCompliance,
@@ -31,7 +32,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 			boolean transactionCompliance,
 			boolean closedCompliance,
 			boolean cachingCompliance,
-			boolean loadByIdCompliance) {
+			boolean loadByIdCompliance,
+			boolean deleteCompliance) {
 		this.queryCompliance = queryCompliance;
 		this.transactionCompliance = transactionCompliance;
 		this.listCompliance = listCompliance;
@@ -41,6 +43,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 		this.globalGeneratorNameScopeCompliance = globalGeneratorNameScopeCompliance;
 		this.orderByMappingCompliance = orderByMappingCompliance;
 		this.loadByIdCompliance = loadByIdCompliance;
+		this.deleteCompliance = deleteCompliance;
 	}
 
 	@Override
@@ -88,6 +91,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 		return loadByIdCompliance;
 	}
 
+	@Override
+	public boolean isJpaDeleteComplianceEnabled() {
+		return deleteCompliance;
+	}
+
 	public static class JpaComplianceBuilder {
 		private boolean queryCompliance;
 		private boolean listCompliance;
@@ -98,6 +106,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 		private boolean transactionCompliance;
 		private boolean closedCompliance;
 		private boolean loadByIdCompliance;
+		private boolean deleteCompliance;
 
 		public JpaComplianceBuilder() {
 		}
@@ -147,6 +156,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 			return this;
 		}
 
+		public JpaComplianceBuilder setDeleteCompliance(boolean deleteCompliance) {
+			this.deleteCompliance = deleteCompliance;
+			return this;
+		}
+
 		JpaCompliance createJpaCompliance() {
 			return new JpaComplianceImpl(
 					listCompliance,
@@ -157,7 +171,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 					transactionCompliance,
 					closedCompliance,
 					cachingCompliance,
-					loadByIdCompliance
+					loadByIdCompliance,
+					deleteCompliance
 			);
 		}
 	}

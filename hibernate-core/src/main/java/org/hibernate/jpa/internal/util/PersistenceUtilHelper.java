@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpa.internal.util;
 
-import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -17,7 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.WeakHashMap;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.HibernateException;
@@ -412,42 +411,24 @@ public final class PersistenceUtilHelper {
 	}
 
 	/**
-	 * Cache hierarchy and member resolution, taking care to not leak
-	 * references to Class instances.
+	 * Cache hierarchy and member resolution in a weak hash map
 	 */
-	public static final class MetadataCache implements Serializable {
+	//TODO not really thread-safe
+	public static class MetadataCache implements Serializable {
+		private transient Map<Class<?>, ClassMetadataCache> classCache = new WeakHashMap<Class<?>, ClassMetadataCache>();
 
-		private final ClassValue<ClassMetadataCache> metadataCacheClassValue;
 
-		public MetadataCache() {
-			this( new MetadataClassValue() );
+		private void readObject(java.io.ObjectInputStream stream) {
+			classCache = new WeakHashMap<Class<?>, ClassMetadataCache>();
 		}
 
-		//To help with serialization: no need to serialize the actual metadataCacheClassValue field
-		private MetadataCache(ClassValue<ClassMetadataCache> metadataCacheClassValue) {
-			this.metadataCacheClassValue = metadataCacheClassValue;
-		}
-
-		Object writeReplace() throws ObjectStreamException {
-			//Writing a different instance which doesn't include the cache
-			return new MetadataCache(null);
-		}
-
-		private Object readResolve() throws ObjectStreamException {
-			//Ensure we do instantiate a new cache instance on deserialization
-			return new MetadataCache();
-		}
-
-		ClassMetadataCache getClassMetadata(final Class<?> clazz) {
-			return metadataCacheClassValue.get( clazz );
-		}
-
-	}
-
-	private static final class MetadataClassValue extends ClassValue<ClassMetadataCache> {
-		@Override
-		protected ClassMetadataCache computeValue(final Class type) {
-			return new ClassMetadataCache( type );
+		ClassMetadataCache getClassMetadata(Class<?> clazz) {
+			ClassMetadataCache classMetadataCache = classCache.get( clazz );
+			if ( classMetadataCache == null ) {
+				classMetadataCache = new ClassMetadataCache( clazz );
+				classCache.put( clazz, classMetadataCache );
+			}
+			return classMetadataCache;
 		}
 	}
 

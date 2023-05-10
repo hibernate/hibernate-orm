@@ -94,6 +94,9 @@ public class EntitySelectFetchInitializerBuilder {
 						.effectivelyBatchLoadable( entityPersister ) ) {
 			return NONE;
 		}
+		else if ( creationState.isDynamicInstantiation() ) {
+			return BatchMode.BATCH_INITIALIZE;
+		}
 		while ( parentAccess.isEmbeddableInitializer() ) {
 			final EmbeddableInitializer embeddableInitializer = parentAccess.asEmbeddableInitializer();
 			final EmbeddableValuedModelPart initializedPart = embeddableInitializer.getInitializedPart();

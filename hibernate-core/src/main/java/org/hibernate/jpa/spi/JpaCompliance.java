@@ -155,4 +155,18 @@ public interface JpaCompliance {
 	 */
 	boolean isLoadByIdComplianceEnabled();
 
+	/**
+	 * JPA specifies that an {@link IllegalStateException} must be thrown by
+	 * {@link jakarta.persistence.EntityManager#remove} if the entity is a
+	 * detached entity ( or the transaction commit will fail).
+	 * <p>
+	 * If the {@link jakarta.persistence.Entity} is a removed entity,
+	 * it is ignored by the remove operation.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_DELETE_COMPLIANCE
+	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaDeleteCompliance
+	 *
+	 */
+	boolean isJpaDeleteComplianceEnabled();
+
 }

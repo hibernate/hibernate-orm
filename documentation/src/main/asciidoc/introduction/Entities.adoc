@@ -984,26 +984,43 @@ However, as before, the order of the elements is not persistent.
 That is, the collection is a _bag_, not a set.
 ====
 
-[[element-collections]]
+[[collections]]
 === Collections of basic values and embeddable objects
 
 We've now seen the following kinds of entity attribute:
 
 |===
-| Kind of entity attribute | Kind of referenced value | Examples
+| Kind of entity attribute | Kind of referenced value | Multiplicity | Examples
 
-| Single-valued attribute of basic type | Non-entity | `@Basic String name`
-| Single-valued attribute of embeddable type | Non-entity | `@Embedded Name name`
-| Single-valued association | Entity | `@ManyToOne Publisher publisher`, `@OneToOne Person person`
-| Many-valued association | Entity | `@OneToMany Set<Book> books`, `@ManyToMany Set<Author> authors`
+| Single-valued attribute of basic type | Non-entity | At most one | `@Basic String name`
+| Single-valued attribute of embeddable type | Non-entity | At most one | `@Embedded Name name`
+| Single-valued association | Entity | At most one | `@ManyToOne Publisher publisher`, `@OneToOne Person person`
+| Many-valued association | Entity | Zero or more | `@OneToMany Set<Book> books`, `@ManyToMany Set<Author> authors`
 |===
 
 Scanning this taxonomy, you might ask: does Hibernate have multivalued attributes of basic or embeddable type?
 
-The answer is that it does. Indeed, there are two different ways to handle such a collection, by mapping it:
+Well, actually, we've already seen that it does, at least in two special cases.
+So first, lets <<basic-attributes,recall>> that JPA treats `byte[]` and `char[]` arrays as basic types.
+Hibernate persists a `byte[]` or `char[]` array to a `VARBINARY` or `VARCHAR` column, respectively.
 
-- to a column of SQL `ARRAY` type (or of type `JSON`, if the database doesn't have an `ARRAY` type), or
+But in this section we're really concerned with cases _other_ than these two special cases.
+So then, _apart from ``byte[]`` and ``char[]``_, does Hibernate have multivalued attributes of basic or embeddable type?
+
+And the answer again is that _it does_. Indeed, there are two different ways to handle such a collection, by mapping it:
+
+- to a column of SQL `ARRAY` type (assuming the database has an `ARRAY` type), or
 - to a separate table.
+
+So we may expand our taxonomy with:
+
+|===
+| Kind of entity attribute | Kind of referenced value | Multiplicity | Examples
+
+| `byte[]` and `char[]` arrays | Non-entity | Zero or more | `byte[] image`, `char[] text`
+| Collection of basic-typed elements | Non-entity | Zero or more | `@Array String[] names`, `@ElementCollection Set<String> names`
+| Collection of embeddable elements | Non-entity | Zero or more |  `@ElementCollection Set<Name> names`
+|===
 
 [CAUTION]
 .These sorts of mappings are overused
@@ -1013,16 +1030,28 @@ But such situations are rare.
 Almost every many-valued relationship should map to a foreign key association between separate tables.
 And almost every table should be mapped by an entity class.
 
-The features we're about to meet in this subsection are used much more often by beginners than they're used by experts.
+The features we're about to meet in the next two subsections are used much more often by beginners than they're used by experts.
 So if you're a beginner, you'll save yourself same hassle by staying away from these features for now.
 ====
 
+[[arrays]]
+=== Collections mapped to SQL arrays
+
 Let's consider a calendar event which repeats on certain days of the week.
 We might represent this in our `Event` entity as an attribute of type `DayOfWeek[]` or `List<DayOfWeek>`.
-Since the number of elements of this array or list us upper bounded by 7, this is a reasonable case for the use of an `ARRAY`-typed column.
+Since the number of elements of this array or list is upper bounded by 7, this is a reasonable case for the use of an `ARRAY`-typed column.
 It's hard to see much value in storing this collection in a separate table.
 
-JPA does not define a standard way to achieve this, but here's how we can do it in Hibernate:
+[TIP]
+.Learning to not hate SQL arrays
+====
+For a long time, we thought arrays were a kind of weird and warty thing to add to the relational model, but recently we've come to realize that this view was overly closed-minded.
+Indeed, we might choose to view SQL `ARRAY` types as a generalization of `VARCHAR` and `VARBINARY` to generic "element" types.
+And from this point of view, SQL arrays look quite attractive, at least for certain problems.
+If we're comfortable mapping `byte[]` to `VARBINARY(255)`, why would we shy away from mapping `DayOfWeek[]` to `TINYINT ARRAY[7]`?
+====
+
+Unfortunately, JPA does not define a standard way to map SQL arrays, but here's how we can do it in Hibernate:
 
 [source, java]
 ----
@@ -1037,6 +1066,57 @@ class Event {
 ----
 
 The `@Array` annotation is optional, but it's important to limit the amount of storage space the database allocates to the `ARRAY` column.
+
+[WARNING]
+.Not every database has an `ARRAY` type
+====
+Now for the gotcha: not every database has a SQL `ARRAY` type, and some that _do_ have an `ARRAY` type don't allow it to be used as a column type.
+
+In particular, neither DB2 nor SQL Server have array-typed columns.
+On these databases, Hibernate falls back to something much worse: it uses Java serialization to encode the array to a binary representation, and stores the binary stream in a `VARBINARY` column.
+Quite clearly, this is terrible.
+You can ask Hibernate to do something _slightly_ less terrible by annotating the attribute `@JdbcTypeCode(SqlTypes.JSON)`, so that the array is serialized to JSON instead of binary format.
+But at this point it's better to just admit defeat and use an `@ElementCollection` instead.
+====
+
+Alternatively, we could store this array or list in a separate table.
+
+[[element-collections]]
+=== Collections mapped to a separate table
+
+JPA _does_ define a standard way to map a collection to a table:
+
+[source, java]
+----
+@Entity
+class Event {
+    @Id @GeneratedValue long id;
+    ...
+    @ElementCollection
+    DayOfWeek[] daysOfWeek;  // stored in a dedicated table
+    ...
+}
+----
+
+[WARNING]
+.This is not what we would do
+====
+`@ElementCollection` is one of our least-favorite features of JPA.
+Even the name of the annotation is bad.
+
+The code above results in a table with three columns:
+
+- a foreign key of the `Event` table,
+- a `TINYINT` encoding the `enum`, and
+- an `INTEGER` encoding the ordering of elements in the array.
+
+Instead of a surrogate primary key, it has a composite key comprising the foreign key of `Event` and the order column.
+
+When&mdash;inevitably&mdash;we find that we need to add a fourth column to that table, our Java code must change completely.
+Most likely, we'll realize that we need to add a separate entity after all.
+
+There's much more we could say about "element collections", but we won't say it, because we don't want to hand you the gun that you'll shoot your foot with.
+====
 
 [[equals-and-hash]]
 === `equals()` and `hashCode()`

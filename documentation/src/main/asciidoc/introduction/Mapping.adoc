@@ -151,7 +151,7 @@ is a bad idea, since it's impossible to create a foreign key constraint that tar
 // However, it's possible to emulate a mix of `SINGLE_TABLE` and `JOINED` inheritance using the `@SecondaryTable` annotation.
 
 [[table-mappings]]
-=== Mapping to tables
+=== Mapping entities to tables
 
 The following annotations specify exactly how elements of the domain model map to tables of the relational model:
 
@@ -197,4 +197,150 @@ These annotations specify how elements of the domain model map to columns of tab
 | `@OrderColumn` | Specifies a column that should be used to maintain the order of a `List`.
 | `@MapKeyColumn` | Specified a column that should be used to persist the keys of a `Map`.
 |===
+
+We use the `@Column` annotation to map basic attributes.
+
+[[regular-column-mappings]]
+=== Mapping basic attributes to columns
+
+The `@Column` annotation is not only useful for specifying the column name.
+
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped column
+| `table` | The name of the table to which this column belongs
+| `length` | The length of a `VARCHAR`, `CHAR`, or `VARBINARY` column type
+| `precision` | The decimal digits of precision of a `FLOAT`, `DECIMAL`, `NUMERIC`, or `TIME`, or `TIMESTAMP` column type
+| `scale` | The scale of a `DECIMAL` or `NUMERIC` column type, the digits of precision that occur to the right of the decimal point
+| `unique` | Whether the column has a `UNIQUE` constraint
+| `nullable` | Whether the column has a `NOT NULL` constraint
+| `insertable` | Whether the column should appear in generated SQL `INSERT` and `UPDATE` statements
+| `updatable` | Whether the column should appear in generated SQL `INSERT` and `UPDATE` statements
+| `columnDefinition` 💀| A DDL fragment that should be used to declare the column
+|===
+
+[TIP]
+.Use of `columnDefinition` results in unportable DDL
+====
+We no longer recommend the use of `columnDefinition`.
+Hibernate has much better ways to customize the generated DDL using techniques that result in portable behavior across different databases.
+====
+
+Here we see four different ways to use the `@Column` annotation:
+
+[source,java]
+----
+@Entity
+@Table(name="Books")
+@SecondaryTable(name="Editions")
+class Book {
+    @Id @GeneratedValue
+    @Column(name="bookId") // customize column name
+    Long id;
+
+    @Column(length=100, nullable=false) // declare column as VARCHAR(100) NOT NULL
+    String title;
+    
+    @Column(length=17, unique=true, nullable=false) // declare column as VARCHAR(17) NOT NULL UNIQUE
+    String isbn;
+    
+    @Column(table="Editions", updatable=false) // column belongs to the secondary table, and is never updated
+    int edition;
+}
+----
+
+We don't use `@Column` to map associations.
+
+[[join-column-mappings]]
+=== Mapping associations to foreign key columns
+
+The `@JoinColumn` annotation is used to customize a foreign key column.
+
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped foreign key column
+| `table` | The name of the table to which this column belongs
+| `referencedColumnName` | The name of the column to which the mapped foreign key column refers
+| `unique` | Whether the column has a `UNIQUE` constraint
+| `nullable` | Whether the column has a `NOT NULL` constraint
+| `insertable` | Whether the column should appear in generated SQL `INSERT` and `UPDATE` statements
+| `updatable` | Whether the column should appear in generated SQL `INSERT` and `UPDATE` statements
+| `columnDefinition` 💀| A DDL fragment that should be used to declare the column
+| `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint
+|===
+
+Here we see how to use `@JoinColumn` to define a `@ManyToOne` association which mapping a foreign key column which refers to a non-primary-key `UNIQUE` column of the referenced table.
+
+[source,java]
+----
+@Entity
+@Table(name="Items")
+class Item {
+    ...
+    @ManyToOne(optional=false)  // implies nullable=false
+    @JoinColumn(name = "bookIsbn", referencedColumnName = "isbn",  // a reference to a non-PK column
+                foreignKey = @ForeignKey(name="ItemsToBooksBySsn")) // supply a name for the FOREIGN KEY constraint
+    Book book;
+    ...
+}
+----
+
+[TIP]
+.Foreign key constraint names
+====
+Notice the use of `@ForeignKey` to customize the name of the foreign key constraint.
+If you don't supply a name explicitly, Hibernate will generate a quite ugly name.
+To be fair, this is perfectly fine if you're only using the generated DDL for testing.
+====
+
+[[primary-key-column-mappings]]
+=== Mapping primary key joins between tables
+
+The `@PrimaryKeyJoinColumn` is a special-purpose annotation for mapping:
+
+- the primary key column of a `@SecondaryTable`&mdash;which is also a foreign key referencing the primary table, or
+- the primary key column of the primary table mapped by a subclass in a `JOINED` inheritance hierarchy&mdash;which is also a foreign key referencing the primary table mapped by the root entity.
+
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped foreign key column
+| `referencedColumnName` | The name of the column to which the mapped foreign key column refers
+| `columnDefinition` 💀| A DDL fragment that should be used to declare the column
+| `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint
+|===
+
+When mapping a subclass table primary key, we place the `@PrimaryKeyJoinColumn` annotation on the entity class:
+
+[source,java]
+----
+@Entity
+@Table(name="People")
+@Inheritance(strategy=JOINED)
+class Person { ... }
+
+@Entity
+@Table(name="Authors")
+@PrimaryKeyJoinColumn(name="personId") // the name of the primary key of the Authors table
+class Author { ... }
+----
+
+But to map a secondary table primary key, the `@PrimaryKeyJoinColumn` annotation must occur inside the `@SecondaryTable` annotation:
+
+[source,java]
+----
+@Entity
+@Table(name="Books")
+@SecondaryTable(name="Editions",
+                pkJoinColumns = @PrimaryKeyJoinColumn(name="bookId")) // the name of the primary key of the Editions table
+class Book {
+    @Id @GeneratedValue
+    @Column(name="bookId") // the name of the primary key of the Books table
+    Long id;
+
+    ...
+}
+----
 

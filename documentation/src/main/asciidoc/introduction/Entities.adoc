@@ -207,6 +207,7 @@ On the other hand, if, as is more common, you're working with a pre-existing dat
 
 JPA defines the following strategies for generating ids, which are enumerated by `GenerationType`:
 
+.Standard id generation strategies
 |===
 | Strategy                  | Java type | Implementation
 
@@ -445,6 +446,7 @@ The `@Id` and `@Version` attributes we've already seen are just specialized exam
 A _basic_ attribute of an entity is a field or property which maps to a single column of the associated database table.
 The JPA specification defines a quite limited set of basic types:
 
+.JPA-standard basic attribute types
 |====
 | Classification | Package | Types
 

@@ -54,6 +54,7 @@ Where `{version}` is the version of Hibernate you're using.
 You'll also need to add a dependency for the JDBC
 driver for your database.
 
+.JDBC driver dependencies
 |===
 | Database                  | Driver dependency
 
@@ -77,6 +78,7 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 
 Optionally, you might also add any of the following additional features:
 
+.Optional dependencies
 |===
 | Optional feature | Dependencies
 
@@ -223,6 +225,7 @@ With rare exception, the default behavior of every one of these settings was car
 
 The properties you really do need to get started are these three:
 
+.JDBC connection settings
 |===
 | Configuration property name                                         | Purpose
 
@@ -251,6 +254,7 @@ This pool is not meant for use in production, and later, when we discuss perform
 
 Alternatively, in a container environment, you'll need at least one of these properties:
 
+.Transaction management settings
 |===
 | Configuration property name            | Purpose
 
@@ -271,6 +275,7 @@ annotations you've specified in your Java code, and export the schema at
 initialization time by specifying one or more of the following configuration
 properties:
 
+.Schema management settings
 [cols="1,1"]
 |===
 | Configuration property name                                | Purpose
@@ -333,6 +338,7 @@ logger.hibernate.level = debug
 
 You can make the logged SQL more readable by enabling one or both of the following settings:
 
+.Setting for SQL logging to the console
 |===
 | Configuration property name | Purpose
 
@@ -346,6 +352,7 @@ These settings can really help when troubleshooting SQL.
 
 The following properties are very useful for minimizing the amount of information you'll need to explicitly specify in `@Table` and `@Column` annotations, which we'll discuss below in <<mapping-entity-classes>>:
 
+.Settings for minimizing explicit mapping information
 |===
 | Configuration property name           | Purpose
 
@@ -369,6 +376,7 @@ Please refer to the Javadoc for these interfaces for more information about the 
 
 _By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode data. So, if you're working with SQL Server, you might need to force Hibernate to use the `nchar` and `nvarchar` types.
 
+.Setting the use of nationalized charcter data
 |===
 | Configuration property name                 | Purpose
 

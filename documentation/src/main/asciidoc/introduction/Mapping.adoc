@@ -67,3 +67,86 @@ a| To retrieve instances of a given class, we must `JOIN` the table mapped by th
 | Not very popular.
 
   From a certain point of view, competes with `@MappedSuperclass`.
+|===
+
+The three mapping strategies are enumerated by `InheritanceType`.
+We specify an inheritance mapping strategy using the `@Inheritance` annotation.
+
+For mappings with a _discriminator column_, we should:
+
+- specify the discriminator column name and type by annotating the root entity `@DiscriminatorColumn`, and
+- specify the values of this discriminator by annotating each entity in the hierarchy `@DiscriminatorValue`.
+
+// [[single-table-inheritance]]
+// === Single table inheritance
+
+For single table inheritance we always need a discriminator:
+
+[source,java]
+----
+@Entity
+@DiscriminatorColumn(discriminatorType=CHAR, name="kind")
+@DiscriminatorValue('P')
+class Person { ... }
+
+@Entity
+@DiscriminatorValue('A')
+class Author { ... }
+----
+
+We don't need to explicitly specify `@Inheritance(strategy=SINGLE_TABLE)`, since that's the default.
+
+// [[multiple-table-inheritance]]
+// === Multiple table inheritance
+
+For `JOINED` inheritance we don't need a discriminator:
+
+[source,java]
+----
+@Entity
+@Inheritance(strategy=JOINED)
+class Person { ... }
+
+@Entity
+class Author { ... }
+----
+
+[TIP]
+.Discriminator columns for `JOINED` inheritance
+====
+However, we can add a discriminator column if we like, and in that case the generated SQL for polymorphic queries will be slightly simpler.
+====
+
+Similarly, for `TABLE_PER_CLASS` inheritance we have:
+
+[source,java]
+----
+@Entity
+@Inheritance(strategy=TABLE_PER_CLASS)
+class Person { ... }
+
+@Entity
+class Author { ... }
+----
+
+[NOTE]
+.Discriminator columns for `TABLE_PER_CLASS` inheritance
+====
+Hibernate doesn't allow discriminator columns for `TABLE_PER_CLASS` inheritance mappings, since they would make no sense, and offer no advantage.
+====
+
+Notice that in this last case, a polymorphic association like:
+
+[source,java]
+----
+@ManyToOne Person person;
+----
+
+is a bad idea, since it's impossible to create a foreign key constraint that targets both mapped tables.
+
+// [[mixing-inheritance]]
+// === Mixed inheritance
+//
+// Hibernate doesn't support mixing ``InheritanceType``s within a single entity hierarchy.
+// However, it's possible to emulate a mix of `SINGLE_TABLE` and `JOINED` inheritance using the `@SecondaryTable` annotation.
+

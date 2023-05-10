@@ -40,7 +40,8 @@ stage('Configure') {
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
 		// Long running databases
 		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ),
-		new BuildEnvironment( dbName: 'cockroachdb_22_1', node: 'cockroachdb', longRunning: true ),
+		new BuildEnvironment( dbName: 'cockroachdb_21_2', node: 'cockroachdb', longRunning: true ),
+		new BuildEnvironment( dbName: 'cockroachdb_23_1', node: 'cockroachdb', longRunning: true ),
 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true )
 	];
 
@@ -231,6 +232,13 @@ stage('Build') {
 										docker.image('cockroachdb/cockroach:v22.1.13').pull()
 									}
 									sh "./docker_db.sh cockroachdb_22_1"
+									state[buildEnv.tag]['containerName'] = "cockroach"
+									break;
+								case "cockroachdb_23_1":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('cockroachdb/cockroach-unstable:v23.1.0-rc.1').pull()
+									}
+									sh "./docker_db.sh cockroachdb_23_1"
 									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}

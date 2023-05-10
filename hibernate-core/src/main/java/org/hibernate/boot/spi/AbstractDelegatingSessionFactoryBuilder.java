@@ -373,6 +373,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	public SessionFactoryBuilder enableJpaDeleteCompliance(boolean enabled) {
+		delegate.enableJpaDeleteCompliance(enabled);
+		return getThis();
+	}
+
+	@Override
 	public T applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
 		delegate.applyStatelessInterceptor(statelessInterceptorSupplier);
 		return getThis();

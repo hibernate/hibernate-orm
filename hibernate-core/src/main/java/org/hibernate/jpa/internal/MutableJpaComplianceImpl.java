@@ -26,6 +26,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean closedCompliance;
 	private boolean cachingCompliance;
 	private boolean loadByIdCompliance;
+	private boolean deleteCompliance;
 
 	public MutableJpaComplianceImpl(Map<?,?> configurationSettings) {
 		this(
@@ -88,6 +89,11 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 				configurationSettings,
 				jpaByDefault
 		);
+		deleteCompliance = ConfigurationHelper.getBoolean(
+				AvailableSettings.JPA_DELETE_COMPLIANCE,
+				configurationSettings,
+				jpaByDefault
+		);
 	}
 
 	@Override
@@ -133,6 +139,11 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	@Override
 	public boolean isLoadByIdComplianceEnabled() {
 		return loadByIdCompliance;
+	}
+
+	@Override
+	public boolean isJpaDeleteComplianceEnabled() {
+		return deleteCompliance;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -183,6 +194,12 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	}
 
 	@Override
+	public void setDeleteCompliance(boolean deleteCompliance) {
+		this.deleteCompliance = deleteCompliance;
+	}
+
+
+	@Override
 	public JpaCompliance immutableCopy() {
 		JpaComplianceImpl.JpaComplianceBuilder builder = new JpaComplianceImpl.JpaComplianceBuilder();
 		builder = builder.setListCompliance( listCompliance )
@@ -193,7 +210,8 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 				.setTransactionCompliance( transactionCompliance )
 				.setClosedCompliance( closedCompliance )
 				.setCachingCompliance( cachingCompliance )
-				.setLoadByIdCompliance( loadByIdCompliance );
+				.setLoadByIdCompliance( loadByIdCompliance )
+				.setDeleteCompliance( deleteCompliance);
 		return builder.createJpaCompliance();
 	}
 }

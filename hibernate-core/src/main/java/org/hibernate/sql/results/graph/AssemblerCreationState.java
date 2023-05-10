@@ -17,8 +17,11 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
  * @author Steve Ebersole
  */
 public interface AssemblerCreationState {
-
 	default boolean isScrollResult() {
+		return false;
+	}
+
+	default boolean isDynamicInstantiation() {
 		return false;
 	}
 

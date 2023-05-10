@@ -591,15 +591,29 @@ For example, the following converter will be automatically applied to any attrib
 [source,java]
 ----
 @Converter(autoApply = true)
-public class BitSetConverter implements AttributeConverter<BitSet,byte[]> {
+public static class EnumSetConverter implements AttributeConverter<EnumSet<DayOfWeek>,Integer> {
     @Override
-    public byte[] convertToDatabaseColumn(BitSet bitSet) {
-        return bitSet.toByteArray();
+    public Integer convertToDatabaseColumn(EnumSet<DayOfWeek> enumSet) {
+        int encoded = 0;
+        DayOfWeek[] values = DayOfWeek.values();
+        for (int i = 0; i<values.length; i++) {
+            if (enumSet.contains(values[i])) {
+                encoded |= 1<<i;
+            }
+        }
+        return encoded;
     }
 
     @Override
-    public BitSet convertToEntityAttribute(byte[] bytes) {
-        return BitSet.valueOf(bytes);
+    public EnumSet<DayOfWeek> convertToEntityAttribute(Integer encoded) {
+        EnumSet<DayOfWeek> set = EnumSet.noneOf(DayOfWeek.class);
+        DayOfWeek[] values = DayOfWeek.values();
+        for (int i = 0; i<values.length; i++) {
+            if (((1<<i) & encoded) != 0) {
+                set.add(values[i]);
+            }
+        }
+        return set;
     }
 }
 ----

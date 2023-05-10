@@ -79,6 +79,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 * @param event The delete event to be handled.
 	 *
 	 */
+	@Override
 	public void onDelete(DeleteEvent event) throws HibernateException {
 		onDelete( event, DeleteContext.create() );
 	}
@@ -90,6 +91,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	 * @param transientEntities The cache of entities already deleted
 	 *
 	 */
+	@Override
 	public void onDelete(DeleteEvent event, DeleteContext transientEntities) throws HibernateException {
 		if ( !optimizeUnloadedDelete( event ) ) {
 			delete( event, transientEntities );

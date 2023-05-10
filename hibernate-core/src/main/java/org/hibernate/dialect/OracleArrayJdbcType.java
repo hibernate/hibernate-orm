@@ -218,9 +218,7 @@ public class OracleArrayJdbcType implements JdbcType {
 	}
 
 	String[] getDropArrayTypeCommand(String elementTypeName) {
-		// for some weird reason dropping the type declarations causes problem in the test suite
-//		return new String[] { "drop type " + elementTypeName };
-		return EMPTY_STRING_ARRAY;
+		return EMPTY_STRING_ARRAY; //new String[] { "drop type " + elementTypeName + " force" };
 	}
 
 	@Override

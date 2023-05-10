@@ -125,7 +125,7 @@ public class CockroachDialect extends Dialect {
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 21, 1 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 22, 1 );
 
 	protected final PostgreSQLDriverKind driverKind;
 

@@ -111,6 +111,7 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 				arrayJdbcMapping,
 				null,
 				null,
+				null,
 				lockOptions,
 				session.isDefaultReadOnly(),
 				session

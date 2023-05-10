@@ -40,31 +40,59 @@ public class OracleNestedTableTest {
 
 	@Test public void testSchema(SessionFactoryScope scope) {
 		scope.inSession( s -> {
-			try ( Connection c = s.getJdbcConnectionAccess().obtainConnection() ) {
+			Connection c;
+			try {
+				c = s.getJdbcConnectionAccess().obtainConnection();
+			}
+			catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+			try {
 				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "STRINGS" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
 					assertEquals( "STRINGARRAY", type );
 					return;
 				}
-				fail("named enum column not exported");
+				fail("nested table column not exported");
 			}
 			catch (SQLException e) {
 				throw new RuntimeException(e);
 			}
+			finally {
+				try {
+					s.getJdbcConnectionAccess().releaseConnection(c);
+				}
+				catch (SQLException e) {
+				}
+			}
 		});
 		scope.inSession( s -> {
-			try ( Connection c = s.getJdbcConnectionAccess().obtainConnection() ) {
+			Connection c;
+			try {
+				c = s.getJdbcConnectionAccess().obtainConnection();
+			}
+			catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+			try {
 				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "ACTIVITYTYPES" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
 					assertEquals( "ACTIVITYTYPEARRAY", type );
 					return;
 				}
-				fail("named enum column not exported");
+				fail("nested table column not exported");
 			}
 			catch (SQLException e) {
 				throw new RuntimeException(e);
+			}
+			finally {
+				try {
+					s.getJdbcConnectionAccess().releaseConnection(c);
+				}
+				catch (SQLException e) {
+				}
 			}
 		});
 	}
@@ -78,10 +106,11 @@ public class OracleNestedTableTest {
 
 		@Array(length = 33)
 		@Column(length = 25)
-		@JdbcTypeCode(SqlTypes.ARRAY)
+		@JdbcTypeCode(SqlTypes.TABLE)
 		String[] strings;
 
 		@Array(length = 2)
+		@JdbcTypeCode(SqlTypes.TABLE)
 		ActivityType[] activityTypes;
 
 	}

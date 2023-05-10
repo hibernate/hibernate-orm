@@ -43,7 +43,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 		@Override
 		public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-			throw new ParsingException( "line " + line + ":" + charPositionInLine + " " + msg);
+			throw new ParsingException( "At position " + line + ":" + charPositionInLine + ", " + msg);
 		}
 
 		@Override
@@ -127,7 +127,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 			return hqlParser.statement();
 		}
 		catch ( ParsingException ex ) {
-			throw new SemanticException( "A query exception occurred", hql, ex );
+			throw new SemanticException( "Illegal HQL syntax [" + ex.getMessage() + "]", hql, ex );
 		}
 	}
 }

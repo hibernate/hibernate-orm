@@ -23,14 +23,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * This annotation may be applied to an embeddable class:
  * <pre>
  * {@code @Embeddable}
- * {@code Struct(name = "CUST")}
+ * {@code @Struct(name = "CUST")}
  * public class Customer { ... }
  * </pre>
+ * <p>
  * Alternatively, it may be applied to an embedded attribute:
  * <pre>
  * public class Order {
- *     {@code Embedded}
- *     {@code Struct(name = "CUST")}
+ *     {@code @Embedded}
+ *     {@code @Struct(name = "CUST")}
  *     private Customer customer;
  * }
  * </pre>

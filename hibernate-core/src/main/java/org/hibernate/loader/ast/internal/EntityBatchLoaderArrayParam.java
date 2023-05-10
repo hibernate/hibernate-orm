@@ -135,6 +135,7 @@ public class EntityBatchLoaderArrayParam<T>
 				arrayJdbcMapping,
 				pkValue,
 				entityInstance,
+				getLoadable().getRootEntityDescriptor(),
 				lockOptions,
 				readOnly,
 				session

@@ -524,7 +524,7 @@ checkerFramework {
 	extraJavacArgs = [
 	        '-AsuppressWarnings=initialization',
 			"-Astubs=${project.rootDir}/checkerstubs",
-			'-AonlyDefs=^org\\.hibernate\\.(jpamodelgen|spi|pretty)\\.'
+			'-AonlyDefs=^org\\.hibernate\\.(jpamodelgen|spi|pretty|(action|context|bytecode)\\.spi)\\.'
 	]
 }
 

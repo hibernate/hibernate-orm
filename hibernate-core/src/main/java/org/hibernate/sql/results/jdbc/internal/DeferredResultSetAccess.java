@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.loader.ast.internal.FollowOnLocker;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -103,16 +104,8 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 							LOG.usingFollowOnLocking();
 						}
 
-						final LockOptions lockOptionsToUse = new LockOptions( lockMode );
-						lockOptionsToUse.setTimeOut( lockOptions.getTimeOut() );
-						lockOptionsToUse.setScope( lockOptions.getScope() );
-
-						executionContext.getCallback().registerAfterLoadAction( (entity, persister, session) ->
-								session.asSessionImplementor().lock(
-										persister.getEntityName(),
-										entity,
-										lockOptionsToUse
-								)
+						executionContext.getCallback().registerAfterLoadAction(
+								new FollowOnLocker( lockMode, lockOptions.getTimeOut(), lockOptions.getLockScope() )
 						);
 					}
 				}

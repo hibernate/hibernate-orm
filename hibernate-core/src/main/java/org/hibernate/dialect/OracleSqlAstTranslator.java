@@ -92,35 +92,43 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			QuerySpec querySpec,
 			ForUpdateClause forUpdateClause,
 			Boolean followOnLocking) {
-		LockStrategy strategy = super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
+		final LockStrategy logicalStrategy = super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
 		final boolean followOnLockingDisabled = Boolean.FALSE.equals( followOnLocking );
-		if ( strategy != LockStrategy.FOLLOW_ON && querySpec.hasSortSpecifications() ) {
+
+		if ( logicalStrategy == LockStrategy.FOLLOW_ON && !followOnLockingDisabled ) {
+			return LockStrategy.FOLLOW_ON;
+		}
+
+		// Oracle places a number of restrictions on when for-update can be used.  In these cases,
+		// fallback to follow-on locking if allowed
+		//
+		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
+
+		if ( logicalStrategy != LockStrategy.FOLLOW_ON && querySpec.hasSortSpecifications() ) {
 			if ( followOnLockingDisabled ) {
 				throw new IllegalQueryOperationException( "Locking with ORDER BY is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			return LockStrategy.FOLLOW_ON;
 		}
-		// Oracle also doesn't support locks with set operators
-		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
-		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
+		if ( logicalStrategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
 			if ( followOnLockingDisabled ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			return LockStrategy.FOLLOW_ON;
 		}
-		if ( strategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
+		if ( logicalStrategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
 			if ( followOnLockingDisabled ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			return LockStrategy.FOLLOW_ON;
 		}
-		if ( strategy != LockStrategy.FOLLOW_ON && useOffsetFetchClause( querySpec ) && !isRowsOnlyFetchClauseType( querySpec ) ) {
+		if ( logicalStrategy != LockStrategy.FOLLOW_ON && useOffsetFetchClause( querySpec ) && !isRowsOnlyFetchClauseType( querySpec ) ) {
 			if ( followOnLockingDisabled ) {
 				throw new IllegalQueryOperationException( "Locking with FETCH is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			return LockStrategy.FOLLOW_ON;
 		}
-		if ( strategy != LockStrategy.FOLLOW_ON ) {
+		if ( logicalStrategy != LockStrategy.FOLLOW_ON ) {
 			final boolean hasOffset;
 			if ( querySpec.isRoot() && hasLimit() && getLimit().getFirstRow() != null ) {
 				hasOffset = true;
@@ -134,10 +142,11 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				if ( followOnLockingDisabled ) {
 					throw new IllegalQueryOperationException( "Locking with OFFSET is not supported" );
 				}
-				strategy = LockStrategy.FOLLOW_ON;
+				return LockStrategy.FOLLOW_ON;
 			}
 		}
-		return strategy;
+
+		return logicalStrategy;
 	}
 
 	private boolean hasSetOperations(QuerySpec querySpec) {

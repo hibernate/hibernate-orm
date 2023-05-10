@@ -1,0 +1,69 @@
+[[object-relational-mapping]]
+== Object/relational mapping
+
+Given a domain model&mdash;that is, a collection of entity classes decorated with all the fancy annotations we <<entities-summary,just met>> in the previous chapter&mdash;Hibernate will happily go away and infer a complete relational schema, and even <<automatic-schema-export,export it to your database>> if you ask politely.
+
+The resulting schema will be entirely sane and reasonable, though if you look closely, you'll find some flaws.
+For example, every `VARCHAR` column will have the same length, `VARCHAR(255)`.
+
+But the process I just described&mdash;which we call _top down_ mapping&mdash;simply doesn't fit the most common scenario for the use of O/R mapping.
+It's only rarely that the Java classes precede the relational schema.
+Usually, _we already have a relational schema_, and we're constructing our domain model around the schema.
+This is called _bottom up_ mapping.
+
+[NOTE]
+."Legacy" data
+====
+Developers often refer to a pre-existing relational database as "legacy" data.
+That's perhaps a bad word to use, conjuring images of bad old "legacy apps" written in COBOL or something.
+But it's not "legacy" data&mdash;it's just your data.
+And it's valuable.
+So learning to work with "legacy" data is important.
+====
+
+Especially when mapping bottom up, we often need to customize the inferred object/relational mappings.
+This is a somewhat tedious topic, and so we don't want to spend too many words on it.
+Instead, we'll quickly skim the most important mapping annotations.
+
+[[mapping-inheritance]]
+=== Mapping entity inheritance hierarchies
+
+In <<entity-inheritance>> we saw that entity classes may exist within an inheritance hierarchy.
+There's three basic strategies for mapping an entity hierarchy to relational tables.
+Let's put them in a table, so we can more easily compare the points of difference between them.
+
+
+|===
+| Strategy | Mapping | Polymorphic queries | Constraints | Normalization | When to use it
+
+| `SINGLE_TABLE`
+| Map every class in the hierarchy to the same table, and uses the value of a _discriminator column_ to determine which concrete class each row represents.
+| To retrieve instances of a given class, we only need to query the one table.
+| Attributes declared by subclasses map to columns without `NOT NULL` constraints. 💀
+
+  Any association may have a `FOREIGN KEY` constraint. 🤓
+| Subclass data is denormalized. 🧐
+| Works well when subclasses declare few or no additional attributes.
+| `JOINED`
+| Map every class in the hierarchy to a separate table, but each table only maps the attributes declared by the class itself.
+
+  Optionally, a discriminator column may be used.
+a| To retrieve instances of a given class, we must `JOIN` the table mapped by the class with:
+
+  - all tables mapped by its superclasses and
+  - all tables mapped by its subclasses.
+| Any attribute may map to a column with a `NOT NULL` constraint. 🤓
+
+  Any association may have a `FOREIGN KEY` constraint. 🤓
+| The tables are normalized. 🤓
+| The best option when we care a lot about constraints and normalization.
+| `TABLE_PER_CLASS`
+| Map every concrete class in the hierarchy to a separate table, but denormalize all inherited attributes into the table.
+| To retrieve instances of a given class, we must take a `UNION` over the table mapped by the class and the tables mapped by its subclasses.
+| Associations targeting a superclass cannot have a corresponding `FOREIGN KEY` constraint in the database. 💀💀
+
+  Any attribute may map to a column with a `NOT NULL` constraint. 🤓
+| Superclass data is denormalized. 🧐
+| Not very popular.
+
+  From a certain point of view, competes with `@MappedSuperclass`.

@@ -103,7 +103,43 @@ It is in principle possible to mix field and property access using explicit `@Ac
 We don't recommend doing this.
 ====
 
-Every entity must have an identifier attribute.
+An entity class like `Book`, which does not extend any other entity class is called a _root entity_.
+Every root entity must declare an identifier attribute.
+
+[[entity-inheritance]]
+=== Entity class inheritance
+
+An entity class may `extend` another entity class.
+
+[source,java]
+----
+@Entity
+class AudioBook extends Book {
+    AudioBook() {}
+    ...
+}
+----
+
+A subclass entity inherits every persistent attribute of every entity it extends.
+
+A root entity may also extend another class and inherit mapped attributes from the other class.
+But in this case, the class which declares the mapped attributes must be annotated `@MappedSuperclass`.
+
+[source,java]
+----
+@MappedSuperclass
+class Versioned {
+    ...
+}
+
+@Entity
+class Book extends Versioned {
+    ...
+}
+----
+
+Every entity must have an identifier attribute, but only a root entity class may declare an attribute annotated `@Id`.
+Subclass entities always inherit the identifier attribute of the root entity.
 
 [[identifier-attributes]]
 === Identifier attributes
@@ -388,6 +424,20 @@ Either way, we may now use `BookId` to obtain instances of `Book`:
 ----
 Book book = session.find(Book.class, new BookId(isbn, printing));
 ----
+
+[[version-attributes]]
+=== Version attributes
+
+An entity may have an attribute which is used by Hibernate for optimistic lock checking.
+A version attribute is usually of type `Integer` or `LocalDateTime`, though several other types are also allowed.
+
+[source,java]
+----
+@Version
+LocalDateTime lastUpdated;
+----
+
+The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.
 
 [[basic-attributes]]
 === Basic attributes
@@ -1057,7 +1107,8 @@ Unfortunately, JPA does not define a standard way to map SQL arrays, but here's 
 ----
 @Entity
 class Event {
-    @Id @GeneratedValue long id;
+    @Id @GeneratedValue
+    Long id;
     ...
     @Array(length=7)
     DayOfWeek[] daysOfWeek;  // stored as a SQL ARRAY type
@@ -1090,7 +1141,8 @@ JPA _does_ define a standard way to map a collection to a table:
 ----
 @Entity
 class Event {
-    @Id @GeneratedValue long id;
+    @Id @GeneratedValue
+    Long id;
     ...
     @ElementCollection
     DayOfWeek[] daysOfWeek;  // stored in a dedicated table
@@ -1117,6 +1169,77 @@ Most likely, we'll realize that we need to add a separate entity after all.
 
 There's much more we could say about "element collections", but we won't say it, because we don't want to hand you the gun that you'll shoot your foot with.
 ====
+
+[[entities-summary]]
+=== Summary of annotations
+
+Let's pause to remember the annotations we've met so far.
+
+.Declaring entities and embeddable types
+[cols="2,4,1"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@Entity` | Declare an entity class | &#10003;
+| `@MappedSuperclass` | Declare a non-entity class with mapped attributes inherited by an entity | &#10003;
+| `@Embeddable` | Declare an embeddable type | &#10003;
+| `@Converter` | Register an `AttributeConverter` | &#10003;
+|===
+
+.Declaring basic attributes
+[cols="2,4,1"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@Id` | Declare a basic-typed identifier attribute | &#10003;
+| `@Version` | Declare a version attribute | &#10003;
+| `@Basic` | (Optional) Declare a basic attribute | &#10003;
+| `@EmbeddedId` | Declare an embeddable-typed identifier attribute | &#10003;
+| `@Embedded` | (Optional) Declare an embeddable-typed attribute | &#10003;
+| `@Enumerated` | (Optional) Declare an `enum`-typed attribute and specify how it is encoded | &#10003;
+| `@Array` | (Optional) Declare that an attribute maps to a SQL `ARRAY`, and specify the length | &#10007;
+| `@ElementCollection` | Declare that a collection is mapped to a dedicated table | &#10003;
+|===
+
+.Converters and compositional basic types
+[cols="2,4,1"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@Convert` | Apply a converter to an attribute | &#10003;
+| `@JavaType` | Explicitly specify an implementation of `JavaType` for a basic attribute | &#10007;
+| `@JdbcType` | Explicitly specify an implementation of `JdbcType` for a basic attribute | &#10007;
+| `@JdbcTypeCode` | Explicitly specify a JDBC type code used to determine the `JdbcType` for a basic attribute | &#10007;
+| `@JavaTypeRegistration` | Register a `JavaType` for a given Java type | &#10007;
+| `@JdbcTypeRegistration` | Register a `JdbcType` for a given JDBC type code | &#10007;
+|===
+
+.System-generated identifiers
+[cols="2,4,1"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@GeneratedValue` | Specify that an identifier is system-generated | &#10003;
+| `@SequenceGenerator` | Define an id generated backed by on a database sequence | &#10003;
+| `@TableGenerator` | Define an id generated backed by a database table | &#10003;
+| `@IdGeneratorType`  | Declare an annotation that associates a custom `Generator` with each `@Id` attribute it annotates | &#10007;
+| `@ValueGenerationType` | Declare an annotation that associates a custom `Generator` with each `@Basic` attribute it annotates | &#10007;
+|===
+
+.Declaring entity associations
+[cols="2,4,1"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@ManyToOne` | Declare the single-valued side of a many-to-one association (the owning side) | &#10003;
+| `@OneToMany` | Declare the many-valued side of a many-to-one association (the unowned side) | &#10003;
+| `@ManyToMany` | Declare either side of a one-to-one association | &#10003;
+| `@OneToOne` | Declare either side of a one-to-one association | &#10003;
+| `@MapsId` | Declare that the owning side of a `@OneToOne` association maps the primary key column | &#10003;
+|===
+
+Phew!
+That's already a lot of annotations, and we have not even started with the annotations for O/R mapping!
 
 [[equals-and-hash]]
 === `equals()` and `hashCode()`

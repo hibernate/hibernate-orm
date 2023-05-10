@@ -461,7 +461,65 @@ Note that:
 Therefore, we recommend `@Basic(optional=false)` in preference to `@Column(nullable=false)` in most circumstances.
 ====
 
-This limited set of pre-defined basic attribute types can be extended by supplying a _converter_.
+[[enums]]
+=== Enumerated types
+
+We included Java ``enum``s on the list above.
+An enumerated type is considered a sort of basic type, but since most databases don't have a native `ENUM` type, JPA provides a special `@Enumerated` annotation to specify how the enumerated values should be represented in the database:
+
+- by default, an enum is stored as an integer, the value of its `ordinal()` member, but
+- if the attribute is annotated `@Enumerated(STRING)`, it will be stored as a string, the value of its `name()` member.
+
+[source,java]
+----
+//here, an ORDINAL encoding makes sense
+@Enumerated
+@Basic(optional=false)
+DayOfWeek dayOfWeek;
+
+//but usually, a STRING encoding is better
+@Enumerated(EnumType.STRING)
+@Basic(optional=false)
+Status status;
+
+----
+[TIP]
+.It's usually better to persist `enum` values by their names
+====
+JPA picks the wrong default here.
+In most cases, storing an integer encoding of the `enum` value makes the relational data harder to interpret.
+
+Even considering `DayOfWeek`, the encoding to integers is ambiguous.
+If you check `java.time.DayOfWeek`, you'll notice that `SUNDAY` is encoded as `6`.
+But in the country I was born, `SUNDAY` is the _first_ day of the week!
+
+So we prefer `@Enumerated(STRING)` for most `enum` attributes.
+====
+
+[NOTE]
+.Enumerated column types
+====
+In Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
+
+- a `VARCHAR` column type with a `CHECK` constraint on most databases, or
+- an `ENUM` column type on MySQL.
+
+Any other ``enum`` is mapped to a `TINYINT` column with a `CHECK` constraint.
+
+An interesting case is PostgreSQL.
+Postgres supports _named_ `ENUM` types, which must be declared using a DDL `CREATE TYPE` statement.
+Sadly, these `ENUM` types aren't well-integrated with the language nor well-supported by the Postgres JDBC driver, so Hibernate doesn't use them by default.
+But if you would like to use a named enumerated type on Postgres, just annotate your `enum` attribute like this:
+
+[source,java]
+----
+@JdbcTypeCode(SqlTypes.NAMED_ENUM)
+@Basic(optional=false)
+Status status;
+----
+====
+
+The limited set of pre-defined basic attribute types can be extended by supplying a _converter_.
 
 [[converters]]
 === Converters
@@ -483,7 +541,7 @@ For example, the following converter will be automatically applied to any attrib
 [source,java]
 ----
 @Converter(autoApply = true)
-public static class BitSetConverter implements AttributeConverter<BitSet,byte[]> {
+public class BitSetConverter implements AttributeConverter<BitSet,byte[]> {
     @Override
     public byte[] convertToDatabaseColumn(BitSet bitSet) {
         return bitSet.toByteArray();
@@ -671,6 +729,7 @@ The embeddable object belongs to the entity, and can't be shared with other enti
 
 Now we'll discuss a different kind of relationship: a relationship between Java objects that each have their persistent identity and persistence lifecycle.
 
+
 [[associations]]
 === Associations
 
@@ -678,9 +737,9 @@ An _association_ is a relationship between entities.
 We usually classify associations based on their _multiplicity_.
 If `E` and `F` are both entity classes, then:
 
-- a _one to one_ association relates at most one unique instance `E` with at most one unique instance of `F`,
-- a _many to one_ association relates zero or more instances of `E` with a unique instance of `F`, and
-- a _many to many_ association relates zero or more instances of `E` with zero or more instance of `F`.
+- a _one-to-one_ association relates at most one unique instance `E` with at most one unique instance of `F`,
+- a _many-to-one_ association relates zero or more instances of `E` with a unique instance of `F`, and
+- a _many-to-many_ association relates zero or more instances of `E` with zero or more instance of `F`.
 
 An association between entity classes may be either:
 
@@ -690,12 +749,12 @@ An association between entity classes may be either:
 Let's begin with the most common association multiplicity.
 
 [[many-to-one-unidirectional]]
-=== Many to one
+=== Many-to-one
 
-A many to one association is the most basic sort of association we can imagine.
+A many-to-one association is the most basic sort of association we can imagine.
 It maps completely naturally to a foreign key in the database.
 
-The `@ManyToOne` annotation marks the "one" side of the association, and so a unidirectional many to one association looks like this:
+The `@ManyToOne` annotation marks the "one" side of the association, and so a unidirectional many-to-one association looks like this:
 
 [source,java]
 ----
@@ -783,16 +842,16 @@ In hindsight, we could have done more to make clear that this was always a viabl
 ====
 
 [[one-to-one-fk]]
-=== One to one (first way)
+=== One-to-one (first way)
 
-The simplest sort of one to one association is almost exactly line a `@ManyToOne` association, except that it maps to a foreign key column with a `UNIQUE` constraint.
+The simplest sort of one-to-one association is almost exactly line a `@ManyToOne` association, except that it maps to a foreign key column with a `UNIQUE` constraint.
 
-A one to one association must be annotated `@OneToOne`:
+A one-to-one association must be annotated `@OneToOne`:
 
 [source,java]
 ----
 @Entity
-static class Author {
+class Author {
     @Id @GeneratedValue
     Long id;
 
@@ -803,12 +862,20 @@ static class Author {
 }
 ----
 
+[TIP]
+.One-to-one associations are a way to represent subtyping
+====
+A one-to-one association often models a "type of" relationship.
+In our example, an `Author` is a type of `Person`.
+An alternative&mdash;and often more natural&mdash;way to represent "type of" relationships in Java is via <<entity-inheritance>>.
+====
+
 We can make this association bidirectional by adding a reference back to the `Author` in the `Person` entity:
 
 [source,java]
 ----
 @Entity
-static class Person {
+class Person {
     @Id @GeneratedValue
     Long id;
 
@@ -820,7 +887,7 @@ static class Person {
 ----
 
 [NOTE]
-.Lazy fetching for one to one associations
+.Lazy fetching for one-to-one associations
 ====
 Notice that we did not declare the unowned end of the association `fetch=LAZY`.
 That's because:
@@ -839,10 +906,10 @@ Author author;
 ----
 ====
 
-This is not the only sort of one to one association.
+This is not the only sort of one-to-one association.
 
 [[one-to-one-pk]]
-=== One to one (second way)
+=== One-to-one (second way)
 
 An arguably more elegant way to represent such a relationship is to share a primary key between the two tables.
 
@@ -851,7 +918,7 @@ To use this approach, the `Author` class must be annotated like this:
 [source,java]
 ----
 @Entity
-static class Author {
+class Author {
     @Id
     Long id;
 
@@ -871,12 +938,12 @@ The `Person` class does not change.
 If the association is bidirectional, we annotate the unowned side `@OneToOne(mappedBy = "person")` just as before.
 
 [[many-to-many]]
-=== Many to many
+=== Many-to-many
 
-A unidirectional many to many association is represented as a collection-valued attribute.
+A unidirectional many-to-many association is represented as a collection-valued attribute.
 It maps to a separate _association table_ in the database.
 
-A many to many association must be annotated `@ManyToMany`:
+A many-to-many association must be annotated `@ManyToMany`:
 
 [source,java]
 ----
@@ -912,13 +979,64 @@ As before, we have the option to `Collection` or `List`, but in this case it _do
 [NOTE]
 .Sets and bags
 ====
-A many to many association represented as a `Collection` or `List` may contain duplicate elements.
+A many-to-many association represented as a `Collection` or `List` may contain duplicate elements.
 However, as before, the order of the elements is not persistent.
 That is, the collection is a _bag_, not a set.
 ====
 
 [[element-collections]]
-=== `@ElementCollection`
+=== Collections of basic values and embeddable objects
+
+We've now seen the following kinds of entity attribute:
+
+|===
+| Kind of entity attribute | Kind of referenced value | Examples
+
+| Single-valued attribute of basic type | Non-entity | `@Basic String name`
+| Single-valued attribute of embeddable type | Non-entity | `@Embedded Name name`
+| Single-valued association | Entity | `@ManyToOne Publisher publisher`, `@OneToOne Person person`
+| Many-valued association | Entity | `@OneToMany Set<Book> books`, `@ManyToMany Set<Author> authors`
+|===
+
+Scanning this taxonomy, you might ask: does Hibernate have multivalued attributes of basic or embeddable type?
+
+The answer is that it does. Indeed, there are two different ways to handle such a collection, by mapping it:
+
+- to a column of SQL `ARRAY` type (or of type `JSON`, if the database doesn't have an `ARRAY` type), or
+- to a separate table.
+
+[CAUTION]
+.These sorts of mappings are overused
+====
+There _are_ situations where we think it's appropriate to use a collection of basic-typed values in our entity class.
+But such situations are rare.
+Almost every many-valued relationship should map to a foreign key association between separate tables.
+And almost every table should be mapped by an entity class.
+
+The features we're about to meet in this subsection are used much more often by beginners than they're used by experts.
+So if you're a beginner, you'll save yourself same hassle by staying away from these features for now.
+====
+
+Let's consider a calendar event which repeats on certain days of the week.
+We might represent this in our `Event` entity as an attribute of type `DayOfWeek[]` or `List<DayOfWeek>`.
+Since the number of elements of this array or list us upper bounded by 7, this is a reasonable case for the use of an `ARRAY`-typed column.
+It's hard to see much value in storing this collection in a separate table.
+
+JPA does not define a standard way to achieve this, but here's how we can do it in Hibernate:
+
+[source, java]
+----
+@Entity
+class Event {
+    @Id @GeneratedValue long id;
+    ...
+    @Array(length=7)
+    DayOfWeek[] daysOfWeek;  // stored as a SQL ARRAY type
+    ...
+}
+----
+
+The `@Array` annotation is optional, but it's important to limit the amount of storage space the database allocates to the `ARRAY` column.
 
 [[equals-and-hash]]
 === `equals()` and `hashCode()`

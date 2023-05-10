@@ -1183,7 +1183,7 @@ Let's pause to remember the annotations we've met so far.
 | `@Entity` | Declare an entity class | &#10003;
 | `@MappedSuperclass` | Declare a non-entity class with mapped attributes inherited by an entity | &#10003;
 | `@Embeddable` | Declare an embeddable type | &#10003;
-| `@Converter` | Register an `AttributeConverter` | &#10003;
+| `@IdClass` | declare the identifier class for an entity with multiple `@Id` attributes | &#10003;
 |===
 
 .Declaring basic attributes
@@ -1206,6 +1206,7 @@ Let's pause to remember the annotations we've met so far.
 |===
 | Annotation | Purpose | JPA-standard
 
+| `@Converter` | Register an `AttributeConverter` | &#10003;
 | `@Convert` | Apply a converter to an attribute | &#10003;
 | `@JavaType` | Explicitly specify an implementation of `JavaType` for a basic attribute | &#10007;
 | `@JdbcType` | Explicitly specify an implementation of `JdbcType` for a basic attribute | &#10007;

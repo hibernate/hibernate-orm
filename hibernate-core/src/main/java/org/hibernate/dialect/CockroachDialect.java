@@ -148,6 +148,13 @@ public class CockroachDialect extends Dialect {
 		this.driverKind = driverKind;
 	}
 
+	/**
+	 * For Hibernate Reactive
+	 */
+	public CockroachDialect(String version, PostgreSQLDriverKind driverKind) {
+		this( parseVersion( version ), driverKind );
+	}
+
 	protected static DatabaseVersion fetchDataBaseVersion( DialectResolutionInfo info ) {
 		String versionString = null;
 		if ( info.getDatabaseMetadata() != null ) {

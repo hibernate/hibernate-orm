@@ -697,6 +697,14 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
 
 	/**
+	 *
+	 * @see JpaCompliance#isJpaDeleteComplianceEnabled()
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JPA_DELETE_COMPLIANCE
+	 */
+	SessionFactoryBuilder enableJpaDeleteCompliance(boolean enabled);
+
+	/**
 	 * After all options have been set, build the SessionFactory.
 	 *
 	 * @return The built SessionFactory.

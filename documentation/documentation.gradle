@@ -130,8 +130,6 @@ task renderIntroduction(type: AsciidoctorTask, group: 'Documentation') {task->
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task
 
-	dependsOn tasks.collectConfigProperties
-
 	sourceDir = file( 'src/main/asciidoc/introduction' )
 	sources {
 		include 'Hibernate_Introduction.adoc'

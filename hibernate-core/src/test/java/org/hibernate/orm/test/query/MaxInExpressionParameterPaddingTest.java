@@ -202,6 +202,43 @@ public class MaxInExpressionParameterPaddingTest {
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
 	}
 
+	@TestForIssue(jiraKey = "HHH-16589")
+	@Test
+	public void testInClauseParameterSplittingAfterLimit4(EntityManagerFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction(
+				entityManager ->
+						entityManager.createQuery(
+										"select p from Person p where p.id in :ids" )
+								.setParameter( "ids", IntStream.range( 0, 39 )
+										.boxed()
+										.collect( Collectors.toList() ) )
+								.getResultList()
+		);
+
+		StringBuilder expectedInClause = new StringBuilder();
+		expectedInClause.append( "in (?" );
+		for ( int i = 1; i < MAX_COUNT; i++ ) {
+			expectedInClause.append( ",?" );
+		}
+		expectedInClause.append( ")" );
+		expectedInClause.append( " or p1_0.id in (?");
+		for ( int i = 1; i < MAX_COUNT; i++ ) {
+			expectedInClause.append( ",?" );
+		}
+		expectedInClause.append( ")" );
+		expectedInClause.append( " or p1_0.id in (?");
+		for ( int i = 1; i < MAX_COUNT; i++ ) {
+			expectedInClause.append( ",?" );
+		}
+		expectedInClause.append( ")" );
+
+
+		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 

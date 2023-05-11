@@ -21,6 +21,10 @@ public final class MathHelper {
 	 * @return smallest power of two number
 	 */
 	public static int ceilingPowerOfTwo(int value) {
-		return 1 << -Integer.numberOfLeadingZeros(value - 1);
+		int result = 1 << -Integer.numberOfLeadingZeros(value - 1);
+		if ( result < value ) { // Overflow
+			return Integer.MAX_VALUE;
+		}
+		return result;
 	}
 }

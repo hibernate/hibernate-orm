@@ -1,7 +1,9 @@
 import org.asciidoctor.gradle.jvm.AsciidoctorTask
+import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 
 plugins {
 	id 'org.asciidoctor.jvm.convert' version '3.3.2'
+	id 'org.asciidoctor.jvm.pdf' version '3.3.2'
 }
 
 /*
@@ -65,6 +67,11 @@ tasks.register('buildDocsForPublishing') {
 
 
 asciidoctorj {
+	modules {
+		pdf {
+			version '2.3.7'
+		}
+	}
 	attributes  icons: 'font',
 			experimental: true,
 			'source-highlighter': 'prettify',
@@ -77,6 +84,7 @@ asciidoctorj {
 // Topical Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tasks.register('renderTopicalGuides', AsciidoctorTask) { task ->
+	group = "Documentation"
 	description = 'Renders the  Topical Guides in HTML format using Asciidoctor.'
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task
@@ -96,6 +104,7 @@ tasks.register('renderTopicalGuides', AsciidoctorTask) { task ->
 // Getting Started Guides (quick starts) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tasks.register('renderGettingStartedGuides', AsciidoctorTask) { task ->
+	group = "Documentation"
 	description = 'Renders the Getting Started Guides (quick starts) in HTML format using Asciidoctor.'
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task
@@ -125,10 +134,29 @@ tasks.register('buildTutorialZip', Zip) { task ->
 
 // Introduction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-task renderIntroduction(type: AsciidoctorTask, group: 'Documentation') {task->
+tasks.register('renderIntroductionPdf', AsciidoctorPdfTask) {task->
+	group = "Documentation"
+	description = 'Renders the Introduction in PDF format using Asciidoctor.'
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
+	inputs.property "hibernate-version", project.ormVersion
+
+	sourceDir = file( 'src/main/asciidoc/introduction' )
+	baseDir = file( 'src/main/asciidoc/introduction' )
+	sources {
+		include 'Hibernate_Introduction.adoc'
+	}
+	outputDir = "$buildDir/asciidoc/introduction/pdf"
+
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+}
+
+tasks.register('renderIntroduction', AsciidoctorTask) {task->
+	group = "Documentation"
 	description = 'Renders the Introduction in HTML format using Asciidoctor.'
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task
+	inputs.property "hibernate-version", project.ormVersion
 
 	sourceDir = file( 'src/main/asciidoc/introduction' )
 	sources {
@@ -160,6 +188,7 @@ task renderIntroduction(type: AsciidoctorTask, group: 'Documentation') {task->
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tasks.register('renderUserGuide', AsciidoctorTask) { task ->
+	group = "Documentation"
 	description = 'Renders the User Guides in HTML format using Asciidoctor.'
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task

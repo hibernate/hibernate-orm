@@ -1,12 +1,12 @@
 [[object-relational-mapping]]
 == Object/relational mapping
 
-Given a domain model&mdash;that is, a collection of entity classes decorated with all the fancy annotations we <<entities-summary,just met>> in the previous chapter&mdash;Hibernate will happily go away and infer a complete relational schema, and even <<automatic-schema-export,export it to your database>> if you ask politely.
+Given a domain model—that is, a collection of entity classes decorated with all the fancy annotations we <<entities-summary,just met>> in the previous chapter—Hibernate will happily go away and infer a complete relational schema, and even <<automatic-schema-export,export it to your database>> if you ask politely.
 
 The resulting schema will be entirely sane and reasonable, though if you look closely, you'll find some flaws.
 For example, every `VARCHAR` column will have the same length, `VARCHAR(255)`.
 
-But the process I just described&mdash;which we call _top down_ mapping&mdash;simply doesn't fit the most common scenario for the use of O/R mapping.
+But the process I just described—which we call _top down_ mapping—simply doesn't fit the most common scenario for the use of O/R mapping.
 It's only rarely that the Java classes precede the relational schema.
 Usually, _we already have a relational schema_, and we're constructing our domain model around the schema.
 This is called _bottom up_ mapping.
@@ -16,7 +16,7 @@ This is called _bottom up_ mapping.
 ====
 Developers often refer to a pre-existing relational database as "legacy" data.
 That's perhaps a bad word to use, conjuring images of bad old "legacy apps" written in COBOL or something.
-But it's not "legacy" data&mdash;it's just your data.
+But it's not "legacy" data—it's just your data.
 And it's valuable.
 So learning to work with "legacy" data is important.
 ====
@@ -439,8 +439,8 @@ class Book {
 
 The `@PrimaryKeyJoinColumn` is a special-purpose annotation for mapping:
 
-- the primary key column of a `@SecondaryTable`&mdash;which is also a foreign key referencing the primary table, or
-- the primary key column of the primary table mapped by a subclass in a `JOINED` inheritance hierarchy&mdash;which is also a foreign key referencing the primary table mapped by the root entity.
+- the primary key column of a `@SecondaryTable`—which is also a foreign key referencing the primary table, or
+- the primary key column of the primary table mapped by a subclass in a `JOINED` inheritance hierarchy—which is also a foreign key referencing the primary table mapped by the root entity.
 
 .`@PrimaryKeyJoinColumn` annotation members
 [cols=",8"]
@@ -489,7 +489,7 @@ class Book {
 === Column lengths and adaptive column types
 
 Hibernate automatically adjusts the column type used in generated DDL based on the column length specified by the `@Column` annotation.
-So we don't usually need to explicitly specify that a column should be of type `TEXT` or `CLOB`&mdash;or worry about the parade of `TINYTEXT`, `MEDIUMTEXT`, `TEXT`, `LONGTEXT` types on MySQL&mdash;because Hibernate will automatically select one of those types if required to accommodate a string of the `length` we specify.
+So we don't usually need to explicitly specify that a column should be of type `TEXT` or `CLOB`—or worry about the parade of `TINYTEXT`, `MEDIUMTEXT`, `TEXT`, `LONGTEXT` types on MySQL—because Hibernate will automatically select one of those types if required to accommodate a string of the `length` we specify.
 
 The constant values defined in the class `org.hibernate.Length` are very helpful here:
 

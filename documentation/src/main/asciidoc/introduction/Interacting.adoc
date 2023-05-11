@@ -36,7 +36,7 @@ It's a simpler programming model, and lets the developer interact with the datab
 Stateful sessions certainly have their advantages, but they're more difficult to reason about, and when something goes wrong, the error messages can be more difficult to understand.
 ====
 
-[persistence-contexts]
+[[persistence-contexts]]
 === Persistence Contexts
 
 A persistence context is a sort of cache; we sometimes call it the "first-level cache", to distinguish it from the <<second-level-cache,second-level cache>>.

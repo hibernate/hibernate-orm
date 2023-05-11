@@ -60,7 +60,7 @@ On the other hand, stateful sessions come with some very important restrictions,
 - persistence contexts aren't threadsafe, and can't be shared across threads, and
 - a persistence context can't be reused across unrelated transactions, since that would break the isolation and atomicity of the transactions.
 
-[WARNING]
+[IMPORTANT]
 .This is important
 ====
 If you didn't quite understand the point above, then go back and re-read it until you do understand.
@@ -72,4 +72,159 @@ For this reason Hibernate provides both stateful and stateless sessions.
 
 [[creating-session]]
 === Creating a session
+
+Sticking with standard JPA-defined APIs, we saw how to obtain an `EntityManagerFactory` in <<configuration-jpa>>.
+It's quite unsurprising that we may use this object to create an `EntityManager`:
+
+[source,java]
+----
+EntityManager em = emf.createEntityManager();
+----
+
+When we're finished with the `EntityManager`, we should explicitly clean it up:
+
+[source,java]
+----
+em.close();
+----
+
+On the other hand, if we're starting from a `SessionFactory`, as described in <<configuration-api>>, we may use:
+
+[source,java]
+----
+Session s = sf.openSession();
+----
+
+But we still need to clean up:
+
+[source,java]
+----
+em.close();
+----
+
+[NOTE]
+.Injecting the `EntityManager`
+====
+If you're writing code for some sort of container environment, you'll probably obtain the `EntityManager` by some sort of dependency injection.
+For example, in Java (or Jakarta) EE you would write:
+
+[source,java]
+----
+@PersistenceContext EntityManager em;
+----
+
+In Quarkus, injection is handled by CDI:
+
+[source,java]
+----
+@Inject EntityManager em;
+----
+====
+
+[[managing-transactions]]
+=== Managing transactions
+
+Using JPA-standard APIs, the `EntityTransaction` interface allows us to control database transactions.
+
+[source,java]
+----
+EntityManager em = emf.createEntityManager();
+EntityTransaction tx = s.getTransaction();
+try {
+    tx.beginTransaction();
+    //do some work
+    ...
+    tx.commit();
+}
+catch (Exception e) {
+    if (tx.isActive()) tx.rollback();
+    throw e;
+}
+finally {
+    em.close();
+}
+----
+
+Using Hibernate's native APIs we might write something really similar,
+// [source,java]
+// ----
+// Session s = sf.openSession();
+// Transaction tx = null;
+// try {
+//     tx = s.beginTransaction();
+//     //do some work
+//     ...
+//     tx.commit();
+// }
+// catch (Exception e) {
+//     if (tx!=null) tx.rollback();
+//     throw e;
+// }
+// finally {
+//     s.close();
+// }
+// ----
+but since this sort of code is extremely tedious, we have a much nicer option:
+
+[source,java]
+----
+sf.inTransaction(s -> {
+    //do the work
+    ...
+});
+----
+
+[NOTE]
+.Container-managed transactions
+====
+In a container environment, the container itself is usually responsible for managing transactions.
+In Java EE or Quarkus, you'll probably indicate the boundaries of the transaction using the `@Transactional` annotation.
+====
+
+=== Operations on the persistence context
+
+Of course, the main reason we need an `EntityManager` is to do stuff to the database.
+The following operations let us interact with the persistence context:
+
+.Important methods of the `EntityManager`
+[cols="2,5"]
+|===
+| Method name and parameters | Effect
+
+| `find(Class,Object)` and `find(Class,Object,LockModeType)`
+| Obtain a persistent object given its type and its id
+| `persist(Object)`
+| Make a transient object persistent and schedule a SQL `insert` statement for later execution
+| `remove(Object)`
+| Make a persistent object transient and schedule a SQL `delete` statement for later execution
+| `merge(Object)`
+| Copy the state of a given detached object to a corresponding managed persistent instance and return
+the persistent object
+| `refresh(Object)` and `refresh(Object,LockModeType)`
+| Refresh the persistent state of an object using a new SQL `select` to retrieve the current state from the
+database
+| `lock(Object, LockModeType)`
+| Obtain a <<optimistic-and-pessimistic-locking,pessimistic lock>> on a persistent object
+| `flush()`
+| Detect changes made to persistent objects association with the session and synchronize the database state with the state of the session by executing SQL `insert`, `update`, and `delete` statements
+| `detach(Object)`
+| Disassociate a persistent object from a session without
+affecting the database
+| `getReference(Class,id)` or
+`getReference(Object)`
+| Obtain a reference to a persistent object without actually loading its state from the database
+|===
+
+If an exception occurs while interacting with the database, there's no good way to resynchronize the state of the current persistence context with the state held in database tables.
+
+Therefore, a session is considered to be unusable after any of its methods throws an exception.
+
+[IMPORTANT]
+.The persistence context is fragile
+====
+If you receive an exception from Hibernate, you should immediately close and discard the current session. Open a new session if you need to, but throw the bad one away first.
+====
+
+[[flush]]
+=== Flushing the session
 

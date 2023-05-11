@@ -990,7 +990,7 @@ include::{example-dir-basic-mapping}/basic/BlobByteArrayTest.java[tags=basic-blo
 
 By default, Hibernate maps `Duration` to the `NUMERIC` SQL type.
 
-TIP: It's possible to map `Duration` to the `INTERVAL_SECOND` SQL type using `@JdbcType(INTERVAL_SECOND)` or by setting `hibernate.type.preferred_duration_jdbc_type=INTERVAL_SECOND`
+TIP: It's possible to map `Duration` to the `INTERVAL_SECOND` SQL type using `@JdbcTypeCode(INTERVAL_SECOND)` or by setting `hibernate.type.preferred_duration_jdbc_type=INTERVAL_SECOND`
 
 [[basic-duration-example]]
 .Mapping Duration

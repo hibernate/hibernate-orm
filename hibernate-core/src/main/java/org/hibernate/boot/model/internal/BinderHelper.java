@@ -1083,8 +1083,12 @@ public class BinderHelper {
 		if ( targetValue instanceof Collection ) {
 			toOne = (ToOne) ( (Collection) targetValue ).getElement();
 		}
-		else {
+		else if ( targetValue instanceof ToOne ) {
 			toOne = (ToOne) targetValue;
+		}
+		else {
+			// Nothing to check, EARLY EXIT
+			return;
 		}
 		final String referencedEntityName = toOne.getReferencedEntityName();
 		final PersistentClass referencedClass = persistentClasses.get( referencedEntityName );

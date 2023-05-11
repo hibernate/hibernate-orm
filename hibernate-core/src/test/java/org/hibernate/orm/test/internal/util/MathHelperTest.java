@@ -43,4 +43,20 @@ public class MathHelperTest {
 		assertThat( MathHelper.ceilingPowerOfTwo( Integer.MAX_VALUE ) ).isEqualTo( Integer.MAX_VALUE );
 	}
 
+	@Test
+	public void divideRoundingUp() {
+		assertThat( MathHelper.divideRoundingUp( 0, 1 ) ).isEqualTo( 0 );
+		assertThat( MathHelper.divideRoundingUp( 1, 1 ) ).isEqualTo( 1 );
+		assertThat( MathHelper.divideRoundingUp( 2, 1 ) ).isEqualTo( 2 );
+		assertThat( MathHelper.divideRoundingUp( 0, 2 ) ).isEqualTo( 0 );
+		assertThat( MathHelper.divideRoundingUp( 1, 2 ) ).isEqualTo( 1 );
+		assertThat( MathHelper.divideRoundingUp( 2, 2 ) ).isEqualTo( 1 );
+		assertThat( MathHelper.divideRoundingUp( 3, 2 ) ).isEqualTo( 2 );
+		assertThat( MathHelper.divideRoundingUp( 4, 2 ) ).isEqualTo( 2 );
+		assertThat( MathHelper.divideRoundingUp( 5, 2 ) ).isEqualTo( 3 );
+		assertThat( MathHelper.divideRoundingUp( 9, 3 ) ).isEqualTo( 3 );
+		assertThat( MathHelper.divideRoundingUp( 10, 3 ) ).isEqualTo( 4 );
+		assertThat( MathHelper.divideRoundingUp( Integer.MAX_VALUE, 2 ) ).isEqualTo( 1_073_741_824 );
+	}
+
 }

@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -76,20 +78,37 @@ public class MaxInExpressionParameterPaddingTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction( entityManager ->
-			entityManager.createQuery( "select p from Person p where p.id in :ids" )
-					.setParameter( "ids", IntStream.range( 0, MAX_COUNT ).boxed().collect( Collectors.toList() ) )
-					.getResultList()
-			);
+		scope.inTransaction( entityManager -> entityManager
+				.createQuery( "select p from Person p where p.id in :ids" )
+				.setParameter( "ids", IntStream.range( 0, 5 )
+						.boxed()
+						.collect( toList() ) )
+				.getResultList() );
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in (?" );
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( ")" );
+		expectedInClause.append( "where p1_0.id in " );
+		appendInClause( expectedInClause, 8 );
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( expectedInClause.toString() );
+	}
+
+	@Test
+	public void testInClauseParameterNoPaddingAtLimit(EntityManagerFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( entityManager -> entityManager
+				.createQuery( "select p from Person p where p.id in :ids" )
+				.setParameter( "ids", IntStream.range( 0, MAX_COUNT )
+						.boxed()
+						.collect( Collectors.toList() ) )
+				.getResultList() );
+
+		StringBuilder expectedInClause = new StringBuilder();
+		expectedInClause.append( "where p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( expectedInClause.toString() );
 	}
 
 	@TestForIssue(jiraKey = "HHH-14109")
@@ -98,24 +117,18 @@ public class MaxInExpressionParameterPaddingTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery(
-										"select p from Person p where p.id in :ids" )
-								.setParameter( "ids", IntStream.range( 0, 10 )
-										.boxed()
-										.collect( Collectors.toList() ) )
-								.getResultList()
-		);
+		scope.inTransaction( entityManager -> entityManager
+				.createQuery( "select p from Person p where p.id in :ids" )
+				.setParameter( "ids", IntStream.range( 0, 10 )
+						.boxed()
+						.collect( Collectors.toList() ) )
+				.getResultList() );
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in (?" );
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( ")" );
+		expectedInClause.append( "where p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( expectedInClause.toString() );
 	}
 
 	@Test
@@ -123,25 +136,22 @@ public class MaxInExpressionParameterPaddingTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery(
-										"select p from Person p where p.id in :ids" )
-								.setParameter( "ids", IntStream.range( 0, 16 )
-										.boxed()
-										.collect( Collectors.toList() ) )
-								.getResultList()
-		);
+		scope.inTransaction( entityManager -> entityManager
+				.createQuery( "select p from Person p where p.id in :ids" )
+				.setParameter( "ids", IntStream.range( 0, 16 )
+						.boxed()
+						.collect( Collectors.toList() ) )
+				.getResultList() );
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "(p1_0.id in (?" );
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in (?))" );
+		expectedInClause.append( "where (" );
+		expectedInClause.append( "p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( " or p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( ')' );
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( expectedInClause.toString() );
 	}
 
 	@Test
@@ -149,23 +159,22 @@ public class MaxInExpressionParameterPaddingTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				entityManager -> entityManager.createQuery(
-						"select p from Person p where p.id not in :ids" )
-						.setParameter( "ids", IntStream.range( 0, 16 )
-								.boxed()
-								.collect( Collectors.toList() ) )
-						.getResultList() );
+		scope.inTransaction( entityManager -> entityManager
+				.createQuery( "select p from Person p where p.id not in :ids" )
+				.setParameter( "ids", IntStream.range( 0, 16 )
+						.boxed()
+						.collect( Collectors.toList() ) )
+				.getResultList() );
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "(p1_0.id not in (?" );
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( ")" );
-		expectedInClause.append( " and p1_0.id not in (?))" );
+		expectedInClause.append( "where (" );
+		expectedInClause.append( "p1_0.id not in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( " and p1_0.id not in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( ')' );
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( expectedInClause.toString() );
 	}
 
 	@Test
@@ -173,25 +182,22 @@ public class MaxInExpressionParameterPaddingTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery(
-										"select p from Person p where p.id in :ids" )
-								.setParameter( "ids", IntStream.range( 0, 18 )
-										.boxed()
-										.collect( Collectors.toList() ) )
-								.getResultList()
-		);
+		scope.inTransaction( entityManager -> entityManager
+				.createQuery( "select p from Person p where p.id in :ids" )
+				.setParameter( "ids", IntStream.range( 0, 18 )
+						.boxed()
+						.collect( Collectors.toList() ) )
+				.getResultList() );
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "(p1_0.id in (?" );
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in (?,?,?,?))" );
+		expectedInClause.append( "where (" );
+		expectedInClause.append( "p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( " or p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( ')' );
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( expectedInClause.toString() );
 	}
 
 	@Test
@@ -199,31 +205,26 @@ public class MaxInExpressionParameterPaddingTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery(
-										"select p from Person p where p.id in :ids" )
-								.setParameter( "ids", IntStream.range( 0, 33 )
-										.boxed()
-										.collect( Collectors.toList() ) )
-								.getResultList()
-		);
+		scope.inTransaction( entityManager -> entityManager
+				.createQuery( "select p from Person p where p.id in :ids" )
+				.setParameter( "ids", IntStream.range( 0, 33 )
+						.boxed()
+						.collect( Collectors.toList() ) )
+				.getResultList() );
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "(p1_0.id in (?" );
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in (?");
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in (?,?,?,?))" );
+		expectedInClause.append( "where (" );
+		expectedInClause.append( "p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( " or p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( " or p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( " or p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( ')' );
 
-
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( expectedInClause.toString() );
 	}
 
 	@TestForIssue(jiraKey = "HHH-16589")
@@ -232,35 +233,34 @@ public class MaxInExpressionParameterPaddingTest {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery(
-										"select p from Person p where p.id in :ids" )
-								.setParameter( "ids", IntStream.range( 0, 39 )
-										.boxed()
-										.collect( Collectors.toList() ) )
-								.getResultList()
-		);
+		scope.inTransaction( entityManager -> entityManager
+				.createQuery( "select p from Person p where p.id in :ids" )
+				.setParameter( "ids", IntStream.range( 0, 39 )
+						.boxed()
+						.collect( Collectors.toList() ) )
+				.getResultList() );
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "(p1_0.id in (?" );
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in (?");
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in (?");
-		for ( int i = 1; i < MAX_COUNT; i++ ) {
-			expectedInClause.append( ",?" );
-		}
-		expectedInClause.append( "))" );
+		expectedInClause.append( "where (" );
+		expectedInClause.append( "p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( " or p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( " or p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( " or p1_0.id in " );
+		appendInClause( expectedInClause, MAX_COUNT );
+		expectedInClause.append( ')' );
 
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( expectedInClause.toString() );
+	}
 
-		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
+	private void appendInClause(StringBuilder sql, int inClauseSize) {
+		sql.append( "(?" );
+		for ( int i = 1; i < inClauseSize; i++ ) {
+			sql.append( ",?" );
+		}
+		sql.append( ")" );
 	}
 
 	@Entity(name = "Person")

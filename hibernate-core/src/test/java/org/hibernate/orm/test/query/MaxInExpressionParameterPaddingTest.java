@@ -134,12 +134,36 @@ public class MaxInExpressionParameterPaddingTest {
 		);
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in (?" );
+		expectedInClause.append( "(p1_0.id in (?" );
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in (?)" );
+		expectedInClause.append( " or p1_0.id in (?))" );
+
+		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
+	}
+
+	@Test
+	public void testInClauseParameterSplittingAfterLimitNotIn(EntityManagerFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction(
+				entityManager -> entityManager.createQuery(
+						"select p from Person p where p.id not in :ids" )
+						.setParameter( "ids", IntStream.range( 0, 16 )
+								.boxed()
+								.collect( Collectors.toList() ) )
+						.getResultList() );
+
+		StringBuilder expectedInClause = new StringBuilder();
+		expectedInClause.append( "(p1_0.id not in (?" );
+		for ( int i = 1; i < MAX_COUNT; i++ ) {
+			expectedInClause.append( ",?" );
+		}
+		expectedInClause.append( ")" );
+		expectedInClause.append( " and p1_0.id not in (?))" );
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
 	}
@@ -160,12 +184,12 @@ public class MaxInExpressionParameterPaddingTest {
 		);
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in (?" );
+		expectedInClause.append( "(p1_0.id in (?" );
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in (?,?,?,?)" );
+		expectedInClause.append( " or p1_0.id in (?,?,?,?))" );
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
 	}
@@ -186,7 +210,7 @@ public class MaxInExpressionParameterPaddingTest {
 		);
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in (?" );
+		expectedInClause.append( "(p1_0.id in (?" );
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
@@ -196,7 +220,7 @@ public class MaxInExpressionParameterPaddingTest {
 			expectedInClause.append( ",?" );
 		}
 		expectedInClause.append( ")" );
-		expectedInClause.append( " or p1_0.id in (?,?,?,?)" );
+		expectedInClause.append( " or p1_0.id in (?,?,?,?))" );
 
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );
@@ -219,7 +243,7 @@ public class MaxInExpressionParameterPaddingTest {
 		);
 
 		StringBuilder expectedInClause = new StringBuilder();
-		expectedInClause.append( "in (?" );
+		expectedInClause.append( "(p1_0.id in (?" );
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
@@ -233,7 +257,7 @@ public class MaxInExpressionParameterPaddingTest {
 		for ( int i = 1; i < MAX_COUNT; i++ ) {
 			expectedInClause.append( ",?" );
 		}
-		expectedInClause.append( ")" );
+		expectedInClause.append( "))" );
 
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( expectedInClause.toString() ) );

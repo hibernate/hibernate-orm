@@ -20,6 +20,7 @@ public class MathHelperTest {
 
 	@Test
 	public void ceilingPowerOfTwo() {
+		assertThat( MathHelper.ceilingPowerOfTwo( 0 ) ).isEqualTo( 1 );
 		assertThat( MathHelper.ceilingPowerOfTwo( 1 ) ).isEqualTo( 1 );
 		assertThat( MathHelper.ceilingPowerOfTwo( 2 ) ).isEqualTo( 2 );
 		assertThat( MathHelper.ceilingPowerOfTwo( 3 ) ).isEqualTo( 4 );

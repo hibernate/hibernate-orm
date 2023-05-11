@@ -152,6 +152,7 @@ The appropriate policies depend on the kind of data an entity represents. For ex
 
 The `@Cache` annotation also specifies `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
 
+.Cache concurrency policies
 |===
 | Concurrency policy | Interpretation | Use case
 
@@ -180,6 +181,7 @@ Once we've marked some entities and collection as eligible for storage in the se
 
 Configuring Hibernate's second-level cache is a rather involved topic, and quite outside the scope of this document. But in case it helps, we often test Hibernate with the following configuration, which uses EHCache as the cache implementation, as above in <<optional-dependencies>>:
 
+.Cache provider configuration
 |===
 | Configuration property name              | Property value
 
@@ -201,12 +203,49 @@ You can find much more information about the second-level cache in the
 
 For the most part, the second-level cache is transparent.
 Program logic which interacts with the Hibernate session is unaware of the cache, and is not impacted by changes to caching policies.
+
 At worst, interaction with the cache may be controlled by specification of an explicit `CacheMode`.
 
 [source,java]
 ----
 s.setCacheMode(CacheMode.IGNORE);
 ----
+
+Or, using JPA-standard APIs:
+
+[source,java]
+----
+em.setCacheRetrieveMode(CacheRetrieveMode.BYPASS);
+em.setCacheStoreMode(CacheStoreMode.BYPASS);
+----
+
+The JPA-defined cache modes are:
+
+.Cache modes
+[cols=",3"]
+|===
+| Mode | Interpretation
+
+| `CacheRetrieveMode.USE` | Read data from the cache if available
+| `CacheRetrieveMode.BYPASS` | Don't read data from the cache; go direct to the database
+
+| `CacheStoreMode.USE` | Write data to the cache when read from the database or when modified; do not update already-cached items when reading
+| `CacheStoreMode.REFRESH` | Write data to the cache when read from the database or when modified; always update cached items when reading
+| `CacheStoreMode.BYPASS` | Don't write data to the cache
+|===
+
+[TIP]
+.A good time to `BYPASS` the cache
+====
+It's a good idea to set the `CacheStoreMode` to `BYPASS` just before running a query which returns a large result set full of data that we don't expect to need again soon.
+This saves work, and prevents the newly-read data from pushing out the previously cached data.
+
+[source,java]
+----
+em.setCacheStoreMode(CacheStoreMode.BYPASS);
+List<Publisher> allpubs = em.createQuery("from Publisher", Publisher.class).getResultList();
+----
+====
 
 Very occasionally, it's necessary or advantageous to control the cache explicitly, for example, to evict some data that we know to be stale.
 The `Cache` interface allows programmatic eviction of cached items.
@@ -222,26 +261,24 @@ sf.getCache().evictEntityData(Book.class, bookId);
 None of the operations of the `Cache` interface respect any isolation or transactional semantics associated with the underlying caches. In particular, eviction via the methods of this interface causes an immediate "hard" removal outside any current transaction and/or locking scheme.
 ====
 
+Ordinarily, however, Hibernate automatically evicts or updates cached data after modifications, and, in addition, cached data which is unused will eventually be expired according to the configured policies.
+
+This is quite different to what happens with the first-level cache.
+
 [[session-cache-management]]
 === Session cache management
 
-Entity instances aren't automatically evicted from the session cache when
-they're no longer needed. (The session cache is quite different to the
-second-level cache in this respect!) Instead, they stay pinned in memory
-until the session they belong to is discarded by your program.
+Entity instances aren't automatically evicted from the session cache when they're no longer needed.
+Instead, they stay pinned in memory until the session they belong to is discarded by your program.
 
-The methods `detach()` and `clear()` allow you to remove entities from the
-session cache, making them available for garbage collection. Since most
-sessions are rather short-lived, you won't need these operations very often.
-And if you find yourself thinking you _do_ need them in a certain situation,
-you should strongly consider an alternative solution: a _stateless session_.
+The methods `detach()` and `clear()` allow you to remove entities from the session cache, making them available for garbage collection.
+Since most sessions are rather short-lived, you won't need these operations very often.
+And if you find yourself thinking you _do_ need them in a certain situation, you should strongly consider an alternative solution: a _stateless session_.
 
 [[stateless-sessions]]
 === Stateless sessions
 
-An arguably-underappreciated feature of Hibernate is the `StatelessSession`
-interface, which provides a command-oriented, more bare-metal approach to
-interacting with the database.
+An arguably-underappreciated feature of Hibernate is the `StatelessSession` interface, which provides a command-oriented, more bare-metal approach to interacting with the database.
 
 You may obtain a reactive stateless session from the `SessionFactory`:
 
@@ -252,56 +289,50 @@ Stage.StatelessSession ss = getSessionFactory().openStatelessSession();
 
 A stateless session:
 
-- doesn't have a first-level cache (persistence context), nor does it interact
-with any second-level caches, and
-- doesn't implement transactional write-behind or automatic dirty checking,
-so all operations are executed immediately when they're explicitly called.
+- doesn't have a first-level cache (persistence context), nor does it interact with any second-level caches, and
+- doesn't implement transactional write-behind or automatic dirty checking, so all operations are executed immediately when they're explicitly called.
 
-For a stateless session, you're always working with detached objects. Thus,
-the programming model is a bit different:
+For a stateless session, you're always working with detached objects. Thus, the programming model is a bit different:
 
+.Important methods of the `StatelessSession`
+[cols=",2"]
 |===
 | Method name and parameters | Effect
 
-| `get(Class, Object)` | Obtain a detached object, given its type and its id,
-by executing a `select`
+| `get(Class, Object)` | Obtain a detached object, given its type and its id, by executing a `select`
 | `fetch(Object)`      | Fetch an association of a detached object
 | `refresh(Object)`    | Refresh the state of a detached object by executing
 a `select`
-| `insert(Object)`     | Immediately `insert` the state of the given
-transient object into the database
-| `update(Object)`     | Immediately `update` the state of the given detached
-object in the database
-| `delete(Object)`     | Immediately `delete` the state of the given detached
-object from the database
+| `insert(Object)`     | Immediately `insert` the state of the given transient object into the database
+| `update(Object)`     | Immediately `update` the state of the given detached object in the database
+| `delete(Object)`     | Immediately `delete` the state of the given detached object from the database
 |===
 
 NOTE: There's no `flush()` operation, and so `update()` is always explicit.
 
-In certain circumstances, this makes stateless sessions easier to work with,
-but with the caveat that a stateless session is much more vulnerable to data
-aliasing effects, since it's easy to get two non-identical Java objects which
-both represent the same row of a database table.
+In certain circumstances, this makes stateless sessions easier to work with, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
 
-IMPORTANT: If you use `fetch()` in a stateless session, you can very easily
-obtain two objects representing the same database row!
+[IMPORTANT]
+====
+If you use `fetch()` in a stateless session, you can very easily obtain two objects representing the same database row!
+====
 
-In particular, the absence of a persistence context means that you can safely
-perform bulk-processing tasks without allocating huge quantities of memory.
+In particular, the absence of a persistence context means that you can safely perform bulk-processing tasks without allocating huge quantities of memory.
 Use of a `StatelessSession` alleviates the need to call:
 
 - `clear()` or `detach()` to perform first-level cache management, and
 - `setCacheMode()` to bypass interaction with the second-level cache.
 
-TIP: Stateless sessions can be useful, but for bulk operations on huge datasets,
+[TIP]
+====
+Stateless sessions can be useful, but for bulk operations on huge datasets,
 Hibernate can't possibly compete with stored procedures!
+====
 
-When using a stateless session, you should be aware of the following additional
-limitations:
+When using a stateless session, you should be aware of the following additional limitations:
 
 - persistence operations never cascade to associated instances,
-- changes to `@ManyToMany` associations and ``@ElementCollection``s cannot be made
-persistent, and
+- changes to `@ManyToMany` associations and ``@ElementCollection``s cannot be made persistent, and
 - operations performed via a stateless session bypass callbacks.
 
 [[optimistic-and-pessimistic-locking]]

@@ -202,7 +202,7 @@ On the other hand, it's very easy to use, and exposes some options that `persist
 [TIP]
 .Advanced configuration options
 ====
-Actually, the `Configuration` class is just a very simple facade for the more modern, much more powerful&mdash;but more complex&mdash;API defined in the package `org.hibernate.boot`.
+Actually, the `Configuration` class is just a very simple facade for the more modern, much more powerful—but more complex—API defined in the package `org.hibernate.boot`.
 This API is useful if you have very advanced requirements, for example, if you're writing a framework or implementing a container.
 You'll find more information in the Hibernate ORM Integration Guide, and in the package-level documentation of `org.hibernate.boot`.
 ====
@@ -218,7 +218,7 @@ Instead, we'll mention the ones you need to get started, and come back to some o
 [TIP]
 .Ya ain't gunna need 'em
 ====
-Hibernate has many&mdash;too many&mdash;switches and toggles.
+Hibernate has many—too many—switches and toggles.
 Please don't go crazy messing about with these settings; most of them are rarely needed, and many only exist to provide backward compatibility with older versions of Hibernate.
 With rare exception, the default behavior of every one of these settings was carefully chosen to be _the behavior we recommend_.
 ====
@@ -353,7 +353,7 @@ These settings can really help when troubleshooting SQL.
 
 === Minimizing repetitive mapping information
 
-The following properties are very useful for minimizing the amount of information you'll need to explicitly specify in `@Table` and `@Column` annotations, which we'll discuss below in <<mapping-entity-classes>>:
+The following properties are very useful for minimizing the amount of information you'll need to explicitly specify in `@Table` and `@Column` annotations, which we'll discuss below in <<object-relational-mapping>>:
 
 .Settings for minimizing explicit mapping information
 [cols=",2"]

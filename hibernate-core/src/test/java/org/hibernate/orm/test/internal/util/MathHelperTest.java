@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Vlad Mihalcea
  */
 public class MathHelperTest {
-	
+
 	@Test
 	public void ceilingPowerOfTwo() {
 		assertThat( MathHelper.ceilingPowerOfTwo( 1 ) ).isEqualTo( 1 );
@@ -37,6 +37,9 @@ public class MathHelperTest {
 		assertThat( MathHelper.ceilingPowerOfTwo( 14 ) ).isEqualTo( 16 );
 		assertThat( MathHelper.ceilingPowerOfTwo( 15 ) ).isEqualTo( 16 );
 		assertThat( MathHelper.ceilingPowerOfTwo( 16 ) ).isEqualTo( 16 );
+
+		assertThat( MathHelper.ceilingPowerOfTwo( Integer.MAX_VALUE - 1 ) ).isEqualTo( Integer.MAX_VALUE );
+		assertThat( MathHelper.ceilingPowerOfTwo( Integer.MAX_VALUE ) ).isEqualTo( Integer.MAX_VALUE );
 	}
 
 }

@@ -6837,29 +6837,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				&& bindValueCount > 2;
 
 		if ( inClauseParameterPaddingEnabled ) {
-			// bindValueCount: 1005
-			// bindValuePaddingCount: 1024
-			int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo( bindValueCount );
-
-			// inExprLimit: 1000
-			if ( inExprLimit > 0 ) {
-				if ( bindValuePaddingCount > inExprLimit ) {
-					// bindValueCount % inExprLimit: 5
-					// bindValuePaddingCount: 8
-					if ( bindValueCount < inExprLimit ) {
-						bindValueMaxCount = inExprLimit;
-					}
-					else {
-						bindValueMaxCount = MathHelper.ceilingPowerOfTwo( bindValueCount % inExprLimit );
-					}
-				}
-				else if ( bindValueCount < bindValuePaddingCount ) {
-					bindValueMaxCount = bindValuePaddingCount;
-				}
-			}
-			else if ( bindValueCount < bindValuePaddingCount ) {
-				bindValueMaxCount = bindValuePaddingCount;
-			}
+			bindValueMaxCount = calculateLastInClauseSize( bindValueCount, inExprLimit );
 		}
 
 		final Iterator<Expression> iterator = listExpressions.iterator();
@@ -6912,6 +6890,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		appendSql( CLOSE_PARENTHESIS );
+	}
+
+	private int calculateLastInClauseSize(int bindValueCount, int inExprLimit) {
+		if ( inExprLimit <= 0 ) {
+			return MathHelper.ceilingPowerOfTwo( bindValueCount );
+		}
+		int lastInClauseSize = bindValueCount % inExprLimit;
+		int lastInClauseSizeWithPadding = lastInClauseSize == 0 ? 0 : MathHelper.ceilingPowerOfTwo( lastInClauseSize );
+		return Math.min( inExprLimit, lastInClauseSizeWithPadding );
 	}
 
 	@Override

@@ -264,6 +264,8 @@ class Book {
 }
 ----
 
+Here, there should be a `UNIQUE` constraint on one of the columns of the association table.
+
 [source,java]
 ----
 @Entity
@@ -275,6 +277,8 @@ class Author {
     ...
 }
 ----
+
+Here, there should be a `UNIQUE` constraint on _both_ columns of the association table.
 
 .`@JoinTable` annotation members
 [cols=",8"]

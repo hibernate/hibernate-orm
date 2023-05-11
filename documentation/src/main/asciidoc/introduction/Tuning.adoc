@@ -1,0 +1,281 @@
+[[tuning-and-performance]]
+== Tuning and performance
+
+Once you have a program up and running using Hibernate to access
+the database, it's inevitable that you'll find places where performance is
+disappointing or unacceptable.
+
+Fortunately, most performance problems are relatively easy to solve with
+the tools that Hibernate makes available to you, as long as you keep a
+couple of simple principles in mind.
+
+First and most important: the reason you're using Hibernate is
+that it makes things easier. If, for a certain problem, it's making
+things _harder_, stop using it. Solve this problem with a different tool
+instead.
+
+IMPORTANT: Just because you're using Hibernate in your program doesn't mean
+you have to use it _everywhere_.
+
+Second: there are two main potential sources of performance bottlenecks in
+a program that uses Hibernate:
+
+- too many round trips to the database, and
+- memory consumption associated with the first-level (session) cache.
+
+So performance tuning primarily involves reducing the number of accesses
+to the database, and/or controlling the size of the session cache.
+
+But before we get to those more advanced topics, we should start by tuning
+the connection pool.
+
+[[connection-pool]]
+=== Tuning the connection pool
+
+TODO
+
+[[statement-batching]]
+=== Enabling statement batching
+
+An easy way to improve performance of some transactions with almost no
+work at all is to turn on automatic DML statement batching. Batching
+only helps in cases where a program executes many inserts, updates, or
+deletes against the same table in a single transaction.
+
+All you need to do is set a single property:
+
+|===
+| Configuration property name | Purpose
+
+| `hibernate.jdbc.batch_size` | Maximum batch size for SQL statement batching
+|===
+
+TIP: Even better than DML statement batching is the use of HQL `update`
+or `delete` queries, or even native SQL that calls a stored procedure!
+
+[[association-fetching]]
+=== Association fetching
+
+:association-fetching: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#fetching
+
+Achieving high performance in ORM means minimizing the number of round
+trips to the database. This goal should be uppermost in your mind
+whenever you're writing data access code with Hibernate. The most
+fundamental rule of thumb in ORM is:
+
+- explicitly specify all the data you're going to need right at the start
+of a session/transaction, and fetch it immediately in one or two queries,
+- and only then start navigating associations between persistent entities.
+
+Without question, the most common cause of poorly-performing data access
+code in Java programs is the problem of _N+1 selects_. Here, a list of N
+rows is retrieved from the database in an initial query, and then
+associated instances of a related entity are fetched using N subsequent
+queries.
+
+IMPORTANT: Hibernate code which does this is bad code and makes
+Hibernate look bad to people who don't realize that it's their own
+fault for not following the advice in this section!
+
+Hibernate provides several strategies for efficiently fetching
+associations and avoiding N+1 selects:
+
+- outer join fetching,
+- batch fetching, and
+- subselect fetching.
+
+Of these, you should almost always use outer join fetching. Batch
+fetching and subselect fetching are only useful in rare cases where
+outer join fetching would result in a cartesian product and a huge
+result set. Unfortunately, outer join fetching simply isn't possible
+with lazy fetching.
+
+TIP: Avoid the use of lazy fetching, which is often the source of
+N+1 selects.
+
+Now, we're not saying that associations should be mapped for eager
+fetching by default! That would be a terrible idea, resulting in
+simple session operations that fetch almost the entire database.
+Therefore:
+
+TIP: Most associations should be mapped for lazy fetching by default.
+
+It sounds as if this tip is in contradiction to the previous one, but
+it's not. It's saying that you must explicitly specify eager fetching
+for associations precisely when and where they are needed.
+
+If you need eager fetching in some particular transaction, use:
+
+- `left join fetch` in HQL,
+- a fetch profile,
+- a JPA `EntityGraph`, or
+- `fetch()` in a criteria query.
+
+You can find much more information about association fetching in the
+{association-fetching}[User Guide].
+
+[[second-level-cache]]
+=== Enabling the second-level cache
+
+:second-level-cache: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#caching
+
+A classic way to reduce the number of accesses to the database is to
+use a second-level cache, allowing cached data to be shared between
+sessions.
+
+Configuring Hibernate's second-level cache is a rather involved topic,
+and quite outside the scope of this document. But in case it helps, we
+often test Hibernate with the following configuration, which uses
+EHCache as the cache implementation, as above in <<optional-dependencies>>:
+
+|===
+| Configuration property name              | Property value
+
+| `hibernate.cache.use_second_level_cache` | `true`
+| `hibernate.cache.region.factory_class`   | `org.hibernate.cache.jcache.JCacheRegionFactory`
+| `hibernate.javax.cache.provider`         | `org.ehcache.jsr107.EhcacheCachingProvider`
+| `hibernate.javax.cache.uri`              | `/ehcache.xml`
+|===
+
+If you're using EHCache, you'll also need to include an `ehcache.xml` file
+that explicitly configures the behavior of each cache region belonging to
+your entities and collections.
+
+TIP: Don't forget that you need to explicitly mark each entity that will
+be stored in the second-level cache with the `@Cache` annotation from
+`org.hibernate.annotations`.
+
+You can find much more information about the second-level cache in the
+{second-level-cache}[User Guide].
+
+[[session-cache-management]]
+=== Session cache management
+
+Entity instances aren't automatically evicted from the session cache when
+they're no longer needed. (The session cache is quite different to the
+second-level cache in this respect!) Instead, they stay pinned in memory
+until the session they belong to is discarded by your program.
+
+The methods `detach()` and `clear()` allow you to remove entities from the
+session cache, making them available for garbage collection. Since most
+sessions are rather short-lived, you won't need these operations very often.
+And if you find yourself thinking you _do_ need them in a certain situation,
+you should strongly consider an alternative solution: a _stateless session_.
+
+[[stateless-sessions]]
+=== Stateless sessions
+
+An arguably-underappreciated feature of Hibernate is the `StatelessSession`
+interface, which provides a command-oriented, more bare-metal approach to
+interacting with the database.
+
+You may obtain a reactive stateless session from the `SessionFactory`:
+
+[source, JAVA, indent=0]
+----
+Stage.StatelessSession ss = getSessionFactory().openStatelessSession();
+----
+
+A stateless session:
+
+- doesn't have a first-level cache (persistence context), nor does it interact
+with any second-level caches, and
+- doesn't implement transactional write-behind or automatic dirty checking,
+so all operations are executed immediately when they're explicitly called.
+
+For a stateless session, you're always working with detached objects. Thus,
+the programming model is a bit different:
+
+|===
+| Method name and parameters | Effect
+
+| `get(Class, Object)` | Obtain a detached object, given its type and its id,
+by executing a `select`
+| `fetch(Object)`      | Fetch an association of a detached object
+| `refresh(Object)`    | Refresh the state of a detached object by executing
+a `select`
+| `insert(Object)`     | Immediately `insert` the state of the given
+transient object into the database
+| `update(Object)`     | Immediately `update` the state of the given detached
+object in the database
+| `delete(Object)`     | Immediately `delete` the state of the given detached
+object from the database
+|===
+
+NOTE: There's no `flush()` operation, and so `update()` is always explicit.
+
+In certain circumstances, this makes stateless sessions easier to work with,
+but with the caveat that a stateless session is much more vulnerable to data
+aliasing effects, since it's easy to get two non-identical Java objects which
+both represent the same row of a database table.
+
+IMPORTANT: If you use `fetch()` in a stateless session, you can very easily
+obtain two objects representing the same database row!
+
+In particular, the absence of a persistence context means that you can safely
+perform bulk-processing tasks without allocating huge quantities of memory.
+Use of a `StatelessSession` alleviates the need to call:
+
+- `clear()` or `detach()` to perform first-level cache management, and
+- `setCacheMode()` to bypass interaction with the second-level cache.
+
+TIP: Stateless sessions can be useful, but for bulk operations on huge datasets,
+Hibernate can't possibly compete with stored procedures!
+
+When using a stateless session, you should be aware of the following additional
+limitations:
+
+- persistence operations never cascade to associated instances,
+- changes to `@ManyToMany` associations and ``@ElementCollection``s cannot be made
+persistent, and
+- operations performed via a stateless session bypass callbacks.
+
+[[optimistic-and-pessimistic-locking]]
+=== Optimistic and pessimistic locking
+
+Finally, an aspect of behavior under load that we didn't mention above is row-level
+data contention. When many transactions try to read and update the same data, the
+program might become unresponsive with lock escalation, deadlocks, and lock
+acquisition timeout errors.
+
+There's two basic approaches to data concurrency in Hibernate:
+
+- optimistic locking using `@Version` columns, and
+- database-level pessimistic locking using the SQL `for update` syntax (or equivalent).
+
+In the Hibernate community it's _much_ more common to use optimistic locking, and
+Hibernate makes that incredibly easy.
+
+TIP: Where possible, in a multiuser system, avoid holding a pessimistic lock across
+a user interaction. Indeed, the usual practice is to avoid having transactions that
+span user interactions. For multiuser systems, optimistic locking is king.
+
+That said, there _is_ also a place for pessimistic locks, which can sometimes reduce
+the probability of transaction rollbacks.
+
+Therefore, the `find()`, `lock()`, and `refresh()` methods of the reactive session
+accept an optional `LockMode`. You can also specify a `LockMode` for a query. The
+lock mode can be used to request a pessimistic lock, or to customize the behavior
+of optimistic locking:
+
+|===
+| `LockMode` type | Meaning
+
+| `READ`                        | An optimistic lock obtained implicitly whenever
+an entity is read from the database using `select`
+| `OPTIMISTIC`                  | An optimistic lock obtained when an entity is
+read from the database, and verified using a
+`select` to check the version when the
+transaction completes
+| `OPTIMISTIC_FORCE_INCREMENT`  | An optimistic lock obtained when an entity is
+read from the database, and enforced using an
+`update` to increment the version when the
+transaction completes
+| `WRITE`                       | A pessimistic lock obtained implicitly whenever
+an entity is written to the database using
+`update` or `insert`
+| `PESSIMISTIC_READ`            | A pessimistic `for share` lock
+| `PESSIMISTIC_WRITE`           | A pessimistic `for update` lock
+| `PESSIMISTIC_FORCE_INCREMENT` | A pessimistic lock enforced using an immediate
+`update` to increment the version
+|===

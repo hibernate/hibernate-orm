@@ -128,4 +128,5 @@ Naturally, we'll start at the top of this list, with the least-interesting topic
 include::Configuration.adoc[]
 include::Entities.adoc[]
 include::Mapping.adoc[]
+include::Interacting.adoc[]
 include::Tuning.adoc[]

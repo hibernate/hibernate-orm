@@ -441,6 +441,50 @@ LocalDateTime lastUpdated;
 
 The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.
 
+[[natural-id-attributes]]
+=== Natural id attributes
+
+Even when an entity has a surrogate key, it should still be possible to identify a combination of fields which uniquely identifies an instance of the entity, from the point of view of the user of the system.
+We call this combination of fields a _natural key_.
+
+[IMPORTANT]
+.What if my entity has no natural key?
+====
+If you can't identify a natural key, it might be a sign that you need to think more carefully about some aspect of your data model.
+If an entity doesn't have a meaningful unique key, then it's impossible to say what event or object it represents in the "real world" outside your program.
+====
+
+Since it's _extremely_ common to retrieve an entity based on its natural key, Hibernate has a way to mark the attributes of the entity which make up its natural key.
+Each attribute must be annotated `@NaturalId`.
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    @Id @GeneratedValue
+    Long id; // the system-generated surrogate key
+
+    @NaturalId
+    String isbn; // belongs to the natural key
+
+    @NaturalId
+    int printing; // also belongs to the natural key
+
+    ...
+}
+----
+
+Hibernate automatically generates a `UNIQUE` constraint on the columns mapped by the annotated fields.
+
+[TIP]
+====
+Consider using the natural id attributes to implement <<equals-and-hash>>.
+====
+
+Note that even when you've identified a natural key, we still recommend the use of a generated surrogate key in foreign keys, since this makes your data model _much_ easier to change.
+
 [[basic-attributes]]
 === Basic attributes
 
@@ -490,7 +534,8 @@ Hibernate slightly extends this list with the following types:
 |====
 
 The `@Basic` annotation explicitly specifies that an attribute is basic, but it's often not needed, since attributes are assumed basic by default.
-On the other hand, if an attribute cannot be null, use of `@Basic(optional=false)` is highly recommended.
+On the other hand, if a non-primitively-typed attribute cannot be null, use of `@Basic(optional=false)` is highly recommended.
+Note that primitively-typed attributes are inferred `NOT NULL` by default.
 
 [source,java]
 ----
@@ -1306,38 +1351,39 @@ That's already a lot of annotations, and we have not even started with the annot
 [[equals-and-hash]]
 === `equals()` and `hashCode()`
 
-Entity classes should override `equals()` and `hashCode()`. People new to
-Hibernate or JPA are often confused by exactly which fields should be
-included in the `hashCode()`, so please keep the following principles in
-mind:
+Entity classes should override `equals()` and `hashCode()`. People new to Hibernate or JPA are often confused by exactly which fields should be included in the `hashCode()`, so please keep the following principles in mind:
 
-- You should not include mutable fields in the hashcode, since that would
-require rehashing any collection containing the entity whenever the field
-is mutated.
-- It's not completely wrong to include a generated identifier (surrogate
-key) in the hashcode, but since the identifier is not generated until
-the entity instance is made persistent, you must take great care to not
-add it to any hashed collection before the identifier is generated. We
-therefore advise against including any database-generated field in the
-hashcode.
+- You should not include mutable fields in the hashcode, since that would require rehashing any collection containing the entity whenever the field is mutated.
+- It's not completely wrong to include a generated identifier (surrogate key) in the hashcode, but since the identifier is not generated until the entity instance is made persistent, you must take great care to not add it to any hashed collection before the identifier is generated. We therefore advise against including any database-generated field in the hashcode.
 
 It's OK to include any immutable, non-generated field in the hashcode.
 
-TIP: We therefore recommend identifying a _natural key_ for each entity,
-that is, a combination of fields that uniquely identifies an instance of
-the entity, from the perspective of the data model of the program. The
-business key should correspond to a unique constraint on the database,
-and to the fields which are included in `equals()` and `hashCode()`.
+TIP: We therefore recommend identifying a <<natural-id-attributes,natural key>> for each entity, that is, a combination of fields that uniquely identifies an instance of the entity, from the perspective of the data model of the program. The natural key should correspond to a unique constraint on the database, and to the fields which are included in `equals()` and `hashCode()`.
 
-That said, an implementation of `equals()` and `hashCode()` based on the
-generated identifier of the entity can work _if you're careful_.
+[source,java]
+----
+@Entity
+class Book {
 
-IMPORTANT: If you can't identify a natural key, it might be a sign that
-you need to think more carefully about some aspect of your data model.
-If an entity doesn't have a meaningful unique key, then it's impossible
-to say what event or object it represents in the "real world" outside
-your program.
+    @Id @GeneratedValue
+    Long id;
 
-Note that even when you've identified a natural key, we still recommend
-the use of a generated surrogate key in foreign keys, since this makes
-your data model _much_ easier to change.
+    @NaturalId
+    @Basic(optional=false)
+    String isbn;
+
+    ...
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof Book
+            && ((Book) other).isbn.equals(isbn);
+    }
+    @Override
+    public int hashCode() {
+        return isbn.hashCode();
+    }
+}
+----
+
+That said, an implementation of `equals()` and `hashCode()` based on the generated identifier of the entity can work _if you're careful_.

@@ -183,7 +183,7 @@ Alternatively, the venerable class `org.hibernate.cfg.Configuration` allows an i
 
 [source,java]
 ----
-SessionFactory factory = new Configuration()
+SessionFactory sf = new Configuration()
     .addAnnotatedClass(Book.class)
     .addAnnotatedClass(Author.class)
     .setProperty(AvailableSettings.JAKARTA_JDBC_URL, "jdbc:postgresql://localhost/example")

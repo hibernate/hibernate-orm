@@ -39,6 +39,7 @@ import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -76,9 +77,10 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -119,6 +121,27 @@ public class PostgreSQLDialect extends Dialect {
 	protected final PostgreSQLDriverKind driverKind;
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
 	private final ParameterMarkerStrategy parameterRenderer;
+
+
+	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+		@Override
+		public Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Integer precision,
+				Integer scale,
+				Long length) {
+			switch (jdbcType.getDdlTypeCode()) {
+				case SqlTypes.BINARY:
+				case SqlTypes.VARBINARY:
+					// Ignore all size related parameters
+					return new Size();
+
+				default:
+					return super.resolveSize(jdbcType, javaType, precision, scale, length);
+			}
+		}
+	};
 
 	public PostgreSQLDialect() {
 		this( MINIMUM_VERSION );
@@ -271,6 +294,11 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public int getDefaultStatementBatchSize() {
 		return 15;
+	}
+
+	@Override
+	public SizeStrategy getSizeStrategy() {
+		return sizeStrategy;
 	}
 
 	@Override

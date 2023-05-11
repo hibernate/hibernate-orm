@@ -1,0 +1,71 @@
+[[interacting]]
+== Interacting with the database
+
+To interact with the database, that is, to execute queries, or to insert, update, or delete data, we need an instance of one of the following objects:
+
+- a JPA `EntityManager`,
+- a Hibernate `Session`, or
+- a Hibernate `StatelessSession`.
+
+The `Session` interface extends `EntityManager`, and so the only difference between the two interfaces is that `Session` offers a few more operations.
+
+[TIP]
+.The `Session` hiding inside an `EntityManager`
+====
+Actually, in Hibernate, every `EntityManager` is a `Session`, and you can narrow it like this:
+
+[source,java]
+----
+Session session = entityManager.unwrap(Session.class);
+----
+====
+
+An instance of `Session` (or of `EntityManager`) is a _stateful session_.
+It mediates the interaction between your program and the database via a operations on a _persistence context_.
+
+In this chapter, we're not going to talk much about `StatelessSession`.
+We'll come back to <<stateless-sessions,this very useful API>> when we talk about performance.
+What you need to know for now is that a stateless session doesn't have a persistence context.
+
+[TIP]
+.Some people prefer `StatelessSession`
+====
+Still, we should let you know that some people prefer to use `StatelessSession` everywhere.
+It's a simpler programming model, and lets the developer interact with the database more _directly_.
+
+Stateful sessions certainly have their advantages, but they're more difficult to reason about, and when something goes wrong, the error messages can be more difficult to understand.
+====
+
+[persistence-contexts]
+=== Persistence Contexts
+
+A persistence context is a sort of cache; we sometimes call it the "first-level cache", to distinguish it from the <<second-level-cache,second-level cache>>.
+For every entity instance read within the scope of a persistence context, and for every new entity made persistent within the scope of the persistence context, the context holds a unique mapping from the identifier of the entity instance to the instance itself.
+
+The lifetime of a persistence context usually corresponds to the lifetime of a transaction, though it's possible to have a persistence context that spans several database-level transactions that form a single logical unit of work.
+
+There are several reasons we like persistence contexts.
+
+1. They help avoid _data aliasing_: if we modify an entity in one section of code, then other code executing within the same persistence context will see our modification.
+2. They enable _automatic dirty checking_: after modifying an entity, we don't need to perform any explicit operation to ask Hibernate to propagate that change back to the database.
+   Instead, the change will be automatically synchronized with the database when the session _flush_ occurs.
+3. They can improve performance by avoiding a trip to the database when a given entity instance is requested repeatedly in a given unit of work.
+
+A persistence context also allows us to detect circularities when performing operations on graphs of entities.
+(Even in a stateless session, we need some sort of temporary cache of the entity instances we've visited while executing a query.)
+
+On the other hand, stateful sessions come with some very important restrictions, since:
+
+- persistence contexts aren't threadsafe, and can't be shared across threads, and
+- a persistence context can't be reused across unrelated transactions, since that would break the isolation and atomicity of the transactions.
+
+[WARNING]
+.This is important
+====
+If you didn't quite understand the point above, then go back and re-read it until you do understand.
+A great deal of human suffering has resulted from users mismanaging the lifecycle of the Hibernate `Session` or JPA `EntityManager`.
+====
+
+[[creating-session]]
+=== Creating a session
+

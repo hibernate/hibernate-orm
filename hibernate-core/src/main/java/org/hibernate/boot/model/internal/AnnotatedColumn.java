@@ -745,9 +745,7 @@ public class AnnotatedColumn {
 		annotatedColumn.setLength( (long) column.length() );
 		annotatedColumn.setPrecision( column.precision() );
 		annotatedColumn.setScale( column.scale() );
-		if ( inferredData.getProperty().isAnnotationPresent(Array.class) ) {
-			annotatedColumn.setArrayLength( inferredData.getProperty().getAnnotation(Array.class).length() );
-		}
+		annotatedColumn.handleArrayLength( inferredData );
 //		annotatedColumn.setPropertyHolder( propertyHolder );
 //		annotatedColumn.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		annotatedColumn.setNullable( column.nullable() ); //TODO force to not null if available? This is a (bad) user choice.
@@ -767,6 +765,12 @@ public class AnnotatedColumn {
 		annotatedColumn.extractDataFromPropertyData( propertyHolder, inferredData );
 		annotatedColumn.bind();
 		return annotatedColumn;
+	}
+
+	private void handleArrayLength(PropertyData inferredData) {
+		if ( inferredData.getProperty().isAnnotationPresent(Array.class) ) {
+			setArrayLength( inferredData.getProperty().getAnnotation(Array.class).length() );
+		}
 	}
 
 	private static String logicalColumnName(
@@ -917,6 +921,7 @@ public class AnnotatedColumn {
 		column.applyGeneratedAs( inferredData, 1 );
 		column.applyCheckConstraint( inferredData, 1 );
 		column.extractDataFromPropertyData( propertyHolder, inferredData );
+		column.handleArrayLength( inferredData );
 		column.bind();
 		return columns;
 	}

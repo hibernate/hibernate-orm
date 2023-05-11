@@ -14,7 +14,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.List;
 
 /**
- * Validates the arguments provided to a HQL function invocation.
+ * Validates the arguments provided to an HQL function invocation.
  *
  * @author Steve Ebersole
  *

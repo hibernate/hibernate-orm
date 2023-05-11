@@ -6,7 +6,7 @@ We say that the entity _maps_ or _maps to_ the table.
 
 NOTE: Much less commonly, an entity might aggregate data from multiple tables, but we'll get to that later.
 
-An entity has _attributes_&mdash;properties or fields&mdash;which map to columns of the table.
+An entity has _attributes_—properties or fields—which map to columns of the table.
 In particular, every entity must have an _identifier_ or _id_, which maps to the primary key of the table.
 The id allows us to uniquely associate a row of the table with an instance of the Java class, at least within a given _persistence context_.
 
@@ -18,7 +18,7 @@ By providing its id to Hibernate, we may re-materialize the instance in a new pe
 Therefore, the operations `persist()` and `remove()` may be thought of as demarcating the beginning and end of the lifecycle of an entity, at least with respect to persistence.
 
 Thus, an id represents the _persistent identity_ of an entity, an identity that outlives a particular instantiation in memory.
-And this is an important difference between entity class itself and the values of its attributes&mdash;the entity has a persistent identity, and a well-defined lifecycle with respect to persistence, whereas a `String` or `List` representing one of its attribute values doesn't.
+And this is an important difference between entity class itself and the values of its attributes—the entity has a persistent identity, and a well-defined lifecycle with respect to persistence, whereas a `String` or `List` representing one of its attribute values doesn't.
 
 An entity usually has associations to other entities.
 Typically, an association between two entities maps to a foreign key in one of the database tables.
@@ -556,8 +556,8 @@ You might wonder what the difference is.
 
 Well, it's perhaps not obvious to a casual user of the JPA annotations, but they actually come in two "layers":
 
-- annotations like `@Entity`, `@Id`, and `@Basic` belong to the _logical_ layer&mdash;they specify the semantics of your Java domain model, whereas
-- annotations like `@Table` and `@Column` belong to the _mapping_ layer&mdash;they specify how elements of the domain model map to objects in the relational database.
+- annotations like `@Entity`, `@Id`, and `@Basic` belong to the _logical_ layer—they specify the semantics of your Java domain model, whereas
+- annotations like `@Table` and `@Column` belong to the _mapping_ layer—they specify how elements of the domain model map to objects in the relational database.
 
 Information may be inferred from the logical layer down to the mapping layer, but is never inferred in the opposite direction.
 
@@ -1019,7 +1019,7 @@ Here, the `Author` table has a foreign key column holding the identifier of the 
 ====
 A one-to-one association often models a "type of" relationship.
 In our example, an `Author` is a type of `Person`.
-An alternative&mdash;and often more natural&mdash;way to represent "type of" relationships in Java is via <<entity-inheritance>>.
+An alternative—and often more natural—way to represent "type of" relationships in Java is via <<entity-inheritance>>.
 ====
 
 We can make this association bidirectional by adding a reference back to the `Author` in the `Person` entity:
@@ -1270,7 +1270,7 @@ The code above results in a table with three columns:
 
 Instead of a surrogate primary key, it has a composite key comprising the foreign key of `Event` and the order column.
 
-When&mdash;inevitably&mdash;we find that we need to add a fourth column to that table, our Java code must change completely.
+When—inevitably—we find that we need to add a fourth column to that table, our Java code must change completely.
 Most likely, we'll realize that we need to add a separate entity after all.
 
 There's much more we could say about "element collections", but we won't say it, because we don't want to hand you the gun that you'll shoot your foot with.

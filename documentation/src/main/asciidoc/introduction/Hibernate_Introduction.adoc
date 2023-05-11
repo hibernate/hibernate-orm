@@ -51,7 +51,7 @@ It quickly overtook other open source and commercial contenders to become the mo
 In 2004, Gavin and Christian joined a tiny startup called JBoss, and other early Hibernate contributors soon followed: Max Rydahl Andersen, Emmanuel Bernard, Steve Ebersole, and Sanne Grinovero.
 
 Soon after, Gavin joined the EJB 3 expert group and convinced the group to deprecate Entity Beans in favor of a brand-new persistence API modelled after Hibernate.
-Later, members of the TopLink team got involved, and the Java Persistence API evolved as a collaboration between&mdash;primarily&mdash;Sun, JBoss, Oracle, and Sybase, under the leadership of Linda Demichiel.
+Later, members of the TopLink team got involved, and the Java Persistence API evolved as a collaboration between—primarily—Sun, JBoss, Oracle, and Sybase, under the leadership of Linda Demichiel.
 
 Over the intervening two decades, _many_ talented people have contributed to the development of Hibernate.
 We're all especially grateful to Steve, who has led the project for many years, since Gavin stepped back to focus in other work.

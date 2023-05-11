@@ -50,6 +50,7 @@ There are several reasons we like persistence contexts.
 2. They enable _automatic dirty checking_: after modifying an entity, we don't need to perform any explicit operation to ask Hibernate to propagate that change back to the database.
    Instead, the change will be automatically synchronized with the database when the session _flush_ occurs.
 3. They can improve performance by avoiding a trip to the database when a given entity instance is requested repeatedly in a given unit of work.
+4. They make it possible to _transparently batch_ together multiple database operations.
 
 A persistence context also allows us to detect circularities when performing operations on graphs of entities.
 (Even in a stateless session, we need some sort of temporary cache of the entity instances we've visited while executing a query.)
@@ -65,6 +66,9 @@ On the other hand, stateful sessions come with some very important restrictions,
 If you didn't quite understand the point above, then go back and re-read it until you do understand.
 A great deal of human suffering has resulted from users mismanaging the lifecycle of the Hibernate `Session` or JPA `EntityManager`.
 ====
+
+We'll conclude by noting that whether a persistence context helps or harms the performance of a given unit of work depends greatly on the nature of the unit of work.
+For this reason Hibernate provides both stateful and stateless sessions.
 
 [[creating-session]]
 === Creating a session

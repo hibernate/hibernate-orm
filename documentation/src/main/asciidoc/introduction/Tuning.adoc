@@ -119,14 +119,66 @@ You can find much more information about association fetching in the
 
 :second-level-cache: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#caching
 
-A classic way to reduce the number of accesses to the database is to
-use a second-level cache, allowing cached data to be shared between
-sessions.
+A classic way to reduce the number of accesses to the database is to use a second-level cache, allowing cached data to be shared between sessions.
 
-Configuring Hibernate's second-level cache is a rather involved topic,
-and quite outside the scope of this document. But in case it helps, we
-often test Hibernate with the following configuration, which uses
-EHCache as the cache implementation, as above in <<optional-dependencies>>:
+By nature, a second-level cache tends to undermine the ACID properties of transaction processing in a relational database. A second-level cache is often by far the easiest way to improve the performance of a system, but only at the cost of making it much more difficult to reason about concurrency. And so the cache is a potential source of bugs which are difficult to isolate and reproduce.
+
+[IMPORTANT]
+.Caching is disabled by default
+====
+Therefore, by default, an entity is not eligible for storage in the second-level cache.
+We must explicitly mark each entity that will  be stored in the second-level cache with the `@Cache` annotation from `org.hibernate.annotations`.
+====
+
+For example:
+
+[source,java]
+----
+@Cache(usage=NONSTRICT_READ_WRITE, region="Publishers")
+@Entity
+class Publisher { ... }
+----
+
+Hibernate segments the second-level cache into named _regions_, one for each:
+
+- mapped entity hierarchy or
+- collection role.
+
+Each region is permitted its own policies for expiry, persistence, and replication. These policies must be configured externally to Hibernate.
+
+An entity hierarchy or collection role may be explicitly assigned a region using the `@Cache` annotation, but, by default, the region name is just the name of the entity class or collection role.
+
+The appropriate policies depend on the kind of data an entity represents. For example, a program might have different caching policies for "reference" data, for transactional data, and for data used for analytics. Ordinarily, the implementation of those policies is the responsibility of the underlying cache implementation.
+
+The `@Cache` annotation also specifies `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
+
+|===
+| Concurrency policy | Interpretation | Use case
+
+| `READ_ONLY` | Read-only access | Immutable data
+| `NONSTRICT_READ_WRITE` | Read/write access with no locking | When concurrent updates are extremely improbable
+| `READ_WRITE` | Read/write access using soft locks | When concurrent updates are possible but not common
+| `TRANSACTION` | transactional access | When concurrent updates are frequent
+|===
+
+Which policies make sense may also depend on the underlying second-level cache implementation.
+
+[NOTE]
+.The JPA-defined `@Cacheable` annotation
+====
+JPA has a similar annotation, named `@Cacheable`.
+Unfortunately, it's almost useless to us, since:
+
+- it provides no way to specify any information about the nature of the cached entity and how its cache should be managed, and
+- it may not be used to annotate associations, and so we can't even use it to mark collection roles as eligible for storage in the second-level cache.
+====
+
+Once we've marked some entities and collection as eligible for storage in the second-level cache, we still need to set up an actual cache.
+
+[[second-level-cache-configuration]]
+=== Configuring the second-level cache provider
+
+Configuring Hibernate's second-level cache is a rather involved topic, and quite outside the scope of this document. But in case it helps, we often test Hibernate with the following configuration, which uses EHCache as the cache implementation, as above in <<optional-dependencies>>:
 
 |===
 | Configuration property name              | Property value
@@ -141,12 +193,34 @@ If you're using EHCache, you'll also need to include an `ehcache.xml` file
 that explicitly configures the behavior of each cache region belonging to
 your entities and collections.
 
-TIP: Don't forget that you need to explicitly mark each entity that will
-be stored in the second-level cache with the `@Cache` annotation from
-`org.hibernate.annotations`.
-
 You can find much more information about the second-level cache in the
 {second-level-cache}[User Guide].
+
+[[second-level-cache-management]]
+=== Second-level cache management
+
+For the most part, the second-level cache is transparent.
+Program logic which interacts with the Hibernate session is unaware of the cache, and is not impacted by changes to caching policies.
+At worst, interaction with the cache may be controlled by specification of an explicit `CacheMode`.
+
+[source,java]
+----
+s.setCacheMode(CacheMode.IGNORE);
+----
+
+Very occasionally, it's necessary or advantageous to control the cache explicitly, for example, to evict some data that we know to be stale.
+The `Cache` interface allows programmatic eviction of cached items.
+
+[source,java]
+----
+sf.getCache().evictEntityData(Book.class, bookId);
+----
+
+[NOTE]
+.Second-level cache management is not transaction-aware
+====
+None of the operations of the `Cache` interface respect any isolation or transactional semantics associated with the underlying caches. In particular, eviction via the methods of this interface causes an immediate "hard" removal outside any current transaction and/or locking scheme.
+====
 
 [[session-cache-management]]
 === Session cache management

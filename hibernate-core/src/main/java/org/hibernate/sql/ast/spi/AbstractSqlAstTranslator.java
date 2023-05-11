@@ -216,6 +216,7 @@ import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomain
 
 /**
  * @author Steve Ebersole
+ * @author Adrodoc
  */
 public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implements SqlAstTranslator<T>, SqlAppender {
 
@@ -6885,17 +6886,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private static int addPadding(int bindValueCount, int inExprLimit) {
-		if ( inExprLimit <= 0 ) {
-			return MathHelper.ceilingPowerOfTwo( bindValueCount );
+		int ceilingPowerOfTwo = MathHelper.ceilingPowerOfTwo( bindValueCount );
+		if ( inExprLimit <= 0 || ceilingPowerOfTwo <= inExprLimit ) {
+			return ceilingPowerOfTwo;
 		}
 
-		int lastInClauseSize = bindValueCount % inExprLimit;
-		if ( lastInClauseSize == 0 ) {
-			return bindValueCount;
-		}
-		int lastInClauseSizeWithPadding = Math.min( inExprLimit, MathHelper.ceilingPowerOfTwo( lastInClauseSize ) );
-		int padding = lastInClauseSizeWithPadding - lastInClauseSize;
-		return bindValueCount + padding;
+		int numberOfInClauses = MathHelper.divideRoundingUp( bindValueCount, inExprLimit );
+		int numberOfInClausesWithPadding = MathHelper.ceilingPowerOfTwo( numberOfInClauses );
+		return numberOfInClausesWithPadding * inExprLimit;
 	}
 
 	@Override

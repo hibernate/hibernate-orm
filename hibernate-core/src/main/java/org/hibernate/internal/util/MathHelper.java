@@ -8,6 +8,7 @@ package org.hibernate.internal.util;
 
 /**
  * @author Vlad Mihalcea
+ * @author Adrodoc
  */
 public final class MathHelper {
 
@@ -26,5 +27,16 @@ public final class MathHelper {
 			return Integer.MAX_VALUE;
 		}
 		return result;
+	}
+
+	/**
+	 * Returns the result of dividing a positive {@code numerator} by a positive {@code denominator} rounded up. For
+	 * example dividing 5 by 2 would give a result of 3.
+	 */
+	public static int divideRoundingUp(int numerator, int denominator) {
+		if ( numerator == 0 ) {
+			return 0;
+		}
+		return ( ( numerator - 1 ) / denominator ) + 1;
 	}
 }

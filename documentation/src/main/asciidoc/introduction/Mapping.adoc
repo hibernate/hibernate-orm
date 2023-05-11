@@ -156,6 +156,7 @@ is a bad idea, since it's impossible to create a foreign key constraint that tar
 The following annotations specify exactly how elements of the domain model map to tables of the relational model:
 
 .Annotations for mapping tables
+[cols=",5"]
 |===
 | Annotation | Purpose
 
@@ -187,6 +188,7 @@ class Book { ... }
 The `@Table` annotation can do more than just specify a name:
 
 .`@Table` annotation members
+[cols=",8"]
 |===
 | Annotation member | Purpose
 
@@ -208,6 +210,7 @@ It's usually better to set the configuration properties `hibernate.default_schem
 The `@SecondaryTable` annotation is even more interesting:
 
 .`@SecondaryTable` annotation members
+[cols=",8"]
 |===
 | Annotation member | Purpose
 
@@ -228,6 +231,7 @@ To understand this annotation better, we must first discuss column mappings in g
 These annotations specify how elements of the domain model map to columns of tables in the relational model:
 
 .Annotations for mapping columns
+[cols=",5"]
 |===
 | Annotation | Purpose
 
@@ -246,6 +250,7 @@ We use the `@Column` annotation to map basic attributes.
 The `@Column` annotation is not only useful for specifying the column name.
 
 .`@Column` annotation members
+[cols=",8"]
 |===
 | Annotation member | Purpose
 
@@ -299,6 +304,7 @@ We don't use `@Column` to map associations.
 The `@JoinColumn` annotation is used to customize a foreign key column.
 
 .`@JoinColumn` annotation members
+[cols=",8"]
 |===
 | Annotation member | Purpose
 
@@ -346,6 +352,7 @@ The `@PrimaryKeyJoinColumn` is a special-purpose annotation for mapping:
 - the primary key column of the primary table mapped by a subclass in a `JOINED` inheritance hierarchy&mdash;which is also a foreign key referencing the primary table mapped by the root entity.
 
 .`@PrimaryKeyJoinColumn` annotation members
+[cols=",8"]
 |===
 | Annotation member | Purpose
 
@@ -386,4 +393,74 @@ class Book {
     ...
 }
 ----
+
+[[column-lengths]]
+=== Column lengths and adaptive column types
+
+Hibernate automatically adjusts the column type used in generated DDL based on the column length specified by the `@Column` annotation.
+So we don't usually need to explicitly specify that a column should be of type `TEXT` or `CLOB`&mdash;or worry about the parade of `TINYTEXT`, `MEDIUMTEXT`, `TEXT`, `LONGTEXT` types on MySQL&mdash;because Hibernate will automatically select one of those types if required to accommodate a string of the `length` we specify.
+
+The constant values defined in the class `org.hibernate.Length` are very helpful here:
+
+.Predefined column lengths
+[cols=",,8"]
+|===
+| Constant | Value | Description
+
+| `DEFAULT` | 255 | The default length of a `VARCHAR` or `VARBINARY` column when none is explicitly specified
+| `LONG` | 32600 | The largest column length for a `VARCHAR` or `VARBINARY` that is allowed on every database Hibernate supports
+| `LONG16` | 32767 | The maximum length that can be represented using 16 bits (but this length is too large for a `VARCHAR` or `VARBINARY` column on for some database)
+| `LONG32` | 2147483647 | The maximum length for a Java string
+|===
+
+We can use these constants in the `@Column` annotation:
+
+[source,java]
+----
+@Column(length=LONG)
+String text;
+
+@Column(length=LONG32)
+byte[] binaryData;
+----
+
+This is usually all you need to do to make use of large object types in Hibernate.
+
+[[lobs]]
+=== LOBs
+
+JPA provides a `@Lob` annotation which specifies that a field should be persisted as a `BLOB` or `CLOB`.
+
+[NOTE]
+.Semantics of the `@Lob` amnotation
+====
+What the spec actually says is that the field should be persisted
+
+> as a large object to a database-supported large object type.
+
+It's quite unclear what this means, and the spec goes on to say that
+
+> the treatment of the `Lob` annotation is provider-dependent
+
+which doesn't help much.
+====
+
+Hibernate interprets this annotation in what we think is the most reasonable way.
+In Hibernate, an attribute annotated `@Lob` will be written to JDBC using the `setClob()` or `setBlob()` method of `PreparedStatement`, and will be read from JDBC using the `getClob()` or `getBlob()` method of `ResultSet`.
+
+Now, the use of these JDBC methods is usually unnecessary!
+JDBC drivers are perfectly capable of converting between `String` and `CLOB` or between `byte[]` and `BLOB`.
+So unless you specifically need to use these JDBC LOB APIs, you _don't_ need the `@Lob` annotation.
+
+Instead, as we just saw in <<column-lengths>>, all you need is to specify a large enough column `length` to accommodate the data you plan to write to that column.
+
+[WARNING]
+.PostgreSQL `BYTEA` and `TEXT`
+====
+Unfortunately, the driver for PostgreSQL does not allow `BYTEA` or `TEXT` columns to be read via the JDBC LOB APIs.
+
+This limitation of the Postgres driver has resulted in a whole cottage industry of bloggers and stackoverflow question-answerers recommending convoluted ways to hack the Hibernate `Dialect` for Postgres to allow an attribute annotated `@Lob` to be written using `setString()` and read using `getString()`.
+
+But _simply removing the `@Lob` annotation has exactly the same effect!_
+====
 

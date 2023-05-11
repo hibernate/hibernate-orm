@@ -6820,15 +6820,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 
-		inListPredicate.getTestExpression().accept( this );
-		if ( inListPredicate.isNegated() ) {
-			appendSql( " not" );
-		}
-		appendSql( " in (" );
-		String separator = NO_SEPARATOR;
-
 		int bindValueCount = listExpressions.size();
-		int bindValueMaxCount = bindValueCount;
+		int bindValueCountWithPadding = bindValueCount;
 
 		int inExprLimit = dialect.getInExpressionCountLimit();
 
@@ -6837,68 +6830,72 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				&& bindValueCount > 2;
 
 		if ( inClauseParameterPaddingEnabled ) {
-			bindValueMaxCount = calculateLastInClauseSize( bindValueCount, inExprLimit );
+			bindValueCountWithPadding = addPadding( bindValueCount, inExprLimit );
 		}
+		final boolean splitInClause = inExprLimit > 0 && bindValueCountWithPadding > inExprLimit;
+
+		if ( splitInClause ) {
+			appendSql( OPEN_PARENTHESIS );
+		}
+
+		inListPredicate.getTestExpression().accept( this );
+		if ( inListPredicate.isNegated() ) {
+			appendSql( " not" );
+		}
+		appendSql( " in (" );
+		String separator = NO_SEPARATOR;
 
 		final Iterator<Expression> iterator = listExpressions.iterator();
-		int itemNumber = 0;
-		while ( iterator.hasNext() && ( inExprLimit == 0 || itemNumber < inExprLimit ) ) {
-			final Expression listExpression = itemAccessor.apply( iterator.next() );
+		Expression expression = null;
+		for ( int i = 0; i < bindValueCountWithPadding; i++ ) {
+			if ( inExprLimit > 0 && i % inExprLimit == 0 && i != 0 ) {
+				appendInClauseSeperator( inListPredicate );
+				separator = NO_SEPARATOR;
+			}
+
+			if ( iterator.hasNext() ) { // If the iterator is exhausted, reuse the last expression for padding.
+				expression = itemAccessor.apply( iterator.next() );
+			}
 			appendSql( separator );
-			listExpression.accept( this );
+			expression.accept( this );
 			separator = COMA_SEPARATOR;
-			itemNumber++;
+
 			// If we encounter an expression that is not a parameter or literal, we reset the inExprLimit and bindValueMaxCount
 			// and just render through the in list expressions as they are without padding/splitting
-			if ( !( listExpression instanceof JdbcParameter || listExpression instanceof SqmParameterInterpretation || listExpression instanceof Literal ) ) {
+			if ( !( expression instanceof JdbcParameter || expression instanceof SqmParameterInterpretation || expression instanceof Literal ) ) {
 				inExprLimit = 0;
-				bindValueMaxCount = bindValueCount;
-			}
-		}
-
-		if ( itemNumber != inExprLimit && bindValueCount == bindValueMaxCount ) {
-			appendSql( CLOSE_PARENTHESIS );
-			return;
-		}
-
-		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
-			do {
-				append( ") or " );
-				inListPredicate.getTestExpression().accept( this );
-				if ( inListPredicate.isNegated() ) {
-					appendSql( " not" );
-				}
-				appendSql( " in (" );
-				separator = NO_SEPARATOR;
-				itemNumber = 0;
-				while ( iterator.hasNext() && itemNumber < inExprLimit ) {
-					final Expression listExpression = iterator.next();
-					appendSql( separator );
-					itemAccessor.apply( listExpression ).accept( this );
-					separator = COMA_SEPARATOR;
-					itemNumber++;
-				}
-			} while ( iterator.hasNext() );
-		}
-
-		if ( inClauseParameterPaddingEnabled ) {
-			final Expression lastExpression = itemAccessor.apply( listExpressions.get( listExpressions.size() - 1 ) );
-			for ( ; itemNumber < bindValueMaxCount; itemNumber++ ) {
-				appendSql( separator );
-				lastExpression.accept( this );
-				separator = COMA_SEPARATOR;
+				bindValueCountWithPadding = bindValueCount;
 			}
 		}
 		appendSql( CLOSE_PARENTHESIS );
+
+		if ( splitInClause ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
 	}
 
-	private int calculateLastInClauseSize(int bindValueCount, int inExprLimit) {
+	private void appendInClauseSeperator(InListPredicate inListPredicate) {
+		appendSql( CLOSE_PARENTHESIS );
+		appendSql( inListPredicate.isNegated() ? " and " : " or " );
+		inListPredicate.getTestExpression().accept( this );
+		if ( inListPredicate.isNegated() ) {
+			appendSql( " not" );
+		}
+		appendSql( " in (" );
+	}
+
+	private static int addPadding(int bindValueCount, int inExprLimit) {
 		if ( inExprLimit <= 0 ) {
 			return MathHelper.ceilingPowerOfTwo( bindValueCount );
 		}
+
 		int lastInClauseSize = bindValueCount % inExprLimit;
-		int lastInClauseSizeWithPadding = lastInClauseSize == 0 ? 0 : MathHelper.ceilingPowerOfTwo( lastInClauseSize );
-		return Math.min( inExprLimit, lastInClauseSizeWithPadding );
+		if ( lastInClauseSize == 0 ) {
+			return bindValueCount;
+		}
+		int lastInClauseSizeWithPadding = Math.min( inExprLimit, MathHelper.ceilingPowerOfTwo( lastInClauseSize ) );
+		int padding = lastInClauseSizeWithPadding - lastInClauseSize;
+		return bindValueCount + padding;
 	}
 
 	@Override

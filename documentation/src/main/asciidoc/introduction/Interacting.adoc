@@ -291,12 +291,10 @@ Hibernate features three complementary ways to write queries:
 - the JPA _criteria query_ API, along with extensions, allowing almost any HQL query to be constructed programmatically via a typesafe API, and, of course
 - for when all else fails, _native SQL_ queries.
 
-We don't need to discuss HQL in detail in this Introduction.
-That's there's already a complete and very up-to-date description of the language in
-the {hql}[User Guide].
-
 [[hql-queries]]
 === HQL queries
+
+The query language is discussed in great detail below in <<query-language>>.
 
 [[criteria-queries]]
 === Criteria queries

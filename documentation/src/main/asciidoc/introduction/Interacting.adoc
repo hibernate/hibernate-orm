@@ -243,6 +243,9 @@ Therefore, a session is considered to be unusable after any of its methods throw
 If you receive an exception from Hibernate, you should immediately close and discard the current session. Open a new session if you need to, but throw the bad one away first.
 ====
 
+[[cascade]]
+=== Cascading persistence operations
+
 [[flush]]
 === Flushing the session
 
@@ -276,3 +279,27 @@ s.setHibernateFlushMode(FlushMode.MANUAL);
 ----
 
 Since flushing is a somewhat expensive operation (the session must dirty-check every entity in the persistence context), setting the flush mode to `COMMIT` can occasionally be a useful optimization.
+
+[[queries]]
+=== Queries
+
+:hql: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#query-language
+
+Hibernate features three complementary ways to write queries:
+
+- the _Hibernate Query Language_, an extremely powerful superset of JPQL, which abstracts most of the features of modern SQL queries,
+- the JPA _criteria query_ API, along with extensions, allowing almost any HQL query to be constructed programmatically via a typesafe API, and, of course
+- for when all else fails, _native SQL_ queries.
+
+We don't need to discuss HQL in detail in this Introduction.
+That's there's already a complete and very up-to-date description of the language in
+the {hql}[User Guide].
+
+[[hql-queries]]
+=== HQL queries
+
+[[criteria-queries]]
+=== Criteria queries
+
+[[native-queries]]
+=== Native SQL queries

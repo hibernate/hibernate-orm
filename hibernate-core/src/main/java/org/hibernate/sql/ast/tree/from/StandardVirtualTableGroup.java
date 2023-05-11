@@ -16,6 +16,8 @@ import org.hibernate.metamodel.mapping.OwnedValuedModelPart;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.spi.NavigablePath;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Christian Beikov
  */
@@ -32,7 +34,7 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 				underlyingTableGroup.canUseInnerJoins(),
 				navigablePath,
 				modelPart,
-				underlyingTableGroup.getSourceAlias(),
+				castNonNull( navigablePath.getRealParent() ).getAlias(),
 				null,
 				null
 		);

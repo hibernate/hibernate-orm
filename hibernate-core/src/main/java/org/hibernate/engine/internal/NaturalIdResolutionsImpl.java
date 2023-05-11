@@ -381,7 +381,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	@Override
-	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean delayToAfterTransactionCompletion) {
 		final NaturalIdMapping naturalIdMapping = entityDescriptor.getNaturalIdMapping();
 		if ( naturalIdMapping == null ) {
 			// nothing to do
@@ -402,7 +402,19 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		final EntityPersister persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 
 		final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalId, persister, session() );
-		cacheAccess.evict( naturalIdCacheKey );
+
+		if (delayToAfterTransactionCompletion) {
+			session().asEventSource().getActionQueue().registerProcess(
+				(success, session) -> {
+					if ( success ) {
+						cacheAccess.evict( naturalIdCacheKey );
+					}
+				}
+			);
+		}
+		else {
+			cacheAccess.evict( naturalIdCacheKey );
+		}
 
 //			if ( sessionCachedNaturalIdValues != null
 //					&& !Arrays.equals( sessionCachedNaturalIdValues, deletedNaturalIdValues ) ) {
@@ -428,7 +440,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			cacheResolution( pk, naturalIdValuesFromCurrentObjectState, persister );
 			stashInvalidNaturalIdReference( persister, cachedNaturalIdValues );
 
-			removeSharedResolution( pk, cachedNaturalIdValues, persister );
+			removeSharedResolution( pk, cachedNaturalIdValues, persister, false );
 		}
 	}
 
@@ -462,11 +474,11 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	/**
-	 * It is only valid to define natural ids at the root of an entity hierarchy.  This method makes sure we are 
+	 * It is only valid to define natural ids at the root of an entity hierarchy.  This method makes sure we are
 	 * using the root persister.
 	 *
 	 * @param persister The persister representing the entity type.
-	 * 
+	 *
 	 * @return The root persister.
 	 */
 	protected EntityPersister locatePersisterForKey(EntityPersister persister) {
@@ -730,7 +742,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			final Resolution cachedNaturalId = new ResolutionImpl( getEntityDescriptor(), naturalIdValues, persistenceContext );
 			pkToNaturalIdMap.put( pk, cachedNaturalId );
 			naturalIdToPkMap.put( cachedNaturalId, pk );
-			
+
 			return true;
 		}
 

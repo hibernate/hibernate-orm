@@ -716,7 +716,7 @@ For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on
 Since Hibernate understand more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
 ====
 
-If a given `JavaType` does not know how to convert its instances to the type required by its partner `JdbcType`, we must help it out by providing a JPA `AttributeConverter` to perform the conversion.
+If a given `JavaType` doesn't know how to convert its instances to the type required by its partner `JdbcType`, we must help it out by providing a JPA `AttributeConverter` to perform the conversion.
 
 For example, to form a basic type using `LongJavaType` and `TimestampJdbcType`, we would provide an `AttributeConverter<Long,Timestamp>`.
 
@@ -732,7 +732,7 @@ Let's abandon our analogy right here, before we start calling this basic type a 
 [[embeddable-objects]]
 === Embeddable objects
 
-An embeddable object is a Java class whose state maps to multiple columns of a table, but which does not itself have a persistent identity.
+An embeddable object is a Java class whose state maps to multiple columns of a table, but which doesn't itself have a persistent identity.
 That is, it's a class with mapped attributes, but no `@Id` attribute.
 
 An embeddable object can only be made persistent by assigning it to the attribute of an entity.
@@ -833,6 +833,12 @@ Let's begin with the most common association multiplicity.
 A many-to-one association is the most basic sort of association we can imagine.
 It maps completely naturally to a foreign key in the database.
 
+[TIP]
+.One-to-many join table mappings
+====
+Later, we'll see how to map a many-to-one association to an <<join-table-mappings,association table>>.
+====
+
 The `@ManyToOne` annotation marks the "one" side of the association, and so a unidirectional many-to-one association looks like this:
 
 [source,java]
@@ -846,6 +852,8 @@ class Book {
     ...
 }
 ----
+
+Here, the `Book` table has a foreign key column holding the identifier of the associated `Publisher`.
 
 [TIP]
 .Almost all associations should be lazy
@@ -889,7 +897,7 @@ That said, it's not a hard requirement to update the unowned side, at least if y
 .Unidirectional `@OneToMany`?
 ====
 In principle Hibernate _does_ allow you to have a unidirectional one to many, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
-In practice, this mapping is unnatural, and does not work very well.
+In practice, this mapping is unnatural, and just doesn't work very well.
 Avoid it.
 ====
 
@@ -925,6 +933,12 @@ In hindsight, we could have done more to make clear that this was always a viabl
 
 The simplest sort of one-to-one association is almost exactly line a `@ManyToOne` association, except that it maps to a foreign key column with a `UNIQUE` constraint.
 
+[TIP]
+.One-to-many join table mappings
+====
+Later, we'll see how to map a many-to-one association to an <<join-table-mappings,association table>>.
+====
+
 A one-to-one association must be annotated `@OneToOne`:
 
 [source,java]
@@ -940,6 +954,8 @@ class Author {
     ...
 }
 ----
+
+Here, the `Author` table has a foreign key column holding the identifier of the associated `Publisher`.
 
 [TIP]
 .One-to-one associations are a way to represent subtyping
@@ -1011,28 +1027,31 @@ class Author {
 
 Notice that the `@Id` attribute is no longer a `@GeneratedValue` and, instead, the `author` association is annotated `@MapsId`.
 This lets Hibernate know that the association to `Person` is the source of primary key values for `Author`.
-That is, that the foreign key column referring to the `Author` table is also the primary key of the `Person` table.
 
-The `Person` class does not change.
+Here, there's no extra foreign key column in the `Author` table, since the `id` column holds the identifier of `Person`.
+That is, the primary key of the `Author` table does double duty as the foreign key referring to the `Person` table.
+
+The `Person` class doesn't change.
 If the association is bidirectional, we annotate the unowned side `@OneToOne(mappedBy = "person")` just as before.
 
 [[many-to-many]]
 === Many-to-many
 
 A unidirectional many-to-many association is represented as a collection-valued attribute.
-It maps to a separate _association table_ in the database.
+It always maps to a separate _association table_ in the database.
 
 A many-to-many association must be annotated `@ManyToMany`:
 
 [source,java]
 ----
+@Entity
 class Book {
     @Id @GeneratedValue
     Long id;
-    
+
     @ManyToMany
     Set<Author> authors;
-    
+
     ...
 }
 ----
@@ -1041,6 +1060,7 @@ If the association is bidirectional, we add a very similar-looking attribute to 
 
 [source,java]
 ----
+@Entity
 class Book {
     @Id @GeneratedValue
     Long id;
@@ -1130,7 +1150,7 @@ And from this point of view, SQL arrays look quite attractive, at least for cert
 If we're comfortable mapping `byte[]` to `VARBINARY(255)`, why would we shy away from mapping `DayOfWeek[]` to `TINYINT ARRAY[7]`?
 ====
 
-Unfortunately, JPA does not define a standard way to map SQL arrays, but here's how we can do it in Hibernate:
+Unfortunately, JPA doesn't define a standard way to map SQL arrays, but here's how we can do it in Hibernate:
 
 [source, java]
 ----

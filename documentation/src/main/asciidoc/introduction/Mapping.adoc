@@ -151,7 +151,7 @@ is a bad idea, since it's impossible to create a foreign key constraint that tar
 // However, it's possible to emulate a mix of `SINGLE_TABLE` and `JOINED` inheritance using the `@SecondaryTable` annotation.
 
 [[table-mappings]]
-=== Mapping entities to tables
+=== Mapping to tables
 
 The following annotations specify exactly how elements of the domain model map to tables of the relational model:
 
@@ -162,9 +162,14 @@ The following annotations specify exactly how elements of the domain model map t
 
 | `@Table` | Map an entity class to its primary table
 | `@SecondaryTable` | Define a secondary table for an entity class
-| `@JoinTable` | Map a many-to-many association to its association table
+| `@JoinTable` | Map a many-to-many or many-to-one association to its association table
 | `@CollectionTable` | Map an `@ElementCollection` to its table
 |===
+
+The first two annotations are used to map an entity to its _primary table_ and, optionally, one or more _secondary tables_.
+
+[[entity-table-mappings]]
+=== Mapping entities to tables
 
 By default, an entity maps to a single table, which may be specified using `@Table`:
 
@@ -200,12 +205,16 @@ The `@Table` annotation can do more than just specify a name:
 |===
 
 [TIP]
-.Don't hardcode the schema and catalog
+.If you don't need to, don't hardcode the schema and catalog
 ====
-It's very often a bad idea to hardcode the schema and catalog in a `@Table` annotation.
-It's usually better to set the configuration properties `hibernate.default_schema` and `hibernate.default_catalog`, or simply ensure that your JDBC connection URL specifies the schema and catalog.
-====
+It only makes sense to explicitly specify the `schema` in annotations if the domain model is spread across multiple schemas.
 
+Otherwise, it's a bad idea to hardcode the schema (or catalog) in a `@Table` annotation.
+Instead:
+
+- set the configuration property `hibernate.default_schema` (or `hibernate.default_catalog`), or
+- simply specify the schema in the JDBC connection URL.
+====
 
 The `@SecondaryTable` annotation is even more interesting:
 
@@ -223,7 +232,67 @@ The `@SecondaryTable` annotation is even more interesting:
 | `foreignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``@PrimaryKeyJoinColumn``s
 |===
 
-To understand this annotation better, we must first discuss column mappings in general.
+[[join-table-mappings]]
+=== Mapping associations to tables
+
+The `@JoinTable` annotation specifies an _association table_, that is, a table holding foreign keys of both associated entities.
+This annotation is usually used with `@ManyToMany` associations:
+
+[source,java]
+----
+@Entity
+class Book {
+    ...
+    @ManyToMany
+    @JoinTable(name="BooksAuthors")
+    Set<Author> authors;
+    ...
+}
+----
+
+But it's even possible to use it to map a `@ManyToOne` or `@OneToOne` association to an association table.
+
+[source,java]
+----
+@Entity
+class Book {
+    ...
+    @ManyToOne(fetch=LAZY)
+    @JoinTable(name="BookPublisher")
+    Publisher publisher;
+    ...
+}
+----
+
+[source,java]
+----
+@Entity
+class Author {
+    ...
+    @OneToOne(optional=false, fetch=LAZY)
+    @JoinTable(name="AuthorPerson")
+    Person author;
+    ...
+}
+----
+
+.`@JoinTable` annotation members
+[cols=",8"]
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped association table
+| `schema` 💀 | The schema to which the table belongs
+| `catalog` 💀 | The catalog to which the table belongs
+| `uniqueConstraints` | One or more `@UniqueConstraint` annotations declaring multi-column unique constraints
+| `indexes` | One or more `@Index` annotations each declaring an index
+| `joinColumns` | One or more `@JoinColumn` annotations, specifying <<join-column-mappings,foreign key column mappings>> to the table of the owning side
+| `inverseJoinColumns` | One or more `@JoinColumn` annotations, specifying <<join-column-mappings,foreign key column mappings>> to the table of the unowned side
+| `foreignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``joinColumns``s
+| `inverseForeignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``inverseJoinColumns``s
+|===
+
+To better understand these annotations, we must first discuss column mappings in general.
 
 [[column-mappings]]
 === Mapping to columns
@@ -343,6 +412,24 @@ If you don't supply a name explicitly, Hibernate will generate a quite ugly name
 To be fair, this is perfectly fine if you're only using the generated DDL for testing.
 ====
 
+For associations mapped to a `@JoinTable`, fetching the association requires two joins, and so we must declare the ``@JoinColumn``s inside the `@JoinTable` annotation:
+
+[source,java]
+----
+@Entity
+class Book {
+    @Id @GeneratedValue
+    Long id;
+
+    @ManyToMany
+    @JoinTable(joinColumns=@JoinColumn(name="bookId"),
+               inverseJoinColumns=@joinColumn(name="authorId"))
+    Set<Author> authors;
+
+    ...
+}
+----
+
 [[primary-key-column-mappings]]
 === Mapping primary key joins between tables
 
@@ -457,10 +544,10 @@ Instead, as we just saw in <<column-lengths>>, all you need is to specify a larg
 [WARNING]
 .PostgreSQL `BYTEA` and `TEXT`
 ====
-Unfortunately, the driver for PostgreSQL does not allow `BYTEA` or `TEXT` columns to be read via the JDBC LOB APIs.
+Unfortunately, the driver for PostgreSQL doesn't allow `BYTEA` or `TEXT` columns to be read via the JDBC LOB APIs.
 
 This limitation of the Postgres driver has resulted in a whole cottage industry of bloggers and stackoverflow question-answerers recommending convoluted ways to hack the Hibernate `Dialect` for Postgres to allow an attribute annotated `@Lob` to be written using `setString()` and read using `getString()`.
 
-But _simply removing the `@Lob` annotation has exactly the same effect!_
+But simply removing the `@Lob` annotation has exactly the same effect.
 ====
 

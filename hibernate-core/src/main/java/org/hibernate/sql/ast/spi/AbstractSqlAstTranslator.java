@@ -2865,7 +2865,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( currentQueryPart != null && queryPartForRowNumberingClauseDepth != clauseStack.depth() ) {
 				this.queryPartForRowNumbering = null;
 				this.queryPartForRowNumberingClauseDepth = -1;
-				this.needsSelectAliases = false;
+				// If explicit column aliases were defined we should still use them when rendering the select clause
+				this.needsSelectAliases = columnAliases != null;
 			}
 			// If we are row numbering the current query group, this means that we can't render the
 			// order by and offset fetch clause, so we must do row counting on the query group level

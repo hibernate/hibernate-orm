@@ -1892,8 +1892,9 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = OracleDialect.class)
-	@SkipForDialect(dialectClass = MariaDBDialect.class)
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "HHH-16576")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "HHH-16576")
+	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 5, reason = "HHH-16576")
 	public void testMaxOverUnion(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

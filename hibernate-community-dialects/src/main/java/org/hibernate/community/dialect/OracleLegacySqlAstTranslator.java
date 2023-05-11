@@ -433,10 +433,45 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				rhs.accept( this );
 				appendSql( ')' );
 				break;
+			case SqlTypes.ARRAY:
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "decode(" );
+						arrayToString( lhs );
+						appendSql( ',' );
+						arrayToString( rhs );
+						appendSql( ",0,1)=1" );
+						break;
+					case NOT_DISTINCT_FROM:
+						appendSql( "decode(" );
+						arrayToString( lhs );
+						appendSql( ',' );
+						arrayToString( rhs );
+						appendSql( ",0,1)=0" );
+						break;
+					default:
+						arrayToString( lhs );
+						appendSql( operator.sqlText() );
+						arrayToString( rhs );
+				}
+				break;
 			default:
 				renderComparisonEmulateDecode( lhs, operator, rhs );
 				break;
 		}
+	}
+
+	private void arrayToString(Expression expression) {
+		appendSql("case when ");
+		expression.accept( this );
+		appendSql(" is not null then (select listagg(column_value||',')");
+		if ( !getDialect().getVersion().isSameOrAfter( 18 ) ) {
+			// The within group clause became optional in 18
+			appendSql(" within group(order by rownum)");
+		}
+		appendSql("||';' from table(");
+		expression.accept( this );
+		appendSql(")) else null end");
 	}
 
 	@Override

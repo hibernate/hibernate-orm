@@ -50,11 +50,11 @@ It quickly overtook other open source and commercial contenders to become the mo
 
 In 2004, Gavin and Christian joined a tiny startup called JBoss, and other early Hibernate contributors soon followed: Max Rydahl Andersen, Emmanuel Bernard, Steve Ebersole, and Sanne Grinovero.
 
-Soon after, Gavin joined the EJB 3 expert group and convinced the group to deprecate Entity Beans in favor of brand new persistence API modelled after Hibernate.
+Soon after, Gavin joined the EJB 3 expert group and convinced the group to deprecate Entity Beans in favor of a brand-new persistence API modelled after Hibernate.
 Later, members of the TopLink team got involved, and the Java Persistence API evolved as a collaboration between&mdash;primarily&mdash;Sun, JBoss, Oracle, and Sybase, under the leadership of Linda Demichiel.
 
-Over the intervening two decades, _many_ other talented people have contributed to the development of Hibernate.
-Special credit must go to Steve, who has led the project for many years, since Gavin stepped back to focus in other work.
+Over the intervening two decades, _many_ talented people have contributed to the development of Hibernate.
+We're all especially grateful to Steve, who has led the project for many years, since Gavin stepped back to focus in other work.
 ====
 
 We can think of the API of Hibernate in terms of three basic elements:
@@ -78,6 +78,40 @@ JPA is a great baseline that really nails the basics of the object/relational ma
 But without the native APIs, and extended mapping annotations, you miss out on much of the power of Hibernate.
 ====
 
+[[java-code]]
+=== Writing Java code with Hibernate
+
+If you're completely new to Hibernate and JPA, you might already be wondering how the persistence-related code is structured, and how it fits into the rest of your program.
+
+Well, typically, your persistence-related code comes in two layers:
+
+. a representation of your data model in Java, which takes the form of a set of annotated entity classes, and
+. a larger number of functions which interact with Hibernate's APIs to perform the persistence operations associated with your various transactions.
+
+The first part, the data or "domain" model, is usually easier to write, but doing a great and very clean job of it will strongly affect your success in the second part.
+
+Most people implement the domain model as a set of what we used to call "Plain Old Java Objects", that is, as simple Java classes with no direct dependencies on technical infrastructure, nor on application logic which deals with request processing, transaction management, communications, or interaction with the database.
+
+[TIP]
+====
+Take your time with this code, and try to produce a Java model that's as close as reasonable to the relational data model. Avoid using exotic or advanced mapping features when they're not really needed.
+When in the slightest doubt, map a foreign key relationship using `@ManyToOne` with `@OneToMany(mappedBy=...)` in preference to more complicated association mappings.
+====
+
+The second part of the code is much trickier to get right. This code must:
+
+- manage transactions and sessions,
+- interact with the database via the Hibernate session,
+- fetch and prepare data needed by the UI, and
+- handle failures.
+
+[TIP]
+====
+Some responsibility for transaction and session management, and for
+recovery from certain kinds of failure, can be best handled in some sort
+of framework code.
+====
+
 [[overview]]
 === Overview
 
@@ -94,4 +128,4 @@ Naturally, we'll start at the top of this list, with the least-interesting topic
 include::Configuration.adoc[]
 include::Entities.adoc[]
 include::Mapping.adoc[]
-
+include::Tuning.adoc[]

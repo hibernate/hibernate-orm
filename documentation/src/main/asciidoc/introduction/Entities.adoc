@@ -927,7 +927,7 @@ Collection<Book> books;
 [NOTE]
 .`Set`, `List`, or `Collection`?
 ====
-A one to many association mapped to a foreign key can never contain duplicate elements, so `Set` seems like the most semantically correct Java collection type to use here, and so that's the conventional practice in the Hibernate community.
+A one-to-many association mapped to a foreign key can never contain duplicate elements, so `Set` seems like the most semantically correct Java collection type to use here, and so that's the conventional practice in the Hibernate community.
 
 The catch associated with using a set is that we must carefully ensure that `Book` has a high-quality implementation of <<equals-and-hash>>.
 Now, that's not necessarily a bad thing, since a quality `equals()` is independently useful.

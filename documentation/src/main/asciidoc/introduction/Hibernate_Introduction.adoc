@@ -63,6 +63,8 @@ We can think of the API of Hibernate in terms of three basic elements:
 - a _native API_ exposing the full set of available functionality, centered around the interfaces `SessionFactory`, which extends `EntityManagerFactory`, and `Session`, which extends `EntityManager`, and
 - a set of _mapping annotations_ which augment the O/R mapping annotations defined by JPA, and which may be used with the JPA-defined interfaces, or with the native API.
 
+image::images/api-overview.png[width=700,align="center"]
+
 As an application developer, you must decide whether to:
 
 - write your program in terms of `Session` and `SessionFactory`, or
@@ -174,7 +176,7 @@ If these repository frameworks offered anything actually _useful_—and not obvi
 .Encoding a query language in method naming conventions
 ====
 One thing that some repository frameworks offer is the ability to declare an abstract method that queries the database, and have the framework fill in an implementation of the method.
-But the way this works is that you must encode your query into the name of the method itself, resulting in stuff like:
+But the way this works is that you must encode your query into the name of the method itself, which leads to stuff like:
 
     findFirst10ByOrderDistinctPeopleByLastnameOrFirstnameAsc
 

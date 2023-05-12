@@ -24,14 +24,16 @@ The four basic ways to obtain an instance of Hibernate are shown in the followin
 
 Here we'll focus on the first two options.
 
-[NOTE]
+:hibernate-quarkus: https://quarkus.io/guides/hibernate-orm
+
 .Hibernate in containers
-====
-The last option is extremely popular, since every major Java application server and microservice framework comes with built-in support for Hibernate.
+****
+Actually, the last option is extremely popular, since every major Java application server and microservice framework comes with built-in support for Hibernate.
 Such container environments typically also feature facilities to automatically manage the lifecycle of an `EntityManager` or `Session` and its association with container-managed transactions.
 
 To learn how to configure Hibernate in such a container environment, you'll need to refer to the documentation of your chosen container.
-====
+For Quarkus, here's the {hibernate-quarkus}[relevant documentation].
+****
 
 If you're using Hibernate outside of a container environment,
 you'll need to:

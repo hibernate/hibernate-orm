@@ -372,7 +372,11 @@ Hibernate features three complementary ways to write queries:
 [[hql-queries]]
 === HQL queries
 
-The query language is discussed in great detail below in <<query-language>>.
+:hql: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#query-language
+
+A full discussion of the query language would require just as much text as the rest of this Introduction.
+Fortunately, HQL is already described in exhaustive detail in the {hql}[User Guide].
+// The query language is discussed in great detail below in <<query-language>>.
 
 Here we want to see how to execute a query via the `Session` or `EntityManager` API.
 The method we call depends on what kind of query it is:

@@ -115,7 +115,7 @@ You can find much more information about association fetching in the
 {association-fetching}[User Guide].
 
 [[second-level-cache]]
-=== Enabling the second-level cache
+=== The second-level cache
 
 :second-level-cache: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#caching
 
@@ -128,16 +128,9 @@ By nature, a second-level cache tends to undermine the ACID properties of transa
 ====
 Therefore, by default, an entity is not eligible for storage in the second-level cache.
 We must explicitly mark each entity that will  be stored in the second-level cache with the `@Cache` annotation from `org.hibernate.annotations`.
+
+But that's still not enough: Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
 ====
-
-For example:
-
-[source,java]
-----
-@Cache(usage=NONSTRICT_READ_WRITE, region="Publishers")
-@Entity
-class Publisher { ... }
-----
 
 Hibernate segments the second-level cache into named _regions_, one for each:
 
@@ -146,13 +139,27 @@ Hibernate segments the second-level cache into named _regions_, one for each:
 
 Each region is permitted its own policies for expiry, persistence, and replication. These policies must be configured externally to Hibernate.
 
-An entity hierarchy or collection role may be explicitly assigned a region using the `@Cache` annotation, but, by default, the region name is just the name of the entity class or collection role.
-
 The appropriate policies depend on the kind of data an entity represents. For example, a program might have different caching policies for "reference" data, for transactional data, and for data used for analytics. Ordinarily, the implementation of those policies is the responsibility of the underlying cache implementation.
 
-The `@Cache` annotation also specifies `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
+[[enable-second-level-cache]]
+=== Specifying which data is cached
 
-.Cache concurrency policies
+By default, no data is eligible for storage in the second-level cache.
+
+An entity hierarchy or collection role may be assigned a region using the `@Cache` annotation.
+If no region name is explicitly specified, the region name is just the name of the entity class or collection role.
+
+[source,java]
+----
+@Entity
+@Cache(usage=NONSTRICT_READ_WRITE, region="Publishers")
+class Publisher { ... }
+----
+
+The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
+
+.Cache concurrency
+[cols=",2,3"]
 |===
 | Concurrency policy | Interpretation | Use case
 
@@ -174,7 +181,41 @@ Unfortunately, it's almost useless to us, since:
 - it may not be used to annotate associations, and so we can't even use it to mark collection roles as eligible for storage in the second-level cache.
 ====
 
-Once we've marked some entities and collection as eligible for storage in the second-level cache, we still need to set up an actual cache.
+If our entity has a <<natural-id-attributes,natural id>>, we can enable an additional cache, which holds a mapping from natural id to id, by annotating the entity `@NaturalIdCache`.
+By default, the natural id cache is stored in a dedicated region of the second-level cache, separate from the cached entity data.
+
+[source,java]
+----
+@Entity
+@Cache(usage=READ_WRITE, region="Book")
+@NaturalIdCache(region="BookIsbn")
+class Book {
+    ...
+    @NaturalId
+    String isbn;
+
+    @NaturalId
+    int printing;
+    ...
+}
+----
+
+This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs lookup by natural id:
+
+- `bySimpleNaturalId()` if just one attribute is annotation `@NaturalId`, or
+- `byNaturalId()` if multiple attributes are annotated `@NaturalId`.
+
+[source,java]
+----
+Book book = s.byNaturalId().using("isbn", isbn, "printing", printing).load();
+----
+
+[NOTE]
+====
+Since the natural id cache doesn't contain the actual state of the entity, it doesn't make sense to annotate an entity `@NaturalIdCache` unless it is already eligible for storage in the second-level cache, that is, unless it's also annotated `@Cache`.
+====
+
+Once we've marked an entity or collection as eligible for storage in the second-level cache, we still need to set up an actual cache.
 
 [[second-level-cache-configuration]]
 === Configuring the second-level cache provider

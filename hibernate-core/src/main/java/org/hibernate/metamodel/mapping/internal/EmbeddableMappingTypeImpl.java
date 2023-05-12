@@ -166,8 +166,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
 				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
-				creationContext.getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
-				false
+				creationContext.getServiceRegistry().getService( ConfigurationService.class ).getSettings()
 		);
 		final AggregateColumn aggregateColumn = bootDescriptor.getAggregateColumn();
 		if ( aggregateColumn != null ) {

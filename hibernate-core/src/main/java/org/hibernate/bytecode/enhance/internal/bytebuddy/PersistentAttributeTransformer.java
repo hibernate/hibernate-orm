@@ -103,6 +103,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		this.enhancedFields = enhancedFields;
 	}
 
+	public static class PersistentAttributeDescriptor {
+
+	}
+
 	public static PersistentAttributeTransformer collectPersistentFields(
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,

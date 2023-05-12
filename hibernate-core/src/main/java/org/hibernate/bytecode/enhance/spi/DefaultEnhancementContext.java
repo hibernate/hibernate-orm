@@ -23,6 +23,9 @@ import jakarta.persistence.Transient;
  */
 public class DefaultEnhancementContext implements EnhancementContext {
 
+	public DefaultEnhancementContext() {
+	}
+
 	/**
 	 * @return the classloader for this class
 	 */

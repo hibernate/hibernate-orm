@@ -23,6 +23,10 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.Transient;
 
 import org.hibernate.Version;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ClassDetails;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelProcessingContext;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceLogging;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl.ModelProcessingContextImpl;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
@@ -93,6 +97,7 @@ public class EnhancerImpl implements Enhancer {
 
 	private final EnhancerClassFileLocator classFileLocator;
 	private final TypePool typePool;
+	private final ModelProcessingContextImpl modelProcessingContext;
 
 	/**
 	 * Extract the following constants so that enhancement on large projects
@@ -127,6 +132,11 @@ public class EnhancerImpl implements Enhancer {
 		this.byteBuddyState = byteBuddyState;
 		this.classFileLocator = new EnhancerClassFileLocator( enhancementContext.getLoadingClassLoader() );
 		this.typePool = buildTypePool( classFileLocator );
+
+		this.modelProcessingContext = new ModelProcessingContextImpl(
+				typePool,
+				enhancementContext
+		);
 	}
 
 	/**
@@ -180,6 +190,11 @@ public class EnhancerImpl implements Enhancer {
 		}
 
 		builder = builder.annotateType( HIBERNATE_VERSION_ANNOTATION );
+
+		final ClassDetails classDetails = modelProcessingContext.getClassDetailsRegistry().resolveClassDetails(
+				managedCtClass.getName(),
+				managedCtClass
+		);
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
@@ -585,8 +600,7 @@ public class EnhancerImpl implements Enhancer {
 		}
 	}
 
-	private static class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
-
+	public static class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
 		// The name of the class to (possibly be) transformed.
 		private String className;
 		// The explicitly resolved Resolution for the class to (possibly be) transformed.
@@ -597,13 +611,15 @@ public class EnhancerImpl implements Enhancer {
 		 *
 		 * @param classLoader The class loader to query which must not be the bootstrap class loader, i.e. {@code null}.
 		 */
-		protected EnhancerClassFileLocator(ClassLoader classLoader) {
+		public EnhancerClassFileLocator(ClassLoader classLoader) {
 			super( classLoader );
 		}
 
 		@Override
 		public Resolution locate(String className) throws IOException {
-			assert className != null;
+			if ( ModelSourceLogging.MODEL_SOURCE_TRACE_ENABLED ) {
+				ModelSourceLogging.MODEL_SOURCE_LOGGER.tracef( "EnhancerClassFileLocator#locate%s)", className );
+			}
 			if ( className.equals( this.className ) ) {
 				return resolution;
 			}

@@ -296,8 +296,192 @@ Hibernate features three complementary ways to write queries:
 
 The query language is discussed in great detail below in <<query-language>>.
 
+Here we want to see how to execute a query via the `Session` or `EntityManager` API.
+The method we call depends on what kind of query it is:
+
+- _selection queries_ return a result list, but do not modify the data, but
+- _mutation queries_ modify data, and return the number of modified rows.
+
+Selection queries usually start with the keyword `select` or `from`, whereas mutation queries begin with the keyword `insert`, `update`, or `delete`.
+
+.Executing HQL
+|===
+| Kind of query | `Session` method | `EntityManager` method | `Query` execution method
+
+| Selection query | `createSelectionQuery(String,Class)` | `createQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation query | `createMutationQuery(String)` | `createQuery(String,Class)` | `executeUpdate()`
+|===
+
+So for the `Session` API we would write:
+
+[source,java]
+----
+List<Book> matchingBooks =
+        s.createSelectionQuery("from Book where title like :titleSearchPattern", Book.class)
+         .setParameter("titleSearchPattern", titleSearchPattern)
+         .getResultList();
+----
+
+Or, if we're sticking to the JPA-standard APIs:
+
+[source,java]
+----
+List<Book> matchingBooks =
+        s.createQuery("from Book where title like :titleSearchPattern", Book.class)
+         .setParameter("titleSearchPattern", titleSearchPattern)
+         .getResultList();
+----
+
+The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed a mutation query.
+
+In the query above, `:titleSearchPattern` is called a _named parameter_.
+We may also identify parameters by a number.
+These are called _ordinal parameters_.
+
+[source,java]
+----
+List<Book> matchingBooks =
+        s.createSelectionQuery("from Book where title like ?1", Book.class)
+         .setParameter(1, titleSearchPattern)
+         .getResultList();
+----
+
+When a query has multiple parameters, named parameters tend to be easier to read, even if slightly more verbose.
+
+[IMPORTANT]
+.Using parameters to avoid injection attacks
+====
+_Never_ concatenate user input with HQL and pass the concatenated string to `createSelectionQuery()`.
+This would open up the possibility for an attacker to execute arbitrary code on your database server.
+====
+
+If we're expecting a query to return a single result, we can use `getSingleResult()`.
+
+[source,java]
+----
+Book book =
+        s.createSelectionQuery("from Book where isbn = ?1", Book.class)
+         .setParameter(1, isbn)
+         .getSingleResult();
+----
+
+Or, if we're expecting it to return at most one result, we can use `getSingleResultOrNull()`.
+
+[source,java]
+----
+Book bookOrNull =
+        s.createSelectionQuery("from Book where isbn = ?1", Book.class)
+         .setParameter(1, isbn)
+         .getSingleResult();
+----
+
+Occasionally we need to build a query at runtime, from a set of optional conditions.
+For this, JPA offers an API which allows programmatic construction of a query.
+
+[NOTE]
+.HQL is implemented in terms of criteria queries
+====
+Actually, in Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
+This ensures that the semantics of HQL and criteria queries are identical.
+====
+
 [[criteria-queries]]
 === Criteria queries
 
+Imagine we're implementing some sort of search screen, where the user of our system is offered several different ways to constrain the query result set.
+For example, we might let them search for books by title and/or the author name.
+Of course, we could construct a HQL query by string concatenation, but this is a bit fragile, so it's quite nice to have an alternative.
+
+First we need an object for building criteria queries.
+Using the JPA-standard APIs, this would be a `CriteriaBuilder`, and we get it from the `EntityManagerFactory`:
+
+[source,java]
+----
+CriteriaBuilder cb = emf.getCriteriaBuilder();
+----
+
+But if we have a `SessionFactory`, we get something much better, a `HibernateCriteriaBuilder`:
+
+[source,java]
+----
+HibernateCriteriaBuilder cb = sf.getCriteriaBuilder();
+----
+
+The `HibernateCriteriaBuilder` extends `CriteriaBuilder` and adds many operations that JPQL doesn't have.
+
+[TIP]
+.Getting a `HibernateCriteriaBuilder` in JPA
+====
+If you're using `EntityManagerFactory`, don't despair, you have two perfectly good ways to obtain the `HibernateCriteriaBuilder` associated with that factory.
+Either:
+
+[source,java]
+----
+HibernateCriteriaBuilder cb = emf.unwrap(SessionFactory.class).getCriteriaBuilder();
+----
+
+Or simply:
+
+[source,java]
+----
+HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) emf.getCriteriaBuilder();
+----
+====
+
+We're ready to create a criteria query.
+
+[source,java]
+----
+CriteriaQuery<Book> query = cb.createQuery(Book.class);
+Root<Book> book = query.from(Book.class);
+Predicate where = conjunction();
+if (titlePattern != null) {
+    where = cb.and(where, cb.like(book.get(Book_.title), titlePattern));
+}
+if (namePattern != null) {
+    Join<Book,Author> author = book.join(Book_.author);
+    where = cb.and(where, cb.like(author.get(Author_.name), namePattern));
+}
+query.select(book).where(where)
+    .orderBy(cb.asc(book.get(Book_.title)));
+----
+
+:generator: https://hibernate.org/orm/tooling/
+:generator-guide: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#tooling-modelgen
+
+Here, the classes `Book_` and `Author_` are classes generated by Hibernate's {generator}[JPA Metamodel Generator], which is documented in the {generator-guide}[User Guide].
+
+[NOTE]
+.Injection attacks and criteria queries
+====
+Notice that we did not bother treating `titlePattern` and `namePattern` as parameters.
+That's safe because, _by default_, Hibernate automatically and transparently handles any literal string passed to the `CriteriaBuilder` as a JDBC parameter.
+
+But this behavior is controlled by the configuration setting `hibernate.criteria.value_handling_mode`.
+If you change the default behavior, and set the property to `INLINE` instead of `BIND`, you _must_ pass user-input via a JPA `ParameterExpression`.
+====
+
+Execution of a criteria query works almost exactly like execution of HQL.
+
+.Executing criteria queries
+|===
+| Kind of query | `Session` method | `EntityManager` method | `Query` execution method
+
+| Selection query | `createSelectionQuery(CriteriaQuery)` | `createQuery(CriteriaQuery)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation query | `createMutationQuery(CriteriaUpdate)` or `createMutationQuery(CriteriaDelte)` | `createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelte)` | `executeUpdate()`
+|===
+
+For example:
+
+[source,java]
+----
+List<Book> matchingBooks =
+        s.createSelectionQuery(query)
+         .getResultList();
+----
+
+When all else fails, and sometimes even before that, we're left with the option of writing a query in SQL.
+
 [[native-queries]]
 === Native SQL queries
+

@@ -243,7 +243,7 @@ Values are generated using a database sequence defined as follows:
 create sequence seq_book start with 5 increment by 10
 ----
 
-[IMPORTANT]
+[CAUTION]
 // .Check the `initialValue` and `allocationSize`
 ====
 If you let Hibernate export your database schema, the sequence definition will have the right `start with` and `increment` values.

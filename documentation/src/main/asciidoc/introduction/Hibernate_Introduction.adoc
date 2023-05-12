@@ -182,6 +182,7 @@ So there's that.
 
 One thing that some repository frameworks offer is the ability to declare an abstract method that queries the database, and have the framework fill in an implementation of the method.
 But the way this works is that you must encode your query into the name of the method itself.
+
 Which, at least in principle, for a not-very-complicated query, leads to a method name like this:
 
 [.text-center]

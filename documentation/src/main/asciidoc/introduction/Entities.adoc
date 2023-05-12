@@ -483,6 +483,8 @@ Hibernate automatically generates a `UNIQUE` constraint on the columns mapped by
 Consider using the natural id attributes to implement <<equals-and-hash>>.
 ====
 
+The payoff for doing this extra work, as we will see <<enable-second-level-cache,much later>>, is that we can take advantage of optimized natural id lookups that make use of the second-level cache.
+
 Note that even when you've identified a natural key, we still recommend the use of a generated surrogate key in foreign keys, since this makes your data model _much_ easier to change.
 
 [[basic-attributes]]

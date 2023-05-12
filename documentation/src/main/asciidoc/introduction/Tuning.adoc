@@ -349,7 +349,7 @@ The JPA-defined cache modes are:
 |===
 
 [TIP]
-.A good time to `BYPASS` the cache
+// .A good time to `BYPASS` the cache
 ====
 It's a good idea to set the `CacheStoreMode` to `BYPASS` just before running a query which returns a large result set full of data that we don't expect to need again soon.
 This saves work, and prevents the newly-read data from pushing out the previously cached data.

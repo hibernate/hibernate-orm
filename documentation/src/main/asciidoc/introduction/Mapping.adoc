@@ -12,7 +12,7 @@ Usually, _we already have a relational schema_, and we're constructing our domai
 This is called _bottom up_ mapping.
 
 [TIP]
-."Legacy" data
+// ."Legacy" data
 ====
 Developers often refer to a pre-existing relational database as "legacy" data.
 That's perhaps a bad word to use, conjuring images of bad old "legacy apps" written in COBOL or something.
@@ -112,7 +112,7 @@ class Author { ... }
 ----
 
 [TIP]
-.Discriminator columns for `JOINED` inheritance
+// .Discriminator columns for `JOINED` inheritance
 ====
 However, we can add a discriminator column if we like, and in that case the generated SQL for polymorphic queries will be slightly simpler.
 ====
@@ -205,7 +205,7 @@ The `@Table` annotation can do more than just specify a name:
 |===
 
 [TIP]
-.If you don't need to, don't hardcode the schema and catalog
+// .If you don't need to, don't hardcode the schema and catalog
 ====
 It only makes sense to explicitly specify the `schema` in annotations if the domain model is spread across multiple schemas.
 
@@ -340,9 +340,9 @@ The `@Column` annotation is not only useful for specifying the column name.
 |===
 
 [TIP]
-.Use of `columnDefinition` results in unportable DDL
+// .Use of `columnDefinition` results in unportable DDL
 ====
-We no longer recommend the use of `columnDefinition`.
+We no longer recommend the use of `columnDefinition` since it results in unportable DDL.
 Hibernate has much better ways to customize the generated DDL using techniques that result in portable behavior across different databases.
 ====
 
@@ -409,7 +409,7 @@ class Item {
 ----
 
 [TIP]
-.Foreign key constraint names
+// .Foreign key constraint names
 ====
 Notice the use of `@ForeignKey` to customize the name of the foreign key constraint.
 If you don't supply a name explicitly, Hibernate will generate a quite ugly name.

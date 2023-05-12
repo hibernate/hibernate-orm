@@ -246,6 +246,13 @@ If you receive an exception from Hibernate, you should immediately close and dis
 [[cascade]]
 === Cascading persistence operations
 
+TODO
+
+[[proxies-and-lazy-fetching]]
+=== Proxies and lazy fetching
+
+TODO (incl. static methods of Hibernate)
+
 [[flush]]
 === Flushing the session
 
@@ -309,7 +316,7 @@ Selection queries usually start with the keyword `select` or `from`, whereas mut
 | Kind of query | `Session` method | `EntityManager` method | `Query` execution method
 
 | Selection query | `createSelectionQuery(String,Class)` | `createQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation query | `createMutationQuery(String)` | `createQuery(String,Class)` | `executeUpdate()`
+| Mutation query | `createMutationQuery(String)` | `createQuery(String)` | `executeUpdate()`
 |===
 
 So for the `Session` API we would write:
@@ -468,7 +475,7 @@ Execution of a criteria query works almost exactly like execution of HQL.
 | Kind of query | `Session` method | `EntityManager` method | `Query` execution method
 
 | Selection query | `createSelectionQuery(CriteriaQuery)` | `createQuery(CriteriaQuery)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation query | `createMutationQuery(CriteriaUpdate)` or `createMutationQuery(CriteriaDelte)` | `createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelte)` | `executeUpdate()`
+| Mutation query | `createMutationQuery(CriteriaUpdate)` or `createQuery(CriteriaDelete)` | `createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelte)` | `executeUpdate()`
 |===
 
 For example:
@@ -485,3 +492,36 @@ When all else fails, and sometimes even before that, we're left with the option 
 [[native-queries]]
 === Native SQL queries
 
+HQL is a powerful language which helps reduce the verbosity of SQL, and significantly increases portability of queries between databases.
+But ultimately, the true value of ORM is not in avoiding SQL, but in alleviating the pain involved in dealing with SQL result sets once we get them back to our Java program.
+As we said <<introduction,right up front>>, Hibernate's generated SQL is meant to be used in conjunction with handwritten SQL, and native SQL queries are one of the facilities we provide to make that easy.
+
+.Executing SQL
+|===
+| Kind of query | `Session` method | `EntityManager` method | `Query` execution method
+
+| Selection query | `createNativeQuery(String,Class)` | `createNativeQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation query | `createNativeMutationQuery(String)` | `createNativeQuery(String)` | `executeUpdate()`
+|===
+
+For the most simple cases, Hibernate can infer the shape of the result set:
+
+[source, java]
+----
+Book book = s.createNativeQuery("select * from Books where isbn = ?1", Book.class).getSingleResult();
+
+String title = s.createNativeQuery("select title from Books where isbn = ?1", String.class).getSingleResult();
+----
+
+However, in general, there isn't enough information in the JDBC `ResultSetMetaData` to infer the mapping of columns to entity objects.
+So for more complicated cases, you'll need to use the `@SqlResultSetMapping` annotation to define a named mapping, and pass the name to `createNativeQuery()`.
+
+[[pagination]]
+=== Limits and pagination
+
+TODO
+
+[[named-queries]]
+=== Named queries
+
+TODO

@@ -188,7 +188,7 @@ public abstract class CachedMutableNaturalIdTest {
 					// should resolve from second level cache
 					final AllCached shouldBeThere = session.bySimpleNaturalId( AllCached.class ).load( "it" );
 					assertNotNull( shouldBeThere );
-					assert(shouldBeThere.getId() != id);
+					assert(id.compareTo(shouldBeThere.getId()) != 0);
 				}
 		);
 	}

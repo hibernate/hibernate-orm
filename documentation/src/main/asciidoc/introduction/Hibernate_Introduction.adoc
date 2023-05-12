@@ -29,7 +29,7 @@ ORM takes the pain out of persistence by relieving the developer of the need to 
 Even better, ORM makes it much easier to tune performance later, after the basic persistence logic has already been written.
 
 [TIP]
-.ORM or SQL?
+// .ORM or SQL?
 ====
 A perennial question is: should I use ORM, or plain SQL?
 The answer is usually: _use both_.
@@ -74,7 +74,7 @@ As an application developer, you must decide whether to:
 Whichever path you take, you will use the JPA-defined mapping annotations most of the time, and the Hibernate-defined annotations for more advanced mapping problems.
 
 [TIP]
-.Developing with "pure" JPA
+// .Developing with "pure" JPA
 ====
 You might wonder if it's possible to develop an application using _only_ JPA-defined APIs, and, indeed, that's possible in principle.
 JPA is a great baseline that really nails the basics of the object/relational mapping problem.

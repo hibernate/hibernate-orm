@@ -456,15 +456,27 @@ Book bookOrNull =
          .getSingleResult();
 ----
 
+By default, Hibernate dirty checks entities in the persistence context before executing a query, in order to determine if the session should be flushed.
+If there are many entities association with the persistence context, then this can be an expensive operation.
+
+To disable this behavior, set the flush mode to `COMMIT` or `MANUAL`:
+
+[source,java]
+----
+Book bookOrNull =
+        s.createSelectionQuery("from Book where isbn = ?1", Book.class)
+         .setParameter(1, isbn)
+         .setHibernateFlushMode(MANUAL)
+         .getSingleResult();
+----
+
+[CAUTION]
+====
+Setting the flush mode to `COMMIT` or `MANUAL` might cause the query to return stale results.
+====
+
 Occasionally we need to build a query at runtime, from a set of optional conditions.
 For this, JPA offers an API which allows programmatic construction of a query.
-
-[NOTE]
-// .HQL is implemented in terms of criteria queries
-====
-Actually, in Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
-This ensures that the semantics of HQL and criteria queries are identical.
-====
 
 [[criteria-queries]]
 === Criteria queries
@@ -472,6 +484,12 @@ This ensures that the semantics of HQL and criteria queries are identical.
 Imagine we're implementing some sort of search screen, where the user of our system is offered several different ways to constrain the query result set.
 For example, we might let them search for books by title and/or the author name.
 Of course, we could construct a HQL query by string concatenation, but this is a bit fragile, so it's quite nice to have an alternative.
+
+.HQL is implemented in terms of criteria objects
+****
+Actually, in Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
+This ensures that the semantics of HQL and criteria queries are identical.
+****
 
 First we need an object for building criteria queries.
 Using the JPA-standard APIs, this would be a `CriteriaBuilder`, and we get it from the `EntityManagerFactory`:
@@ -590,10 +608,81 @@ String title = s.createNativeQuery("select title from Books where isbn = ?1", St
 However, in general, there isn't enough information in the JDBC `ResultSetMetaData` to infer the mapping of columns to entity objects.
 So for more complicated cases, you'll need to use the `@SqlResultSetMapping` annotation to define a named mapping, and pass the name to `createNativeQuery()`.
 
+By default, Hibernate doesn't flush the session before execution of a native query.
+That's because the session is unaware of which modifications held in memory would affect the results of the query.
+
+So if there are any unflushed changes to ``Book``s, this query might return stale data:
+
+[source,java]
+----
+List<Book> books =
+        s.createNativeQuery("select * from Books")
+         .getResultList()
+----
+
+There's two ways to ensure the persistence context is flushed before this query is executed.
+
+Either, we could simply force a flush by set the flush mode to `ALWAYS`:
+
+[source,java]
+----
+List<Book> books =
+        s.createNativeQuery("select * from Books")
+         .setHibernateFlushMode(ALWAYS)
+         .getResultList()
+----
+
+Or, alternative, we could tell Hibernate which modified state affects the results of the query:
+
+[source,java]
+----
+List<Book> books =
+        s.createNativeQuery("select * from Books")
+         .addSynchronizedEntityClass(Book.class)
+         .getResultList()
+----
+
+
 [[pagination]]
 === Limits and pagination
 
-TODO
+If a query might return more results than we can handle at one time, we may specify:
+
+- a _limit_ on the maximum number of rows returned, and,
+- optionally, an _offset_, the first row of an ordered result set to return.
+
+[TIP]
+====
+The offset is used to paginate query results.
+====
+
+There's two ways to add a limit or offset to a HQL or native SQL query:
+
+- using the syntax of the query language itself, for example, `offset 10 rows fetch next 20 rows only`, or
+- using the methods `setFirstResult()` and `setMaxResults()` of the `SelectionQuery` interface.
+
+If the limit or offset is parameterized, the second option is simpler.
+For example, this:
+
+[source,java]
+----
+List<Book> books =
+        s.createSelectionQuery("from Book where title like ?1")
+         .setParameter(1, titlePatterm)
+         .setMaxResults(10)
+         .getResultList();
+----
+
+is simpler than:
+
+[source,java]
+----
+List<Book> books =
+        s.createSelectionQuery("from Book where title like ?1 fetch first ?2 rows only")
+         .setParameter(1, titlePatterm)
+         .setParameter(2, 10)
+         .getResultList();
+----
 
 [[named-queries]]
 === Named queries

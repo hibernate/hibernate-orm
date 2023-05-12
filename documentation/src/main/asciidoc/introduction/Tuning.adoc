@@ -204,12 +204,36 @@ The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy 
 .Cache concurrency
 [cols=",2,3"]
 |===
-| Concurrency policy | Interpretation | Use case
+| Concurrency policy | Interpretation | Explanation
 
-| `READ_ONLY` | Read-only access | Immutable data
-| `NONSTRICT_READ_WRITE` | Read/write access with no locking | When concurrent updates are extremely improbable
-| `READ_WRITE` | Read/write access using soft locks | When concurrent updates are possible but not common
-| `TRANSACTION` | transactional access | When concurrent updates are frequent
+| `READ_ONLY` a|
+- Immutable data
+- Read-only access
+| Indicates that the cached object is immutable, and is never updated. If an entity with this cache concurrency is updated, an exception is thrown.
+
+This is the simplest, safest, and best-performing cache concurrency strategy. It's particularly suitable for so-called "reference" data.
+
+| `NONSTRICT_READ_WRITE` a|
+- Concurrent updates are extremely improbable
+- Read/write access with no locking
+| Indicates that the cached object is sometimes updated, but that it's extremely unlikely that two transactions will attempt to update the same item of data at the same time.
+
+This strategy does not use locks. When an item is updated, the cache is invalidated both before and after completion of the updating transaction. But without locking, it's impossible to completely rule out the possibility of a second transaction storing or retrieving stale data in or from the cache during the completion process of the first transaction.
+
+| `READ_WRITE` a|
+- Concurrent updates are possible but not common
+- Read/write access using soft locks
+a| Indicates a non-vanishing likelihood that two concurrent transactions attempt to update the same item of data simultaneously.
+
+This strategy uses "soft" locks to prevent concurrent transactions from retrieving or storing a stale item from or in the cache during the transaction completion process. A soft lock is simply a marker entry placed in the cache while the updating transaction completes.
+
+- A second transaction may not read the item from the cache while the soft lock is present, and instead simply proceeds to read the item directly from the database, exactly as if a regular cache miss had occurred.
+- Similarly, the soft lock also prevents this second transaction from storing a stale item to the cache when it returns from its round trip to the database with something that might not quite be the latest version.
+
+| `TRANSACTIONAL` a|
+- Concurrent updates are frequent
+- Transactional access
+| Indicates that concurrent writes are common, and the only way to maintain synchronization between the second-level cache and the database is via the use of a fully transactional cache provider. In this case, the cache and the database must cooperate via JTA or the XA protocol, and Hibernate itself takes on little responsibility for maintaining the integrity of the cache.
 |===
 
 Which policies make sense may also depend on the underlying second-level cache implementation.
@@ -447,6 +471,8 @@ accept an optional `LockMode`. You can also specify a `LockMode` for a query. Th
 lock mode can be used to request a pessimistic lock, or to customize the behavior
 of optimistic locking:
 
+.Optimistic and pessimistic lock modes
+[cols=",4"]
 |===
 | `LockMode` type | Meaning
 

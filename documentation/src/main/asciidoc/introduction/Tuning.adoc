@@ -115,7 +115,7 @@ associated instances of a related entity are fetched using N subsequent
 queries.
 
 [IMPORTANT]
-.This problem is your responsibility
+// .This problem is your responsibility
 ====
 This isn't a bug or limitation of Hibernate; this problem even affects typical handwritten JDBC code behind DAOs.
 Only you, the developer, can solve this problem, because only you know ahead of time what data you're going to need in a given unit of work.
@@ -176,8 +176,9 @@ But that's still not enough.
 Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
 
 [IMPORTANT]
-.Caching is disabled by default
+// .Caching is disabled by default
 ====
+Caching is disabled by default.
 To minimize the risk of data loss, we force you to stop and think before any entity goes into the cache.
 ====
 
@@ -245,7 +246,7 @@ This strategy uses "soft" locks to prevent concurrent transactions from retrievi
 Which policies make sense may also depend on the underlying second-level cache implementation.
 
 [NOTE]
-.The JPA-defined `@Cacheable` annotation
+// .The JPA-defined `@Cacheable` annotation
 ====
 JPA has a similar annotation, named `@Cacheable`.
 Unfortunately, it's almost useless to us, since:
@@ -370,8 +371,9 @@ sf.getCache().evictEntityData(Book.class, bookId);
 ----
 
 [NOTE]
-.Second-level cache management is not transaction-aware
+// .Second-level cache management is not transaction-aware
 ====
+Second-level cache management is not transaction-aware.
 None of the operations of the `Cache` interface respect any isolation or transactional semantics associated with the underlying caches. In particular, eviction via the methods of this interface causes an immediate "hard" removal outside any current transaction and/or locking scheme.
 ====
 

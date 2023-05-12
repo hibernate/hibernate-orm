@@ -49,7 +49,7 @@ package org.hibernate;
  * <p>
  * Very occasionally, it's necessary or advantageous to control the cache explicitly
  * via programmatic eviction, using, for example, {@link #evictEntityData(Class)} to
- * evicts a whole cache region, or {@link #evictEntityData(Class, Object)}, to evict
+ * evict a whole cache region, or {@link #evictEntityData(Class, Object)}, to evict
  * a single item.
  * <p>
  * If multiple entities or roles are mapped to the same cache region, they share

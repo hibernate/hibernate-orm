@@ -193,7 +193,6 @@ public class SequenceStyleGenerator
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
 		this.identifierType = type;
-		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, parameters, false );
 
 		final QualifiedName sequenceName = determineSequenceName(parameters, dialect, jdbcEnvironment, serviceRegistry );
 
@@ -204,6 +203,7 @@ public class SequenceStyleGenerator
 
 		final boolean isPooledOptimizer = OptimizerFactory.isPooledOptimizer( optimizationStrategy );
 
+		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, parameters );
 
 		SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,

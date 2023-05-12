@@ -511,18 +511,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.commentsEnabled = getBoolean( USE_SQL_COMMENTS, configurationSettings );
 
-		this.preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, configurationSettings, false  );
+		this.preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, configurationSettings  );
 
 		this.allowOutOfTransactionUpdateOperations = getBoolean(
 				ALLOW_UPDATE_OUTSIDE_TRANSACTION,
-				configurationSettings,
-				false
+				configurationSettings
 		);
 
 		this.releaseResourcesOnCloseEnabled = getBoolean(
 				DISCARD_PC_ON_CLOSE,
-				configurationSettings,
-				false
+				configurationSettings
 		);
 
 		Object jdbcTimeZoneValue = configurationSettings.get(
@@ -556,8 +554,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.failOnPaginationOverCollectionFetchEnabled = getBoolean(
 				FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
-				configurationSettings,
-				false
+				configurationSettings
 		);
 
 		this.immutableEntityUpdateQueryHandlingMode = ImmutableEntityUpdateQueryHandlingMode.interpret(
@@ -569,8 +566,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.inClauseParameterPaddingEnabled =  getBoolean(
 				IN_CLAUSE_PARAMETER_PADDING,
-				configurationSettings,
-				false
+				configurationSettings
 		);
 
 		this.queryStatisticsMaxSize = getInt(

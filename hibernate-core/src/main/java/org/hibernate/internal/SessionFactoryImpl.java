@@ -1614,8 +1614,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	private void logIfEmptyCompositesEnabled(Map<String, Object> props ) {
-		final boolean isEmptyCompositesEnabled =
-				getBoolean( CREATE_EMPTY_COMPOSITES_ENABLED, props, false );
+		final boolean isEmptyCompositesEnabled = getBoolean( CREATE_EMPTY_COMPOSITES_ENABLED, props );
 		if ( isEmptyCompositesEnabled ) {
 			LOG.emptyCompositesEnabled();
 		}

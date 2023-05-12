@@ -149,11 +149,10 @@ The `<persistence-unit>` element defines a named _persistence unit_, that is:
 
 Each `<class>` element specifies the fully-qualified name of an entity class.
 
-[TIP]
-// .Scanning for entity classes
-====
+.Scanning for entity classes
+****
 In some container environments, for example, in any EE container, the `<class>` elements are unnecessary, since the container will scan the archive for annotated classes, and automatically recognize any class annotated `@Entity`.
-====
+****
 
 Each `<property>` element specifies a _configuration property_ and its value.
 Note that:

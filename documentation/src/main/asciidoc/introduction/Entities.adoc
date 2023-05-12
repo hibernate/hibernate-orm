@@ -886,7 +886,7 @@ A one-to-one association is the usual way we implement subtyping in a fully-norm
 
 Let's begin with the most common association multiplicity.
 
-[[many-to-one-unidirectional]]
+[[many-to-one]]
 === Many-to-one
 
 A many-to-one association is the most basic sort of association we can imagine.

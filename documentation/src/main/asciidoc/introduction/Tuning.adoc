@@ -67,12 +67,11 @@ As long as you set at least one property with the prefix `hibernate.agroal`, the
 | `hibernate.connection.isolation` | The default transaction isolation level
 |===
 
-[NOTE]
-.This is not needed in a container environment
-====
+.Container-managed datasources
+****
 In a container environment, you usually don't need to configure a connection pool through Hibernate.
 Instead, you'll use a container-managed datasource, as we saw in <<basic-configuration-settings>>.
-====
+****
 
 [[statement-batching]]
 === Enabling statement batching
@@ -170,14 +169,16 @@ A classic way to reduce the number of accesses to the database is to use a secon
 
 By nature, a second-level cache tends to undermine the ACID properties of transaction processing in a relational database. A second-level cache is often by far the easiest way to improve the performance of a system, but only at the cost of making it much more difficult to reason about concurrency. And so the cache is a potential source of bugs which are difficult to isolate and reproduce.
 
-[IMPORTANT]
-.Caching is disabled by default
-====
 Therefore, by default, an entity is not eligible for storage in the second-level cache.
 We must explicitly mark each entity that will  be stored in the second-level cache with the `@Cache` annotation from `org.hibernate.annotations`.
 
 But that's still not enough.
 Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
+
+[IMPORTANT]
+.Caching is disabled by default
+====
+To minimize the risk of data loss, we force you to stop and think before any entity goes into the cache.
 ====
 
 Hibernate segments the second-level cache into named _regions_, one for each:

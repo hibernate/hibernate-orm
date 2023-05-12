@@ -113,9 +113,8 @@ But we still need to clean up:
 em.close();
 ----
 
-[NOTE]
 .Injecting the `EntityManager`
-====
+****
 If you're writing code for some sort of container environment, you'll probably obtain the `EntityManager` by some sort of dependency injection.
 For example, in Java (or Jakarta) EE you would write:
 
@@ -130,7 +129,7 @@ In Quarkus, injection is handled by CDI:
 ----
 @Inject EntityManager em;
 ----
-====
+****
 
 Outside a container environment, we'll also have to write code to manage database transactions.
 
@@ -188,12 +187,11 @@ sf.inTransaction(s -> {
 });
 ----
 
-[NOTE]
 .Container-managed transactions
-====
+****
 In a container environment, the container itself is usually responsible for managing transactions.
 In Java EE or Quarkus, you'll probably indicate the boundaries of the transaction using the `@Transactional` annotation.
-====
+****
 
 [[persistence-operations]]
 === Operations on the persistence context

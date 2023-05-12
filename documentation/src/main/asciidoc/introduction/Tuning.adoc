@@ -115,9 +115,14 @@ rows is retrieved from the database in an initial query, and then
 associated instances of a related entity are fetched using N subsequent
 queries.
 
-IMPORTANT: Hibernate code which does this is bad code and makes
-Hibernate look bad to people who don't realize that it's their own
-fault for not following the advice in this section!
+[IMPORTANT]
+.This problem is your responsibility
+====
+This isn't a bug or limitation of Hibernate; this problem even affects typical handwritten JDBC code behind DAOs.
+Only you, the developer, can solve this problem, because only you know ahead of time what data you're going to need in a given unit of work.
+But that's OK.
+Hibernate gives you all the tools you need.
+====
 
 Hibernate provides several strategies for efficiently fetching
 associations and avoiding N+1 selects:

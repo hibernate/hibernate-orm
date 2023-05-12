@@ -138,7 +138,7 @@ public class EnumType<T extends Enum<T>>
 			if ( parameters.containsKey (NAMED ) ) {
 				indicators = new LocalJdbcTypeIndicators(
 						// use ORDINAL as default for hbm.xml mappings
-						getBoolean( NAMED, parameters, false ) ? STRING : ORDINAL,
+						getBoolean( NAMED, parameters ) ? STRING : ORDINAL,
 						false,
 						columnLength
 				);

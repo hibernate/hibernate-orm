@@ -201,7 +201,7 @@ public class SequenceStyleGenerator
 		int incrementSize = determineIncrementSize( parameters );
 		final OptimizerDescriptor optimizationStrategy = determineOptimizationStrategy( parameters, incrementSize );
 
-		boolean forceTableUse = getBoolean( FORCE_TBL_PARAM, parameters, false );
+		boolean forceTableUse = getBoolean( FORCE_TBL_PARAM, parameters );
 		final boolean physicalSequence = isPhysicalSequence( jdbcEnvironment, forceTableUse );
 
 		incrementSize = adjustIncrementSize(

@@ -192,18 +192,17 @@ In a container environment, the container itself is usually responsible for mana
 In Java EE or Quarkus, you'll probably indicate the boundaries of the transaction using the `@Transactional` annotation.
 ====
 
+[[persistence-operations]]
 === Operations on the persistence context
 
 Of course, the main reason we need an `EntityManager` is to do stuff to the database.
-The following operations let us interact with the persistence context:
+The following important operations let us interact with the persistence context and schedule modifications to the data:
 
-.Important methods of the `EntityManager`
+.Methods for modifying data and managing the persistence context
 [cols="2,5"]
 |===
 | Method name and parameters | Effect
 
-| `find(Class,Object)` and `find(Class,Object,LockModeType)`
-| Obtain a persistent object given its type and its id
 | `persist(Object)`
 | Make a transient object persistent and schedule a SQL `insert` statement for later execution
 | `remove(Object)`
@@ -211,29 +210,44 @@ The following operations let us interact with the persistence context:
 | `merge(Object)`
 | Copy the state of a given detached object to a corresponding managed persistent instance and return
 the persistent object
-| `refresh(Object)` and `refresh(Object,LockModeType)`
-| Refresh the persistent state of an object using a new SQL `select` to retrieve the current state from the
-database
-| `lock(Object, LockModeType)`
-| Obtain a <<optimistic-and-pessimistic-locking,pessimistic lock>> on a persistent object
-| `flush()`
-| Detect changes made to persistent objects association with the session and synchronize the database state with the state of the session by executing SQL `insert`, `update`, and `delete` statements
 | `detach(Object)`
 | Disassociate a persistent object from a session without
 affecting the database
-| `getReference(Class,id)` or
-`getReference(Object)`
-| Obtain a reference to a persistent object without actually loading its state from the database
+| `clear()`
+| Empty the persistence context and detach all its entities
+| `flush()`
+| Detect changes made to persistent objects association with the session and synchronize the database state with the state of the session by executing SQL `insert`, `update`, and `delete` statements
 |===
 
-Notice that some of these operations have no immediate effect on the database, and simply schedule a command for later execution.
+Notice that `persist()` and `remove()` have no immediate effect on the database, and instead simply schedule a command for later execution.
+Also notice that there's no `update()` operation for a stateful session.
+Modifications are automatically detected when the session is <<flush,flushed>>.
 
-Any of these operations might throw an exception, and it's important that we know what to do when that happens.
+On the other hand, the following operations all result in immediate access to the database:
 
-[[session-exception-handling]]
-=== Session and exception handling
+.Methods for reading and locking data
+[cols="2,5"]
+|===
+| Method name and parameters | Effect
 
-If an exception occurs while interacting with the database, there's no good way to resynchronize the state of the current persistence context with the state held in database tables.
+| `find(Class,Object)`
+| Obtain a persistent object given its type and its id
+| `find(Class,Object,LockModeType)`
+| Obtain a persistent object given its type and its id, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>
+| `getReference(Class,id)`
+| Obtain a reference to a persistent object given its type and its id, without actually loading its state from the database
+| `getReference(Object)`
+| Obtain a reference to a persistent object with the same identity as the given detached instance, without actually loading its state from the database
+| `refresh(Object)`
+| Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database
+| `refresh(Object,LockModeType)`
+| Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>
+| `lock(Object, LockModeType)`
+| Obtain an <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock>> on a persistent object
+|===
+
+Any of these operations might throw an exception.
+Now, if an exception occurs while interacting with the database, there's no good way to resynchronize the state of the current persistence context with the state held in database tables.
 
 Therefore, a session is considered to be unusable after any of its methods throws an exception.
 
@@ -246,12 +260,63 @@ If you receive an exception from Hibernate, you should immediately close and dis
 [[cascade]]
 === Cascading persistence operations
 
-TODO
+It's quite often the case that the lifecycle of a _child_ entity is completely dependent on the lifeycle of some _parent_.
+This is especially common for many-to-one and one-to-one associations, though it's very rare for many-to-many associations.
+
+For example, it's quite common to make an `Order` and all its ``Item``s persistent in the same transaction, or to delete a `Project` and its ``Files``s at once.
+This sort of relationship is sometimes called a _whole/part_-type relationship.
+
+_Cascading_ is a convenience which allows us to propagate one of the operations listed in <<persistence-operations>> from a parent to its children.
+To set up cascading, we specify the `cascade` member of one of the association mapping annotations, usually `@OneToMany` or `@OneToOne`.
+
+[source,java]
+----
+@Entity
+class Order {
+    ...
+    @OneToMany(mappedby="order",
+               // cascade persist(), remove(), and refresh() from Order to Item
+               cascade={PERSIST,REMOVE,REFRESH},
+               // also remove() orphaned Items
+               orphanRemoval=true)
+    private Set<Item> items;
+    ...
+}
+----
+
+_Orphan removal_ indicates that an `Item` should be automatically deleted if it is removed from the set of items belonging to its parent `Order`.
 
 [[proxies-and-lazy-fetching]]
 === Proxies and lazy fetching
 
-TODO (incl. static methods of Hibernate)
+Our data model is a set of interconnected entities, and in Java our whole dataset would be represented as an enormous interconnected graph of objects.
+It's possible that this graph is disconnected, but more likely it's connected, or composed of a relatively small number of connected subgraphs.
+
+Therefore, when we retrieve on object belonging to this graph from the database and instantiate it in memory, we simply can't recursively retrieve and instantiate all its associated entities.
+Quite aside from the waste of memory on the VM side, this process would involve a huge number of round trips to the database server, or a massive multidimensional cartesian product of tables, or both.
+Instead, we're forced to cut the graph somewhere.
+
+Hibernate solves this problem using _proxies_ and _lazy fetching_.
+A proxy is an object that masquerades as a real entity or collection, but doesn't actually hold any state, because that state has not yet been fetched from the database.
+When you call a method of the proxy, Hibernate will detect the call and fetch the state from the database before allowing the invocation to proceed to the real entity object or collection.
+
+Now for the gotchas:
+
+1. Hibernate will only do this for an entity which is currently association with a persistence context.
+   Once the session ends, and the persistence context is cleaned up, the proxy is no longer fetchable, and instead its methods throw the hated `LazyInitializationException`.
+2. A round trip to the database to fetch the state of a single entity instance is just about _the least efficient_ way to access data.
+   It almost inevitably leads to the infamous _N+1 selects_ problem we'll discuss later when we talk about how to <<association-fetching,optimize association fetching>>.
+
+[TIP]
+.Strive to avoid triggering lazy fetching
+====
+We're getting a bit ahead of ourselves here, but let's quickly mention the general strategy we recommend to navigate past these gotchas:
+
+- All associations should be set `fetch=LAZY` to avoid fetching extra data when it's not needed.
+  As we mentioned in <<many-to-one>>, this setting is not the default for `@ManyToOne` associations, and must be specified explicitly.
+- However, avoid writing code which triggers lazy fetching.
+  Instead, fetch all the data you'll need upfront at the beginning of a unit of work, using one of the techniques described in <<association-fetching>>, usually, using _join fetch_ in HQL.
+====
 
 [[flush]]
 === Flushing the session

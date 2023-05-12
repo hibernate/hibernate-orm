@@ -132,10 +132,13 @@ In Quarkus, injection is handled by CDI:
 ----
 ====
 
+Outside a container environment, we'll also have to write code to manage database transactions.
+
 [[managing-transactions]]
 === Managing transactions
 
 Using JPA-standard APIs, the `EntityTransaction` interface allows us to control database transactions.
+The idiom we recommend is the following:
 
 [source,java]
 ----
@@ -256,6 +259,9 @@ Therefore, a session is considered to be unusable after any of its methods throw
 ====
 If you receive an exception from Hibernate, you should immediately close and discard the current session. Open a new session if you need to, but throw the bad one away first.
 ====
+
+Each of the operations we've seen so far affects a single entity instance passed as an argument.
+But there's a way to set things up so that an operation will propagate to associated entities.
 
 [[cascade]]
 === Cascading persistence operations

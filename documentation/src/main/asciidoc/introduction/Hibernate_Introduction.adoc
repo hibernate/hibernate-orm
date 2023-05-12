@@ -78,6 +78,25 @@ JPA is a great baseline that really nails the basics of the object/relational ma
 But without the native APIs, and extended mapping annotations, you miss out on much of the power of Hibernate.
 ====
 
+Since Hibernate existed before JPA, and since JPA was modelled on Hibernate, we unfortunately have some competition and duplication in naming between the standard and native APIs.
+For example:
+
+.Examples of competing APIs with similar naming
+|===
+| Hibernate | JPA
+
+| `org.hibernate.annotations.CascadeType` | `javax.persistence.CascadeType`
+| `org.hibernate.FlushMode` | `javax.persistence.FlushModeType`
+| `org.hibernate.annotations.FetchMode` | `javax.persistence.FetchType`
+| `org.hibernate.query.Query` | `javax.peristence.Query`
+| `org.hibernate.Cache` | `javax.peristence.Cache`
+| `@org.hibernate.annotations.NamedQuery` | `@javax.persistence.NamedQuery`,
+| `@org.hibernate.annotations.Cache` | `@javax.persistence.Cacheable`
+|===
+
+Typically, the Hibernate-native APIs offer something a little extra that's missing in JPA, so this isn't exactly a _flaw_.
+But it's something to watch out for.
+
 [[java-code]]
 === Writing Java code with Hibernate
 
@@ -111,6 +130,78 @@ Some responsibility for transaction and session management, and for
 recovery from certain kinds of failure, can be best handled in some sort
 of framework code.
 ====
+
+A question that's older than Hibernate is: should this code exist in a separate _persistence layer_.
+To give our answer to this question, and at the risk of this Introduction devolving into a rant at such an early stage, we're going to need to talk a little more about ancient history.
+
+[[persistence-layer]]
+=== The persistence layer in modern Java
+
+Back in the dark days of Java EE 4, before the standardization of Hibernate, and subsequent ascendance of JPA in Java enterprise development, it was common to hand-code the messy JDBC interactions that Hibernate takes care of today.
+In those terrible times, a pattern arose that we used to call _Data Access Objects_ (DAOs).
+A DAO gave you a place to put all that nasty JDBC code, leaving the important program logic cleaner.
+
+When Hibernate arrived suddenly on the scene in 2001, developers loved it.
+But Hibernate implemented no specification, and many wished to reduce or at least _localize_ the dependence of their project logic on Hibernate.
+An obvious solution was to keep the DAOs around, but to replace the JDBC code inside them with calls to the Hibernate `Session`.
+
+[NOTE]
+.We partly blame ourselves for what happened next
+====
+Back in 2002 and 2003 this really seemed like a pretty reasonable thing to do.
+In fact, we contributed to the popularity of this approach by recommending—or at least not discouraging—the use of DAOs in _Hibernate in Action_.
+
+We hereby apologize for this mistake, and for taking much too long to recognize it.
+====
+
+Eventually, some folks came to believe that their DAOs shielded their program from depending in a hard way on ORM, allowing them to "swap out" Hibernate, and replace it with JDBC, or with something else.
+In fact, this was never really true—there's quite a deep difference between the programming model of JDBC, where every interaction with the database is explicit and synchronous, and the programming model of stateful sessions in Hibernate, where updates are implicit, and SQL statements are executed asynchronously.
+
+But then the whole landscape for persistence in Java changed in April 2006, when the final draft of JPA 1.0 was approved.
+Java now had a standard way to do ORM, with multiple high-quality implementations of the standard API.
+This was the end of the line for the DAOs, right?
+
+Well, no.
+It wasn't.
+DAOs were rebranded "repositories", and continue to enjoy a sort-of zombie afterlife as a front-end to JPA.
+But are they really pulling their weight, or are they just unnecessary extra complexity and bloat? An extra layer of indirection that makes stack traces harder to read and code harder to debug?
+
+Our considered view is that they're mostly just bloat.
+The JPA `EntityManager` is a "repository", and it's a standard repository with a well-defined specification written by people who spend all day thinking about persistence.
+If these repository frameworks offered anything actually _useful_—and not obviously foot-shooty—over and above what `EntityManager` provides, we would have already added it to `EntityManager` decades ago.
+
+[NOTE]
+.Encoding a query language in method naming conventions
+====
+One thing that some repository frameworks offer is the ability to declare an abstract method that queries the database, and have the framework fill in an implementation of the method.
+But the way this works is that you must encode your query into the name of the method itself, resulting in stuff like:
+
+    findFirst10ByOrderDistinctPeopleByLastnameOrFirstnameAsc
+
+This is a _much worse_ query language than HQL.
+I think you can see why we didn't implement this idea in Hibernate.
+====
+
+Even better, `EntityManager` is a single _generic_ "repository" that works for every entity in your system.
+We might analogize it to `ArrayList`.
+Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
+They're a parallel class hierarchy that makes the data model harder to evolve over time.
+
+[TIP]
+====
+On the other hand, we admit that repositories do provide a convenient place to stick your `@NamedQuery` annotations.
+So there's that.
+====
+
+Ultimately, we're not sure you do need a separate persistence layer.
+And even if you do, DAO-style repositories aren't the obviously-correct pattern:
+
+- every nontrivial query touches multiple entities, and so it's often quite ambiguous which DAO such a query belongs to, and
+- most queries are extremely specific to a particular fragment of program logic, and aren't reused in many different places.
+
+So at least _consider_ the possibility that it might be OK to call the `EntityManager` direct from your business logic.
+
+OK, _phew_, let's move on.
 
 [[overview]]
 === Overview

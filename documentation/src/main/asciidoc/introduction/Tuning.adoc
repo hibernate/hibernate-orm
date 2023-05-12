@@ -32,26 +32,68 @@ the connection pool.
 [[connection-pool]]
 === Tuning the connection pool
 
-TODO
+The connection pool built in to Hibernate is suitable for testing, but isn't intended for use in production.
+Instead, Hibernate supports a range of different connection pools, including our favorite, Agroal.
+
+To select and configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
+For example:
+
+[source,properties]
+----
+hibernate.agroal.maxSize 20
+hibernate.agroal.minSize 10
+hibernate.agroal.acquisitionTimeout PT1s
+hibernate.agroal.reapTimeout PT10s
+----
+
+As long as you set at least one property with the prefix `hibernate.agroal`, the `AgroalConnectionProvider` will be selected automatically.
+
+.Settings for configuring Agroal
+[cols=",4"]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.agroal.maxSize` | The maximum number of connections present on the pool
+| `hibernate.agroal.minSize` | The minimum number of connections present on the pool
+| `hibernate.agroal.initialSize` | The number of connections added to the pool when it is started
+| `hibernate.agroal.maxLifetime` | The maximum amount of time a connection can live, after which it is removed from the pool
+| `hibernate.agroal.acquisitionTimeout` | The maximum amount of time a thread can wait for a connection, after which an exception is thrown instead
+| `hibernate.agroal.reapTimeout` | The duration for eviction of idle connections
+| `hibernate.agroal.leakTimeout` | The duration of time a connection can be held without causing a leak to be reported
+| `hibernate.agroal.idleValidationTimeout` | A foreground validation is executed if a connection has been idle on the pool for longer than this duration
+| `hibernate.agroal.validationTimeout` | The interval between background validation checks
+| `hibernate.agroal.initialSql` | A SQL command to be executed when a connection is created
+| `hibernate.connection.autocommit` | The default autocommit mode
+| `hibernate.connection.isolation` | The default transaction isolation level
+|===
+
+[NOTE]
+.This is not needed in a container environment
+====
+In a container environment, you usually don't need to configure a connection pool through Hibernate.
+Instead, you'll use a container-managed datasource, as we saw in <<basic-configuration-settings>>.
+====
 
 [[statement-batching]]
 === Enabling statement batching
 
-An easy way to improve performance of some transactions with almost no
-work at all is to turn on automatic DML statement batching. Batching
-only helps in cases where a program executes many inserts, updates, or
-deletes against the same table in a single transaction.
+An easy way to improve performance of some transactions, with almost no work at all, is to turn on automatic DML statement batching.
+Batching only helps in cases where a program executes many inserts, updates, or deletes against the same table in a single transaction.
 
 All you need to do is set a single property:
 
+.Enabling JDBC batching
+[cols=",3"]
 |===
 | Configuration property name | Purpose
 
 | `hibernate.jdbc.batch_size` | Maximum batch size for SQL statement batching
 |===
 
-TIP: Even better than DML statement batching is the use of HQL `update`
-or `delete` queries, or even native SQL that calls a stored procedure!
+[TIP]
+====
+Even better than DML statement batching is the use of HQL `update` or `delete` queries, or even native SQL that calls a stored procedure!
+====
 
 [[association-fetching]]
 === Association fetching
@@ -129,7 +171,8 @@ By nature, a second-level cache tends to undermine the ACID properties of transa
 Therefore, by default, an entity is not eligible for storage in the second-level cache.
 We must explicitly mark each entity that will  be stored in the second-level cache with the `@Cache` annotation from `org.hibernate.annotations`.
 
-But that's still not enough: Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
+But that's still not enough.
+Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
 ====
 
 Hibernate segments the second-level cache into named _regions_, one for each:

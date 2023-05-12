@@ -10,7 +10,7 @@ To interact with the database, that is, to execute queries, or to insert, update
 The `Session` interface extends `EntityManager`, and so the only difference between the two interfaces is that `Session` offers a few more operations.
 
 [TIP]
-.The `Session` hiding inside an `EntityManager`
+// .The `Session` hiding inside an `EntityManager`
 ====
 Actually, in Hibernate, every `EntityManager` is a `Session`, and you can narrow it like this:
 
@@ -28,7 +28,7 @@ We'll come back to <<stateless-sessions,this very useful API>> when we talk abou
 What you need to know for now is that a stateless session doesn't have a persistence context.
 
 [TIP]
-.Some people prefer `StatelessSession`
+// .Some people prefer `StatelessSession`
 ====
 Still, we should let you know that some people prefer to use `StatelessSession` everywhere.
 It's a simpler programming model, and lets the developer interact with the database more _directly_.
@@ -312,13 +312,13 @@ Now for the gotchas:
    It almost inevitably leads to the infamous _N+1 selects_ problem we'll discuss later when we talk about how to <<association-fetching,optimize association fetching>>.
 
 [TIP]
-.Strive to avoid triggering lazy fetching
+// .Strive to avoid triggering lazy fetching
 ====
 We're getting a bit ahead of ourselves here, but let's quickly mention the general strategy we recommend to navigate past these gotchas:
 
 - All associations should be set `fetch=LAZY` to avoid fetching extra data when it's not needed.
   As we mentioned in <<many-to-one>>, this setting is not the default for `@ManyToOne` associations, and must be specified explicitly.
-- However, avoid writing code which triggers lazy fetching.
+- But strive to avoid writing code which triggers lazy fetching.
   Instead, fetch all the data you'll need upfront at the beginning of a unit of work, using one of the techniques described in <<association-fetching>>, usually, using _join fetch_ in HQL.
 ====
 
@@ -490,7 +490,7 @@ HibernateCriteriaBuilder cb = sf.getCriteriaBuilder();
 The `HibernateCriteriaBuilder` extends `CriteriaBuilder` and adds many operations that JPQL doesn't have.
 
 [TIP]
-.Getting a `HibernateCriteriaBuilder` in JPA
+// .Getting a `HibernateCriteriaBuilder` in JPA
 ====
 If you're using `EntityManagerFactory`, don't despair, you have two perfectly good ways to obtain the `HibernateCriteriaBuilder` associated with that factory.
 Either:

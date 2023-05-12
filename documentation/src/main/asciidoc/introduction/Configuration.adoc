@@ -236,10 +236,10 @@ The properties you really do need to get started are these three:
 |===
 
 [IMPORTANT]
-.You don't need `hibernate.dialect` anymore!
+// .You don't need `hibernate.dialect` anymore!
 ====
 In Hibernate 6, you don't need to specify `hibernate.dialect`.
-The correct Hibernate SQL `Dialect` will be determined for you.
+The correct Hibernate SQL `Dialect` will be determined for you automatically.
 
 The only reason to specify this property is if you're using a custom user-written `Dialect` class.
 ====
@@ -256,7 +256,7 @@ You can set the size of Hibernate's built-in connection pool using this property
 |===
 
 [CAUTION]
-.The default connection pool is not meant for production use
+// .The default connection pool is not meant for production use
 ====
 By default, Hibernate uses a simplistic built-in connection pool.
 This pool is not meant for use in production, and later, when we discuss performance, we'll see how to <<connection-pool,select a more robust implementation>>.

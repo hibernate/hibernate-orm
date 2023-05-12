@@ -175,7 +175,7 @@ We must explicitly mark each entity that will  be stored in the second-level cac
 But that's still not enough.
 Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
 
-[IMPORTANT]
+[CAUTION]
 // .Caching is disabled by default
 ====
 Caching is disabled by default.
@@ -370,7 +370,7 @@ The `Cache` interface allows programmatic eviction of cached items.
 sf.getCache().evictEntityData(Book.class, bookId);
 ----
 
-[NOTE]
+[CAUTION]
 // .Second-level cache management is not transaction-aware
 ====
 Second-level cache management is not transaction-aware.
@@ -428,7 +428,7 @@ NOTE: There's no `flush()` operation, and so `update()` is always explicit.
 
 In certain circumstances, this makes stateless sessions easier to work with, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
 
-[IMPORTANT]
+[CAUTION]
 ====
 If you use `fetch()` in a stateless session, you can very easily obtain two objects representing the same database row!
 ====

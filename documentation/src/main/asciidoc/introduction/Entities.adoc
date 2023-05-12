@@ -34,7 +34,7 @@ An entity must:
 On the other hand, the entity class may be either concrete or `abstract`, and it may have any number of additional constructors.
 
 [TIP]
-.Inner entity classes
+// .Inner entity classes
 ====
 An entity class may be a `static` inner class.
 ====
@@ -196,7 +196,7 @@ Long id;
 ----
 
 [TIP]
-.Using surrogate keys
+// .Using surrogate keys
 ====
 System-generated identifiers, or _surrogate keys_ make it easier to evolve or refactor the relational data model.
 If you have the freedom to define the relational schema, we recommend the use of surrogate keys.
@@ -440,7 +440,7 @@ LocalDateTime lastUpdated;
 The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.
 
 [TIP]
-.Optimistic locking in Hibernate
+// .Optimistic locking in Hibernate
 ====
 If an entity doesn't have a version number, which often happens when mapping legacy data, we can still do optimistic locking.
 The `@OptimisticLocking` annotation lets us specify that optimistic locks should be checked by validating the values of `ALL` fields, or only the `DIRTY` fields of the entity.
@@ -609,7 +609,7 @@ In Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
 Any other ``enum`` is mapped to a `TINYINT` column with a `CHECK` constraint.
 
 [TIP]
-.It's usually better to persist `enum` values by their names
+// .It's usually better to persist `enum` values by their names
 ====
 JPA picks the wrong default here.
 In most cases, storing an integer encoding of the `enum` value makes the relational data harder to interpret.
@@ -845,7 +845,7 @@ class Author {
 ----
 
 [TIP]
-.The `@Embedded` annotation is not required
+// .The `@Embedded` annotation is not required
 ====
 JPA provides an `@Embedded` annotation to identify an attribute of an entity that refers to an embeddable type.
 This annotation is completely optional, and so we don't usually use it.
@@ -879,7 +879,7 @@ In this diagram, we can see the sorts of associations which are possible.
 image::images/associations.png[]
 
 [TIP]
-.One-to-one associations and subtyping
+// .One-to-one associations and subtyping
 ====
 An astute observer of the diagram above might notice that the relationships we've represented as unidirectional one-to-one associations could reasonably be represented in Java using subtyping.
 This is quite normal.
@@ -895,7 +895,7 @@ A many-to-one association is the most basic sort of association we can imagine.
 It maps completely naturally to a foreign key in the database.
 
 [TIP]
-.One-to-many join table mappings
+// .One-to-many join table mappings
 ====
 Later, we'll see how to map a many-to-one association to an <<join-table-mappings,association table>>.
 ====
@@ -917,10 +917,11 @@ class Book {
 Here, the `Book` table has a foreign key column holding the identifier of the associated `Publisher`.
 
 [TIP]
-.Almost all associations should be lazy
+// .Almost all associations should be lazy
 ====
 A very unfortunate misfeature of JPA is that `@ManyToOne` associations are fetched eagerly by default.
 This is almost never what we want.
+Almost all associations should be lazy.
 The only scenario in which `fetch=EAGER` makes sense is if we think there's always a _very_ high probability that the associated object will be found in the second-level cache.
 Whenever this isn't the case, remember to explicitly specify `fetch=LAZY`.
 ====
@@ -955,7 +956,7 @@ That said, it's not a hard requirement to update the unowned side, at least if y
 ====
 
 [TIP]
-.Unidirectional `@OneToMany`?
+// .Unidirectional `@OneToMany`?
 ====
 In principle Hibernate _does_ allow you to have a unidirectional one to many, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
 In practice, this mapping is unnatural, and just doesn't work very well.
@@ -994,7 +995,7 @@ In hindsight, we could have done more to make clear that this was always a viabl
 The simplest sort of one-to-one association is almost exactly line a `@ManyToOne` association, except that it maps to a foreign key column with a `UNIQUE` constraint.
 
 [TIP]
-.One-to-many join table mappings
+// .One-to-many join table mappings
 ====
 Later, we'll see how to map a many-to-one association to an <<join-table-mappings,association table>>.
 ====
@@ -1018,7 +1019,7 @@ class Author {
 Here, the `Author` table has a foreign key column holding the identifier of the associated `Publisher`.
 
 [TIP]
-.One-to-one associations are a way to represent subtyping
+// .One-to-one associations are a way to represent subtyping
 ====
 A one-to-one association often models a "type of" relationship.
 In our example, an `Author` is a type of `Person`.

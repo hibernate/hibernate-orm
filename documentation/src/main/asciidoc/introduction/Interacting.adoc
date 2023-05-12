@@ -429,7 +429,7 @@ List<Book> matchingBooks =
 
 When a query has multiple parameters, named parameters tend to be easier to read, even if slightly more verbose.
 
-[IMPORTANT]
+[WARNING]
 // .Using parameters to avoid injection attacks
 ====
 _Never_ concatenate user input with HQL and pass the concatenated string to `createSelectionQuery()`.

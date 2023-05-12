@@ -228,9 +228,9 @@ The properties you really do need to get started are these three:
 .JDBC connection settings
 [cols=",2"]
 |===
-| Configuration property name                                         | Purpose
+| Configuration property name | Purpose
 
-| `jakarta.persistence.jdbc.url`                                        | JDBC URL of your database
+| `jakarta.persistence.jdbc.url` | JDBC URL of your database
 | `jakarta.persistence.jdbc.user` and `jakarta.persistence.jdbc.password` | Your database credentials
 |===
 
@@ -244,13 +244,21 @@ The only reason to specify this property is if you're using a custom user-writte
 ====
 
 Pooling JDBC connections is an extremely important performance optimization.
-You can set the size of Hibernate's built-in connection pool using the property `hibernate.connection.pool_size`.
+You can set the size of Hibernate's built-in connection pool using this property:
+
+.Built-in connection pool size
+[cols=",2"]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.connection.pool_size` | The size of the built-in connection pool
+|===
 
 [CAUTION]
 .The default connection pool is not meant for production use
 ====
 By default, Hibernate uses a simplistic built-in connection pool.
-This pool is not meant for use in production, and later, when we discuss performance, we'll see how to select a more robust implementation.
+This pool is not meant for use in production, and later, when we discuss performance, we'll see how to <<connection-pool,select a more robust implementation>>.
 ====
 
 Alternatively, in a container environment, you'll need at least one of these properties:

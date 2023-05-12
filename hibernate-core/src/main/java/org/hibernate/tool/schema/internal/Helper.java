@@ -162,8 +162,7 @@ public class Helper {
 						//Then try the Hibernate ORM setting:
 						ConfigurationHelper.getBoolean(
 								AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
-								configurationValues,
-								false
+								configurationValues
 						)
 				)
 		);
@@ -172,8 +171,7 @@ public class Helper {
 	public static boolean interpretFormattingEnabled(Map<String,Object> configurationValues) {
 		return ConfigurationHelper.getBoolean(
 				AvailableSettings.FORMAT_SQL,
-				configurationValues,
-				false
+				configurationValues
 		);
 	}
 

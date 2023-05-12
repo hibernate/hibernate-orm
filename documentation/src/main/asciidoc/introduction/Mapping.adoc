@@ -11,7 +11,7 @@ It's only rarely that the Java classes precede the relational schema.
 Usually, _we already have a relational schema_, and we're constructing our domain model around the schema.
 This is called _bottom up_ mapping.
 
-[NOTE]
+[TIP]
 ."Legacy" data
 ====
 Developers often refer to a pre-existing relational database as "legacy" data.
@@ -522,9 +522,8 @@ This is usually all you need to do to make use of large object types in Hibernat
 
 JPA provides a `@Lob` annotation which specifies that a field should be persisted as a `BLOB` or `CLOB`.
 
-[NOTE]
-.Semantics of the `@Lob` amnotation
-====
+.Semantics of the `@Lob` annotation
+****
 What the spec actually says is that the field should be persisted
 
 > as a large object to a database-supported large object type.
@@ -534,7 +533,7 @@ It's quite unclear what this means, and the spec goes on to say that
 > the treatment of the `Lob` annotation is provider-dependent
 
 which doesn't help much.
-====
+****
 
 Hibernate interprets this annotation in what we think is the most reasonable way.
 In Hibernate, an attribute annotated `@Lob` will be written to JDBC using the `setClob()` or `setBlob()` method of `PreparedStatement`, and will be read from JDBC using the `getClob()` or `getBlob()` method of `ResultSet`.

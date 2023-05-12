@@ -3,14 +3,13 @@
 
 An _entity_ is a Java class which represents data in a relational database table.
 We say that the entity _maps_ or _maps to_ the table.
-
-NOTE: Much less commonly, an entity might aggregate data from multiple tables, but we'll get to that later.
+Much less commonly, an entity might aggregate data from multiple tables, but we'll get to that <<entity-table-mappings,later>>.
 
 An entity has _attributes_—properties or fields—which map to columns of the table.
 In particular, every entity must have an _identifier_ or _id_, which maps to the primary key of the table.
 The id allows us to uniquely associate a row of the table with an instance of the Java class, at least within a given _persistence context_.
 
-TIP: We'll explore the idea of a persistence context later. For now, just think of it as a one-to-one mapping between ids and entity instances.
+We'll explore the idea of a persistence context <<persistence-contexts,later>>. For now, just think of it as a one-to-one mapping between ids and entity instances.
 
 An instance of a Java class cannot outlive the virtual machine to which it belongs.
 But we may think of an entity instance having a lifecycle which transcends a particular instantiation in memory.
@@ -53,9 +52,8 @@ class Book {
 
 Alternatively, the class may be identified as an entity type by providing an XML-based mapping for the class.
 
-[TIP]
 .Mapping entities using XML
-====
+****
 When XML-based mappings are used, the `<entity>` element is used to declare an entity class:
 
 [source,xml]
@@ -72,7 +70,7 @@ When XML-based mappings are used, the `<entity>` element is used to declare an e
 ----
 We won't have much more to say about XML-based mappings in this Introduction, since it's not our preferred way to do things.
 But since the `orm.xml` mapping file format defined by the JPA specification was modelled closely on the annotation-based mappings, it's usually easy to go back and forth between the two options.
-====
+****
 
 Each entity class has a default _access type_, either:
 
@@ -376,7 +374,7 @@ class BookId {
 }
 ----
 
-IMPORTANT: Every id class should override `equals()` and `hashCode()`.
+Every id class should override `equals()` and `hashCode()`.
 
 This is not our preferred approach.
 Instead, we recommend that the `BookId` class be declared as an `@Embeddable` type:
@@ -441,10 +439,18 @@ LocalDateTime lastUpdated;
 
 The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.
 
+[TIP]
+.Optimistic locking in Hibernate
+====
+If an entity doesn't have a version number, which often happens when mapping legacy data, we can still do optimistic locking.
+The `@OptimisticLocking` annotation lets us specify that optimistic locks should be checked by validating the values of `ALL` fields, or only the `DIRTY` fields of the entity.
+And the `@OptimisticLock` annotation lets us selectively exclude certain fields from optimistic locking.
+====
+
 [[natural-id-attributes]]
 === Natural id attributes
 
-Even when an entity has a surrogate key, it should still be possible to identify a combination of fields which uniquely identifies an instance of the entity, from the point of view of the user of the system.
+Even when an entity has a surrogate key, it should still be possible to write down a combination of fields which uniquely identifies an instance of the entity, from the point of view of the user of the system.
 We call this combination of fields a _natural key_.
 
 [IMPORTANT]
@@ -546,9 +552,8 @@ Note that primitively-typed attributes are inferred `NOT NULL` by default.
 String middleName; // may be null
 ----
 
-[TIP]
 .Should I use `optional=false` or `nullable=false` in JPA?
-====
+****
 There are two ways to mark a mapped column `not null` in JPA:
 
 - using `@Basic(optional=false)`, or
@@ -558,20 +563,20 @@ You might wonder what the difference is.
 
 Well, it's perhaps not obvious to a casual user of the JPA annotations, but they actually come in two "layers":
 
-- annotations like `@Entity`, `@Id`, and `@Basic` belong to the _logical_ layer—they specify the semantics of your Java domain model, whereas
-- annotations like `@Table` and `@Column` belong to the _mapping_ layer—they specify how elements of the domain model map to objects in the relational database.
+- annotations like `@Entity`, `@Id`, and `@Basic` belong to the _logical_ layer, the subject of the current chapter—they specify the semantics of your Java domain model, whereas
+- annotations like `@Table` and `@Column` belong to the _mapping_ layer, the topic of the <<object-relational-mapping,next chapter>>—they specify how elements of the domain model map to objects in the relational database.
 
 Information may be inferred from the logical layer down to the mapping layer, but is never inferred in the opposite direction.
 
-Now, the `@Column` annotation belongs to the _mapping_ layer, and so its `nullable` member only affects schema generation (resulting in a `not null` constraint in the generated DDL).
-The `@Basic` annotation belongs to the logical layer, and so an attribute marked `optional=false` is checked by Hibernate before it even writes an entity to the database.
+Now, the `@Column` annotation, to whom we'll be properly <<regular-column-mappings,introduced>> a bit later, belongs to the _mapping_ layer, and so its `nullable` member only affects schema generation (resulting in a `not null` constraint in the generated DDL).
+On the other hand, the `@Basic` annotation belongs to the logical layer, and so an attribute marked `optional=false` is checked by Hibernate before it even writes an entity to the database.
 Note that:
 
 - `optional=false` implies `nullable=false`, but
 - `nullable=false` _does not_ imply `optional=false`.
 
 Therefore, we recommend `@Basic(optional=false)` in preference to `@Column(nullable=false)` in most circumstances.
-====
+****
 
 [[enums]]
 === Enumerated types
@@ -595,6 +600,14 @@ DayOfWeek dayOfWeek;
 Status status;
 
 ----
+
+In Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
+
+- a `VARCHAR` column type with a `CHECK` constraint on most databases, or
+- an `ENUM` column type on MySQL.
+
+Any other ``enum`` is mapped to a `TINYINT` column with a `CHECK` constraint.
+
 [TIP]
 .It's usually better to persist `enum` values by their names
 ====
@@ -608,17 +621,7 @@ But in the country I was born, `SUNDAY` is the _first_ day of the week!
 So we prefer `@Enumerated(STRING)` for most `enum` attributes.
 ====
 
-[NOTE]
-.Enumerated column types
-====
-In Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
-
-- a `VARCHAR` column type with a `CHECK` constraint on most databases, or
-- an `ENUM` column type on MySQL.
-
-Any other ``enum`` is mapped to a `TINYINT` column with a `CHECK` constraint.
-
-An interesting case is PostgreSQL.
+An interesting special case is PostgreSQL.
 Postgres supports _named_ `ENUM` types, which must be declared using a DDL `CREATE TYPE` statement.
 Sadly, these `ENUM` types aren't well-integrated with the language nor well-supported by the Postgres JDBC driver, so Hibernate doesn't use them by default.
 But if you would like to use a named enumerated type on Postgres, just annotate your `enum` attribute like this:
@@ -629,9 +632,8 @@ But if you would like to use a named enumerated type on Postgres, just annotate 
 @Basic(optional=false)
 Status status;
 ----
-====
 
-The limited set of pre-defined basic attribute types can be extended by supplying a _converter_.
+The limited set of pre-defined basic attribute types can be stretched a bit further by supplying a _converter_.
 
 [[converters]]
 === Converters
@@ -753,15 +755,15 @@ long currentTimeMillis;
 
 The `@JdbcTypeRegistration` annotation may be used to register a user-written `JdbcType` as the default for a given SQL type code.
 
-[NOTE]
 .JDBC types and JDBC type codes
-====
+****
 The types defined by the JDBC specification are enumerated by the integer type codes in the class `java.sql.Types`.
 Each JDBC type is an abstraction of a commonly-available type in SQL.
 For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on Oracle).
 
 Since Hibernate understand more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
-====
+For example, `SqlTypes.GEOMETRY` represents the spatial data type `GEOMETRY`.
+****
 
 If a given `JavaType` doesn't know how to convert its instances to the type required by its partner `JdbcType`, we must help it out by providing a JPA `AttributeConverter` to perform the conversion.
 
@@ -971,9 +973,8 @@ Collection<Book> books;
 
 (We'll see how to map a collection with a persistent order later.)
 
-[NOTE]
 .`Set`, `List`, or `Collection`?
-====
+****
 A one-to-many association mapped to a foreign key can never contain duplicate elements, so `Set` seems like the most semantically correct Java collection type to use here, and so that's the conventional practice in the Hibernate community.
 
 The catch associated with using a set is that we must carefully ensure that `Book` has a high-quality implementation of <<equals-and-hash>>.
@@ -985,7 +986,7 @@ Then our code would be much less sensitive to how `equals()` and `hashCode()` we
 In the past, we were perhaps too dogmatic in recommending the use of `Set`.
 Now? I guess we're happy to let you guys decide.
 In hindsight, we could have done more to make clear that this was always a viable option.
-====
+****
 
 [[one-to-one-fk]]
 === One-to-one (first way)
@@ -1040,9 +1041,8 @@ class Person {
 }
 ----
 
-[NOTE]
 .Lazy fetching for one-to-one associations
-====
+****
 Notice that we did not declare the unowned end of the association `fetch=LAZY`.
 That's because:
 
@@ -1058,7 +1058,7 @@ On the other hand, if _every_ `Person` was an `Author`, that is, if the associat
 @OneToOne(optional=false, mappedBy = "person", fetch=LAZY)
 Author author;
 ----
-====
+****
 
 This is not the only sort of one-to-one association.
 
@@ -1200,14 +1200,13 @@ We might represent this in our `Event` entity as an attribute of type `DayOfWeek
 Since the number of elements of this array or list is upper bounded by 7, this is a reasonable case for the use of an `ARRAY`-typed column.
 It's hard to see much value in storing this collection in a separate table.
 
-[TIP]
 .Learning to not hate SQL arrays
-====
+****
 For a long time, we thought arrays were a kind of weird and warty thing to add to the relational model, but recently we've come to realize that this view was overly closed-minded.
 Indeed, we might choose to view SQL `ARRAY` types as a generalization of `VARCHAR` and `VARBINARY` to generic "element" types.
 And from this point of view, SQL arrays look quite attractive, at least for certain problems.
 If we're comfortable mapping `byte[]` to `VARBINARY(255)`, why would we shy away from mapping `DayOfWeek[]` to `TINYINT ARRAY[7]`?
-====
+****
 
 Unfortunately, JPA doesn't define a standard way to map SQL arrays, but here's how we can do it in Hibernate:
 

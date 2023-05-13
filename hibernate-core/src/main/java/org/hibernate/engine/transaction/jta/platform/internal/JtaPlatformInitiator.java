@@ -48,7 +48,12 @@ public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatfor
 			platform = getFallbackProvider( configurationValues, registry );
 		}
 
-		LOG.usingJtaPlatform( platform != null ? platform.getClass().getName() : "null" );
+		if ( platform != null && !(platform instanceof NoJtaPlatform) ) {
+			LOG.usingJtaPlatform( platform.getClass().getName() );
+		}
+		else {
+			LOG.noJtaPlatform();
+		}
 		return platform;
 	}
 

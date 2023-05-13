@@ -47,30 +47,33 @@ public class PostgresIntervalSecondTest {
 				PostgresIntervalSecondTest.EntityWithIntervalSecondDuration.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
 
-
-		final JdbcType intervalType = jdbcTypeRegistry.getDescriptor( SqlTypes.INTERVAL_SECOND );
+		final JdbcType durationJdbcType = mappingMetamodel.getTypeConfiguration()
+				.getBasicTypeForJavaType( Duration.class )
+				.getJdbcType();
 
 		// default interval type set by a config property and should be `NUMERIC`
-		assertThat( intervalType ).isEqualTo( NumericJdbcType.INSTANCE );
+		assertThat( durationJdbcType ).isEqualTo( NumericJdbcType.INSTANCE );
+
+		final JdbcType intervalType = jdbcTypeRegistry.getDescriptor( SqlTypes.INTERVAL_SECOND );
+		assertThat( intervalType ).isOfAnyClassIn( PostgreSQLIntervalSecondJdbcType.class );
 
 		// a simple duration field with no overrides - so should be using a default JdbcType
 		assertThat( entityDescriptor.findAttributeMapping( "duration" )
 				.getSingleJdbcMapping().getJdbcType() )
-				.isEqualTo( intervalType );
+				.isEqualTo( durationJdbcType );
 
 		// a field that is using a @JdbcType annotation to override the JdbcType. Hence, the used JdbcType must match the one
 		// set by the annotation.
 		assertThat( entityDescriptor.findAttributeMapping( "durationJdbcType" )
 				.getSingleJdbcMapping().getJdbcType() )
-				.isNotEqualTo( intervalType )
+				.isNotEqualTo( durationJdbcType )
 				.isOfAnyClassIn( PostgreSQLIntervalSecondJdbcType.class );
 
 		// a field that is using a @JdbcTypeCode annotation to override the JdbcType. Hence, the used JdbcType must match the one
 		// set by the annotation.
 		assertThat( entityDescriptor.findAttributeMapping( "durationJdbcTypeCode" )
 				.getSingleJdbcMapping().getJdbcType() )
-				.isNotEqualTo( intervalType )
-				.isOfAnyClassIn( PostgreSQLIntervalSecondJdbcType.class );
+				.isEqualTo( intervalType );
 	}
 
 	@Entity(name = "EntityWithIntervalSecondDuration")

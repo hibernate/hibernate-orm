@@ -352,7 +352,7 @@ public class Main {
 Here we've used Hibernate's native APIs.
 We could have used JPA-standard APIs to achieve the same thing.
 
-[hello-jpa]
+[[hello-jpa]]
 === Hello, JPA
 
 If we limit ourselves to the use of JPA-standard APIs, we need to use XML to configure Hibernate.
@@ -405,6 +405,7 @@ We can put that logic in our own `inSession()` function, so that we don't have t
 Again, you don't need to understand any of this code right now.
 
 [source,java]
+.`Main.java` (JPA version)
 ----
 package org.hibernate.example;
 
@@ -419,7 +420,7 @@ import static java.lang.System.out;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.tool.schema.Action.CREATE;
 
-public class JpaMain {
+public class Main {
     public static void main(String[] args) {
         var factory = createEntityManagerFactory("example",
                 // export the inferred database schema

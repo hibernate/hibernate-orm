@@ -319,7 +319,7 @@ You can find much more information about the second-level cache in the
 For the most part, the second-level cache is transparent.
 Program logic which interacts with the Hibernate session is unaware of the cache, and is not impacted by changes to caching policies.
 
-At worst, interaction with the cache may be controlled by specification of an explicit `CacheMode`.
+At worst, interaction with the cache may be controlled by specifying of an explicit `CacheMode`:
 
 [source,java]
 ----
@@ -336,7 +336,7 @@ em.setCacheStoreMode(CacheStoreMode.BYPASS);
 
 The JPA-defined cache modes are:
 
-.Cache modes
+.JPA-defined cache modes
 [cols=",3"]
 |===
 | Mode | Interpretation
@@ -349,16 +349,48 @@ The JPA-defined cache modes are:
 | `CacheStoreMode.BYPASS` | Don't write data to the cache
 |===
 
+A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
+
+.Hibernate cache modes and JPA equivalents
+[cols=",5"]
+|===
+| `CacheMode` | Equivalent JPA modes
+
+| `NORMAL` | `CacheRetrieveMode.USE`, `CacheStoreMode.USE`
+| `IGNORE` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.BYPASS`
+| `GET` | `CacheRetrieveMode.USE`, `CacheStoreMode.BYPASS`
+| `PUT` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.USE`
+| `REFRESH` | `CacheRetrieveMode.REFRESH`, `CacheStoreMode.BYPASS`
+|===
+
+There's no particular reason to prefer Hibernate's `CacheMode` to the JPA equivalents.
+This enumeration only exists because Hibernate had cache modes long before they were added to JPA.
+
 [TIP]
 // .A good time to `BYPASS` the cache
 ====
 It's a good idea to set the `CacheStoreMode` to `BYPASS` just before running a query which returns a large result set full of data that we don't expect to need again soon.
 This saves work, and prevents the newly-read data from pushing out the previously cached data.
 
+In JPA we would use this idiom:
+
 [source,java]
 ----
 em.setCacheStoreMode(CacheStoreMode.BYPASS);
-List<Publisher> allpubs = em.createQuery("from Publisher", Publisher.class).getResultList();
+List<Publisher> allpubs =
+        em.createQuery("from Publisher", Publisher.class)
+          .getResultList();
+em.setCacheStoreMode(CacheStoreMode.USE);
+----
+
+But Hibernate has a better way:
+
+[source,java]
+----
+List<Publisher> allpubs =
+        s.createSelectionQuery("from Publisher", Publisher.class)
+         .setCacheStoreMode(CacheStoreMode.BYPASS)
+         .getResultList();
 ----
 ====
 

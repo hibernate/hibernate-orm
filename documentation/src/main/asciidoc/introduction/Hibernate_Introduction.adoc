@@ -202,21 +202,8 @@ So at least _consider_ the possibility that it might be OK to call the `EntityMa
 
 OK, _phew_, let's move on.
 
-[[overview]]
-=== Overview
-
-This introduction will guide you through the basic tasks involved in developing a program that uses Hibernate for persistence:
-
-1. configuring and bootstrapping Hibernate, and obtaining an instance of `SessionFactory` or `EntityManagerFactory`,
-2. writing a _domain model_, that is, a set of _entity classes_ which represent the persistent types in your program, and which map to tables of your database,
-3. using the `Session` or `EntityManager` to perform operations which query the database and return entity instances, or which update the data held in the database,
-4. writing complex queries using the Hibernate Query Language (HQL) or native SQL, and, finally
-5. tuning performance of the data access logic.
-
-Naturally, we'll start at the top of this list, with the least-interesting topic: _configuration_.
-
-[[hello-world]]
-=== Hello World!
+[[hello-hibernate]]
+=== Hello, Hibernate
 
 Before we get into the weeds, we'll quickly present a basic example program that will help you get started if you don't already have Hibernate integrated into your project.
 
@@ -304,16 +291,15 @@ class Book {
 }
 ----
 
-Finally, the code which configures and instantiates Hibernate and asks it to persist and query the entity:
+Finally, let's see code which configures and instantiates Hibernate and asks it to persist and query the entity.
+Don't worry if this makes no sense at all right now.
+It's the job of this Introduction to make all this crystal clear.
 
 [source,java]
 .`Main.java`
 ----
 package org.hibernate.example;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 import org.hibernate.cfg.Configuration;
 
 import static java.lang.Boolean.TRUE;
@@ -352,11 +338,11 @@ public class Main {
 
         // query data using criteria API
         sessionFactory.inSession(session -> {
-            CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
-            CriteriaQuery<String> query = builder.createQuery(String.class);
-            Root<Book> record = query.from(Book.class);
-            query.select(builder.concat(builder.concat(record.get(Book_.isbn), builder.literal(": ")),
-                    record.get(Book_.title)));
+            var builder = sessionFactory.getCriteriaBuilder();
+            var query = builder.createQuery(String.class);
+            var book = query.from(Book.class);
+            query.select(builder.concat(builder.concat(book.get(Book_.isbn), builder.literal(": ")),
+                    book.get(Book_.title)));
             out.println(session.createSelectionQuery(query).getSingleResult());
         });
     }
@@ -365,7 +351,135 @@ public class Main {
 
 Here we've used Hibernate's native APIs.
 We could have used JPA-standard APIs to achieve the same thing.
-In that case, we need to use XML to configure Hibernate.
+
+[hello-jpa]
+=== Hello, JPA
+
+If we limit ourselves to the use of JPA-standard APIs, we need to use XML to configure Hibernate.
+
+[source,xml]
+.`META-INF/persistence.xml`
+----
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="example">
+
+        <class>org.hibernate.example.Book</class>
+
+        <properties>
+
+            <!-- H2 in-memory database -->
+            <property name="jakarta.persistence.jdbc.url"
+                      value="jdbc:h2:mem:db1"/>
+
+            <!-- Credentials -->
+            <property name="jakarta.persistence.jdbc.user"
+                      value="sa"/>
+            <property name="jakarta.persistence.jdbc.password"
+                      value=""/>
+
+            <!-- Agroal connection pool -->
+            <property name="hibernate.agroal.maxSize"
+                      value="20"/>
+
+            <!-- display SQL in console -->
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.highlight_sql" value="true"/>
+
+        </properties>
+
+    </persistence-unit>
+</persistence>
+----
+
+Note that our `build.gradle` and `log4j2.properties` files are unchanged.
+
+Our entity class is also unchanged from what we had before.
+
+Unfortunately, JPA doesn't offer an `inSession()` method, so we'll have to implement session and transaction management ourselves.
+We can put that logic in our own `inSession()` function, so that we don't have to repeat it for every transaction.
+Again, you don't need to understand any of this code right now.
+
+[source,java]
+----
+package org.hibernate.example;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+
+import java.util.Map;
+import java.util.function.Consumer;
+
+import static jakarta.persistence.Persistence.createEntityManagerFactory;
+import static java.lang.System.out;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.hibernate.tool.schema.Action.CREATE;
+
+public class JpaMain {
+    public static void main(String[] args) {
+        var factory = createEntityManagerFactory("example",
+                // export the inferred database schema
+                Map.of(JAKARTA_HBM2DDL_DATABASE_ACTION, CREATE));
+
+        // persist an entity
+        inSession(factory, entityManager -> {
+            entityManager.persist(new Book("9781932394153", "Hibernate in Action"));
+        });
+
+        // query data using HQL
+        inSession(factory, entityManager -> {
+            out.println(entityManager.createQuery("select isbn||': '||title from Book").getSingleResult());
+        });
+
+        // query data using criteria API
+        inSession(factory, entityManager -> {
+            var builder = factory.getCriteriaBuilder();
+            var query = builder.createQuery(String.class);
+            var book = query.from(Book.class);
+            query.select(builder.concat(builder.concat(book.get(Book_.isbn), builder.literal(": ")),
+                    book.get(Book_.title)));
+            out.println(entityManager.createQuery(query).getSingleResult());
+        });
+    }
+
+    // do some work in a session, performing correct transaction management
+    static void inSession(EntityManagerFactory factory, Consumer<EntityManager> work) {
+        var entityManager = factory.createEntityManager();
+        var transaction = entityManager.getTransaction();
+        try {
+            transaction.begin();
+            work.accept(entityManager);
+            transaction.commit();
+        }
+        catch (Exception e) {
+            if (transaction.isActive()) transaction.rollback();
+            throw e;
+        }
+        finally {
+            entityManager.close();
+        }
+    }
+}
+----
+
+It's now time to begin our journey toward actually _understanding_ the code we've just seen.
+
+[[overview]]
+=== Overview
+
+This introduction will guide you through the basic tasks involved in developing a program that uses Hibernate for persistence:
+
+1. configuring and bootstrapping Hibernate, and obtaining an instance of `SessionFactory` or `EntityManagerFactory`,
+2. writing a _domain model_, that is, a set of _entity classes_ which represent the persistent types in your program, and which map to tables of your database,
+3. using the `Session` or `EntityManager` to perform operations which query the database and return entity instances, or which update the data held in the database,
+4. writing complex queries using the Hibernate Query Language (HQL) or native SQL, and, finally
+5. tuning performance of the data access logic.
+
+Naturally, we'll start at the top of this list, with the least-interesting topic: _configuration_.
 
 include::Configuration.adoc[]
 include::Entities.adoc[]

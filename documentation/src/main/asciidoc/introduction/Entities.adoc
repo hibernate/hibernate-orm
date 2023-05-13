@@ -540,6 +540,7 @@ Hibernate slightly extends this list with the following types:
 | Classification | Package | Types
 
 | Date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, `ZonedDateTime`, `Year`
+| LOB types | `java.sql` | `Blob`, `Clob`
 | Miscellaneous | `java.util` | `Currency`, `URL`
 |====
 

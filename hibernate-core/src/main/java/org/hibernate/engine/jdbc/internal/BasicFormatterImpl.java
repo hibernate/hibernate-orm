@@ -172,6 +172,9 @@ public class BasicFormatterImpl implements Formatter {
 					case "into":
 					case "union":
 					case "intersect":
+					case "offset":
+					case "limit":
+					case "fetch":
 						endNewClause();
 						break;
 

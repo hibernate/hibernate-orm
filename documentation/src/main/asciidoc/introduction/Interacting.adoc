@@ -142,9 +142,9 @@ The idiom we recommend is the following:
 [source,java]
 ----
 EntityManager em = emf.createEntityManager();
-EntityTransaction tx = s.getTransaction();
+EntityTransaction tx = em.getTransaction();
 try {
-    tx.beginTransaction();
+    tx.begin();
     //do some work
     ...
     tx.commit();

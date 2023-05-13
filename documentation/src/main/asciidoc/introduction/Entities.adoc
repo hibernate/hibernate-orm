@@ -545,7 +545,6 @@ Hibernate slightly extends this list with the following types:
 
 The `@Basic` annotation explicitly specifies that an attribute is basic, but it's often not needed, since attributes are assumed basic by default.
 On the other hand, if a non-primitively-typed attribute cannot be null, use of `@Basic(optional=false)` is highly recommended.
-Note that primitively-typed attributes are inferred `NOT NULL` by default.
 
 [source,java]
 ----
@@ -554,15 +553,11 @@ Note that primitively-typed attributes are inferred `NOT NULL` by default.
 String middleName; // may be null
 ----
 
-[TIP]
-====
-An even better solution is to use the `@NotNull` annotation from Bean Validation.
-Just add Hibernate Validator to your project build.
-====
+Note that primitively-typed attributes are inferred `NOT NULL` by default.
 
-.Should I use `optional=false` or `nullable=false` in JPA?
+.How to make a column `not null` in JPA
 ****
-There are two ways to mark a mapped column `not null` in JPA:
+There are two standard ways to add a `NOT NULL` constraint to a mapped column in JPA:
 
 - using `@Basic(optional=false)`, or
 - using `@Column(nullable=false)`.
@@ -584,7 +579,13 @@ Note that:
 - `nullable=false` _does not_ imply `optional=false`.
 
 Therefore, we prefer `@Basic(optional=false)` to `@Column(nullable=false)`.
-But the `@NotNull` annotation from Bean Validation is even nicer.
+
+[TIP]
+====
+But wait!
+An even better solution is to use the `@NotNull` annotation from Bean Validation.
+Just add Hibernate Validator to your project build, as described in <<optional-dependencies>>.
+====
 ****
 
 [[enums]]

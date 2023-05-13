@@ -8,6 +8,7 @@ package org.hibernate.boot.model.process.spi;
 
 import java.io.InputStream;
 import java.sql.Types;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
@@ -67,6 +68,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
+import org.hibernate.type.descriptor.java.DurationJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
@@ -75,6 +77,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -665,10 +668,9 @@ public class MetadataBuildingProcess {
 
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {
-			adaptToPreferredSqlTypeCode(
+			adaptToPreferredSqlTypeCodeForDuration(
+					typeConfiguration,
 					jdbcTypeRegistry,
-					dialectIntervalDescriptor,
-					SqlTypes.INTERVAL_SECOND,
 					preferredSqlTypeCodeForDuration
 			);
 		}
@@ -730,6 +732,24 @@ public class MetadataBuildingProcess {
 			);
 		}
 		// else warning?
+	}
+
+	private static void adaptToPreferredSqlTypeCodeForDuration(
+			TypeConfiguration typeConfiguration,
+			JdbcTypeRegistry jdbcTypeRegistry,
+			int preferredSqlTypeCodeForDuration) {
+		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final BasicType<?> durationType = new NamedBasicTypeImpl<>(
+				javaTypeRegistry.getDescriptor( Duration.class ),
+				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForDuration ),
+				"duration"
+		);
+		basicTypeRegistry.register(
+				durationType,
+				Duration.class.getSimpleName(),
+				Duration.class.getName()
+		);
 	}
 
 	private static void adaptToPreferredSqlTypeCodeForInstant(

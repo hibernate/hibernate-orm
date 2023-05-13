@@ -400,7 +400,7 @@ Can also specify the name of the constant in `org.hibernate.type.SqlTypes` inste
 Global setting identifying the preferred JDBC type code for storing uuid values.
 Can also specify the name of the constant in `org.hibernate.type.SqlTypes` instead.
 
-`*hibernate.type.preferred_duration_jdbc_type*` (e.g. `2` for `java.sql.Types.NUMERIC` or `3100` for `org.hibernate.types.SqlTypes.INTERVAL_SECOND` (default value))::
+`*hibernate.type.preferred_duration_jdbc_type*` (e.g. `2` for `java.sql.Types.NUMERIC` (default value) or `3100` for `org.hibernate.types.SqlTypes.INTERVAL_SECOND`)::
 Global setting identifying the preferred JDBC type code for storing duration values.
 Can also specify the name of the constant in `org.hibernate.type.SqlTypes` instead.
 

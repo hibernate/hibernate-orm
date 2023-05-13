@@ -392,7 +392,10 @@ The `@JoinColumn` annotation is used to customize a foreign key column.
 | `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint
 |===
 
-Here we see how to use `@JoinColumn` to define a `@ManyToOne` association which mapping a foreign key column which refers to a non-primary-key `UNIQUE` column of the referenced table.
+A foreign key column doesn't necessarily have to refer to the primary key of the referenced table.
+It's quite acceptable for the foreign key to refer to any other unique key of the referenced entity, even to a unique key of a secondary table.
+
+Here we see how to use `@JoinColumn` to define a `@ManyToOne` association mapping a foreign key column which refers to the `@NaturalId` of `Book`:
 
 [source,java]
 ----
@@ -402,19 +405,60 @@ class Item {
     ...
     @ManyToOne(optional=false)  // implies nullable=false
     @JoinColumn(name = "bookIsbn", referencedColumnName = "isbn",  // a reference to a non-PK column
-                foreignKey = @ForeignKey(name="ItemsToBooksBySsn")) // supply a name for the FOREIGN KEY constraint
+                foreignKey = @ForeignKey(name="ItemsToBooksBySsn")) // supply a name for the FK constraint
     Book book;
     ...
 }
 ----
 
+In case this is confusing:
+
+- `bookIsbn` is the name of the foreign key column in the `Items` table,
+- it refers to a unique key `isbn` in the `Books` table, and
+- it has a foreign key constraint named `ItemsToBooksBySsn`.
+
+Note that the `foreignKey` member is completely optional and only affects DDL generation.
+
 [TIP]
 // .Foreign key constraint names
 ====
-Notice the use of `@ForeignKey` to customize the name of the foreign key constraint.
-If you don't supply a name explicitly, Hibernate will generate a quite ugly name.
+If you don't supply an explicit name using `@ForeignKey`, Hibernate will generate a quite ugly name.
+The reason for this is that the maximum length of foreign key names on some databases is extremely constrained, and we need to avoid collisions.
 To be fair, this is perfectly fine if you're only using the generated DDL for testing.
 ====
+
+For composite foreign keys we might have multiple `@JoinColumn` annotations:
+
+[source,java]
+----
+@Entity
+@Table(name="Items")
+class Item {
+    ...
+    @ManyToOne(optional=false)
+    @JoinColumn(name = "bookIsbn", referencedColumnName = "isbn")
+    @JoinColumn(name = "bookPrinting", referencedColumnName = "printing")
+    Book book;
+    ...
+}
+----
+
+If we need to specify the `@ForeignKey`, this starts to get a bit messy:
+
+[source,java]
+----
+@Entity
+@Table(name="Items")
+class Item {
+    ...
+    @ManyToOne(optional=false)
+    @JoinColumns(value = {@JoinColumn(name = "bookIsbn", referencedColumnName = "isbn"),
+                          @JoinColumn(name = "bookPrinting", referencedColumnName = "printing")},
+                 foreignKey = @ForeignKey(name="ItemsToBooksBySsn"))
+    Book book;
+    ...
+}
+----
 
 For associations mapped to a `@JoinTable`, fetching the association requires two joins, and so we must declare the ``@JoinColumn``s inside the `@JoinTable` annotation:
 
@@ -427,12 +471,15 @@ class Book {
 
     @ManyToMany
     @JoinTable(joinColumns=@JoinColumn(name="bookId"),
-               inverseJoinColumns=@joinColumn(name="authorId"))
+               inverseJoinColumns=@joinColumn(name="authorId"),
+               foreignKey=@ForeignKey(name="BooksToAuthors"))
     Set<Author> authors;
 
     ...
 }
 ----
+
+Again, the `foreignKey` member is optional.
 
 [[primary-key-column-mappings]]
 === Mapping primary key joins between tables

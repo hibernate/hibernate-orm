@@ -34,20 +34,27 @@ public enum FlushMode {
 
 	/**
 	 * The {@link Session} is flushed when {@link Transaction#commit()}
-	 * is called.
+	 * is called. It is never automatically flushed before query
+	 * execution.
+	 *
+	 * @see FlushModeType#COMMIT
 	 */
 	COMMIT,
 
 	/**
-	 * The {@link Session} is sometimes flushed before query execution
-	 * in order to ensure that queries never return stale state. This
-	 * is the default flush mode.
+	 * The {@link Session} is flushed when {@link Transaction#commit()}
+	 * is called, and is sometimes flushed before query execution in
+	 * order to ensure that queries never return stale state. This is
+	 * the default flush mode.
+	 *
+	 * @see FlushModeType#AUTO
 	 */
 	AUTO,
 
 	/**
-	 * The {@link Session} is flushed before every query. This is almost
-	 * always unnecessary and inefficient.
+	 * The {@link Session} is flushed when {@link Transaction#commit()}
+	 * is called and before every query. This is usually unnecessary and
+	 * inefficient.
 	 */
 	ALWAYS;
 

@@ -227,6 +227,10 @@ dependencies {
     // the GOAT ORM
     implementation 'org.hibernate.orm:hibernate-core:6.2.2.Final'
 
+    // Hibernate Validator
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.0.Final'
+    implementation 'org.glassfish:jakarta.el:4.0.2'
+
     // Agroal connection pool
     implementation 'org.hibernate.orm:hibernate-agroal:6.2.2.Final'
     implementation 'io.agroal:agroal-pool:2.1'
@@ -270,16 +274,16 @@ We begin with our _entity class_:
 ----
 package org.hibernate.example;
 
-import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 class Book {
     @Id
     String isbn;
 
-    @Basic(optional = false)
+    @NotNull
     String title;
 
     Book() {}

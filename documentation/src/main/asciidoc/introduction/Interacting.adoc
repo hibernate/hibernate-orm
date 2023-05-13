@@ -724,6 +724,25 @@ We have to make sure that the class with the `@NamedQuery` annotation will be sc
 
 The `@NamedNativeQuery` lets us do the same for native SQL queries.
 
+.Executing named queries
+|===
+| Kind of query | `Session` method | `EntityManager` method | `Query` execution method
+
+| Selection query | `createNamedSelectionQuery(String,Class)` | `createNamedQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation query | `createNamedMutationQuery(String)` | `createNamedQuery(String)` | `executeUpdate()`
+|===
+
+We execute our named query as follows:
+
+[source,java]
+----
+em.createNamedQuery("10BooksByTitle")
+  .setParameter("titlePattern", titlePattern)
+  .getResultList()
+----
+
+Note that the code which executes the named query is not aware of whether the query was written in HQL or in native SQL, making it slightly easier to change and optimize the query later.
+
 [[jdbc]]
 === Interacting directly with JDBC
 

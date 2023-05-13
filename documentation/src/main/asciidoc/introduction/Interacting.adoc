@@ -594,6 +594,7 @@ As we said <<introduction,right up front>>, Hibernate's generated SQL is meant t
 
 | Selection query | `createNativeQuery(String,Class)` | `createNativeQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
 | Mutation query | `createNativeMutationQuery(String)` | `createNativeQuery(String)` | `executeUpdate()`
+| Stored procedure | `createStoredProcedureCall(String)` | `createStoredProcedureQuery(String)` | `execute()`
 |===
 
 For the most simple cases, Hibernate can infer the shape of the result set:
@@ -688,3 +689,28 @@ List<Book> books =
 === Named queries
 
 TODO
+
+[[jdbc]]
+=== Interacting directly with JDBC
+
+From time to time we run into the need to write some code that calls JDBC directly.
+Unfortunately, JPA offers no good way to do this, but the Hibernate `Session` does.
+
+[source,java]
+----
+session.doWork(connection -> {
+    try (var callable = connection.prepareCall("{call myproc(?)}")) {
+        callable.setLong(1, argument);
+        callable.execute();
+    }
+});
+----
+
+The `Connection` passed to the work is the same connection being used by the session, and so any work performed using that connection occurs in the same transaction context.
+
+[TIP]
+====
+You can call stored procedures using `createStoredProcedureQuery()` or `createStoredProcedureCall()`.
+====
+
+If the work returns a value, use `doReturningWork()` instead of `doWork()`.

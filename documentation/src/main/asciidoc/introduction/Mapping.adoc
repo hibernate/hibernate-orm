@@ -15,15 +15,33 @@ This is called _bottom up_ mapping.
 // ."Legacy" data
 ====
 Developers often refer to a pre-existing relational database as "legacy" data.
-That's perhaps a bad word to use, conjuring images of bad old "legacy apps" written in COBOL or something.
-But it's not "legacy" data—it's just your data.
-And it's valuable.
-So learning to work with "legacy" data is important.
+This tends to conjure images of bad old "legacy apps" written in COBOL or something.
+But legacy data is valuable, and learning to work with it is important.
 ====
 
 Especially when mapping bottom up, we often need to customize the inferred object/relational mappings.
 This is a somewhat tedious topic, and so we don't want to spend too many words on it.
 Instead, we'll quickly skim the most important mapping annotations.
+
+[[case-convention]]
+.Hibernate SQL case convention
+****
+Computers have had lowercase letters for rather a long time now.
+Most developers learned long ago that text written in MixedCase, camelCase, or even snake_case is easier to read than text written in SHOUTYCASE.
+This is just as true of SQL as it is of any other language.
+
+Therefore, for over twenty years, the convention on the Hibernate project has been that:
+
+- query language identifiers are written in `lowercase`,
+- table names are written in `MixedCase`, and
+- column names are written in `camelCase`.
+
+That is to say, we simply adopted Java's excellent conventions and applied them to SQL.
+
+Now, there's no way we can force you to follow this convention, even if we wished to.
+Hell, you can easily write a `PhysicalNamingStrategy` which makes table and column names ALL UGLY AND SHOUTY LIKE THIS IF YOU PREFER.
+But, _by default_, that's what Hibernate does, and it's frankly a pretty sane thing to do.
+****
 
 [[mapping-inheritance]]
 === Mapping entity inheritance hierarchies

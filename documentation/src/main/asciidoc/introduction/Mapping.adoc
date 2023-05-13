@@ -619,3 +619,36 @@ This limitation of the Postgres driver has resulted in a whole cottage industry 
 But simply removing the `@Lob` annotation has exactly the same effect.
 ====
 
+Finally, as an alternative, Hibernate lets you declare an attribute of type `java.sql.Blob` or `java.sql.Clob`.
+
+[source,java]
+----
+@Entity
+class Book {
+    ...
+    Clob text;
+    Blob coverArt;
+    ....
+}
+----
+
+To assign a value to these fields, we'll need to use a `LobHelper`.
+We can get one from the `Session`:
+
+[source,java]
+----
+LobHelper helper = s.getLobHelper();
+book.text = helper.createClob(text);
+book.coverArt = helper.createBlob(image);
+----
+
+In principle, the `Blob` and `Clob` objects provide efficient ways to read or stream LOB data from the server.
+
+[source,java]
+----
+Book book = s.find(Book.class, bookId);
+String text = book.text.getSubString(1, textLength);
+InputStream bytes = book.images.getBinaryStream();
+----
+
+Of course, the behavior here depends very much on the JDBC driver, and so we really can't promise that this is a sensible thing to do on your database.

@@ -215,6 +215,158 @@ This introduction will guide you through the basic tasks involved in developing 
 
 Naturally, we'll start at the top of this list, with the least-interesting topic: _configuration_.
 
+[[hello-world]]
+=== Hello World!
+
+Before we get into the weeds, we'll quickly present a basic example program that will help you get started if you don't already have Hibernate integrated into your project.
+
+We begin with a simple gradle build file:
+
+[source,groovy]
+.`build.gradle`
+----
+plugins {
+    id 'java'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // the GOAT ORM
+    implementation 'org.hibernate.orm:hibernate-core:6.2.2.Final'
+
+    // Agroal connection pool
+    implementation 'org.hibernate.orm:hibernate-agroal:6.2.2.Final'
+    implementation 'io.agroal:agroal-pool:2.1'
+
+    // logging via Log4j
+    implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+
+    // JPA metamodel generator (for criteria queries)
+    annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.2.2.Final'
+
+    // H2 database
+    runtimeOnly 'com.h2database:h2:2.1.214'
+}
+----
+
+Only the first of these dependencies is absolutely _required_ to run Hibernate.
+
+Next, we'll add a logging configuration file for log4j:
+
+[source,properties]
+.`log4j2.properties`
+----
+rootLogger.level = info
+rootLogger.appenderRefs = console
+rootLogger.appenderRef.console.ref = console
+
+logger.hibernate.name = org.hibernate.SQL
+logger.hibernate.level = info
+
+appender.console.name = console
+appender.console.type = Console
+appender.console.layout.type = PatternLayout
+appender.console.layout.pattern = %highlight{[%p]} %m%n
+----
+
+Now we need some Java code.
+We begin with our _entity class_:
+
+[source,java]
+.`Book.java`
+----
+package org.hibernate.example;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+@Entity
+class Book {
+    @Id
+    String isbn;
+
+    @Basic(optional = false)
+    String title;
+
+    Book() {}
+
+    Book(String isbn, String title) {
+        this.isbn = isbn;
+        this.title = title;
+    }
+}
+----
+
+Finally, the code which configures and instantiates Hibernate and asks it to persist and query the entity:
+
+[source,java]
+.`Main.java`
+----
+package org.hibernate.example;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import org.hibernate.cfg.Configuration;
+
+import static java.lang.Boolean.TRUE;
+import static java.lang.System.out;
+import static org.hibernate.cfg.AvailableSettings.*;
+
+public class Main {
+    public static void main(String[] args) {
+        var sessionFactory = new Configuration()
+                .addAnnotatedClass(Book.class)
+                // use H2 in-memory database
+                .setProperty(URL, "jdbc:h2:mem:db1")
+                .setProperty(USER, "sa")
+                .setProperty(PASS, "")
+                // use Agroal connection pool
+                .setProperty("hibernate.agroal.maxSize", "20")
+                // display SQL in console
+                .setProperty(SHOW_SQL, TRUE.toString())
+                .setProperty(FORMAT_SQL, TRUE.toString())
+                .setProperty(HIGHLIGHT_SQL, TRUE.toString())
+                .buildSessionFactory();
+
+        // export the inferred database schema
+        sessionFactory.getSchemaManager().exportMappedObjects(true);
+
+
+        // persist an entity
+        sessionFactory.inTransaction(session -> {
+            session.persist(new Book("9781932394153", "Hibernate in Action"));
+        });
+
+        // query data using HQL
+        sessionFactory.inSession(session -> {
+            out.println(session.createSelectionQuery("select isbn||': '||title from Book").getSingleResult());
+        });
+
+        // query data using criteria API
+        sessionFactory.inSession(session -> {
+            CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
+            CriteriaQuery<String> query = builder.createQuery(String.class);
+            Root<Book> record = query.from(Book.class);
+            query.select(builder.concat(builder.concat(record.get(Book_.isbn), builder.literal(": ")),
+                    record.get(Book_.title)));
+            out.println(session.createSelectionQuery(query).getSingleResult());
+        });
+    }
+}
+----
+
+Here we've used Hibernate's native APIs.
+We could have used JPA-standard APIs to achieve the same thing.
+In that case, we need to use XML to configure Hibernate.
+
 include::Configuration.adoc[]
 include::Entities.adoc[]
 include::Mapping.adoc[]

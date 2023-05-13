@@ -707,7 +707,22 @@ List<Book> books =
 [[named-queries]]
 === Named queries
 
-TODO
+The `@NamedQuery` annotation lets us define a HQL query that is compiled and checked as part of the bootstrap process.
+We can place the `@NamedQuery` annotation on any class, even on an entity class.
+
+[source,java]
+----
+@NamedQuery(name="10BooksByTitle",
+            query="from Book where title like :titlePattern order by title fetch first 10 rows only")
+class BookQueries {}
+----
+
+We have to make sure that the class with the `@NamedQuery` annotation will be scanned by Hibernate, either:
+
+- by adding `<class>org.hibernate.example.BookQueries</class>` to `persistence.xml`, or
+- by calling `configuration.addClass(BookQueries.class)`.
+
+The `@NamedNativeQuery` lets us do the same for native SQL queries.
 
 [[jdbc]]
 === Interacting directly with JDBC

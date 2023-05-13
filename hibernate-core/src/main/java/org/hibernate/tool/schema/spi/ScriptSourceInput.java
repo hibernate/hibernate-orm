@@ -32,4 +32,8 @@ public interface ScriptSourceInput {
 		return false;
 	}
 
+	default boolean exists() {
+		return true;
+	}
+
 }

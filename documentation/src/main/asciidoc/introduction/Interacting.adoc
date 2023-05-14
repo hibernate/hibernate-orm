@@ -383,7 +383,7 @@ It's not necessary to dirty-check on entity instance in read-only mode.
 
 Hibernate features three complementary ways to write queries:
 
-- the _Hibernate Query Language_, an extremely powerful superset of JPQL, which abstracts most of the features of modern SQL queries,
+- the _Hibernate Query Language_, an extremely powerful superset of JPQL, which abstracts most of the features of modern dialects of SQL,
 - the JPA _criteria query_ API, along with extensions, allowing almost any HQL query to be constructed programmatically via a typesafe API, and, of course
 - for when all else fails, _native SQL_ queries.
 
@@ -393,7 +393,7 @@ Hibernate features three complementary ways to write queries:
 :hql: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#query-language
 
 A full discussion of the query language would require just as much text as the rest of this Introduction.
-Fortunately, HQL is already described in exhaustive detail in the {hql}[User Guide].
+Fortunately, HQL is already described in exhaustive (and exhausting) detail in the {hql}[User Guide].
 // The query language is discussed in great detail below in <<query-language>>.
 
 Here we want to see how to execute a query via the `Session` or `EntityManager` API.
@@ -472,8 +472,10 @@ Or, if we're expecting it to return at most one result, we can use `getSingleRes
 Book bookOrNull =
         s.createSelectionQuery("from Book where isbn = ?1", Book.class)
          .setParameter(1, isbn)
-         .getSingleResult();
+         .getSingleResultOrNull();
 ----
+
+The difference, of course, is that `getSingleResult()` throws an exception if there is no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
 
 By default, Hibernate dirty checks entities in the persistence context before executing a query, in order to determine if the session should be flushed.
 If there are many entities association with the persistence context, then this can be an expensive operation.

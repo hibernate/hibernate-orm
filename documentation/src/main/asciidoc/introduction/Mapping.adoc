@@ -652,3 +652,38 @@ InputStream bytes = book.images.getBinaryStream();
 ----
 
 Of course, the behavior here depends very much on the JDBC driver, and so we really can't promise that this is a sensible thing to do on your database.
+
+[[mapping-formulas]]
+=== Mapping to formulas
+
+Hibernate lets us map an attribute of an entity to a SQL formula involving columns of the mapped table.
+Thus, the attribute is a sort of "derived" value.
+
+.Annotations for mapping formulas
+[cols=",5"]
+|===
+| Annotation | Purpose
+
+| `@Formula` | Map an attribute to a SQL formula
+| `@JoinFormula` | Map an association to a SQL formula
+| `@DiscriminatorFormula` | Use a SQL formula as the discriminator in <<mapping-inheritance,single table inheritance>>.
+|===
+
+For example:
+
+[source,java]
+----
+@Entity
+class Order {
+    ...
+    @Column(name = "sub_total", scale=2, precision=8)
+    BigDecimal subTotal;
+
+    @Column(name = "tax", scale=4, precision=4)
+    BigDecimal taxRate;
+
+    @Formula("sub_total * (1.0 + tax)")
+    BigDecimal totalWithTax;
+    ...
+}
+----

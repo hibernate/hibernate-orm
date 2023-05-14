@@ -897,6 +897,26 @@ This is quite normal.
 A one-to-one association is the usual way we implement subtyping in a fully-normalized relational model.
 ====
 
+There are three annotations for mapping associations: `@ManyToOne`, `@OneToMany`, and `@ManyToMany`.
+They share some common annotation members:
+
+.Association-defining annotation members
+[cols=",4,3"]
+|===
+| Member | Interpretation | Default value
+
+| `cascade` | Persistence operations which should <<cascade,cascade>> to the associated entity (a list of ``CascadeType``s) | `{}`
+| `fetch` | Whether the association is eagerly <<association-fetching,fetched>> or may be <<proxies-and-lazy-fetching,proxied>>
+a|
+- `LAZY` for `@OneToMany` and `@ManyToMany`
+- `EAGER` for `@ManyToOne` 💀💀💀
+| `targetEntity` | The associated entity class | Determined from the attribute type declaration
+| `optional` | For `@ManyToOne` or `@OneToOne` associations, whether the association can be `null` | `true`
+| `mappedBy` | For a bidirectional association, an attribute of the associated entity which maps the association | By default, the association is assumed unidirectional
+|===
+
+We'll explain the effect of these members as we consider the various types of association mapping.
+
 Let's begin with the most common association multiplicity.
 
 [[many-to-one]]

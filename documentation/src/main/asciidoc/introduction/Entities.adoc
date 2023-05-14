@@ -792,7 +792,7 @@ Let's abandon our analogy right here, before we start calling this basic type a 
 [[embeddable-objects]]
 === Embeddable objects
 
-An embeddable object is a Java class whose state maps to multiple columns of a table, but which doesn't itself have a persistent identity.
+An embeddable object is a Java class whose state maps to multiple columns of a table, but which doesn't have its own persistent identity.
 That is, it's a class with mapped attributes, but no `@Id` attribute.
 
 An embeddable object can only be made persistent by assigning it to the attribute of an entity.
@@ -828,7 +828,7 @@ class Name {
 An embeddable class must satisfy the same requirements that entity classes satisfy, with the exception that an embeddable class has no `@Id` attribute.
 In particular, it must have a constructor with no parameters.
 
-Alternatively, and embeddable type may be defined as a Java record type:
+Alternatively, an embeddable type may be defined as a Java record type:
 
 [source,java]
 ----
@@ -855,6 +855,9 @@ class Author {
 }
 ----
 
+Embeddable types can be nested.
+That is, an `@Embeddable` class may have an attribute whose type is itself a different `@Embeddable` class.
+
 [TIP]
 // .The `@Embedded` annotation is not required
 ====
@@ -862,12 +865,16 @@ JPA provides an `@Embedded` annotation to identify an attribute of an entity tha
 This annotation is completely optional, and so we don't usually use it.
 ====
 
+Usually, embeddable types are stored in a "flattened" format.
+Their attributes map columns of the table of their parent entity.
+Later, in <<mapping-embeddables>>, we'll see a couple of different options.
+
 An attribute of embeddable type represents a relationship between a Java object with a persistent identity, and a Java object with no persistent identity.
-You can think of it as a whole-part relationship.
+We can think of it as a whole/part relationship.
 The embeddable object belongs to the entity, and can't be shared with other entity instances.
+And it exits for only as long as its parent entity exists.
 
-Now we'll discuss a different kind of relationship: a relationship between Java objects that each have their persistent identity and persistence lifecycle.
-
+Next we'll discuss a different kind of relationship: a relationship between Java objects that each have their persistent identity and persistence lifecycle.
 
 [[associations]]
 === Associations

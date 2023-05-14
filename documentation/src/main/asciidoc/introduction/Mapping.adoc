@@ -653,6 +653,84 @@ InputStream bytes = book.images.getBinaryStream();
 
 Of course, the behavior here depends very much on the JDBC driver, and so we really can't promise that this is a sensible thing to do on your database.
 
+[[mapping-embeddables]]
+=== Mapping embeddable types to UDTs or to JSON
+
+There's a couple of alternative ways to represent an embeddable type on the database side.
+
+[discrete]
+==== Embeddables as UDTs
+
+First, a really nice option, at least in the case of Java record types, and for databases which support _user-defined types_ (UDTs), is to define a UDT which represents the record type.
+Hibernate 6 makes this really easy.
+Just annotate the record type, or the attribute which holds a reference to it, with the new `@Struct` annotation:
+
+[source,java]
+----
+@Embeddable
+@Struct(name="PersonName")
+record Name(String firstName, String middleName, String lastName) {}
+----
+[source,java]
+----
+@Entity
+class Person {
+    ...
+    Name name;
+    ...
+}
+----
+
+This results in the following UDT:
+
+[source,sql]
+----
+create type PersonName as (firstName varchar(255), middleName varchar(255), lastName varchar(255))
+----
+
+And the `name` column of the `Author` table will have the type `PersonName`.
+
+[discrete]
+==== Embeddables to JSON
+
+A second option that's available is to map the embeddable type to a `JSON` (or `JSONB`) column.
+Now, this isn't something we would exactly _recommend_ if you're defining a data model from scratch, but it's at least useful for mapping pre-existing tables with JSON-typed columns.
+Since embeddable types are nestable, we can map some JSON formats this way, and even query JSON properties using HQL.
+
+[NOTE]
+====
+At this time, JSON arrays are not supported!
+====
+
+To map an attribute of embeddable type to JSON, we must annotate the attribute `@JdbcTypeCode(SqlTypes.JSON)`, instead of annotating the embeddable type.
+But the embeddable type `Name` should still be annotated `@Embeddable` if we want to query its attributes using HQL.
+
+[source,java]
+----
+@Embeddable
+record Name(String firstName, String middleName, String lastName) {}
+----
+[source,java]
+----
+@Entity
+class Person {
+    ...
+    @JdbcTypeCode(SqlTypes.JSON)
+    Name name;
+    ...
+}
+----
+
+We also need to add Jackson or an implementation of JSONB—for example, Yasson—to our runtime classpath.
+To use Jackson we could add this line to our Gradle build:
+
+[source,groovy]
+----
+runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:{jacksonVersion}'
+----
+
+Now the `name` column of the `Author` table will have the type `jsonb`, and Hibernate will automatically use Jackson to serialize a `Name` to and from JSON format.
+
 [[mapping-formulas]]
 === Mapping to formulas
 

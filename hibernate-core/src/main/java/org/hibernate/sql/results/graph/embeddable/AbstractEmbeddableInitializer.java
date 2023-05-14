@@ -263,8 +263,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		FetchParentAccess parentAccess = fetchParentAccess;
 
 		while ( parentAccess != null && parentAccess.isEmbeddableInitializer() ) {
-			assert !( parentAccess.getInitializedPart() instanceof CompositeIdentifierMapping )
-					: "isPartOfKey should have been true in this case";
+			if ( parentAccess.getInitializedPart() instanceof CompositeIdentifierMapping ) {
+				return false;
+			}
 			parentAccess = parentAccess.getFetchParentAccess();
 		}
 

@@ -351,13 +351,14 @@ logger.hibernate.name = org.hibernate.SQL
 logger.hibernate.level = debug
 ----
 
-You can make the logged SQL more readable by enabling one or both of the following settings:
+You can make the SQL logged to the console more readable by enabling formatting or highlighting.
 
-.Setting for SQL logging to the console
+.Settings for SQL logging to the console
 [cols=",2"]
 |===
 | Configuration property name | Purpose
 
+| `hibernate.show_sql` | If `true`, log SQL directly to the console
 | `hibernate.format_sql`      | If `true`, log SQL in a multiline, indented format
 | `hibernate.highlight_sql`   | If `true`, log SQL with syntax highlighting via ANSI escape codes
 |===
@@ -391,7 +392,7 @@ Please refer to the Javadoc for these interfaces for more information about the 
 
 === Nationalized character data in SQL Server
 
-_By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode data. So, if you're working with SQL Server, you might need to force Hibernate to use the `nchar` and `nvarchar` types.
+_By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode data. But a Java string may contain any Unicode character. So, if you're working with SQL Server, you might need to force Hibernate to use the `nchar` and `nvarchar` column types.
 
 .Setting the use of nationalized character data
 [cols=",2"]
@@ -406,3 +407,6 @@ _By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode 
 ====
 Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `_UTF8`.
 ====
+
+On the other hand, if only _some_ columns store nationalized data, use the `@Nationalized` annotation to indicate fields of your entities which map these columns.
+

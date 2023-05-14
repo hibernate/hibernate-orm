@@ -394,6 +394,28 @@ List<Publisher> allpubs =
 ----
 ====
 
+[TIP]
+====
+For "reference" data, that is, for data which is expected to always be found in the second-level cache, it's a good idea to _prime_ the cache at startup.
+There's a really easy way to do this: just execute a query immediately after obtaining the
+`EntityManager` or `SessionFactory`.
+
+[source,java]
+----
+SessionFactory sf = setupHibernate(new Configuration()).buildSessionFactory();
+// prime the second-level cache
+sf.inSession(s -> {
+    s.createSelectionQuery("from Countries"))
+     .setReadOnly(true)
+     .getResultList();
+    s.createSelectionQuery("from Product where discontinued = false"))
+     .setReadOnly(true)
+     .getResultList();
+});
+
+----
+====
+
 Very occasionally, it's necessary or advantageous to control the cache explicitly, for example, to evict some data that we know to be stale.
 The `Cache` interface allows programmatic eviction of cached items.
 

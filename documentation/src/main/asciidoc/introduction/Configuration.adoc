@@ -78,6 +78,10 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 :slf4j: http://www.slf4j.org/
 :enhancer: https://docs.jboss.org/hibernate/orm/5.4/topical/html_single/bytecode/BytecodeEnhancement.html
 :agroal: https://agroal.github.io
+:jackson: https://github.com/FasterXML/jackson
+:yasson: https://projects.eclipse.org/projects/ee4j.yasson
+:validator: https://hibernate.org/validator
+:ehcache: https://www.ehcache.org
 
 Optionally, you might also add any of the following additional features:
 
@@ -86,12 +90,12 @@ Optionally, you might also add any of the following additional features:
 | Optional feature | Dependencies
 
 | An {slf4j}[SLF4J] logging implementation | `org.apache.logging.log4j:log4j-core` or `org.slf4j:slf4j-jdk14`
-| A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal` and `io.agroal:agroal-pool`, for example
+| A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal` and `io.agroal:agroal-pool`
 | The Hibernate metamodel generator, if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
-| Hibernate Validator | `org.hibernate.validator:hibernate-validator` and `org.glassfish:jakarta.el`
-| Compile-time checking for your HQL queries | `org.hibernate:query-validator`
-| Second-level cache support via JCache and EHCache | `org.hibernate.orm:hibernate-jcache` along with `org.ehcache:ehcache`
+| {validator}[Hibernate Validator] | `org.hibernate.validator:hibernate-validator` and `org.glassfish:jakarta.el`
+| Second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` along with `org.ehcache:ehcache`
 // | SCRAM authentication support for PostgreSQL | `com.ongres.scram:client:2.1`
+| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] | `com.fasterxml.jackson.core:jackson-databind` or `org.eclipse:yasson`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your

@@ -971,7 +971,7 @@ That said, it's not a hard requirement to update the unowned side, at least if y
 [TIP]
 // .Unidirectional `@OneToMany`?
 ====
-In principle Hibernate _does_ allow you to have a unidirectional one to many, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
+In principle Hibernate _does_ allow you to have a unidirectional one-to-many, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
 In practice, this mapping is unnatural, and just doesn't work very well.
 Avoid it.
 ====
@@ -1005,12 +1005,12 @@ In hindsight, we could have done more to make clear that this was always a viabl
 [[one-to-one-fk]]
 === One-to-one (first way)
 
-The simplest sort of one-to-one association is almost exactly line a `@ManyToOne` association, except that it maps to a foreign key column with a `UNIQUE` constraint.
+The simplest sort of one-to-one association is almost exactly like a `@ManyToOne` association, except that it maps to a foreign key column with a `UNIQUE` constraint.
 
 [TIP]
 // .One-to-many join table mappings
 ====
-Later, we'll see how to map a many-to-one association to an <<join-table-mappings,association table>>.
+Later, we'll see how to map a one-to-one association to an <<join-table-mappings,association table>>.
 ====
 
 A one-to-one association must be annotated `@OneToOne`:
@@ -1055,6 +1055,8 @@ class Person {
 }
 ----
 
+`Person.author` is the unowned sure, because it's the side marked `mappedBy`.
+
 .Lazy fetching for one-to-one associations
 ****
 Notice that we did not declare the unowned end of the association `fetch=LAZY`.
@@ -1098,7 +1100,11 @@ class Author {
 }
 ----
 
-Notice that the `@Id` attribute is no longer a `@GeneratedValue` and, instead, the `author` association is annotated `@MapsId`.
+Notice that, compared with the previous mapping:
+
+- the `@Id` attribute is no longer a `@GeneratedValue` and,
+- instead, the `author` association is annotated `@MapsId`.
+
 This lets Hibernate know that the association to `Person` is the source of primary key values for `Author`.
 
 Here, there's no extra foreign key column in the `Author` table, since the `id` column holds the identifier of `Person`.
@@ -1194,6 +1200,8 @@ So we may expand our taxonomy with:
 | Collection of embeddable elements | Non-entity | Zero or more |  `@ElementCollection Set<Name> names`
 |===
 
+There's actually two new kinds of mapping here: `@Array` mappings, and `@ElementCollection` mappings.
+
 [CAUTION]
 // .These sorts of mappings are overused
 ====
@@ -1207,6 +1215,8 @@ And almost every table should be mapped by an entity class.
 The features we're about to meet in the next two subsections are used much more often by beginners than they're used by experts.
 So if you're a beginner, you'll save yourself same hassle by staying away from these features for now.
 ====
+
+We'll talk about `@Array` mappings first.
 
 [[arrays]]
 === Collections mapped to SQL arrays

@@ -91,8 +91,8 @@ For example:
 | `org.hibernate.annotations.CascadeType` | `javax.persistence.CascadeType`
 | `org.hibernate.FlushMode` | `javax.persistence.FlushModeType`
 | `org.hibernate.annotations.FetchMode` | `javax.persistence.FetchType`
-| `org.hibernate.query.Query` | `javax.peristence.Query`
-| `org.hibernate.Cache` | `javax.peristence.Cache`
+| `org.hibernate.query.Query` | `javax.persistence.Query`
+| `org.hibernate.Cache` | `javax.persistence.Cache`
 | `@org.hibernate.annotations.NamedQuery` | `@javax.persistence.NamedQuery`,
 | `@org.hibernate.annotations.Cache` | `@javax.persistence.Cacheable`
 |===

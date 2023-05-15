@@ -1524,22 +1524,22 @@ public class EntityBinder {
 	}
 
 	private void bindSubclassCache(SharedCacheMode sharedCacheMode) {
-		final Cache cache = annotatedClass.getAnnotation( Cache.class );
+		if ( annotatedClass.isAnnotationPresent( Cache.class ) ) {
+			final String className = persistentClass.getClassName() == null
+					? annotatedClass.getName()
+					: persistentClass.getClassName();
+			throw new AnnotationException("Entity class '" + className
+					+  "' is annotated '@Cache' but it is a subclass in an entity inheritance hierarchy"
+					+" (only root classes may define second-level caching semantics)");
+		}
+
 		final Cacheable cacheable = annotatedClass.getAnnotation( Cacheable.class );
-		if ( cache != null ) {
-			LOG.cacheOrCacheableAnnotationOnNonRoot(
-					persistentClass.getClassName() == null
-							? annotatedClass.getName()
-							: persistentClass.getClassName()
-			);
-		}
-		else if ( cacheable == null && persistentClass.getSuperclass() != null ) {
-			// we should inherit our super's caching config
-			isCached = persistentClass.getSuperclass().isCached();
-		}
-		else {
-			isCached = isCacheable( sharedCacheMode, cacheable );
-		}
+		isCached = cacheable == null && persistentClass.getSuperclass() != null
+				// we should inherit the root class caching config
+				? persistentClass.getSuperclass().isCached()
+				//TODO: is this even correct?
+				//      Do we even correctly support selectively enabling caching on subclasses like this?
+				: isCacheable( sharedCacheMode, cacheable );
 	}
 
 	private void bindRootClassCache(SharedCacheMode sharedCacheMode, MetadataBuildingContext context) {
@@ -1581,6 +1581,7 @@ public class EntityBinder {
 				// all entities should be cached
 				return true;
 			case ENABLE_SELECTIVE:
+			case UNSPECIFIED: // Hibernate defaults to ENABLE_SELECTIVE, the only sensible setting
 				// only entities with @Cacheable(true) should be cached
 				return explicitCacheableAnn != null && explicitCacheableAnn.value();
 			case DISABLE_SELECTIVE:

@@ -110,6 +110,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.LazyValue;
 import org.hibernate.internal.util.StringHelper;
@@ -143,6 +144,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -358,6 +360,7 @@ public abstract class AbstractEntityPersister
 	private final String[][] propertyColumnWriters;
 	private final boolean[][] propertyColumnUpdateable;
 	private final boolean[][] propertyColumnInsertable;
+	private final Set<String> sharedColumnNames;
 
 	private final List<Integer> lobProperties;
 
@@ -434,6 +437,7 @@ public abstract class AbstractEntityPersister
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
+	protected final String[] fullDiscriminatorSQLValues;
 	private final Object[] fullDiscriminatorValues;
 
 	/**
@@ -599,6 +603,7 @@ public abstract class AbstractEntityPersister
 		propertyColumnWriters = new String[hydrateSpan][];
 		propertyColumnUpdateable = new boolean[hydrateSpan][];
 		propertyColumnInsertable = new boolean[hydrateSpan][];
+		sharedColumnNames = new HashSet<>();
 
 		final HashSet<Property> thisClassProperties = new HashSet<>();
 		final ArrayList<String> lazyNames = new ArrayList<>();
@@ -736,6 +741,10 @@ public abstract class AbstractEntityPersister
 							typeConfiguration,
 							functionRegistry
 					);
+					if ( isDefinedBySubclass && persistentClass.isDefinedOnMultipleSubclasses( column )
+							|| !isDefinedBySubclass && persistentClass.hasSubclasses() ) {
+						sharedColumnNames.add( colName );
+					}
 				}
 			}
 			propColumns.add( cols );
@@ -772,7 +781,7 @@ public abstract class AbstractEntityPersister
 
 		// Handle any filters applied to the class level
 		filterHelper = isNotEmpty( persistentClass.getFilters() )
-				? new FilterHelper( persistentClass.getFilters(), factory )
+				? new FilterHelper( persistentClass.getFilters(), getEntityNameByTableNameMap( persistentClass ), factory )
 				: null;
 
 		useReferenceCacheEntries = shouldUseReferenceCacheEntries( creationContext.getSessionFactoryOptions() );
@@ -782,12 +791,12 @@ public abstract class AbstractEntityPersister
 				&& shouldInvalidateCache( persistentClass, creationContext );
 
 		final List<Object> values = new ArrayList<>();
-//		final List<String> sqlValues = new ArrayList<>();
+		final List<String> sqlValues = new ArrayList<>();
 
 		if ( persistentClass.isPolymorphic() && persistentClass.getDiscriminator() != null ) {
 			if ( !getEntityMetamodel().isAbstract() ) {
 				values.add( DiscriminatorHelper.getDiscriminatorValue( persistentClass ) );
-//				sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( persistentClass, dialect, factory ) );
+				sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( persistentClass, dialect ) );
 			}
 
 			final List<Subclass> subclasses = persistentClass.getSubclasses();
@@ -796,13 +805,32 @@ public abstract class AbstractEntityPersister
 				//copy/paste from EntityMetamodel:
 				if ( !isAbstract( subclass ) ) {
 					values.add( DiscriminatorHelper.getDiscriminatorValue( subclass ) );
-//					sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( subclass, dialect, factory ) );
+					sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( subclass, dialect ) );
 				}
 			}
 		}
 
-//		fullDiscriminatorSQLValues = toStringArray( sqlValues );
+		fullDiscriminatorSQLValues = toStringArray( sqlValues );
 		fullDiscriminatorValues = toObjectArray( values );
+	}
+
+	public static Map<String, String> getEntityNameByTableNameMap(PersistentClass persistentClass) {
+		final Map<String, String> entityNameByTableNameMap = new HashMap<>();
+		PersistentClass superType = persistentClass.getSuperPersistentClass();
+		while ( superType != null ) {
+			entityNameByTableNameMap.put( superType.getTable().getName(), superType.getEntityName() );
+			for ( Join join : superType.getJoins() ) {
+				entityNameByTableNameMap.put( join.getTable().getName(), superType.getEntityName() );
+			}
+			superType = superType.getSuperPersistentClass();
+		}
+		for ( PersistentClass subclass : persistentClass.getSubclassClosure() ) {
+			entityNameByTableNameMap.put( subclass.getTable().getName(), subclass.getEntityName() );
+			for ( Join join : subclass.getJoins() ) {
+				entityNameByTableNameMap.put( join.getTable().getName(), subclass.getEntityName() );
+			}
+		}
+		return entityNameByTableNameMap;
 	}
 
 	private MultiIdEntityLoader<Object> buildMultiIdLoader(PersistentClass persistentClass) {
@@ -943,6 +971,10 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean isSubclassEntityName(String entityName) {
 		return entityMetamodel.getSubclassEntityNames().contains( entityName );
+	}
+
+	public boolean isSharedColumn(String columnExpression) {
+		return sharedColumnNames.contains( columnExpression );
 	}
 
 	protected boolean[] getTableHasColumns() {
@@ -3007,7 +3039,13 @@ public abstract class AbstractEntityPersister
 			final FilterAliasGenerator filterAliasGenerator = useQualifier && tableGroup != null
 					? getFilterAliasGenerator( tableGroup )
 					: null;
-			filterHelper.applyEnabledFilters( predicateConsumer, filterAliasGenerator, enabledFilters );
+			filterHelper.applyEnabledFilters(
+					predicateConsumer,
+					filterAliasGenerator,
+					enabledFilters,
+					tableGroup,
+					creationState
+			);
 		}
 	}
 

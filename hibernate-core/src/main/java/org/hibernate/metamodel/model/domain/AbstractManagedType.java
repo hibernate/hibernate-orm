@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,7 +59,7 @@ public abstract class AbstractManagedType<J>
 	private volatile Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes ;
 	private volatile Map<String, PersistentAttribute<J, ?>> declaredConcreteGenericAttributes;
 
-	private final List<ManagedDomainType> subTypes = new ArrayList<>();
+	private final List<ManagedDomainType<? extends J>> subTypes = new ArrayList<>();
 
 	protected AbstractManagedType(
 			String hibernateTypeName,
@@ -85,6 +86,11 @@ public abstract class AbstractManagedType<J>
 	@Override
 	public ManagedDomainType<? super J> getSuperType() {
 		return superType;
+	}
+
+	@Override
+	public Collection<? extends ManagedDomainType<? extends J>> getSubTypes() {
+		return subTypes;
 	}
 
 	@Override

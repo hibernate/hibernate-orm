@@ -48,6 +48,10 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		this.joinPredicateConsumer = joinPredicateConsumer;
 	}
 
+	public TableGroup getCorrelatedTableGroup() {
+		return correlatedTableGroup;
+	}
+
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		assert !getTableGroupJoins().contains( join );
@@ -154,9 +158,5 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 
 	public Consumer<Predicate> getJoinPredicateConsumer() {
 		return joinPredicateConsumer;
-	}
-
-	public TableGroup getCorrelatedTableGroup(){
-		return correlatedTableGroup;
 	}
 }

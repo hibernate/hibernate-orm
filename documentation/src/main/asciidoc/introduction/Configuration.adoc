@@ -396,6 +396,7 @@ Writing your own `PhysicalNamingStrategy` and/or `ImplicitNamingStrategy` is an 
 Please refer to the Javadoc for these interfaces for more information about the division of responsibility between them.
 ====
 
+[[nationalized-chars]]
 === Nationalized character data in SQL Server
 
 _By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode data. But a Java string may contain any Unicode character. So, if you're working with SQL Server, you might need to force Hibernate to use the `nchar` and `nvarchar` column types.

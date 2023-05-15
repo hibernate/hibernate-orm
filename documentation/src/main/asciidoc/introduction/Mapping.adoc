@@ -731,6 +731,49 @@ runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:{jacksonVersion}'
 
 Now the `name` column of the `Author` table will have the type `jsonb`, and Hibernate will automatically use Jackson to serialize a `Name` to and from JSON format.
 
+[[miscellaneous-mappings]]
+=== Summary of SQL column type mappings
+
+So, as we've seen, there are quite a few annotations that affect the mapping of Java types to SQL column types in DDL.
+Here we summarize the ones we've just seen in the second half of this chapter, along with some we already mentioned in earlier chapters.
+
+.Annotations for mapping SQL column types
+[cols=",3"]
+|===
+| Annotation | Interpretation
+
+| `@Enumerated` | Specify how an `enum` type should be persisted
+| `@Nationalized` | Use a nationalized character type: `NCHAR`, `NVARCHAR`, or `NCLOB`
+| `@Lob` 💀 | Use JDBC LOB APIs to read and write the annotated attribute
+| `@Array` | Map a collection to a SQL `ARRAY` type of the specified length
+| `@Struct` | Map an embeddable to a SQL UDT with the given name
+| `@TimeZoneStorage` | Specify how the time zone information should be persisted
+| `@JdbcType` or `@JdbcTypeCode` | Use an implementation of `JdbcType` to map an arbitrary SQL type
+|===
+
+In addition, there are some configuration properties which have a _global_ affect on how basic types map to SQL column types:
+
+.Type mapping settings
+[cols=",2"]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.use_nationalized_character_data` | Enable use of nationalized character types by default
+| `hibernate.type.preferred_boolean_jdbc_type` | Specify the default SQL column type for mapping `boolean`
+| `hibernate.type.preferred_uuid_jdbc_type` | Specify the default SQL column type for mapping `UUID`
+| `hibernate.type.preferred_duration_jdbc_type` | Specify the default SQL column type for mapping `Duration`
+| `hibernate.type.preferred_instant_jdbc_type` | Specify the default SQL column type for mapping `Instant`
+| `hibernate.timezone.default_storage` | Specify the default strategy for storing time zone information
+|===
+
+[TIP]
+====
+These are _global_ settings and thus quite clumsy.
+We recommend against messing with any of these settings unless you have a really good reason for it.
+====
+
+There's one more topic we would like to cover in this chapter.
+
 [[mapping-formulas]]
 === Mapping to formulas
 

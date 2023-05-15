@@ -9,9 +9,9 @@ package org.hibernate.orm.test.cache;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.internal.EntityBinder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -23,7 +23,6 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -34,8 +33,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.SharedCacheMode;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gail Badner
@@ -57,16 +55,16 @@ public class NonRootEntityWithCacheAnnotationTest {
 		try (ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings( settings )
 				.build()) {
-
-			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000482" );
-
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( ABase.class )
-					.addAnnotatedClass( AEntity.class )
-					.buildMetadata();
-
-			assertTrue( triggerable.wasTriggered() );
-			assertFalse( metadata.getEntityBinding( AEntity.class.getName() ).isCached() );
+			try {
+				new MetadataSources( serviceRegistry )
+						.addAnnotatedClass( ABase.class )
+						.addAnnotatedClass( AEntity.class )
+						.buildMetadata();
+				fail("No error for @Cache on subclass entity");
+			}
+			catch (AnnotationException ae) {
+				//exception required
+			}
 		}
 	}
 

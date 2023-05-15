@@ -1914,4 +1914,13 @@ public class FunctionTests {
 		);
 	}
 
+	@Test
+	public void testMemberOf(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("from EntityOfLists where org.hibernate.testing.orm.domain.gambit.EnumValue.THREE member of listOfEnums").getResultList();
+				}
+		);
+	}
+
 }

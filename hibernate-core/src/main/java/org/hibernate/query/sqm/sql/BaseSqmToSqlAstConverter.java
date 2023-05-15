@@ -4983,7 +4983,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( entityNames.isEmpty() ) {
 				continue;
 			}
-			registerTypeUsage( tableGroup );
 
 			final ModelPartContainer modelPart = tableGroup.getModelPart();
 			final EntityMappingType entityMapping;
@@ -5000,17 +4999,36 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					tableGroup,
 					this
 			);
+			// We need to check if this is a treated left or full join, which case we should
+			// allow null discriminator values to maintain correct semantics
+			final TableGroupJoin join = getParentTableGroupJoin( tableGroup );
+			final boolean allowNulls = join != null && ( join.getJoinType() == SqlAstJoinType.LEFT || join.getJoinType() == SqlAstJoinType.FULL );
 			registerTypeUsage( tableGroup );
 			predicate = combinePredicates(
 					predicate,
 					createTreatTypeRestriction(
 							typeExpression,
-							entityNames
+							entityNames,
+							allowNulls
 					)
 			);
 		}
 
 		return predicate;
+	}
+
+	private TableGroupJoin getParentTableGroupJoin(TableGroup tableGroup) {
+		final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
+		if ( parentNavigablePath != null ) {
+			final TableGroup parentTableGroup = getFromClauseIndex().findTableGroup( parentNavigablePath );
+			if ( parentTableGroup instanceof PluralTableGroup ) {
+				return getParentTableGroupJoin( parentTableGroup );
+			}
+			else if ( parentTableGroup != null ) {
+				return parentTableGroup.findTableGroupJoin( tableGroup );
+			}
+		}
+		return null;
 	}
 
 	private Set<String> determineEntityNamesForTreatTypeRestriction(
@@ -5079,13 +5097,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		registerTypeUsage( discriminatorSqmPath );
 		return createTreatTypeRestriction(
 				DiscriminatorPathInterpretation.from( discriminatorSqmPath, this ),
-				subclassEntityNames
+				subclassEntityNames,
+				false
 		);
 	}
 
-	private Predicate createTreatTypeRestriction(Expression typeExpression, Set<String> subclassEntityNames) {
+	private Predicate createTreatTypeRestriction(
+			Expression typeExpression,
+			Set<String> subclassEntityNames,
+			boolean allowNulls) {
+		final Predicate discriminatorPredicate;
 		if ( subclassEntityNames.size() == 1 ) {
-			return new ComparisonPredicate(
+			discriminatorPredicate = new ComparisonPredicate(
 					typeExpression,
 					ComparisonOperator.EQUAL,
 					new EntityTypeLiteral( domainModel.findEntityDescriptor( subclassEntityNames.iterator().next() ) )
@@ -5096,8 +5119,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			for ( String subclassEntityName : subclassEntityNames ) {
 				typeLiterals.add( new EntityTypeLiteral( domainModel.findEntityDescriptor( subclassEntityName ) ) );
 			}
-			return new InListPredicate( typeExpression, typeLiterals );
+			discriminatorPredicate = new InListPredicate( typeExpression, typeLiterals );
 		}
+		if ( allowNulls ) {
+			return new Junction(
+					Junction.Nature.DISJUNCTION,
+					List.of( discriminatorPredicate, new NullnessPredicate( typeExpression ) ),
+					getBooleanType()
+			);
+		}
+		return discriminatorPredicate;
 	}
 
 	private MappingModelExpressible<?> resolveInferredType() {

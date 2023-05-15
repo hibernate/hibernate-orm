@@ -315,14 +315,16 @@ Once we've marked an entity or collection as eligible for storage in the second-
 [[second-level-cache-configuration]]
 === Configuring the second-level cache provider
 
-Configuring Hibernate's second-level cache is a rather involved topic, and quite outside the scope of this document. But in case it helps, we often test Hibernate with the following configuration, which uses EHCache as the cache implementation, as above in <<optional-dependencies>>:
+Configuring a second-level cache provider is a rather involved topic, and quite outside the scope of this document.
+But in case it helps, we often test Hibernate with the following configuration, which uses EHCache as the cache implementation, as above in <<optional-dependencies>>:
 
-.Cache provider configuration
+:ehcache-config: https://www.ehcache.org/documentation/
+
+.EHCache provider configuration
 |===
 | Configuration property name              | Property value
 
-| `hibernate.cache.use_second_level_cache` | `true`
-| `hibernate.cache.region.factory_class`   | `org.hibernate.cache.jcache.JCacheRegionFactory`
+| `hibernate.cache.region.factory_class`   | `jcache`
 | `hibernate.javax.cache.provider`         | `org.ehcache.jsr107.EhcacheCachingProvider`
 | `hibernate.javax.cache.uri`              | `/ehcache.xml`
 |===
@@ -330,15 +332,61 @@ Configuring Hibernate's second-level cache is a rather involved topic, and quite
 If you're using EHCache, you'll also need to include an `ehcache.xml` file
 that explicitly configures the behavior of each cache region belonging to
 your entities and collections.
+You'll find more information about configuring EHCache {ehcache-config}[here].
 
-You can find much more information about the second-level cache in the
-{second-level-cache}[User Guide].
+Alternatively, to use Infinispan as the cache implementation, the following settings are required:
+
+:infinispan-hibernate: https://infinispan.org/docs/stable/titles/hibernate/hibernate.html
+
+.Infinispan provider configuration
+[cols=",3"]
+|===
+| Configuration property name              | Property value
+
+| `hibernate.cache.region.factory_class`   | `infinispan`
+| `hibernate.cache.infinispan.cfg`         a|
+[cols="1,2"]
+!===
+! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs.xml` ! for a distributed cache
+! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs-local.xml` ! to test with local cache
+!===
+|===
+
+Infinispan is usually used when distributed caching is required.
+You'll find more information about using Infinispan with Hibernate {infinispan-hibernate}[here] .
+
+Finally, there's a way to globally disable the second-level cache:
+
+|===
+| Configuration property name              | Property value
+
+| `hibernate.cache.use_second_level_cache` | `true` to enable caching, `false` to disable it
+|===
+
+When `hibernate.cache.region.factory_class` is set, this property defaults to `true`.
+
+[TIP]
+====
+This setting lets us easily disable the second-level cache completely when troubleshooting or profiling performance.
+====
+
+
+You can find much more information about the second-level cache in the {second-level-cache}[User Guide].
 
 [[query-cache]]
 === Caching query result sets
 
 The caches we've described above are only used to optimize lookups by id or by natural id.
 Hibernate also has a way to cache the result sets of queries, though this is only rarely an efficient thing to do.
+
+The query cache must be enabled explicitly:
+
+.Query cache configuration
+|===
+| Configuration property name | Property value
+
+| `hibernate.cache.use_query_cache` | `true` to enable the query cache
+|===
 
 To cache the results of a query, call `SelectionQuery.setCacheable(true)`:
 

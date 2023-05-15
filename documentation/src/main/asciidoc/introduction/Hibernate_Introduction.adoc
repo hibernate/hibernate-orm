@@ -1,9 +1,19 @@
+:pdf-theme: theme.yml
+:source-highlighter: rouge
+:icons: font
+:doctype: book
+:pdf-fontsdir: fonts
+
 = An introduction to Hibernate 6
 Gavin King and the Hibernate team
 :toc:
 :toclevels: 3
 
+<<<
+
 include::Preface.adoc[]
+
+<<<
 
 :numbered:
 
@@ -93,7 +103,7 @@ For example:
 | `org.hibernate.annotations.FetchMode` | `javax.persistence.FetchType`
 | `org.hibernate.query.Query` | `javax.persistence.Query`
 | `org.hibernate.Cache` | `javax.persistence.Cache`
-| `@org.hibernate.annotations.NamedQuery` | `@javax.persistence.NamedQuery`,
+| `@org.hibernate.annotations.NamedQuery` | `@javax.persistence.NamedQuery`
 | `@org.hibernate.annotations.Cache` | `@javax.persistence.Cacheable`
 |===
 
@@ -486,9 +496,14 @@ This introduction will guide you through the basic tasks involved in developing 
 
 Naturally, we'll start at the top of this list, with the least-interesting topic: _configuration_.
 
+<<<
 include::Configuration.adoc[]
+<<<
 include::Entities.adoc[]
+<<<
 include::Mapping.adoc[]
+<<<
 include::Interacting.adoc[]
+<<<
 include::Tuning.adoc[]
 // include::../userguide/chapters/query/hql/QueryLanguage.adoc[]

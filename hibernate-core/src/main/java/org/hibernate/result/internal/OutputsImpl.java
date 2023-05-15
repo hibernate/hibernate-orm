@@ -219,8 +219,7 @@ public class OutputsImpl implements Outputs {
 		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState =
 				new JdbcValuesSourceProcessingStateStandardImpl(
 						executionContext,
-						processingOptions,
-						executionContext::registerLoadingEntityEntry
+						processingOptions
 				);
 		try {
 			final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(

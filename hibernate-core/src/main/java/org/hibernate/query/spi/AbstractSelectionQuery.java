@@ -763,6 +763,12 @@ public abstract class AbstractSelectionQuery<R>
 		return this;
 	}
 
+	@Override
+	public SelectionQuery<R> setComment(String comment) {
+		super.setComment( comment );
+		return this;
+	}
+
 
 	@Override
 	public SelectionQuery<R> setParameter(String name, Object value) {

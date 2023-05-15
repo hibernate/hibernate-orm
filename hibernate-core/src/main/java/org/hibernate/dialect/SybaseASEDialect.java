@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -592,30 +593,16 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
-	}
-
-	@Override
-	public String getForUpdateString() {
-		return " for update";
-	}
-
-	@Override
-	public String getForUpdateString(String aliases) {
-		return getForUpdateString() + " of " + aliases;
+	public boolean supportsSkipLocked() {
+		return true;
 	}
 
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
-		//TODO: is this really necessary??!
-		return tableName;
-	}
-
-	@Override
-	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
-		//TODO: is this really correct?
-		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
+		final String lockHint = super.appendLockHint( mode, tableName );
+		return mode.getLockMode() == LockMode.UPGRADE_SKIPLOCKED || mode.getTimeOut() == LockOptions.SKIP_LOCKED
+				? lockHint + " readpast"
+				: lockHint;
 	}
 
 	@Override

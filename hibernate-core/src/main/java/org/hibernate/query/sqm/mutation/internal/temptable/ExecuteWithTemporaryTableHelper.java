@@ -146,7 +146,7 @@ public final class ExecuteWithTemporaryTableHelper {
 					querySpec -> {
 						querySpec.getFromClause().visitTableJoins(
 								tableJoin -> {
-									if ( tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+									if ( tableJoin.isInitialized() && tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
 										lockOptions.setLockMode( lockMode );
 									}
 								}

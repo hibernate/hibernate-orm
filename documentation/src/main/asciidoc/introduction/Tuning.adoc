@@ -167,9 +167,12 @@ You can find much more information about association fetching in the
 
 :second-level-cache: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#caching
 
-A classic way to reduce the number of accesses to the database is to use a second-level cache, allowing cached data to be shared between sessions.
+A classic way to reduce the number of accesses to the database is to use a second-level cache, allowing  data cached in memory to be shared between sessions.
 
-By nature, a second-level cache tends to undermine the ACID properties of transaction processing in a relational database. A second-level cache is often by far the easiest way to improve the performance of a system, but only at the cost of making it much more difficult to reason about concurrency. And so the cache is a potential source of bugs which are difficult to isolate and reproduce.
+By nature, a second-level cache tends to undermine the ACID properties of transaction processing in a relational database.
+We _don't_ use a distributed transaction with two-phase commit to ensure that changes to the cache and database happen atomically.
+So a second-level cache is often by far the easiest way to improve the performance of a system, but only at the cost of making it much more difficult to reason about concurrency.
+And so the cache is a potential source of bugs which are difficult to isolate and reproduce.
 
 Therefore, by default, an entity is not eligible for storage in the second-level cache.
 We must explicitly mark each entity that will  be stored in the second-level cache with the `@Cache` annotation from `org.hibernate.annotations`.
@@ -207,6 +210,22 @@ If no region name is explicitly specified, the region name is just the name of t
 @Cache(usage=NONSTRICT_READ_WRITE, region="Publishers")
 class Publisher { ... }
 ----
+[source,java]
+----
+@Entity
+class Publisher {
+    ...
+    @Cache(usage=NONSTRICT_READ_WRITE, region="PublishedBooks")
+    @OneToMany(mappedBy="publisher")
+    Set<Book> books;
+    ...
+}
+----
+
+The cache defined by a `@Cache` annotation is automatically utilized by Hibernate to:
+
+- retrieve an entity by id when `find()` is called, or
+- to resolve an association by id.
 
 The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
 
@@ -288,7 +307,7 @@ Book book = s.byNaturalId().using("isbn", isbn, "printing", printing).load();
 
 [NOTE]
 ====
-Since the natural id cache doesn't contain the actual state of the entity, it doesn't make sense to annotate an entity `@NaturalIdCache` unless it is already eligible for storage in the second-level cache, that is, unless it's also annotated `@Cache`.
+Since the natural id cache doesn't contain the actual state of the entity, it doesn't make sense to annotate an entity `@NaturalIdCache` unless it's already eligible for storage in the second-level cache, that is, unless it's also annotated `@Cache`.
 ====
 
 Once we've marked an entity or collection as eligible for storage in the second-level cache, we still need to set up an actual cache.
@@ -314,6 +333,50 @@ your entities and collections.
 
 You can find much more information about the second-level cache in the
 {second-level-cache}[User Guide].
+
+[[query-cache]]
+=== Caching query result sets
+
+The caches we've described above are only used to optimize lookups by id or by natural id.
+Hibernate also has a way to cache the result sets of queries, though this is only rarely an efficient thing to do.
+
+To cache the results of a query, call `SelectionQuery.setCacheable(true)`:
+
+[source,java]
+----
+s.createQuery("from Product where discontinued = false")
+ .setCacheable(true)
+ .getResultList();
+----
+
+By default, the query result set is stored in a cache region named `default-query-results-region`.
+Since different queries should have different caching policies, it's common to explicitly specify a region name:
+
+[source,java]
+----
+s.createQuery("from Product where discontinued = false")
+ .setCacheable(true)
+ .setCacheRegion("ProductCatalog")
+ .getResultList();
+----
+
+A result set is cached together with a _logical timestamp_.
+By "logical", we mean that it doesn't actually increase linearly with time, and in particular it's not the system time.
+
+When a `Product` is updated, Hibernate _does not_ go through the query cache and invalidate every cached result set that's affected by the change.
+Instead, there's a special region of the cache which holds a logical timestamp of the most-recent update to each table.
+This is called the _update timestamps cache_, and it's kept in the region `default-update-timestamps-region`.
+
+[CAUTION]
+====
+It's _your responsibility_ to ensure that this cache region is configured with appropriate policies.
+In particular, update timestamps should never expire or be evicted.
+====
+
+When a query result set is read from the cache, Hibernate compares its timestamp with the timestamp of each of the tables that affect the results of the query, and _only_ returns the result set if the result set isn't stale.
+If the result set _is_ stale, Hibernate goes ahead and re-executes the query against the database and updates the cached result set.
+
+As is generally the case with any second-level cache, the query cache can break the ACID properties of transactions.
 
 [[second-level-cache-management]]
 === Second-level cache management

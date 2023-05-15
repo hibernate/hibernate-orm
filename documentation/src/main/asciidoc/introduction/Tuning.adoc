@@ -227,6 +227,12 @@ The cache defined by a `@Cache` annotation is automatically utilized by Hibernat
 - retrieve an entity by id when `find()` is called, or
 - to resolve an association by id.
 
+[WARNING]
+====
+The `@Cache` annotation must be specified on the _root class_ of an entity inheritance hierarchy.
+It is an error to place it on a subclass entity.
+====
+
 The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
 
 .Cache concurrency

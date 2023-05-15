@@ -854,6 +854,15 @@ public final class StringHelper {
 		return buffer.toString();
 	}
 
+	public static String capitalizeFirst(String text) {
+		if ( isEmpty( text ) ) {
+			return null;
+		}
+
+		return Character.isUpperCase( text.charAt( 0 ) )
+				+ text.substring( 1, text.length() - 1 );
+	}
+
 	public interface Renderer<T> {
 		String render(T value);
 	}

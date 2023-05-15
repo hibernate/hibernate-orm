@@ -43,6 +43,14 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 
 	private final TypePool classPool;
 
+	// todo (enhancement-naming) : combine all method to field-access handling ( into a single ASM wrapper?  Iterate
+	// 	methods once, from a singular piece of code (maintenance).
+	//
+	// for each method, find the corresponding MethodDetails, and:
+	//		1. if a GETTER, find the corresponding setter (name) and the "backing field" (`#visitFieldInsn`) and
+	//			create a "persistent attribute" reference from the 3 plus maybe the internal
+	//		2. if OTHER and extended enhancement is enabled, transform any "backing field" references (`#visitFieldInsn`)
+
 	FieldAccessEnhancer(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext, TypePool classPool) {
 		this.managedCtClass = managedCtClass;
 		this.enhancementContext = enhancementContext;

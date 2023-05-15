@@ -8,14 +8,12 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl;
 
 import java.util.Locale;
 
+import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ClassDetails;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.MethodDetails;
-import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceLogging;
 
-import jakarta.persistence.Transient;
 import net.bytebuddy.description.method.MethodDescription;
 
-import static net.bytebuddy.description.type.TypeDescription.VOID;
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceLogging.MODEL_SOURCE_LOGGER;
 
 /**
@@ -26,7 +24,12 @@ public class MethodDetailsImpl extends AbstractAnnotationTarget implements Metho
 	private final ClassDetails type;
 	private final MethodKind methodKind;
 
+	private final String methodNameStem;
 	private final String toString;
+
+	public MethodDetailsImpl(MethodDescription methodDescriptor, MethodKind methodKind) {
+		this( methodDescriptor, null, methodKind );
+	}
 
 	public MethodDetailsImpl(
 			MethodDescription methodDescriptor,
@@ -45,8 +48,32 @@ public class MethodDetailsImpl extends AbstractAnnotationTarget implements Metho
 				"MethodDetails(%s#%s : %s)",
 				methodDescriptor.getDeclaringType().getActualName(),
 				methodDescriptor.getName(),
-				type.getName()
+				type == null ? "???" : type.getName()
 		);
+
+		if ( methodKind == MethodKind.GETTER ) {
+			if ( methodDescriptor.getName().startsWith( "get" )
+					|| methodDescriptor.getName().startsWith( "has" ) ) {
+				methodNameStem = methodDescriptor.getName().substring( 3, methodDescriptor.getName().length() - 1 );
+			}
+			else if ( methodDescriptor.getName().startsWith( "is" ) ) {
+				methodNameStem = methodDescriptor.getName().substring( 2, methodDescriptor.getName().length() - 1 );
+			}
+			else {
+				throw new HibernateException( "Could not determine attribute method name stem for getter method - " + methodDescriptor.getName() );
+			}
+		}
+		else if ( methodKind == MethodKind.SETTER ) {
+			if ( methodDescriptor.getName().startsWith( "set" ) ) {
+				methodNameStem = methodDescriptor.getName().substring( 3, methodDescriptor.getName().length() - 1 );
+			}
+			else {
+				throw new HibernateException( "Could not determine attribute method name stem for setter method - " + methodDescriptor.getName() );
+			}
+		}
+		else {
+			methodNameStem = null;
+		}
 	}
 
 	@Override
@@ -65,28 +92,8 @@ public class MethodDetailsImpl extends AbstractAnnotationTarget implements Metho
 	}
 
 	@Override
-	@SuppressWarnings("RedundantIfStatement")
-	public boolean isPersistable() {
-		if ( methodDescriptor.isStatic() ) {
-			return false;
-		}
-
-		if ( hasAnnotation( Transient.class ) ) {
-			return false;
-		}
-
-		if ( methodDescriptor.isSynthetic() ) {
-			return false;
-		}
-
-		// only a getter can be the backing for a persistent attribute
-		// in terms of where we look for annotations
-		if ( methodDescriptor.getReturnType().asErasure().equals( VOID )
-				|| !methodDescriptor.getParameters().isEmpty() ) {
-			return false;
-		}
-
-		return true;
+	public String resolveAttributeMethodNameStem() {
+		return methodNameStem;
 	}
 
 	@Override

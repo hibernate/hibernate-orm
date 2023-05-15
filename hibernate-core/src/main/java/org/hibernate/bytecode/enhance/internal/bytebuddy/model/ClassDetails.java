@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.hibernate.internal.util.IndexedConsumer;
 
+import net.bytebuddy.description.type.TypeDescription;
+
 /**
  * Abstraction for what Hibernate understands about a "class", generally before it has access to
  * the actual {@link Class} reference, if there is a {@code Class} at all (dynamic models).
@@ -68,4 +70,12 @@ public interface ClassDetails extends AnnotationTarget {
 	 * {@linkplain AnnotationTarget.Kind#METHOD methods}.
 	 */
 	MemberDetails getIdentifierMember();
+
+	boolean isImplementorOf(Class<?> checkType);
+
+	default boolean isImplementorOf(TypeDescription.Generic checkType) {
+		return isImplementorOf( checkType.asErasure() );
+	}
+
+	boolean isImplementorOf(TypeDescription checkType);
 }

@@ -29,11 +29,13 @@ public interface MemberDetails extends AnnotationTarget {
 	ClassDetails getType();
 
 	/**
-	 * Whether this member can act as the backing for a persistent attribute.  This is
-	 * not the same as being a persistent attribute; here we just check some basics
-	 * such whether it is static, annotated as {@linkplain jakarta.persistence.Transient @Transient}, etc.
+	 * For members representing attributes, determine the name stem for methods related
+	 * to it.  This is the name of the attribute with its first letter capitalized.
+	 * <p/>
+	 * For an attribute named {@code text}, the name stem would be {@code Text} as a base for the
+	 * {@code getText} and {@code setText} method names
 	 */
-	boolean isPersistable();
+	String resolveAttributeMethodNameStem();
 
 	/**
 	 * For members representing attributes, determine the attribute name

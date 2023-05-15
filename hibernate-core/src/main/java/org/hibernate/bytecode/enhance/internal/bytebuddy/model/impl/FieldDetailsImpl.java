@@ -10,8 +10,8 @@ import java.util.Locale;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ClassDetails;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.FieldDetails;
+import org.hibernate.internal.util.StringHelper;
 
-import jakarta.persistence.Transient;
 import net.bytebuddy.description.field.FieldDescription;
 
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceLogging.MODEL_SOURCE_LOGGER;
@@ -23,6 +23,7 @@ public class FieldDetailsImpl extends AbstractAnnotationTarget implements FieldD
 	private final FieldDescription fieldDescriptor;
 	private final ClassDetails type;
 
+	private final String methodNameStem;
 	private final String toString;
 
 	public FieldDetailsImpl(FieldDescription fieldDescriptor, ClassDetails type) {
@@ -40,6 +41,7 @@ public class FieldDetailsImpl extends AbstractAnnotationTarget implements FieldD
 				fieldDescriptor.getName(),
 				type.getName()
 		);
+		this.methodNameStem = StringHelper.capitalizeFirst( fieldDescriptor.getName() );
 	}
 
 	@Override
@@ -53,21 +55,8 @@ public class FieldDetailsImpl extends AbstractAnnotationTarget implements FieldD
 	}
 
 	@Override
-	@SuppressWarnings("RedundantIfStatement")
-	public boolean isPersistable() {
-		if ( fieldDescriptor.isStatic() ) {
-			return false;
-		}
-
-		if ( fieldDescriptor.isTransient() || hasAnnotation( Transient.class ) ) {
-			return false;
-		}
-
-		if ( fieldDescriptor.isSynthetic() ) {
-			return false;
-		}
-
-		return true;
+	public String resolveAttributeMethodNameStem() {
+		return methodNameStem;
 	}
 
 	@Override

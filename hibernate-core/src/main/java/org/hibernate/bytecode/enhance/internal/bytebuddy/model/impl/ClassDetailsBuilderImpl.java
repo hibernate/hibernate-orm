@@ -32,6 +32,6 @@ public class ClassDetailsBuilderImpl implements ClassDetailsBuilder {
 	}
 
 	public ClassDetails buildClassDetails(String name, TypeDescription typeDescription, ModelProcessingContext processingContext) {
-		return new ClassDetailsImpl( name, typeDescription, (ModelProcessingContextImpl) processingContext );
+		return new ClassDetailsImpl( name, typeDescription, processingContext );
 	}
 }

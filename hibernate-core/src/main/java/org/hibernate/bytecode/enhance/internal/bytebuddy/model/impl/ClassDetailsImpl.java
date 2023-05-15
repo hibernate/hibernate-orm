@@ -14,6 +14,7 @@ import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ClassDetails;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.FieldDetails;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.MemberDetails;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.MethodDetails;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.MethodDetails.MethodKind;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelProcessingContext;
 
 import jakarta.persistence.EmbeddedId;
@@ -79,35 +80,42 @@ public class ClassDetailsImpl extends AbstractAnnotationTarget implements ClassD
 			final TypeDescription returnTypeDescription = declaredMethod.getReturnType().asErasure();
 			final String methodName = declaredMethod.getName();
 
-			if ( TypeDescription.VOID.equals( returnTypeDescription ) ) {
-				// void return -> could be a setter
-				if ( declaredMethod.getParameters().size() == 1
-						&& methodName.startsWith( "set" ) ) {
-					final TypeDescription methodTypeDescription = declaredMethod.getParameters().get( 0 ).getType().asErasure();
-					final ClassDetails methodTypeDetails = classDetailsRegistry.resolveClassDetails(
-							methodTypeDescription.getName(),
-							methodTypeDescription
-					);
-					methods.add( new MethodDetailsImpl( declaredMethod, methodTypeDetails, MethodDetails.MethodKind.SETTER ) );
-				}
+			// SETTER
+			if ( TypeDescription.VOID.equals( returnTypeDescription )
+					&& declaredMethod.getParameters().size() == 1
+					&& methodName.startsWith( "set" ) ) {
+				final TypeDescription methodTypeDescription = declaredMethod.getParameters().get( 0 ).getType().asErasure();
+				final ClassDetails methodTypeDetails = classDetailsRegistry.resolveClassDetails(
+						methodTypeDescription.getName(),
+						methodTypeDescription
+				);
+				methods.add( new MethodDetailsImpl( declaredMethod, methodTypeDetails, MethodKind.SETTER ) );
+				continue;
 			}
-			else {
-				// non-void return -> could be a getter
-				if ( declaredMethod.getParameters().isEmpty()
-						&& ( methodName.startsWith( "get" ) || methodName.startsWith( "is" ) ) ) {
-					final ClassDetails methodTypeDetails = classDetailsRegistry.resolveClassDetails(
-							returnTypeDescription.getName(),
-							returnTypeDescription
-					);
-					final MethodDetailsImpl methodDetails = new MethodDetailsImpl(
-							declaredMethod,
-							methodTypeDetails,
-							MethodDetails.MethodKind.GETTER
-					);
-					methods.add( methodDetails );
-					identifierMember = checkForIdentifier( methodDetails, identifierMember, typeDescription );
-				}
+
+			// GETTER
+			if ( declaredMethod.getParameters().isEmpty()
+					&& ( methodName.startsWith( "get" ) || methodName.startsWith( "is" ) ) ) {
+				final ClassDetails methodTypeDetails = classDetailsRegistry.resolveClassDetails(
+						returnTypeDescription.getName(),
+						returnTypeDescription
+				);
+				final MethodDetailsImpl methodDetails = new MethodDetailsImpl(
+						declaredMethod,
+						methodTypeDetails,
+						MethodKind.GETTER
+				);
+				methods.add( methodDetails );
+				identifierMember = checkForIdentifier( methodDetails, identifierMember, typeDescription );
+				continue;
 			}
+
+			// OTHER
+			if ( declaredMethod.isConstructor() ) {
+				continue;
+			}
+			final MethodDetailsImpl methodDetails = new MethodDetailsImpl( declaredMethod, MethodKind.OTHER );
+			methods.add( methodDetails );
 		}
 	}
 
@@ -181,6 +189,16 @@ public class ClassDetailsImpl extends AbstractAnnotationTarget implements ClassD
 	@Override
 	public MemberDetails getIdentifierMember() {
 		return identifierMember;
+	}
+
+	@Override
+	public boolean isImplementorOf(Class<?> checkType) {
+		return typeDescription.asErasure().isAssignableTo( checkType );
+	}
+
+	@Override
+	public boolean isImplementorOf(TypeDescription checkType) {
+		return typeDescription.isAssignableTo( checkType.asErasure() );
 	}
 
 	@Override

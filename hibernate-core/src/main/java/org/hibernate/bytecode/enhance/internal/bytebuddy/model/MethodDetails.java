@@ -27,24 +27,10 @@ public interface MethodDetails extends MemberDetails {
 		OTHER
 	}
 
-	default MethodKind getMethodKind() {
-		return null;
-	}
+	MethodKind getMethodKind();
 
 	@Override
 	default String resolveAttributeName() {
-		final String methodName = getName();
-
-		if ( methodName.startsWith( "is" ) ) {
-			return Introspector.decapitalize( methodName.substring( 2 ) );
-		}
-		else if ( methodName.startsWith( "has" ) ) {
-			return Introspector.decapitalize( methodName.substring( 3 ) );
-		}
-		else if ( methodName.startsWith( "get" ) ) {
-			return Introspector.decapitalize( methodName.substring( 3 ) );
-		}
-
-		throw new HibernateException( "Could not determine attribute name from method - " + methodName );
+		return Introspector.decapitalize( resolveAttributeMethodNameStem() );
 	}
 }

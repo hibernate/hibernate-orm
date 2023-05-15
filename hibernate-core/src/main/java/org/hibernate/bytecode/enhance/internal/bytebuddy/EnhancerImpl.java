@@ -6,8 +6,6 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
-import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
@@ -18,14 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
-import jakarta.persistence.Transient;
-
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ClassDetails;
-import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelProcessingContext;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceLogging;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.PersistentAttribute;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl.ModelProcessingContextImpl;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
@@ -52,6 +46,9 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Transient;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.annotation.AnnotationList;
@@ -70,6 +67,9 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.pool.TypePool;
+
+import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
+import static org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceHelper.buildPersistentAttributeList;
 
 public class EnhancerImpl implements Enhancer {
 
@@ -146,7 +146,7 @@ public class EnhancerImpl implements Enhancer {
 	 * @param originalBytes The class's original (pre-enhancement) byte code
 	 *
 	 * @return The enhanced bytecode. Could be the same as the original bytecode if the original was
-	 * already enhanced or we could not enhance it for some reason.
+	 * already enhanced or if we could not enhance it for some reason.
 	 *
 	 * @throws EnhancementException Indicates a problem performing the enhancement
 	 */
@@ -195,6 +195,8 @@ public class EnhancerImpl implements Enhancer {
 				managedCtClass.getName(),
 				managedCtClass
 		);
+
+		final List<PersistentAttribute> persistentAttributes = buildPersistentAttributeList( classDetails, null, modelProcessingContext );
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
@@ -394,6 +396,14 @@ public class EnhancerImpl implements Enhancer {
 			return null;
 		}
 	}
+
+	private List<PersistentAttribute> resolvePersistentAttributes(
+			ClassDetails classDetails,
+			ModelProcessingContextImpl modelProcessingContext) {
+		return buildPersistentAttributeList( classDetails, null, modelProcessingContext );
+	}
+
+
 
 	private PersistentAttributeTransformer createTransformer(TypeDescription typeDescription) {
 		return PersistentAttributeTransformer.collectPersistentFields( typeDescription, enhancementContext, typePool );

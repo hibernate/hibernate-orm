@@ -7,10 +7,12 @@
 package org.hibernate.orm.test.bytecode.bytebuddy;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ClassDetails;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.MemberDetails;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceHelper;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.PersistentAttribute;
 
 import org.junit.jupiter.api.Test;
 
@@ -68,6 +70,23 @@ public class SuperClassLevelAccessTests {
 					null
 			);
 			assertThat( determinedAccessType ).isEqualTo( AccessType.FIELD );
+		} );
+	}
+
+	@Test
+	void testPersistentAttributeResolution() {
+		Helper.withProcessingContext( (modelProcessingContext) -> {
+			final ClassDetails classDetails = modelProcessingContext
+					.getClassDetailsRegistry()
+					.resolveClassDetails( SuperClassLevelAccessEntity.class.getName() );
+			final List<PersistentAttribute> persistentAttributes = ModelSourceHelper.buildPersistentAttributeList(
+					classDetails,
+					null,
+					modelProcessingContext
+			);
+			assertThat( persistentAttributes ).hasSize( 2 );
+			assertThat( persistentAttributes.get( 0 ).getAccessType() ).isEqualTo( AccessType.FIELD );
+			assertThat( persistentAttributes.get( 1 ).getAccessType() ).isEqualTo( AccessType.FIELD );
 		} );
 	}
 

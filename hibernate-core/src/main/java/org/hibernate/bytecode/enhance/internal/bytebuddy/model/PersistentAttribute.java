@@ -6,6 +6,7 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy.model;
 
+import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 
 /**
@@ -19,7 +20,7 @@ public class PersistentAttribute {
 	private final MethodDetails underlyingGetter;
 	private final MethodDetails underlyingSetter;
 
-	// others like writerMethod, readerMethod, etc?
+	// todo (enhancement-naming) : others like writerMethod, readerMethod, etc?
 
 	public PersistentAttribute(
 			String name,
@@ -38,12 +39,23 @@ public class PersistentAttribute {
 		return name;
 	}
 
+	/**
+	 * The implicit or {@link #isAccessTypeExplicit() explicit} access-type for this attribute
+	 */
 	public AccessType getAccessType() {
 		return accessType;
 	}
 
+	/**
+	 * Whether {@linkplain  jakarta.persistence.Access @Access} was explicitly
+	 * defined on the attribute member.
+	 */
+	public boolean isAccessTypeExplicit() {
+		return getUnderlyingMember().hasAnnotation( Access.class );
+	}
+
 	public MemberDetails getUnderlyingMember() {
-		return accessType == AccessType.FIELD ? underlyingField : underlyingGetter;
+		return accessType == AccessType.FIELD ? getUnderlyingField() : getUnderlyingGetter();
 	}
 
 	public FieldDetails getUnderlyingField() {

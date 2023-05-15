@@ -515,6 +515,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				entityInstance = existingEntity;
 				if ( existingLoadingEntry == null && isExistingEntityInitialized( existingEntity ) ) {
 					this.isInitialized = true;
+					registerReloadedEntity( rowProcessingState, existingEntity );
 					notifyResolutionListeners( entityInstance );
 				}
 			}
@@ -661,6 +662,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					// EARLY EXIT!!!
 					// because the second level cache has reference cache entries, the entity is initialized
 					isInitialized = true;
+					registerReloadedEntity( rowProcessingState, cached );
 					return cached;
 				}
 			}
@@ -719,6 +721,17 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						entityKey,
 						new LoadingEntityEntry( this, entityKey, concreteDescriptor, instance )
 				);
+	}
+
+	protected void registerReloadedEntity(RowProcessingState rowProcessingState, Object instance) {
+		if ( rowProcessingState.getCallback() != null ) {
+			// This is only needed for follow-on locking, so skip registering the entity if there is no callback
+			rowProcessingState.getJdbcValuesSourceProcessingState()
+					.registerReloadedEntity(
+							entityKey,
+							new LoadingEntityEntry( this, entityKey, concreteDescriptor, instance )
+					);
+		}
 	}
 
 	@Override

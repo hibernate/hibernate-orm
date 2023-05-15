@@ -59,6 +59,11 @@ public class TableReferenceJoin implements TableJoin, PredicateContainer {
 	}
 
 	@Override
+	public boolean isInitialized() {
+		return true;
+	}
+
+	@Override
 	public void applyPredicate(Predicate newPredicate) {
 		predicate = SqlAstTreeHelper.combinePredicates( predicate, newPredicate);
 	}

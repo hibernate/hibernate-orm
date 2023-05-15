@@ -55,6 +55,10 @@ public interface JdbcValuesSourceProcessingState {
 			EntityKey entityKey,
 			LoadingEntityEntry loadingEntry);
 
+	void registerReloadedEntity(
+			EntityKey entityKey,
+			LoadingEntityEntry loadingEntry);
+
 	void registerInitializer(
 			EntityUniqueKey entityKey,
 			Initializer initializer);

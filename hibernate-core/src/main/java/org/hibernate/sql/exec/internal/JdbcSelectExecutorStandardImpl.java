@@ -334,8 +334,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
 				executionContext,
-				processingOptions,
-				executionContext::registerLoadingEntityEntry
+				processingOptions
 		);
 
 		final RowReader<R> rowReader = ResultsHelper.createRowReader(

@@ -12,6 +12,13 @@ font:
     Roboto Light:
       normal: Roboto-Light.ttf
       italic: Roboto-LightItalic.ttf
+    Emoji:
+      normal: OpenSansEmoji.ttf
+      bold: OpenSansEmoji.ttf
+      italic: OpenSansEmoji.ttf
+      bold_italic: OpenSansEmoji.ttf
+  fallbacks:
+    - Emoji
 base:
   font:
     color: #151e3d

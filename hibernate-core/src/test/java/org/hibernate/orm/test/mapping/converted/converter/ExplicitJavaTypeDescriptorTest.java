@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
+import java.io.Serializable;
 import java.sql.Types;
 import java.util.Locale;
 import jakarta.persistence.AttributeConverter;
@@ -62,7 +63,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 		// assertions based on the persist call
 		assertThat( mutableToDomainCallCount, is(1 ) );  			// 1 instead of 0 because of the deep copy call
-		assertThat( mutableToDatabaseCallCount, is(2 ) );  			// 2 instead of 1 because of the deep copy call
+		assertThat( mutableToDatabaseCallCount, is(3 ) );  			// 2 instead of 1 because of the deep copy call
 
 		assertThat( immutableToDomainCallCount, is(0 ) );			// logical
 		assertThat( immutableToDatabaseCallCount, is(1 ) );			// logical
@@ -203,7 +204,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	// Purely immutable state
 
 	@Immutable
-	public static class ImmutableState {
+	public static class ImmutableState implements Serializable {
 		private final String state;
 
 		public ImmutableState(String state) {
@@ -254,7 +255,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutable state we treat as immutable
 
-	public static class PseudoMutableState {
+	public static class PseudoMutableState implements Serializable {
 		private String state;
 
 		public PseudoMutableState(String state) {

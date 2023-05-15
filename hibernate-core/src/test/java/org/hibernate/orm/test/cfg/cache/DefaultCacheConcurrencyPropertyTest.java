@@ -28,7 +28,6 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -39,7 +38,6 @@ public class DefaultCacheConcurrencyPropertyTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9763" )
-	@FailureExpected( jiraKey = "HHH-9763" )
 	public void testExplicitDefault() {
 
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()

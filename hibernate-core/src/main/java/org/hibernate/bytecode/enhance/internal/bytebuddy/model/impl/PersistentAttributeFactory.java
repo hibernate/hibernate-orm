@@ -27,7 +27,7 @@ public class PersistentAttributeFactory {
 	private MethodDetails getterMethod;
 	private MethodDetails setterMethod;
 
-	// todo (enhancement naming) : track other method references like inline dirty checking method, etc
+	// todo (enhancement naming) : track other method references like inline dirty checking methods, etc
 
 	public PersistentAttributeFactory(ClassDetails declaringType, String name, AccessType accessType) {
 		this.declaringType = declaringType;
@@ -35,14 +35,21 @@ public class PersistentAttributeFactory {
 		this.accessType = accessType;
 	}
 
-	public PersistentAttributeFactory(ClassDetails declaringType, String name, AccessType accessType, FieldDetails backingField) {
+	public PersistentAttributeFactory(
+			ClassDetails declaringType,
+			String name,
+			AccessType accessType,
+			FieldDetails backingField,
+			MethodDetails getterMethod,
+			MethodDetails setterMethod) {
 		this( declaringType, name, accessType );
-		this.backingField = backingField;
-	}
 
-	public PersistentAttributeFactory(ClassDetails declaringType, String name, AccessType accessType, MethodDetails getterMethod) {
-		this( declaringType, name, accessType );
+		assert getterMethod == null || getterMethod.getMethodKind() == MethodDetails.MethodKind.GETTER;
+		assert setterMethod == null || setterMethod.getMethodKind() == MethodDetails.MethodKind.SETTER;
+
+		this.backingField = backingField;
 		this.getterMethod = getterMethod;
+		this.setterMethod = setterMethod;
 	}
 
 	public ClassDetails getDeclaringType() {

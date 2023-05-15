@@ -8,6 +8,8 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy.model;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -37,13 +39,28 @@ public class ModelSourceHelper {
 
 		MODEL_SOURCE_LOGGER.debugf( "Building PersistentAttribute list for %s using %s class-level access", declaringType.getName(), classLevelAccessType );
 
+		final LinkedHashMap<String,FieldDetails> fieldsByName = new LinkedHashMap<>();
+		final LinkedHashMap<String,MethodDetails> gettersByAttributeName = new LinkedHashMap<>();
+		final LinkedHashMap<String,MethodDetails> settersByAttributeName = new LinkedHashMap<>();
+
 		final LinkedHashMap<String,MemberDetails> attributeMembers = collectBackingMembers(
 				declaringType,
-				classLevelAccessType
+				classLevelAccessType,
+				fieldsByName::put,
+				gettersByAttributeName::put,
+				settersByAttributeName::put
 		);
 		final List<PersistentAttribute> attributes = arrayList( attributeMembers.size() );
 		attributeMembers.forEach( (attributeName, backingMemberDetails) -> {
-			final PersistentAttribute attributeDescriptor = buildPersistentAttribute( attributeName, backingMemberDetails, declaringType, processingContext );
+			final PersistentAttribute attributeDescriptor = buildPersistentAttribute(
+					attributeName,
+					backingMemberDetails,
+					fieldsByName,
+					gettersByAttributeName,
+					settersByAttributeName,
+					declaringType,
+					processingContext
+			);
 			attributes.add( attributeDescriptor );
 		} );
 
@@ -53,6 +70,9 @@ public class ModelSourceHelper {
 	private static PersistentAttribute buildPersistentAttribute(
 			String attributeName,
 			MemberDetails backingMemberDetails,
+			Map<String,FieldDetails> fieldsByName,
+			Map<String,MethodDetails> gettersByAttributeName,
+			Map<String,MethodDetails> settersByAttributeName,
 			ClassDetails declaringType,
 			ModelProcessingContext processingContext) {
 		assert backingMemberDetails.getKind() == AnnotationTarget.Kind.FIELD
@@ -63,25 +83,10 @@ public class ModelSourceHelper {
 					declaringType,
 					attributeName,
 					AccessType.FIELD,
-					(FieldDetails) backingMemberDetails
+					(FieldDetails) backingMemberDetails,
+					gettersByAttributeName.get( attributeName ),
+					settersByAttributeName.get( attributeName )
 			);
-
-			final String methodNameStem = backingMemberDetails.resolveAttributeMethodNameStem();
-			assert StringHelper.isNotEmpty( methodNameStem );
-
-			for ( int i = 0; i < declaringType.getMethods().size(); i++ ) {
-				final MethodDetails methodDetails = declaringType.getMethods().get( i );
-				if ( methodDetails.getMethodKind() == MethodDetails.MethodKind.GETTER ) {
-					if ( methodNameStem.equals( methodDetails.resolveAttributeMethodNameStem() ) ) {
-						builder.setGetterMethod( methodDetails );
-					}
-				}
-				else if ( methodDetails.getMethodKind() == MethodDetails.MethodKind.SETTER ) {
-					if ( methodNameStem.equals( methodDetails.resolveAttributeMethodNameStem() ) ) {
-						builder.setSetterMethod( methodDetails );
-					}
-				}
-			}
 
 			return builder.buildPersistentAttribute();
 		}
@@ -91,24 +96,10 @@ public class ModelSourceHelper {
 				declaringType,
 				attributeName,
 				AccessType.PROPERTY,
-				(MethodDetails) backingMemberDetails
+				fieldsByName.get( attributeName ),
+				(MethodDetails) backingMemberDetails,
+				settersByAttributeName.get( attributeName )
 		);
-
-		for ( int i = 0; i < declaringType.getFields().size(); i++ ) {
-			final FieldDetails fieldDetails = declaringType.getFields().get( i );
-			if ( attributeName.equals( fieldDetails.getName() ) ) {
-				builder.setBackingField( fieldDetails );
-			}
-		}
-
-		for ( int i = 0; i < declaringType.getMethods().size(); i++ ) {
-			final MethodDetails methodDetails = declaringType.getMethods().get( i );
-			if ( methodDetails.getMethodKind() == MethodDetails.MethodKind.SETTER ) {
-				if ( backingMemberDetails.resolveAttributeMethodNameStem().equals( methodDetails.resolveAttributeMethodNameStem() ) ) {
-					builder.setSetterMethod( methodDetails );
-				}
-			}
-		}
 
 		return builder.buildPersistentAttribute();
 	}
@@ -144,7 +135,10 @@ public class ModelSourceHelper {
 
 	public static LinkedHashMap<String,MemberDetails> collectBackingMembers(
 			ClassDetails declaringType,
-			AccessType classLevelAccessType) {
+			AccessType classLevelAccessType,
+			BiConsumer<String,FieldDetails> fieldCollector,
+			BiConsumer<String,MethodDetails> getterCollector,
+			BiConsumer<String,MethodDetails> setterCollector) {
 		assert classLevelAccessType != null;
 
 		final LinkedHashMap<String,MemberDetails> attributeMembers = new LinkedHashMap<>();
@@ -158,22 +152,31 @@ public class ModelSourceHelper {
 			}
 		};
 
-		collectAttributeLevelAccessMembers( declaringType, backingMemberConsumer );
+		collectAttributeLevelAccessMembers( declaringType, backingMemberConsumer, fieldCollector, getterCollector, setterCollector );
 		collectClassLevelAccessMembers( classLevelAccessType, declaringType, backingMemberConsumer );
 
 		return attributeMembers;
 	}
 
 	/**
-	 * Perform an action for each member which locally define an `AccessType` via `@Access`
+	 * Perform an action for each member which locally define an `AccessType` via `@Access`.
+	 * <p/>
+	 * This method visits each method and field on the type, so we use this as an opportunity
+	 * to collect all fields, getters and setters for use later in building PersistentAttribute
+	 * references
 	 *
 	 * @param declaringType The declaring type for the members to process
 	 * @param backingMemberConsumer Callback for members with a local `@Access`
 	 */
 	private static void collectAttributeLevelAccessMembers(
 			ClassDetails declaringType,
-			Consumer<MemberDetails> backingMemberConsumer) {
+			Consumer<MemberDetails> backingMemberConsumer,
+			BiConsumer<String, FieldDetails> fieldCollector,
+			BiConsumer<String, MethodDetails> getterCollector,
+			BiConsumer<String, MethodDetails> setterCollector) {
 		for ( FieldDetails fieldDetails : declaringType.getFields() ) {
+			fieldCollector.accept( fieldDetails.resolveAttributeName(), fieldDetails );
+
 			if ( fieldDetails.hasAnnotation( Transient.class ) ) {
 				continue;
 			}
@@ -189,7 +192,13 @@ public class ModelSourceHelper {
 		}
 
 		for ( MethodDetails methodDetails : declaringType.getMethods() ) {
-			if ( methodDetails.getMethodKind() != MethodDetails.MethodKind.GETTER ) {
+			if ( methodDetails.getMethodKind() == MethodDetails.MethodKind.GETTER ) {
+				getterCollector.accept( methodDetails.resolveAttributeName(), methodDetails );
+			}
+			else {
+				if ( methodDetails.getMethodKind() != MethodDetails.MethodKind.SETTER ) {
+					setterCollector.accept( methodDetails.resolveAttributeName(), methodDetails );
+				}
 				continue;
 			}
 

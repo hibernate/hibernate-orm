@@ -59,7 +59,10 @@ public class SuperClassLevelAccessTests {
 
 			final LinkedHashMap<String, MemberDetails> backingMembers = ModelSourceHelper.collectBackingMembers(
 					classDetails,
-					AccessType.PROPERTY
+					AccessType.PROPERTY,
+					(s, fieldDetails) -> {},
+					(s, methodDetails) -> {},
+					(s, methodDetails) -> {}
 			);
 
 			assertThat( backingMembers ).hasSize( 2 );

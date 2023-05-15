@@ -54,10 +54,10 @@ public class MethodDetailsImpl extends AbstractAnnotationTarget implements Metho
 		if ( methodKind == MethodKind.GETTER ) {
 			if ( methodDescriptor.getName().startsWith( "get" )
 					|| methodDescriptor.getName().startsWith( "has" ) ) {
-				methodNameStem = methodDescriptor.getName().substring( 3, methodDescriptor.getName().length() - 1 );
+				methodNameStem = methodDescriptor.getName().substring( 3 );
 			}
 			else if ( methodDescriptor.getName().startsWith( "is" ) ) {
-				methodNameStem = methodDescriptor.getName().substring( 2, methodDescriptor.getName().length() - 1 );
+				methodNameStem = methodDescriptor.getName().substring( 2 );
 			}
 			else {
 				throw new HibernateException( "Could not determine attribute method name stem for getter method - " + methodDescriptor.getName() );
@@ -65,7 +65,7 @@ public class MethodDetailsImpl extends AbstractAnnotationTarget implements Metho
 		}
 		else if ( methodKind == MethodKind.SETTER ) {
 			if ( methodDescriptor.getName().startsWith( "set" ) ) {
-				methodNameStem = methodDescriptor.getName().substring( 3, methodDescriptor.getName().length() - 1 );
+				methodNameStem = methodDescriptor.getName().substring( 3 );
 			}
 			else {
 				throw new HibernateException( "Could not determine attribute method name stem for setter method - " + methodDescriptor.getName() );

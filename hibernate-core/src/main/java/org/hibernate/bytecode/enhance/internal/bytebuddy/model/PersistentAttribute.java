@@ -20,8 +20,6 @@ public class PersistentAttribute {
 	private final MethodDetails underlyingGetter;
 	private final MethodDetails underlyingSetter;
 
-	// todo (enhancement-naming) : others like writerMethod, readerMethod, etc?
-
 	public PersistentAttribute(
 			String name,
 			AccessType accessType,

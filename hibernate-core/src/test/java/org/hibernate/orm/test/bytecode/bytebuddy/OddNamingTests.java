@@ -77,6 +77,19 @@ public class OddNamingTests {
 			assertThat( persistentAttributes ).hasSize( 2 );
 			assertThat( persistentAttributes.get( 0 ).getAccessType() ).isEqualTo( AccessType.PROPERTY );
 			assertThat( persistentAttributes.get( 1 ).getAccessType() ).isEqualTo( AccessType.PROPERTY );
+
+			final PersistentAttribute primaryName;
+			final PersistentAttribute id;
+			if ( "primaryName".equals( persistentAttributes.get( 0 ).getName() ) ) {
+				primaryName = persistentAttributes.get( 0 );
+				id = persistentAttributes.get( 1 );
+			}
+			else {
+				id = persistentAttributes.get( 0 );
+				primaryName = persistentAttributes.get( 1 );
+			}
+			assertThat( primaryName.getUnderlyingField() ).isNull();
+			assertThat( id.getUnderlyingField() ).isNotNull();
 		} );
 	}
 

@@ -14,7 +14,9 @@ import java.util.Map;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
+import org.hibernate.Session;
 
+import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
@@ -78,6 +80,21 @@ public interface MutationQuery extends CommonQueryContract {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns
+
+	@Override
+	MutationQuery setFlushMode(FlushModeType flushMode);
+
+	@Override
+	MutationQuery setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	MutationQuery setTimeout(int timeout);
+
+	@Override
+	MutationQuery setComment(String comment);
+
+	@Override
+	MutationQuery setHint(String hintName, Object value);
 
 	@Override
 	MutationQuery setParameter(String name, Object value);
@@ -192,7 +209,4 @@ public interface MutationQuery extends CommonQueryContract {
 
 	@Override
 	MutationQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
-
-	@Override
-	MutationQuery setHibernateFlushMode(FlushMode flushMode);
 }

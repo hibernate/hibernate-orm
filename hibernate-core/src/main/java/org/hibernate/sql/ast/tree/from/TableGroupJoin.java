@@ -87,6 +87,11 @@ public class TableGroupJoin implements TableJoin, DomainResultProducer {
 		sqlTreeWalker.visitTableGroupJoin( this );
 	}
 
+	@Override
+	public boolean isInitialized() {
+		return joinedGroup.isInitialized();
+	}
+
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}

@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.locking.jpa;
 
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.query.spi.QueryImplementor;
 
@@ -20,9 +21,11 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.PessimisticLockException;
+import jakarta.persistence.QueryTimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
  * @author Steve Ebersole
@@ -88,12 +91,13 @@ public class FollowOnLockingTest {
 						try {
 							// with the initial txn still active (locks still held), try to update the row from another txn
 							scope.inTransaction( (session2) -> {
-								final Employee june = session2.find( Employee.class, 3 );
-								june.setSalary( 90000F );
+								session2.createMutationQuery( "update Employee e set salary = 90000 where e.id = 3" )
+										.setTimeout( 1 )
+										.executeUpdate();
 							} );
 							fail( "Locked entity update was allowed" );
 						}
-						catch (PessimisticLockException | LockTimeoutException expected) {
+						catch (PessimisticLockException | LockTimeoutException | QueryTimeoutException expected) {
 						}
 					}
 			);

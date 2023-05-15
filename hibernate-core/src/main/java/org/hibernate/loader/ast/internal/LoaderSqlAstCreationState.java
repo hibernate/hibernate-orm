@@ -6,8 +6,10 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -20,6 +22,7 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.ResultListTransformer;
@@ -35,6 +38,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -101,6 +105,21 @@ public class LoaderSqlAstCreationState
 	@Override
 	public QueryPart getInflightQueryPart() {
 		return processingState.getInflightQueryPart();
+	}
+
+	@Override
+	public void registerTreat(TableGroup tableGroup, EntityDomainType<?> treatType) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void registerTreatUsage(TableGroup tableGroup, EntityDomainType<?> treatType) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<TableGroup, Map<EntityDomainType<?>, Boolean>> getTreatRegistrations() {
+		return Collections.emptyMap();
 	}
 
 	@Override

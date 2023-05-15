@@ -6,8 +6,11 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.persister.entity.EntityNameUse;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * Access to stuff used while creating a SQL AST
@@ -28,4 +31,15 @@ public interface SqlAstCreationState {
 	LoadQueryInfluencers getLoadQueryInfluencers();
 
 	void registerLockMode(String identificationVariable, LockMode explicitLockMode);
+
+	/**
+	 * This callback is for handling of filters and is necessary to allow correct treat optimizations.
+	 */
+	@Internal
+	default void registerEntityNameUsage(
+			TableGroup tableGroup,
+			EntityNameUse entityNameUse,
+			String hibernateEntityName) {
+		// No-op
+	}
 }

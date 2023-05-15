@@ -34,9 +34,6 @@ public class ModelSourceHelper {
 				declaringType.getIdentifierMember(),
 				contextAccessType
 		);
-		if ( classLevelAccessType == null ) {
-			throw new HibernateException( "Unable to determine class-level attribute access-type : " + declaringType.getName() );
-		}
 
 		MODEL_SOURCE_LOGGER.debugf( "Building PersistentAttribute list for %s using %s class-level access", declaringType.getName(), classLevelAccessType );
 
@@ -142,7 +139,7 @@ public class ModelSourceHelper {
 					: AccessType.PROPERTY;
 		}
 
-		return contextAccessType;
+		return contextAccessType == null ? AccessType.PROPERTY : contextAccessType;
 	}
 
 	public static LinkedHashMap<String,MemberDetails> collectBackingMembers(

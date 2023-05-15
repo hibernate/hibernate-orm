@@ -54,7 +54,7 @@ public class OddNamingTests {
 					null,
 					null
 			);
-			assertThat( determinedAccessTypeLegacy ).isNull();
+			assertThat( determinedAccessTypeLegacy ).isEqualTo( AccessType.PROPERTY );
 
 			// id, name
 			assertThat( classDetails.getFields() ).hasSize( 2 );

@@ -82,6 +82,7 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 :yasson: https://projects.eclipse.org/projects/ee4j.yasson
 :validator: https://hibernate.org/validator
 :ehcache: https://www.ehcache.org
+:infinispan: https://infinispan.org
 
 Optionally, you might also add any of the following additional features:
 
@@ -93,7 +94,8 @@ Optionally, you might also add any of the following additional features:
 | A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal` and `io.agroal:agroal-pool`
 | The Hibernate metamodel generator, if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
 | {validator}[Hibernate Validator] | `org.hibernate.validator:hibernate-validator` and `org.glassfish:jakarta.el`
-| Second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` along with `org.ehcache:ehcache`
+| Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` along with `org.ehcache:ehcache`
+| Distributed second-level cache support via {infinispan}[Infinispan] | `org.infinispan:infinispan-hibernate-cache-v60`
 // | SCRAM authentication support for PostgreSQL | `com.ongres.scram:client:2.1`
 | A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] | `com.fasterxml.jackson.core:jackson-databind` or `org.eclipse:yasson`
 |===

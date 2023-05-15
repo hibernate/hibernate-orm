@@ -95,8 +95,10 @@ The default access type may be specified explicitly using the `@Access` annotati
 [IMPORTANT]
 // .Mapping annotations should be placed consistently
 ====
-Mapping annotations should be placed consistently.
-If the `@Id` annotation occurs on a field, the other mapping annotations should also be applied to field; or, if the `@Id` annotation occurs on a getter, the other mapping annotations should be applied to getters.
+Mapping annotations should be placed consistently:
+
+- if `@Id` annotates a field, the other mapping annotations should also be applied to fields, or,
+- if `@Id` annotates a getter, the other mapping annotations should be applied to getters.
 
 It is in principle possible to mix field and property access using explicit `@Access` annotations at the attribute level.
 We don't recommend doing this.
@@ -211,11 +213,11 @@ JPA defines the following strategies for generating ids, which are enumerated by
 |===
 | Strategy                  | Java type | Implementation
 
-| `GenerationType.UUID`     | `UUID` or `String`  | A Java `UUID`.
-| `GenerationType.IDENTITY` | `Long` or `Integer` | An identity or autoincrement column.
-| `GenerationType.SEQUENCE` | `Long` or `Integer` | A database sequence.
-| `GenerationType.TABLE`    | `Long` or `Integer` | A database table.
-| `GenerationType.AUTO`     | `Long` or `Integer` | Selects `SEQUENCE`, `TABLE`, or `UUID` based on the identifier type and capabilities of the database.
+| `GenerationType.UUID`     | `UUID` or `String`  | A Java `UUID`
+| `GenerationType.IDENTITY` | `Long` or `Integer` | An identity or autoincrement column
+| `GenerationType.SEQUENCE` | `Long` or `Integer` | A database sequence
+| `GenerationType.TABLE`    | `Long` or `Integer` | A database table
+| `GenerationType.AUTO`     | `Long` or `Integer` | Selects `SEQUENCE`, `TABLE`, or `UUID` based on the identifier type and capabilities of the database
 |===
 
 For example, the following id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
@@ -242,6 +244,10 @@ Values are generated using a database sequence defined as follows:
 ----
 create sequence seq_book start with 5 increment by 10
 ----
+
+Notice that Hibernate doesn't have to go to the database every time a new identifier is needed.
+Instead, a given process obtains a block of ids, of size `allocationSize`, and only needs to hit the database each time the block is exhausted.
+Of course, the downside is that generated identifiers are not contiguous.
 
 [CAUTION]
 // .Check the `initialValue` and `allocationSize`
@@ -403,7 +409,7 @@ class BookId {
 
 We'll learn more about <<embeddable-objects>> below.
 
-Now the entity class may reuse this definition using `@EmbeddedId`:
+Now the entity class may reuse this definition using `@EmbeddedId`, and the `@IdClass` annotation is no longer required:
 
 [source,java]
 ----
@@ -1299,7 +1305,7 @@ Alternatively, we could store this array or list in a separate table.
 [[element-collections]]
 === Collections mapped to a separate table
 
-JPA _does_ define a standard way to map a collection to a table:
+JPA _does_ define a standard way to map a collection to an auxiliary table:
 
 [source, java]
 ----
@@ -1313,6 +1319,21 @@ class Event {
     ...
 }
 ----
+
+Here, each collection elements are stored as separate row of the auxiliary table.
+By default, this table has the following definition:
+
+[source,sql]
+----
+create table Event_daysOfWeek (
+    Event_id bigint not null,
+    daysOfWeek tinyint check (daysOfWeek between 0 and 6),
+    daysOfWeek_ORDER integer not null,
+    primary key (Event1_id, daysOfWeek_ORDER)
+)
+----
+
+Which is fine, but it's still a mapping we prefer to avoid.
 
 [WARNING]
 // .This is not what we would do
@@ -1330,9 +1351,10 @@ Instead of a surrogate primary key, it has a composite key comprising the foreig
 
 When—inevitably—we find that we need to add a fourth column to that table, our Java code must change completely.
 Most likely, we'll realize that we need to add a separate entity after all.
-
-There's much more we could say about "element collections", but we won't say it, because we don't want to hand you the gun that you'll shoot your foot with.
+So this mapping isn't very robust in the face of minor changes to our data model.
 ====
+
+There's much more we could say about "element collections", but we won't say it, because we don't want to hand you the gun you'll shoot your foot with.
 
 [[entities-summary]]
 === Summary of annotations

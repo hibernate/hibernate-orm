@@ -865,6 +865,9 @@ JPA provides an `@Embedded` annotation to identify an attribute of an entity tha
 This annotation is completely optional, and so we don't usually use it.
 ====
 
+On the other hand a reference to an embeddable type is _never_ polymorphic.
+One `@Embeddable` class `F` may inherit a second `@Embeddable` class `E`, but an attribute of type `E` will always refer to an instance of that concrete class `E`, never to an instance of `F`.
+
 Usually, embeddable types are stored in a "flattened" format.
 Their attributes map columns of the table of their parent entity.
 Later, in <<mapping-embeddables>>, we'll see a couple of different options.

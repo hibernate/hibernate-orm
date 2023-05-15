@@ -86,6 +86,7 @@ import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
@@ -93,7 +94,6 @@ import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -6728,7 +6728,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral) {
-		final BasicValuedMapping inferredType = (BasicValuedMapping) resolveInferredType();
+		final MappingModelExpressible<?> inferred = resolveInferredType();
+		final SqlExpressible inferredType;
+		if ( inferred instanceof PluralAttributeMapping ) {
+			final CollectionPart elementDescriptor = ((PluralAttributeMapping) inferred).getElementDescriptor();
+			if ( elementDescriptor instanceof BasicValuedCollectionPart) {
+				inferredType = (BasicValuedCollectionPart) elementDescriptor;
+			}
+			else {
+				inferredType = null;
+			}
+		}
+		else if ( inferred instanceof BasicValuedMapping ) {
+			inferredType = (BasicValuedMapping) inferred;
+		}
+		else {
+			inferredType = null;
+		}
 		if ( inferredType != null ) {
 			return new QueryLiteral<>(
 					inferredType.getJdbcMapping().convertToRelationalValue( sqmEnumLiteral.getEnumValue() ),

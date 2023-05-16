@@ -200,7 +200,7 @@ Of course, the main reason we need an `EntityManager` is to do stuff to the data
 The following important operations let us interact with the persistence context and schedule modifications to the data:
 
 .Methods for modifying data and managing the persistence context
-[cols="2,5"]
+[cols="30,~"]
 |===
 | Method name and parameters | Effect
 
@@ -227,7 +227,7 @@ Modifications are automatically detected when the session is <<flush,flushed>>.
 On the other hand, the following operations all result in immediate access to the database:
 
 .Methods for reading and locking data
-[cols="2,5"]
+[cols="30,~"]
 |===
 | Method name and parameters | Effect
 
@@ -358,7 +358,7 @@ s.setHibernateFlushMode(FlushMode.MANUAL);
 Since flushing is a somewhat expensive operation (the session must dirty-check every entity in the persistence context), setting the flush mode to `COMMIT` can occasionally be a useful optimization.
 
 .Flush modes
-[cols=",,3"]
+[cols="15,15,~"]
 |===
 | Hibernate `FlushMode` | JPA `FlushModeType` | Interpretation
 
@@ -397,7 +397,7 @@ Fortunately, HQL is already described in exhaustive (and exhausting) detail in t
 // The query language is discussed in great detail below in <<query-language>>.
 
 Here we want to see how to execute a query via the `Session` or `EntityManager` API.
-The method we call depends on what kind of query it is:
+The method we call depends on what Kind it is:
 
 - _selection queries_ return a result list, but do not modify the data, but
 - _mutation queries_ modify data, and return the number of modified rows.
@@ -405,11 +405,12 @@ The method we call depends on what kind of query it is:
 Selection queries usually start with the keyword `select` or `from`, whereas mutation queries begin with the keyword `insert`, `update`, or `delete`.
 
 .Executing HQL
+[cols="10,36,32,22"]
 |===
-| Kind of query | `Session` method | `EntityManager` method | `Query` execution method
+| Kind | `Session` method | `EntityManager` method | `Query` execution method
 
-| Selection query | `createSelectionQuery(String,Class)` | `createQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation query | `createMutationQuery(String)` | `createQuery(String)` | `executeUpdate()`
+| Selection | `createSelectionQuery(String,Class)` | `createQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | `createMutationQuery(String)` | `createQuery(String)` | `executeUpdate()`
 |===
 
 So for the `Session` API we would write:
@@ -432,7 +433,7 @@ List<Book> matchingBooks =
          .getResultList();
 ----
 
-The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed a mutation query.
+The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed a Mutation.
 
 In the query above, `:titleSearchPattern` is called a _named parameter_.
 We may also identify parameters by a number.
@@ -584,11 +585,12 @@ If you change the default behavior, and set the property to `INLINE` instead of 
 Execution of a criteria query works almost exactly like execution of HQL.
 
 .Executing criteria queries
+[cols="10,36,32,22"]
 |===
-| Kind of query | `Session` method | `EntityManager` method | `Query` execution method
+| Kind | `Session` method | `EntityManager` method | `Query` execution method
 
-| Selection query | `createSelectionQuery(CriteriaQuery)` | `createQuery(CriteriaQuery)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation query | `createMutationQuery(CriteriaUpdate)` or `createQuery(CriteriaDelete)` | `createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelte)` | `executeUpdate()`
+| Selection | `createSelectionQuery(CriteriaQuery)` | `createQuery(CriteriaQuery)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | `createMutationQuery(CriteriaUpdate)` or `createQuery(CriteriaDelete)` | `createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelte)` | `executeUpdate()`
 |===
 
 For example:
@@ -610,11 +612,12 @@ But ultimately, the true value of ORM is not in avoiding SQL, but in alleviating
 As we said <<introduction,right up front>>, Hibernate's generated SQL is meant to be used in conjunction with handwritten SQL, and native SQL queries are one of the facilities we provide to make that easy.
 
 .Executing SQL
+[cols="10,36,32,22"]
 |===
-| Kind of query | `Session` method | `EntityManager` method | `Query` execution method
+| Kind | `Session` method | `EntityManager` method | `Query` execution method
 
-| Selection query | `createNativeQuery(String,Class)` | `createNativeQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation query | `createNativeMutationQuery(String)` | `createNativeQuery(String)` | `executeUpdate()`
+| Selection | `createNativeQuery(String,Class)` | `createNativeQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | `createNativeMutationQuery(String)` | `createNativeQuery(String)` | `executeUpdate()`
 | Stored procedure | `createStoredProcedureCall(String)` | `createStoredProcedureQuery(String)` | `execute()`
 |===
 
@@ -727,11 +730,12 @@ We have to make sure that the class with the `@NamedQuery` annotation will be sc
 The `@NamedNativeQuery` lets us do the same for native SQL queries.
 
 .Executing named queries
+[cols="10,36,32,22"]
 |===
-| Kind of query | `Session` method | `EntityManager` method | `Query` execution method
+| Kind | `Session` method | `EntityManager` method | `Query` execution method
 
-| Selection query | `createNamedSelectionQuery(String,Class)` | `createNamedQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation query | `createNamedMutationQuery(String)` | `createNamedQuery(String)` | `executeUpdate()`
+| Selection | `createNamedSelectionQuery(String,Class)` | `createNamedQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | `createNamedMutationQuery(String)` | `createNamedQuery(String)` | `executeUpdate()`
 |===
 
 We execute our named query as follows:

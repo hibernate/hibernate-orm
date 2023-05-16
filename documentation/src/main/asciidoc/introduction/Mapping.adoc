@@ -174,7 +174,7 @@ is a bad idea, since it's impossible to create a foreign key constraint that tar
 The following annotations specify exactly how elements of the domain model map to tables of the relational model:
 
 .Annotations for mapping tables
-[cols=",5"]
+[%autowidth.stretch]
 |===
 | Annotation | Purpose
 
@@ -211,7 +211,7 @@ class Book { ... }
 The `@Table` annotation can do more than just specify a name:
 
 .`@Table` annotation members
-[cols=",8"]
+[%autowidth.stretch]
 |===
 | Annotation member | Purpose
 
@@ -237,7 +237,7 @@ Instead:
 The `@SecondaryTable` annotation is even more interesting:
 
 .`@SecondaryTable` annotation members
-[cols=",8"]
+[%autowidth.stretch]
 |===
 | Annotation member | Purpose
 
@@ -299,7 +299,7 @@ class Author {
 Here, there should be a `UNIQUE` constraint on _both_ columns of the association table.
 
 .`@JoinTable` annotation members
-[cols=",8"]
+[%autowidth.stretch]
 |===
 | Annotation member | Purpose
 
@@ -322,7 +322,7 @@ To better understand these annotations, we must first discuss column mappings in
 These annotations specify how elements of the domain model map to columns of tables in the relational model:
 
 .Annotations for mapping columns
-[cols=",5"]
+[%autowidth.stretch]
 |===
 | Annotation | Purpose
 
@@ -341,7 +341,7 @@ We use the `@Column` annotation to map basic attributes.
 The `@Column` annotation is not only useful for specifying the column name.
 
 .`@Column` annotation members
-[cols=",8"]
+[%autowidth.stretch]
 |===
 | Annotation member | Purpose
 
@@ -395,7 +395,7 @@ We don't use `@Column` to map associations.
 The `@JoinColumn` annotation is used to customize a foreign key column.
 
 .`@JoinColumn` annotation members
-[cols=",8"]
+[%autowidth.stretch]
 |===
 | Annotation member | Purpose
 
@@ -508,7 +508,7 @@ The `@PrimaryKeyJoinColumn` is a special-purpose annotation for mapping:
 - the primary key column of the primary table mapped by a subclass in a `JOINED` inheritance hierarchy—which is also a foreign key referencing the primary table mapped by the root entity.
 
 .`@PrimaryKeyJoinColumn` annotation members
-[cols=",8"]
+[%autowidth.stretch]
 |===
 | Annotation member | Purpose
 
@@ -559,7 +559,7 @@ So we don't usually need to explicitly specify that a column should be of type `
 The constant values defined in the class `org.hibernate.Length` are very helpful here:
 
 .Predefined column lengths
-[cols=",,8"]
+[%autowidth.stretch]
 |===
 | Constant | Value | Description
 
@@ -738,7 +738,7 @@ So, as we've seen, there are quite a few annotations that affect the mapping of 
 Here we summarize the ones we've just seen in the second half of this chapter, along with some we already mentioned in earlier chapters.
 
 .Annotations for mapping SQL column types
-[cols=",3"]
+[%autowidth.stretch]
 |===
 | Annotation | Interpretation
 
@@ -754,7 +754,7 @@ Here we summarize the ones we've just seen in the second half of this chapter, a
 In addition, there are some configuration properties which have a _global_ affect on how basic types map to SQL column types:
 
 .Type mapping settings
-[cols=",2"]
+[%autowidth.stretch]
 |===
 | Configuration property name | Purpose
 
@@ -781,7 +781,7 @@ Hibernate lets us map an attribute of an entity to a SQL formula involving colum
 Thus, the attribute is a sort of "derived" value.
 
 .Annotations for mapping formulas
-[cols=",5"]
+[%autowidth.stretch]
 |===
 | Annotation | Purpose
 

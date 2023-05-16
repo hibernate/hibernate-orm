@@ -308,7 +308,7 @@ This cache is utilized when the entity is retrieved using one of the operations 
 
 [source,java]
 ----
-Book book = s.byNaturalId().using("isbn", isbn, "printing", printing).load();
+Book book = session.byNaturalId().using("isbn", isbn, "printing", printing).load();
 ----
 
 [NOTE]
@@ -403,9 +403,9 @@ To cache the results of a query, call `SelectionQuery.setCacheable(true)`:
 
 [source,java]
 ----
-s.createQuery("from Product where discontinued = false")
- .setCacheable(true)
- .getResultList();
+session.createQuery("from Product where discontinued = false")
+    .setCacheable(true)
+    .getResultList();
 ----
 
 By default, the query result set is stored in a cache region named `default-query-results-region`.
@@ -413,10 +413,10 @@ Since different queries should have different caching policies, it's common to e
 
 [source,java]
 ----
-s.createQuery("from Product where discontinued = false")
- .setCacheable(true)
- .setCacheRegion("ProductCatalog")
- .getResultList();
+session.createQuery("from Product where discontinued = false")
+    .setCacheable(true)
+    .setCacheRegion("ProductCatalog")
+    .getResultList();
 ----
 
 A result set is cached together with a _logical timestamp_.
@@ -447,15 +447,15 @@ At worst, interaction with the cache may be controlled by specifying of an expli
 
 [source,java]
 ----
-s.setCacheMode(CacheMode.IGNORE);
+session.setCacheMode(CacheMode.IGNORE);
 ----
 
 Or, using JPA-standard APIs:
 
 [source,java]
 ----
-em.setCacheRetrieveMode(CacheRetrieveMode.BYPASS);
-em.setCacheStoreMode(CacheStoreMode.BYPASS);
+entityManager.setCacheRetrieveMode(CacheRetrieveMode.BYPASS);
+entityManager.setCacheStoreMode(CacheStoreMode.BYPASS);
 ----
 
 The JPA-defined cache modes are:
@@ -500,11 +500,11 @@ In JPA we would use this idiom:
 
 [source,java]
 ----
-em.setCacheStoreMode(CacheStoreMode.BYPASS);
+entityManager.setCacheStoreMode(CacheStoreMode.BYPASS);
 List<Publisher> allpubs =
-        em.createQuery("from Publisher", Publisher.class)
-          .getResultList();
-em.setCacheStoreMode(CacheStoreMode.USE);
+        entityManager.createQuery("from Publisher", Publisher.class)
+            .getResultList();
+entityManager.setCacheStoreMode(CacheStoreMode.USE);
 ----
 
 But Hibernate has a better way:
@@ -512,9 +512,9 @@ But Hibernate has a better way:
 [source,java]
 ----
 List<Publisher> allpubs =
-        s.createSelectionQuery("from Publisher", Publisher.class)
-         .setCacheStoreMode(CacheStoreMode.BYPASS)
-         .getResultList();
+        session.createSelectionQuery("from Publisher", Publisher.class)
+            .setCacheStoreMode(CacheStoreMode.BYPASS)
+            .getResultList();
 ----
 ====
 
@@ -526,15 +526,15 @@ There's a really easy way to do this: just execute a query immediately after obt
 
 [source,java]
 ----
-SessionFactory sf = setupHibernate(new Configuration()).buildSessionFactory();
+SessionFactory sessionFactory = setupHibernate(new Configuration()).buildSessionFactory();
 // prime the second-level cache
-sf.inSession(s -> {
-    s.createSelectionQuery("from Countries"))
-     .setReadOnly(true)
-     .getResultList();
-    s.createSelectionQuery("from Product where discontinued = false"))
-     .setReadOnly(true)
-     .getResultList();
+sessionFactory.inSession(session -> {
+    session.createSelectionQuery("from Countries"))
+        .setReadOnly(true)
+        .getResultList();
+    session.createSelectionQuery("from Product where discontinued = false"))
+        .setReadOnly(true)
+        .getResultList();
 });
 
 ----
@@ -545,7 +545,7 @@ The `Cache` interface allows programmatic eviction of cached items.
 
 [source,java]
 ----
-sf.getCache().evictEntityData(Book.class, bookId);
+sessionFactory.getCache().evictEntityData(Book.class, bookId);
 ----
 
 [CAUTION]

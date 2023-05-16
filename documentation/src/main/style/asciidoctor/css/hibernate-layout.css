@@ -11,14 +11,15 @@ body:before {
 #header {
     width: 1000px !important;
 }
-.sidebarblock>.content>.title,h4,h5,h6{
+.sidebarblock>.content>.title,h4,h5,h6 {
+    font-family: 'Noto Serif', "Open Sans", "DejaVu Sans", sans-serif !important;
     font-size: 1.3em !important;
     margin-top:0em !important;
     margin-bottom:1em !important;
     line-height:1.0125em !important
 }
-#toctitle>.content>.title,h4,h5,h6{
-    font-family:"Open Sans","DejaVu Sans",sans-serif !important;
+#toctitle>.content>.title,h4,h5,h6 {
+    font-family: 'Noto Serif', "Open Sans", "DejaVu Sans", sans-serif !important;
     font-weight:300 !important;
     font-style:normal !important;
     font-size: 1.3em !important;
@@ -48,7 +49,7 @@ h1{
     font-size: 1.9em !important;
     color:#182737 !important;
     line-height: 1.2 !important;
-    font-family:'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
+    font-family: 'Noto Serif', 'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
     font-weight: bold !important;
     text-align: justify !important;
     text-decoration: none !important;
@@ -59,15 +60,14 @@ h1{
     line-height:1em !important;
     padding-top: 2em !important;
 }
-h2{
+h2 {
     font-weight: bold !important;
     font-size: 1.7em !important;
-    line-height: 3em !important;
-    font-family:'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
+    line-height: 2em !important;
+    font-family: 'Noto Serif', 'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
     color:#4a5d75 !important;
-    margin-top:3em !important;
-    margin-bottom:1em !important;
-    line-height:1.6em !important;
+    margin-top: 2em !important;
+    margin-bottom: 0.5em !important;
     background-position: bottom !important;
     background-repeat: repeat-x !important;
     background-size: 75px;
@@ -75,19 +75,20 @@ h2{
     height: 60px !important;
 }
 h3 {
+    font-weight: bold !important;
     text-decoration: none !important;
     color:#4a5d75 !important;
-    font-family:'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
+    font-family: 'Noto Serif', 'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
     font-size: 1.4em !important;
-    margin-top:1em !important;
-    margin-bottom:.5em !important;
+    margin-top: 1.4em !important;
+    margin-bottom: 1.0em !important;
     line-height:1.0125em !important
 }
 h4,h5,h6{
     font-size:1.125em !important;
     text-decoration: none !important;
     color:#4a5d75 !important;
-    font-family:'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important
+    font-family: 'Noto Serif', 'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important
 }
 .admonitionblock{
     background-color: antiquewhite !important;
@@ -197,7 +198,7 @@ ul {
     padding-top: .5em;
     font-weight: lighter !important;
     color:#4a5d75 !important;
-    font-family:'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
+    font-family: 'Noto Serif', 'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
     font-size: 1em !important;
 }
 em,i{

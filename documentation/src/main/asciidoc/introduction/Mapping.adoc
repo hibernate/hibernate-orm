@@ -637,7 +637,7 @@ We can get one from the `Session`:
 
 [source,java]
 ----
-LobHelper helper = s.getLobHelper();
+LobHelper helper = session.getLobHelper();
 book.text = helper.createClob(text);
 book.coverArt = helper.createBlob(image);
 ----
@@ -646,7 +646,7 @@ In principle, the `Blob` and `Clob` objects provide efficient ways to read or st
 
 [source,java]
 ----
-Book book = s.find(Book.class, bookId);
+Book book = session.find(Book.class, bookId);
 String text = book.text.getSubString(1, textLength);
 InputStream bytes = book.images.getBinaryStream();
 ----

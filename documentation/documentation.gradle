@@ -4,6 +4,12 @@ import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 plugins {
 	id 'org.asciidoctor.jvm.convert' version '3.3.2'
 	id 'org.asciidoctor.jvm.pdf' version '3.3.2'
+	id "org.asciidoctor.jvm.gems" version "3.3.2"
+}
+
+repositories {
+	mavenCentral()
+	ruby.gems()
 }
 
 /*
@@ -39,6 +45,8 @@ dependencies {
 	reportAggregation project(':hibernate-ant')
 	reportAggregation project(':hibernate-enhance-maven-plugin')
 	reportAggregation project(':hibernate-jpamodelgen')
+
+	asciidoctorGems 'rubygems:rouge:4.1.1'
 }
 
 
@@ -67,6 +75,7 @@ tasks.register('buildDocsForPublishing') {
 
 
 asciidoctorj {
+	requires 'rouge'
 	modules {
 		pdf {
 			version '2.3.7'
@@ -74,7 +83,7 @@ asciidoctorj {
 	}
 	attributes  icons: 'font',
 			experimental: true,
-			'source-highlighter': 'prettify',
+			'source-highlighter': 'rouge',
 			majorMinorVersion: rootProject.ormVersion.family,
 			fullVersion: rootProject.ormVersion.fullName
 

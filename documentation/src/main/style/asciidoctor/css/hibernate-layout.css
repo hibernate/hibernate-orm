@@ -239,3 +239,19 @@ pre {
     border-radius: 0.3em !important;
     font-size:1.05em !important;
 }
+.k, .kv, .kc, .kd, .kt, .kn {
+  color: #445588 !important;
+}
+.o, .nd {
+  font-weight: normal !important;
+}
+.nc, .nf {
+  color: #990000 !important;
+  font-weight: normal !important;
+}
+.c, .c1 {
+  font-style: normal !important;
+}
+.na {
+  color: #000000 !important;
+}

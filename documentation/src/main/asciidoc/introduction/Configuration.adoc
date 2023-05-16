@@ -6,7 +6,7 @@ Unfortunately, there are several distinct ways to configure and bootstrap Hibern
 
 The four basic ways to obtain an instance of Hibernate are shown in the following table:
 
-[cols="1,1"]
+[cols="50,50"]
 |===
 
 | Using the standard JPA-defined XML, and the operation `Persistence.createEntityManagerFactory()`
@@ -57,6 +57,7 @@ You'll also need to add a dependency for the JDBC
 driver for your database.
 
 .JDBC driver dependencies
+[cols="40,~"]
 |===
 | Database                  | Driver dependency
 
@@ -87,6 +88,7 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 Optionally, you might also add any of the following additional features:
 
 .Optional dependencies
+[cols="40,~"]
 |===
 | Optional feature | Dependencies
 
@@ -236,7 +238,7 @@ With rare exception, the default behavior of every one of these settings was car
 The properties you really do need to get started are these three:
 
 .JDBC connection settings
-[cols=",2"]
+[cols="35,~"]
 |===
 | Configuration property name | Purpose
 
@@ -258,7 +260,7 @@ Pooling JDBC connections is an extremely important performance optimization.
 You can set the size of Hibernate's built-in connection pool using this property:
 
 .Built-in connection pool size
-[cols=",2"]
+[cols="35,~"]
 |===
 | Configuration property name | Purpose
 
@@ -275,7 +277,7 @@ This pool is not meant for use in production, and later, when we discuss perform
 Alternatively, in a container environment, you'll need at least one of these properties:
 
 .Transaction management settings
-[cols=",2"]
+[cols="35,~"]
 |===
 | Configuration property name            | Purpose
 
@@ -297,18 +299,18 @@ initialization time by specifying one or more of the following configuration
 properties:
 
 .Schema management settings
-[cols=",2"]
+[cols="52,~"]
 |===
 | Configuration property name                                | Purpose
 
 | `jakarta.persistence.schema-generation.database.action`
-a| * If `drop-and-create`, first drop the schema and then export tables, sequences, and constraints.
-* If `create`, export tables, sequences, and constraints, without attempting to drop them first.
-* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup.
-Additionally, drop the schema on `SessionFactory` shutdown.
-* If `drop`, drop the schema on `SessionFactory` shutdown.
-* If `validate`, validate the database schema without changing it.
-* If `update`, only export what's missing in the schema.
+a| * If `drop-and-create`, first drop the schema and then export tables, sequences, and constraints
+* If `create`, export tables, sequences, and constraints, without attempting to drop them first
+* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup
+Additionally, drop the schema on `SessionFactory` shutdown
+* If `drop`, drop the schema on `SessionFactory` shutdown
+* If `validate`, validate the database schema without changing it
+* If `update`, only export what's missing in the schema
 
 | `jakarta.persistence.create-database-schemas`
 | (Optional) If `true`, automatically create schemas and catalogs
@@ -333,7 +335,7 @@ This approach is cleaner than writing Java code to instantiate entity instances 
 [TIP]
 // .Programmatic schema export
 ====
-The `SchemaManager` API allow you to control schema export programmatically.
+Alternatively, the `SchemaManager` API allow you to control schema export programmatically.
 
 [source,java]
 sessionFactory.getSchemaManager().exportMappedObjects(true);
@@ -360,7 +362,7 @@ logger.hibernate.level = debug
 You can make the SQL logged to the console more readable by enabling formatting or highlighting.
 
 .Settings for SQL logging to the console
-[cols=",2"]
+[cols="35,~"]
 |===
 | Configuration property name | Purpose
 
@@ -376,7 +378,7 @@ These settings can really help when troubleshooting SQL.
 The following properties are very useful for minimizing the amount of information you'll need to explicitly specify in `@Table` and `@Column` annotations, which we'll discuss below in <<object-relational-mapping>>:
 
 .Settings for minimizing explicit mapping information
-[cols=",2"]
+[cols="35,~"]
 |===
 | Configuration property name           | Purpose
 
@@ -402,7 +404,7 @@ Please refer to the Javadoc for these interfaces for more information about the 
 _By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode data. But a Java string may contain any Unicode character. So, if you're working with SQL Server, you might need to force Hibernate to use the `nchar` and `nvarchar` column types.
 
 .Setting the use of nationalized character data
-[cols=",2"]
+[cols="40,~"]
 |===
 | Configuration property name                 | Purpose
 

@@ -4,25 +4,38 @@ page:
 font:
   catalog:
     merge: false
-    Roboto:
-      normal: Roboto-Regular.ttf
-      italic: Roboto-Italic.ttf
-      bold: Roboto-Bold.ttf
-      bold_italic: Roboto-BoldItalic.ttf
-    Roboto Light:
-      normal: Roboto-Light.ttf
-      italic: Roboto-LightItalic.ttf
-    Emoji:
+    Source Sans Pro:
+      normal: SourceSansPro-Regular.ttf
+      italic: SourceSansPro-Italic.ttf
+      bold: SourceSansPro-Bold.ttf
+      bold_italic: SourceSansPro-BoldItalic.ttf
+    Source Sans Pro Light:
+      normal: SourceSansPro-Light.ttf
+      italic: SourceSansPro-LightItalic.ttf
+      bold: SourceSansPro-SemiBold.ttf
+      bold_italic: SourceSansPro-SemiBoldItalic.ttf
+    Inconsolata Light:
+      normal: Inconsolata-Light.ttf
+      bold: Inconsolata-Light.ttf
+      italic: Inconsolata-Light.ttf
+    OpenSansEmoji:
       normal: OpenSansEmoji.ttf
       bold: OpenSansEmoji.ttf
       italic: OpenSansEmoji.ttf
       bold_italic: OpenSansEmoji.ttf
+    NotoEmoji:
+      normal: NotoEmoji.ttf
+      bold: NotoEmoji.ttf
+      italic: NotoEmoji.ttf
+      bold_italic: NotoEmoji.ttf
   fallbacks:
-    - Emoji
+    - OpenSansEmoji
+    - NotoEmoji
+    - Source Sans Pro
 base:
   font:
     color: #151e3d
-    family: Roboto
+    family: Source Sans Pro
     size: 9
   line-height-length: 11.5
   line-height: $base-line-height-length / $base-font-size
@@ -31,13 +44,19 @@ prose:
 image:
   width: 70%
   align: center
+codespan:
+  font:
+    size: 8.5
+    family: Inconsolata Light
+    color: #281e5d
 code:
-  font-size: 8
-  font-color: #281e5d
+  font:
+    size: 8.5
+    color: #281e5d
+    family: Inconsolata Light
   border-width: 0
   padding: [4,4,4,20]
 #  background-color: #f7f7f7
-#  font-family: Inconsolata
 sidebar:
   border-width: 0
   title:
@@ -64,6 +83,7 @@ list:
   indent: $base-font-size * 1.5
   item-spacing: 2
 table:
+  font-size: 8.5
   caption:
     text-align: right
     side: top
@@ -79,9 +99,6 @@ table:
     background-color: #f0f0f0
   cell:
     padding: 6
-codespan:
-  font-size: 8
-  font-color: #281e5d
 footer:
   border-width: 0
 quote:

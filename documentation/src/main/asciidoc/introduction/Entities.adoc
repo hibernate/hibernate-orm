@@ -209,7 +209,7 @@ On the other hand, if, as is more common, you're working with a pre-existing dat
 JPA defines the following strategies for generating ids, which are enumerated by `GenerationType`:
 
 .Standard id generation strategies
-[cols="3,2,6"]
+[cols="25,15,~"]
 |===
 | Strategy                  | Java type | Implementation
 
@@ -508,7 +508,7 @@ A _basic_ attribute of an entity is a field or property which maps to a single c
 The JPA specification defines a quite limited set of basic types:
 
 .JPA-standard basic attribute types
-[cols="3,2,6"]
+[cols="30,^14,~"]
 |====
 | Classification | Package | Types
 
@@ -541,13 +541,14 @@ As we'll soon see in <<embeddable-objects>>, Hibernate has much better ways to h
 Hibernate slightly extends this list with the following types:
 
 .Additional basic attribute types in Hibernate
-[cols="3,2,6"]
+[cols="30,^14,56"]
 |====
 | Classification | Package | Types
 
-| Date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, `ZonedDateTime`, `Year`
-| LOB types | `java.sql` | `Blob`, `Clob`
-| Miscellaneous | `java.util` | `Currency`, `URL`
+| Additional date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, `Year`, and even `ZonedDateTime`
+| JDBC LOB types | `java.sql` | `Blob`, `Clob`
+| Java class object | `java.lang` | `Class`
+| Miscellaneous types | `java.util` | `Currency`, `URL`, `TimeZone`
 |====
 
 The `@Basic` annotation explicitly specifies that an attribute is basic, but it's often not needed, since attributes are assumed basic by default.
@@ -917,11 +918,11 @@ There are three annotations for mapping associations: `@ManyToOne`, `@OneToMany`
 They share some common annotation members:
 
 .Association-defining annotation members
-[cols=",4,3"]
+[cols="14,~,35"]
 |===
 | Member | Interpretation | Default value
 
-| `cascade` | Persistence operations which should <<cascade,cascade>> to the associated entity (a list of ``CascadeType``s) | `{}`
+| `cascade` | Persistence operations which should <<cascade,cascade>> to the associated entity; a list of ``CascadeType``s | `{}`
 | `fetch` | Whether the association is eagerly <<association-fetching,fetched>> or may be <<proxies-and-lazy-fetching,proxied>>
 a|
 - `LAZY` for `@OneToMany` and `@ManyToMany`
@@ -1204,13 +1205,18 @@ That is, the collection is a _bag_, not a set.
 
 We've now seen the following kinds of entity attribute:
 
+[cols="32,^15,^15,~"]
 |===
-| Kind of entity attribute | Kind of referenced value | Multiplicity | Examples
+| Kind of entity attribute | Kind of reference | Multiplicity | Examples
 
 | Single-valued attribute of basic type | Non-entity | At most one | `@Basic String name`
 | Single-valued attribute of embeddable type | Non-entity | At most one | `@Embedded Name name`
-| Single-valued association | Entity | At most one | `@ManyToOne Publisher publisher`, `@OneToOne Person person`
-| Many-valued association | Entity | Zero or more | `@OneToMany Set<Book> books`, `@ManyToMany Set<Author> authors`
+| Single-valued association | Entity | At most one |
+`@ManyToOne Publisher publisher` +
+`@OneToOne Person person`
+| Many-valued association | Entity | Zero or more |
+`@OneToMany Set<Book> books` +
+`@ManyToMany Set<Author> authors`
 |===
 
 Scanning this taxonomy, you might ask: does Hibernate have multivalued attributes of basic or embeddable type?
@@ -1229,11 +1235,16 @@ And the answer again is that _it does_. Indeed, there are two different ways to 
 
 So we may expand our taxonomy with:
 
+[cols="32,^15,^15,~"]
 |===
-| Kind of entity attribute | Kind of referenced value | Multiplicity | Examples
+| Kind of entity attribute | Kind of reference | Multiplicity | Examples
 
-| `byte[]` and `char[]` arrays | Non-entity | Zero or more | `byte[] image`, `char[] text`
-| Collection of basic-typed elements | Non-entity | Zero or more | `@Array String[] names`, `@ElementCollection Set<String> names`
+| `byte[]` and `char[]` arrays | Non-entity | Zero or more |
+`byte[] image` +
+`char[] text`
+| Collection of basic-typed elements | Non-entity | Zero or more |
+`@Array String[] names` +
+`@ElementCollection Set<String> names`
 | Collection of embeddable elements | Non-entity | Zero or more |  `@ElementCollection Set<Name> names`
 |===
 
@@ -1362,7 +1373,7 @@ There's much more we could say about "element collections", but we won't say it,
 Let's pause to remember the annotations we've met so far.
 
 .Declaring entities and embeddable types
-[cols="2,4,1"]
+[cols="22,~,^13"]
 |===
 | Annotation | Purpose | JPA-standard
 
@@ -1373,7 +1384,7 @@ Let's pause to remember the annotations we've met so far.
 |===
 
 .Declaring basic attributes
-[cols="2,4,2,1"]
+[cols="22,~,^10,^13"]
 |===
 | Annotation | Purpose | Required | JPA-standard
 
@@ -1388,7 +1399,7 @@ Let's pause to remember the annotations we've met so far.
 |===
 
 .Converters and compositional basic types
-[cols="2,4,1"]
+[cols="22,~,^13"]
 |===
 | Annotation | Purpose | JPA-standard
 
@@ -1402,7 +1413,7 @@ Let's pause to remember the annotations we've met so far.
 |===
 
 .System-generated identifiers
-[cols="2,4,1"]
+[cols="22,~,^13"]
 |===
 | Annotation | Purpose | JPA-standard
 
@@ -1414,7 +1425,7 @@ Let's pause to remember the annotations we've met so far.
 |===
 
 .Declaring entity associations
-[cols="2,4,1"]
+[cols="22,~,^13"]
 |===
 | Annotation | Purpose | JPA-standard
 

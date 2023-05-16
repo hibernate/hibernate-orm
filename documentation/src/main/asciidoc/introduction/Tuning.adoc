@@ -49,7 +49,7 @@ hibernate.agroal.reapTimeout PT10s
 As long as you set at least one property with the prefix `hibernate.agroal`, the `AgroalConnectionProvider` will be selected automatically.
 
 .Settings for configuring Agroal
-[cols=",4"]
+[cols="37,~"]
 |===
 | Configuration property name | Purpose
 
@@ -82,7 +82,7 @@ Batching only helps in cases where a program executes many inserts, updates, or 
 All you need to do is set a single property:
 
 .Enabling JDBC batching
-[cols=",3"]
+[%autowidth.stretch]
 |===
 | Configuration property name | Purpose
 
@@ -236,7 +236,7 @@ It is an error to place it on a subclass entity.
 The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
 
 .Cache concurrency
-[cols=",2,3"]
+[cols="20,30,~"]
 |===
 | Concurrency policy | Interpretation | Explanation
 
@@ -327,6 +327,7 @@ But in case it helps, we often test Hibernate with the following configuration, 
 :ehcache-config: https://www.ehcache.org/documentation/
 
 .EHCache provider configuration
+[cols="35,~"]
 |===
 | Configuration property name              | Property value
 
@@ -345,16 +346,18 @@ Alternatively, to use Infinispan as the cache implementation, the following sett
 :infinispan-hibernate: https://infinispan.org/docs/stable/titles/hibernate/hibernate.html
 
 .Infinispan provider configuration
-[cols=",3"]
+[cols="35,~"]
 |===
 | Configuration property name              | Property value
 
 | `hibernate.cache.region.factory_class`   | `infinispan`
-| `hibernate.cache.infinispan.cfg`         a|
-[cols="1,2"]
+| `hibernate.cache.infinispan.cfg`         a| Path to infinispan configuration file, for example:
+[cols="~,35"]
 !===
-! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs.xml` ! for a distributed cache
-! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs-local.xml` ! to test with local cache
+! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs.xml`
+! for a distributed cache
+! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs-local.xml`
+! to test with local cache
 !===
 |===
 
@@ -363,10 +366,12 @@ You'll find more information about using Infinispan with Hibernate {infinispan-h
 
 Finally, there's a way to globally disable the second-level cache:
 
+.Setting to disable caching
+[cols="35,~"]
 |===
 | Configuration property name              | Property value
 
-| `hibernate.cache.use_second_level_cache` | `true` to enable caching, `false` to disable it
+| `hibernate.cache.use_second_level_cache` | `true` to enable caching, or `false` to disable it
 |===
 
 When `hibernate.cache.region.factory_class` is set, this property defaults to `true`.
@@ -375,7 +380,6 @@ When `hibernate.cache.region.factory_class` is set, this property defaults to `t
 ====
 This setting lets us easily disable the second-level cache completely when troubleshooting or profiling performance.
 ====
-
 
 You can find much more information about the second-level cache in the {second-level-cache}[User Guide].
 
@@ -387,7 +391,8 @@ Hibernate also has a way to cache the result sets of queries, though this is onl
 
 The query cache must be enabled explicitly:
 
-.Query cache configuration
+.Setting to enable the query cache
+[cols="35,~"]
 |===
 | Configuration property name | Property value
 
@@ -456,7 +461,7 @@ em.setCacheStoreMode(CacheStoreMode.BYPASS);
 The JPA-defined cache modes are:
 
 .JPA-defined cache modes
-[cols=",3"]
+[cols="30,~"]
 |===
 | Mode | Interpretation
 
@@ -471,9 +476,9 @@ The JPA-defined cache modes are:
 A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
 
 .Hibernate cache modes and JPA equivalents
-[cols=",5"]
+[cols="30,~"]
 |===
-| `CacheMode` | Equivalent JPA modes
+| Hibernate `CacheMode` | Equivalent JPA modes
 
 | `NORMAL` | `CacheRetrieveMode.USE`, `CacheStoreMode.USE`
 | `IGNORE` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.BYPASS`
@@ -584,7 +589,7 @@ A stateless session:
 For a stateless session, you're always working with detached objects. Thus, the programming model is a bit different:
 
 .Important methods of the `StatelessSession`
-[cols=",2"]
+[%autowidth.stretch]
 |===
 | Method name and parameters | Effect
 
@@ -653,7 +658,7 @@ lock mode can be used to request a pessimistic lock, or to customize the behavio
 of optimistic locking:
 
 .Optimistic and pessimistic lock modes
-[cols=",4"]
+[cols="26,~"]
 |===
 | `LockMode` type | Meaning
 

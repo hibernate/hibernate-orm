@@ -91,28 +91,28 @@ It's quite unsurprising that we may use this object to create an `EntityManager`
 
 [source,java]
 ----
-EntityManager em = emf.createEntityManager();
+EntityManager entityManager = entityManagerFactory.createEntityManager();
 ----
 
 When we're finished with the `EntityManager`, we should explicitly clean it up:
 
 [source,java]
 ----
-em.close();
+entityManager.close();
 ----
 
 On the other hand, if we're starting from a `SessionFactory`, as described in <<configuration-api>>, we may use:
 
 [source,java]
 ----
-Session s = sf.openSession();
+Session session = sessionFactory.openSession();
 ----
 
 But we still need to clean up:
 
 [source,java]
 ----
-em.close();
+entityManager.close();
 ----
 
 .Injecting the `EntityManager`
@@ -122,14 +122,14 @@ For example, in Java (or Jakarta) EE you would write:
 
 [source,java]
 ----
-@PersistenceContext EntityManager em;
+@PersistenceContext EntityManager entityManager;
 ----
 
 In Quarkus, injection is handled by CDI:
 
 [source,java]
 ----
-@Inject EntityManager em;
+@Inject EntityManager entityManager;
 ----
 ****
 
@@ -143,8 +143,8 @@ The idiom we recommend is the following:
 
 [source,java]
 ----
-EntityManager em = emf.createEntityManager();
-EntityTransaction tx = em.getTransaction();
+EntityManager entityManager = entityManagerFactory.createEntityManager();
+EntityTransaction tx = entityManager.getTransaction();
 try {
     tx.begin();
     //do some work
@@ -156,17 +156,17 @@ catch (Exception e) {
     throw e;
 }
 finally {
-    em.close();
+    entityManager.close();
 }
 ----
 
 Using Hibernate's native APIs we might write something really similar,
 // [source,java]
 // ----
-// Session s = sf.openSession();
+// Session session = sessionFactory.openSession();
 // Transaction tx = null;
 // try {
-//     tx = s.beginTransaction();
+//     tx = session.beginTransaction();
 //     //do some work
 //     ...
 //     tx.commit();
@@ -176,14 +176,14 @@ Using Hibernate's native APIs we might write something really similar,
 //     throw e;
 // }
 // finally {
-//     s.close();
+//     session.close();
 // }
 // ----
 but since this sort of code is extremely tedious, we have a much nicer option:
 
 [source,java]
 ----
-sf.inTransaction(s -> {
+sessionFactory.inTransaction(session -> {
     //do the work
     ...
 });
@@ -347,14 +347,14 @@ For example, to disable flushes that occur before query execution, call:
 
 [source,java]
 ----
-em.setFlushMode(FlushModeType.COMMIT);
+entityManager.setFlushMode(FlushModeType.COMMIT);
 ----
 
 Hibernate allows greater control over the flush mode than JPA:
 
 [source,java]
 ----
-s.setHibernateFlushMode(FlushMode.MANUAL);
+session.setHibernateFlushMode(FlushMode.MANUAL);
 ----
 
 Since flushing is a somewhat expensive operation (the session must dirty-check every entity in the persistence context), setting the flush mode to `COMMIT` can occasionally be a useful optimization.
@@ -420,9 +420,9 @@ So for the `Session` API we would write:
 [source,java]
 ----
 List<Book> matchingBooks =
-        s.createSelectionQuery("from Book where title like :titleSearchPattern", Book.class)
-         .setParameter("titleSearchPattern", titleSearchPattern)
-         .getResultList();
+        session.createSelectionQuery("from Book where title like :titleSearchPattern", Book.class)
+            .setParameter("titleSearchPattern", titleSearchPattern)
+            .getResultList();
 ----
 
 Or, if we're sticking to the JPA-standard APIs:
@@ -430,9 +430,9 @@ Or, if we're sticking to the JPA-standard APIs:
 [source,java]
 ----
 List<Book> matchingBooks =
-        s.createQuery("from Book where title like :titleSearchPattern", Book.class)
-         .setParameter("titleSearchPattern", titleSearchPattern)
-         .getResultList();
+        session.createQuery("from Book where title like :titleSearchPattern", Book.class)
+            .setParameter("titleSearchPattern", titleSearchPattern)
+            .getResultList();
 ----
 
 The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed a Mutation.
@@ -444,9 +444,9 @@ These are called _ordinal parameters_.
 [source,java]
 ----
 List<Book> matchingBooks =
-        s.createSelectionQuery("from Book where title like ?1", Book.class)
-         .setParameter(1, titleSearchPattern)
-         .getResultList();
+        session.createSelectionQuery("from Book where title like ?1", Book.class)
+            .setParameter(1, titleSearchPattern)
+            .getResultList();
 ----
 
 When a query has multiple parameters, named parameters tend to be easier to read, even if slightly more verbose.
@@ -463,9 +463,9 @@ If we're expecting a query to return a single result, we can use `getSingleResul
 [source,java]
 ----
 Book book =
-        s.createSelectionQuery("from Book where isbn = ?1", Book.class)
-         .setParameter(1, isbn)
-         .getSingleResult();
+        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .getSingleResult();
 ----
 
 Or, if we're expecting it to return at most one result, we can use `getSingleResultOrNull()`.
@@ -473,9 +473,9 @@ Or, if we're expecting it to return at most one result, we can use `getSingleRes
 [source,java]
 ----
 Book bookOrNull =
-        s.createSelectionQuery("from Book where isbn = ?1", Book.class)
-         .setParameter(1, isbn)
-         .getSingleResultOrNull();
+        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .getSingleResultOrNull();
 ----
 
 The difference, of course, is that `getSingleResult()` throws an exception if there is no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
@@ -488,10 +488,10 @@ To disable this behavior, set the flush mode to `COMMIT` or `MANUAL`:
 [source,java]
 ----
 Book bookOrNull =
-        s.createSelectionQuery("from Book where isbn = ?1", Book.class)
-         .setParameter(1, isbn)
-         .setHibernateFlushMode(MANUAL)
-         .getSingleResult();
+        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .setHibernateFlushMode(MANUAL)
+            .getSingleResult();
 ----
 
 [CAUTION]
@@ -520,14 +520,14 @@ Using the JPA-standard APIs, this would be a `CriteriaBuilder`, and we get it fr
 
 [source,java]
 ----
-CriteriaBuilder cb = emf.getCriteriaBuilder();
+CriteriaBuilder cb = entityManagerFactory.getCriteriaBuilder();
 ----
 
 But if we have a `SessionFactory`, we get something much better, a `HibernateCriteriaBuilder`:
 
 [source,java]
 ----
-HibernateCriteriaBuilder cb = sf.getCriteriaBuilder();
+HibernateCriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 ----
 
 The `HibernateCriteriaBuilder` extends `CriteriaBuilder` and adds many operations that JPQL doesn't have.
@@ -540,14 +540,14 @@ Either:
 
 [source,java]
 ----
-HibernateCriteriaBuilder cb = emf.unwrap(SessionFactory.class).getCriteriaBuilder();
+HibernateCriteriaBuilder cb = entityManagerFactory.unwrap(SessionFactory.class).getCriteriaBuilder();
 ----
 
 Or simply:
 
 [source,java]
 ----
-HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) emf.getCriteriaBuilder();
+HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManagerFactory.getCriteriaBuilder();
 ----
 ====
 
@@ -600,8 +600,8 @@ For example:
 [source,java]
 ----
 List<Book> matchingBooks =
-        s.createSelectionQuery(query)
-         .getResultList();
+        session.createSelectionQuery(query)
+            .getResultList();
 ----
 
 When all else fails, and sometimes even before that, we're left with the option of writing a query in SQL.
@@ -627,9 +627,9 @@ For the most simple cases, Hibernate can infer the shape of the result set:
 
 [source, java]
 ----
-Book book = s.createNativeQuery("select * from Books where isbn = ?1", Book.class).getSingleResult();
+Book book = session.createNativeQuery("select * from Books where isbn = ?1", Book.class).getSingleResult();
 
-String title = s.createNativeQuery("select title from Books where isbn = ?1", String.class).getSingleResult();
+String title = session.createNativeQuery("select title from Books where isbn = ?1", String.class).getSingleResult();
 ----
 
 However, in general, there isn't enough information in the JDBC `ResultSetMetaData` to infer the mapping of columns to entity objects.
@@ -643,8 +643,8 @@ So if there are any unflushed changes to ``Book``s, this query might return stal
 [source,java]
 ----
 List<Book> books =
-        s.createNativeQuery("select * from Books")
-         .getResultList()
+        session.createNativeQuery("select * from Books")
+            .getResultList()
 ----
 
 There's two ways to ensure the persistence context is flushed before this query is executed.
@@ -654,9 +654,9 @@ Either, we could simply force a flush by set the flush mode to `ALWAYS`:
 [source,java]
 ----
 List<Book> books =
-        s.createNativeQuery("select * from Books")
-         .setHibernateFlushMode(ALWAYS)
-         .getResultList()
+        session.createNativeQuery("select * from Books")
+            .setHibernateFlushMode(ALWAYS)
+            .getResultList()
 ----
 
 Or, alternative, we could tell Hibernate which modified state affects the results of the query:
@@ -664,9 +664,9 @@ Or, alternative, we could tell Hibernate which modified state affects the result
 [source,java]
 ----
 List<Book> books =
-        s.createNativeQuery("select * from Books")
-         .addSynchronizedEntityClass(Book.class)
-         .getResultList()
+        session.createNativeQuery("select * from Books")
+            .addSynchronizedEntityClass(Book.class)
+            .getResultList()
 ----
 
 
@@ -694,10 +694,10 @@ For example, this:
 [source,java]
 ----
 List<Book> books =
-        s.createSelectionQuery("from Book where title like ?1")
-         .setParameter(1, titlePatterm)
-         .setMaxResults(10)
-         .getResultList();
+        session.createSelectionQuery("from Book where title like ?1")
+            .setParameter(1, titlePatterm)
+            .setMaxResults(10)
+            .getResultList();
 ----
 
 is simpler than:
@@ -705,10 +705,10 @@ is simpler than:
 [source,java]
 ----
 List<Book> books =
-        s.createSelectionQuery("from Book where title like ?1 fetch first ?2 rows only")
-         .setParameter(1, titlePatterm)
-         .setParameter(2, 10)
-         .getResultList();
+        session.createSelectionQuery("from Book where title like ?1 fetch first ?2 rows only")
+            .setParameter(1, titlePatterm)
+            .setParameter(2, 10)
+            .getResultList();
 ----
 
 [[named-queries]]
@@ -744,9 +744,10 @@ We execute our named query as follows:
 
 [source,java]
 ----
-em.createNamedQuery("10BooksByTitle")
-  .setParameter("titlePattern", titlePattern)
-  .getResultList()
+List<Book> books =
+        entityManager.createNamedQuery("10BooksByTitle")
+            .setParameter("titlePattern", titlePattern)
+            .getResultList()
 ----
 
 Note that the code which executes the named query is not aware of whether the query was written in HQL or in native SQL, making it slightly easier to change and optimize the query later.

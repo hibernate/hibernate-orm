@@ -173,7 +173,7 @@ We may obtain an `EntityManagerFactory` by calling `Persistence.createEntityMana
 
 [source,java]
 ----
-EntityManagerFactory emf =
+EntityManagerFactory entityManagerFactory =
     Persistence.createEntityManagerFactory("org.hibernate.example");
 ----
 
@@ -181,7 +181,7 @@ If necessary, we may override configuration properties specified in `persistence
 
 [source,java]
 ----
-EntityManagerFactory emf =
+EntityManagerFactory entityManagerFactory =
     Persistence.createEntityManagerFactory("org.hibernate.example",
             Map.of(AvailableSettings.JAKARTA_JDBC_PASSWORD, password));
 ----
@@ -193,7 +193,7 @@ Alternatively, the venerable class `org.hibernate.cfg.Configuration` allows an i
 
 [source,java]
 ----
-SessionFactory sf = new Configuration()
+SessionFactory sessionFactory = new Configuration()
     .addAnnotatedClass(Book.class)
     .addAnnotatedClass(Author.class)
     .setProperty(AvailableSettings.JAKARTA_JDBC_URL, "jdbc:postgresql://localhost/example")
@@ -228,7 +228,6 @@ Of course, we're not going to cover every useful configuration setting in this c
 Instead, we'll mention the ones you need to get started, and come back to some other important settings later, especially when we talk about performance tuning.
 
 [TIP]
-// .Ya ain't gunna need 'em
 ====
 Hibernate has many—too many—switches and toggles.
 Please don't go crazy messing about with these settings; most of them are rarely needed, and many only exist to provide backward compatibility with older versions of Hibernate.

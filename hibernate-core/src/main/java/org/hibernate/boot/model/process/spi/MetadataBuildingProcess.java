@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -68,7 +69,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
-import org.hibernate.type.descriptor.java.DurationJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
@@ -77,7 +77,6 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -630,9 +629,7 @@ public class MetadataBuildingProcess {
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
 		// Capture the dialect configured JdbcTypes so that we can detect if a TypeContributor overwrote them,
 		// which has precedence over the fallback and preferred type registrations
-		final JdbcType dialectUuidDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.UUID );
 		final JdbcType dialectArrayDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY );
-		final JdbcType dialectIntervalDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.INTERVAL_SECOND );
 
 		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
@@ -642,10 +639,9 @@ public class MetadataBuildingProcess {
 		// add fallback type descriptors
 		final int preferredSqlTypeCodeForUuid = getPreferredSqlTypeCodeForUuid( serviceRegistry );
 		if ( preferredSqlTypeCodeForUuid != SqlTypes.UUID ) {
-			adaptToPreferredSqlTypeCode(
+			adaptToPreferredSqlTypeCodeForUuid(
+					typeConfiguration,
 					jdbcTypeRegistry,
-					dialectUuidDescriptor,
-					SqlTypes.UUID,
 					preferredSqlTypeCodeForUuid
 			);
 		}
@@ -732,6 +728,24 @@ public class MetadataBuildingProcess {
 			);
 		}
 		// else warning?
+	}
+
+	private static void adaptToPreferredSqlTypeCodeForUuid(
+			TypeConfiguration typeConfiguration,
+			JdbcTypeRegistry jdbcTypeRegistry,
+			int preferredSqlTypeCodeForUuid) {
+		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final BasicType<?> uuidType = new NamedBasicTypeImpl<>(
+				javaTypeRegistry.getDescriptor( UUID.class ),
+				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForUuid ),
+				"uuid"
+		);
+		basicTypeRegistry.register(
+				uuidType,
+				UUID.class.getSimpleName(),
+				UUID.class.getName()
+		);
 	}
 
 	private static void adaptToPreferredSqlTypeCodeForDuration(

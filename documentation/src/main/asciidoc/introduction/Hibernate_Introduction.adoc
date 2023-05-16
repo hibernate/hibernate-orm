@@ -339,7 +339,6 @@ public class Main {
         // export the inferred database schema
         sessionFactory.getSchemaManager().exportMappedObjects(true);
 
-
         // persist an entity
         sessionFactory.inTransaction(session -> {
             session.persist(new Book("9781932394153", "Hibernate in Action"));

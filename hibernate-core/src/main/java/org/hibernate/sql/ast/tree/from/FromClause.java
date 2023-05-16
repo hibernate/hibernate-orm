@@ -12,6 +12,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
@@ -222,6 +224,20 @@ public class FromClause implements SqlAstNode {
 			}
 		}
 		return null;
+	}
+
+	public TableGroup findTableGroup(NavigablePath navigablePath) {
+		return queryTableGroups(
+				tg -> {
+					if ( navigablePath.equals( tg.getNavigablePath() ) ) {
+						return tg;
+					}
+					if ( tg instanceof OneToManyTableGroup && navigablePath.getParent().equals( tg.getNavigablePath() ) ) {
+						return ( (OneToManyTableGroup) tg ).getTableGroup( CollectionPart.Nature.fromName( navigablePath.getLocalName() ) );
+					}
+					return null;
+				}
+		);
 	}
 
 	@Override

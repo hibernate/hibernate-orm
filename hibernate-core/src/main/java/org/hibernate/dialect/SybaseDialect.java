@@ -477,9 +477,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
-		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
-		return NameQualifierSupport.CATALOG;
+		// SCHEMA (schema) : https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1570/html/commands/X48762.htm
+		// CATALOG (database) : https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1570/html/commands/X75308.htm
+		return NameQualifierSupport.BOTH;
 	}
 
 	@Override

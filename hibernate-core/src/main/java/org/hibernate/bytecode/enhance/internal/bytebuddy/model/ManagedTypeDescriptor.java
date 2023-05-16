@@ -6,20 +6,17 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy.model;
 
-import net.bytebuddy.dynamic.ClassFileLocator;
-import net.bytebuddy.pool.TypePool;
+import java.util.Map;
 
 /**
  * @author Steve Ebersole
  */
-public interface ModelProcessingContext {
+public interface ManagedTypeDescriptor {
+	ClassDetails getClassDetails();
 
-	/**
-	 * Registry of managed-classes
-	 */
-	ClassDetailsRegistry getClassDetailsRegistry();
+	Map<String,PersistentAttribute> getPersistentAttributes();
 
-	TypePool getTypePool();
-
-	ClassFileLocator getClassFileLocator();
+	default PersistentAttribute getPersistentAttribute(String name) {
+		return getPersistentAttributes().get( name );
+	}
 }

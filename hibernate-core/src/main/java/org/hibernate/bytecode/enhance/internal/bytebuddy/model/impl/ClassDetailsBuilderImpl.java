@@ -11,7 +11,6 @@ import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ClassDetailsBuild
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelProcessingContext;
 
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.pool.TypePool;
 
 /**
  * ClassDetailsBuilder implementation
@@ -19,15 +18,15 @@ import net.bytebuddy.pool.TypePool;
  * @author Steve Ebersole
  */
 public class ClassDetailsBuilderImpl implements ClassDetailsBuilder {
-	private final TypePool typePool;
+	private final ModelProcessingContext modelProcessingContext;
 
-	public ClassDetailsBuilderImpl(TypePool typePool) {
-		this.typePool = typePool;
+	public ClassDetailsBuilderImpl(ModelProcessingContextImpl modelProcessingContext) {
+		this.modelProcessingContext = modelProcessingContext;
 	}
 
 	@Override
 	public ClassDetails buildClassDetails(String name, ModelProcessingContext processingContext) {
-		final TypeDescription typeDescription = typePool.describe( name ).resolve();
+		final TypeDescription typeDescription = modelProcessingContext.getTypePool().describe( name ).resolve();
 		return buildClassDetails( name, typeDescription, processingContext );
 	}
 

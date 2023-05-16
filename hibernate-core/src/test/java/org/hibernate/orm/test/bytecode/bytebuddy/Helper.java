@@ -8,11 +8,10 @@ package org.hibernate.orm.test.bytecode.bytebuddy;
 
 import java.util.function.Consumer;
 
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
-import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.EnhancerClassFileLocator;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.ClassFileLocatorImpl;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ManagedTypeModelContext;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl.ManagedTypeModelContextImpl;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl.ModelProcessingContextImpl;
-
-import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 
 import net.bytebuddy.pool.TypePool;
 
@@ -25,19 +24,27 @@ public class Helper {
 	}
 
 	public static void withProcessingContext(ClassLoader classLoader, Consumer<ModelProcessingContextImpl> action) {
-		try (EnhancerClassFileLocator classFileLocator = new EnhancerClassFileLocator( classLoader )) {
-			final EnhancerTestContext context = new EnhancerTestContext() {
-				@Override
-				public ClassLoader getLoadingClassLoader() {
-					return classLoader;
-				}
-			};
+		try (ClassFileLocatorImpl classFileLocator = new ClassFileLocatorImpl( classLoader )) {
 			final ModelProcessingContextImpl processingContext = new ModelProcessingContextImpl(
-					TypePool.Default.WithLazyResolution.of( classFileLocator ),
-					context
+					classFileLocator,
+					TypePool.Default.WithLazyResolution.of( classFileLocator )
 			);
 
 			action.accept( processingContext );
+		}
+	}
+
+	public static void withManagedTypeModelContext(Consumer<ManagedTypeModelContext> action) {
+		withManagedTypeModelContext( Helper.class.getClassLoader(), action );
+	}
+
+	public static void withManagedTypeModelContext(ClassLoader classLoader, Consumer<ManagedTypeModelContext> action) {
+		try (ClassFileLocatorImpl classFileLocator = new ClassFileLocatorImpl( classLoader )) {
+			final ModelProcessingContextImpl processingContext = new ModelProcessingContextImpl(
+					classFileLocator,
+					TypePool.Default.WithLazyResolution.of( classFileLocator )
+			);
+			action.accept( new ManagedTypeModelContextImpl( processingContext ) );
 		}
 	}
 }

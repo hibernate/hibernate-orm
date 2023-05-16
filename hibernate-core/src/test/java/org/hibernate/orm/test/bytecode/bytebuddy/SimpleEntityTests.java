@@ -82,14 +82,15 @@ public class SimpleEntityTests {
 
 	@Test
 	void testPersistentAttributeResolution() {
-		Helper.withProcessingContext( (modelProcessingContext) -> {
-			final ClassDetails classDetails = modelProcessingContext
+		Helper.withManagedTypeModelContext( (managedTypeModelContext) -> {
+			final ClassDetails classDetails = managedTypeModelContext
+					.getModelProcessingContext()
 					.getClassDetailsRegistry()
 					.resolveClassDetails( SimpleEntity.class.getName() );
 			final List<PersistentAttribute> persistentAttributes = ModelSourceHelper.buildPersistentAttributeList(
 					classDetails,
 					null,
-					modelProcessingContext
+					managedTypeModelContext
 			);
 			assertThat( persistentAttributes ).hasSize( 2 );
 			assertThat( persistentAttributes.get( 0 ).getAccessType() ).isEqualTo( AccessType.FIELD );

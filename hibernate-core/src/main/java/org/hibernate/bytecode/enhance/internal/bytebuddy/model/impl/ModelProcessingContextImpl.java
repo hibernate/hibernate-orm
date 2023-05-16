@@ -27,25 +27,28 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.ClassFileLocatorImpl;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelProcessingContext;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 
 import jakarta.persistence.AttributeConverter;
+import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.pool.TypePool;
 
 /**
  * @author Steve Ebersole
  */
-public class ModelProcessingContextImpl implements ModelProcessingContext, ClassLoaderAccess {
+public class ModelProcessingContextImpl implements ModelProcessingContext {
 	private final ClassDetailsRegistryImpl classDetailsRegistry;
-	private final EnhancementContext enhancementContext;
+	private final ClassFileLocatorImpl classFileLocator;
+	private final TypePool typePool;
 
-	public ModelProcessingContextImpl(TypePool typePool, EnhancementContext enhancementContext) {
-		final ClassDetailsBuilderImpl classDetailsBuilder = new ClassDetailsBuilderImpl( typePool );
+	public ModelProcessingContextImpl(
+			ClassFileLocatorImpl classFileLocator,
+			TypePool typePool) {
+		this.classFileLocator = classFileLocator;
+		this.typePool = typePool;
+		final ClassDetailsBuilderImpl classDetailsBuilder = new ClassDetailsBuilderImpl( this );
 		this.classDetailsRegistry = new ClassDetailsRegistryImpl( classDetailsBuilder, this );
-		this.enhancementContext = enhancementContext;
 
 		primeClassDetails( String.class );
 		primeClassDetails( Boolean.class );
@@ -95,23 +98,12 @@ public class ModelProcessingContextImpl implements ModelProcessingContext, Class
 	}
 
 	@Override
-	public ClassLoaderAccess getClassLoaderAccess() {
-		return this;
+	public TypePool getTypePool() {
+		return typePool;
 	}
 
 	@Override
-	public <T> Class<T> classForName(String name) {
-		try {
-			//noinspection unchecked
-			return (Class<T>) enhancementContext.getLoadingClassLoader().loadClass( name );
-		}
-		catch (ClassNotFoundException e) {
-			throw new ClassLoadingException( "Unable to load Class (using EnhancementContext class-loader) : " + name );
-		}
-	}
-
-	@Override
-	public URL locateResource(String resourceName) {
-		return enhancementContext.getLoadingClassLoader().getResource( resourceName );
+	public ClassFileLocator getClassFileLocator() {
+		return classFileLocator;
 	}
 }

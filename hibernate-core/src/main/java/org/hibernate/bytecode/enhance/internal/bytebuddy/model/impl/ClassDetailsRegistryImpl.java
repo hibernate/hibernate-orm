@@ -54,9 +54,8 @@ public class ClassDetailsRegistryImpl implements ClassDetailsRegistry {
 			return existing;
 		}
 
-		final ClassDetails created = classDetailsBuilder.buildClassDetails( name, processingContext );
-		registerClassDetails( name, created );
-		return created;
+		// NOTE: ClassDetails references register themselves to avoid stack overflow issues
+		return classDetailsBuilder.buildClassDetails( name, processingContext );
 	}
 
 	public ClassDetails resolveClassDetails(String name, TypeDescription typeDescription) {

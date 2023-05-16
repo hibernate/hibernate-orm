@@ -36,6 +36,7 @@ dependencies {
     implementation libs.jandex
     implementation libs.classmate
     implementation libs.byteBuddy
+    implementation libs.asmAnalysis
 
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb

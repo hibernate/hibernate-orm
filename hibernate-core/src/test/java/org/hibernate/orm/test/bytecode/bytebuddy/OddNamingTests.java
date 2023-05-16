@@ -65,14 +65,15 @@ public class OddNamingTests {
 
 	@Test
 	void testPersistentAttributeResolution() {
-		Helper.withProcessingContext( (modelProcessingContext) -> {
-			final ClassDetails classDetails = modelProcessingContext
+		Helper.withManagedTypeModelContext( (managedTypeContext) -> {
+			final ClassDetails classDetails = managedTypeContext
+					.getModelProcessingContext()
 					.getClassDetailsRegistry()
 					.resolveClassDetails( OddNamingEntity.class.getName() );
 			final List<PersistentAttribute> persistentAttributes = ModelSourceHelper.buildPersistentAttributeList(
 					classDetails,
 					null,
-					modelProcessingContext
+					managedTypeContext
 			);
 			assertThat( persistentAttributes ).hasSize( 2 );
 			assertThat( persistentAttributes.get( 0 ).getAccessType() ).isEqualTo( AccessType.PROPERTY );
@@ -88,8 +89,10 @@ public class OddNamingTests {
 				id = persistentAttributes.get( 0 );
 				primaryName = persistentAttributes.get( 1 );
 			}
-			assertThat( primaryName.getUnderlyingField() ).isNull();
+			assertThat( primaryName.getUnderlyingField() ).isNotNull();
+			assertThat( primaryName.getUnderlyingField().getName() ).isEqualTo( "name" );
 			assertThat( id.getUnderlyingField() ).isNotNull();
+			assertThat( id.getUnderlyingField().getName() ).isEqualTo( "id" );
 		} );
 	}
 

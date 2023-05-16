@@ -54,14 +54,15 @@ public class ClassLevelAccessTests {
 
 	@Test
 	void testPersistentAttributeResolution() {
-		Helper.withProcessingContext( (modelProcessingContext) -> {
-			final ClassDetails classDetails = modelProcessingContext
+		Helper.withManagedTypeModelContext( (managedTypeContext) -> {
+			final ClassDetails classDetails = managedTypeContext
+					.getModelProcessingContext()
 					.getClassDetailsRegistry()
 					.resolveClassDetails( ClassLevelAccessEntity.class.getName() );
 			final List<PersistentAttribute> persistentAttributes = ModelSourceHelper.buildPersistentAttributeList(
 					classDetails,
 					null,
-					modelProcessingContext
+					managedTypeContext
 			);
 			assertThat( persistentAttributes ).hasSize( 2 );
 			assertThat( persistentAttributes.get( 0 ).getAccessType() ).isEqualTo( AccessType.FIELD );

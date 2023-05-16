@@ -89,6 +89,6 @@ public class PersistentAttributeFactory {
 	}
 
 	public PersistentAttribute buildPersistentAttribute() {
-		return new PersistentAttribute( name, accessType, backingField, getterMethod, setterMethod );
+		return new PersistentAttributeImpl( name, accessType, backingField, getterMethod, setterMethod );
 	}
 }

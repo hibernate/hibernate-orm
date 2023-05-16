@@ -43,7 +43,7 @@ public class GenericReturnValueMappedSuperclassEnhancementTest {
 		@GeneratedValue
 		public int id;
 
-		@Access(AccessType.PROPERTY)
+		@Access(AccessType.FIELD)
 		private T entity;
 
 		public T getEntity() {

@@ -63,10 +63,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			}
 		}
 
-		final BytecodeProvider bytecodeProvider =
-				metadata.getMetadataBuildingOptions().getServiceRegistry()
-						.getService( BytecodeProvider.class );
-		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
+		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( metadata ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForNamedQueryValidation( metadata ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForSchemaExport( metadata ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForRegistration() );

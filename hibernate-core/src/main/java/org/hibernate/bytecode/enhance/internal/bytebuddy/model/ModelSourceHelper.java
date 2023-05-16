@@ -6,6 +6,7 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy.model;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,12 +14,19 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl.ManagedTypeDescriptorImpl;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl.PersistentAttributeFactory;
-import org.hibernate.internal.util.StringHelper;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Transient;
+import net.bytebuddy.dynamic.ClassFileLocator;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceLogging.MODEL_SOURCE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
@@ -27,10 +35,20 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  * @author Steve Ebersole
  */
 public class ModelSourceHelper {
+	public static ManagedTypeDescriptor buildManagedTypeDescriptor(
+			ClassDetails declaringType,
+			AccessType contextAccessType,
+			ManagedTypeModelContext processingContext) {
+		return new ManagedTypeDescriptorImpl(
+				declaringType,
+				buildPersistentAttributeList( declaringType, contextAccessType, processingContext ),
+				processingContext
+		);
+	}
 	public static List<PersistentAttribute> buildPersistentAttributeList(
 			ClassDetails declaringType,
 			AccessType contextAccessType,
-			ModelProcessingContext processingContext) {
+			ManagedTypeModelContext processingContext) {
 		final AccessType classLevelAccessType = determineClassLevelAccessType(
 				declaringType,
 				declaringType.getIdentifierMember(),
@@ -50,11 +68,14 @@ public class ModelSourceHelper {
 				gettersByAttributeName::put,
 				settersByAttributeName::put
 		);
+
 		final List<PersistentAttribute> attributes = arrayList( attributeMembers.size() );
-		attributeMembers.forEach( (attributeName, backingMemberDetails) -> {
+		ClassNode classNode = null;
+		Map<String, MethodNode> getterMethodNodeMap = null;
+		for ( Map.Entry<String, MemberDetails> membersEntry : attributeMembers.entrySet() ) {
 			final PersistentAttribute attributeDescriptor = buildPersistentAttribute(
-					attributeName,
-					backingMemberDetails,
+					membersEntry.getKey(),
+					membersEntry.getValue(),
 					fieldsByName,
 					gettersByAttributeName,
 					settersByAttributeName,
@@ -62,9 +83,87 @@ public class ModelSourceHelper {
 					processingContext
 			);
 			attributes.add( attributeDescriptor );
-		} );
+
+			if ( attributeDescriptor.getUnderlyingField() == null ) {
+				// we need the field,  but it is not known likely due to a naming mismatch (see HHH-16572).
+				// locate it using ASM
+				assert attributeDescriptor.getUnderlyingGetter() != null;
+				if ( classNode == null ) {
+					classNode = buildClassNode( declaringType, processingContext );
+					getterMethodNodeMap = buildGetterMethodNodeMap( declaringType, classNode, processingContext );
+				}
+
+				final FieldDetails backingField = locateBackingField(
+						attributeDescriptor,
+						getterMethodNodeMap,
+						fieldsByName
+				);
+				attributeDescriptor.setUnderlyingField( backingField );
+			}
+		}
 
 		return attributes;
+	}
+
+	private static FieldDetails locateBackingField(
+			PersistentAttribute attributeDescriptor,
+			Map<String, MethodNode> getterMethodNodeMap,
+			Map<String, FieldDetails> fieldDetailsMap) {
+		final MethodNode methodNode = getterMethodNodeMap.get( attributeDescriptor.getName() );
+
+		// assume the final GETFIELD instruction is the backing field
+		for ( int i = methodNode.instructions.size() - 1; i >= 0; i-- ) {
+			final AbstractInsnNode instruction = methodNode.instructions.get( i );
+			if ( instruction.getOpcode() == Opcodes.GETFIELD ) {
+				final FieldInsnNode getFieldInstruction = (FieldInsnNode) instruction;
+				final String returnedFieldName = getFieldInstruction.name;
+				return fieldDetailsMap.get( returnedFieldName );
+			}
+		}
+
+		return null;
+	}
+
+	private static Map<String,MethodNode> buildGetterMethodNodeMap(
+			ClassDetails declaringType,
+			ClassNode classNode,
+			ManagedTypeModelContext processingContext) {
+		final LinkedHashMap<String,MethodNode> methodNodesByAttributeName = new LinkedHashMap<>();
+		final LinkedHashMap<String,MethodDetails> getterMethodDetailsByName = new LinkedHashMap<>();
+		for ( MethodDetails method : declaringType.getMethods() ) {
+			if ( method.getMethodKind() != MethodDetails.MethodKind.GETTER ) {
+				continue;
+			}
+
+			getterMethodDetailsByName.put( method.getName(), method );
+		}
+
+		for ( MethodNode methodNode : classNode.methods ) {
+			final MethodDetails getterMethodDetails = getterMethodDetailsByName.get( methodNode.name );
+			if ( getterMethodDetails == null ) {
+				continue;
+			}
+
+			methodNodesByAttributeName.put( getterMethodDetails.resolveAttributeName(), methodNode );
+		}
+
+		return methodNodesByAttributeName;
+	}
+
+	private static ClassNode buildClassNode(ClassDetails declaringType, ManagedTypeModelContext processingContext) {
+		try {
+			final ClassNode classNode = new ClassNode();
+			final ClassFileLocator.Resolution resolution = processingContext
+					.getModelProcessingContext()
+					.getClassFileLocator()
+					.locate( declaringType.getClassName() );
+			final ClassReader classReader = new ClassReader( resolution.resolve() );
+			classReader.accept( classNode, ClassReader.SKIP_DEBUG );
+			return classNode;
+		}
+		catch (IOException e) {
+			throw new RuntimeException( e );
+		}
 	}
 
 	private static PersistentAttribute buildPersistentAttribute(
@@ -74,7 +173,7 @@ public class ModelSourceHelper {
 			Map<String,MethodDetails> gettersByAttributeName,
 			Map<String,MethodDetails> settersByAttributeName,
 			ClassDetails declaringType,
-			ModelProcessingContext processingContext) {
+			ManagedTypeModelContext processingContext) {
 		assert backingMemberDetails.getKind() == AnnotationTarget.Kind.FIELD
 				|| backingMemberDetails.getKind() == AnnotationTarget.Kind.METHOD;
 

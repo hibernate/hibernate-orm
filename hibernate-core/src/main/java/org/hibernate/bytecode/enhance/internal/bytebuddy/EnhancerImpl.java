@@ -18,8 +18,9 @@ import java.util.Optional;
 
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ClassDetails;
-import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceLogging;
-import org.hibernate.bytecode.enhance.internal.bytebuddy.model.PersistentAttribute;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ManagedTypeModelContext;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl.ManagedTypeDescriptorRegistryImpl;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl.ManagedTypeModelContextImpl;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.model.impl.ModelProcessingContextImpl;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
@@ -69,7 +70,6 @@ import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.pool.TypePool;
 
 import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
-import static org.hibernate.bytecode.enhance.internal.bytebuddy.model.ModelSourceHelper.buildPersistentAttributeList;
 
 public class EnhancerImpl implements Enhancer {
 
@@ -95,9 +95,9 @@ public class EnhancerImpl implements Enhancer {
 	protected final ByteBuddyEnhancementContext enhancementContext;
 	private final ByteBuddyState byteBuddyState;
 
-	private final EnhancerClassFileLocator classFileLocator;
+	private final ClassFileLocatorImpl classFileLocator;
 	private final TypePool typePool;
-	private final ModelProcessingContextImpl modelProcessingContext;
+	private final ManagedTypeModelContext managedTypeModelContext;
 
 	/**
 	 * Extract the following constants so that enhancement on large projects
@@ -130,13 +130,14 @@ public class EnhancerImpl implements Enhancer {
 	public EnhancerImpl(final EnhancementContext enhancementContext, final ByteBuddyState byteBuddyState) {
 		this.enhancementContext = new ByteBuddyEnhancementContext( enhancementContext );
 		this.byteBuddyState = byteBuddyState;
-		this.classFileLocator = new EnhancerClassFileLocator( enhancementContext.getLoadingClassLoader() );
+		this.classFileLocator = new ClassFileLocatorImpl( enhancementContext.getLoadingClassLoader() );
 		this.typePool = buildTypePool( classFileLocator );
 
-		this.modelProcessingContext = new ModelProcessingContextImpl(
-				typePool,
-				enhancementContext
+		final ModelProcessingContextImpl modelProcessingContext = new ModelProcessingContextImpl(
+				classFileLocator,
+				typePool
 		);
+		this.managedTypeModelContext = new ManagedTypeModelContextImpl( modelProcessingContext );
 	}
 
 	/**
@@ -197,21 +198,15 @@ public class EnhancerImpl implements Enhancer {
 		final boolean isManagedType = isEntityClass || isCompositeClass || isMappedSuperclassClass;
 
 		if ( isManagedType ) {
-			final ClassDetails classDetails = modelProcessingContext.getClassDetailsRegistry().resolveClassDetails(
-					managedCtClass.getName(),
-					managedCtClass
-			);
-
-			final List<PersistentAttribute> persistentAttributes = buildPersistentAttributeList( classDetails, null, modelProcessingContext );
 			if ( isEntityClass ) {
-				return enhanceEntity( persistentAttributes, classDetails, managedCtClass, builder );
+				return enhanceEntity( managedCtClass, builder );
 			}
 
 			if ( isCompositeClass ) {
-				return enhanceEmbeddable( persistentAttributes, classDetails, managedCtClass, builder );
+				return enhanceEmbeddable( managedCtClass, builder );
 			}
 
-			return enhanceMappedSuperclass( persistentAttributes, classDetails, managedCtClass, builder );
+			return enhanceMappedSuperclass( managedCtClass, builder );
 		}
 
 		if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
@@ -224,12 +219,10 @@ public class EnhancerImpl implements Enhancer {
 	}
 
 	private DynamicType.Builder<?> enhanceEntity(
-			List<PersistentAttribute> persistentAttributes,
-			ClassDetails classDetails,
 			TypeDescription managedCtClass,
 			DynamicType.Builder<?> builder) {
-
 		log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
+
 		builder = builder.implement( ManagedEntity.class )
 				.defineMethod( EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME, Object.class, Visibility.PUBLIC )
 				.intercept( FixedValue.self() );
@@ -376,12 +369,10 @@ public class EnhancerImpl implements Enhancer {
 			}
 		}
 
-		return createTransformer( managedCtClass ).applyTo( builder );
+		return createTransformer( managedCtClass ).applyTo( builder, managedTypeModelContext );
 	}
 
 	private DynamicType.Builder<?> enhanceEmbeddable(
-			List<PersistentAttribute> persistentAttributes,
-			ClassDetails classDetails,
 			TypeDescription managedCtClass,
 			DynamicType.Builder<?> builder) {
 		log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
@@ -414,27 +405,17 @@ public class EnhancerImpl implements Enhancer {
 					.intercept( implementationClearOwner );
 		}
 
-		return createTransformer( managedCtClass ).applyTo( builder );
+		return createTransformer( managedCtClass ).applyTo( builder, managedTypeModelContext );
 	}
 
 	private DynamicType.Builder<?> enhanceMappedSuperclass(
-			List<PersistentAttribute> persistentAttributes,
-			ClassDetails classDetails,
 			TypeDescription managedCtClass,
 			DynamicType.Builder<?> builder) {
 		log.debugf( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
 		builder = builder.implement( ManagedMappedSuperclass.class );
-		return createTransformer( managedCtClass ).applyTo( builder );
+		return createTransformer( managedCtClass ).applyTo( builder, managedTypeModelContext );
 	}
-
-	private List<PersistentAttribute> resolvePersistentAttributes(
-			ClassDetails classDetails,
-			ModelProcessingContextImpl modelProcessingContext) {
-		return buildPersistentAttributeList( classDetails, null, modelProcessingContext );
-	}
-
-
 
 	private PersistentAttributeTransformer createTransformer(TypeDescription typeDescription) {
 		return PersistentAttributeTransformer.collectPersistentFields( typeDescription, enhancementContext, typePool );
@@ -638,42 +619,6 @@ public class EnhancerImpl implements Enhancer {
 
 				return new AnnotationList.Explicit( annotationDescriptions );
 			}
-		}
-	}
-
-	public static class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
-		// The name of the class to (possibly be) transformed.
-		private String className;
-		// The explicitly resolved Resolution for the class to (possibly be) transformed.
-		private Resolution resolution;
-
-		/**
-		 * Creates a new class file locator for the given class loader.
-		 *
-		 * @param classLoader The class loader to query which must not be the bootstrap class loader, i.e. {@code null}.
-		 */
-		public EnhancerClassFileLocator(ClassLoader classLoader) {
-			super( classLoader );
-		}
-
-		@Override
-		public Resolution locate(String className) throws IOException {
-			if ( ModelSourceLogging.MODEL_SOURCE_TRACE_ENABLED ) {
-				ModelSourceLogging.MODEL_SOURCE_LOGGER.tracef( "EnhancerClassFileLocator#locate%s)", className );
-			}
-			if ( className.equals( this.className ) ) {
-				return resolution;
-			}
-			else {
-				return super.locate( className );
-			}
-		}
-
-		void setClassNameAndBytes(String className, byte[] bytes) {
-			assert className != null;
-			assert bytes != null;
-			this.className = className;
-			this.resolution = new Resolution.Explicit( bytes);
 		}
 	}
 

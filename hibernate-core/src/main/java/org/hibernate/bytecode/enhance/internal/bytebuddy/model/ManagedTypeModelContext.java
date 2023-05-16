@@ -6,20 +6,10 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy.model;
 
-import net.bytebuddy.dynamic.ClassFileLocator;
-import net.bytebuddy.pool.TypePool;
-
 /**
  * @author Steve Ebersole
  */
-public interface ModelProcessingContext {
-
-	/**
-	 * Registry of managed-classes
-	 */
-	ClassDetailsRegistry getClassDetailsRegistry();
-
-	TypePool getTypePool();
-
-	ClassFileLocator getClassFileLocator();
+public interface ManagedTypeModelContext {
+	ManagedTypeDescriptorRegistry getDescriptorRegistry();
+	ModelProcessingContext getModelProcessingContext();
 }

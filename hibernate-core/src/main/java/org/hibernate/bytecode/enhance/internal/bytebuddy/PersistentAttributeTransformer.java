@@ -19,6 +19,8 @@ import java.util.Objects;
 import jakarta.persistence.Embedded;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ManagedTypeDescriptor;
+import org.hibernate.bytecode.enhance.internal.bytebuddy.model.ManagedTypeModelContext;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.internal.CoreLogging;
@@ -228,7 +230,9 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		return null;
 	}
 
-	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder) {
+	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder, ManagedTypeModelContext managedTypeModelContext) {
+		final ManagedTypeDescriptor managedTypeDescriptor = managedTypeModelContext.getDescriptorRegistry().resolveDescriptor( managedCtClass.getName() );
+
 		boolean compositeOwner = false;
 
 		// Remove the private modifier from the constructor, which allows to create a better InstantiationOptimizer

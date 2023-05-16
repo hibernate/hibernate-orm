@@ -6,65 +6,24 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy.model;
 
-import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 
 /**
  * @author Steve Ebersole
  */
-public class PersistentAttribute {
-	private final String name;
-	private final AccessType accessType;
+public interface PersistentAttribute {
+	String getName();
 
-	private final FieldDetails underlyingField;
-	private final MethodDetails underlyingGetter;
-	private final MethodDetails underlyingSetter;
+	AccessType getAccessType();
 
-	public PersistentAttribute(
-			String name,
-			AccessType accessType,
-			FieldDetails underlyingField,
-			MethodDetails underlyingGetter,
-			MethodDetails underlyingSetter) {
-		this.name = name;
-		this.accessType = accessType;
-		this.underlyingField = underlyingField;
-		this.underlyingGetter = underlyingGetter;
-		this.underlyingSetter = underlyingSetter;
-	}
+	boolean isAccessTypeExplicit();
 
-	public String getName() {
-		return name;
-	}
+	MemberDetails getUnderlyingMember();
 
-	/**
-	 * The implicit or {@link #isAccessTypeExplicit() explicit} access-type for this attribute
-	 */
-	public AccessType getAccessType() {
-		return accessType;
-	}
+	FieldDetails getUnderlyingField();
+	void setUnderlyingField(FieldDetails underlyingField);
 
-	/**
-	 * Whether {@linkplain  jakarta.persistence.Access @Access} was explicitly
-	 * defined on the attribute member.
-	 */
-	public boolean isAccessTypeExplicit() {
-		return getUnderlyingMember().hasAnnotation( Access.class );
-	}
+	MethodDetails getUnderlyingGetter();
 
-	public MemberDetails getUnderlyingMember() {
-		return accessType == AccessType.FIELD ? getUnderlyingField() : getUnderlyingGetter();
-	}
-
-	public FieldDetails getUnderlyingField() {
-		return underlyingField;
-	}
-
-	public MethodDetails getUnderlyingGetter() {
-		return underlyingGetter;
-	}
-
-	public MethodDetails getUnderlyingSetter() {
-		return underlyingSetter;
-	}
+	MethodDetails getUnderlyingSetter();
 }

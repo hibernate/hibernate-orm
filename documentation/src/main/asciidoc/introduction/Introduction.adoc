@@ -30,6 +30,8 @@ But if Hibernate is making things more difficult, for some particularly tricky p
 Just because you're using Hibernate for persistence doesn't mean you have to use it for _everything_.
 ====
 
+Developers often ask about the relationship between Hibernate and JPA, so let's take a short detour into some history.
+
 [[hibernate-and-jpa]]
 === Hibernate and JPA
 

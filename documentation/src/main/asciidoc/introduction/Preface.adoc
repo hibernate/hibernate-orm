@@ -12,8 +12,9 @@ But the following general themes stand out.
 Hibernate 6:
 
 - finally takes advantage of the advances in relational databases over the past decade, updating the query language to support a raft of new constructs in modern dialects of SQL,
+- exhibits much more consistent behavior across different databases, greatly improving portability, and generates much higher-quality DDL from dialect-independent code,
 - improves error reporting by more scrupulous validation of queries _before_ access to the database,
-- improves the type-safety of O/R mapping annotations and clarifies the separation of API, SPI, and internal implementation
+- improves the type-safety of O/R mapping annotations, clarifies the separation of API, SPI, and internal implementation, and fixes some long-standing architectural flaws,
 - removes or deprecates legacy APIs, laying the foundation for future evolution, and
 - makes far better use of Javadoc, putting much more information at the fingertips of developers.
 

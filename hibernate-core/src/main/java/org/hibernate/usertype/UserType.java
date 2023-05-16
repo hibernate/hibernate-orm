@@ -287,8 +287,10 @@ public interface UserType<J> {
 	 * Read an instance of the Java class mapped by this custom type
 	 * from the given JDBC {@link ResultSet}. Implementors must handle
 	 * null column values.
+	 *
+	 * @param owner in Hibernate 6, this is always null
 	 */
-	J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
+	J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, @Deprecated Object owner)
 			throws SQLException;
 
 	/**

@@ -1881,4 +1881,43 @@ public class FunctionTests {
 		);
 	}
 
+	@Test
+	public void testMaxGreatest(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(10L, session.createQuery("select greatest((select max(someLong) from SimpleEntity), (select max(someInteger) from SimpleEntity))", Long.class)
+							.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	public void testMaxOverUnion(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(10L, session.createQuery("select max(val) from (select someLong as val from SimpleEntity union select someInteger as val from SimpleEntity)", Long.class)
+							.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	public void testBetweenDates(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("select theDate from EntityOfBasics where theDate between local date and local date + 7 day").getResultList();
+				}
+		);
+	}
+
+	@Test
+	public void testMemberOf(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("from EntityOfLists where org.hibernate.testing.orm.domain.gambit.EnumValue.THREE member of listOfEnums").getResultList();
+				}
+		);
+	}
+
 }

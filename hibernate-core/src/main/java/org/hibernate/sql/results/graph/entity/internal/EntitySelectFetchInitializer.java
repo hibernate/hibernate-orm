@@ -31,6 +31,7 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.sql.results.spi.LoadContexts;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
@@ -139,10 +140,8 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			return;
 		}
 
-		final LoadingEntityEntry existingLoadingEntry = session
-				.getPersistenceContext()
-				.getLoadContexts()
-				.findLoadingEntityEntry( entityKey );
+		final LoadContexts loadContexts = session.getPersistenceContext().getLoadContexts();
+		final LoadingEntityEntry existingLoadingEntry = loadContexts.findLoadingEntityEntry( entityKey );
 
 		if ( existingLoadingEntry != null ) {
 			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
@@ -157,20 +156,27 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			}
 			this.entityInstance = existingLoadingEntry.getEntityInstance();
 
-			if ( existingLoadingEntry.getEntityInitializer() != this ) {
+			final EntityInitializer entityInitializer = existingLoadingEntry.getEntityInitializer();
+			if ( entityInitializer != this ) {
 				// the entity is already being loaded elsewhere
 				if ( EntityLoadingLogging.DEBUG_ENABLED ) {
 					EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 							"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
 							CONCRETE_NAME,
 							toLoggableString( getNavigablePath(), entityIdentifier ),
-							existingLoadingEntry.getEntityInitializer()
+							entityInitializer
 					);
 				}
 
 				// EARLY EXIT!!!
 				isInitialized = true;
 				return;
+			}
+			else {
+				if ( entityInstance == null ) {
+					isInitialized = true;
+					return;
+				}
 			}
 		}
 
@@ -193,6 +199,11 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
 				throw new FetchNotFoundException( entityName, entityIdentifier );
 			}
+			rowProcessingState.getJdbcValuesSourceProcessingState()
+					.registerLoadingEntity(
+							entityKey,
+							new LoadingEntityEntry( this, entityKey, concreteDescriptor, entityInstance )
+					);
 		}
 
 		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
@@ -209,6 +220,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		if ( lazyInitializer != null ) {
 			lazyInitializer.setUnwrap( unwrapProxy );
 		}
+
 		isInitialized = true;
 	}
 

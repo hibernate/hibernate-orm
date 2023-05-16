@@ -244,6 +244,10 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 		delegate().visitRegisteredComponents( consumer );
 	}
 
+	@Override
+	public Component getGenericComponent(Class<?> componentClass) {
+		return delegate().getGenericComponent( componentClass );
+	}
 
 	@Override
 	public NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory) {

@@ -6,10 +6,15 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import java.util.Map;
+
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 
 /**
- * SqlAstProcessingState specialization for
+ * SqlAstProcessingState specialization for query parts
+ *
  * @author Steve Ebersole
  */
 public interface SqlAstQueryPartProcessingState extends SqlAstProcessingState {
@@ -18,4 +23,13 @@ public interface SqlAstQueryPartProcessingState extends SqlAstProcessingState {
 	 * considered in-flight as it is probably still being built.
 	 */
 	QueryPart getInflightQueryPart();
+
+	void registerTreat(TableGroup tableGroup, EntityDomainType<?> treatType);
+
+	void registerTreatUsage(TableGroup tableGroup, EntityDomainType<?> treatType);
+
+	/**
+	 * The treat registrations. The boolean indicates whether the treat is used in the query part.
+	 */
+	Map<TableGroup, Map<EntityDomainType<?>, Boolean>> getTreatRegistrations();
 }

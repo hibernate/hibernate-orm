@@ -141,6 +141,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final List<Component> composites = new ArrayList<>();
+	private final Map<Class<?>, Component> genericComponentsMap = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
 
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
@@ -283,6 +284,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	@Override
+	public void registerGenericComponent(Component component) {
+		genericComponentsMap.put( component.getComponentClass(), component );
+	}
+
+	@Override
+	public Component getGenericComponent(Class<?> componentClass) {
+		return genericComponentsMap.get( componentClass );
+	}
+
+	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
 		throw new UnsupportedOperationException(
 				"You should not be building a SessionFactory from an in-flight metadata collector; and of course " +
@@ -333,7 +344,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		if ( matchingPersistentClass != null ) {
 			throw new DuplicateMappingException(
 					String.format(
-							"The [%s] and [%s] entities share the same JPA entity name: [%s], which is not allowed",
+							"Entity classes [%s] and [%s] share the entity name '%s' (entity names must be distinct)",
 							matchingPersistentClass.getClassName(),
 							persistentClass.getClassName(),
 							jpaEntityName
@@ -2314,6 +2325,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 					options,
 					entityBindingMap,
 					composites,
+					genericComponentsMap,
 					mappedSuperClasses,
 					collectionBindingMap,
 					typeDefRegistry.copyRegistrationMap(),

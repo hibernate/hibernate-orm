@@ -1,6 +1,9 @@
-html
-{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
-body{
+html {
+    font-family:sans-serif;
+    -ms-text-size-adjust:100%;
+    -webkit-text-size-adjust:100%
+}
+body {
     position:relative !important;
     cursor:auto !important;
 }
@@ -17,6 +20,9 @@ body:before {
     margin-top:0em !important;
     margin-bottom:1em !important;
     line-height:1.0125em !important
+}
+#toctitle {
+    font-family: 'Noto Serif', "Open Sans", "DejaVu Sans", sans-serif !important;
 }
 #toctitle>.content>.title,h4,h5,h6 {
     font-family: 'Noto Serif', "Open Sans", "DejaVu Sans", sans-serif !important;
@@ -42,23 +48,23 @@ body:before {
 #toc>#tocsearch {
     font-family: "FontAwesome";
 }
+#author, #revnumber {
+    font-size: 1.1em !important;
+    margin-bottom: 0.2em !important;
+}
 .subheader .title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{
     color:darkslategray;
 }
-h1{
-    font-size: 1.9em !important;
+h1 {
+    font-size: 2.5em !important;
     color:#182737 !important;
-    line-height: 1.2 !important;
     font-family: 'Noto Serif', 'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
     font-weight: bold !important;
-    text-align: justify !important;
+    text-align: center !important;
     text-decoration: none !important;
     width:100% !important;
-    height: 103px !important;
-    margin-top:1.1em !important;
-    margin-bottom:.2em !important;
-    line-height:1em !important;
-    padding-top: 2em !important;
+    margin-top:1.5em !important;
+    margin-bottom: 1em !important;
 }
 h2 {
     font-weight: bold !important;

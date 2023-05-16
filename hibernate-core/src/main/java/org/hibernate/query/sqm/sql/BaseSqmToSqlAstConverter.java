@@ -3111,10 +3111,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						subType.getEntityName(),
 						(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 				);
-				actualTableGroup.resolveTableReference(
-						null,
-						subType.getEntityPersister().getMappedTableDetails().getTableName()
-				);
+				if ( useKind == EntityNameUse.UseKind.PROJECTION ) {
+					actualTableGroup.resolveTableReference(
+							null,
+							subType.getEntityPersister().getMappedTableDetails().getTableName()
+					);
+				}
 			}
 		}
 	}

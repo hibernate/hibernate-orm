@@ -12,6 +12,8 @@ import java.util.Collection;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.spi.NavigablePath;
@@ -20,6 +22,8 @@ import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePath;
 
 /**
  * @param <D> The (D)eclaring type
@@ -154,6 +158,28 @@ public abstract class AbstractPluralAttribute<D, C, E>
 				lhs,
 				lhs.nodeBuilder()
 		);
+	}
+
+	@Override
+	public NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
+		if ( parent == null ) {
+			throw new IllegalArgumentException(
+					"`lhs` cannot be null for a sub-navigable reference - " + getName()
+			);
+		}
+		final SqmPathSource<?> parentPathSource = parent.getReferencedPathSource();
+		NavigablePath navigablePath = parent.getNavigablePath();
+		if ( parentPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) {
+			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
+		}
+		final DomainType<?> parentType = parentPathSource.getSqmPathType();
+		if ( parentType != getDeclaringType() && parentType instanceof EntityDomainType &&
+				( (EntityDomainType<?>) parentType ).findPluralAttribute( getName() ) == null ) {
+			// If the parent path is an entity type which does not contain the joined attribute
+			// add an implicit treat to the parent's navigable path
+			navigablePath = navigablePath.treatAs( getDeclaringType().getTypeName() );
+		}
+		return buildSubNavigablePath( navigablePath, getName(), alias );
 	}
 
 	@Override

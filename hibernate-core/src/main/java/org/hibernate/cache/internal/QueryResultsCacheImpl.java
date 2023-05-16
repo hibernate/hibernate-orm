@@ -52,7 +52,9 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final List<?> results,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( DEBUG_ENABLED ) {
-			L2CACHE_LOGGER.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), session.getCacheTransactionSynchronization().getCachingTimestamp() );
+			L2CACHE_LOGGER.debugf( "Caching query results in region: %s; timestamp=%s",
+					cacheRegion.getName(),
+					session.getCacheTransactionSynchronization().getCachingTimestamp() );
 		}
 
 		final CacheItem cacheItem = new CacheItem(

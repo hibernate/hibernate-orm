@@ -38,7 +38,7 @@ public class StandardFunctionReturnTypeResolvers {
 	/**
 	 * A resolver that defines an invariant result type.  E.g. `substring` always
 	 * returns a String.  Note however that to account for attribute converters and
-	 * such, this resolver allows the context-impled expression type to be the
+	 * such, this resolver allows the context-implied expression type to be the
 	 * return type so long as the Java types are compatible.
 	 */
 	public static FunctionReturnTypeResolver invariant(BasicType<?> invariantType) {

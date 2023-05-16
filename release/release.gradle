@@ -238,6 +238,15 @@ task stageTopicalGuide(type: Copy) {
     into "${buildDir}/documentation/topical"
 }
 
+task stageIntroduction(type: Copy) {
+    group 'Release'
+
+    dependsOn ':documentation:renderIntroduction'
+
+    from "${project( ':documentation' ).buildDir}/asciidoc/introduction"
+    into "${buildDir}/documentation/introduction"
+}
+
 
 task stageUserGuide(type: Copy) {
     group 'Release'
@@ -335,6 +344,7 @@ task assembleDocumentation {
     dependsOn tasks.stageIntegrationGuide
     dependsOn tasks.stageTopicalGuide
     dependsOn tasks.stageQuickstart
+    dependsOn tasks.stageIntroduction
     dependsOn tasks.stageUserGuide
     dependsOn tasks.stageMigrationGuide
     dependsOn tasks.stageOrmReports

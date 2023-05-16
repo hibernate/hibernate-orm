@@ -34,6 +34,7 @@ import java.util.Locale;
 
 import static java.sql.Types.ARRAY;
 import static java.util.Collections.emptySet;
+import static org.hibernate.internal.util.StringHelper.truncate;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
@@ -233,8 +234,10 @@ public class OracleNestedTableJdbcType implements JdbcType {
 		final Dialect dialect = database.getDialect();
 		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
 		String elementTypeName = getTypeName( pluralJavaType.getElementJavaType(), dialect );
-		return " nested table " + columnName
-				+ " store as \"" + tableName + " " + columnName + " " + elementTypeName + "\"";
+		return " nested table " + columnName + " store as \"" + truncate(
+				tableName + " " + columnName + " " + elementTypeName,
+				dialect.getMaxIdentifierLength()
+		) + "\"";
 	}
 
 	@Override

@@ -1892,8 +1892,6 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = OracleDialect.class)
-	@SkipForDialect(dialectClass = MariaDBDialect.class)
 	public void testMaxOverUnion(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1909,6 +1907,15 @@ public class FunctionTests {
 		scope.inTransaction(
 				session -> {
 					session.createSelectionQuery("select theDate from EntityOfBasics where theDate between local date and local date + 7 day").getResultList();
+				}
+		);
+	}
+
+	@Test
+	public void testMemberOf(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("from EntityOfLists where org.hibernate.testing.orm.domain.gambit.EnumValue.THREE member of listOfEnums").getResultList();
 				}
 		);
 	}

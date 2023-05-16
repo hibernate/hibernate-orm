@@ -164,7 +164,7 @@ public class CockroachDialect extends Dialect {
 		return parseVersion( versionString );
 	}
 
-	protected static DatabaseVersion parseVersion(String versionString ) {
+	public static DatabaseVersion parseVersion( String versionString ) {
 		DatabaseVersion databaseVersion = null;
 		// What the DB select returns is similar to "CockroachDB CCL v21.2.10 (x86_64-unknown-linux-gnu, built 2022/05/02 17:38:58, go1.16.6)"
 		Matcher m = CRDB_VERSION_PATTERN.matcher( versionString == null ? "" : versionString );

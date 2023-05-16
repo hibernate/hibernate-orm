@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.Restrictable;
+import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -42,6 +43,11 @@ public class FilterHelper {
 	private final boolean[] filterAutoAliasFlags;
 	private final Map<String, String>[] filterAliasTableMaps;
 	private final List<String>[] parameterNames;
+	private final Map<String, String> tableToEntityName;
+
+	public FilterHelper(List<FilterConfiguration> filters, SessionFactoryImplementor factory) {
+		this( filters, null, factory );
+	}
 
 	/**
 	 * The map of defined filters.  This is expected to be in format
@@ -51,7 +57,7 @@ public class FilterHelper {
 	 * @param filters The map of defined filters.
 	 * @param factory The session factory
 	 */
-	public FilterHelper(List<FilterConfiguration> filters, SessionFactoryImplementor factory) {
+	public FilterHelper(List<FilterConfiguration> filters, Map<String, String> tableToEntityName, SessionFactoryImplementor factory) {
 		int filterCount = filters.size();
 
 		filterNames = new String[filterCount];
@@ -59,6 +65,7 @@ public class FilterHelper {
 		filterAutoAliasFlags = new boolean[filterCount];
 		filterAliasTableMaps = new Map[filterCount];
 		parameterNames = new List[filterCount];
+		this.tableToEntityName = tableToEntityName;
 
 		filterCount = 0;
 		for ( final FilterConfiguration filter : filters ) {
@@ -145,21 +152,32 @@ public class FilterHelper {
 	public void applyEnabledFilters(
 			Consumer<Predicate> predicateConsumer,
 			FilterAliasGenerator aliasGenerator,
-			Map<String, Filter> enabledFilters) {
-		final FilterPredicate predicate = generateFilterPredicate( aliasGenerator, enabledFilters );
+			Map<String, Filter> enabledFilters,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
+		final FilterPredicate predicate = generateFilterPredicate(
+				aliasGenerator,
+				enabledFilters,
+				tableGroup,
+				creationState
+		);
 		if ( predicate != null ) {
 			predicateConsumer.accept( predicate );
 		}
 	}
 
-	private FilterPredicate generateFilterPredicate(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
+	private FilterPredicate generateFilterPredicate(
+			FilterAliasGenerator aliasGenerator,
+			Map<String, Filter> enabledFilters,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
 		final FilterPredicate filterPredicate = new FilterPredicate();
 
 		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
 			final String filterName = filterNames[i];
 			final FilterImpl enabledFilter = (FilterImpl) enabledFilters.get( filterName );
 			if ( enabledFilter != null ) {
-				filterPredicate.applyFragment( render( aliasGenerator, i ), enabledFilter, parameterNames[i] );
+				filterPredicate.applyFragment( render( aliasGenerator, i, tableGroup, creationState ), enabledFilter, parameterNames[i] );
 			}
 		}
 
@@ -187,34 +205,78 @@ public class FilterHelper {
 					if ( buffer.length() > 0 ) {
 						buffer.append( " and " );
 					}
-					buffer.append( render( aliasGenerator, i ) );
+					buffer.append( render( aliasGenerator, i, null, null ) );
 				}
 			}
 		}
 	}
 
-	private String render(FilterAliasGenerator aliasGenerator, int filterIndex) {
+	private String render(
+			FilterAliasGenerator aliasGenerator,
+			int filterIndex,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
 		Map<String, String> aliasTableMap = filterAliasTableMaps[filterIndex];
 		String condition = filterConditions[filterIndex];
 		if ( aliasGenerator == null ) {
 			return StringHelper.replace( condition, FilterImpl.MARKER + ".", "");
 		}
 		if ( filterAutoAliasFlags[filterIndex] ) {
-			return StringHelper.replace(
+			final String tableName = aliasTableMap.get( null );
+			final String newCondition = StringHelper.replace(
 					condition,
 					FilterImpl.MARKER,
-					aliasGenerator.getAlias( aliasTableMap.get( null ) )
+					aliasGenerator.getAlias( tableName )
 			);
+			if ( creationState != null && tableToEntityName != null && !newCondition.equals( condition ) ) {
+				creationState.registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.EXPRESSION,
+						tableToEntityName.get(
+								tableName == null
+										? tableGroup.getPrimaryTableReference().getTableId()
+										: tableName
+						)
+				);
+			}
+			return newCondition;
 		}
 		else if ( isTableFromPersistentClass( aliasTableMap ) ) {
-			return StringHelper.replace( condition,  "{alias}", aliasGenerator.getAlias( aliasTableMap.get( null ) ) );
+			final String tableName = aliasTableMap.get( null );
+			final String newCondition = StringHelper.replace(
+					condition,
+					"{alias}",
+					aliasGenerator.getAlias( tableName )
+			);
+			if ( creationState != null && !newCondition.equals( condition ) ) {
+				creationState.registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.EXPRESSION,
+						tableToEntityName.get(
+								tableName == null
+										? tableGroup.getPrimaryTableReference().getTableId()
+										: tableName
+						)
+				);
+			}
+			return newCondition;
 		}
 		else {
 			for ( Map.Entry<String, String> entry : aliasTableMap.entrySet() ) {
-				condition = StringHelper.replace( condition,
+				final String tableName = entry.getValue();
+				final String newCondition = StringHelper.replace(
+						condition,
 						"{" + entry.getKey() + "}",
-						aliasGenerator.getAlias( entry.getValue() )
+						aliasGenerator.getAlias( tableName )
 				);
+				if ( creationState != null && !newCondition.equals( condition ) ) {
+					creationState.registerEntityNameUsage(
+							tableGroup,
+							EntityNameUse.EXPRESSION,
+							tableToEntityName.get( tableName )
+					);
+				}
+				condition = newCondition;
 			}
 			return condition;
 		}

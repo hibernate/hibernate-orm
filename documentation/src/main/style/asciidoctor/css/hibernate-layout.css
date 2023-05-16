@@ -11,7 +11,13 @@ body:before {
 #header {
     width: 1000px !important;
 }
-#toctitle,.sidebarblock>.content>.title,h4,h5,h6{
+.sidebarblock>.content>.title,h4,h5,h6{
+    font-size: 1.3em !important;
+    margin-top:0em !important;
+    margin-bottom:1em !important;
+    line-height:1.0125em !important
+}
+#toctitle>.content>.title,h4,h5,h6{
     font-family:"Open Sans","DejaVu Sans",sans-serif !important;
     font-weight:300 !important;
     font-style:normal !important;

@@ -127,7 +127,6 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
-import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderArrayParam;
@@ -205,6 +204,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -232,6 +232,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
+import org.hibernate.sql.InFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
@@ -307,6 +308,7 @@ import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
@@ -3169,6 +3171,63 @@ public abstract class AbstractEntityPersister
 			return junction;
 		}
 		return predicate;
+	}
+
+	protected String getPrunedDiscriminatorPredicate(
+			Map<String, EntityNameUse> entityNameUses,
+			MappingMetamodelImplementor mappingMetamodel,
+			String alias) {
+		final InFragment frag = new InFragment();
+		if ( isDiscriminatorFormula() ) {
+			frag.setFormula( alias, getDiscriminatorFormulaTemplate() );
+		}
+		else {
+			frag.setColumn( alias, getDiscriminatorColumnName() );
+		}
+		boolean containsNotNull = false;
+		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
+			final EntityNameUse.UseKind useKind = entry.getValue().getKind();
+			if ( useKind == EntityNameUse.UseKind.PROJECTION || useKind == EntityNameUse.UseKind.EXPRESSION ) {
+				// We only care about treat and filter uses which allow to reduce the amount of rows to select
+				continue;
+			}
+			final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entry.getKey() );
+			// Filtering for abstract entities makes no sense, so ignore that
+			// Also, it makes no sense to filter for any of the super types,
+			// as the query will contain a filter for that already anyway
+			if ( !persister.isAbstract() && ( this == persister || !isTypeOrSuperType( persister ) ) ) {
+				containsNotNull = containsNotNull || InFragment.NOT_NULL.equals( persister.getDiscriminatorSQLValue() );
+				frag.addValue( persister.getDiscriminatorSQLValue() );
+			}
+		}
+		final List<String> discriminatorSQLValues = Arrays.asList( ( (AbstractEntityPersister) getRootEntityDescriptor() ).fullDiscriminatorSQLValues );
+		if ( frag.getValues().size() == discriminatorSQLValues.size() ) {
+			// Nothing to prune if we filter for all subtypes
+			return null;
+		}
+
+		if ( containsNotNull ) {
+			final StringBuilder sb = new StringBuilder();
+			String lhs;
+			if ( isDiscriminatorFormula() ) {
+				lhs = StringHelper.replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, alias );
+			}
+			else {
+				lhs = qualifyConditionally( alias, getDiscriminatorColumnName() );
+			}
+			sb.append( " or " ).append( lhs ).append( " is not in (" );
+			for ( Object discriminatorSQLValue : discriminatorSQLValues ) {
+				if ( !frag.getValues().contains( discriminatorSQLValue ) ) {
+					sb.append( lhs ).append( discriminatorSQLValue );
+				}
+			}
+			sb.append( ") and " ).append( lhs ).append( " is not null" );
+			frag.getValues().remove( InFragment.NOT_NULL );
+			return frag.toFragmentString() + sb;
+		}
+		else {
+			return frag.toFragmentString();
+		}
 	}
 
 	@Override

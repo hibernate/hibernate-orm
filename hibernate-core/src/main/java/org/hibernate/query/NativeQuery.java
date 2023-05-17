@@ -626,6 +626,18 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setFirstResult(int startPosition);
 
+	/**
+	 * Set the prefix characters used to recognize named and ordinal parameters.
+	 * By default, named parameters are of form {@code :name}, and ordinal
+	 * parameters are of form {@code ?n}.
+	 *
+	 * @param namedParamPrefix the prefix for named parameters
+	 * @param ordinalParamPrefix the prefix for ordinal parameters
+	 *
+	 * @since 6.3
+	 */
+	NativeQuery<T> setParameterEscapes(char namedParamPrefix, char ordinalParamPrefix);
+
 	@Override
 	NativeQuery<T> setHint(String hintName, Object value);
 

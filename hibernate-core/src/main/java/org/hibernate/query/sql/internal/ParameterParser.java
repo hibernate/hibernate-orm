@@ -23,6 +23,9 @@ public class ParameterParser {
 	private static final String HQL_SEPARATORS = " \n\r\f\t,()=<>&|+-=/*'^![]#~\\";
 	private static final BitSet HQL_SEPARATORS_BITSET = new BitSet();
 
+	public static final char NAMED_PARAM_PREFIX = ':';
+	public static final char ORDINAL_PARAM_PREFIX = '?';
+
 	static {
 		for ( int i = 0; i < HQL_SEPARATORS.length(); i++ ) {
 			HQL_SEPARATORS_BITSET.set( HQL_SEPARATORS.charAt( i ) );
@@ -33,6 +36,10 @@ public class ParameterParser {
 	 * Direct instantiation of ParameterParser disallowed.
 	 */
 	private ParameterParser() {
+	}
+
+	public static void parse(String sqlString, ParameterRecognizer recognizer) {
+		parse( sqlString, recognizer, NAMED_PARAM_PREFIX, ORDINAL_PARAM_PREFIX );
 	}
 
 	/**
@@ -47,7 +54,8 @@ public class ParameterParser {
 	 * @param recognizer The thing which handles recognition events.
 	 * @throws QueryException Indicates unexpected parameter conditions.
 	 */
-	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {
+	public static void parse(String sqlString, ParameterRecognizer recognizer, char namedParamPrefix, char ordinalParamPrefix)
+			throws QueryException {
 		checkIsNotAFunctionCall( sqlString );
 		final int stringLength = sqlString.length();
 
@@ -125,12 +133,12 @@ public class ParameterParser {
 			}
 			// otherwise
 			else {
-				if ( c == ':' && indx < stringLength - 1 && sqlString.charAt( indx + 1 ) == ':') {
+				if ( c == namedParamPrefix && indx < stringLength - 1 && sqlString.charAt( indx + 1 ) == namedParamPrefix) {
 					// colon character has been escaped
 					recognizer.other( c );
 					indx++;
 				}
-				else if ( c == ':' ) {
+				else if ( c == namedParamPrefix) {
 					// named parameter
 					final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
 					final int chopLocation = right < 0 ? sqlString.length() : right;
@@ -143,7 +151,7 @@ public class ParameterParser {
 					recognizer.namedParameter( param, indx );
 					indx = chopLocation - 1;
 				}
-				else if ( c == '?' ) {
+				else if ( c == ordinalParamPrefix) {
 					// could be either a positional or JPA-style ordinal parameter
 					if ( indx < stringLength - 1 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
 						// a peek ahead showed this as a JPA-positional parameter

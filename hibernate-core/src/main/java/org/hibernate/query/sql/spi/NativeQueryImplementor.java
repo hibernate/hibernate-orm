@@ -192,6 +192,9 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setFirstResult(int startPosition);
 
 	@Override
+	NativeQueryImplementor<R> setParameterEscapes(char namedParamPrefix, char ordinalParamPrefix);
+
+	@Override
 	NativeQueryImplementor<R> addQueryHint(String hint);
 
 	@Override

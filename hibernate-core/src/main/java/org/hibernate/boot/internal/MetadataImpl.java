@@ -669,4 +669,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return composites;
 	}
 
+	public Map<Class<?>, Component> getGenericComponentsMap() {
+		return genericComponentsMap;
+	}
+
 }

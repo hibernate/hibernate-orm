@@ -77,7 +77,7 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 === Optional dependencies
 
 :slf4j: http://www.slf4j.org/
-:enhancer: https://docs.jboss.org/hibernate/orm/5.4/topical/html_single/bytecode/BytecodeEnhancement.html
+:enhancer: {versionDocBase}/topical/html_single/bytecode/BytecodeEnhancement.html
 :agroal: https://agroal.github.io
 :jackson: https://github.com/FasterXML/jackson
 :yasson: https://projects.eclipse.org/projects/ee4j.yasson
@@ -210,8 +210,8 @@ SessionFactory sessionFactory = new Configuration()
 The `Configuration` class has survived almost unchanged since the very earliest (pre-1.0) versions of Hibernate, and so it doesn't look particularly modern.
 On the other hand, it's very easy to use, and exposes some options that `persistence.xml` doesn't support.
 
-:native-bootstrap: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#bootstrap-native
-:boot: https://docs.jboss.org/hibernate/orm/6.2/javadocs/org/hibernate/boot/package-summary.html
+:native-bootstrap: {userGuideBase}#bootstrap-native
+:boot: {versionDocBase}/javadocs/org/hibernate/boot/package-summary.html
 
 .Advanced configuration options
 ****

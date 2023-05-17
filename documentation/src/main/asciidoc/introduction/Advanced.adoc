@@ -404,7 +404,7 @@ Point event =
                 .getSingleResult();
 ----
 
-:matrix: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#spatial-configuration-dialect-features
+:matrix: {userGuideBase}#spatial-configuration-dialect-features
 
 Here, `within()` is one of the functions for testing spatial relations defined by the OpenGIS specification.
 Other such functions include `touches()`, `intersects()`, `distance()`, `boundary()`, etc.

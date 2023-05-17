@@ -8,8 +8,6 @@ package org.hibernate.orm.test.quarkus;
 
 import org.hibernate.boot.internal.MetadataImpl;
 
-import org.junit.Test;
-
 /**
  * Quarkus needs to be able to make a deep copy of MetadataImpl;
  * for this to be possible, it needs to expose some of its state.
@@ -18,7 +16,7 @@ import org.junit.Test;
  */
 public class MetadataCopyingTest {
 
-	public void copyIsPossible() {
+	public void copyGettersAreExposed() {
 		MetadataImpl existingInstance = fetchSomehowOldCopy();
 		//Test that for each constructor parameter needed to create a new MetadataImpl,
 		//we can actually read the matching state from an existing MetadataImpl instance.

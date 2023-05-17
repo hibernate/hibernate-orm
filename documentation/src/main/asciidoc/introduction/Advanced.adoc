@@ -1,0 +1,429 @@
+[[advanced]]
+== Advanced Topics
+
+In the last chapter of this Introduction, we turn to some topics that don't really belong in an introduction.
+Here we consider some problems, and solutions, that you're probably not going to run into immediately if you're new to Hibernate.
+But we do want you to know _about_ them, so that when the time comes, you'll know what tool to reach for.
+
+[[filters]]
+=== Filters
+
+_Filters_ are one of the nicest and under-usedest features of Hibernate, and we're quite proud of them.
+A filter is a named, globally-defined, parameterized restriction on the data that is visible in a given session.
+
+Examples of well-defined filters might include:
+
+- a filter that restricts the data visible to a given user according to row-level permissions,
+- a filter which hides data which has been soft-deleted,
+- in a versioned database, a filter that displays versions which were current at a given instant in the past, or
+- a filter that restricts to data associated with a certain geographical region.
+
+A filter must be declared somewhere.
+A package descriptor is as good a place as any:
+
+[source,java]
+----
+@FilterDef(name = "ByRegion",
+           parameters = @ParamDef(name = "region", type = String.class))
+package org.hibernate.example;
+----
+
+This filter has one parameter.
+Fancier filters might in principle have multiple parameters, though we admit this must be quite rare.
+
+[IMPORTANT]
+====
+If you add annotations to a package descriptor, and you're using `Configuration` to configure Hibernate, make sure you call `Configuration.addPackage()` to let Hibernate know that the package descriptor is annotated.
+====
+
+_Typically_, but not necessarily, a `@FilterDef` specifies a default restriction:
+
+[source,java]
+----
+@FilterDef(name = "ByRegion",
+           parameters = @ParamDef(name = "region", type = String.class),
+           defaultCondition = "region = :region")
+package org.hibernate.example;
+----
+
+The restriction must contain a reference to the parameter of the filter, specified using the usual syntax for named parameters.
+
+Any entity or collection which is affected by a filter must be annotated `@Filter`:
+
+[source,java]
+----
+@Entity
+@Filter(name = "ByRegion")
+class User {
+
+    @Id String username;
+
+    String region;
+
+    ...
+}
+----
+
+If the `@Filter` annotation does not explicitly specify a restriction, the default restriction given by the `@FilterDef` will be applied to the entity.
+But an entity is free to override the default condition.
+
+[source,java]
+----
+@Entity
+@Filter(name = "ByRegion", condition = "name = :region")
+class Region {
+
+    @Id String name;
+
+    ...
+}
+----
+
+Note that the restriction specified by the `condition` or `defaultCondition` is a native SQL expression.
+
+By default, a new session comes with every filter disabled.
+A filter may be explicitly enabled in a given session by calling `enableFilter()` and assigning arguments to the parameters of the filter.
+You should do this right at the _start_ of the session.
+
+[source,java]
+----
+sessionFactory.inTransaction(session -> {
+    session.enableFilter("ByRegion")
+        .setParameter("region", "es")
+        .validate();
+
+	...
+});
+----
+
+Now, any queries executed within the session will have the filter restriction applied.
+Collections annotated `@Filter` will also have their members correctly filtered.
+
+[CAUTION]
+====
+On the other hand, filters are not applied to `@ManyToOne` associations, nor to `find()`.
+This is completely by design and is not in any way a bug.
+====
+
+More than one filter may be enabled in a given session.
+
+A closely-related problem is multi-tenancy.
+
+[[multitenancy]]
+=== Multi-tenancy
+
+A _multi-tenant_ database is one where the data is segregated by _tenant_.
+We don't need to actually define what a "tenant" really represents here; all we care about at this level of abstraction is that each tenant may be distinguished by a unique identifier.
+And that there's a well-defined _current tenant_ in each session.
+
+We may specify the current tenant when we open a session:
+
+[source,java]
+----
+var session =
+        sessionFactory.withOptions()
+            .tenantIdentifier(tenantId)
+            .openSession();
+----
+
+However, since we often don't have this level of control of creation of the session, it's more common to supply an implementation of `CurrentTenantIdentifierResolver` to Hibernate.
+
+There are three common ways to implement multi-tenancy:
+
+1. each tenant has its own database,
+2. each tenant has its own schema,
+3. tenants share tables in a single schema, and rows are tagged with the tenant id.
+
+From the point of view of Hibernate, there's little difference between the first two options.
+Hibernate will need to obtain a JDBC connection with permissions on the database and schema owned by the current tenant.
+
+Therefore, we must implement a `MultiTenantConnectionProvider` which takes on this responsibility:
+
+- from time to time, Hibernate will ask for a connection, passing the id of the current tenant, and then we must create an appropriate connection or obtain one from a pool, and return it to Hibernate, and
+- later, Hibernate will release the connection and ask us to destroy it or return it to the appropriate pool.
+
+[TIP]
+====
+Check out `DataSourceBasedMultiTenantConnectionProviderImpl` for inspiration.
+====
+
+The third option is quite different.
+In this case we don't need a `MultiTenantConnectionProvider`, but we will need a dedicated column holding the tenant id mapped by each of our entities.
+
+[source,java]
+----
+@Entity
+class Account {
+    @Id String id;
+    @TenantId String tenantId;
+    ...
+}
+----
+
+The `@TenantId` annotation is used to indicate an attribute of an entity which holds the tenant id.
+Within a given session, our data is automatically filtered so that only rows tagged with the tenant id of the current tenant are visible in that session.
+
+[CAUTION]
+====
+Native SQL queries are _not_ automatically filtered by tenant id; you'll have to do that part yourself.
+====
+
+.Multi-tenancy configuration
+[cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| `hibernate.tenant_identifier_resolver`  | Specifies the `CurrentTenantIdentifierResolver`
+| `hibernate.multi_tenant_connection_provider`  | Specifies the `MultiTenantConnectionProvider`
+|===
+
+
+[[custom-sql]]
+=== Using custom-written SQL
+
+We've already discussed how to run <<native-queries,queries written in SQL>>, but occasionally that's not enough.
+Sometimes—but much less often than you might expect—we would like to customize the SQL used by Hibernate to perform basic CRUD operations for an entity or collection.
+
+For this we can use `@SQLInsert` and friends:
+
+[source,java]
+----
+@Entity
+@SQLInsert(sql = "insert into person (name, id, valid) values (?, ?, true)", check = COUNT)
+@SQLUpdate(sql = "update person set name = ? where id = ?")
+@SQLDelete(sql = "update person set valid = false where id = ?")
+@SQLSelect(sql = "select id, name from person where id = ? and valid = true")
+public static class Person { ... }
+----
+
+[TIP]
+====
+If the custom SQL should be executed via a `CallableStatement`, just specify `callable=true`.
+====
+
+Any SQL statement specified by one of these annotations must have exactly the number of JDBC parameters that Hibernate expects, that is, one for each column mapped by the entity, in the exact order Hibernate expects. In particular, the primary key columns must come last.
+
+However, the `@Column` annotation does lend some flexibility here:
+
+- if a column should not be written as part of the custom `insert` statement, and has no corresponding JDBC parameter in the custom SQL, map it `@Column(insertable=false)`, or
+- if a column should not be written as part of the custom `update` statement, and has no corresponding JDBC parameter in the custom SQL, map it `@Column(updatable=false)`.
+
+Sometimes a custom `insert` or `update` statement assigns a value to a mapped column which is calculated when the statement is executed on the database.
+For example, the value might be obtained by calling a SQL function:
+
+[source,java]
+----
+@SQLInsert(sql = "insert into person (name, id) values (?, gen_random_uuid())")
+----
+
+But the entity instance which represents the row being inserted or updated won't be automatically populated with that value.
+And so our persistence context loses synchronization with the database.
+In situations like this, we may use the `@Generated` annotation to tell Hibernate to reread the state of the entity after each `insert` or `update`.
+
+[[database-generated-columns]]
+=== Handling database-generated columns
+
+Sometimes, a column value is assigned or mutated by events that happen in the database, and aren't visible to Hibernate.
+For example:
+
+- a table might have a column value populated by a trigger,
+- a mapped column might have a default value defined in DDL, or
+- a custom SQL `insert` or `update` statement might assign a value to a mapped column, as we saw in the previous subsection.
+
+One way to deal with this situation is to explicitly call `refresh()` at appropriate moments, forcing the session to reread the state of the entity.
+But this is annoying.
+
+The `@Generated` annotation relieves us of the burden of explicitly calling `refresh()`.
+It specifies that the value of the annotated entity attribute is generated by the database, and that the generated value should be automatically retrieved using a SQL `returning` clause, or separate `select` after it is generated.
+
+A useful example is the following mapping:
+
+[source,java]
+----
+@Entity
+class Entity {
+    @Generated @Id
+    @ColumnDefault("gen_random_uuid()")
+    UUID id;
+}
+----
+
+The generated DDL is:
+
+[source,sql]
+----
+create table Entity (
+    id uuid default gen_random_uuid() not null,
+    primary key (uuid)
+)
+----
+
+So here the value of `id` is defined by the column default clause, by calling the PostgreSQL function `gen_random_uuid()`.
+
+When a column value is generated during updates, use `@Generated(event=UPDATE)`.
+When a value is generated by both inserts _and_ updates, use `@Generated(event={INSERT,UPDATE})`.
+
+[TIP]
+====
+For columns which should be generated using a SQL `generated always as` clause, prefer the `@GeneratedColumn` annotation, so that Hibernate automatically generates the correct DDL.
+====
+
+[[naming-strategies]]
+=== Naming strategies
+
+When working with a pre-existing relational schema, it's usual to find that the column and table naming conventions used in the schema don't match Java's naming conventions.
+
+Of course, the `@Table` and `@Column` annotations let us explicitly specify a mapped table or column name.
+But we would prefer to avoid scattering these annotations across our whole domain model.
+
+Therefore, Hibernate lets us define a mapping between Java naming conventions, and the naming conventions of the relational schema.
+Such a mapping is called a _naming strategy_.
+
+First, we need to understand how Hibernate assigns and processes names.
+
+- _Logical naming_ is the process of applying naming rules to determine the _logical names_ of objects which were not explicitly assigned names in the O/R mapping.
+  That is, when there's no `@Table` or `@Column` annotation.
+- _Physical naming_ is the process of applying additional rules to transform a logical name into an actual "physical" name that will be used in the database.
+  For example, the rules might include things like using standardized abbreviations, or trimming the length of identifiers.
+
+Thus, there's two flavors of naming strategy, with slightly different responsibilities.
+Hibernate comes with default implementations of these interfaces:
+
+
+|===
+| Flavor | Default implementation
+
+| An `ImplicitNamingStrategy` is responsible for assigning a logical name when none is specified by an annotation
+| A default strategy which implements the rules defined by JPA
+| A `PhysicalNamingStrategy` is responsible for transforming a logical name and producing the name used in the database
+| A trivial implementation which does no processing
+|===
+
+[TIP]
+====
+We happen to not much like the naming rules defined by JPA, which specify that mixed case and camel case identifiers should be concatenated using underscores.
+We bet you could easily come up with a much better `ImplicitNamingStrategy` than that!
+(Hint: it should always produce legit mixed case identifiers.)
+====
+[TIP]
+====
+A popular `PhysicalNamingStrategy` produces snake case identifiers.
+====
+
+Custom naming strategies may be enabled using the configuration properties we already mentioned without much explanation back in <<minimizing>>.
+
+.Naming strategy configuration
+[cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| `hibernate.implicit_naming_strategy`  | Specifies the `ImplicitNamingStrategy`
+| `hibernate.physical_naming_strategy`  | Specifies the `PhysicalNamingStrategy`
+|===
+
+[[spatial]]
+=== Spatial datatypes
+
+:ogc: https://www.ogc.org
+:geolatte: https://github.com/GeoLatte/geolatte-geom
+
+Hibernate Spatial augments the <<basic-attributes,built-in basic types>> with a set of Java mappings for {ogc}[OGC] spatial types.
+
+- {geolatte}[Geolatte-geom] defines a set of Java types implementing the OGC spatial types, and codecs for translating to and from database-native spatial datatypes.
+- Hibernate Spatial itself supplies integration with Hibernate.
+
+To use Hibernate Spatial, we must add it as a dependency, as described in <<optional-dependencies>>.
+
+Then we may immediately use Geolatte-geom and JTS types in our entities.
+No special annotations are needed:
+
+[source,java]
+----
+import org.locationtech.jts.geom.Point;
+import jakarta.persistence.*;
+
+@Entity
+class Event {
+    Event() {}
+
+    Event(String name, Point location) {
+        this.name = name;
+        this.location = location;
+    }
+
+    @Id @GeneratedValue
+    Long id;
+
+    String name;
+
+    Point location;
+
+}
+----
+
+The generated DDL uses `geometry` as the type of the column mapped by `location`:
+
+[source,sql]
+----
+create table Event (
+    id bigint not null,
+    location geometry,
+    name varchar(255),
+    primary key (id)
+)
+----
+
+Hibernate Spatial lets us work with spatial types just as we would with any of the built-in basic attribute types.
+
+[source,java]
+----
+var geometryFactory = new GeometryFactory();
+
+...
+
+Point point = geometryFactory.createPoint(new Coordinate(10, 5));
+session.persist(new Event("Hibernate ORM presentation", point));
+----
+
+But what makes this powerful is that we may write some very fancy queries involving functions of spatial types:
+
+[source,java]
+----
+Polygon triangle =
+        geometryFactory.createPolygon(
+                new Coordinate[] {
+                        new Coordinate(9, 4),
+                        new Coordinate(11, 4),
+                        new Coordinate(11, 20),
+                        new Coordinate(9, 4)
+                }
+        );
+Point event =
+        session.createQuery("select location from Event where within(location, :zone) = true", Point.class)
+                .setParameter("zone", triangle)
+                .getSingleResult();
+----
+
+:matrix: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#spatial-configuration-dialect-features
+
+Here, `within()` is one of the functions for testing spatial relations defined by the OpenGIS specification.
+Other such functions include `touches()`, `intersects()`, `distance()`, `boundary()`, etc.
+Not every spatial relation function is supported on every database.
+A matrix of support for spatial relation functions may be found in the {matrix}[User Guide].
+
+[TIP]
+====
+If you want to play with spatial functions on H2, run the following code first:
+
+[source,java]
+----
+sessionFactory.inTransaction(session -> {
+    session.doWork(connection -> {
+        try (var statement = connection.createStatement()) {
+            statement.execute("create alias if not exists h2gis_spatial for \"org.h2gis.functions.factory.H2GISFunctions.load\"");
+            statement.execute("call h2gis_spatial()");
+        }
+    });
+} );
+----
+====

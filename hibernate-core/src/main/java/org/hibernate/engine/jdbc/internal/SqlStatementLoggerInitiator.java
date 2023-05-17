@@ -26,9 +26,9 @@ public class SqlStatementLoggerInitiator implements StandardServiceInitiator<Sql
 
 	@Override
 	public SqlStatementLogger initiateService(Map<String, Object> configValues, ServiceRegistryImplementor registry) {
-		final boolean showSQL = ConfigurationHelper.getBoolean( Environment.SHOW_SQL, configValues, false );
-		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );
-		final boolean highlightSQL = ConfigurationHelper.getBoolean( Environment.HIGHLIGHT_SQL, configValues, false );
+		final boolean showSQL = ConfigurationHelper.getBoolean( Environment.SHOW_SQL, configValues );
+		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues );
+		final boolean highlightSQL = ConfigurationHelper.getBoolean( Environment.HIGHLIGHT_SQL, configValues );
 		final long logSlowQuery = ConfigurationHelper.getLong( Environment.LOG_SLOW_QUERY, configValues, 0 );
 
 		return new SqlStatementLogger( showSQL, formatSQL, highlightSQL, logSlowQuery );

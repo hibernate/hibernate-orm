@@ -168,7 +168,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex );
+			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 
@@ -232,7 +232,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, propertyAccessMap, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex );
+			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 

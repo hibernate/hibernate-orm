@@ -10,8 +10,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -45,6 +47,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  * @author Christian Beikov
  */
 public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+
+	private static final String UNION_ALL = " union all ";
 
 	public SybaseASELegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
@@ -109,14 +113,64 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
-		super.renderNamedTableReference( tableReference, lockMode );
-		if ( getDialect().getVersion().isBefore( 15, 7 ) ) {
-			if ( LockMode.READ.lessThan( lockMode ) ) {
-				appendSql( " holdlock" );
+		final String tableExpression = tableReference.getTableExpression();
+		if ( tableReference instanceof UnionTableReference && lockMode != LockMode.NONE && tableExpression.charAt( 0 ) == '(' ) {
+			// SQL Server requires to push down the lock hint to the actual table names
+			int searchIndex = 0;
+			int unionIndex;
+			while ( ( unionIndex = tableExpression.indexOf( UNION_ALL, searchIndex ) ) != -1 ) {
+				append( tableExpression, searchIndex, unionIndex );
+				renderLockHint( lockMode );
+				appendSql( UNION_ALL );
+				searchIndex = unionIndex + UNION_ALL.length();
 			}
-			return true;
+			append( tableExpression, searchIndex, tableExpression.length() - 1 );
+			renderLockHint( lockMode );
+			appendSql( " )" );
+
+			registerAffectedTable( tableReference );
+			final Clause currentClause = getClauseStack().getCurrent();
+			if ( rendersTableReferenceAlias( currentClause ) ) {
+				final String identificationVariable = tableReference.getIdentificationVariable();
+				if ( identificationVariable != null ) {
+					appendSql( ' ' );
+					appendSql( identificationVariable );
+				}
+			}
 		}
-		return false;
+		else {
+			super.renderNamedTableReference( tableReference, lockMode );
+			renderLockHint( lockMode );
+		}
+		// Just always return true because SQL Server doesn't support the FOR UPDATE clause
+		return true;
+	}
+
+	private void renderLockHint(LockMode lockMode) {
+		final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
+		switch ( lockMode ) {
+			case PESSIMISTIC_READ:
+			case PESSIMISTIC_WRITE:
+			case WRITE: {
+				switch ( effectiveLockTimeout ) {
+					case LockOptions.SKIP_LOCKED:
+						appendSql( " holdlock readpast" );
+						break;
+					default:
+						appendSql( " holdlock" );
+						break;
+				}
+				break;
+			}
+			case UPGRADE_SKIPLOCKED: {
+				appendSql( " holdlock readpast" );
+				break;
+			}
+			case UPGRADE_NOWAIT: {
+				appendSql( " holdlock" );
+				break;
+			}
+		}
 	}
 
 	@Override
@@ -152,10 +206,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion().isBefore( 15, 7 ) ) {
-			return;
-		}
-		super.renderForUpdateClause( querySpec, forUpdateClause );
+		// Sybase ASE does not really support the FOR UPDATE clause
 	}
 
 	@Override

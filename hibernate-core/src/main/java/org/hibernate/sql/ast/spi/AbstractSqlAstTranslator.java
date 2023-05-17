@@ -1417,7 +1417,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						tableGroupJoin -> {
 							final TableGroup group = tableGroupJoin.getJoinedGroup();
 							if ( forUpdateClause.hasAlias( group.getSourceAlias() ) ) {
-								if ( tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
+								if ( tableGroupJoin.isInitialized() && tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
 									if ( Boolean.FALSE.equals( followOnLocking ) ) {
 										throw new IllegalQueryOperationException(
 												"Locking with OUTER joins is not supported" );
@@ -1435,7 +1435,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// Visit TableReferenceJoin and TableGroupJoin to see if all use INNER
 				if ( querySpec.getFromClause().queryTableJoins(
 						tableJoin -> {
-							if ( tableJoin.getJoinType() != SqlAstJoinType.INNER && !( tableJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
+							if ( tableJoin.isInitialized() && tableJoin.getJoinType() != SqlAstJoinType.INNER && !( tableJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
 								if ( Boolean.FALSE.equals( followOnLocking ) ) {
 									throw new IllegalQueryOperationException(
 											"Locking with OUTER joins is not supported" );
@@ -2866,7 +2866,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( currentQueryPart != null && queryPartForRowNumberingClauseDepth != clauseStack.depth() ) {
 				this.queryPartForRowNumbering = null;
 				this.queryPartForRowNumberingClauseDepth = -1;
-				this.needsSelectAliases = false;
+				// If explicit column aliases were defined we should still use them when rendering the select clause
+				this.needsSelectAliases = columnAliases != null;
 			}
 			// If we are row numbering the current query group, this means that we can't render the
 			// order by and offset fetch clause, so we must do row counting on the query group level

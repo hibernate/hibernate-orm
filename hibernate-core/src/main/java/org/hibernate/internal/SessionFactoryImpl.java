@@ -447,11 +447,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	class IntegratorObserver implements SessionFactoryObserver {
 		private final ArrayList<Integrator> integrators = new ArrayList<>();
-
-		@Override
-		public void sessionFactoryCreated(SessionFactory factory) {
-		}
-
 		@Override
 		public void sessionFactoryClosed(SessionFactory factory) {
 			for ( Integrator integrator : integrators ) {
@@ -943,8 +938,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 				}
 				else {
-					final NamedQueryMemento namedQueryMemento = ( (SqmQueryImplementor<?>) hibernateQuery ).toMemento(
-							name );
+					final NamedQueryMemento namedQueryMemento =
+							( (SqmQueryImplementor<?>) hibernateQuery ).toMemento( name );
 					namedObjectRepository.registerSqmQueryMemento(
 							name,
 							(NamedSqmQueryMemento) namedQueryMemento
@@ -1598,8 +1593,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	private void logIfEmptyCompositesEnabled(Map<String, Object> props ) {
-		final boolean isEmptyCompositesEnabled =
-				getBoolean( CREATE_EMPTY_COMPOSITES_ENABLED, props, false );
+		final boolean isEmptyCompositesEnabled = getBoolean( CREATE_EMPTY_COMPOSITES_ENABLED, props );
 		if ( isEmptyCompositesEnabled ) {
 			LOG.emptyCompositesEnabled();
 		}

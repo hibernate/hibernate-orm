@@ -52,7 +52,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				@Setting(name = AvailableSettings.FORMAT_SQL, value = "false")
 		}
 )
-@RequiresDialect(H2Dialect.class)
+@RequiresDialect(value = H2Dialect.class, majorVersion = 2, comment = "H2 didn't support SQL arrays before version 2")
 @JiraKey("HHH-16469")
 public class DepthOneBatchTest {
 

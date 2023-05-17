@@ -282,7 +282,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( value = DialectChecks.SupportSkipLocked.class )
+	@RequiresDialectFeature( value = DialectChecks.SupportsSkipLocked.class )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	public void testUpdateWithPessimisticReadLockSkipLocked() {
 		Lock lock = new Lock();

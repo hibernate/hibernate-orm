@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -47,6 +45,7 @@ public class RefreshAndInheritanceTest {
 		scope.inTransaction(
 				entityManager -> {
 					ManufacturerCompany manufacturerCompany = new ManufacturerCompany();
+					manufacturerCompany.setId( 1L );
 					manufacturerCompany.setComputerSystem( new ManufacturerComputerSystem() );
 
 					Person person = new Person();
@@ -85,7 +84,6 @@ public class RefreshAndInheritanceTest {
 	@DiscriminatorColumn(name = "CompanyType", discriminatorType = DiscriminatorType.INTEGER)
 	public static abstract class Company {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		protected long id;
 
 		@OneToMany(mappedBy = "company", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -99,6 +97,10 @@ public class RefreshAndInheritanceTest {
 			people.add( person );
 			person.setCompany( this );
 		}
+
+		public void setId(long id) {
+			this.id = id;
+		}
 	}
 
 	@Entity(name = "ComputerSystem")
@@ -106,7 +108,7 @@ public class RefreshAndInheritanceTest {
 	@DiscriminatorColumn(name = "CompanyType", discriminatorType = DiscriminatorType.INTEGER)
 	public static abstract class ComputerSystem {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		private long id;
 
 		@ManyToOne
@@ -139,7 +141,7 @@ public class RefreshAndInheritanceTest {
 	@Entity(name = "Person")
 	public static class Person {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		private long id;
 
 		private String firstName;

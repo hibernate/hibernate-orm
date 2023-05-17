@@ -470,7 +470,12 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	private void arrayToString(Expression expression) {
 		appendSql("case when ");
 		expression.accept( this );
-		appendSql(" is not null then (select listagg(column_value||',')||';' from table(");
+		appendSql(" is not null then (select listagg(column_value||',')");
+		if ( !getDialect().getVersion().isSameOrAfter( 18 ) ) {
+			// The within group clause became optional in 18
+			appendSql(" within group(order by rownum)");
+		}
+		appendSql("||';' from table(");
 		expression.accept( this );
 		appendSql(")) else null end");
 	}

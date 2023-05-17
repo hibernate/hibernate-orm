@@ -155,8 +155,9 @@ class Book extends Versioned {
 }
 ----
 
-Every entity must have an identifier attribute, but only a root entity class may declare an attribute annotated `@Id`.
-Subclass entities always inherit the identifier attribute of the root entity.
+A root entity class must declare an attribute annotated `@Id`, or inherit one from a `@MappedSuperclass`.
+A subclass entity always inherits the identifier attribute of the root entity.
+It may not declare its own `@Id` attribute.
 
 [[identifier-attributes]]
 === Identifier attributes

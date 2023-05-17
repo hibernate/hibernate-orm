@@ -8,6 +8,106 @@ But we do want you to know _about_ them, so that when the time comes, you'll kno
 [[filters]]
 === Filters
 
+_Filters_ are one of the nicest and under-usedest features of Hibernate, and we're quite proud of them.
+A filter is a named, globally-defined, parameterized restriction on the data that is visible in a given session.
+
+Examples of well-defined filters might include:
+
+- a filter that restricts the data visible to a given user according to row-level permissions,
+- a filter which hides data which has been soft-deleted,
+- in a versioned database, a filter that displays versions which were current at a given instant in the past, or
+- a filter that restricts to data associated with a certain geographical region.
+
+A filter must be declared somewhere.
+A package descriptor is as good a place as any:
+
+[source,java]
+----
+@FilterDef(name = "ByRegion",
+           parameters = @ParamDef(name = "region", type = String.class))
+package org.hibernate.example;
+----
+
+This filter has one parameter.
+Fancier filters might in principle have multiple parameters, though we admit this must be quite rare.
+
+[IMPORTANT]
+====
+If you add annotations to a package descriptor, and you're using `Configuration` to configure Hibernate, make sure you call `Configuration.addPackage()` to let Hibernate know that the package descriptor is annotated.
+====
+
+_Typically_, but not necessarily, a `@FilterDef` specifies a default restriction:
+
+[source,java]
+----
+@FilterDef(name = "ByRegion",
+           parameters = @ParamDef(name = "region", type = String.class),
+           defaultCondition = "region = :region")
+package org.hibernate.example;
+----
+
+The restriction must contain a reference to the parameter of the filter, specified using the usual syntax for named parameters.
+
+Any entity or collection which is affected by a filter must be annotated `@Filter`:
+
+[source,java]
+----
+@Entity
+@Filter(name = "ByRegion")
+class User {
+
+    @Id String username;
+
+    String region;
+
+    ...
+}
+----
+
+If the `@Filter` annotation does not explicitly specify a restriction, the default restriction given by the `@FilterDef` will be applied to the entity.
+But an entity is free to override the default condition.
+
+[source,java]
+----
+@Entity
+@Filter(name = "ByRegion", condition = "name = :region")
+class Region {
+
+    @Id String name;
+
+    ...
+}
+----
+
+Note that the restriction specified by the `condition` or `defaultCondition` is a native SQL expression.
+
+By default, a new session comes with every filter disabled.
+A filter may be explicitly enabled in a given session by calling `enableFilter()` and assigning arguments to the parameters of the filter.
+You should do this right at the _start_ of the session.
+
+[source,java]
+----
+sessionFactory.inTransaction(session -> {
+    session.enableFilter("ByRegion")
+        .setParameter("region", "es")
+        .validate();
+
+	...
+});
+----
+
+Now, any queries executed within the session will have the filter restriction applied.
+Collections annotated `@Filter` will also have their members correctly filtered.
+
+[CAUTION]
+====
+On the other hand, filters are not applied to `@ManyToOne` associations, nor to `find()`.
+This is completely by design and is not in any way a bug.
+====
+
+More than one filter may be enabled in a given session.
+
+A closely-related problem is multi-tenancy.
 
 [[multitenancy]]
 === Multi-tenancy

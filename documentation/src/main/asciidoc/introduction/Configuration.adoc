@@ -77,7 +77,7 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 === Optional dependencies
 
 :slf4j: http://www.slf4j.org/
-:enhancer: {versionDocBase}/topical/html_single/bytecode/BytecodeEnhancement.html
+:enhancer: {userGuideBase}#tooling-gradle
 :agroal: https://agroal.github.io
 :jackson: https://github.com/FasterXML/jackson
 :yasson: https://projects.eclipse.org/projects/ee4j.yasson
@@ -104,10 +104,7 @@ Optionally, you might also add any of the following additional features:
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
-Gradle build if you want to use field-level  lazy fetching.
-
-TIP: Field-level lazy fetching is an advanced feature that most programs
-don't need. Stick to the basics for now.
+Gradle build if you want to use field-level lazy fetching.
 
 [[configuration-jpa]]
 === Configuration using JPA XML

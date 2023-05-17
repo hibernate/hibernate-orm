@@ -427,3 +427,67 @@ sessionFactory.inTransaction(session -> {
 } );
 ----
 ====
+
+[[any]]
+=== Any mappings
+
+An `@Any` mapping is a sort of polymorphic many-to-one association where the target entity types are not related by the usual entity inheritance.
+The target type is distinguished using a discriminator value stored on the _referring_ side of the relationship.
+
+This is quite different to <<entity-inheritance,discriminated inheritance>> where the discriminator is held in the tables mapped by the referenced entity hierarchy.
+
+For example, consider an `Order` entity containing `Payment` information, where a `Payment` might be a `CashPayment` or a `CreditCardPayment`:
+
+[source,java]
+----
+interface Payment { ... }
+
+@Entity
+class CashPayment { ... }
+
+@Entity
+class CreditCardPayment { ... }
+----
+
+In this example, `Payment` is not be declared as an entity type, and is not annotated `@Entity`. It might even be an interface, or at most just a mapped superclass, of `CashPayment` and `CreditCardPayment`. So in terms of the object/relational mappings, `CashPayment` and `CreditCardPayment` would not be considered to participate in the same entity inheritance hierarchy.
+
+On the other hand, `CashPayment` and `CreditCardPayment` do have the same identifier type.
+This is important.
+
+
+An `@Any` mapping would store the discriminator value identifying the concrete type of `Payment` along with the state of the associated `Order`, instead of storing it in the table mapped by `Payment`.
+
+[source,java]
+----
+@Entity
+class Order {
+    ...
+
+    @Any
+    @JoinColumn(name="payment_id") // the foreign key column
+    @Column(name="payment_type")   // the discriminator column
+    // map from discriminator values to target entity types
+    @AnyDiscriminatorValue(discriminator="CASH", entity=CashPayment.class)
+    @AnyDiscriminatorValue(discriminator="CREDIT", entity=CreditCardPayment.class)
+    Payment payment;
+
+    ...
+}
+----
+
+It's reasonable to think of the "foreign key" in an `@Any` mapping as a composite value made up of the foreign key and discriminator taken together. Note, however, that this composite foreign key is only conceptual and cannot be declared as a physical constraint on the relational database table.
+
+There are a number of annotations which are useful to express this sort of complicated and unnatural mapping:
+
+.Annotations for `@Any` mappings
+|===
+| Annotations | Purpose
+
+| `@AnyDiscriminator`, `@JdbcType`, or `@JdbcTypeCode` | Specify the type of the discriminator
+| `@AnyDiscriminatorValue` | Specifies how discriminator values map to entity types
+| `@Column` or `@Formula` | Specify the column or formula in which the discriminator value is stored
+| `@AnyKeyJavaType`, `@AnyKeyJavaClass`, `@AnyKeyJdbcType`, or `@AnyKeyJdbcTypeCode` | Specify the type of the foreign key (that is, of the ids of the target entities)
+| `@JoinColumn` | Specifies the foreign key column
+|===
+
+Of course, `@Any` mappings are disfavored, except in extremely special cases, since it's much more difficult to enforce referential integrity at the database level.

@@ -35,7 +35,13 @@ include::Mapping.adoc[]
 
 include::Interacting.adoc[]
 
+// include::../userguide/chapters/query/hql/QueryLanguage.adoc[]
+
 <<<
 
 include::Tuning.adoc[]
-// include::../userguide/chapters/query/hql/QueryLanguage.adoc[]
+
+<<<
+
+include::Advanced.adoc[]
+

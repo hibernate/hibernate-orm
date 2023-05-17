@@ -372,6 +372,7 @@ You can make the SQL logged to the console more readable by enabling formatting 
 
 These settings can really help when troubleshooting SQL.
 
+[[minimizing]]
 === Minimizing repetitive mapping information
 
 The following properties are very useful for minimizing the amount of information you'll need to explicitly specify in `@Table` and `@Column` annotations, which we'll discuss below in <<object-relational-mapping>>:
@@ -384,17 +385,14 @@ The following properties are very useful for minimizing the amount of informatio
 | `hibernate.default_schema`            | A default schema name for entities which do not explicitly declare one
 | `hibernate.default_catalog`           | A default catalog name for entities which do not explicitly declare one
 | `hibernate.physical_naming_strategy`  | A `PhysicalNamingStrategy` implementing your database naming standards
-| `hibernate.implicit_naming_strategy`  | An `ImplicitNamingStrategy` which specifies how "logical" names of
-                                          relational objects should be inferred when no name is specified in
-                                          annotations
+| `hibernate.implicit_naming_strategy`  | An `ImplicitNamingStrategy` which specifies how "logical" names of relational objects should be inferred when no name is specified in annotations
 |===
 
 [TIP]
 // .Implement your naming standards as a `PhysicalNamingStrategy`
 ====
 Writing your own `PhysicalNamingStrategy` and/or `ImplicitNamingStrategy` is an especially good way to reduce the clutter of annotations on your entity classes, and to implement your database naming conventions, and so we think you should do it for any nontrivial data model.
-
-Please refer to the Javadoc for these interfaces for more information about the division of responsibility between them.
+We'll have more to say about them in <<naming-strategies>>.
 ====
 
 [[nationalized-chars]]

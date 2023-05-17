@@ -1,0 +1,142 @@
+[[advanced]]
+== Advanced Topics
+
+In the last chapter of this Introduction, we turn to some topics that don't really belong in an introduction.
+Here we consider some problems, and solutions, that you're probably not going to run into immediately if you're new to Hibernate.
+But we do want you to know _about_ them, so that when the time comes, you'll know what tool to reach for.
+
+[[filters]]
+=== Filters
+
+
+[[multitenancy]]
+=== Multi-tenancy
+
+A _multi-tenant_ database is one where the data is segregated by _tenant_.
+We don't need to actually define what a "tenant" really represents here; all we care about at this level of abstraction is that each tenant may be distinguished by a unique identifier.
+And that there's a well-defined _current tenant_ in each session.
+
+We may specify the current tenant when we open a session:
+
+[source,java]
+----
+var session =
+        sessionFactory.withOptions()
+            .tenantIdentifier(tenantId)
+            .openSession();
+----
+
+However, since we often don't have this level of control of creation of the session, it's more common to supply an implementation of `CurrentTenantIdentifierResolver` to Hibernate.
+
+There are three common ways to implement multi-tenancy:
+
+1. each tenant has its own database,
+2. each tenant has its own schema,
+3. tenants share tables in a single schema, and rows are tagged with the tenant id.
+
+From the point of view of Hibernate, there's little difference between the first two options.
+Hibernate will need to obtain a JDBC connection with permissions on the database and schema owned by the current tenant.
+
+Therefore, we must implement a `MultiTenantConnectionProvider` which takes on this responsibility:
+
+- from time to time, Hibernate will ask for a connection, passing the id of the current tenant, and then we must create an appropriate connection or obtain one from a pool, and return it to Hibernate, and
+- later, Hibernate will release the connection and ask us to destroy it or return it to the appropriate pool.
+
+[TIP]
+====
+Check out `DataSourceBasedMultiTenantConnectionProviderImpl` for inspiration.
+====
+
+The third option is quite different.
+In this case we don't need a `MultiTenantConnectionProvider`, but we will need a dedicated column holding the tenant id mapped by each of our entities.
+
+[source,java]
+----
+@Entity
+class Account {
+    @Id String id;
+    @TenantId String tenantId;
+    ...
+}
+----
+
+The `@TenantId` annotation is used to indicate an attribute of an entity which holds the tenant id.
+Within a given session, our data is automatically filtered so that only rows tagged with the tenant id of the current tenant are visible in that session.
+
+[CAUTION]
+====
+Native SQL queries are _not_ automatically filtered by tenant id; you'll have to do that part yourself.
+====
+
+.Multi-tenancy configuration
+[cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| `hibernate.tenant_identifier_resolver`  | Specifies the `CurrentTenantIdentifierResolver`
+| `hibernate.multi_tenant_connection_provider`  | Specifies the `MultiTenantConnectionProvider`
+|===
+
+
+[[custom-sql]]
+=== Using custom-written SQL
+
+[[database-generated-columns]]
+=== Handling database-generated columns
+
+
+[[naming-strategies]]
+=== Naming strategies
+
+When working with a pre-existing relational schema, it's usual to find that the column and table naming conventions used in the schema don't match Java's naming conventions.
+
+Of course, the `@Table` and `@Column` annotations let us explicitly specify a mapped table or column name.
+But we would prefer to avoid scattering these annotations across our whole domain model.
+
+Therefore, Hibernate lets us define a mapping between Java naming conventions, and the naming conventions of the relational schema.
+Such a mapping is called a _naming strategy_.
+
+First, we need to understand how Hibernate assigns and processes names.
+
+- _Logical naming_ is the process of applying naming rules to determine the _logical names_ of objects which were not explicitly assigned names in the O/R mapping.
+  That is, when there's no `@Table` or `@Column` annotation.
+- _Physical naming_ is the process of applying additional rules to transform a logical name into an actual "physical" name that will be used in the database.
+  For example, the rules might include things like using standardized abbreviations, or trimming the length of identifiers.
+
+Thus, there's two flavors of naming strategy, with slightly different responsibilities.
+Hibernate comes with default implementations of these interfaces:
+
+
+|===
+| Flavor | Default implementation
+
+| An `ImplicitNamingStrategy` is responsible for assigning a logical name when none is specified by an annotation
+| A default strategy which implements the rules defined by JPA
+| A `PhysicalNamingStrategy` is responsible for transforming a logical name and producing the name used in the database
+| A trivial implementation which does no processing
+|===
+
+[TIP]
+====
+We happen to not much like the naming rules defined by JPA, which specify that mixed case and camel case identifiers should be concatenated using underscores.
+We bet you could easily come up with a much better `ImplicitNamingStrategy` than that!
+(Hint: it should always produce legit mixed case identifiers.)
+====
+[TIP]
+====
+A popular `PhysicalNamingStrategy` produces snake case identifiers.
+====
+
+Custom naming strategies may be enabled using the configuration properties we already mentioned without much explanation back in <<minimizing>>.
+
+.Naming strategy configuration
+[cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| `hibernate.implicit_naming_strategy`  | Specifies the `ImplicitNamingStrategy`
+| `hibernate.physical_naming_strategy`  | Specifies the `PhysicalNamingStrategy`
+|===
+
+[[spatial]]
+=== Spatial datatypes

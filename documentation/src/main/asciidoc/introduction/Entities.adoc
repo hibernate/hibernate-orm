@@ -23,22 +23,6 @@ An entity usually has associations to other entities.
 Typically, an association between two entities maps to a foreign key in one of the database tables.
 A group of mutually associated entities is often called a _domain model_, though _data model_ is also a perfectly good term.
 
-."Dynamic" models
-****
-:maps: {userGuideBase}#dynamic-model
-:envers: https://hibernate.org/orm/envers/
-We love representing entities as classes because the classes give us a _type-safe_ model of our data.
-But actually, not every entity needs to be a Java class.
-Hibernate also has the ability to represent entities as detyped instances of `java.util.Map`, and associations between entities as maps "containing" other maps.
-This must sound like a sort-of weird feature for a project that places so much importance on type-safety.
-
-But actually, this is a useful capability for a very particular sort of generic code.
-The canonical demonstration of this is {envers}[Hibernate Envers], which is a great auditing/versioning system for programs that use Hibernate.
-Envers makes use of maps to represent a _versioned model_ of the data.
-You can find more information in the {maps}[User Guide], if you're curious.
-****
-
-
 [[entity-clases]]
 === Entity classes
 
@@ -88,6 +72,19 @@ Since the `orm.xml` mapping file format defined by the JPA specification was mod
 ****
 
 We won't have much more to say about XML-based mappings in this Introduction, since it's not our preferred way to do things.
+
+."Dynamic" models
+****
+:maps: {userGuideBase}#dynamic-model
+:envers: https://hibernate.org/orm/envers/
+We love representing entities as classes because the classes give us a _type-safe_ model of our data.
+But Hibernate also has the ability to represent entities as detyped instances of `java.util.Map`.
+There's information in the {maps}[User Guide], if you're curious.
+This must sound like a weird feature for a project that places importance on type-safety.
+Actually, it's a useful capability for a very particular sort of generic code.
+{envers}[Hibernate Envers] is a great auditing/versioning system for Hibernate entities.
+Envers makes use of maps to represent its _versioned model_ of the data.
+****
 
 [[access-type]]
 === Access types

@@ -102,7 +102,9 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import static org.hibernate.jpa.HibernateHints.HINT_NAMED_PARAMETER_PREFIX;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_ORDINAL_PARAMETER_PREFIX;
 import static org.hibernate.query.results.Builders.resultClassBuilder;
 
 /**
@@ -111,11 +113,11 @@ import static org.hibernate.query.results.Builders.resultClassBuilder;
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
 		implements NativeQueryImplementor<R>, DomainQueryExecutionContext, ResultSetMappingResolutionContext {
-	private final String sqlString;
+	private String sqlString;
 	private final String originalSqlString;
-	private final ParameterMetadataImplementor parameterMetadata;
-	private final List<ParameterOccurrence> parameterOccurrences;
-	private final QueryParameterBindings parameterBindings;
+	private ParameterMetadataImplementor parameterMetadata;
+	private List<ParameterOccurrence> parameterOccurrences;
+	private QueryParameterBindings parameterBindings;
 
 	private final ResultSetMapping resultSetMapping;
 	private final boolean resultMappingSuppliedToCtor;
@@ -125,6 +127,8 @@ public class NativeQueryImpl<R>
 	private Boolean startsWithSelect;
 	private Set<String> querySpaces;
 	private Callback callback;
+	private char namedParamPrefix = ParameterParser.NAMED_PARAM_PREFIX;
+	private char ordinalParamPrefix = ParameterParser.ORDINAL_PARAM_PREFIX;
 
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
@@ -196,15 +200,8 @@ public class NativeQueryImpl<R>
 
 		this.originalSqlString = memento.getOriginalSqlString();
 
-		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation(
-				originalSqlString,
-				session
-		);
+		interpretParameters( session );
 
-		this.sqlString = parameterInterpretation.getAdjustedSqlString();
-		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
-		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = resultSetMappingCreator.get();
@@ -341,18 +338,23 @@ public class NativeQueryImpl<R>
 		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 
-		return interpretationCache.resolveNativeQueryParameters(
+		if ( namedParamPrefix != ParameterParser.NAMED_PARAM_PREFIX || ordinalParamPrefix != ParameterParser.ORDINAL_PARAM_PREFIX ) {
+			return createParameterInterpretation( sqlString, session );
+		}
+		else {
+			return interpretationCache.resolveNativeQueryParameters(
 					sqlString,
-					s -> {
-						final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
-
-						session.getFactory().getServiceRegistry()
-								.getService( NativeQueryInterpreter.class )
-								.recognizeParameters( sqlString, parameterRecognizer );
-
-						return new ParameterInterpretationImpl( parameterRecognizer );
-					}
+					s -> createParameterInterpretation( sqlString, session )
 			);
+		}
+	}
+
+	private ParameterInterpretationImpl createParameterInterpretation(String sqlString, SharedSessionContractImplementor session) {
+		final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
+		session.getFactory().getServiceRegistry()
+				.getService( NativeQueryInterpreter.class )
+				.recognizeParameters( sqlString, parameterRecognizer, namedParamPrefix, ordinalParamPrefix );
+		return new ParameterInterpretationImpl( parameterRecognizer) ;
 	}
 
 	protected void applyOptions(NamedNativeQueryMemento memento) {
@@ -378,15 +380,19 @@ public class NativeQueryImpl<R>
 
 		this.querySpaces = new HashSet<>();
 
-		final ParameterInterpretation parameterInterpretation = resolveParameterInterpretation( sqlString, session );
 		this.originalSqlString = sqlString;
-		this.sqlString = parameterInterpretation.getAdjustedSqlString();
-		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
-		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		interpretParameters( session );
 
 		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( sqlString, true, session.getFactory() );
 		this.resultMappingSuppliedToCtor = false;
+	}
+
+	private void interpretParameters(SharedSessionContractImplementor session) {
+		final ParameterInterpretation interpretation = resolveParameterInterpretation( originalSqlString, session );
+		this.sqlString = interpretation.getAdjustedSqlString();
+		this.parameterMetadata = interpretation.toParameterMetadata(session);
+		this.parameterOccurrences = interpretation.getOrderedParameterOccurrences();
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 	}
 
 	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
@@ -1494,14 +1500,29 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-
+	@Override
+	public NativeQueryImplementor<R> setParameterEscapes(char namedParamPrefix, char ordinalParamPrefix) {
+		this.namedParamPrefix = namedParamPrefix;
+		this.ordinalParamPrefix = ordinalParamPrefix;
+		interpretParameters( getSession() );
+		return this;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Hints
 
 	@Override
 	public NativeQueryImplementor<R> setHint(String hintName, Object value) {
-		super.setHint( hintName, value );
+		switch ( hintName ) {
+			case HINT_NAMED_PARAMETER_PREFIX:
+				setParameterEscapes( (Character) value, ordinalParamPrefix );
+				break;
+			case HINT_ORDINAL_PARAMETER_PREFIX:
+				setParameterEscapes( namedParamPrefix, (Character) value );
+				break;
+			default:
+				super.setHint( hintName, value );
+		}
 		return this;
 	}
 

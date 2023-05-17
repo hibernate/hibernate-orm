@@ -156,4 +156,18 @@ public interface HibernateHints {
 	 * to a function rather than a call to a procedure.
 	 */
 	String HINT_CALLABLE_FUNCTION = "org.hibernate.callableFunction";
+
+	/**
+	 * The prefix character used to recognize a named parameter.
+	 *
+	 * @see org.hibernate.query.NativeQuery#setParameterEscapes(char, char)
+	 */
+	String HINT_NAMED_PARAMETER_PREFIX = "org.hibernate.namedParameterPrefix";
+
+	/**
+	 * The prefix character used to recognize an ordinal parameter.
+	 *
+	 * @see org.hibernate.query.NativeQuery#setParameterEscapes(char, char)
+	 */
+	String HINT_ORDINAL_PARAMETER_PREFIX = "org.hibernate.ordinalParameterPrefix";
 }

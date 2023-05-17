@@ -9,6 +9,7 @@ package org.hibernate.engine.query.spi;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sql.internal.NativeSelectQueryPlanImpl;
+import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -30,7 +31,15 @@ public interface NativeQueryInterpreter extends Service {
 	 * @param nativeQuery The query to recognize parameters in
 	 * @param recognizer The recognizer to call
 	 */
-	void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer);
+	void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer, char namedParamPrefix, char ordinalParamPrefix);
+
+	/**
+	 * @deprecated use {@link #recognizeParameters(String, ParameterRecognizer, char, char)}
+	 */
+	@Deprecated
+	default void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer) {
+		recognizeParameters( nativeQuery, recognizer, ParameterParser.NAMED_PARAM_PREFIX, ParameterParser.ORDINAL_PARAM_PREFIX );
+	}
 
 	/**
 	 * Creates a new query plan for the passed native query definition

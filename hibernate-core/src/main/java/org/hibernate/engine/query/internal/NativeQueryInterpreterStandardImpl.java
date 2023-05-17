@@ -24,8 +24,8 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 	public static final NativeQueryInterpreterStandardImpl NATIVE_QUERY_INTERPRETER = new NativeQueryInterpreterStandardImpl();
 
 	@Override
-	public void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer) {
-		ParameterParser.parse( nativeQuery, recognizer );
+	public void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer, char namedParamPrefix, char ordinalParamPrefix) {
+		ParameterParser.parse( nativeQuery, recognizer, namedParamPrefix, ordinalParamPrefix );
 	}
 
 	@Override

@@ -4,6 +4,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Proxy;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -44,10 +49,13 @@ public class ChainedEntitiesRecursiveLoadTest {
 	}
 
 	@Entity
+	@Proxy(lazy = false)
 	public static class Container {
 
 		@Id @GeneratedValue Long id;
 
-		@ManyToOne Container parent;
+		@Fetch(FetchMode.SELECT)
+		@ManyToOne
+		Container parent;
 	}
 }

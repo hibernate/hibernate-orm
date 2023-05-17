@@ -317,12 +317,11 @@ public class CacheEntityLoaderHelper {
 			Object entity = convertCacheEntryToEntity( entry, entityKey.getIdentifier(), source, persister, instanceToLoad, entityKey );
 
 			if ( !persister.isInstance( entity ) ) {
+				// Cleanup the inconsistent return class entity from the persistence context
+				final PersistenceContext persistenceContext = source.getPersistenceContext();
+				persistenceContext.removeEntry( entity );
+				persistenceContext.removeEntity( entityKey );
 				return null;
-//				throw new WrongClassException(
-//						"loaded object was of wrong class " + entity.getClass(),
-//						entityKey.getIdentifier(),
-//						persister.getEntityName()
-//				);
 			}
 
 			return entity;

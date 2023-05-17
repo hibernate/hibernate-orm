@@ -97,7 +97,7 @@ Even better than DML statement batching is the use of HQL `update` or `delete` q
 [[association-fetching]]
 === Association fetching
 
-:association-fetching: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#fetching
+:association-fetching: {userGuideBase}#fetching
 
 Achieving high performance in ORM means minimizing the number of round
 trips to the database. This goal should be uppermost in your mind
@@ -165,7 +165,7 @@ You can find much more information about association fetching in the
 [[second-level-cache]]
 === The second-level cache
 
-:second-level-cache: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#caching
+:second-level-cache: {userGuideBase}#caching
 
 A classic way to reduce the number of accesses to the database is to use a second-level cache, allowing  data cached in memory to be shared between sessions.
 

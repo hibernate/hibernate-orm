@@ -124,7 +124,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				appendSql( UNION_ALL );
 				searchIndex = unionIndex + UNION_ALL.length();
 			}
-			append( tableExpression, searchIndex, tableExpression.length() - 2 );
+			append( tableExpression, searchIndex, tableExpression.length() - 1 );
 			renderLockHint( lockMode );
 			appendSql( " )" );
 

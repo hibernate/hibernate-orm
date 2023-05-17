@@ -9,12 +9,14 @@ package org.hibernate.orm.test.locking.jpa;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +34,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
  */
 @DomainModel(annotatedClasses = { Employee.class, Department.class })
 @SessionFactory(useCollectingStatementInspector = true)
+@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Seems HSQLDB doesn't cancel the query if it waits for a lock?!")
 public class FollowOnLockingTest {
 
 	@Test

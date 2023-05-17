@@ -89,12 +89,17 @@ For this we can use `@SQLInsert` and friends:
 [source,java]
 ----
 @Entity
-@SQLInsert(sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) ", check = COUNT)
-@SQLUpdate(sql = "UPDATE person SET name = ? where id = ? ")
-@SQLDelete(sql = "UPDATE person SET valid = false WHERE id = ? ")
-@SQLSelect(sql = "SELECT id, name FROM person WHERE id = ? and valid = true")
+@SQLInsert(sql = "insert into person (name, id, valid) values (?, ?, true)", check = COUNT)
+@SQLUpdate(sql = "update person set name = ? where id = ?")
+@SQLDelete(sql = "update person set valid = false where id = ?")
+@SQLSelect(sql = "select id, name from person where id = ? and valid = true")
 public static class Person { ... }
 ----
+
+[TIP]
+====
+If the custom SQL should be executed via a `CallableStatement`, just specify `callable=true`.
+====
 
 Any SQL statement specified by one of these annotations must have exactly the number of JDBC parameters that Hibernate expects, that is, one for each column mapped by the entity, in the exact order Hibernate expects. In particular, the primary key columns must come last.
 
@@ -103,9 +108,17 @@ However, the `@Column` annotation does lend some flexibility here:
 - if a column should not be written as part of the custom `insert` statement, and has no corresponding JDBC parameter in the custom SQL, map it `@Column(insertable=false)`, or
 - if a column should not be written as part of the custom `update` statement, and has no corresponding JDBC parameter in the custom SQL, map it `@Column(updatable=false)`.
 
-In either of these cases, it's possible that the custom `insert` or `update` statement assigns a value to the mapped column as it is written, for example, by calling a SQL function.
-But our entity instance won't be automatically populated with that value.
-We may use the `@Generated` annotation to tell Hibernate to reread the state of the entity after each `insert` and/or `update`.
+Sometimes a custom `insert` or `update` statement assigns a value to a mapped column which is calculated when the statement is executed on the database.
+For example, the value might be obtained by calling a SQL function:
+
+[source,java]
+----
+@SQLInsert(sql = "insert into person (name, id) values (?, gen_random_uuid())")
+----
+
+But the entity instance which represents the row being inserted or updated won't be automatically populated with that value.
+And so our persistence context loses synchronization with the database.
+In situations like this, we may use the `@Generated` annotation to tell Hibernate to reread the state of the entity after each `insert` or `update`.
 
 [[database-generated-columns]]
 === Handling database-generated columns

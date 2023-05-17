@@ -352,8 +352,8 @@ The `@Column` annotation is not only useful for specifying the column name.
 | `scale` | The scale of a `DECIMAL` or `NUMERIC` column type, the digits of precision that occur to the right of the decimal point
 | `unique` | Whether the column has a `UNIQUE` constraint
 | `nullable` | Whether the column has a `NOT NULL` constraint
-| `insertable` | Whether the column should appear in generated SQL `INSERT` and `UPDATE` statements
-| `updatable` | Whether the column should appear in generated SQL `INSERT` and `UPDATE` statements
+| `insertable` | Whether the column should appear in generated SQL `INSERT` statements
+| `updatable` | Whether the column should appear in generated SQL `UPDATE` statements
 | `columnDefinition` 💀| A DDL fragment that should be used to declare the column
 |===
 
@@ -404,8 +404,8 @@ The `@JoinColumn` annotation is used to customize a foreign key column.
 | `referencedColumnName` | The name of the column to which the mapped foreign key column refers
 | `unique` | Whether the column has a `UNIQUE` constraint
 | `nullable` | Whether the column has a `NOT NULL` constraint
-| `insertable` | Whether the column should appear in generated SQL `INSERT` and `UPDATE` statements
-| `updatable` | Whether the column should appear in generated SQL `INSERT` and `UPDATE` statements
+| `insertable` | Whether the column should appear in generated SQL `INSERT` statements
+| `updatable` | Whether the column should appear in generated SQL `UPDATE` statements
 | `columnDefinition` 💀| A DDL fragment that should be used to declare the column
 | `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint
 |===
@@ -617,6 +617,12 @@ Unfortunately, the driver for PostgreSQL doesn't allow `BYTEA` or `TEXT` columns
 This limitation of the Postgres driver has resulted in a whole cottage industry of bloggers and stackoverflow question-answerers recommending convoluted ways to hack the Hibernate `Dialect` for Postgres to allow an attribute annotated `@Lob` to be written using `setString()` and read using `getString()`.
 
 But simply removing the `@Lob` annotation has exactly the same effect.
+
+Conclusion:
+
+- on PostgreSQL, `@Lob` always means the `OID` type,
+- `@Lob` should never be used to map columns of type `BYTEA` or `TEXT`, and
+- please don't believe everything you read on stackoverflow.
 ====
 
 Finally, as an alternative, Hibernate lets you declare an attribute of type `java.sql.Blob` or `java.sql.Clob`.

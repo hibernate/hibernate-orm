@@ -140,3 +140,107 @@ Custom naming strategies may be enabled using the configuration properties we al
 
 [[spatial]]
 === Spatial datatypes
+
+:ogc: https://www.ogc.org
+:geolatte: https://github.com/GeoLatte/geolatte-geom
+
+Hibernate Spatial augments the <<basic-attributes,built-in basic types>> with a set of Java mappings for {ogc}[OGC] spatial types.
+
+- {geolatte}[Geolatte-geom] defines a set of Java types implementing the OGC spatial types, and codecs for translating to and from database-native spatial datatypes.
+- Hibernate Spatial itself supplies integration with Hibernate.
+
+To use Hibernate Spatial, we must add it as a dependency, as described in <<optional-dependencies>>.
+
+Then we may immediately use Geolatte-geom and JTS types in our entities.
+No special annotations are needed:
+
+[source,java]
+----
+import org.locationtech.jts.geom.Point;
+import jakarta.persistence.*;
+
+@Entity
+class Event {
+    Event() {}
+
+    Event(String name, Point location) {
+        this.name = name;
+        this.location = location;
+    }
+
+    @Id @GeneratedValue
+    Long id;
+
+    String name;
+
+    Point location;
+
+}
+----
+
+The generated DDL uses `geometry` as the type of the column mapped by `location`:
+
+[source,sql]
+----
+create table Event (
+    id bigint not null,
+    location geometry,
+    name varchar(255),
+    primary key (id)
+)
+----
+
+Hibernate Spatial lets us work with spatial types just as we would with any of the built-in basic attribute types.
+
+[source,java]
+----
+var geometryFactory = new GeometryFactory();
+
+...
+
+Point point = geometryFactory.createPoint(new Coordinate(10, 5));
+session.persist(new Event("Hibernate ORM presentation", point));
+----
+
+But what makes this powerful is that we may write some very fancy queries involving functions of spatial types:
+
+[source,java]
+----
+Polygon triangle =
+        geometryFactory.createPolygon(
+                new Coordinate[] {
+                        new Coordinate(9, 4),
+                        new Coordinate(11, 4),
+                        new Coordinate(11, 20),
+                        new Coordinate(9, 4)
+                }
+        );
+Point event =
+        session.createQuery("select location from Event where within(location, :zone) = true", Point.class)
+                .setParameter("zone", triangle)
+                .getSingleResult();
+----
+
+:matrix: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#spatial-configuration-dialect-features
+
+Here, `within()` is one of the functions for testing spatial relations defined by the OpenGIS specification.
+Other such functions include `touches()`, `intersects()`, `distance()`, `boundary()`, etc.
+Not every spatial relation function is supported on every database.
+A matrix of support for spatial relation functions may be found in the {matrix}[User Guide].
+
+[TIP]
+====
+If you want to play with spatial functions on H2, run the following code first:
+
+[source,java]
+----
+sessionFactory.inTransaction(session -> {
+    session.doWork(connection -> {
+        try (var statement = connection.createStatement()) {
+            statement.execute("create alias if not exists h2gis_spatial for \"org.h2gis.functions.factory.H2GISFunctions.load\"");
+            statement.execute("call h2gis_spatial()");
+        }
+    });
+} );
+----
+====

@@ -100,6 +100,7 @@ Optionally, you might also add any of the following additional features:
 | Distributed second-level cache support via {infinispan}[Infinispan] | `org.infinispan:infinispan-hibernate-cache-v60`
 // | SCRAM authentication support for PostgreSQL | `com.ongres.scram:client:2.1`
 | A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] | `com.fasterxml.jackson.core:jackson-databind` or `org.eclipse:yasson`
+| <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your

@@ -1843,9 +1843,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToDetermineCockroachDatabaseVersion(String minimumVersion);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Unable to create the ReflectionOptimizer for [%s]",
+	@Message(value = "Unable to create the ReflectionOptimizer for [%s]: %s",
 			id = 513)
-	void unableToGenerateReflectionOptimizer(String className, @Cause Throwable cause);
+	void unableToGenerateReflectionOptimizer(String className, String cause);
 
 	@LogMessage(level = WARN)
 	@Message(value = "PostgreSQL JDBC driver classes are inaccessible and thus, certain DDL types like JSONB, JSON, GEOMETRY can not be used.",

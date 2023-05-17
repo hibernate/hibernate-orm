@@ -9,7 +9,7 @@ An entity has _attributes_—properties or fields—which map to columns of the 
 In particular, every entity must have an _identifier_ or _id_, which maps to the primary key of the table.
 The id allows us to uniquely associate a row of the table with an instance of the Java class, at least within a given _persistence context_.
 
-We'll explore the idea of a persistence context <<persistence-contexts,later>>. For now, just think of it as a one-to-one mapping between ids and entity instances.
+We'll explore the idea of a persistence context <<persistence-contexts,later>>. For now, think of it as a one-to-one mapping between ids and entity instances.
 
 An instance of a Java class cannot outlive the virtual machine to which it belongs.
 But we may think of an entity instance having a lifecycle which transcends a particular instantiation in memory.
@@ -80,9 +80,10 @@ We won't have much more to say about XML-based mappings in this Introduction, si
 We love representing entities as classes because the classes give us a _type-safe_ model of our data.
 But Hibernate also has the ability to represent entities as detyped instances of `java.util.Map`.
 There's information in the {maps}[User Guide], if you're curious.
+
 This must sound like a weird feature for a project that places importance on type-safety.
 Actually, it's a useful capability for a very particular sort of generic code.
-{envers}[Hibernate Envers] is a great auditing/versioning system for Hibernate entities.
+For example, {envers}[Hibernate Envers] is a great auditing/versioning system for Hibernate entities.
 Envers makes use of maps to represent its _versioned model_ of the data.
 ****
 

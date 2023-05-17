@@ -128,6 +128,7 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 
@@ -706,12 +707,23 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		SessionBuilderImplementor builder = withOptions();
 		builder.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
 
+		if ( map != null ) {
+			//noinspection SuspiciousMethodCalls
+			final String tenantIdHint = (String) map.get( HINT_TENANT_ID );
+			if ( tenantIdHint != null ) {
+				builder = (SessionBuilderImplementor) builder.tenantIdentifier( tenantIdHint );
+			}
+		}
+
 		final Session session = builder.openSession();
 		if ( map != null ) {
 			for ( Map.Entry<K, V> o : map.entrySet() ) {
 				final K key = o.getKey();
 				if ( key instanceof String ) {
 					final String sKey = (String) key;
+					if ( HINT_TENANT_ID.equals( sKey ) ) {
+						continue;
+					}
 					session.setProperty( sKey, o.getValue() );
 				}
 			}

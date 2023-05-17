@@ -592,13 +592,14 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return true;
+		// It does support skipping locked rows only for READ locking
+		return false;
 	}
 
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
 		final String lockHint = super.appendLockHint( mode, tableName );
-		return mode.getLockMode() == LockMode.UPGRADE_SKIPLOCKED || mode.getTimeOut() == LockOptions.SKIP_LOCKED
+		return !mode.getLockMode().greaterThan( LockMode.READ ) && mode.getTimeOut() == LockOptions.SKIP_LOCKED
 				? lockHint + " readpast"
 				: lockHint;
 	}

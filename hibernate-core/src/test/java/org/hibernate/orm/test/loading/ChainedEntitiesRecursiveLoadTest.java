@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.loading;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -52,10 +53,31 @@ public class ChainedEntitiesRecursiveLoadTest {
 	@Proxy(lazy = false)
 	public static class Container {
 
-		@Id @GeneratedValue Long id;
+		Long id;
+
+		Container parent;
+
+		public Container() {
+		}
+
+		@Id
+		@GeneratedValue 
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
 
 		@Fetch(FetchMode.SELECT)
-		@ManyToOne
-		Container parent;
+		@ManyToOne(fetch = FetchType.LAZY)
+		public Container getParent() {
+			return parent;
+		}
+
+		public void setParent(Container parent) {
+			this.parent = parent;
+		}
 	}
 }

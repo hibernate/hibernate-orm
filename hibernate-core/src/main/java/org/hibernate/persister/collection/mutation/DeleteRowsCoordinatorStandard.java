@@ -68,8 +68,8 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 
 		final MutationExecutorService mutationExecutorService = session
 				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
+				.getFastSessionServices()
+				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> batchKey,
 				operationGroup,

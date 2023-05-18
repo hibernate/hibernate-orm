@@ -976,15 +976,15 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
 		return session.getSessionFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class )
+				.getFastSessionServices()
+				.getMutationExecutorService()
 				.createExecutor( resolveBatchKeyAccess( dynamicUpdate, session ), group, session );
 	}
 
 	private MutationExecutor updateVersionExecutor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
 		return session.getSessionFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class )
+				.getFastSessionServices()
+				.getMutationExecutorService()
 				.createExecutor( resolveUpdateVersionBatchKeyAccess( dynamicUpdate, session ), group, session );
 	}
 

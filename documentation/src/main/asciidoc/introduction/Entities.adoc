@@ -302,36 +302,28 @@ This fits somewhat uncomfortably with the common practice of annotating the `@Id
 ====
 
 As you can see, JPA provides quite adequate support for the most common strategies for system-generated ids.
-However, the annotations themselves are a little more intrusive than they should be, and there's no well-defined way to extend this framework to support custom strategies for id generation.
+However, the annotations themselves are a bit more intrusive than they should be, and there's no well-defined way to extend this framework to support custom strategies for id generation.
 Nor may `@GeneratedValue` be used on a property not annotated `@Id`.
-Since custom id generation is a rather common requirement, Hibernate provides a very carefully-designed framework for user-defined ``Generator``s.
-
-[[user-defined-generators]]
-=== User-defined generators
-
-JPA doesn't define a standard way to extend the set of id generation strategies, but Hibernate does:
-
-- the `Generator` hierarchy of interfaces in the package `org.hibernate.generator` lets you define new generators, and
-- the `@IdGeneratorType` meta-annotation from the package `org.hibernate.annotations` lets you write an annotation which associates a `Generator` type with identifier attributes.
-
-Furthermore, the `@ValueGenerationType` meta-annotation lets you write an annotation which associates a `Generator` type with a non-`@Id` attribute.
-
-[NOTE]
-// .The older APIs are still available in Hibernate 6
-====
-These APIs are new in Hibernate 6, and supersede the classic `IdentifierGenerator` interface and `@GenericGenerator` annotation from older versions of Hibernate.
-However, the older APIs are still available and custom ``IdentifierGenerator``s written for older versions of Hibernate continue to work in Hibernate 6.
-====
-
-You can find out more from the Javadoc for `@IdGeneratorType` and for `org.hibernate.generator`.
+Since custom id generation is a rather common requirement, Hibernate provides a very carefully-designed framework for user-defined ``Generator``s, which we'll discuss in <<user-defined-generators>>.
 
 [[natural-identifiers]]
-=== Natural identifiers
+=== Natural keys as identifiers
 
-Not every id maps to a (system-generated) surrogate key.
+Not every identifier attribute maps to a (system-generated) surrogate key.
 Primary keys which are meaningful to the user of the system are called _natural keys_.
 
 When the primary key of a table is a natural key, we don't annotate the identifier attribute `@GeneratedValue`, and it's the responsibility of the application code to assign a value to the identifier attribute.
+
+[source,java]
+----
+@Entity
+class Book {
+    @Id
+    String isbn;
+
+    ...
+}
+----
 
 Of particular interest are natural keys which comprise more than one database column, and such natural keys are called _composite keys_.
 
@@ -477,8 +469,10 @@ And the `@OptimisticLock` annotation lets us selectively exclude certain fields 
 [[natural-id-attributes]]
 === Natural id attributes
 
-Even when an entity has a surrogate key, it should still be possible to write down a combination of fields which uniquely identifies an instance of the entity, from the point of view of the user of the system.
-We call this combination of fields a _natural key_.
+Even when an entity has a surrogate key, it should always be possible to write down a combination of fields which uniquely identifies an instance of the entity, from the point of view of the user of the system.
+This combination of fields is its natural key.
+Above, we <<natural-identifiers,considered>> the case where the natural key coincides with the primary key.
+Here, the natural key is a second unique key of the entity, distinct from its surrogate primary key.
 
 [IMPORTANT]
 // .What if my entity has no natural key?

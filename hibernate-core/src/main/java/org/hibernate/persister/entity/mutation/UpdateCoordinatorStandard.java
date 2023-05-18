@@ -25,7 +25,6 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -1110,7 +1109,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private void applyPartictionKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder) {
 		final AbstractEntityPersister persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
-			for ( AttributeMapping attributeMapping : persister.getAttributeMappings() ) {
+			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
+			for ( int m = 0; m < attributeMappings.size(); m++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( m );
 				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
 				for ( int i = 0; i < jdbcTypeCount; i++ ) {
 					final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );
@@ -1624,7 +1625,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private void addPartitionRestriction(TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder) {
 		final AbstractEntityPersister persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
-			for ( AttributeMapping attributeMapping : persister.getAttributeMappings() ) {
+			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
+			for ( int m = 0; m < attributeMappings.size(); m++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( m );
 				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
 				for ( int i = 0; i < jdbcTypeCount; i++ ) {
 					final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );

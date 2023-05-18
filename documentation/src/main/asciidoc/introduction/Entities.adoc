@@ -448,7 +448,7 @@ Book book = session.find(Book.class, new BookId(isbn, printing));
 === Version attributes
 
 An entity may have an attribute which is used by Hibernate for optimistic lock checking.
-A version attribute is usually of type `Integer` or `LocalDateTime`, though several other types are also allowed.
+A version attribute is usually of type `Integer`, `Short`, `Long`, `LocalDateTime`, `OffsetDateTime`, `ZonedDateTime`, or `Instant`.
 
 [source,java]
 ----
@@ -456,7 +456,7 @@ A version attribute is usually of type `Integer` or `LocalDateTime`, though seve
 LocalDateTime lastUpdated;
 ----
 
-The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.
+Version attributes are automatically assigned by Hibernate when an entity is made persistent, and automatically incremented or updated each time the entity is updated.
 
 [TIP]
 // .Optimistic locking in Hibernate
@@ -465,6 +465,8 @@ If an entity doesn't have a version number, which often happens when mapping leg
 The `@OptimisticLocking` annotation lets us specify that optimistic locks should be checked by validating the values of `ALL` fields, or only the `DIRTY` fields of the entity.
 And the `@OptimisticLock` annotation lets us selectively exclude certain fields from optimistic locking.
 ====
+
+The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.
 
 [[natural-id-attributes]]
 === Natural id attributes

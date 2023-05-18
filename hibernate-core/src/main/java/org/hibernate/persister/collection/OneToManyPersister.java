@@ -226,8 +226,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		assert NullnessHelper.areAllNonNull( updateRowOperation, updateRowValues, updateRowRestrictions );
 
 		final MutationExecutorService mutationExecutorService = getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
+				.getFastSessionServices()
+				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
 				new MutationOperationGroupSingle( MutationType.UPDATE, this, updateRowOperation ),

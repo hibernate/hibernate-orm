@@ -50,8 +50,8 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 
 		final MutationExecutorService mutationExecutorService = session
 				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
+				.getFastSessionServices()
+				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE" ),
 				operationGroup,

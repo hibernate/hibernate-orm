@@ -3,6 +3,49 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.3.Final (May 18, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32152
+
+** Bug
+    * [HHH-16576] - Problem in query involving union on MySQL 5.7, MariaDB and Oracle
+    * [HHH-16573] - Embeddable element collection with updateable = false leads to NullPointerException
+    * [HHH-16555] - Join fetch query in combination with the inheritance pattern not working in hibernate 6
+    * [HHH-16551] - Schema management: discriminator column of type CHAR should always be of length 1
+    * [HHH-16549] - NullPointerException when calling LoadQueryInfluencers#isFetchProfileEnabled
+    * [HHH-16545] - PersistenceUtilHelper.MetadataCache is not Thread-Safe
+    * [HHH-16542] - Bad get/is handling with bytecode enhancement
+    * [HHH-16541] - follow-on locking not always handled correctly
+    * [HHH-16533] - Sybase cast, literal and truncation doesn't work with jConnect driver
+    * [HHH-16517] - H6: Problems with flush when batch is ON (without @DynamicUpdate)
+    * [HHH-16505] - Interpretation of "bare" left-join alias reference in HQL
+    * [HHH-16496] - CLONE - Join fetching nested @OneToMany collections causes result multiplication
+    * [HHH-16491] - SQM could not correct resolve Generics Embeddable ids
+    * [HHH-16483] - Recursive CTE using Criteria API will throw `Already registered a copy: org.hibernate.query.sqm.tree.cte.SqmCteStatement` error
+    * [HHH-16472] - Treated left join with restriction on entity results in incorrect query
+    * [HHH-16469] - Hibernate repeatedly issues identical SELECT queries to load an optional one-to-one association 
+    * [HHH-16453] - Loading an Entity with two eager collections, produces duplicates when one of the collection is a a bag
+    * [HHH-16447] - Lazy load of collection fails after EntityManager.refresh
+    * [HHH-16425] - Function type resolver doesn't work with anonymous tuple path sources
+    * [HHH-16423] - LazyInitializationException when calling em.refresh() on entity with lazy and eager children
+    * [HHH-16298] - Failure merging a referenced entity 
+    * [HHH-15726] - Disjunction with treat results in too restrictive query
+    * [HHH-12981] - Join alias is miscalculated when two descendant entities have same attribute name
+
+** Improvement
+    * [HHH-16580] - Some typos in org.hibernate.query.sqm
+    * [HHH-16546] - Reduce verbosity of logs in a few edge cases
+    * [HHH-16538] - Remove BeanValidationIntegrator#BV_CHECK_CLASS
+    * [HHH-15871] - Update EDB testing to version 15
+    * [HHH-15160] - Extend Postgis support to distance operators
+
+** Task
+    * [HHH-16631] - Avoid unnecessary INFO logging at bootstrap
+    * [HHH-16630] - Refactor code to avoid frequent lookup of Service MutationExecutorService
+    * [HHH-16625] - Expose enough state from MetadataImpl to allow cloning it
+
+
 Changes in 6.2.2.Final (April 28, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

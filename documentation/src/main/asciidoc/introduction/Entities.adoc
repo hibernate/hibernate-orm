@@ -934,16 +934,17 @@ An association between entity classes may be either:
 - _unidirectional_, navigable from `E` to `F` but not from `F` to `E`, or
 - _bidirectional_, and navigable in either direction.
 
-In this diagram, we can see the sorts of associations which are possible.
+In this example data model, we can see the sorts of associations which are possible:
 
-image::images/associations.png[]
+image::images/associations.png[Example data model,align="center",pdfwidth=90%]
 
 [TIP]
 // .One-to-one associations and subtyping
 ====
-An astute observer of the diagram above might notice that the relationships we've represented as unidirectional one-to-one associations could reasonably be represented in Java using subtyping.
+An astute observer of the diagram above might notice that the relationship we've presented as a unidirectional one-to-one association could reasonably be represented in Java using subtyping.
 This is quite normal.
 A one-to-one association is the usual way we implement subtyping in a fully-normalized relational model.
+It's related to the `JOINED` <<mapping-inheritance,inheritance mapping>> strategy.
 ====
 
 There are three annotations for mapping associations: `@ManyToOne`, `@OneToMany`, and `@ManyToMany`.

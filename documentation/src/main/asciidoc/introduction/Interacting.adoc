@@ -48,7 +48,7 @@ Thus, an entity instance may be in one of three states with respect to a given p
 2. _persistent_ — currently associated with the persistence context, or
 3. _detached_ — previously persistent in another session, but not currently associated with _this_ persistence context.
 
-image:images/entity-lifecyle.png[width=800,align="center"]
+image::images/entity-lifecyle.png[Entity lifecycle,width=800,align="center"]
 
 At any given moment, an instance may be associated with at most one persistence context.
 

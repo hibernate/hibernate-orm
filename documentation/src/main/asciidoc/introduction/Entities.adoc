@@ -561,7 +561,7 @@ Hibernate slightly extends this list with the following types:
 | Classification | Package | Types
 
 | Additional date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, `Year`, and even `ZonedDateTime`
-| JDBC LOB types | `java.sql` | `Blob`, `Clob`
+| JDBC LOB types | `java.sql` | `Blob`, `Clob`, `NClob`
 | Java class object | `java.lang` | `Class`
 | Miscellaneous types | `java.util` | `Currency`, `URL`, `TimeZone`
 |====
@@ -681,7 +681,7 @@ Converters substantially widen the set of attribute types that can be handled by
 There are two ways to apply a converter:
 
 - the `@Convert` annotation applies an `AttributeConverter` to a particular entity attribute, or
-- the `@Converter` annotation registers an `AttributeConverter` for automatic application to all attributes of a given type.
+- the `@Converter` annotation (or, alternatively, the `@ConverterRegistration` annotation) registers an `AttributeConverter` for automatic application to all attributes of a given type.
 
 For example, the following converter will be automatically applied to any attribute of type `BitSet`, and takes care of persisting the `BitSet` to a column of type `varbinary`:
 
@@ -859,6 +859,11 @@ record Name(String firstName, String middleName, String lastName) {}
 ----
 
 In this case, the requirement for a constructor with no parameters is relaxed.
+
+[NOTE]
+====
+Unfortunately, as of May 2023, Java `record` types still cannot be used as ``@EmbeddedId``s.
+====
 
 We may now use our `Name` class (or record) as the type of an entity attribute:
 

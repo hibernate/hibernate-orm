@@ -702,10 +702,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		SessionBuilderImplementor builder = withOptions();
 		builder.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
 
-		//noinspection SuspiciousMethodCalls
-		final String tenantIdHint = (String) map.get( HINT_TENANT_ID );
-		if ( tenantIdHint != null ) {
-			builder = (SessionBuilderImplementor) builder.tenantIdentifier( tenantIdHint );
+		if ( map != null ) {
+			//noinspection SuspiciousMethodCalls
+			final String tenantIdHint = (String) map.get( HINT_TENANT_ID );
+			if ( tenantIdHint != null ) {
+				builder = (SessionBuilderImplementor) builder.tenantIdentifier( tenantIdHint );
+			}
 		}
 
 		final Session session = builder.openSession();
@@ -714,6 +716,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 				final K key = o.getKey();
 				if ( key instanceof String ) {
 					final String sKey = (String) key;
+					if ( HINT_TENANT_ID.equals( sKey ) ) {
+						continue;
+					}
 					session.setProperty( sKey, o.getValue() );
 				}
 			}

@@ -108,7 +108,7 @@ fundamental rule of thumb in ORM is:
 of a session/transaction, and fetch it immediately in one or two queries,
 - and only then start navigating associations between persistent entities.
 
-image:images/fetching.png[width=700,align="center"]
+image::images/fetching.png[Fetching process,width=700,align="center"]
 
 Without question, the most common cause of poorly-performing data access
 code in Java programs is the problem of _N+1 selects_. Here, a list of N

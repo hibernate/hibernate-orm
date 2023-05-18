@@ -54,6 +54,18 @@ At any given moment, an instance may be associated with at most one persistence 
 
 The lifetime of a persistence context usually corresponds to the lifetime of a transaction, though it's possible to have a persistence context that spans several database-level transactions that form a single logical unit of work.
 
+[WARNING]
+====
+A persistence context—that is, a `Session` or `EntityManager`—absolutely positively **must not be shared between multiple threads or between concurrent transactions.**
+
+If you accidentally leak a session across threads, you will suffer.
+====
+
+.Container-managed peristence contexts
+****
+In a container environment, the lifecycle of a persistence context scoped to the transaction will usually be managed for you.
+****
+
 There are several reasons we like persistence contexts.
 
 1. They help avoid _data aliasing_: if we modify an entity in one section of code, then other code executing within the same persistence context will see our modification.

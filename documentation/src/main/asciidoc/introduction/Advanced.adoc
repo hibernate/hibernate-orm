@@ -585,3 +585,80 @@ There are a number of annotations which are useful to express this sort of compl
 |===
 
 Of course, `@Any` mappings are disfavored, except in extremely special cases, since it's much more difficult to enforce referential integrity at the database level.
+
+[[bytecode-enhancer]]
+=== Using the bytecode enhancer
+
+:enhancer: {userGuideBase}#BytecodeEnhancement
+
+Hibernate's {enhancer}[bytecode enhancer] enables the following features:
+
+- _attribute-level lazy fetching_ for basic attributes annotated `@Basic(fetch=LAZY)` and for lazy non-polymorphic associations,
+- _interception-based_—instead of the usual _snapshot-based_—detection of modifications.
+
+To use the bytecode enhancer, we must add the Hibernate plugin to our gradle build:
+
+[source,groovy]
+----
+plugins {
+    id "org.hibernate.orm" version "6.2.2.Final"
+}
+
+hibernate { enhancement }
+----
+
+// [discrete]
+// ==== Attribute-level lazy fetching
+
+Consider this field:
+
+[source,java]
+----
+@Entity
+class Book {
+    ...
+
+    @Basic(optional = false, fetch = LAZY)
+    @Column(length = LONG32)
+    String fullText;
+    
+    ...
+}
+----
+
+The `fullText` field maps to a `clob` or `text` column, depending on the SQL dialect.
+Since it's expensive to retrieve the full book-length text, we've mapped the field `fetch=LAZY`, telling Hibernate not to read the field until it's actually used.
+
+- _Without_ the bytecode enhancer, this instruction is ignored, and the field is always fetched immediately, as part of the initial `select` that retrieves the `Book` entity.
+- _With_ bytecode enhancement, Hibernate is able to detect access to the field, and lazy fetching is possible.
+
+[TIP]
+====
+By default, Hibernate fetches all lazy fields of a given entity at once, in a single `select`, when any one of them is accessed.
+Using the `@LazyGroup` annotation, it's possible to assign fields to distinct "fetch groups", so that different lazy fields may be fetched independently.
+====
+
+Similarly, interception lets us implement lazy fetching for non-polymorphic associations without the need for a separate proxy object.
+However, if an association is polymorphic, that is, if the target entity type has subclasses, then a proxy is still required.
+
+// [discrete]
+// ==== Interception-based change detection
+
+Interception-based change detection is a nice performance optimization with a slight cost in terms of correctness.
+
+- _Without_ the bytecode enhancer, Hibernate keeps a snapshot of the state of each entity after reading from or writing to the database.
+When the session flushes, the snapshot state is compared to the current state of the entity to determine if the entity has been modified.
+Maintaining these snapshots does have an impact on performance.
+- _With_ bytecode enhancement, we may avoid this cost by intercepting writes to the field and recording these modifications as they happen.
+
+[CAUTION]
+====
+Interception-based change detection is less accurate than snapshot-based dirty checking.
+For example, consider this attribute:
+
+[source,java]
+byte[] image;
+
+Interception is able to detect writes to the `image` field, that is, replacement of the whole array.
+It's not able to detect modifications made directly to the _elements_ of the array, and so such modifications may be lost.
+====

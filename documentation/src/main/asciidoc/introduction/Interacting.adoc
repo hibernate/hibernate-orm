@@ -727,6 +727,7 @@ List<Book> books =
 === Named queries
 
 The `@NamedQuery` annotation lets us define a HQL query that is compiled and checked as part of the bootstrap process.
+This means we find out about errors in our queries earlier, instead of waiting until the query is actually executed.
 We can place the `@NamedQuery` annotation on any class, even on an entity class.
 
 [source,java]
@@ -742,6 +743,7 @@ We have to make sure that the class with the `@NamedQuery` annotation will be sc
 - by calling `configuration.addClass(BookQueries.class)`.
 
 The `@NamedNativeQuery` lets us do the same for native SQL queries.
+There is much less advantage to using `@NamedNativeQuery`, because there is very little that Hibernate can do to validate the correctness of a query written in the native SQL dialect of your database.
 
 .Executing named queries
 [cols="10,36,32,22"]

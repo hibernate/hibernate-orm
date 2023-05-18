@@ -2396,7 +2396,8 @@ public abstract class AbstractEntityPersister
 		Arrays.sort( attributeNames );
 
 		int index = 0;
-		for ( final AttributeMapping attributeMapping : attributeMappings ) {
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
 				fields.add( attributeMapping.getStateArrayPosition() );
 				index++;
@@ -2450,7 +2451,8 @@ public abstract class AbstractEntityPersister
 			// Sort attribute names so that we can traverse mappings efficiently
 			Arrays.sort( attributeNames );
 			int index = 0;
-			for ( final AttributeMapping attributeMapping : attributeMappings ) {
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				final String attributeName = attributeMapping.getAttributeName();
 				if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
 					final int position = attributeMapping.getStateArrayPosition();
@@ -3368,7 +3370,8 @@ public abstract class AbstractEntityPersister
 
 	protected UpdateCoordinator buildUpdateCoordinator() {
 		// we only have updates to issue for entities with one or more singular attributes
-		for ( AttributeMapping attributeMapping : attributeMappings ) {
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping instanceof SingularAttributeMapping ) {
 				return new UpdateCoordinatorStandard( this, factory );
 			}
@@ -4852,7 +4855,8 @@ public abstract class AbstractEntityPersister
 		// in the collected names.  iterate here because it is already alphabetical
 
 		final List<SingularAttributeMapping> collectedAttrMappings = new ArrayList<>();
-		for ( AttributeMapping attributeMapping : attributeMappings ) {
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( attributeNames.contains( attributeMapping.getAttributeName() ) ) {
 				collectedAttrMappings.add( (SingularAttributeMapping) attributeMapping );
 			}
@@ -5815,7 +5819,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer selectableConsumer) {
 		int span = 0;
-		for ( AttributeMapping attributeMapping : attributeMappings ) {
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			span += attributeMapping.forEachSelectable( span + offset, selectableConsumer );
 		}
 		return span;

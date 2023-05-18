@@ -186,7 +186,7 @@ public class XmlAccessTest {
 				.getMappingMetamodel()
 				.findEntityDescriptor( classUnderTest.getName() );
 		final AttributeMappingsList attributeMappings = entityDescriptor.getAttributeMappings();
-		final AttributeMapping attributeMapping = attributeMappings.iterator().next();
+		final AttributeMapping attributeMapping = attributeMappings.get( 0 );
 
 		final Getter accessGetter = attributeMapping.getPropertyAccess().getGetter();
 

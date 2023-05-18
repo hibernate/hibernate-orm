@@ -39,11 +39,6 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 	}
 
 	@Override
-	public Iterator<AttributeMapping> iterator() {
-		return new AttributeMappingIterator();
-	}
-
-	@Override
 	public void forEach(Consumer<? super AttributeMapping> attributeMappingConsumer) {
 		for ( AttributeMapping o : list ) {
 			attributeMappingConsumer.accept( o );
@@ -57,16 +52,15 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 		}
 	}
 
-	private final class AttributeMappingIterator implements Iterator<AttributeMapping> {
+	//Intentionally not implementing Iterator
+	public final class AttributeMappingIterator {
 
 		private int idx = 0;
 
-		@Override
 		public boolean hasNext() {
 			return idx < ImmutableAttributeMappingList.this.list.length;
 		}
 
-		@Override
 		public AttributeMapping next() {
 			return ImmutableAttributeMappingList.this.list[idx++];
 		}

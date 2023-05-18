@@ -8,6 +8,7 @@ package org.hibernate.engine.profile;
 
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -55,7 +56,9 @@ public class DefaultFetchProfile extends FetchProfile {
 	@Override
 	public boolean hasSubselectLoadableCollectionsEnabled(EntityPersister persister) {
 		final EntityMappingType entity = metamodels.getEntityMappingType( persister.getEntityName() );
-		for ( AttributeMapping attributeMapping : entity.getAttributeMappings() ) {
+		final AttributeMappingsList attributeMappings = entity.getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping.getMappedFetchOptions().getStyle() == SUBSELECT ) {
 				return true;
 			}

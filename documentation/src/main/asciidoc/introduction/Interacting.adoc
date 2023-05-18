@@ -788,3 +788,53 @@ You can call stored procedures using `createStoredProcedureQuery()` or `createSt
 ====
 
 If the work returns a value, use `doReturningWork()` instead of `doWork()`.
+
+[[advice]]
+=== What to do when things go wrong
+
+Object/relational mapping has been called the "Vietnam of computer science".
+The person who made this analogy is American, and so one supposes that he meant to imply some kind of unwinnable war.
+This is quite ironic, since at the very moment he made this comment, Hibernate was already on the brink of winning the war.
+
+Today, Vietnam is a peaceful country with exploding per-capita GDP, and ORM is a solved problem.
+That said, Hibernate is complex, and ORM still presents many pitfalls for the inexperienced, even occasionally for the experienced.
+Sometimes things go wrong.
+
+In this section we'll quickly sketch some general strategies for avoiding "quagmires".
+
+- Understand SQL and the relational model.
+  Know the capabilities of your RDBMS.
+  Work closely with the DBA if you're lucky enough to have one.
+  Hibernate is not about "transparent persistence" for Java objects.
+  It's about making two excellent technologies work smoothly together.
+- <<logging-generated-sql,Log the SQL>> executed by Hibernate.
+//   Look, this seems obvious, until you've met users who didn't realize it was possible or useful.
+  You cannot know that your persistence logic is correct until you've actually inspected the SQL that's being executed.
+  Even when everything seems to be "working", there might be a lurking <<association-fetching,N+1 selects monster>>.
+- Be careful when <<many-to-one,modifying bidirectional associations>>.
+  In principle, you should update _both ends_ of the association.
+  But Hibernate doesn't strictly enforce that, since there are some situations where such a rule would be too heavy-handed.
+  Whatever the case, it's up to you to maintain consistency across your model.
+- Never <<persistence-contexts,leak persistence context>> across threads or concurrent transactions.
+  Have a strategy or framework to guarantee this never happens.
+- When running queries that return large result sets, take care to consider the size of the <<session-cache-management,session cache>>.
+  Consider using a <<stateless-sessions,stateless session>>.
+- Think carefully about the semantics of the <<second-level-cache,second-level cache>>, and how the caching policies impact transaction isolation.
+- Avoid fancy bells and whistles you don't need.
+  Hibernate is incredibly feature-rich, and that's a good thing, because it serves the needs of a huge number of users, many of whom have one or two very specialized needs.
+  But nobody has _all_ those specialized needs.
+  In all probability, you have none of them.
+  Write your domain model in the simplest way that's reasonable, using the simplest mapping strategies that make sense.
+- When something isn't behaving as you expect, _simplify_.
+  Isolate the problem.
+  Find the absolute minimum test case which reproduces the behavior, _before_ asking for help online.
+  Most of the time, the mere act of isolating the problem will suggest an obvious solution.
+- Avoid frameworks and libraries that "wrap" JPA.
+  If there's any one criticism of Hibernate and ORM that sometimes _does_ ring true, it's that it takes you too far from direct control over JDBC.
+  An additional layer just takes you even further.
+- Avoid copy/pasting code from random bloggers or stackoverflow reply guys.
+  Many of the suggestions you'll find online just aren't the simplest solution, and many aren't correct for Hibernate 6.
+  Instead, _understand_ what you're doing; study the Javadoc of the APIs you're using; read the JPA specification; follow the advice we give in this document; go direct to the Hibernate team on Zulip.
+  (Sure, we can be a bit cantankerous at times, but we _do_ always want you to be successful.)
+- Always consider other options.
+  You don't have to use Hibernate for _everything_.

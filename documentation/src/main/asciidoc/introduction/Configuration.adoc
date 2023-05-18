@@ -338,7 +338,7 @@ Alternatively, the `SchemaManager` API allow you to control schema export progra
 sessionFactory.getSchemaManager().exportMappedObjects(true);
 ====
 
-
+[[logging-generated-sql]]
 === Logging the generated SQL
 
 :log4j: https://github.com/hibernate/hibernate-reactive/blob/main/examples/session-example/src/main/resources/log4j2.properties

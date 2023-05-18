@@ -354,6 +354,14 @@ public class LoaderSelectBuilder {
 		this.entityGraphTraversalState = entityGraphTraversalState;
 		this.forceIdentifierSelection = forceIdentifierSelection;
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
+		if ( loadable instanceof PluralAttributeMapping ) {
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+			if ( pluralAttributeMapping.getMappedType()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.BAG ) {
+				rowCardinality = RowCardinality.BAG;
+			}
+		}
 	}
 
 	private LoaderSelectBuilder(
@@ -440,15 +448,6 @@ public class LoaderSelectBuilder {
 	}
 
 	private SelectStatement generateSelect() {
-		if ( loadable instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
-			if ( pluralAttributeMapping.getMappedType()
-					.getCollectionSemantics()
-					.getCollectionClassification() == CollectionClassification.BAG ) {
-				rowCardinality = RowCardinality.BAG;
-			}
-		}
-
 		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final QuerySpec rootQuerySpec = new QuerySpec( true );

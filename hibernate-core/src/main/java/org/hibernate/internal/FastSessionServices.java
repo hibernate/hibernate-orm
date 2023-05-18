@@ -21,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -180,6 +181,7 @@ public final class FastSessionServices {
 	private final ConnectionObserverStatsBridge defaultJdbcObservers;
 	private final FormatMapper jsonFormatMapper;
 	private final FormatMapper xmlFormatMapper;
+	private final MutationExecutorService mutationExecutorService;
 
 	FastSessionServices(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
@@ -235,6 +237,7 @@ public final class FastSessionServices {
 		this.defaultJdbcBatchSize = sessionFactoryOptions.getJdbcBatchSize();
 		this.requiresMultiTenantConnectionProvider = sessionFactory.getSessionFactoryOptions().isMultiTenancyEnabled();
 		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 
 		//Some "hot" services:
 		this.connectionProvider = requiresMultiTenantConnectionProvider
@@ -399,4 +402,9 @@ public final class FastSessionServices {
 		}
 		return xmlFormatMapper;
 	}
+
+	public MutationExecutorService getMutationExecutorService() {
+		return mutationExecutorService;
+	}
+
 }

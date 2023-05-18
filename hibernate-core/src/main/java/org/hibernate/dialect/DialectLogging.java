@@ -14,7 +14,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
-import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.DEBUG;
 
 /**
  * Logging related to Hibernate dialects
@@ -33,7 +33,7 @@ public interface DialectLogging {
 	boolean DEBUG_ENABLED = DIALECT_LOGGER.isDebugEnabled();
 	boolean TRACE_ENABLED = DIALECT_LOGGER.isTraceEnabled();
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Using dialect: %s", id = 35001)
 	void usingDialect(Dialect dialect);
 }

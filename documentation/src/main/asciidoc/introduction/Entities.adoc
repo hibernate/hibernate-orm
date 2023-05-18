@@ -726,6 +726,7 @@ BitSet bitset;
 
 All this is nice, but it probably won't surprise you that Hibernate goes beyond what is required by JPA.
 
+[[compositional-basic-types]]
 === Compositional basic types
 
 Hibernate considers a "basic type" to be formed by the marriage of two objects:
@@ -733,8 +734,13 @@ Hibernate considers a "basic type" to be formed by the marriage of two objects:
 - a `JavaType`, which models the semantics of a certain Java class, and
 - a `JdbcType`, representing a SQL type which is understood by JDBC.
 
+When mapping a basic attribute, we may explicitly specify a `JavaType`, a `JdbcType`, or both.
+
+[discrete]
+==== JavaType
+
 An instance of `org.hibernate.type.descriptor.java.JavaType` represents a particular Java class.
-It is able to:
+It's able to:
 
 - compare instances of the class to determine if an attribute of that class type is dirty (modified),
 - produce a useful hash code for an instance of the class,
@@ -760,6 +766,9 @@ BitSet bitSet;
 ----
 
 Alternatively, the `@JavaTypeRegistration` annotation may be used to register `BitSetJavaType` as the default `JavaType` for `BitSet`.
+
+[discrete]
+==== JdbcType
 
 A `org.hibernate.type.descriptor.jdbc.JdbcType` is able to read and write a single Java type from and to JDBC.
 
@@ -797,6 +806,9 @@ For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on
 Since Hibernate understand more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
 For example, `SqlTypes.GEOMETRY` represents the spatial data type `GEOMETRY`.
 ****
+
+[discrete]
+==== AttributeConverter
 
 If a given `JavaType` doesn't know how to convert its instances to the type required by its partner `JdbcType`, we must help it out by providing a JPA `AttributeConverter` to perform the conversion.
 

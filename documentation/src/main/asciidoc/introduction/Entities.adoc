@@ -1406,16 +1406,16 @@ Let's pause to remember the annotations we've met so far.
 .Declaring basic attributes
 [cols="22,~,^10,^13"]
 |===
-| Annotation | Purpose | Required | JPA-standard
+| Annotation | Purpose | | JPA-standard
 
-| `@Id` | Declare a basic-typed identifier attribute | Yes | &#10003;
-| `@Version` | Declare a version attribute | Yes | &#10003;
-| `@Basic` | Declare a basic attribute | No | &#10003;
-| `@EmbeddedId` | Declare an embeddable-typed identifier attribute | Yes | &#10003;
-| `@Embedded` | Declare an embeddable-typed attribute | No | &#10003;
-| `@Enumerated` | Declare an `enum`-typed attribute and specify how it is encoded | No | &#10003;
-| `@Array` | Declare that an attribute maps to a SQL `ARRAY`, and specify the length | No | &#10007;
-| `@ElementCollection` | Declare that a collection is mapped to a dedicated table | Yes | &#10003;
+| `@Id` | Declare a basic-typed identifier attribute | | &#10003;
+| `@Version` | Declare a version attribute | | &#10003;
+| `@Basic` | Declare a basic attribute | Default | &#10003;
+| `@EmbeddedId` | Declare an embeddable-typed identifier attribute | | &#10003;
+| `@Embedded` | Declare an embeddable-typed attribute | Inferred | &#10003;
+| `@Enumerated` | Declare an `enum`-typed attribute and specify how it is encoded | Inferred | &#10003;
+| `@Array` | Declare that an attribute maps to a SQL `ARRAY`, and specify the length | Inferred | &#10007;
+| `@ElementCollection` | Declare that a collection is mapped to a dedicated table | | &#10003;
 |===
 
 .Converters and compositional basic types

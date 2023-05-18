@@ -430,7 +430,7 @@ Or, if we're sticking to the JPA-standard APIs:
 [source,java]
 ----
 List<Book> matchingBooks =
-        session.createQuery("from Book where title like :titleSearchPattern", Book.class)
+        entityManager.createQuery("select b from Book b where b.title like :titleSearchPattern", Book.class)
             .setParameter("titleSearchPattern", titleSearchPattern)
             .getResultList();
 ----

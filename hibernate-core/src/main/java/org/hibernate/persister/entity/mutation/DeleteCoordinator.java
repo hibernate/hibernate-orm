@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -357,7 +358,9 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 			applyOptimisticLocking( deleteGroupBuilder, loadedState, session );
 			final AbstractEntityPersister persister = entityPersister();
 			if ( persister.hasPartitionedSelectionMapping() ) {
-				for ( AttributeMapping attributeMapping : persister.getAttributeMappings() ) {
+				final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
+				for ( int m = 0; m < attributeMappings.size(); m++ ) {
+					final AttributeMapping attributeMapping = attributeMappings.get( m );
 					final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
 					for ( int i = 0; i < jdbcTypeCount; i++ ) {
 						final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );

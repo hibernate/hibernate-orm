@@ -259,7 +259,9 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 	}
 
 	default int compare(Object value1, Object value2) {
-		for ( AttributeMapping attributeMapping : getAttributeMappings() ) {
+		final AttributeMappingsList attributeMappings = getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			AttributeMapping attributeMapping = attributeMappings.get( i );
 			final Getter getter = attributeMapping.getPropertyAccess().getGetter();
 			final int comparison = attributeMapping.compare( getter.get( value1 ), getter.get( value2 ) );
 			if ( comparison != 0 ) {

@@ -67,7 +67,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 )
 @SessionFactory( exportSchema = false )
 @JiraKey( value = "HHH-16578" )
-@RequiresDialect( value = MySQLDialect.class )
+@RequiresDialect( value = MySQLDialect.class, matchSubTypes = false )
 public class MySQLColumnValidationTest {
 
 	private DriverManagerConnectionProviderImpl connectionProvider;

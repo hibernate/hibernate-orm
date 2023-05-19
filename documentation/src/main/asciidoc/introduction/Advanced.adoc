@@ -126,12 +126,20 @@ var session =
             .openSession();
 ----
 
-However, since we often don't have this level of control of creation of the session, it's more common to supply an implementation of `CurrentTenantIdentifierResolver` to Hibernate.
+Or, when using JPA-standard APIs:
+
+[source,java]
+----
+var entityManager =
+        entityManagerFactory.createEntityManager(Map.of(HibernateHints.HINT_TENANT_ID, tenantId));
+----
+
+However, since we often don't have this level of control over creation of the session, it's more common to supply an implementation of `CurrentTenantIdentifierResolver` to Hibernate.
 
 There are three common ways to implement multi-tenancy:
 
 1. each tenant has its own database,
-2. each tenant has its own schema,
+2. each tenant has its own schema, or
 3. tenants share tables in a single schema, and rows are tagged with the tenant id.
 
 From the point of view of Hibernate, there's little difference between the first two options.
@@ -156,6 +164,7 @@ In this case we don't need a `MultiTenantConnectionProvider`, but we will need a
 class Account {
     @Id String id;
     @TenantId String tenantId;
+    
     ...
 }
 ----
@@ -177,6 +186,10 @@ Native SQL queries are _not_ automatically filtered by tenant id; you'll have to
 | `hibernate.multi_tenant_connection_provider`  | Specifies the `MultiTenantConnectionProvider`
 |===
 
+[TIP]
+====
+If you only need to filter rows by a static condition with no parameters, `@SQLRestriction` is a much simpler way to do that.
+====
 
 [[custom-sql]]
 === Using custom-written SQL

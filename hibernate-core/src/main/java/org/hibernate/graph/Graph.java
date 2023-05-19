@@ -8,6 +8,7 @@ package org.hibernate.graph;
 
 import java.util.List;
 
+import jakarta.persistence.metamodel.PluralAttribute;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
@@ -23,6 +24,21 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface Graph<J> extends GraphNode<J> {
+
+	/**
+	 * Add a subgraph rooted at a plural attribute, allowing
+	 * further nodes to be added to the subgraph.
+	 *
+	 * @apiNote This method is missing in JPA, and nodes cannot be
+	 *          added in a typesafe way to subgraphs representing
+	 *          fetched collections
+	 *
+	 * @since 6.3
+	 */
+	default <AJ> SubGraph<AJ> addPluralSubgraph(PluralAttribute<? extends J, ?, AJ> attribute) {
+		return addSubGraph( attribute.getName() );
+	}
+
 	/**
 	 * Graphs apply only to {@link jakarta.persistence.metamodel.ManagedType}s.
 	 *
@@ -110,7 +126,6 @@ public interface Graph<J> extends GraphNode<J> {
 	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? extends J, AJ> attribute) throws CannotContainSubGraphException;
 
 	<AJ> SubGraph<? extends AJ> addSubGraph(PersistentAttribute<? extends J, AJ> attribute, Class<? extends AJ> type) throws CannotContainSubGraphException;
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// key sub graph nodes

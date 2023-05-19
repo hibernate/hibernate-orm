@@ -35,9 +35,17 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 */
 	NaturalIdMultiLoadAccess<T> with(CacheMode cacheMode);
 
+	default NaturalIdMultiLoadAccess<T> fetching(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.FETCH );
+	}
+	default NaturalIdMultiLoadAccess<T> loading(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.LOAD );
+	}
+
 	/**
-	 * Define a load graph to be used when retrieving the entity
+	 * @deprecated use {@link #loading}
 	 */
+	@Deprecated(since = "6.3")
 	default NaturalIdMultiLoadAccess<T> with(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}

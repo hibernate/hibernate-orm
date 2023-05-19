@@ -43,8 +43,19 @@ public interface IdentifierLoadAccess<T> {
 	 */
 	IdentifierLoadAccess<T> withReadOnly(boolean readOnly);
 
-	default IdentifierLoadAccess<T> with(RootGraph<T> graph) {
+	default IdentifierLoadAccess<T> fetching(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.FETCH );
+	}
+	default IdentifierLoadAccess<T> loading(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
+	}
+
+	/**
+	 * @deprecated use {@link #loading}
+	 */
+	@Deprecated(since = "6.3")
+	default IdentifierLoadAccess<T> with(RootGraph<T> graph) {
+		return loading( graph );
 	}
 
 	IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);

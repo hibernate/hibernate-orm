@@ -221,6 +221,19 @@ However, the `@Column` annotation does lend some flexibility here:
 - if a column should not be written as part of the custom `insert` statement, and has no corresponding JDBC parameter in the custom SQL, map it `@Column(insertable=false)`, or
 - if a column should not be written as part of the custom `update` statement, and has no corresponding JDBC parameter in the custom SQL, map it `@Column(updatable=false)`.
 
+[TIP]
+====
+If you need custom SQL, but are targeting multiple dialects of SQL, you can use the annotations defined in `DialectOverrides`.
+For example, this annotation lets us override the custom `insert` statement just for PostgreSQL:
+
+[source,java]
+----
+@DialectOverride.SQLInsert(dialect = PostgreSQLDialect.class,
+    override = @SQLInsert(sql="insert into person (name,id) values (?,gen_random_uuid())"))
+----
+It's even possible to override the custom SQL for specific _versions_ of a database.
+====
+
 Sometimes a custom `insert` or `update` statement assigns a value to a mapped column which is calculated when the statement is executed on the database.
 For example, the value might be obtained by calling a SQL function:
 

@@ -187,7 +187,7 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce value `%s` [%s] as Integer",
+						"Cannot coerce value '%s' [%s] to Integer",
 						value,
 						value.getClass().getName()
 				)

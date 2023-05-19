@@ -98,6 +98,14 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Cache provider: %s", id = 24)
 	void cacheProvider(String name);
 
+	@LogMessage(level = INFO)
+	@Message(value = "Second-level cache region factory [%s]", id = 25)
+	void regionFactory(String name);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Second-level cache disabled", id = 26)
+	void noRegionFactory();
+
 	@LogMessage(level = WARN)
 	@Message(value = "Calling joinTransaction() on a non JTA EntityManager", id = 27)
 	void callingJoinTransactionOnNonJtaEntityManager();

@@ -8,11 +8,13 @@ package org.hibernate.query.hhh12076;
 
 import java.util.List;
 
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -80,6 +82,8 @@ public class HbmMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = NuoDBDialect.class, comment = "NuoDB expects SELECT in generated OUTER JOIN clause")
+	// NuoDB 18-May-23
 	public void testClassExpressionInOnClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			List<SettlementTask> results = session.createQuery(

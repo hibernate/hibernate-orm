@@ -8,6 +8,8 @@ package org.hibernate.test.optlock;
 
 
 import javax.persistence.PersistenceException;
+
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
@@ -36,28 +38,37 @@ public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "optlock/Document.hbm.xml" };
 	}
-	
-	@Test
+
+    // Running order:
+    //	org.hibernate.test.optlock.OptimisticLockTest > testOptimisticLockAll
+	//	org.hibernate.test.optlock.OptimisticLockTest > testOptimisticLockAllDelete
+	//	org.hibernate.test.optlock.OptimisticLockTest > testOptimisticLockDirty
+	//	org.hibernate.test.optlock.OptimisticLockTest > testOptimisticLockDirtyDelete
+
+	@Test(timeout = 10000)  // 10s
 	public void testOptimisticLockDirty() {
 		testUpdateOptimisticLockFailure( "LockDirty" );
 	}
 
-	@Test
+	@Test(timeout = 10000)
 	public void testOptimisticLockAll() {
 		testUpdateOptimisticLockFailure( "LockAll" );
 	}
 
-	@Test
+	@Test(timeout = 10000)
 	public void testOptimisticLockDirtyDelete() {
 		testDeleteOptimisticLockFailure( "LockDirty" );
 	}
 
-	@Test
+	@Test(timeout = 10000)
 	public void testOptimisticLockAllDelete() {
 		testDeleteOptimisticLockFailure( "LockAll" );
 	}
 
 	private void testUpdateOptimisticLockFailure(String entityName) {
+		//if (entityName.equals("LockDirty"))
+		//	fail( "Test was testOptimistic" + entityName);
+
 		Session mainSession = openSession();
 		mainSession.beginTransaction();
 		Document doc = new Document();
@@ -71,10 +82,24 @@ public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 		mainSession.close();
 
 		mainSession = openSession();
+
+		// NuoDB 18-May-23: Set 30s lock-wait timeout and read-committed isolation
+		if (getDialect() instanceof NuoDBDialect) {
+			mainSession.doWork(conn -> conn.createStatement().executeUpdate("SET LOCK_WAIT_TIMEOUT 30"));
+			mainSession.doWork( conn -> conn.createStatement().executeUpdate("SET ISOLATION LEVEL READ COMMITTED"));
+		}
+
 		mainSession.beginTransaction();
 		doc = ( Document ) mainSession.get( entityName, doc.getId() );
 
 		Session otherSession = sessionFactory().openSession();
+
+		// NuoDB 18-May-23: Set 30s lock-wait timeout and read-committed isolation
+		if (getDialect() instanceof NuoDBDialect) {
+			otherSession.doWork(conn -> conn.createStatement().executeUpdate("SET LOCK_WAIT_TIMEOUT 30"));
+			otherSession.doWork( conn -> conn.createStatement().executeUpdate("SET ISOLATION LEVEL READ COMMITTED"));
+		}
+
 		otherSession.beginTransaction();
 		Document otherDoc = ( Document ) otherSession.get( entityName, doc.getId() );
 		otherDoc.setSummary( "A modern classic" );
@@ -121,6 +146,11 @@ public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 		mainSession.close();
 
 		mainSession = openSession();
+
+		// NuoDB 18-May-23: Force a 30s lock wait so the test won't run forever
+		if (getDialect() instanceof NuoDBDialect)
+			mainSession.doWork( conn -> conn.createStatement().executeUpdate("SET LOCK_WAIT_TIMEOUT 30"));
+
 		mainSession.beginTransaction();
 		doc = ( Document ) mainSession.get( entityName, doc.getId() );
 

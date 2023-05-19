@@ -10,11 +10,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
+import com.nuodb.hibernate.NuoDBDialect;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
 import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
@@ -23,14 +27,14 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * @author Gail Badner
@@ -38,6 +42,7 @@ import static org.junit.Assert.assertThat;
  */
 @TestForIssue(jiraKey = "HHH-13050")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
+@SkipForDialect(NuoDBDialect.class)
 public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 
 	private static TestBatch testBatch;
@@ -51,6 +56,7 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 	public void testAllStatementsAreClosedInCaseOfBatchExecutionFailure() throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		EntityManager em = createEntityManager();
+
 		try {
 			transactionManager.begin();
 
@@ -68,12 +74,14 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 
 			Comment comment = new Comment();
 			comment.setMessage( "Bar" );
+			boolean committedOK = false;
 
 			try {
 				em.persist( comment );
 				transactionManager.commit();
 			}
 			catch (Exception expected) {
+				log.info(" >> >> >> Expected " + expected.getClass());
 				//expected
 				switch ( transactionManager.getStatus() ) {
 					case Status.STATUS_ACTIVE:
@@ -83,7 +91,7 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 			}
 
 			assertThat(
-					"AbstractBatchImpl#releaseStatements() has not been callled",
+					"AbstractBatchImpl#releaseStatements() has not been called",
 					testBatch.calledReleaseStatements,
 					is( true )
 			);

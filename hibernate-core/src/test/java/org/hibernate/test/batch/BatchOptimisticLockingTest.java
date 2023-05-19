@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.Version;
 
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDB192Dialect;
 
@@ -93,11 +94,20 @@ public class BatchOptimisticLockingTest extends
 		}
 		catch (Exception expected) {
 			assertEquals( OptimisticLockException.class, expected.getClass() );
+			//System.out.println("Expected: " + expected.getMessage());
+
 			if ( getDialect() instanceof CockroachDB192Dialect ) {
 				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
 				// serialization failure.
 				assertEquals(
 						"org.hibernate.exception.LockAcquisitionException: could not execute batch",
+						expected.getMessage()
+				);
+			}
+			else if (getDialect() instanceof NuoDBDialect) {
+				// NuoDB 18-May-23
+				assertEquals(
+						"org.hibernate.exception.LockAcquisitionException: could not execute statement",
 						expected.getMessage()
 				);
 			}

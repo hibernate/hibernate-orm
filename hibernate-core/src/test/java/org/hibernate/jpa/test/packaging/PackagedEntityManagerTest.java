@@ -7,6 +7,7 @@
 package org.hibernate.jpa.test.packaging;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
@@ -15,6 +16,8 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 
+import com.nuodb.hibernate.NuoDBDialect;
+import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -44,6 +47,7 @@ import org.hibernate.jpa.test.pack.various.Seat;
 import org.hibernate.stat.Statistics;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -56,7 +60,7 @@ import static org.junit.Assert.fail;
  * In this test we verify that  it is possible to bootstrap Hibernate/JPA from
  * various bundles (war, par, ...) using {@code Persistence.createEntityManagerFactory()}
  * <p/>
- * Each test will before its run build the required bundle and place them into the classpath.
+ * Each test will, before its run, build the required bundle and place them into the classpath.
  *
  * @author Gavin King
  * @author Hardy Ferentschik
@@ -64,7 +68,35 @@ import static org.junit.Assert.fail;
 @SuppressWarnings("unchecked")
 public class PackagedEntityManagerTest extends PackagingTestCase {
 	private EntityManagerFactory emf;
-	@After
+
+	@Before
+	public void setSchema() {
+		// NuoDB 18-May-2: Make sure schema DBO exists
+		if (getDialect() instanceof NuoDBDialect) {
+			createSchemaDBO(openSession());
+		}
+	}
+
+	private void createSchemaDBO(Session session) {
+		try {
+			session.doWork( conn -> conn.createStatement().executeUpdate("CREATE SCHEMA DBO"));
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	private void createSchemaDBO(EntityManager em) {
+		try {
+			em.unwrap(Session.class).doWork(conn -> conn.createStatement().executeUpdate("CREATE SCHEMA DBO"));
+		}
+		catch(Exception e) {
+			// H2 may raise an exception if it exists already?
+			log.info(e.getClass().getSimpleName() + " creating DBO schema: " + e.getLocalizedMessage());
+		}
+	}
+
+		@After
 	public void tearDown(){
 		if(emf != null && emf.isOpen()) {
 			emf.close();
@@ -250,6 +282,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		assertTrue( emf.getProperties().containsKey( "hibernate.test-assertable-setting" ) );
 
 		EntityManager em = emf.createEntityManager();
+		createSchemaDBO(em);  /// Make sure it exists
 		Item i = new Item();
 		i.setDescr( "Blah" );
 		i.setName( "factory" );

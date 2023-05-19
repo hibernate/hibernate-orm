@@ -8,14 +8,17 @@
 package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.lazy;
 
 import java.math.BigDecimal;
+import java.net.URL;
 import java.util.List;
 
 import junit.framework.Assert;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid.Item;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Before;
 import org.junit.Test;
 
 public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {
@@ -27,6 +30,7 @@ public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {
    public CompositeKeyDeleteTest() {
       System.setProperty( "hibernate.enable_specj_proprietary_syntax", "true" );
    }
+
    /**
     * This test checks to make sure the non null column is not updated with a
     * null value when a CustomerInventory is removed.

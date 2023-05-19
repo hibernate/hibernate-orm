@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
 import java.lang.reflect.Method;
+import java.time.Clock;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -17,6 +18,7 @@ import javax.persistence.MappedSuperclass;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
@@ -92,9 +94,15 @@ public class DirtyCheckingWithEmbeddableAndMappedSuperclassTest {
 		assertThat( entity.getFirstPlayerToken() )
 				.extracting( TRACKER_COMPOSITE_FIELD_NAME ).isInstanceOf( CompositeOwnerTracker.class);
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
-		assertThat( entity ).extracting( TRACKER_GET_NAME )
+		// NuoDB 18-May-23
+		SelfDirtinessTracker sdtEntity = (SelfDirtinessTracker)entity;
+		assert(sdtEntity.$$_hibernate_hasDirtyAttributes());
+		//assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
+		assertThat( sdtEntity.$$_hibernate_getDirtyAttributes())
 				.isEqualTo( new String[] { "name", "firstPlayerToken" } );
+		//assertThat( entity ).extracting( TRACKER_GET_NAME )
+		//		.isEqualTo( new String[] { "name", "firstPlayerToken" } );
+
 		assertThat( entity.getFirstPlayerToken() )
 				.extracting( TRACKER_COMPOSITE_FIELD_NAME + ".names" ).isEqualTo( new String[] { "firstPlayerToken" } );
 	}
@@ -106,28 +114,42 @@ public class DirtyCheckingWithEmbeddableAndMappedSuperclassTest {
 		Method trackerClearMethod = CardGame.class.getMethod( TRACKER_CLEAR_NAME );
 		trackerClearMethod.invoke( entity );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( false );
-		assertThat( entity ).extracting( TRACKER_GET_NAME ).isEqualTo( new String[0] );
+		// NuoDB 18-May-23
+		SelfDirtinessTracker sdtEntity = (SelfDirtinessTracker)entity;
+		assert(!sdtEntity.$$_hibernate_hasDirtyAttributes());
+		//assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( false );
+		assertThat( sdtEntity.$$_hibernate_getDirtyAttributes())
+				.isEqualTo( new String[0]  );
+		//assertThat( entity ).extracting( TRACKER_GET_NAME ).isEqualTo( new String[0] );
 	}
 
 	@Test
 	public void shouldUpdateTheTracker() throws Exception {
 		CardGame entity = new CardGame( "SPL", "Splendor" );
-
 		Method trackerClearMethod = CardGame.class.getMethod( TRACKER_CLEAR_NAME );
 		trackerClearMethod.invoke( entity );
 
 		entity.setName( "Splendor: Cities of Splendor" );
 
-		assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
-		assertThat( entity ).extracting( TRACKER_GET_NAME )
+		// NuoDB 18-May-23
+		SelfDirtinessTracker sdtEntity = (SelfDirtinessTracker)entity;
+		assert(sdtEntity.$$_hibernate_hasDirtyAttributes());
+		//assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
+		assertThat( sdtEntity.$$_hibernate_getDirtyAttributes())
 				.isEqualTo( new String[] { "name", "firstPlayerToken" } );
+		//assertThat( entity ).extracting( TRACKER_GET_NAME )
+		//		.isEqualTo( new String[] { "name", "firstPlayerToken" } );
 
 		trackerClearMethod.invoke( entity );
 
 		entity.setFirstPlayerToken( new Component( "FIRST PLAYER!!!!!!!!" ) );
-		assertThat( entity ).extracting( TRACKER_GET_NAME )
+
+		// NuoDB 18-May-23
+		assertThat( sdtEntity.$$_hibernate_getDirtyAttributes())
 				.isEqualTo( new String[] { "firstPlayerToken" } );
+		//assertThat( entity ).extracting( TRACKER_GET_NAME )
+		//		.isEqualTo( new String[] { "firstPlayerToken" } );
+
 		assertThat( entity.getFirstPlayerToken() )
 				.extracting( TRACKER_COMPOSITE_FIELD_NAME + ".names" ).isEqualTo( new String[] { "firstPlayerToken" } );
 	}

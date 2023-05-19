@@ -14,9 +14,11 @@ import javax.persistence.Table;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl;
 import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
@@ -70,6 +72,10 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 			System.out.println( "Caught expected exception : " + expected );
 			expected.printStackTrace( System.out );
 
+			// NuoDB 18-May-2023  Batch is null after exception, nothing to check.
+			if (getDialect() instanceof NuoDBDialect)
+				return;
+
 			try {
 				//at this point the transaction is still active but the batch should have been aborted (have to use reflection to get at the field)
 				SessionImplementor sessionImplementor = (SessionImplementor) session;
@@ -89,7 +95,7 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 				}
 			}
 			catch (Exception fieldException) {
-				fail( "Couldn't inspect field " + fieldException.getMessage() );
+				fail( "Couldn't inspect field: " + fieldException.getMessage() );
 			}
 		}
 		finally {

@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa.test.query;
 
+import java.lang.reflect.Field;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.Entity;
@@ -16,9 +18,11 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -104,10 +108,15 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 			sqlStatementInterceptor.assertExecutedCount(1);
 
-			sqlStatementInterceptor.assertExecuted(
+			// NuoDB 18-May-23: NuoDB requires hint after select with no space before + sign
+			if (getDialect() instanceof NuoDBDialect)
+				sqlStatementInterceptor.assertExecuted(
+						" SELECT /*+ INDEX (game idx_game_title)  */ * from game g where title = ?"
+				);
+			else
+				sqlStatementInterceptor.assertExecuted(
 					"/* + INDEX (game idx_game_title)  */ select * from game g where title = ?"
-
-			);
+				);
 		} );
 	}
 

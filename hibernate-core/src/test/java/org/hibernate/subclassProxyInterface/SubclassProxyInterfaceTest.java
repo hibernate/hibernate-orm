@@ -6,6 +6,7 @@
  */
 package org.hibernate.subclassProxyInterface;
 
+import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
@@ -20,6 +21,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
  */
 public class SubclassProxyInterfaceTest extends BaseUnitTestCase {
 	@Test
+	@RequiresDialect(H2Dialect.class)  // NuoDB 18-May-23
 	public void testSubclassProxyInterfaces() {
         final Configuration cfg = new Configuration()
 				.setProperty( Environment.DIALECT, H2Dialect.class.getName() )

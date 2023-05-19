@@ -69,7 +69,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-        @SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
+	//@SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 	public void testFindWithTimeoutHint() {
 		final Lock lock = new Lock();
 		lock.setName( "name" );
@@ -96,7 +96,6 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class, 
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
                               jiraKey = "HHH-7252" )
-        @SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 	public void testFindWithPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -144,7 +143,6 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getSingleResult.",
 			jiraKey = "HHH-13364" )
-        @SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 	public void testQuerySingleResultPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -189,7 +187,6 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getResultList.",
 			jiraKey = "HHH-13364" )
-        @SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 	public void testQueryResultListPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -237,7 +234,6 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for NamedQuery#getResultList.",
 			jiraKey = "HHH-13364" )
-        @SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 	public void testNamedQueryResultListPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -278,6 +274,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value=NuoDBDialect.class, comment = "NuoDB does not use read locks")
 	@RequiresDialectFeature( value = DialectChecks.SupportSkipLocked.class )
 	public void testUpdateWithPessimisticReadLockSkipLocked() {
 		Lock lock = new Lock();
@@ -752,7 +749,6 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@RequiresDialect( Oracle10gDialect.class )
 	@RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
-        @SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 	public void testContendedPessimisticWriteLockTimeout() throws Exception {
 
 		final CountDownLatch latch = new CountDownLatch( 1 );

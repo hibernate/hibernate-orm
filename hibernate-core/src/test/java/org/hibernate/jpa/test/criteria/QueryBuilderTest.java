@@ -18,6 +18,8 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.metamodel.EntityType;
+
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -320,6 +322,8 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12314")
+	// NuoDB 18-May-23
+	@SkipForDialect(value= NuoDBDialect.class, comment = "NuoDB expects SELECT in generated JOIN sub-select")
 	public void testJoinUsingNegatedPredicate() {
 		// Write test data
 		doInJPA( this::entityManagerFactory, entityManager -> {

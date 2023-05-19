@@ -12,6 +12,8 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 
+import com.nuodb.hibernate.NuoDBDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.jboss.logging.Logger;
 import org.junit.Test;
 
@@ -92,6 +94,8 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	// NuoDB 18-May-2023
+	@SkipForDialect(value=NuoDBDialect.class, comment="Constraint violations not enforced")
 	public void testConstraintViolationException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

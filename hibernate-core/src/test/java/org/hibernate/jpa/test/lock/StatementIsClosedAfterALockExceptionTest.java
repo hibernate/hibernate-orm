@@ -20,10 +20,7 @@ import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 
 import com.nuodb.hibernate.NuoDBDialect;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.*;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Before;
@@ -38,7 +35,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
-@SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
+//@SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider( false, false );
@@ -74,7 +71,10 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 
 	@Test(timeout = 1000 * 30) //30 seconds
 	@TestForIssue(jiraKey = "HHH-11617")
-	@SkipForDialect( value = CockroachDB192Dialect.class )
+	@SkipForDialects(value = {
+			@SkipForDialect(value = CockroachDB192Dialect.class),
+			@SkipForDialect(value = NuoDBDialect.class)
+	})  // NuoDB 18-May-23
 	public void testStatementIsClosed() {
 
 		TransactionUtil.doInJPA( this::entityManagerFactory, em1 -> {
@@ -89,7 +89,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 			);
 
 			TransactionUtil.doInJPA( this::entityManagerFactory, em2 -> {
-				TransactionUtil.setJdbcTimeout( em2.unwrap( Session.class ) );
+				TransactionUtil.setJdbcTimeout( em2.unwrap( Session.class ) ); // Sets a 1s timeout
 				try {
 					em2.find( Lock.class, lockId, LockModeType.PESSIMISTIC_WRITE, properties );
 					fail( "Exception should be thrown" );

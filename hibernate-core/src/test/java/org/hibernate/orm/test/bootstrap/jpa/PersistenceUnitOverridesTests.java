@@ -24,6 +24,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -35,6 +36,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.jdbc.DataSourceStub;
@@ -53,6 +55,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialect(H2Dialect.class)  // NuoDB 18-May-23
 public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 	@Test

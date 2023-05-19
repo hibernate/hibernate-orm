@@ -6,18 +6,7 @@
  */
 package org.hibernate.jpa.test.cdi;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import javax.enterprise.inject.se.SeContainer;
-import javax.enterprise.inject.se.SeContainerInitializer;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -25,9 +14,17 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.tool.schema.Action;
-
 import org.junit.Test;
+
+import javax.enterprise.inject.se.SeContainer;
+import javax.enterprise.inject.se.SeContainerInitializer;
+import javax.persistence.*;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 import static org.junit.Assert.assertEquals;
@@ -41,6 +38,7 @@ public class BasicCdiTest {
 	private static int count;
 
 	@Test
+	//@SkipForDialect(value = NuoDBDialect.class)  // NuoDB 18-May-23
 	@SuppressWarnings("unchecked")
 	public void testIt() {
 		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()

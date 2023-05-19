@@ -7,6 +7,7 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
@@ -30,6 +31,8 @@ public class HHH14156Test extends BaseCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect(value = SQLServerDialect.class, comment = "SQLServer doesn't support tuple comparisons")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support tuple comparisons")
+        // NuoDB 18-May-23
+	@SkipForDialect(value = NuoDBDialect.class, comment = "NuoDB doesn't support tuple comparisons")
 	public void testNoExceptionThrown() {
 		inTransaction( session ->
 			session.createQuery(

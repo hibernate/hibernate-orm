@@ -17,6 +17,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.AbstractHANADialect;
@@ -49,6 +50,8 @@ public class CriteriaToScrollableResultsFetchTest extends BaseEntityManagerFunct
 
 	@Test
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA only supports forward-only cursors")
+	// NuoDB 18-May-23
+	@SkipForDialect(value = NuoDBDialect.class, comment = "NuoDB only supports forward-only cursors")
 	public void testWithScroll() {
 		// Creates data necessary for test
 		Long facilityId = populate();

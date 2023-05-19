@@ -13,12 +13,14 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
 
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -68,6 +70,8 @@ public class UncorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
+	// NuoDB 18-May-23
+	@SkipForDialect(value=NuoDBDialect.class, comment="ALL not supported by NuoDB")
 	public void testEqualAll() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();

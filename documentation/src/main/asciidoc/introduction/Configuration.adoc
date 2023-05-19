@@ -209,17 +209,24 @@ Alternatively, the venerable class `org.hibernate.cfg.Configuration` allows an i
 
 [source,java]
 ----
-SessionFactory sessionFactory = new Configuration()
-    .addAnnotatedClass(Book.class)
-    .addAnnotatedClass(Author.class)
-    .setProperty(AvailableSettings.JAKARTA_JDBC_URL, "jdbc:postgresql://localhost/example")
-    .setProperty(AvailableSettings.JAKARTA_JDBC_USER, user)
-    .setProperty(AvailableSettings.JAKARTA_JDBC_PASSWORD, password)
-    .setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE)
-    .setProperty(AvailableSettings.SHOW_SQL, true)
-    .setProperty(AvailableSettings.FORMAT_SQL, true)
-    .setProperty(AvailableSettings.HIGHLIGHT_SQL, true)
-    .buildSessionFactory();
+SessionFactory sessionFactory =
+        new Configuration()
+            .addAnnotatedClass(Book.class)
+            .addAnnotatedClass(Author.class)
+            // PostgreSQL
+            .setProperty(AvailableSettings.JAKARTA_JDBC_URL, "jdbc:postgresql://localhost/example")
+            // Credentials
+            .setProperty(AvailableSettings.JAKARTA_JDBC_USER, user)
+            .setProperty(AvailableSettings.JAKARTA_JDBC_PASSWORD, password)
+            // Automatic schema export
+            .setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+                         Action.CREATE.getExternalJpaName())
+            // SQL statement logging
+            .setProperty(AvailableSettings.SHOW_SQL, TRUE.toString())
+            .setProperty(AvailableSettings.FORMAT_SQL, TRUE.toString())
+            .setProperty(AvailableSettings.HIGHLIGHT_SQL, TRUE.toString())
+            // Create a new SessionFactory
+            .buildSessionFactory();
 ----
 
 The `Configuration` class has survived almost unchanged since the very earliest (pre-1.0) versions of Hibernate, and so it doesn't look particularly modern.

@@ -1,9 +1,8 @@
-Hibernate ORM is a library providing Object/Relational Mapping (ORM) support
-to applications, libraries, and frameworks.
+Hibernate ORM is a powerful object/relational mapping solution for Java, and makes it easy to develop persistence logic for applications, libraries, and frameworks.
 
-It also provides an implementation of the JPA specification, which is the standard Java specification for ORM.
+Hibernate implements JPA, the standard API for object/relational persistence in Java, but also offers an extensive set of features and APIs which go beyond the specification.
 
-This is the repository of its source code; see https://hibernate.org/orm/[Hibernate.org] for additional information.
+See https://hibernate.org/orm/[Hibernate.org] for more information.
 
 image:https://ci.hibernate.org/job/hibernate-orm-pipeline/job/6.2/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-pipeline/job/6.2/]
 image:https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A[link=https://ge.hibernate.org/scans]
@@ -18,7 +17,7 @@ for its CI needs. See
 
 == Building from sources
 
-The build requires at least Java 11 JDK.
+The build requires at least Java 11 and at most Java 17.
 
 Hibernate uses https://gradle.org[Gradle] as its build tool. See the _Gradle Primer_ section below if you are new to
 Gradle.

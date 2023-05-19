@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -55,6 +56,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.Action;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.UserType;
@@ -441,6 +443,75 @@ public class Configuration {
 		return this;
 	}
 
+	// New typed property setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Set {@value AvailableSettings#SHOW_SQL}, {@value AvailableSettings#FORMAT_SQL},
+	 * and {@value AvailableSettings#HIGHLIGHT_SQL}.
+	 *
+	 * @param showSql should SQL be logged to console?
+	 * @param formatSql should logged SQL be formatted
+	 * @param highlightSql should logged SQL be highlighted with pretty colors
+	 */
+	public Configuration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
+		setProperty( AvailableSettings.SHOW_SQL, Boolean.toString(showSql) );
+		setProperty( AvailableSettings.FORMAT_SQL, Boolean.toString(formatSql) );
+		setProperty( AvailableSettings.HIGHLIGHT_SQL, Boolean.toString(highlightSql) );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#HBM2DDL_AUTO}.
+	 *
+	 * @param action the {@link Action}
+	 */
+	public Configuration setSchemaExportAction(Action action) {
+		setProperty( AvailableSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#USER} and {@value AvailableSettings#PASS}.
+	 *
+	 * @param user the user id
+	 * @param pass the password
+	 */
+	public Configuration setCredentials(String user, String pass) {
+		setProperty( AvailableSettings.USER, user );
+		setProperty( AvailableSettings.PASS, pass );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#URL}.
+	 *
+	 * @param url the JDBC URL
+	 */
+	public Configuration setJdbcUrl(String url) {
+		setProperty( AvailableSettings.URL, url );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#DATASOURCE}.
+	 *
+	 * @param jndiName the JNDI name of the datasource
+	 */
+	public Configuration setDatasource(String jndiName) {
+		setProperty( AvailableSettings.DATASOURCE, jndiName );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#JAKARTA_TRANSACTION_TYPE}.
+	 *
+	 * @param transactionType the {@link PersistenceUnitTransactionType}
+	 */
+	public Configuration setTransactionType(PersistenceUnitTransactionType transactionType) {
+		setProperty( AvailableSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
+		return this;
+	}
+
 	// MetadataSources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -695,6 +766,20 @@ public class Configuration {
 	}
 
 	/**
+	 * Read metadata from the annotations associated with the given classes.
+	 *
+	 * @param annotatedClasses The classes containing annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public Configuration addAnnotatedClasses(Class... annotatedClasses) {
+		for (Class annotatedClass : annotatedClasses) {
+			addAnnotatedClass( annotatedClass );
+		}
+		return this;
+	}
+
+	/**
 	 * Read package-level metadata.
 	 *
 	 * @param packageName java package name
@@ -705,6 +790,22 @@ public class Configuration {
 	 */
 	public Configuration addPackage(String packageName) throws MappingException {
 		metadataSources.addPackage( packageName );
+		return this;
+	}
+
+	/**
+	 * Read package-level metadata.
+	 *
+	 * @param packageNames java package names
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @throws MappingException in case there is an error in the mapping data
+	 */
+	public Configuration addPackages(String... packageNames) throws MappingException {
+		for (String packageName : packageNames) {
+			addPackage( packageName );
+		}
 		return this;
 	}
 

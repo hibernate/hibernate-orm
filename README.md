@@ -33,27 +33,50 @@ To run the matrix tests for NuoDB:
 1. Set the Hibernate dialect - this must match the Hibernate 5 dialect you installed earlier.
 
    * **Note:** the value you set _does not_ have `-hib5` in the end:
+
      ```bash
      export DIALECT_VERSION=22.x.x      (Linux/MacOS)
      set DIALECT_VERSION=22.x.x         (Windows)
      ```
 
-   Alternatively, non-Windows user may prepend it to any command: `DIALECT_VERSION=22.x.x ./gradlew ...`
+   * Alternatively, non-Windows user may prepend it to any command: `DIALECT_VERSION=22.x.x ./gradlew ...`
 
-1. Compile the code: `./gradlew clean compile`
+1. You need a database called `hibernate_orm_test` running locally on your machine with username and password also `hibernate_orm_test`.
+Here are two options using Docker:
 
-1. Run tests:
 
-   * **Note:** If you wish, you can setup a local database by runnning `setup.sh` inside `env` folder.
-     This script will create a NuoDB env with an admin service (AP), a Storage Manager (SM) and a Transaction Engine (TE) to run the tests against.
-     Requires docker to be installed on the server.
-   * Execute `./gradlew clean hibernate-core:matrix_nuodb`.
-     On Windows run `gradlew` (which will invoke `gradlew.bat`).
-     To setup `gradle`, see original README content below.
-     The expected output is:
+   * To use docker compose, clone http://github.com/nuodb/nuodb-compose and (per the README):
+       * `cd nuodb` and `cp env_default` to `.env`.
+       * Edit `.env` and set `DB_NAME`, `DB_USER` and `DB_PASSWORD` to `hibernate_orm_test`.
+         Also (last line) set `EXTERNAL_ADDRESS=127.0.0.1`.
+       * Run: `docker compose -p hib -f monolith.yaml up -d`
+       * Run: `docker exec -it hib-monolith-1 nuocmd show domain`
+
+   * Or, setup a local database by running `setup.sh` inside `env` folder.
+     This script will create a NuoDB env with an admin service, a Storage Manager (SM) and a Transaction Engine (TE) to run the tests against. Requires docker to be installed on the server.
+
+1. You need `gradle` installed.
+   To setup gradle, see original `README` content below.  The expected output is:
+
+1. To run the matrix test-suite using NuoDB as the database, execute:
+
+   * Windows (using `gradlew.bat`):
+
+      ```sh
+      set TEST_PLAN=green
+      gradlew clean hibernate-core:matrix_nuodb
+      ```
+
+   * MacOS/Linux
+
+      ```sh
+      TEST_PLAN=green ./gradlew clean hibernate-core:matrix_nuodb
+      ```
+
+   * Expected output is something like:
 
      ```sh
-     9444 tests completed, 2698 failed, 1803 skipped
+     10392 tests completed, 148 failed, 1942 skipped
      ```
 
    * **Warnings:**
@@ -70,19 +93,20 @@ To run the matrix tests for NuoDB:
 
    Example commands:
 
-   ```
-   ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.PackagedEntityManagerTest
-   ./gradlew clean :hibernate-core:test --tests *.PackagedEntityManagerTest
-   ./gradlew clean :hibernate-core:test --tests org.hibernate.jpa.test.packaging.*
+   ```sh
+   ./gradlew clean :hibernate-core:matrix_nuodb --tests org.hibernate.jpa.test.packaging.PackagedEntityManagerTest
+   ./gradlew clean :hibernate-core:matrix_nuodb --tests *.PackagedEntityManagerTest
+   ./gradlew clean :hibernate-core:matrix_nuodb --tests org.hibernate.jpa.test.packaging.*
    ```
 
    **NOTE:** Not all tests are against NuoDB and actually some are explicitly skipped due to timeout and locks. Those tests have the special annotation `@SkipForDialect(value = NuoDBDialect.class)`
 
-1. Pull JAR from Sonatype
-   Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-NNNN/com/nuodb/hibernate/nuodb-hibernate/22.x.x-hib5/nuodb-hibernate-22.x.x-hib5.jar.
+1. Pull Jar from Sonatype
+
+   Once our jar is put up at Sonatype, its URL is something like https://oss.sonatype.org/content/repositories/comnuodb-NNNN/com/nuodb/hibernate/nuodb-hibernate/20.x.x-hib5/nuodb-hibernate-20.x.x-hib5.jar.
    Note the build number - NNNN (a 4 digit number such as 1050). To use this dependency run as follows:
 
-   ```
+   ```sh
    SONATYPE_VERSION=NNNN gradle clean ...   (Linux)
 
    set SONATYPE_VERSION=NNNN                (Windows)
@@ -140,8 +164,8 @@ Open as a gradle project in IntelliJ in the usual way.
 
 To force it to use NuoDB: `cp databases/nuodb/resources/hibernate.properties hibernate-core/out/test/resources/hibernate.properties`.
 
--------------------
--------------------
+---
+---
 
 # Original README
 
@@ -180,7 +204,6 @@ Hibernate makes use of [Jenkins](https://jenkins-ci.org) for its CI needs.  The 
 push to the upstream repository.   Overall there are a few different jobs, all of which can be seen at 
 [https://ci.hibernate.org/view/ORM/](https://ci.hibernate.org/view/ORM/)
 
-
 Gradle primer
 =========
 
@@ -192,7 +215,6 @@ particular that are indispensable:
 it follows a topical approach to describing all of the capabilities of Gradle.
 * [Gradle DSL Guide](https://docs.gradle.org/current/dsl/index.html) is unique and excellent in quickly
 getting up to speed on certain aspects of Gradle.
-
 
 Using the Gradle Wrapper
 ------------------------
@@ -210,18 +232,14 @@ the wrapper.
 
 Another reason to use `gradlew` is that it uses the exact version of Gradle that the build is defined to work with.
 
-
 Executing Tasks
 ------------------------
 
 Gradle uses the concept of build tasks (equivalent to Ant targets or Maven phases/goals). You can get a list of
-available tasks via 
-
-    gradle tasks
+available tasks via `gradle tasks`.
 
 To execute a task across all modules, simply perform that task from the root directory.  Gradle will visit each
-sub-project and execute that task if the sub-project defines it.  To execute a task in a specific module you can 
-either:
+sub-project and execute that task if the sub-project defines it.  To execute a task in a specific module you can either:
 
 1. `cd` into that module directory and execute the task
 2. name the "task path".  For example, to run the tests for the _hibernate-core_ module from the root directory you could say `gradle hibernate-core:test`
@@ -309,4 +327,3 @@ e.g. `pgsql_ci` for PostgreSQL. By using the system property `dbHost` you can co
 The command for running tests could look like the following:
 
     gradlew test -Pdb=pgsql_ci "-DdbHost=192.168.99.100"
-

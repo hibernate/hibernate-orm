@@ -251,7 +251,7 @@ public class Configuration {
 	 *
 	 * @param properties The new set of properties
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setProperties(Properties properties) {
 		this.properties = properties;
@@ -276,7 +276,7 @@ public class Configuration {
 	 * @param propertyName The name of the property to set
 	 * @param value The new property value
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setProperty(String propertyName, String value) {
 		properties.setProperty( propertyName, value );
@@ -288,7 +288,7 @@ public class Configuration {
 	 *
 	 * @param properties The properties to add.
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addProperties(Properties properties) {
 		this.properties.putAll( properties );
@@ -304,6 +304,8 @@ public class Configuration {
 
 	/**
 	 * Set an {@link ImplicitNamingStrategy} to use in this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setImplicitNamingStrategy(ImplicitNamingStrategy implicitNamingStrategy) {
 		this.implicitNamingStrategy = implicitNamingStrategy;
@@ -319,6 +321,8 @@ public class Configuration {
 
 	/**
 	 * Set a {@link PhysicalNamingStrategy} to use in this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setPhysicalNamingStrategy(PhysicalNamingStrategy physicalNamingStrategy) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
@@ -329,7 +333,7 @@ public class Configuration {
 	 * Use the mappings and properties specified in an application resource named
 	 * {@code hibernate.cfg.xml}.
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates we cannot find {@code hibernate.cfg.xml}
 	 *
@@ -346,7 +350,7 @@ public class Configuration {
 	 *
 	 * @param resource The resource to use
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates we cannot find the named resource
 	 */
@@ -373,7 +377,7 @@ public class Configuration {
 	 *
 	 * @param url URL from which you wish to load the configuration
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates a problem access the url
 	 */
@@ -390,7 +394,7 @@ public class Configuration {
 	 *
 	 * @param configFile File from which you wish to load the configuration
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws HibernateException Generally indicates a problem access the file
 	 */
@@ -404,6 +408,8 @@ public class Configuration {
 
 	/**
 	 * Add a {@link TypeContributor} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration registerTypeContributor(TypeContributor typeContributor) {
 		typeContributorRegistrations.add( typeContributor );
@@ -412,6 +418,8 @@ public class Configuration {
 
 	/**
 	 * Add a {@link FunctionContributor} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration registerFunctionContributor(FunctionContributor functionContributor) {
 		functionContributorRegistrations.add( functionContributor );
@@ -423,6 +431,8 @@ public class Configuration {
 	 * potentially replacing a previously registered type.
 	 *
 	 * @param type The type to register.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration registerTypeOverride(BasicType<?> type) {
 		basicTypes.add( type );
@@ -433,6 +443,15 @@ public class Configuration {
 		void registerType(MetadataBuilder metadataBuilder);
 	}
 
+	/**
+	 * Register a {@linkplain UserType type} into the type registry,
+	 * potentially replacing a previously registered type.
+	 *
+	 * @param type The type to register.
+	 * @param keys The keys under which to register the type.
+	 *
+	 * @return {@code this} for method chaining
+	 */
 	public Configuration registerTypeOverride(UserType<?> type, String[] keys) {
 		if ( userTypeRegistrations == null ) {
 			userTypeRegistrations = new ArrayList<>();
@@ -447,21 +466,25 @@ public class Configuration {
 	 * Read mappings from a particular XML file
 	 *
 	 * @param xmlFile a path to a file
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates inability to locate or parse
 	 * the specified mapping file.
+	 *
 	 * @see #addFile(File)
 	 */
 	public Configuration addFile(String xmlFile) throws MappingException {
 		metadataSources.addFile( xmlFile );
 		return this;
 	}
+
 	/**
 	 * Read mappings from a particular XML file.
 	 *
 	 * @param xmlFile a path to a file
 	 *
-	 * @return this (for method chaining purposes)
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws MappingException Indicates inability to locate the specified mapping file
 	 */
@@ -483,7 +506,7 @@ public class Configuration {
 	 *
 	 * @param binding the parsed mapping
 	 *
-	 * @return this (for method chaining purposes)
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addXmlMapping(Binding<?> binding) {
 		metadataSources.addXmlBinding( binding );
@@ -504,7 +527,7 @@ public class Configuration {
 	 *
 	 * @param xmlFile The cacheable mapping file to be added.
 	 *
-	 * @return this (for method chaining purposes)
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws MappingException Indicates problems reading the cached file or
 	 * processing the non-cached file.
@@ -523,7 +546,7 @@ public class Configuration {
 	 *
 	 * @param xmlFile The xml file, not the bin!
 	 *
-	 * @return The dom "deserialized" from the cached file.
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
 	 */
@@ -538,7 +561,7 @@ public class Configuration {
 	 * @param xmlFile The name of the file to be added, in a form usable to
 	 *                simply construct a {@link File} instance
 	 *
-	 * @return this (for method chaining purposes)
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws MappingException Indicates problems reading the cached file or
 	 * processing the non-cached file
@@ -554,7 +577,9 @@ public class Configuration {
 	 * Read mappings from a {@code URL}.
 	 *
 	 * @param url The url for the mapping document to be read.
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the URL or processing
 	 * the mapping document.
 	 */
@@ -567,7 +592,9 @@ public class Configuration {
 	 * Read mappings from an {@link InputStream}.
 	 *
 	 * @param xmlInputStream The input stream containing a DOM.
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the stream, or
 	 * processing the contained mapping document.
 	 */
@@ -582,7 +609,9 @@ public class Configuration {
 	 * different class loaders in turn.
 	 *
 	 * @param resourceName The resource name
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems locating the resource or
 	 * processing the contained mapping document.
 	 */
@@ -598,7 +627,9 @@ public class Configuration {
 	 * classpath resource}.
 	 *
 	 * @param entityClass The mapped class
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems locating the resource or
 	 * processing the contained mapping document.
 	 */
@@ -619,7 +650,7 @@ public class Configuration {
 	 *
 	 * @param annotatedClass The class containing annotations
 	 *
-	 * @return this (for method chaining)
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAnnotatedClass(Class annotatedClass) {
 		metadataSources.addAnnotatedClass( annotatedClass );
@@ -631,7 +662,7 @@ public class Configuration {
 	 *
 	 * @param packageName java package name
 	 *
-	 * @return this (for method chaining)
+	 * @return {@code this} for method chaining
 	 *
 	 * @throws MappingException in case there is an error in the mapping data
 	 */
@@ -647,7 +678,9 @@ public class Configuration {
 	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param jar a jar file
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the jar file or
 	 * processing the contained mapping documents.
 	 */
@@ -663,7 +696,9 @@ public class Configuration {
 	 * This method does not support {@code orm.xml} files!
 	 *
 	 * @param dir The directory
-	 * @return this (for method chaining purposes)
+	 *
+	 * @return {@code this} for method chaining
+	 *
 	 * @throws MappingException Indicates problems reading the jar file or
 	 * processing the contained mapping documents.
 	 */
@@ -689,7 +724,7 @@ public class Configuration {
 	 *
 	 * @param interceptor The {@link Interceptor} to use
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setInterceptor(Interceptor interceptor) {
 		this.interceptor = interceptor;
@@ -712,6 +747,8 @@ public class Configuration {
 	 * by specified id.
 	 *
 	 * @param entityNotFoundDelegate The delegate to use
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
 		this.entityNotFoundDelegate = entityNotFoundDelegate;
@@ -727,6 +764,8 @@ public class Configuration {
 
 	/**
 	 * Specify a {@link SessionFactoryObserver} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setSessionFactoryObserver(SessionFactoryObserver sessionFactoryObserver) {
 		this.sessionFactoryObserver = sessionFactoryObserver;
@@ -742,6 +781,8 @@ public class Configuration {
 
 	/**
 	 * Specify a {@link StatementInspector} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setStatementInspector(StatementInspector statementInspector) {
 		this.statementInspector = statementInspector;
@@ -757,6 +798,8 @@ public class Configuration {
 
 	/**
 	 * Specify a {@link CurrentTenantIdentifierResolver} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver currentTenantIdentifierResolver) {
 		this.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
@@ -772,6 +815,8 @@ public class Configuration {
 
 	/**
 	 * Specify a {@link CustomEntityDirtinessStrategy} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy customEntityDirtinessStrategy) {
 		this.customEntityDirtinessStrategy = customEntityDirtinessStrategy;
@@ -788,6 +833,8 @@ public class Configuration {
 
 	/**
 	 * Specify a {@link CustomEntityDirtinessStrategy} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	@Incubating
 	public Configuration setColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
@@ -924,24 +971,28 @@ public class Configuration {
 
 	/**
 	 * Adds a {@linkplain SqmFunctionDescriptor SQL function descriptor} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addSqlFunction(String functionName, SqmFunctionDescriptor function) {
 		if ( customFunctionDescriptors == null ) {
 			customFunctionDescriptors = new HashMap<>();
 		}
 		customFunctionDescriptors.put( functionName, function );
-		return null;
+		return this;
 	}
 
 	/**
 	 * Adds an {@link AuxiliaryDatabaseObject} to this configuration.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject object) {
 		if ( auxiliaryDatabaseObjectList == null ) {
 			auxiliaryDatabaseObjectList = new ArrayList<>();
 		}
 		auxiliaryDatabaseObjectList.add( object );
-		return null;
+		return this;
 	}
 
 	/**
@@ -951,20 +1002,24 @@ public class Configuration {
 	 * @param autoApply Should the {@code AttributeConverter} be auto applied to
 	 *                  property types as specified by its "entity attribute"
 	 *                  parameterized type?
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
 		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext ) );
-		return null;
+		return this;
 	}
 
 	/**
 	 * Adds an {@link AttributeConverter} to this configuration.
 	 *
 	 * @param attributeConverterClass The {@code AttributeConverter} class.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
 		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, classmateContext ) );
-		return null;
+		return this;
 	}
 
 	/**
@@ -973,10 +1028,12 @@ public class Configuration {
 	 * their own {@code AttributeConverter} instance.
 	 *
 	 * @param attributeConverter The {@code AttributeConverter} instance.
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
 		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, classmateContext ) );
-		return null;
+		return this;
 	}
 
 	/**
@@ -988,22 +1045,35 @@ public class Configuration {
 	 * @param autoApply Should the {@code AttributeConverter} be auto applied
 	 *                  to property types as specified by its "entity attribute"
 	 *                  parameterized type?
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
 		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, autoApply, classmateContext ) );
-		return null;
+		return this;
 	}
 
+	/**
+	 * Adds an {@link ConverterDescriptor} instance to this configuration.
+	 *
+	 * @param converterDescriptor The {@code ConverterDescriptor} instance.
+	 *
+	 * @return {@code this} for method chaining
+	 */
 	public Configuration addAttributeConverter(ConverterDescriptor converterDescriptor) {
 		if ( attributeConverterDescriptorsByClass == null ) {
 			attributeConverterDescriptorsByClass = new HashMap<>();
 		}
 		attributeConverterDescriptorsByClass.put( converterDescriptor.getAttributeConverterClass(), converterDescriptor );
-		return null;
+		return this;
 	}
 
 	/**
 	 * Add an {@link EntityNameResolver} to this configuration.
+	 *
+	 * @param entityNameResolver The {@code EntityNameResolver} instance.
+	 *
+	 * @return {@code this} for method chaining
 	 *
 	 * @since 6.2
 	 */
@@ -1012,7 +1082,7 @@ public class Configuration {
 			entityNameResolvers = new ArrayList<>();
 		}
 		entityNameResolvers.add( entityNameResolver );
-		return null;
+		return this;
 	}
 
 	/**
@@ -1022,10 +1092,12 @@ public class Configuration {
 	 * has any effect on {@code hbm.xml} binding.
 	 *
 	 * @param sharedCacheMode The SharedCacheMode to use
+	 *
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration setSharedCacheMode(SharedCacheMode sharedCacheMode) {
 		this.sharedCacheMode = sharedCacheMode;
-		return null;
+		return this;
 	}
 
 
@@ -1060,7 +1132,7 @@ public class Configuration {
 	 *
 	 * @param properties The properties to merge
 	 *
-	 * @return this for method chaining
+	 * @return {@code this} for method chaining
 	 */
 	public Configuration mergeProperties(Properties properties) {
 		for ( Map.Entry<Object,Object> entry : properties.entrySet() ) {

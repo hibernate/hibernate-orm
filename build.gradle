@@ -261,7 +261,11 @@ public class NuodbHibernateVersion {
                 System.exit(-1)
             }
 
-            println("    Defaulting to ${latestVersion}")
+            println("    Defaulting to latest version in .m2 repo: ${latestVersion}")
+        }
+        else {
+            latestVersion = System.env['DIALECT_VERSION'];
+            println("    Using DIALECT_VERSION=${latestVersion}")
         }
     }
 
@@ -282,6 +286,7 @@ public class NuodbHibernateVersion {
             
         for(File f : mavenHibDir.listFiles()) {
             String dirName = f.name;
+            String originalDirName = dirName;
             //println("dirName = ${dirName}");
             
             if (dirName.startsWith('.') || dirName.startsWith('3.') ||
@@ -298,6 +303,12 @@ public class NuodbHibernateVersion {
             //println("  latest = ${Arrays.asList(lbits)}");
             //println("  dirName = ${Arrays.asList(m)}");
             
+            // Version must be X.Y.Z, 3 components.  Otherwise it is a dud.
+            if (m.length < 3) {
+                println("WARNING: Corrupt directory name $originalDirName");
+                continue;
+            }
+
             if (m[0] > lbits[0])
                 later = true;
             else if (m[0] == lbits[0]) {

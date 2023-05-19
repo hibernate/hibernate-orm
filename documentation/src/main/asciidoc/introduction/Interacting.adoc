@@ -124,7 +124,7 @@ But we still need to clean up:
 
 [source,java]
 ----
-entityManager.close();
+session.close();
 ----
 
 .Injecting the `EntityManager`

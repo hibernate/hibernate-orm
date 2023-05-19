@@ -120,6 +120,7 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.LazyValue;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
@@ -279,6 +280,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -463,6 +465,8 @@ public abstract class AbstractEntityPersister
 	protected final BasicEntityPropertyMapping propertyMapping;
 
 	private final boolean implementsLifecycle;
+
+	private List<UniqueKeyEntry> uniqueKeyEntries = null; //lazily initialized
 
 	@Deprecated(since = "6.0")
 	public AbstractEntityPersister(
@@ -1164,6 +1168,30 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean canUseReferenceCacheEntries() {
 		return useReferenceCacheEntries;
+	}
+
+	@Override
+	public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
+		if ( this.uniqueKeyEntries == null ) {
+			this.uniqueKeyEntries = initUniqueKeyEntries( this );
+		}
+		return this.uniqueKeyEntries;
+	}
+
+	private static List<UniqueKeyEntry> initUniqueKeyEntries(final AbstractEntityPersister aep) {
+		ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList();
+		for ( Type propertyType : aep.getPropertyTypes() ) {
+			if ( propertyType instanceof AssociationType ) {
+				final AssociationType associationType = (AssociationType) propertyType;
+				final String ukName = associationType.getLHSPropertyName();
+				if ( ukName != null ) {
+					final int index = aep.findAttributeMapping( ukName ).getStateArrayPosition();
+					final Type type = aep.getPropertyTypes()[index];
+					uniqueKeys.add( new UniqueKeyEntry( ukName, index, type ) );
+				}
+			}
+		}
+		return CollectionHelper.toSmallList( uniqueKeys );
 	}
 
 	protected Map<String, SingleIdArrayLoadPlan> getLazyLoadPlanByFetchGroup() {

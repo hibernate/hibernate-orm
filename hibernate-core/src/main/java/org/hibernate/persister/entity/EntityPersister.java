@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -1074,5 +1075,11 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	 */
 	@Deprecated(since = "6.2")
 	String ENTITY_ID = "id";
+
+	/**
+	 * @return Metadata for each unique key defined
+	 */
+	@Incubating
+	Iterable<UniqueKeyEntry> uniqueKeyEntries();
 
 }

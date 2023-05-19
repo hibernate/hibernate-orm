@@ -41,6 +41,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
@@ -1034,32 +1035,27 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	protected void registerPossibleUniqueKeyEntries(Object toInitialize, SharedSessionContractImplementor session) {
-		for ( Type propertyType : concreteDescriptor.getPropertyTypes() ) {
-			if ( propertyType instanceof AssociationType ) {
-				final AssociationType associationType = (AssociationType) propertyType;
-				final String ukName = associationType.getLHSPropertyName();
-				if ( ukName != null ) {
-					final int index = concreteDescriptor.findAttributeMapping( ukName ).getStateArrayPosition();
-					final Type type = concreteDescriptor.getPropertyTypes()[index];
+	protected void registerPossibleUniqueKeyEntries(final Object toInitialize, final SharedSessionContractImplementor session) {
+		for ( UniqueKeyEntry entry : concreteDescriptor.uniqueKeyEntries() ) {
+			final String ukName = entry.getUniqueKeyName();
+			final int index = entry.getStateArrayPosition();//concreteDescriptor.findAttributeMapping( ukName ).getStateArrayPosition();
+			final Type type = entry.getPropertyType();//concreteDescriptor.getPropertyTypes()[index];
 
-					// polymorphism not really handled completely correctly,
-					// perhaps...well, actually its ok, assuming that the
-					// entity name used in the lookup is the same as the
-					// one used here, which it will be
+			// polymorphism not really handled completely correctly,
+			// perhaps...well, actually its ok, assuming that the
+			// entity name used in the lookup is the same as the
+			// one used here, which it will be
 
-					if ( resolvedEntityState[index] != null ) {
-						final EntityUniqueKey euk = new EntityUniqueKey(
-								concreteDescriptor.getRootEntityDescriptor().getEntityName(),
-								//polymorphism comment above
-								ukName,
-								resolvedEntityState[index],
-								type,
-								session.getFactory()
-						);
-						session.getPersistenceContextInternal().addEntity( euk, toInitialize );
-					}
-				}
+			if ( resolvedEntityState[index] != null ) {
+				final EntityUniqueKey euk = new EntityUniqueKey(
+						concreteDescriptor.getRootEntityDescriptor().getEntityName(),
+						//polymorphism comment above
+						ukName,
+						resolvedEntityState[index],
+						type,
+						session.getFactory()
+				);
+				session.getPersistenceContextInternal().addEntity( euk, toInitialize );
 			}
 		}
 	}

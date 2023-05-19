@@ -58,6 +58,7 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.orm.test.jpa.SettingsGenerator;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -727,6 +728,11 @@ public class PersisterClassProviderTest {
 		@Override
 		public boolean canUseReferenceCacheEntries() {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
+			return Collections.emptyList();
 		}
 
 		@Override

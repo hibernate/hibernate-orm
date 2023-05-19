@@ -55,7 +55,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@RequiresDialect(H2Dialect.class)  // NuoDB 18-May-23
+// NuoDB 19-May-23: These tests are hard-wired to use H2.
+@RequiresDialect(H2Dialect.class) // No point running for any other dialect
 public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 	@Test

@@ -46,6 +46,7 @@ public class TransientOverrideAsPersistentJoined extends BaseNonConfigCoreFuncti
 	@Test
 	public void testFindByRootClass() {
 		doInHibernate( this::sessionFactory, session -> {
+			log.warn("Starting");
 			final Employee editor = session.find( Employee.class, "Jane Smith" );
 			assertNotNull( editor );
 			assertEquals( "Senior Editor", editor.getTitle() );
@@ -59,6 +60,7 @@ public class TransientOverrideAsPersistentJoined extends BaseNonConfigCoreFuncti
 			assertSame( editor, jobEditor.getEmployee() );
 			final Job jobWriter = session.find( Job.class, "Write" );
 			assertSame( writer, jobWriter.getEmployee() );
+			log.warn("Done");
 		});
 	}
 

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -1800,6 +1801,7 @@ public class CriteriaQueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-6766" )
+	@SkipForDialect(NuoDBDialect.class)  // NuoDB 19-May-23: multi-column subquery not supported
 	public void testMultiplePropertiesSubquery() {
 		Session session = openSession();
 		Transaction tx = session.beginTransaction();

@@ -19,6 +19,7 @@ import javax.persistence.PersistenceException;
 import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -46,6 +47,7 @@ import org.hibernate.jpa.test.pack.various.Airplane;
 import org.hibernate.jpa.test.pack.various.Seat;
 import org.hibernate.stat.Statistics;
 
+import org.hibernate.testing.RequiresDialect;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +68,8 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
+// NuoDB 19-May-23: These tests are hard-wired to use H2.
+@RequiresDialect(H2Dialect.class) // No point running for any other dialect
 public class PackagedEntityManagerTest extends PackagingTestCase {
 	private EntityManagerFactory emf;
 

@@ -86,7 +86,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			TypedQuery<Game> query = entityManager.createNamedQuery( "SelectNamedQuery", Game.class );
 			query.setParameter( "title", GAME_TITLES[0] );
 			List<Game> list = query.getResultList();
-			assertEquals( 1, list.size() );
+			assertEquals( "Expected 1 game but found " + list.size(),1, list.size() );
 
 			sqlStatementInterceptor.assertExecutedCount(1);
 
@@ -104,7 +104,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			TypedQuery<Game> query = entityManager.createNamedQuery( "SelectNamedNativeQuery", Game.class );
 			query.setParameter( "title", GAME_TITLES[0] );
 			List<Game> list = query.getResultList();
-			assertEquals( 1, list.size() );
+			assertEquals( "Expected 1 game but found " + list.size(), 1, list.size() );
 
 			sqlStatementInterceptor.assertExecutedCount(1);
 
@@ -129,7 +129,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			query.setParameter( "title", GAME_TITLES[0] );
 			query.setParameter( "id", 1L );
 			int updateCount = query.executeUpdate();
-			assertEquals( 1, updateCount );
+			assertEquals( "Expected to update 1 row, but actually updated " + updateCount,1, updateCount );
 
 			sqlStatementInterceptor.assertExecutedCount(1);
 
@@ -148,7 +148,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			query.setParameter( "title", GAME_TITLES[0] );
 			query.setParameter( "id", 1L );
 			int updateCount = query.executeUpdate();
-			assertEquals( 1, updateCount );
+			assertEquals("Expected to update 1 row, but actually updated " + updateCount, 1, updateCount );
 
 			sqlStatementInterceptor.assertExecutedCount(1);
 

@@ -17,6 +17,7 @@ import java.util.TimeZone;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import com.nuodb.hibernate.NuoDBDialect;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -79,7 +80,6 @@ public class JdbcTimestampCustomTimeZoneTest
 
 	@Test
 	public void testTimeZone() {
-
 		connectionProvider.clear();
 		doInHibernate( this::sessionFactory, s -> {
 			Person person = new Person();

@@ -450,6 +450,7 @@ public abstract class AbstractEntityPersister
 	 */
 	protected final BasicEntityPropertyMapping propertyMapping;
 
+	private final boolean implementsLifecycle;
 
 	@Deprecated(since = "6.0")
 	public AbstractEntityPersister(
@@ -504,6 +505,7 @@ public abstract class AbstractEntityPersister
 
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
+		this.implementsLifecycle = Lifecycle.class.isAssignableFrom( javaType.getJavaTypeClass() );
 
 		final Dialect dialect = creationContext.getDialect();
 
@@ -4107,7 +4109,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean implementsLifecycle() {
-		return Lifecycle.class.isAssignableFrom( getMappedClass() );
+		return this.implementsLifecycle;
 	}
 
 	@Override

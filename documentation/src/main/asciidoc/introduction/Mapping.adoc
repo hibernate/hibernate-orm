@@ -638,6 +638,8 @@ class Book {
 }
 ----
 
+The advantage is that a `java.sql.Clob` or `java.sql.Blob` can in principle index up to 2^63^ characters or bytes, much more data than you can fit in a Java `String` or `byte[]` array (or in your computer).
+
 To assign a value to these fields, we'll need to use a `LobHelper`.
 We can get one from the `Session`:
 

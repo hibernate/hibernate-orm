@@ -36,6 +36,17 @@ public interface MultiIdentifierLoadAccess<T> {
 	 */
 	MultiIdentifierLoadAccess<T> with(CacheMode cacheMode);
 
+	default MultiIdentifierLoadAccess<T> fetching(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.FETCH );
+	}
+	default MultiIdentifierLoadAccess<T> loading(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.LOAD );
+	}
+
+	/**
+	 * @deprecated use {@link #loading}
+	 */
+	@Deprecated(since = "6.3")
 	default MultiIdentifierLoadAccess<T> with(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
@@ -46,7 +57,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * Specify a batch size for loading the entities (how many at a time).  The default is
 	 * to use a batch sizing strategy defined by the Dialect in use.  Any greater-than-one
 	 * value here will override that default behavior.  If giving an explicit value here,
-	 * care should be taken to not exceed the capabilities of of the underlying database.
+	 * care should be taken to not exceed the capabilities of the underlying database.
 	 * <p>
 	 * Note that overall a batch-size is considered a hint.  How the underlying loading
 	 * mechanism interprets that is completely up to that underlying loading mechanism.

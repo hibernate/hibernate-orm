@@ -11,6 +11,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32152
 ** Bug
     * [HHH-16576] - Problem in query involving union on MySQL 5.7, MariaDB and Oracle
     * [HHH-16573] - Embeddable element collection with updateable = false leads to NullPointerException
+    * [HHH-16569] - Batch fetch leads to some collections to be wrongly initialized with empty due to wrong generated SQL
     * [HHH-16555] - Join fetch query in combination with the inheritance pattern not working in hibernate 6
     * [HHH-16551] - Schema management: discriminator column of type CHAR should always be of length 1
     * [HHH-16549] - NullPointerException when calling LoadQueryInfluencers#isFetchProfileEnabled

@@ -380,10 +380,106 @@ public interface DialectOverride {
 
 		org.hibernate.annotations.SQLSelect override();
 	}
-	@Target({METHOD, FIELD})
+	@Target({METHOD, FIELD, TYPE})
 	@Retention(RUNTIME)
 	@interface SQLSelects {
 		SQLSelect[] value();
+	}
+
+	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLInsert}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLInserts.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLInsert.class)
+	@interface SQLInsert {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLInsert override();
+	}
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@interface SQLInserts {
+		SQLInsert[] value();
+	}
+
+	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLUpdate}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLUpdates.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLUpdate.class)
+	@interface SQLUpdate {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLUpdate override();
+	}
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@interface SQLUpdates {
+		SQLUpdate[] value();
+	}
+
+	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLDelete}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLDeletes.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLDelete.class)
+	@interface SQLDelete {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLDelete override();
+	}
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@interface SQLDeletes {
+		SQLDelete[] value();
+	}
+
+	/**
+	 * Specializes a {@link org.hibernate.annotations.SQLDeleteAll}
+	 * in a certain dialect.
+	 */
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@Repeatable(SQLDeleteAlls.class)
+	@OverridesAnnotation(org.hibernate.annotations.SQLDeleteAll.class)
+	@interface SQLDeleteAll {
+		/**
+		 * The {@link Dialect} in which this override applies.
+		 */
+		Class<? extends Dialect> dialect();
+		Version before() default @Version(major = MAX_VALUE);
+		Version sameOrAfter() default @Version(major = MIN_VALUE);
+
+		org.hibernate.annotations.SQLDeleteAll override();
+	}
+	@Target({METHOD, FIELD, TYPE})
+	@Retention(RUNTIME)
+	@interface SQLDeleteAlls {
+		SQLDeleteAll[] value();
 	}
 
 	/**

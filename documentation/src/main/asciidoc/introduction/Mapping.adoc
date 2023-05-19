@@ -559,7 +559,7 @@ So we don't usually need to explicitly specify that a column should be of type `
 The constant values defined in the class `org.hibernate.Length` are very helpful here:
 
 .Predefined column lengths
-[%autowidth.stretch]
+[cols="10,12,~"]
 |===
 | Constant | Value | Description
 

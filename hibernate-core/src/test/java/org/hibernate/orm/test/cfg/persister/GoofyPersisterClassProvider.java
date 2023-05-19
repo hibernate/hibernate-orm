@@ -60,6 +60,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -756,6 +757,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public boolean canUseReferenceCacheEntries() {
 			return false;
+		}
+
+		@Override
+		public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
+			return Collections.emptyList();
 		}
 
 		@Override

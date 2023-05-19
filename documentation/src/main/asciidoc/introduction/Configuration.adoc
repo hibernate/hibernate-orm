@@ -84,6 +84,7 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 :validator: https://hibernate.org/validator
 :ehcache: https://www.ehcache.org
 :infinispan: https://infinispan.org
+:generator: https://hibernate.org/orm/tooling/
 
 Optionally, you might also add any of the following additional features:
 
@@ -94,7 +95,7 @@ Optionally, you might also add any of the following additional features:
 
 | An {slf4j}[SLF4J] logging implementation | `org.apache.logging.log4j:log4j-core` or `org.slf4j:slf4j-jdk14`
 | A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal` and `io.agroal:agroal-pool`
-| The Hibernate metamodel generator, if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
+| The {generator}[Hibernate Metamodel Generator], especially if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
 | {validator}[Hibernate Validator] | `org.hibernate.validator:hibernate-validator` and `org.glassfish:jakarta.el`
 | Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` along with `org.ehcache:ehcache`
 | Distributed second-level cache support via {infinispan}[Infinispan] | `org.infinispan:infinispan-hibernate-cache-v60`
@@ -104,7 +105,24 @@ Optionally, you might also add any of the following additional features:
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
-Gradle build if you want to use field-level lazy fetching.
+Gradle build if you want to use <<bytecode-enhancer,field-level lazy fetching>>.
+
+[[metamodel-generator]]
+.The Metamodel Generator
+****
+
+:generator-guide: {userGuideBase}#tooling-modelgen
+
+Hibernate's {generator}[Metamodel Generator] is an annotation processor that produces what JPA calls a _static metamodel_.
+That is, it produces a typed model of the persistent classes in our program, giving us a type-safe way to refer to their attributes in Java code.
+In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
+
+We've already seen how to set up the annotation processor in the <<hello-hibernate,gradle build>> we saw earlier.
+
+Now, you don't have to use the Metamodel Generator with Hibernate—the APIs we just mentioned also accept plain strings—but we find that it works well with gradle and integrates well with our IDE, and the advantage in typesafety is compelling.
+
+You can find more information in the {generator-guide}[User Guide].
+****
 
 [[configuration-jpa]]
 === Configuration using JPA XML

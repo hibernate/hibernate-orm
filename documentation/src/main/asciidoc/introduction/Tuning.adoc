@@ -329,13 +329,12 @@ But in case it helps, we often test Hibernate with the following configuration, 
 
 :ehcache-config: https://www.ehcache.org/documentation/
 
-.EHCache provider configuration
+.EHCache configuration
 [cols="35,~"]
 |===
 | Configuration property name              | Property value
 
 | `hibernate.cache.region.factory_class`   | `jcache`
-| `hibernate.javax.cache.provider`         | `org.ehcache.jsr107.EhcacheCachingProvider`
 | `hibernate.javax.cache.uri`              | `/ehcache.xml`
 |===
 
@@ -343,6 +342,25 @@ If you're using EHCache, you'll also need to include an `ehcache.xml` file
 that explicitly configures the behavior of each cache region belonging to
 your entities and collections.
 You'll find more information about configuring EHCache {ehcache-config}[here].
+
+:caffeine: https://github.com/ben-manes/caffeine/
+
+We may use any other implementation of JCache, such as {caffeine}[Caffeine].
+JCache automatically selects whichever implementation it finds on the classpath.
+If there are multiple implementations on the classpath, we must disambiguate using:
+
+.Disambiguating the JCache implementation
+[cols="35,~"]
+|===
+| Configuration property name        | Property value
+
+| `hibernate.javax.cache.provider`   a| The implementation of `javax.cache.spiCachingProvider`, for example:
+[cols="~,20"]
+!===
+! `org.ehcache.jsr107.EhcacheCachingProvider` ! for EHCache
+! `com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider` ! for Caffeine
+!===
+|===
 
 Alternatively, to use Infinispan as the cache implementation, the following settings are required:
 
@@ -365,7 +383,7 @@ Alternatively, to use Infinispan as the cache implementation, the following sett
 |===
 
 Infinispan is usually used when distributed caching is required.
-You'll find more information about using Infinispan with Hibernate {infinispan-hibernate}[here] .
+There's more about using Infinispan with Hibernate {infinispan-hibernate}[here].
 
 Finally, there's a way to globally disable the second-level cache:
 

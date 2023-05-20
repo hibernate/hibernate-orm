@@ -126,13 +126,15 @@ Hibernate provides several strategies for efficiently fetching associations and 
 
 Of these, you should almost always use outer join fetching.
 
-Batch fetching is disabled by default, but we may enable it using this configuration property:
+Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other using properties:
 
+.Configuration settings to enable batch and subselect fetching
 [cols="35,~"]
 |===
 | Configuration property name | Property value
 
-| `hibernate.default_batch_fetch_size` | A sensible batch size
+| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching
+| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching
 |===
 
 That's all there is to it.

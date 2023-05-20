@@ -56,4 +56,6 @@ public interface MetadataImplementor extends Metadata {
 	void initSessionFactory(SessionFactoryImplementor sessionFactoryImplementor);
 
 	void visitRegisteredComponents(Consumer<Component> consumer);
+
+	Component getGenericComponent(Class<?> componentClass);
 }

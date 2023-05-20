@@ -29,8 +29,7 @@ public class ParameterMarkerStrategyInitiator implements StandardServiceInitiato
 	public ParameterMarkerStrategy initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final boolean useNativeMarkers = ConfigurationHelper.getBoolean(
 				AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS,
-				configurationValues,
-				false
+				configurationValues
 		);
 
 		if ( useNativeMarkers ) {

@@ -65,8 +65,8 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 
 		final MutationExecutorService mutationExecutorService = session
 				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
+				.getFastSessionServices()
+				.getMutationExecutorService();
 
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
 		final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();

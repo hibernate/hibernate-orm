@@ -15,6 +15,8 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.service.ServiceRegistry;
 
+import jakarta.persistence.AccessType;
+
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedType;
 
 /**
@@ -40,8 +42,10 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 				|| BuiltInPropertyAccessStrategies.MIXED.getExternalName().equals( explicitAccessStrategyName ) ) {
 			//type-cache-pollution agent: it's crucial to use the ManagedTypeHelper rather than attempting a direct cast
 			if ( isManagedType( containerClass ) ) {
-				// PROPERTY (BASIC) and MIXED are not valid for bytecode enhanced entities...
-				return PropertyAccessStrategyEnhancedImpl.INSTANCE;
+				if ( BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName ) ) {
+					return PropertyAccessStrategyEnhancedImpl.FIELD;
+				}
+				return PropertyAccessStrategyEnhancedImpl.STANDARD;
 			}
 		}
 

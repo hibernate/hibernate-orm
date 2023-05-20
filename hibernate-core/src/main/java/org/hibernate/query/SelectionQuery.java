@@ -195,6 +195,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	SelectionQuery<R> setTimeout(int timeout);
 
+	@Override
+	SelectionQuery<R> setComment(String comment);
+
 	/**
 	 * Obtain the JDBC fetch size hint in effect for this query. This value is eventually passed along to the JDBC
 	 * query via {@link java.sql.Statement#setFetchSize(int)}. As defined by JDBC, this value is a hint to the

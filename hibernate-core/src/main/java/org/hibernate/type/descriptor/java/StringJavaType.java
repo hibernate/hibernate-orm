@@ -79,6 +79,14 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		if ( Clob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createClob( value );
 		}
+		if ( Integer.class.isAssignableFrom( type ) ) {
+			Integer parsed = Integer.parseInt( value );
+			return (X) parsed;
+		}
+		if ( Long.class.isAssignableFrom( type ) ) {
+			Long parsed = Long.parseLong( value );
+			return (X) parsed;
+		}
 
 		throw unknownUnwrap( type );
 	}
@@ -98,6 +106,12 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		}
 		if (value instanceof Clob) {
 			return DataHelper.extractString( (Clob) value );
+		}
+		if (value instanceof Integer) {
+			return value.toString();
+		}
+		if (value instanceof Long) {
+			return value.toString();
 		}
 
 		throw unknownWrap( value.getClass() );

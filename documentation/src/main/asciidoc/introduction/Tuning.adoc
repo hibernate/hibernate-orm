@@ -1,0 +1,692 @@
+[[tuning-and-performance]]
+== Tuning and performance
+
+Once you have a program up and running using Hibernate to access
+the database, it's inevitable that you'll find places where performance is
+disappointing or unacceptable.
+
+Fortunately, most performance problems are relatively easy to solve with
+the tools that Hibernate makes available to you, as long as you keep a
+couple of simple principles in mind.
+
+First and most important: the reason you're using Hibernate is
+that it makes things easier. If, for a certain problem, it's making
+things _harder_, stop using it. Solve this problem with a different tool
+instead.
+
+IMPORTANT: Just because you're using Hibernate in your program doesn't mean
+you have to use it _everywhere_.
+
+Second: there are two main potential sources of performance bottlenecks in
+a program that uses Hibernate:
+
+- too many round trips to the database, and
+- memory consumption associated with the first-level (session) cache.
+
+So performance tuning primarily involves reducing the number of accesses
+to the database, and/or controlling the size of the session cache.
+
+But before we get to those more advanced topics, we should start by tuning
+the connection pool.
+
+[[connection-pool]]
+=== Tuning the connection pool
+
+The connection pool built in to Hibernate is suitable for testing, but isn't intended for use in production.
+Instead, Hibernate supports a range of different connection pools, including our favorite, Agroal.
+
+To select and configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
+For example:
+
+[source,properties]
+----
+hibernate.agroal.maxSize 20
+hibernate.agroal.minSize 10
+hibernate.agroal.acquisitionTimeout PT1s
+hibernate.agroal.reapTimeout PT10s
+----
+
+As long as you set at least one property with the prefix `hibernate.agroal`, the `AgroalConnectionProvider` will be selected automatically.
+
+.Settings for configuring Agroal
+[cols="37,~"]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.agroal.maxSize` | The maximum number of connections present on the pool
+| `hibernate.agroal.minSize` | The minimum number of connections present on the pool
+| `hibernate.agroal.initialSize` | The number of connections added to the pool when it is started
+| `hibernate.agroal.maxLifetime` | The maximum amount of time a connection can live, after which it is removed from the pool
+| `hibernate.agroal.acquisitionTimeout` | The maximum amount of time a thread can wait for a connection, after which an exception is thrown instead
+| `hibernate.agroal.reapTimeout` | The duration for eviction of idle connections
+| `hibernate.agroal.leakTimeout` | The duration of time a connection can be held without causing a leak to be reported
+| `hibernate.agroal.idleValidationTimeout` | A foreground validation is executed if a connection has been idle on the pool for longer than this duration
+| `hibernate.agroal.validationTimeout` | The interval between background validation checks
+| `hibernate.agroal.initialSql` | A SQL command to be executed when a connection is created
+| `hibernate.connection.autocommit` | The default autocommit mode
+| `hibernate.connection.isolation` | The default transaction isolation level
+|===
+
+.Container-managed datasources
+****
+In a container environment, you usually don't need to configure a connection pool through Hibernate.
+Instead, you'll use a container-managed datasource, as we saw in <<basic-configuration-settings>>.
+****
+
+[[statement-batching]]
+=== Enabling statement batching
+
+An easy way to improve performance of some transactions, with almost no work at all, is to turn on automatic DML statement batching.
+Batching only helps in cases where a program executes many inserts, updates, or deletes against the same table in a single transaction.
+
+All you need to do is set a single property:
+
+.Enabling JDBC batching
+[%autowidth.stretch]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.jdbc.batch_size` | Maximum batch size for SQL statement batching
+|===
+
+[TIP]
+====
+Even better than DML statement batching is the use of HQL `update` or `delete` queries, or even native SQL that calls a stored procedure!
+====
+
+[[association-fetching]]
+=== Association fetching
+
+:association-fetching: {userGuideBase}#fetching
+
+Achieving high performance in ORM means minimizing the number of round
+trips to the database. This goal should be uppermost in your mind
+whenever you're writing data access code with Hibernate. The most
+fundamental rule of thumb in ORM is:
+
+- explicitly specify all the data you're going to need right at the start
+of a session/transaction, and fetch it immediately in one or two queries,
+- and only then start navigating associations between persistent entities.
+
+image::images/fetching.png[Fetching process,width=700,align="center"]
+
+Without question, the most common cause of poorly-performing data access
+code in Java programs is the problem of _N+1 selects_. Here, a list of N
+rows is retrieved from the database in an initial query, and then
+associated instances of a related entity are fetched using N subsequent
+queries.
+
+[IMPORTANT]
+// .This problem is your responsibility
+====
+This isn't a bug or limitation of Hibernate; this problem even affects typical handwritten JDBC code behind DAOs.
+Only you, the developer, can solve this problem, because only you know ahead of time what data you're going to need in a given unit of work.
+But that's OK.
+Hibernate gives you all the tools you need.
+====
+
+Hibernate provides several strategies for efficiently fetching
+associations and avoiding N+1 selects:
+
+- outer join fetching,
+- batch fetching, and
+- subselect fetching.
+
+Of these, you should almost always use outer join fetching. Batch
+fetching and subselect fetching are only useful in rare cases where
+outer join fetching would result in a cartesian product and a huge
+result set. Unfortunately, outer join fetching simply isn't possible
+with lazy fetching.
+
+TIP: Avoid the use of lazy fetching, which is often the source of
+N+1 selects.
+
+Now, we're not saying that associations should be mapped for eager
+fetching by default! That would be a terrible idea, resulting in
+simple session operations that fetch almost the entire database.
+Therefore:
+
+TIP: Most associations should be mapped for lazy fetching by default.
+
+It sounds as if this tip is in contradiction to the previous one, but
+it's not. It's saying that you must explicitly specify eager fetching
+for associations precisely when and where they are needed.
+
+If you need eager fetching in some particular transaction, use:
+
+- `left join fetch` in HQL,
+- a fetch profile,
+- a JPA `EntityGraph`, or
+- `fetch()` in a criteria query.
+
+You can find much more information about association fetching in the
+{association-fetching}[User Guide].
+
+[[second-level-cache]]
+=== The second-level cache
+
+:second-level-cache: {userGuideBase}#caching
+
+A classic way to reduce the number of accesses to the database is to use a second-level cache, allowing  data cached in memory to be shared between sessions.
+
+By nature, a second-level cache tends to undermine the ACID properties of transaction processing in a relational database.
+We _don't_ use a distributed transaction with two-phase commit to ensure that changes to the cache and database happen atomically.
+So a second-level cache is often by far the easiest way to improve the performance of a system, but only at the cost of making it much more difficult to reason about concurrency.
+And so the cache is a potential source of bugs which are difficult to isolate and reproduce.
+
+Therefore, by default, an entity is not eligible for storage in the second-level cache.
+We must explicitly mark each entity that will  be stored in the second-level cache with the `@Cache` annotation from `org.hibernate.annotations`.
+
+But that's still not enough.
+Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
+
+[CAUTION]
+// .Caching is disabled by default
+====
+Caching is disabled by default.
+To minimize the risk of data loss, we force you to stop and think before any entity goes into the cache.
+====
+
+Hibernate segments the second-level cache into named _regions_, one for each:
+
+- mapped entity hierarchy or
+- collection role.
+
+Each region is permitted its own policies for expiry, persistence, and replication. These policies must be configured externally to Hibernate.
+
+The appropriate policies depend on the kind of data an entity represents. For example, a program might have different caching policies for "reference" data, for transactional data, and for data used for analytics. Ordinarily, the implementation of those policies is the responsibility of the underlying cache implementation.
+
+[[enable-second-level-cache]]
+=== Specifying which data is cached
+
+By default, no data is eligible for storage in the second-level cache.
+
+An entity hierarchy or collection role may be assigned a region using the `@Cache` annotation.
+If no region name is explicitly specified, the region name is just the name of the entity class or collection role.
+
+[source,java]
+----
+@Entity
+@Cache(usage=NONSTRICT_READ_WRITE, region="Publishers")
+class Publisher { ... }
+----
+[source,java]
+----
+@Entity
+class Publisher {
+    ...
+    @Cache(usage=NONSTRICT_READ_WRITE, region="PublishedBooks")
+    @OneToMany(mappedBy="publisher")
+    Set<Book> books;
+    ...
+}
+----
+
+The cache defined by a `@Cache` annotation is automatically utilized by Hibernate to:
+
+- retrieve an entity by id when `find()` is called, or
+- to resolve an association by id.
+
+[WARNING]
+====
+The `@Cache` annotation must be specified on the _root class_ of an entity inheritance hierarchy.
+It is an error to place it on a subclass entity.
+====
+
+The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
+
+.Cache concurrency
+[cols="20,30,~"]
+|===
+| Concurrency policy | Interpretation | Explanation
+
+| `READ_ONLY` a|
+- Immutable data
+- Read-only access
+| Indicates that the cached object is immutable, and is never updated. If an entity with this cache concurrency is updated, an exception is thrown.
+
+This is the simplest, safest, and best-performing cache concurrency strategy. It's particularly suitable for so-called "reference" data.
+
+| `NONSTRICT_READ_WRITE` a|
+- Concurrent updates are extremely improbable
+- Read/write access with no locking
+| Indicates that the cached object is sometimes updated, but that it's extremely unlikely that two transactions will attempt to update the same item of data at the same time.
+
+This strategy does not use locks. When an item is updated, the cache is invalidated both before and after completion of the updating transaction. But without locking, it's impossible to completely rule out the possibility of a second transaction storing or retrieving stale data in or from the cache during the completion process of the first transaction.
+
+| `READ_WRITE` a|
+- Concurrent updates are possible but not common
+- Read/write access using soft locks
+a| Indicates a non-vanishing likelihood that two concurrent transactions attempt to update the same item of data simultaneously.
+
+This strategy uses "soft" locks to prevent concurrent transactions from retrieving or storing a stale item from or in the cache during the transaction completion process. A soft lock is simply a marker entry placed in the cache while the updating transaction completes.
+
+- A second transaction may not read the item from the cache while the soft lock is present, and instead simply proceeds to read the item directly from the database, exactly as if a regular cache miss had occurred.
+- Similarly, the soft lock also prevents this second transaction from storing a stale item to the cache when it returns from its round trip to the database with something that might not quite be the latest version.
+
+| `TRANSACTIONAL` a|
+- Concurrent updates are frequent
+- Transactional access
+| Indicates that concurrent writes are common, and the only way to maintain synchronization between the second-level cache and the database is via the use of a fully transactional cache provider. In this case, the cache and the database must cooperate via JTA or the XA protocol, and Hibernate itself takes on little responsibility for maintaining the integrity of the cache.
+|===
+
+Which policies make sense may also depend on the underlying second-level cache implementation.
+
+[NOTE]
+// .The JPA-defined `@Cacheable` annotation
+====
+JPA has a similar annotation, named `@Cacheable`.
+Unfortunately, it's almost useless to us, since:
+
+- it provides no way to specify any information about the nature of the cached entity and how its cache should be managed, and
+- it may not be used to annotate associations, and so we can't even use it to mark collection roles as eligible for storage in the second-level cache.
+====
+
+If our entity has a <<natural-id-attributes,natural id>>, we can enable an additional cache, which holds a mapping from natural id to id, by annotating the entity `@NaturalIdCache`.
+By default, the natural id cache is stored in a dedicated region of the second-level cache, separate from the cached entity data.
+
+[source,java]
+----
+@Entity
+@Cache(usage=READ_WRITE, region="Book")
+@NaturalIdCache(region="BookIsbn")
+class Book {
+    ...
+    @NaturalId
+    String isbn;
+
+    @NaturalId
+    int printing;
+    ...
+}
+----
+
+This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs lookup by natural id:
+
+- `bySimpleNaturalId()` if just one attribute is annotation `@NaturalId`, or
+- `byNaturalId()` if multiple attributes are annotated `@NaturalId`.
+
+[source,java]
+----
+Book book = session.byNaturalId().using("isbn", isbn, "printing", printing).load();
+----
+
+[NOTE]
+====
+Since the natural id cache doesn't contain the actual state of the entity, it doesn't make sense to annotate an entity `@NaturalIdCache` unless it's already eligible for storage in the second-level cache, that is, unless it's also annotated `@Cache`.
+====
+
+Once we've marked an entity or collection as eligible for storage in the second-level cache, we still need to set up an actual cache.
+
+[[second-level-cache-configuration]]
+=== Configuring the second-level cache provider
+
+Configuring a second-level cache provider is a rather involved topic, and quite outside the scope of this document.
+But in case it helps, we often test Hibernate with the following configuration, which uses EHCache as the cache implementation, as above in <<optional-dependencies>>:
+
+:ehcache-config: https://www.ehcache.org/documentation/
+
+.EHCache provider configuration
+[cols="35,~"]
+|===
+| Configuration property name              | Property value
+
+| `hibernate.cache.region.factory_class`   | `jcache`
+| `hibernate.javax.cache.provider`         | `org.ehcache.jsr107.EhcacheCachingProvider`
+| `hibernate.javax.cache.uri`              | `/ehcache.xml`
+|===
+
+If you're using EHCache, you'll also need to include an `ehcache.xml` file
+that explicitly configures the behavior of each cache region belonging to
+your entities and collections.
+You'll find more information about configuring EHCache {ehcache-config}[here].
+
+Alternatively, to use Infinispan as the cache implementation, the following settings are required:
+
+:infinispan-hibernate: https://infinispan.org/docs/stable/titles/hibernate/hibernate.html
+
+.Infinispan provider configuration
+[cols="35,~"]
+|===
+| Configuration property name              | Property value
+
+| `hibernate.cache.region.factory_class`   | `infinispan`
+| `hibernate.cache.infinispan.cfg`         a| Path to infinispan configuration file, for example:
+[cols="~,35"]
+!===
+! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs.xml`
+! for a distributed cache
+! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs-local.xml`
+! to test with local cache
+!===
+|===
+
+Infinispan is usually used when distributed caching is required.
+You'll find more information about using Infinispan with Hibernate {infinispan-hibernate}[here] .
+
+Finally, there's a way to globally disable the second-level cache:
+
+.Setting to disable caching
+[cols="35,~"]
+|===
+| Configuration property name              | Property value
+
+| `hibernate.cache.use_second_level_cache` | `true` to enable caching, or `false` to disable it
+|===
+
+When `hibernate.cache.region.factory_class` is set, this property defaults to `true`.
+
+[TIP]
+====
+This setting lets us easily disable the second-level cache completely when troubleshooting or profiling performance.
+====
+
+You can find much more information about the second-level cache in the {second-level-cache}[User Guide].
+
+[[query-cache]]
+=== Caching query result sets
+
+The caches we've described above are only used to optimize lookups by id or by natural id.
+Hibernate also has a way to cache the result sets of queries, though this is only rarely an efficient thing to do.
+
+The query cache must be enabled explicitly:
+
+.Setting to enable the query cache
+[cols="35,~"]
+|===
+| Configuration property name | Property value
+
+| `hibernate.cache.use_query_cache` | `true` to enable the query cache
+|===
+
+To cache the results of a query, call `SelectionQuery.setCacheable(true)`:
+
+[source,java]
+----
+session.createQuery("from Product where discontinued = false")
+    .setCacheable(true)
+    .getResultList();
+----
+
+By default, the query result set is stored in a cache region named `default-query-results-region`.
+Since different queries should have different caching policies, it's common to explicitly specify a region name:
+
+[source,java]
+----
+session.createQuery("from Product where discontinued = false")
+    .setCacheable(true)
+    .setCacheRegion("ProductCatalog")
+    .getResultList();
+----
+
+A result set is cached together with a _logical timestamp_.
+By "logical", we mean that it doesn't actually increase linearly with time, and in particular it's not the system time.
+
+When a `Product` is updated, Hibernate _does not_ go through the query cache and invalidate every cached result set that's affected by the change.
+Instead, there's a special region of the cache which holds a logical timestamp of the most-recent update to each table.
+This is called the _update timestamps cache_, and it's kept in the region `default-update-timestamps-region`.
+
+[CAUTION]
+====
+It's _your responsibility_ to ensure that this cache region is configured with appropriate policies.
+In particular, update timestamps should never expire or be evicted.
+====
+
+When a query result set is read from the cache, Hibernate compares its timestamp with the timestamp of each of the tables that affect the results of the query, and _only_ returns the result set if the result set isn't stale.
+If the result set _is_ stale, Hibernate goes ahead and re-executes the query against the database and updates the cached result set.
+
+As is generally the case with any second-level cache, the query cache can break the ACID properties of transactions.
+
+[[second-level-cache-management]]
+=== Second-level cache management
+
+For the most part, the second-level cache is transparent.
+Program logic which interacts with the Hibernate session is unaware of the cache, and is not impacted by changes to caching policies.
+
+At worst, interaction with the cache may be controlled by specifying of an explicit `CacheMode`:
+
+[source,java]
+----
+session.setCacheMode(CacheMode.IGNORE);
+----
+
+Or, using JPA-standard APIs:
+
+[source,java]
+----
+entityManager.setCacheRetrieveMode(CacheRetrieveMode.BYPASS);
+entityManager.setCacheStoreMode(CacheStoreMode.BYPASS);
+----
+
+The JPA-defined cache modes are:
+
+.JPA-defined cache modes
+[cols="30,~"]
+|===
+| Mode | Interpretation
+
+| `CacheRetrieveMode.USE` | Read data from the cache if available
+| `CacheRetrieveMode.BYPASS` | Don't read data from the cache; go direct to the database
+
+| `CacheStoreMode.USE` | Write data to the cache when read from the database or when modified; do not update already-cached items when reading
+| `CacheStoreMode.REFRESH` | Write data to the cache when read from the database or when modified; always update cached items when reading
+| `CacheStoreMode.BYPASS` | Don't write data to the cache
+|===
+
+A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
+
+.Hibernate cache modes and JPA equivalents
+[cols="30,~"]
+|===
+| Hibernate `CacheMode` | Equivalent JPA modes
+
+| `NORMAL` | `CacheRetrieveMode.USE`, `CacheStoreMode.USE`
+| `IGNORE` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.BYPASS`
+| `GET` | `CacheRetrieveMode.USE`, `CacheStoreMode.BYPASS`
+| `PUT` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.USE`
+| `REFRESH` | `CacheRetrieveMode.REFRESH`, `CacheStoreMode.BYPASS`
+|===
+
+There's no particular reason to prefer Hibernate's `CacheMode` to the JPA equivalents.
+This enumeration only exists because Hibernate had cache modes long before they were added to JPA.
+
+[TIP]
+// .A good time to `BYPASS` the cache
+====
+It's a good idea to set the `CacheStoreMode` to `BYPASS` just before running a query which returns a large result set full of data that we don't expect to need again soon.
+This saves work, and prevents the newly-read data from pushing out the previously cached data.
+
+In JPA we would use this idiom:
+
+[source,java]
+----
+entityManager.setCacheStoreMode(CacheStoreMode.BYPASS);
+List<Publisher> allpubs =
+        entityManager.createQuery("from Publisher", Publisher.class)
+            .getResultList();
+entityManager.setCacheStoreMode(CacheStoreMode.USE);
+----
+
+But Hibernate has a better way:
+
+[source,java]
+----
+List<Publisher> allpubs =
+        session.createSelectionQuery("from Publisher", Publisher.class)
+            .setCacheStoreMode(CacheStoreMode.BYPASS)
+            .getResultList();
+----
+====
+
+[TIP]
+====
+For "reference" data, that is, for data which is expected to always be found in the second-level cache, it's a good idea to _prime_ the cache at startup.
+There's a really easy way to do this: just execute a query immediately after obtaining the
+`EntityManager` or `SessionFactory`.
+
+[source,java]
+----
+SessionFactory sessionFactory = setupHibernate(new Configuration()).buildSessionFactory();
+// prime the second-level cache
+sessionFactory.inSession(session -> {
+    session.createSelectionQuery("from Countries"))
+        .setReadOnly(true)
+        .getResultList();
+    session.createSelectionQuery("from Product where discontinued = false"))
+        .setReadOnly(true)
+        .getResultList();
+});
+
+----
+====
+
+Very occasionally, it's necessary or advantageous to control the cache explicitly, for example, to evict some data that we know to be stale.
+The `Cache` interface allows programmatic eviction of cached items.
+
+[source,java]
+----
+sessionFactory.getCache().evictEntityData(Book.class, bookId);
+----
+
+[CAUTION]
+// .Second-level cache management is not transaction-aware
+====
+Second-level cache management is not transaction-aware.
+None of the operations of the `Cache` interface respect any isolation or transactional semantics associated with the underlying caches. In particular, eviction via the methods of this interface causes an immediate "hard" removal outside any current transaction and/or locking scheme.
+====
+
+Ordinarily, however, Hibernate automatically evicts or updates cached data after modifications, and, in addition, cached data which is unused will eventually be expired according to the configured policies.
+
+This is quite different to what happens with the first-level cache.
+
+[[session-cache-management]]
+=== Session cache management
+
+Entity instances aren't automatically evicted from the session cache when they're no longer needed.
+Instead, they stay pinned in memory until the session they belong to is discarded by your program.
+
+The methods `detach()` and `clear()` allow you to remove entities from the session cache, making them available for garbage collection.
+Since most sessions are rather short-lived, you won't need these operations very often.
+And if you find yourself thinking you _do_ need them in a certain situation, you should strongly consider an alternative solution: a _stateless session_.
+
+[[stateless-sessions]]
+=== Stateless sessions
+
+An arguably-underappreciated feature of Hibernate is the `StatelessSession` interface, which provides a command-oriented, more bare-metal approach to interacting with the database.
+
+You may obtain a reactive stateless session from the `SessionFactory`:
+
+[source, JAVA, indent=0]
+----
+Stage.StatelessSession ss = getSessionFactory().openStatelessSession();
+----
+
+A stateless session:
+
+- doesn't have a first-level cache (persistence context), nor does it interact with any second-level caches, and
+- doesn't implement transactional write-behind or automatic dirty checking, so all operations are executed immediately when they're explicitly called.
+
+For a stateless session, you're always working with detached objects. Thus, the programming model is a bit different:
+
+.Important methods of the `StatelessSession`
+[%autowidth.stretch]
+|===
+| Method name and parameters | Effect
+
+| `get(Class, Object)` | Obtain a detached object, given its type and its id, by executing a `select`
+| `fetch(Object)`      | Fetch an association of a detached object
+| `refresh(Object)`    | Refresh the state of a detached object by executing
+a `select`
+| `insert(Object)`     | Immediately `insert` the state of the given transient object into the database
+| `update(Object)`     | Immediately `update` the state of the given detached object in the database
+| `delete(Object)`     | Immediately `delete` the state of the given detached object from the database
+|===
+
+NOTE: There's no `flush()` operation, and so `update()` is always explicit.
+
+In certain circumstances, this makes stateless sessions easier to work with, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
+
+[CAUTION]
+====
+If you use `fetch()` in a stateless session, you can very easily obtain two objects representing the same database row!
+====
+
+In particular, the absence of a persistence context means that you can safely perform bulk-processing tasks without allocating huge quantities of memory.
+Use of a `StatelessSession` alleviates the need to call:
+
+- `clear()` or `detach()` to perform first-level cache management, and
+- `setCacheMode()` to bypass interaction with the second-level cache.
+
+[TIP]
+====
+Stateless sessions can be useful, but for bulk operations on huge datasets,
+Hibernate can't possibly compete with stored procedures!
+====
+
+When using a stateless session, you should be aware of the following additional limitations:
+
+- persistence operations never cascade to associated instances,
+- changes to `@ManyToMany` associations and ``@ElementCollection``s cannot be made persistent, and
+- operations performed via a stateless session bypass callbacks.
+
+[[optimistic-and-pessimistic-locking]]
+=== Optimistic and pessimistic locking
+
+Finally, an aspect of behavior under load that we didn't mention above is row-level
+data contention. When many transactions try to read and update the same data, the
+program might become unresponsive with lock escalation, deadlocks, and lock
+acquisition timeout errors.
+
+There's two basic approaches to data concurrency in Hibernate:
+
+- optimistic locking using `@Version` columns, and
+- database-level pessimistic locking using the SQL `for update` syntax (or equivalent).
+
+In the Hibernate community it's _much_ more common to use optimistic locking, and
+Hibernate makes that incredibly easy.
+
+TIP: Where possible, in a multiuser system, avoid holding a pessimistic lock across
+a user interaction. Indeed, the usual practice is to avoid having transactions that
+span user interactions. For multiuser systems, optimistic locking is king.
+
+That said, there _is_ also a place for pessimistic locks, which can sometimes reduce
+the probability of transaction rollbacks.
+
+Therefore, the `find()`, `lock()`, and `refresh()` methods of the reactive session
+accept an optional `LockMode`. You can also specify a `LockMode` for a query. The
+lock mode can be used to request a pessimistic lock, or to customize the behavior
+of optimistic locking:
+
+.Optimistic and pessimistic lock modes
+[cols="26,~"]
+|===
+| `LockMode` type | Meaning
+
+| `READ`                        | An optimistic lock obtained implicitly whenever
+an entity is read from the database using `select`
+| `OPTIMISTIC`                  | An optimistic lock obtained when an entity is
+read from the database, and verified using a
+`select` to check the version when the
+transaction completes
+| `OPTIMISTIC_FORCE_INCREMENT`  | An optimistic lock obtained when an entity is
+read from the database, and enforced using an
+`update` to increment the version when the
+transaction completes
+| `WRITE`                       | A pessimistic lock obtained implicitly whenever
+an entity is written to the database using
+`update` or `insert`
+| `PESSIMISTIC_READ`            | A pessimistic `for share` lock
+| `PESSIMISTIC_WRITE`           | A pessimistic `for update` lock
+| `PESSIMISTIC_FORCE_INCREMENT` | A pessimistic lock enforced using an immediate
+`update` to increment the version
+|===
+
+[[hibernate-reactive]]
+=== Reactive programming with Hibernate
+
+:hr: https://hibernate.org/reactive/
+:hr-guide: https://hibernate.org/reactive/documentation/2.0/reference/html_single/
+
+Finally, many systems which require high scalability now make use of reactive programming and reactive streams.
+{hr}[Hibernate Reactive] brings O/R mapping to the world of reactive programming.
+You can learn much more about Hibernate Reactive from its {hr-guide}[Reference Documentation].

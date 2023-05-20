@@ -1082,8 +1082,12 @@ public class BinderHelper {
 		if ( targetValue instanceof Collection ) {
 			toOne = (ToOne) ( (Collection) targetValue ).getElement();
 		}
-		else {
+		else if ( targetValue instanceof ToOne ) {
 			toOne = (ToOne) targetValue;
+		}
+		else {
+			// Nothing to check, EARLY EXIT
+			return;
 		}
 		final String referencedEntityName = toOne.getReferencedEntityName();
 		final PersistentClass referencedClass = persistentClasses.get( referencedEntityName );
@@ -1093,7 +1097,7 @@ public class BinderHelper {
 				return;
 			}
 			else {
-				ownerClass = getSuperPersistentClass( ownerClass );
+				ownerClass = ownerClass.getSuperPersistentClass();
 			}
 		}
 		throw new AnnotationException(
@@ -1110,24 +1114,9 @@ public class BinderHelper {
 			if ( ownerClass.getTable() == referencedClass.getTable() ) {
 				return true;
 			}
-			referencedClass = getSuperPersistentClass( referencedClass );
+			referencedClass = referencedClass.getSuperPersistentClass();
 		}
 		return false;
 	}
 
-	private static PersistentClass getSuperPersistentClass(PersistentClass persistentClass) {
-		return persistentClass.getSuperclass() != null ? persistentClass.getSuperclass()
-				: getSuperPersistentClass( persistentClass.getSuperMappedSuperclass() );
-	}
-
-	private static PersistentClass getSuperPersistentClass(MappedSuperclass mappedSuperclass) {
-		if ( mappedSuperclass != null ) {
-			final PersistentClass superClass = mappedSuperclass.getSuperPersistentClass();
-			if ( superClass != null ) {
-				return superClass;
-			}
-			return getSuperPersistentClass( mappedSuperclass.getSuperMappedSuperclass() );
-		}
-		return null;
-	}
 }

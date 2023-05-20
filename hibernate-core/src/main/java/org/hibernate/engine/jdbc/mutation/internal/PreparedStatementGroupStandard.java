@@ -149,7 +149,6 @@ public class PreparedStatementGroupStandard implements PreparedStatementGroup {
 	@Override
 	public void release() {
 		statementMap.forEach( (tableName, statementDetails) -> statementDetails.releaseStatement( session ) );
-		statementMap.clear();
 	}
 
 

@@ -55,7 +55,6 @@ public enum Clause {
 	ORDER,
 	OFFSET,
 	FETCH,
-	FOR_UPDATE,
 	OVER,
 	/**
 	 * The clause containing CTEs

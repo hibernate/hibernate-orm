@@ -8,7 +8,6 @@ package org.hibernate.event.internal;
 
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
 import org.hibernate.classic.Lifecycle;
@@ -18,7 +17,6 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * We do two things here:

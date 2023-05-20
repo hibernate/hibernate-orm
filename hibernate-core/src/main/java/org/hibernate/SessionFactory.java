@@ -24,6 +24,8 @@ import org.hibernate.stat.Statistics;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 
+import static org.hibernate.internal.TransactionManagement.manageTransaction;
+
 /**
  * A {@code SessionFactory} represents an "instance" of Hibernate: it maintains
  * the runtime metamodel representing persistent entities, their attributes,
@@ -193,7 +195,16 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * Open a {@link Session} and use it to perform an action.
 	 */
 	default void inSession(Consumer<Session> action) {
-		try (Session session = openSession()) {
+		try ( Session session = openSession() ) {
+			action.accept( session );
+		}
+	}
+
+	/**
+	 * Open a {@link StatelessSession} and use it to perform an action.
+	 */
+	default void inStatelessSession(Consumer<StatelessSession> action) {
+		try ( StatelessSession session = openStatelessSession() ) {
 			action.accept( session );
 		}
 	}
@@ -203,86 +214,49 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * within the bounds of a transaction.
 	 */
 	default void inTransaction(Consumer<Session> action) {
-		inSession(
-				session -> {
-					final Transaction transaction = session.beginTransaction();
-					try {
-						action.accept( session );
-						if ( !transaction.isActive() ) {
-							throw new TransactionManagementException(
-									"Execution of action caused managed transaction to be completed" );
-						}
-					}
-					catch (RuntimeException exception) {
-						// an error happened in the action
-						if ( transaction.isActive() ) {
-							try {
-								transaction.rollback();
-							}
-							catch (Exception ignore) {
-							}
-						}
-
-						throw exception;
-					}
-					// The action completed without throwing an exception,
-					// so we attempt to commit the transaction, allowing
-					// any RollbackException to propagate. Note that when
-					// we get here we know that the transaction is active
-					transaction.commit();
-				}
-		);
+		inSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
-	class TransactionManagementException extends RuntimeException {
-		TransactionManagementException(String message) {
-			super( message );
-		}
+	/**
+	 * Open a {@link StatelessSession} and use it to perform an action
+	 * within the bounds of a transaction.
+	 */
+	default void inStatelessTransaction(Consumer<StatelessSession> action) {
+		inStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
 	/**
 	 * Open a {@link Session} and use it to obtain a value.
 	 */
 	default <R> R fromSession(Function<Session,R> action) {
-		try (Session session = openSession()) {
+		try ( Session session = openSession() ) {
 			return action.apply( session );
 		}
 	}
 
 	/**
-	 * Open a {@link Session} and use it to perform an action
+	 * Open a {@link StatelessSession} and use it to obtain a value.
+	 */
+	default <R> R fromStatelessSession(Function<StatelessSession,R> action) {
+		try ( StatelessSession session = openStatelessSession() ) {
+			return action.apply( session );
+		}
+	}
+
+	/**
+	 * Open a {@link Session} and use it to obtain a value
 	 * within the bounds of a transaction.
 	 */
 	default <R> R fromTransaction(Function<Session,R> action) {
-		return fromSession(
-				session -> {
-					final Transaction transaction = session.beginTransaction();
-					try {
-						R result = action.apply( session );
-						if ( !transaction.isActive() ) {
-							throw new TransactionManagementException(
-									"Execution of action caused managed transaction to be completed" );
-						}
-						// The action completed without throwing an exception,
-						// so we attempt to commit the transaction, allowing
-						// any RollbackException to propagate. Note that when
-						// we get here we know that the transaction is active
-						transaction.commit();
-						return result;
-					}
-					catch (RuntimeException exception) {
-						// an error happened in the action or during commit()
-						if ( transaction.isActive() ) {
-							try {
-								transaction.rollback();
-							}
-							catch (Exception ignore) {
-							}
-						}
-						throw exception;
-					}
-				}
-		);
+		return fromSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
+	}
+
+	/**
+	 * Open a {@link StatelessSession} and use it to obtain a value
+	 * within the bounds of a transaction.
+	 */
+	default <R> R fromStatelessTransaction(Function<StatelessSession,R> action) {
+		return fromStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
 	/**

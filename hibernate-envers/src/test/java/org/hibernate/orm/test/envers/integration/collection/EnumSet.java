@@ -148,6 +148,6 @@ public class EnumSet extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	private void verifyMapping(JdbcMapping jdbcMapping) {
-		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode() ).isIn( Types.VARCHAR, SqlTypes.ENUM );
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode() ).isIn( Types.VARCHAR, Types.NVARCHAR, SqlTypes.ENUM );
 	}
 }

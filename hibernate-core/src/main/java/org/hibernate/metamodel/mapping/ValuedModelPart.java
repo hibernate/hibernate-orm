@@ -64,6 +64,18 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 		);
 	}
 
+	default void forEachNonFormula(SelectableConsumer consumer) {
+		ModelPart.super.forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( selectableMapping.isFormula() ) {
+						return;
+					}
+
+					consumer.accept( selectionIndex, selectableMapping );
+				}
+		);
+	}
+
 	default void forEachUpdatable(SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {

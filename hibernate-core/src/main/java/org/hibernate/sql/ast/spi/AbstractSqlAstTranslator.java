@@ -593,6 +593,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return limit != null && !limit.isEmpty();
 	}
 
+	protected boolean hasLimit(QueryPart queryPart) {
+		if ( queryPart.isRoot() && hasLimit() && limit.getMaxRows() != null ) {
+			return true;
+		}
+		else {
+			return queryPart.getFetchClauseExpression() != null;
+		}
+	}
+
 	protected boolean hasOffset(QueryPart queryPart) {
 		if ( queryPart.isRoot() && hasLimit() && limit.getFirstRow() != null ) {
 			return true;
@@ -1350,12 +1359,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected LockMode getEffectiveLockMode(String alias) {
+		return getEffectiveLockMode( alias, getQueryPartStack().getCurrent().isRoot() );
+	}
+
+	protected LockMode getEffectiveLockMode(String alias, boolean isRoot) {
 		if ( getLockOptions() == null ) {
 			return LockMode.NONE;
 		}
-		final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
 		LockMode lockMode = getLockOptions().getAliasSpecificLockMode( alias );
-		if ( currentQueryPart.isRoot() && lockMode == null ) {
+		if ( isRoot && lockMode == null ) {
 			lockMode = getLockOptions().getLockMode();
 		}
 		return lockMode == null ? LockMode.NONE : lockMode;
@@ -1417,7 +1429,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						tableGroupJoin -> {
 							final TableGroup group = tableGroupJoin.getJoinedGroup();
 							if ( forUpdateClause.hasAlias( group.getSourceAlias() ) ) {
-								if ( tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
+								if ( tableGroupJoin.isInitialized() && tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
 									if ( Boolean.FALSE.equals( followOnLocking ) ) {
 										throw new IllegalQueryOperationException(
 												"Locking with OUTER joins is not supported" );
@@ -1435,7 +1447,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// Visit TableReferenceJoin and TableGroupJoin to see if all use INNER
 				if ( querySpec.getFromClause().queryTableJoins(
 						tableJoin -> {
-							if ( tableJoin.getJoinType() != SqlAstJoinType.INNER && !( tableJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
+							if ( tableJoin.isInitialized() && tableJoin.getJoinType() != SqlAstJoinType.INNER && !( tableJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
 								if ( Boolean.FALSE.equals( followOnLocking ) ) {
 									throw new IllegalQueryOperationException(
 											"Locking with OUTER joins is not supported" );
@@ -2866,7 +2878,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( currentQueryPart != null && queryPartForRowNumberingClauseDepth != clauseStack.depth() ) {
 				this.queryPartForRowNumbering = null;
 				this.queryPartForRowNumberingClauseDepth = -1;
-				this.needsSelectAliases = false;
+				// If explicit column aliases were defined we should still use them when rendering the select clause
+				this.needsSelectAliases = columnAliases != null;
 			}
 			// If we are row numbering the current query group, this means that we can't render the
 			// order by and offset fetch clause, so we must do row counting on the query group level
@@ -4486,8 +4499,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 				// We render the FOR UPDATE clause in the outer query
 				if ( queryPart instanceof QuerySpec ) {
-					clauseStack.pop();
-					clauseStack.push( Clause.FOR_UPDATE );
 					visitForUpdateClause( (QuerySpec) queryPart );
 				}
 			}
@@ -5251,6 +5262,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			forUpdate.applyAliases( dialect.getLockRowIdentifier( effectiveLockMode ), tableGroup );
 		}
+	}
+
+	protected boolean needsLocking(QuerySpec querySpec) {
+		return querySpec.getFromClause().queryTableGroups(
+				tableGroup -> {
+					if ( LockMode.READ.lessThan( getEffectiveLockMode( tableGroup.getSourceAlias(), querySpec.isRoot() ) ) ) {
+						return true;
+					}
+					return null;
+				}
+		) != null;
 	}
 
 	protected boolean hasNestedTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {

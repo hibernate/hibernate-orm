@@ -209,8 +209,8 @@
  * The JPA-defined {@link jakarta.persistence.Cacheable} annotation is almost useless
  * to us, since:
  * <ul>
- * <li>it provides no way to specify any information about the nature of the <em>how</em>
- *     cached entity and how its cache should be managed, and
+ * <li>it provides no way to specify any information about the nature of the cached
+ *     entity and <em>how</em> its cache should be managed, and
  * <li>it may not be used to annotate associations.
  * </ul>
  * <p>

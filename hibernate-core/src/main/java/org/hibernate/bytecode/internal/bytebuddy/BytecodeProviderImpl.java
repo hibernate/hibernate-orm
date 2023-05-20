@@ -67,6 +67,7 @@ import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class BytecodeProviderImpl implements BytecodeProvider {
 
@@ -167,7 +168,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex );
+			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 
@@ -198,7 +199,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	}
 
 	@Override
-	public ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap) {
+	public @Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap) {
 		final Class<?> fastClass;
 		if ( !clazz.isInterface() && !Modifier.isAbstract( clazz.getModifiers() ) ) {
 			// we only provide a fast class instantiator if the class can be instantiated
@@ -231,7 +232,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			findAccessors( clazz, propertyAccessMap, getters, setters );
 		}
 		catch (InvalidPropertyAccessorException ex) {
-			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex );
+			LOG.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
 			return null;
 		}
 
@@ -1313,7 +1314,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	}
 
 	@Override
-	public Enhancer getEnhancer(EnhancementContext enhancementContext) {
+	public @Nullable Enhancer getEnhancer(EnhancementContext enhancementContext) {
 		return new EnhancerImpl( enhancementContext, byteBuddyState );
 	}
 

@@ -40,7 +40,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	protected void registerResolutionListener() {
 		parentAccess.registerResolutionListener( parentInstance -> {
 			final AttributeMapping parentAttribute = getParentEntityAttribute( referencedModelPart.getAttributeName() );
-			if ( parentAttribute != null ) {
+			if ( parentAttribute != null && !firstEntityInitializer.isEntityInitialized() ) {
 				getParentInfos().add( new ParentInfo( parentInstance, parentAttribute.getStateArrayPosition() ) );
 			}
 		} );

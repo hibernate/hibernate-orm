@@ -79,7 +79,7 @@ public class TableBasedDeleteHandler
 		);
 	}
 
-	// Getters for Hibernat Reactive
+	// Getters for Hibernate Reactive
 	protected TemporaryTable getIdTable() {
 		return idTable;
 	}

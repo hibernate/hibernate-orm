@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
+import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
@@ -22,6 +23,7 @@ import org.hibernate.proxy.LazyInitializer;
  *
  * @author Steve Ebersole
  */
+@Internal
 public class SetterFieldImpl implements Setter {
 	private final Class<?> containerClass;
 	private final String propertyName;
@@ -73,8 +75,11 @@ public class SetterFieldImpl implements Setter {
 				if ( lazyInitializer != null ) {
 					valueType = lazyInitializer.getEntityName();
 				}
-				else {
+				else if ( value != null ) {
 					valueType = value.getClass().getTypeName();
+				}
+				else {
+					valueType = "<unknown>";
 				}
 				throw new PropertyAccessException(
 						e,

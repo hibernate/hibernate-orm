@@ -185,7 +185,7 @@ dependencyResolutionManagement {
             version( "derby", derbyVersion )
             version( "pgsql", "42.5.0" )
             version( "mysql", "8.0.27" )
-            version( "oracle", "21.8.0.0" )
+            version( "oracle", "23.2.0.0" )
 
             alias( "h2" ).to( "com.h2database", "h2" ).versionRef( "h2" )
             alias( "h2gis" ).to( "org.orbisgis", "h2gis" ).versionRef( "h2gis" )
@@ -196,7 +196,7 @@ dependencyResolutionManagement {
             alias( "mysql" ).to( "mysql", "mysql-connector-java" ).versionRef( "mysql" )
             alias( "tidb" ).to( "mysql", "mysql-connector-java" ).versionRef( "mysql" )
             alias( "mariadb" ).to( "org.mariadb.jdbc", "mariadb-java-client" ).version( "2.7.7" )
-            alias( "oracle" ).to( "com.oracle.database.jdbc", "ojdbc8" ).versionRef( "oracle" )
+            alias( "oracle" ).to( "com.oracle.database.jdbc", "ojdbc11" ).versionRef( "oracle" )
             alias( "oracleXml" ).to( "com.oracle.database.xml", "xdb" ).versionRef( "oracle" )
             alias( "oracleXmlParser" ).to( "com.oracle.database.xml", "xmlparserv2" ).versionRef( "oracle" )
             alias( "mssql" ).to( "com.microsoft.sqlserver", "mssql-jdbc" ).version( "11.2.0.jre11" )

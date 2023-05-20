@@ -7,7 +7,9 @@
 package org.hibernate.sql.results.graph.instantiation.internal;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -116,11 +118,13 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	public T assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		final T result;
 		try {
-			result = target.getJavaTypeClass().newInstance();
+			final Constructor<T> constructor = target.getJavaTypeClass().getDeclaredConstructor();
+			constructor.setAccessible( true );
+			result = constructor.newInstance();
 		}
-		catch (IllegalAccessException | InstantiationException | java.lang.InstantiationException e) {
+		catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | java.lang.InstantiationException e) {
 			throw new InstantiationException( "Error instantiating class '"
-					+ target.getJavaType().getTypeName() + "' using default constructor", e );
+					+ target.getJavaType().getTypeName() + "' using default constructor: " + e.getMessage(), e );
 		}
 		for ( BeanInjection beanInjection : beanInjections ) {
 			beanInjection.getBeanInjector().inject(

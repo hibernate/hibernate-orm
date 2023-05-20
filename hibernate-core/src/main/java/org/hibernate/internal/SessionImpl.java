@@ -1932,6 +1932,22 @@ public class SessionImpl
 		loadQueryInfluencers.disableFetchProfile( name );
 	}
 
+	public void setSubselectFetchingEnabled(boolean enabled) {
+		loadQueryInfluencers.setSubselectFetchEnabled( enabled );
+	}
+
+	public boolean isSubselectFetchingEnabled() {
+		return loadQueryInfluencers.getSubselectFetchEnabled();
+	}
+
+	public void setFetchBatchSize(int batchSize) {
+		loadQueryInfluencers.setBatchSize( batchSize );
+	}
+
+	public int getFetchBatchSize() {
+		return loadQueryInfluencers.getBatchSize();
+	}
+
 	@Override
 	public LobHelper getLobHelper() {
 		if ( lobHelper == null ) {

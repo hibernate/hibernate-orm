@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -149,11 +150,13 @@ public class SubselectFetch {
 		}
 
 		public void addKey(EntityKey key, LoadingEntityEntry entry) {
-			if ( !entry.getDescriptor().hasSubselectLoadableCollections() ) {
-				return;
-			}
 
-			if ( shouldAddSubselectFetch( entry ) ) {
+			final EntityPersister persister = entry.getDescriptor();
+			boolean subselectsPossible =
+					persister.hasCollections()
+							&& persister.getFactory().getSessionFactoryOptions().isSubselectFetchEnabled()
+						|| persister.hasSubselectLoadableCollections();
+			if ( subselectsPossible && shouldAddSubselectFetch( entry ) ) {
 				final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
 						entry.getEntityInitializer().getNavigablePath(),
 						navigablePath -> new SubselectFetch(

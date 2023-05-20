@@ -252,7 +252,10 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
-		if ( getLoadable().getEntityPersister().hasSubselectLoadableCollections() ) {
+		final EntityPersister persister = getLoadable().getEntityPersister();
+		if ( persister.hasCollections()
+					&& session.getSessionFactory().getSessionFactoryOptions().isSubselectFetchEnabled()
+				|| persister.hasSubselectLoadableCollections() ) {
 			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 					session.getPersistenceContext().getBatchFetchQueue(),
 					sqlAst,

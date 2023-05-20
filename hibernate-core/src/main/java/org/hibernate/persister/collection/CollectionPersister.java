@@ -302,12 +302,19 @@ public interface CollectionPersister extends Restrictable {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
-	boolean isExtraLazy();
+	default boolean isExtraLazy() {
+		return false;
+	}
 	int getSize(Object key, SharedSessionContractImplementor session);
 	boolean indexExists(Object key, Object index, SharedSessionContractImplementor session);
 	boolean elementExists(Object key, Object element, SharedSessionContractImplementor session);
 	Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner);
-	int getBatchSize();
+	default int getBatchSize() {
+		return 0;
+	}
+	default boolean isSubselectLoadable() {
+		return false;
+	}
 
 	/**
 	 * @return the name of the property this collection is mapped by

@@ -512,7 +512,8 @@ public abstract class AbstractEntityPersister
 			batch = creationContext.getSessionFactoryOptions().getDefaultBatchFetchSize();
 		}
 		batchSize = batch;
-		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections();
+		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections()
+				|| entityMetamodel.hasCollections() && factory.getSessionFactoryOptions().isSubselectFetchEnabled();
 		hasPartitionedSelectionMapping = persistentClass.hasPartitionedSelectionMapping();
 		hasCollectionNotReferencingPK = persistentClass.hasCollectionNotReferencingPK();
 

@@ -20,6 +20,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -138,7 +139,10 @@ public class MultiNaturalIdLoadingBatcher {
 	private <E> List<E> performLoad(JdbcParameterBindings jdbcParamBindings, SharedSessionContractImplementor session) {
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
 
-		if ( entityDescriptor.getEntityPersister().hasSubselectLoadableCollections() ) {
+		final EntityPersister persister = entityDescriptor.getEntityPersister();
+		if ( persister.hasCollections()
+					&& session.getSessionFactory().getSessionFactoryOptions().isSubselectFetchEnabled()
+				|| persister.hasSubselectLoadableCollections() ) {
 			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 					session.getPersistenceContext().getBatchFetchQueue(),
 					sqlSelect,

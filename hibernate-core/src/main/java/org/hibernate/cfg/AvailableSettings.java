@@ -1033,6 +1033,17 @@ public interface AvailableSettings {
 	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
 
 	/**
+	 * When enabled, Hibernate will use subselect fetching, when possible, to
+	 * fetch any collection.
+	 * <p>
+	 * By default, Hibernate only uses subselect fetching for collections
+	 * explicitly annotated {@code @Fetch(SUBSELECT)}.
+	 *
+	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
+	 */
+	String USE_SUBSELECT_FETCH = "hibernate.use_subselect_fetch";
+
+	/**
 	 * When enabled, specifies that JDBC scrollable {@code ResultSet}s may be used.
 	 * This property is only necessary when there is no {@code ConnectionProvider},
 	 * that is, when the client is supplying JDBC connections.

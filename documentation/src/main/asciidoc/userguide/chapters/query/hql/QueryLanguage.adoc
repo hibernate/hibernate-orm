@@ -512,7 +512,7 @@ HQL defines two ways to concatenate strings:
 * the SQL-style concatenation operator, `||`, and
 * the JPQL-standard `concat()` function.
 
-See <<hql-functions-string,below>> for details of the `concat()` function.
+See <<hql-string-functions, below>> for details of the `concat()` function.
 
 [[hql-concatenation-example]]
 //.Concatenation operation example

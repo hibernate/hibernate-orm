@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 /**
  * Standard implementation of SingleIdEntityLoader
@@ -175,7 +176,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			LoadQueryInfluencers queryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
 				getLoadable(),
@@ -186,10 +187,11 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				1,
 				queryInfluencers,
 				lockOptions,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
 
+		final JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
 		return new SingleIdLoadPlan<>(
 				(Loadable) getLoadable(),
 				getLoadable().getIdentifierMapping(),

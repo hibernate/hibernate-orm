@@ -39,6 +39,7 @@ import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 /**
@@ -51,7 +52,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 	private JdbcOperationQueryDelete jdbcDelete;
 	private SqmTranslation<DeleteStatement> sqmInterpretation;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 
 	public SimpleDeleteQueryPlan(
 			EntityMappingType entityDescriptor,

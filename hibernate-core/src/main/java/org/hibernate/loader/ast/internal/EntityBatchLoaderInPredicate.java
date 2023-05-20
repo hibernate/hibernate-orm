@@ -23,11 +23,11 @@ import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -51,7 +51,7 @@ public class EntityBatchLoaderInPredicate<T>
 	private final int domainBatchSize;
 	private final int sqlBatchSize;
 
-	private List<JdbcParameter> jdbcParameters;
+	private JdbcParametersList jdbcParameters;
 	private SelectStatement sqlAst;
 	private JdbcOperationQuerySelect jdbcSelectOperation;
 
@@ -245,7 +245,7 @@ public class EntityBatchLoaderInPredicate<T>
 			EntityMappingType entityMapping,
 			int startIndex,
 			int numberOfKeys,
-			List<JdbcParameter> jdbcParameters,
+			JdbcParametersList jdbcParameters,
 			SelectStatement sqlAst,
 			JdbcOperationQuerySelect jdbcSelectOperation,
 			Object pkValue,
@@ -320,7 +320,8 @@ public class EntityBatchLoaderInPredicate<T>
 
 		final int expectedNumberOfParameters = identifierMapping.getJdbcTypeCount() * sqlBatchSize;
 
-		jdbcParameters = arrayList( expectedNumberOfParameters );
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder( expectedNumberOfParameters );
+
 		sqlAst = LoaderSelectBuilder.createSelect(
 				getLoadable(),
 				// null here means to select everything
@@ -330,9 +331,10 @@ public class EntityBatchLoaderInPredicate<T>
 				sqlBatchSize,
 				LoadQueryInfluencers.NONE,
 				LockOptions.NONE,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+		this.jdbcParameters = jdbcParametersBuilder.build();
 		assert jdbcParameters.size() == expectedNumberOfParameters;
 
 		jdbcSelectOperation = sessionFactory.getJdbcServices()

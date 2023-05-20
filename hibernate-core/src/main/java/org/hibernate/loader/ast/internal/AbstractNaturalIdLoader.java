@@ -49,6 +49,7 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -297,7 +298,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	public Object resolveIdToNaturalId(Object id, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+		JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor(),
 				Collections.singletonList( naturalIdMapping() ),
@@ -306,9 +307,11 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				1,
 				session.getLoadQueryInfluencers(),
 				LockOptions.NONE,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+
+		final JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();

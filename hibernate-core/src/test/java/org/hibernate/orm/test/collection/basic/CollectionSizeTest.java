@@ -70,20 +70,23 @@ public class CollectionSizeTest {
 					assertEquals( cont, Hibernate.get(contactsByEmail, new EmailAddress( "test1@test.com" ) ) );
 					assertNull( Hibernate.get(contactsByEmail, new EmailAddress( "test9@test.com" ) ) );
 					assertFalse( Hibernate.isInitialized(contactsByEmail) );
-
+					assertEquals( Hibernate.size( contactsByEmail.entrySet() ), 3 );
 					Hibernate.remove( contactsByEmail, new EmailAddress( "test1@test.com" ) );
 					assertFalse( Hibernate.isInitialized(contactsByEmail) );
-					assertEquals( cont, Hibernate.get(contactsByEmail, new EmailAddress( "test1@test.com" ) ) );
-					assertEquals( Hibernate.size( contactsByEmail.entrySet() ), 3 );
+//					assertEquals( cont, Hibernate.get(contactsByEmail, new EmailAddress( "test1@test.com" ) ) );
+					assertEquals( Hibernate.size( contactsByEmail.entrySet() ), 2 );
 
+					assertEquals( Hibernate.size( addresses ), 3 );
+					assertFalse( Hibernate.isInitialized(addresses) );
 					Hibernate.remove( addresses, new EmailAddress( "test1@test.com" ) );
 					assertFalse( Hibernate.isInitialized(addresses) );
-					assertEquals( Hibernate.size( addresses ), 3 );
+					assertEquals( Hibernate.size( addresses ), 2 );
 
 					List<EmailAddress> addresses3 = cont.getEmailAddresses3();
+					assertEquals( Hibernate.size(addresses3), 2 );
 					Hibernate.remove( addresses3, new EmailAddress( "test4@test.com" ) );
 					assertFalse( Hibernate.isInitialized( addresses3 ) );
-					assertEquals( Hibernate.size(addresses3), 2 );
+					assertEquals( Hibernate.size(addresses3), 1 );
 				}
 		);
 	}

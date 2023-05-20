@@ -16,7 +16,6 @@ import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
-import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -24,6 +23,9 @@ import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
+
+import static java.util.stream.Collectors.toList;
+import static org.hibernate.query.sqm.tree.expression.Compatibility.areAssignmentCompatible;
 
 /**
  * @author Steve Ebersole
@@ -90,16 +92,15 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				else {
 					if ( !aliases.add( argumentAlias ) ) {
 						duplicatedAliases.add( argumentAlias );
-						log.debugf( "Query defined duplicate resultVariable encountered multiple declarations of [%s]",
-									argumentAlias
+						log.debugf(
+								"Query defined duplicate resultVariable encountered multiple declarations of [%s]",
+								argumentAlias
 						);
 					}
 					areAnyArgumentsAliased = true;
 				}
 
-				argumentReaders.add(
-						argumentResult.createResultAssembler( parentAccess, creationState )
-				);
+				argumentReaders.add( argumentResult.createResultAssembler( parentAccess, creationState ) );
 			}
 		}
 
@@ -124,66 +125,53 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 			if ( log.isDebugEnabled() && areAnyArgumentsAliased ) {
 				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
 			}
-			return (DomainResultAssembler<R>) new DynamicInstantiationAssemblerListImpl(
-					(JavaType<List<?>>) javaType,
-					argumentReaders
-			);
+			return (DomainResultAssembler<R>)
+					new DynamicInstantiationAssemblerListImpl( (JavaType<List<?>>) javaType, argumentReaders );
 		}
 		else if ( nature == DynamicInstantiationNature.MAP ) {
 			if ( ! areAllArgumentsAliased ) {
-				throw new IllegalStateException( "Map dynamic instantiation contained one or more arguments with no alias" );
+				throw new IllegalStateException( "Map instantiation contained one or more arguments with no alias" );
 			}
 			if ( !duplicatedAliases.isEmpty() ) {
 				throw new IllegalStateException(
-						"Map dynamic instantiation contained arguments with duplicated aliases [" + StringHelper.join( ",", duplicatedAliases ) + "]"
+						"Map instantiation has arguments with duplicate aliases ["
+								+ StringHelper.join( ",", duplicatedAliases ) + "]"
 				);
 			}
-			return (DomainResultAssembler<R>) new DynamicInstantiationAssemblerMapImpl(
-					(JavaType<Map<?,?>>) javaType,
-					argumentReaders
-			);
+			return (DomainResultAssembler<R>)
+					new DynamicInstantiationAssemblerMapImpl( (JavaType<Map<?,?>>) javaType, argumentReaders );
 		}
 		else {
 			// find a constructor matching argument types
 			constructor_loop:
 			for ( Constructor<?> constructor : javaType.getJavaTypeClass().getDeclaredConstructors() ) {
 				final Type[] genericParameterTypes = constructor.getGenericParameterTypes();
-				if ( genericParameterTypes.length != argumentReaders.size() ) {
-					continue;
-				}
+				if ( genericParameterTypes.length == argumentReaders.size() ) {
+					for ( int i = 0; i < argumentReaders.size(); i++ ) {
+						final ArgumentReader<?> argumentReader = argumentReaders.get( i );
+						final JavaType<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
+								.getMappingMetamodel()
+								.getTypeConfiguration()
+								.getJavaTypeRegistry()
+								.resolveDescriptor( genericParameterTypes[i] );
 
-				for ( int i = 0; i < argumentReaders.size(); i++ ) {
-					final ArgumentReader<?> argumentReader = argumentReaders.get( i );
-					final JavaType<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
-							.getMappingMetamodel()
-							.getTypeConfiguration()
-							.getJavaTypeRegistry()
-							.resolveDescriptor( genericParameterTypes[i] );
-
-					final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
-							argumentTypeDescriptor,
-							argumentReader.getAssembledJavaType()
-					);
-					if ( !assignmentCompatible ) {
-						if ( log.isDebugEnabled() ) {
-							log.debugf(
-									"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
-									i,
-									constructor.getParameterTypes()[i].getName(),
-									argumentTypeDescriptor.getJavaType().getTypeName()
-							);
+						if ( !areAssignmentCompatible( argumentTypeDescriptor, argumentReader.getAssembledJavaType() ) ) {
+							if ( log.isDebugEnabled() ) {
+								log.debugf(
+										"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
+										i,
+										constructor.getParameterTypes()[i].getName(),
+										argumentTypeDescriptor.getJavaType().getTypeName()
+								);
+							}
+							continue constructor_loop;
 						}
-						continue constructor_loop;
 					}
-				}
 
-				constructor.setAccessible( true );
-				//noinspection rawtypes
-				return new DynamicInstantiationAssemblerConstructorImpl(
-						constructor,
-						javaType,
-						argumentReaders
-				);
+					constructor.setAccessible( true );
+					//noinspection rawtypes
+					return new DynamicInstantiationAssemblerConstructorImpl( constructor, javaType, argumentReaders );
+				}
 			}
 
 			if ( log.isDebugEnabled() ) {
@@ -195,20 +183,27 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 
 			if ( ! areAllArgumentsAliased ) {
 				throw new IllegalStateException(
-						"Could not determine appropriate instantiation strategy - no matching constructor found and one or more arguments did not define alias for bean-injection"
+						"Cannot instantiate class '" + javaType.getJavaType().getTypeName() + "'"
+								+ " (it has no constructor with signature " + signature()
+								+ ", and not every argument has an alias)"
 				);
 			}
 			if ( !duplicatedAliases.isEmpty() ) {
 				throw new IllegalStateException(
-						"Could not determine appropriate instantiation strategy - no matching constructor found and arguments defined duplicated aliases [" +
-								StringHelper.join( ",", duplicatedAliases ) + "] for bean-injection"
+						"Cannot instantiate class '" + javaType.getJavaType().getTypeName() + "'"
+								+ " (it has no constructor with signature " + signature()
+								+ ", and has arguments with duplicate aliases ["
+								+ StringHelper.join( ",", duplicatedAliases ) + "])"
 				);
 			}
 
-			return new DynamicInstantiationAssemblerInjectionImpl<>(
-					javaType,
-					argumentReaders
-			);
+			return new DynamicInstantiationAssemblerInjectionImpl<>( javaType, argumentReaders );
 		}
+	}
+
+	private List<String> signature() {
+		return argumentResults.stream()
+				.map( adt -> adt.getResultJavaType().getJavaType().getTypeName() )
+				.collect( toList() );
 	}
 }

@@ -39,9 +39,7 @@ public class DynamicInstantiationAssemblerConstructorImpl<R> implements DomainRe
 	}
 
 	@Override
-	public R assemble(
-			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) {
+	public R assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		final int numberOfArgs = argumentReaders.size();
 		Object[] args = new Object[ numberOfArgs ];
 		for ( int i = 0; i < numberOfArgs; i++ ) {
@@ -52,10 +50,12 @@ public class DynamicInstantiationAssemblerConstructorImpl<R> implements DomainRe
 			return targetConstructor.newInstance( args );
 		}
 		catch (InvocationTargetException e) {
-			throw new InstantiationException( "Error performing dynamic instantiation : " + targetConstructor.getDeclaringClass().getName(), e.getCause() );
+			throw new InstantiationException( "Error instantiating class '"
+					+ targetConstructor.getDeclaringClass().getName() + "'", e.getCause() );
 		}
 		catch (Exception e) {
-			throw new InstantiationException( "Error performing dynamic instantiation : " + targetConstructor.getDeclaringClass().getName(), e );
+			throw new InstantiationException( "Error instantiating class '"
+					+ targetConstructor.getDeclaringClass().getName() + "'", e );
 		}
 	}
 }

@@ -251,6 +251,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -1180,7 +1181,7 @@ public abstract class AbstractEntityPersister
 			return null;
 		}
 		else {
-			final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+			JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 			final SelectStatement select = LoaderSelectBuilder.createSelect(
 					this,
 					partsToSelect,
@@ -1189,9 +1190,10 @@ public abstract class AbstractEntityPersister
 					1,
 					new LoadQueryInfluencers( factory ),
 					LockOptions.NONE,
-					jdbcParameters::add,
+					jdbcParametersBuilder::add,
 					factory
 			);
+			JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
 			return new SingleIdArrayLoadPlan(
 					this,
 					getIdentifierMapping(),

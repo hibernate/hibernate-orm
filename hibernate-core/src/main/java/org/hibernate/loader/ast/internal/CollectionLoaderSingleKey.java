@@ -6,9 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -23,12 +20,12 @@ import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
@@ -44,7 +41,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 	private final int keyJdbcCount;
 
 	private final SelectStatement sqlAst;
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 
 	public CollectionLoaderSingleKey(
 			PluralAttributeMapping attributeMapping,
@@ -53,8 +50,8 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		this.attributeMapping = attributeMapping;
 
 		this.keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 
-		this.jdbcParameters = new ArrayList<>();
 		this.sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				null,
@@ -63,9 +60,10 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				1,
 				influencers,
 				LockOptions.NONE,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+		this.jdbcParameters = jdbcParametersBuilder.build();
 	}
 
 	@Override
@@ -81,7 +79,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		return sqlAst;
 	}
 
-	public List<JdbcParameter> getJdbcParameters() {
+	public JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
 

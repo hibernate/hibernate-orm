@@ -27,11 +27,11 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 
-import static java.util.Collections.singletonList;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
@@ -120,7 +120,7 @@ public class CollectionBatchLoaderArrayParam
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 				session.getPersistenceContext().getBatchFetchQueue(),
 				sqlSelect,
-				singletonList( jdbcParameter ),
+				JdbcParametersList.singleton( jdbcParameter ),
 				jdbcParameterBindings
 		);
 

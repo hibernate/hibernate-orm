@@ -45,6 +45,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
@@ -100,7 +101,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
 						sqmInterpretation.selectStatement,
-						Collections.emptyList(),
+						JdbcParametersList.empty(),
 						jdbcParameterBindings
 				);
 
@@ -352,7 +353,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				sqmInterpretation.getSqlAst()
 		);
 
-		final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref
 				= SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmInterpretation::getJdbcParamsBySqmParam );
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
@@ -392,7 +393,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		private final SelectStatement selectStatement;
 		private final JdbcOperationQuerySelect jdbcSelect;
 		private final FromClauseAccess tableGroupAccess;
-		private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
+		private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 		private final Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes;
 		private transient JdbcParameterBindings firstParameterBindings;
 
@@ -400,7 +401,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				SelectStatement selectStatement,
 				JdbcOperationQuerySelect jdbcSelect,
 				FromClauseAccess tableGroupAccess,
-				Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref,
+				Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref,
 				Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes,
 				JdbcParameterBindings firstParameterBindings) {
 			this.selectStatement = selectStatement;
@@ -423,7 +424,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			return tableGroupAccess;
 		}
 
-		Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> getJdbcParamsXref() {
+		Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> getJdbcParamsXref() {
 			return jdbcParamsXref;
 		}
 

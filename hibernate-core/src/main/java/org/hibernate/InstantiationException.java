@@ -59,7 +59,7 @@ public class InstantiationException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + " : " + clazz.getName();
+		return super.getMessage() + " '" + clazz.getName() + "'";
 	}
 
 }

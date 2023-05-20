@@ -64,7 +64,7 @@ public interface JdbcParameterBindings {
 	default int registerParametersForEachJdbcValue(
 			Object value,
 			Bindable bindable,
-			List<JdbcParameter> jdbcParameters,
+			JdbcParametersList jdbcParameters,
 			SharedSessionContractImplementor session) {
 		return registerParametersForEachJdbcValue( value, 0, bindable, jdbcParameters, session );
 	}
@@ -73,7 +73,7 @@ public interface JdbcParameterBindings {
 			Object value,
 			int offset,
 			Bindable bindable,
-			List<JdbcParameter> jdbcParameters,
+			JdbcParametersList jdbcParameters,
 			SharedSessionContractImplementor session) {
 		return bindable.forEachJdbcValue(
 				value,
@@ -87,7 +87,7 @@ public interface JdbcParameterBindings {
 
 	private void createAndAddBinding(
 			int selectionIndex,
-			List<JdbcParameter> params,
+			JdbcParametersList params,
 			TypeConfiguration typeConfiguration,
 			Object jdbcValue,
 			JdbcMapping type) {

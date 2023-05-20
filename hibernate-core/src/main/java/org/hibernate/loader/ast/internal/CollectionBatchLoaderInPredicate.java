@@ -6,9 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -19,10 +16,10 @@ import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.countIds;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
@@ -38,7 +35,7 @@ public class CollectionBatchLoaderInPredicate
 		implements SqlArrayMultiKeyLoader {
 	private final int keyColumnCount;
 	private final int sqlBatchSize;
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 	private final SelectStatement sqlAst;
 	private final JdbcOperationQuerySelect jdbcSelect;
 
@@ -63,8 +60,8 @@ public class CollectionBatchLoaderInPredicate
 			);
 		}
 
-		jdbcParameters = new ArrayList<>();
-		sqlAst = LoaderSelectBuilder.createSelect(
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
+		this.sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				null,
 				attributeMapping.getKeyDescriptor(),
@@ -72,10 +69,11 @@ public class CollectionBatchLoaderInPredicate
 				sqlBatchSize,
 				influencers,
 				LockOptions.NONE,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
-		assert jdbcParameters.size() == sqlBatchSize * keyColumnCount;
+		this.jdbcParameters = jdbcParametersBuilder.build();
+		assert this.jdbcParameters.size() == this.sqlBatchSize * this.keyColumnCount;
 
 		jdbcSelect = sessionFactory.getJdbcServices()
 				.getJdbcEnvironment()

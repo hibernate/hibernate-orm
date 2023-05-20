@@ -28,6 +28,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
@@ -46,13 +47,13 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	private final ModelPart restrictivePart;
 	private final LockOptions lockOptions;
 	private final JdbcOperationQuerySelect jdbcSelect;
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 
 	public SingleIdLoadPlan(
 			EntityMappingType entityMappingType,
 			ModelPart restrictivePart,
 			SelectStatement sqlAst,
-			List<JdbcParameter> jdbcParameters,
+			JdbcParametersList jdbcParameters,
 			LockOptions lockOptions,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityMappingType = entityMappingType;
@@ -78,7 +79,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		return lockOptions;
 	}
 
-	protected List<JdbcParameter> getJdbcParameters() {
+	protected JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
 

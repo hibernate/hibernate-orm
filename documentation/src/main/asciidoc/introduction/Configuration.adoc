@@ -57,7 +57,7 @@ You'll also need to add a dependency for the JDBC
 driver for your database.
 
 .JDBC driver dependencies
-[cols="40,~"]
+[cols="50,~"]
 |===
 | Database                  | Driver dependency
 
@@ -85,22 +85,34 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 :ehcache: https://www.ehcache.org
 :infinispan: https://infinispan.org
 :generator: https://hibernate.org/orm/tooling/
+:caffeine: https://github.com/ben-manes/caffeine/
 
 Optionally, you might also add any of the following additional features:
 
 .Optional dependencies
-[cols="40,~"]
+[cols="50,~"]
 |===
 | Optional feature | Dependencies
 
-| An {slf4j}[SLF4J] logging implementation | `org.apache.logging.log4j:log4j-core` or `org.slf4j:slf4j-jdk14`
-| A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal` and `io.agroal:agroal-pool`
+| An {slf4j}[SLF4J] logging implementation |
+`org.apache.logging.log4j:log4j-core` +
+or `org.slf4j:slf4j-jdk14`
+| A JDBC connection pool, for example, {agroal}[Agroal] |
+`org.hibernate.orm:hibernate-agroal` +
+and `io.agroal:agroal-pool`
 | The {generator}[Hibernate Metamodel Generator], especially if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
-| {validator}[Hibernate Validator] | `org.hibernate.validator:hibernate-validator` and `org.glassfish:jakarta.el`
-| Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` along with `org.ehcache:ehcache`
+| {validator}[Hibernate Validator] |
+`org.hibernate.validator:hibernate-validator` +
+and `org.glassfish:jakarta.el`
+| Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` +
+and `org.ehcache:ehcache`
+| Local second-level cache support via JCache and {caffeine}[Caffeine]| `org.hibernate.orm:hibernate-jcache` +
+and `com.github.ben-manes.caffeine:jcache`
 | Distributed second-level cache support via {infinispan}[Infinispan] | `org.infinispan:infinispan-hibernate-cache-v60`
 // | SCRAM authentication support for PostgreSQL | `com.ongres.scram:client:2.1`
-| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] | `com.fasterxml.jackson.core:jackson-databind` or `org.eclipse:yasson`
+| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] |
+`com.fasterxml.jackson.core:jackson-databind` +
+or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 |===
 
@@ -368,32 +380,42 @@ sessionFactory.getSchemaManager().exportMappedObjects(true);
 
 :log4j: https://github.com/hibernate/hibernate-reactive/blob/main/examples/session-example/src/main/resources/log4j2.properties
 
-To see the generated SQL as it's sent to the database, either:
+To see the generated SQL as it's sent to the database, you have two options.
 
-- set the property `hibernate.show_sql` to `true`, or
-- enable debug-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
-
-For example, if you're using Log4J 2 (as above in <<optional-dependencies>>), add these lines to your `log4j2.properties` file:
-
-[source,properties]
-----
-logger.hibernate.name = org.hibernate.SQL
-logger.hibernate.level = debug
-----
-
-You can make the SQL logged to the console more readable by enabling formatting or highlighting.
+One way is to set the property `hibernate.show_sql` to `true`, and Hibernate will log SQL direct to the console.
+You can make the output much more readable by enabling formatting or highlighting.
+These settings really help when troubleshooting the generated SQL statements.
 
 .Settings for SQL logging to the console
 [cols="35,~"]
 |===
 | Configuration property name | Purpose
 
-| `hibernate.show_sql` | If `true`, log SQL directly to the console
+| `hibernate.show_sql`        | If `true`, log SQL directly to the console
 | `hibernate.format_sql`      | If `true`, log SQL in a multiline, indented format
 | `hibernate.highlight_sql`   | If `true`, log SQL with syntax highlighting via ANSI escape codes
 |===
 
-These settings can really help when troubleshooting SQL.
+Alternatively, you can enable debug-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
+
+For example, if you're using Log4J 2 (as above in <<optional-dependencies>>), add these lines to your `log4j2.properties` file:
+
+[source,properties]
+----
+# SQL execution
+logger.hibernate.name = org.hibernate.SQL
+logger.hibernate.level = debug
+
+# JDBC parameter binding
+logger.jdbc-bind.name=org.hibernate.orm.jdbc.bind
+logger.jdbc-bind.level=trace
+# JDBC result set extraction
+logger.jdbc-extract.name=org.hibernate.orm.jdbc.extract
+logger.jdbc-extract.level=trace
+
+----
+
+But with this approach we miss out on the pretty highlighting.
 
 [[minimizing]]
 === Minimizing repetitive mapping information

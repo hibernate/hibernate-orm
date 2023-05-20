@@ -321,7 +321,7 @@ When you call a method of the proxy, Hibernate will detect the call and fetch th
 
 Now for the gotchas:
 
-1. Hibernate will only do this for an entity which is currently association with a persistence context.
+1. Hibernate will only do this for an entity which is currently associated with a persistence context.
    Once the session ends, and the persistence context is cleaned up, the proxy is no longer fetchable, and instead its methods throw the hated `LazyInitializationException`.
 2. A round trip to the database to fetch the state of a single entity instance is just about _the least efficient_ way to access data.
    It almost inevitably leads to the infamous _N+1 selects_ problem we'll discuss later when we talk about how to <<association-fetching,optimize association fetching>>.
@@ -334,10 +334,64 @@ We're getting a bit ahead of ourselves here, but let's quickly mention the gener
 - All associations should be set `fetch=LAZY` to avoid fetching extra data when it's not needed.
   As we mentioned in <<many-to-one>>, this setting is not the default for `@ManyToOne` associations, and must be specified explicitly.
 - But strive to avoid writing code which triggers lazy fetching.
-  Instead, fetch all the data you'll need upfront at the beginning of a unit of work, using one of the techniques described in <<association-fetching>>, usually, using _join fetch_ in HQL.
+  Instead, fetch all the data you'll need upfront at the beginning of a unit of work, using one of the techniques described in <<association-fetching>>, usually, using _join fetch_ in HQL or an `EntityGraph`.
 ====
 
-It's clear we need a way to request that an association be _eagerly_ fetched using a database `join`.
+It's important to know that some operations which may be performed with an unfetched proxy _don't_ require fetching its state from the database.
+First, we're always allowed to obtain its identifier:
+
+[source,java]
+----
+var pubId = entityManager.find(Book.class, bookId).getPublisher().getId(); // does not fetch publisher
+----
+
+Second, we may create an association to a proxy:
+
+[source,java]
+----
+book.setPublisher(entityManager.getReference(Publisher.class, pubId)); // does not fetch publisher
+----
+
+Sometimes it's useful to test whether a proxy or collection has been fetched from the database.
+JPA lets us do this using the `PersistenceUnitUtil`:
+
+[source,java]
+----
+boolean authorsFetched = entityManagerFactory.getPersistenceUnitUtil().isLoaded(book.getAuthors());
+----
+
+Hibernate has a slightly easier way to do it:
+
+[source,java]
+----
+boolean authorsFetched = Hibernate.isInitialized(book.getAuthors());
+----
+
+But the static methods of the `Hibernate` class let us do a lot more, and it's worth getting a bit familiar them.
+
+Of particular interest are the operations which let us work with unfetched collections without fetching their state from the database.
+For example, consider this code:
+
+[source,java]
+----
+Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
+Author authorRef = session.getReference(Author.class, authorId);  // obtain an unfetched proxy
+boolean isByAuthor = Hibernate.contains(book.getAuthors(), authorRef); // no fetching
+----
+
+This code fragment leaves both the set `book.authors` and the proxy `authorRef` unfetched.
+
+Finally, `Hibernate.initialize()` is a convenience method that force-fetches a proxy or collection:
+
+[source,java]
+----
+Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
+Hibernate.initialize(book.getAuthors());  // fetch the Authors
+----
+
+But of course, this code is very inefficient, requiring two trips to the database to obtain data that could in principle be retrieved with just one query.
+
+It's clear from the discussion above that we need a way to request that an association be _eagerly_ fetched using a database `join`, thus protecting ourselves from the infamous N+1 selects.
 One way to do that is by passing an `EntityGraph` to `find()`.
 
 [[entity-graph]]
@@ -355,7 +409,7 @@ graph.addSubgraph(Book_.publisher);
 entityManager.find(Book.class, bookId, Map.of(SpecHints.HINT_SPEC_FETCH_GRAPH, graph));
 ----
 
-This is untypesafe and a bit verbose.
+This is untypesafe and unnecessarily verbose.
 Hibernate has a better way:
 
 [source,java]
@@ -810,7 +864,7 @@ For example, this:
 ----
 List<Book> books =
         session.createSelectionQuery("from Book where title like ?1")
-            .setParameter(1, titlePatterm)
+            .setParameter(1, titlePattern)
             .setMaxResults(10)
             .getResultList();
 ----
@@ -821,7 +875,7 @@ is simpler than:
 ----
 List<Book> books =
         session.createSelectionQuery("from Book where title like ?1 fetch first ?2 rows only")
-            .setParameter(1, titlePatterm)
+            .setParameter(1, titlePattern)
             .setParameter(2, 10)
             .getResultList();
 ----

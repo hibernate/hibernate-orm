@@ -1,10 +1,15 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 package org.hibernate.orm.test.hql.customFunctions;
 
 import jakarta.persistence.EntityManager;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -44,11 +49,10 @@ public class CustomDialectFunctionTest extends BaseCoreFunctionalTestCase {
 
                 entityManager.unwrap(Session.class).doWork(connection -> {
                     try (Statement statement = connection.createStatement()) {
-                        statement.executeUpdate("""
-                                    create or replace function greater_than(c bigint, val numeric, gr_val numeric) returns bigint as $$ begin return case when val > gr_val then (c + 1)::bigint else c::bigint end; end; $$ language "plpgsql";
-                                    create or replace function agg_final(c bigint) returns bigint as $$ begin return c; end; $$ language "plpgsql";
-                                    create or replace aggregate count_items_greater_val(numeric, numeric) (sfunc = greater_than, stype = bigint, finalfunc = agg_final, initcond = 0);
-                                """
+                        statement.executeUpdate(
+                                "create or replace function greater_than(c bigint, val numeric, gr_val numeric) returns bigint as $$ begin return case when val > gr_val then (c + 1)::bigint else c::bigint end; end; $$ language 'plpgsql'; " +
+                                "create or replace function agg_final(c bigint) returns bigint as $$ begin return c; end; $$ language 'plpgsql'; " +
+                                "create or replace aggregate count_items_greater_val(numeric, numeric) (sfunc = greater_than, stype = bigint, finalfunc = agg_final, initcond = 0);"
                         );
                     }
                 });

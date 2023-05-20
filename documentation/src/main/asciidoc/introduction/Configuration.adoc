@@ -62,7 +62,7 @@ driver for your database.
 | Database                  | Driver dependency
 
 | PostgreSQL or CockroachDB | `org.postgresql:postgresql:{version}`
-| MySQL or TiDB             | `mysql:mysql-connector-java:{version}`
+| MySQL or TiDB             | `com.mysql:mysql-connector-j:{version}`
 | MariaDB                   | `org.mariadb.jdbc:mariadb-java-client:{version}`
 | DB2                       | `com.ibm.db2:jcc:{version}`
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:${version}`

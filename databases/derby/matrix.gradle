@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 //databaseProfile {
-	jdbcDependency 'org.apache.derby:derby:10.14.2.0'
+	jdbcDependency 'org.apache.derby:derby:10.15.2.0'
 
 //	testing {
 //		beforeSuite {

@@ -41,7 +41,7 @@ public class CompareEntityValuedPathsTest {
 							"select " +
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
-									"where p1_0.uk in(" +
+									"where p1_0.uk in (" +
 									"select c1_0.child_uk " +
 									"from children_uks c1_0 " +
 									"where p1_0.uk=c1_0.owner_uk" +
@@ -65,7 +65,7 @@ public class CompareEntityValuedPathsTest {
 							"select " +
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
-									"where p1_0.id in(" +
+									"where p1_0.id in (" +
 									"select c1_0.children_id " +
 									"from PERSON_TABLE_PERSON_TABLE c1_0 " +
 									"where p1_0.id=c1_0.Person_id" +
@@ -109,7 +109,7 @@ public class CompareEntityValuedPathsTest {
 							"select " +
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
-									"where p1_0.parent_id in(" +
+									"where p1_0.parent_id in (" +
 									"select c1_1.id " +
 									"from children_uks c1_0 " +
 									"join PERSON_TABLE c1_1 on c1_1.uk=c1_0.child_uk " +
@@ -135,7 +135,7 @@ public class CompareEntityValuedPathsTest {
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
 									"join PERSON_TABLE p2_0 on p2_0.uk=p1_0.parent_uk " +
-									"where p2_0.id in(" +
+									"where p2_0.id in (" +
 									"select c1_0.children_id " +
 									"from PERSON_TABLE_PERSON_TABLE c1_0 " +
 									"where p1_0.id=c1_0.Person_id" +
@@ -159,7 +159,7 @@ public class CompareEntityValuedPathsTest {
 							"select " +
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
-									"where p1_0.id in(" +
+									"where p1_0.id in (" +
 									"select e1_0.id " +
 									"from PERSON_TABLE e1_0 " +
 									"where p1_0.id=e1_0.supervisor_id" +
@@ -183,7 +183,7 @@ public class CompareEntityValuedPathsTest {
 							"select " +
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
-									"where p1_0.id in(" +
+									"where p1_0.id in (" +
 									"select e1_0.id " +
 									"from PERSON_TABLE e1_0 " +
 									"where p1_0.uk=e1_0.supervisor_uk" +
@@ -294,7 +294,7 @@ public class CompareEntityValuedPathsTest {
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
 									"join (children_uks c1_0 join PERSON_TABLE c1_1 on c1_1.uk=c1_0.child_uk) on p1_0.uk=c1_0.owner_uk " +
-									"where c1_1.id in(select c2_0.children_id from PERSON_TABLE_PERSON_TABLE c2_0 where p1_0.id=c2_0.Person_id)",
+									"where c1_1.id in (select c2_0.children_id from PERSON_TABLE_PERSON_TABLE c2_0 where p1_0.id=c2_0.Person_id)",
 							statementInspector.getSqlQueries().get( 0 )
 					);
 				}
@@ -315,7 +315,7 @@ public class CompareEntityValuedPathsTest {
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
 									"join PERSON_TABLE_PERSON_TABLE c1_0 on p1_0.id=c1_0.Person_id " +
-									"where c1_0.children_id in(select c2_1.id from children_uks c2_0 join PERSON_TABLE c2_1 on c2_1.uk=c2_0.child_uk where p1_0.uk=c2_0.owner_uk)",
+									"where c1_0.children_id in (select c2_1.id from children_uks c2_0 join PERSON_TABLE c2_1 on c2_1.uk=c2_0.child_uk where p1_0.uk=c2_0.owner_uk)",
 							statementInspector.getSqlQueries().get( 0 )
 					);
 				}
@@ -335,7 +335,7 @@ public class CompareEntityValuedPathsTest {
 							"select " +
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
-									"where p1_0.uk in(" +
+									"where p1_0.uk in (" +
 									"select p2_0.parent_uk " +
 									"from PERSON_TABLE p2_0" +
 									")",
@@ -358,7 +358,7 @@ public class CompareEntityValuedPathsTest {
 							"select " +
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
-									"where p1_0.id in(" +
+									"where p1_0.id in (" +
 									"select p2_0.parent_id " +
 									"from PERSON_TABLE p2_0" +
 									")",

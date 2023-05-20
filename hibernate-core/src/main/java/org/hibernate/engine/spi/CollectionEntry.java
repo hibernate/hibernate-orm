@@ -6,12 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.Collection;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
@@ -20,6 +14,12 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.Collection;
 
 /**
  * We need an entry to tell us all about the current state
@@ -202,10 +202,10 @@ public final class CollectionEntry implements Serializable {
 		snapshot = loadedPersister.isMutable()
 				? collection.getSnapshot( loadedPersister )
 				: null;
-		collection.setSnapshot(loadedKey, role, snapshot);
-		if ( loadedPersister.getBatchSize() > 1 ) {
-			( (AbstractPersistentCollection<?>) collection ).getSession()
-					.getPersistenceContextInternal()
+		collection.setSnapshot( loadedKey, role, snapshot );
+		final SharedSessionContractImplementor session = ((AbstractPersistentCollection<?>) collection).getSession();
+		if ( session.getLoadQueryInfluencers().effectiveBatchSize( loadedPersister ) > 1 ) {
+			session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.removeBatchLoadableCollection( this );
 		}

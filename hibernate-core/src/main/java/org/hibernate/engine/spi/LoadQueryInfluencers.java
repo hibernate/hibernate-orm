@@ -19,6 +19,7 @@ import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * Centralize all options which can influence the SQL query needed to load an
@@ -48,6 +49,10 @@ public class LoadQueryInfluencers implements Serializable {
 	//Lazily initialized!
 	private HashMap<String,Filter> enabledFilters;
 
+	private Boolean subselectFetchEnabled;
+
+	private Integer batchSize;
+
 	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
 
 	private Boolean readOnly;
@@ -57,7 +62,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
-		this(sessionFactory, null);
+		this( sessionFactory, null );
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, Boolean readOnly) {
@@ -73,13 +78,13 @@ public class LoadQueryInfluencers implements Serializable {
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public <T> T fromInternalFetchProfile(CascadingFetchProfile profile, Supplier<T> supplier) {
-		final CascadingFetchProfile previous = this.enabledCascadingFetchProfile;
-		this.enabledCascadingFetchProfile = profile;
+		final CascadingFetchProfile previous = enabledCascadingFetchProfile;
+		enabledCascadingFetchProfile = profile;
 		try {
 			return supplier.get();
 		}
 		finally {
-			this.enabledCascadingFetchProfile = previous;
+			enabledCascadingFetchProfile = previous;
 		}
 	}
 
@@ -248,6 +253,30 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public void setReadOnly(Boolean readOnly) {
 		this.readOnly = readOnly;
+	}
+
+	public Integer getBatchSize() {
+		return batchSize;
+	}
+
+	public void setBatchSize(Integer batchSize) {
+		this.batchSize = batchSize;
+	}
+
+	public int effectiveBatchSize(CollectionPersister persister) {
+		return batchSize != null ? batchSize : persister.getBatchSize();
+	}
+
+	public Boolean getSubselectFetchEnabled() {
+		return subselectFetchEnabled;
+	}
+
+	public void setSubselectFetchEnabled(Boolean subselectFetchEnabled) {
+		this.subselectFetchEnabled = subselectFetchEnabled;
+	}
+
+	public boolean effectiveSubselectFetchEnabled(CollectionPersister persister) {
+		return subselectFetchEnabled != null ? subselectFetchEnabled : persister.isSubselectLoadable();
 	}
 
 	private void checkMutability() {

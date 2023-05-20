@@ -42,7 +42,6 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -281,7 +280,8 @@ public abstract class AbstractCollectionPersister
 		// isSet = collectionBinding.isSet();
 		// isSorted = collectionBinding.isSorted();
 		isPrimitiveArray = collectionBootDescriptor.isPrimitiveArray();
-		subselectLoadable = collectionBootDescriptor.isSubselectLoadable();
+		subselectLoadable = collectionBootDescriptor.isSubselectLoadable()
+				|| factory.getSessionFactoryOptions().isSubselectFetchEnabled();
 
 		qualifiedTableName = determineTableName( table );
 
@@ -705,48 +705,47 @@ public abstract class AbstractCollectionPersister
 			// if there is a user-specified loader, return that
 			return getStandardCollectionLoader();
 		}
+		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
-		final CollectionLoader subSelectLoader = resolveSubSelectLoader( key, session );
-		if ( subSelectLoader != null ) {
-			return subSelectLoader;
+		if ( loadQueryInfluencers.effectiveSubselectFetchEnabled( this ) ) {
+			final CollectionLoader subSelectLoader = resolveSubSelectLoader( key, session );
+			if ( subSelectLoader != null ) {
+				return subSelectLoader;
+			}
 		}
 
-		if ( ! session.getLoadQueryInfluencers().hasEnabledFilters() && ! isAffectedByEnabledFetchProfiles( session.getLoadQueryInfluencers() ) ) {
+		if ( !loadQueryInfluencers.hasEnabledFilters()
+				&& !isAffectedByEnabledFetchProfiles( loadQueryInfluencers ) ) {
 			return getStandardCollectionLoader();
 		}
-
-		return createCollectionLoader( session.getLoadQueryInfluencers() );
+		else {
+			return createCollectionLoader( loadQueryInfluencers );
+		}
 	}
 
 	private CollectionLoader resolveSubSelectLoader(Object key, SharedSessionContractImplementor session) {
-		if ( !isSubselectLoadable() ) {
-			return null;
-		}
-
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
-		final EntityKey ownerEntityKey = session.generateEntityKey( key, getOwnerEntityPersister() );
-		final SubselectFetch subselect = persistenceContext.getBatchFetchQueue().getSubselect( ownerEntityKey );
+		final SubselectFetch subselect =
+				persistenceContext.getBatchFetchQueue()
+						.getSubselect( session.generateEntityKey( key, getOwnerEntityPersister() ) );
 		if ( subselect == null ) {
 			return null;
 		}
+		else {
+			// Take care of any entities that might have
+			// been evicted!
+			subselect.getResultingEntityKeys()
+					.removeIf( entityKey -> !persistenceContext.containsEntity( entityKey ) );
 
-		// Take care of any entities that might have
-		// been evicted!
-		subselect.getResultingEntityKeys().removeIf( o -> !persistenceContext.containsEntity( o ) );
-
-		// Run a subquery loader
-		return createSubSelectLoader( subselect, session );
+			// Run a subquery loader
+			return createSubSelectLoader( subselect, session );
+		}
 	}
 
 	protected CollectionLoader createSubSelectLoader(SubselectFetch subselect, SharedSessionContractImplementor session) {
 		//noinspection RedundantCast
-		return new CollectionLoaderSubSelectFetch(
-				attributeMapping,
-				(DomainResult<?>) null,
-				subselect,
-				session
-		);
+		return new CollectionLoaderSubSelectFetch( attributeMapping, (DomainResult<?>) null, subselect, session );
 	}
 
 	private CollectionLoader reusableCollectionLoader;
@@ -758,9 +757,10 @@ public abstract class AbstractCollectionPersister
 			}
 			return reusableCollectionLoader;
 		}
-
-		// create a one-off
-		return generateCollectionLoader( loadQueryInfluencers );
+		else {
+			// create a one-off
+			return generateCollectionLoader( loadQueryInfluencers );
+		}
 	}
 
 	private boolean canUseReusableCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
@@ -769,13 +769,15 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private CollectionLoader generateCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
-		final int batchSize = getBatchSize();
+		final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 		if ( batchSize > 1 ) {
 			return getFactory().getServiceRegistry()
 					.getService( BatchLoaderFactory.class )
 					.createCollectionBatchLoader( batchSize, loadQueryInfluencers, attributeMapping, getFactory() );
 		}
-		return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, getFactory() );
+		else {
+			return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, getFactory() );
+		}
 	}
 
 	@Override
@@ -1371,6 +1373,7 @@ public abstract class AbstractCollectionPersister
 		return isAffectedByEnabledFilters( session.getLoadQueryInfluencers() );
 	}
 
+	@Override
 	public boolean isSubselectLoadable() {
 		return subselectLoadable;
 	}

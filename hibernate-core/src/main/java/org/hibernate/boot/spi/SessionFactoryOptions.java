@@ -144,6 +144,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	Integer getMaximumFetchDepth();
 
+	boolean isSubselectFetchEnabled();
+
 	NullPrecedence getDefaultNullPrecedence();
 
 	boolean isOrderUpdatesEnabled();

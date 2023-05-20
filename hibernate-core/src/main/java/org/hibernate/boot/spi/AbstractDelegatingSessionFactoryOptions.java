@@ -188,6 +188,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isSubselectFetchEnabled() {
+		return delegate.isSubselectFetchEnabled();
+	}
+
+	@Override
 	public NullPrecedence getDefaultNullPrecedence() {
 		return delegate.getDefaultNullPrecedence();
 	}

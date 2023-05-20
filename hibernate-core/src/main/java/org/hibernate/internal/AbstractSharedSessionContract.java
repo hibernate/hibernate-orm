@@ -265,9 +265,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public Integer getConfiguredJdbcBatchSize() {
 		final Integer sessionJdbcBatchSize = jdbcBatchSize;
-		return sessionJdbcBatchSize == null ?
-				fastSessionServices.defaultJdbcBatchSize :
-				sessionJdbcBatchSize;
+		return sessionJdbcBatchSize == null
+				? fastSessionServices.defaultJdbcBatchSize
+				: sessionJdbcBatchSize;
 	}
 
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {

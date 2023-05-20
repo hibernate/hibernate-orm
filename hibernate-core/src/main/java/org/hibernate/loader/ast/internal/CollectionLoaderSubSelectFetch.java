@@ -34,7 +34,7 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
- * A one-time use CollectionLoader for applying a sub-select fetch
+ * A one-time use {@link CollectionLoader} for applying a subselect fetch.
  *
  * @author Steve Ebersole
  */

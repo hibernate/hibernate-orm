@@ -1117,9 +1117,9 @@ There are several ways to call native or user-defined SQL functions.
 - A native or user-defined function may be called using JPQL's `function` syntax, for example, ``function('sinh', phi)``.
   (This is the easiest way, but not the best way.)
 - A user-written `FunctionContributor` may register user-defined functions.
-- A custom `Dialect` may register additional native functions by overriding `initializeFunctionRegistry()`. <<hql-user-defined-functions-impl, Implementation of this method.>>
+- A custom `Dialect` may register additional native functions by overriding `initializeFunctionRegistry()`. <<hql-user-defined-functions-implementation, Example of implementation.>>
 
-Fortunately, every built-in `Dialect` already registers many native functions for the database it supports.
+Fortunately, every built-in `Dialect` already registers many native functions for the database it supports. So there is no need to define this functions explicitly.
 
 [TIP]
 ====
@@ -2626,7 +2626,7 @@ Hibernate does emulate the `search` and `cycle` clauses though if necessary, so 
 Note that most modern database versions support recursive CTEs already.
 ====
 
-[[hql-user-defined-functions-impl]]
+[[hql-user-defined-functions-implementation]]
 === User-defined functions implementation
 
 Hibernate Dialects can register additional functions known to be available for that particular database product.
@@ -2742,7 +2742,7 @@ include::{example-dir-hql}/customFunctions/ExtendedPGDialect.java[tags=hql-user-
 ----
 ====
 
-Finally, when `countItemsGreaterVal` function is registered we can use it in our JPQL/HQL queries.
+Once the `countItemsGreaterVal` function has been registered, we are able to use it in our JPQL/HQL queries.
 
 [[hql-user-defined-dialect-function-test]]
 .Test of the custom function

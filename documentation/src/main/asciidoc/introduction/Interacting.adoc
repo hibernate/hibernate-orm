@@ -557,6 +557,45 @@ Book bookOrNull =
 
 The difference, of course, is that `getSingleResult()` throws an exception if there is no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
 
+[TIP]
+====
+Since Java has no tuple types, representing the type of a query projection list in Java has always been a problem for JPA and Hibernate.
+Traditionally, we've just used `Object[]`:
+[source,java]
+----
+var results =
+        session.createSelectionQuery("select isbn, title from Book",
+                                     Object[].class)
+            .getResultList();
+for (var result : results) {
+    var isbn = (String) result[0];
+    var title = (String) result[1];
+    ...
+}
+----
+This is really a bit ugly.
+Java's `record` types now offer an interesting alternative:
+[source,java]
+----
+record IsbnTitle(String isbn, String title) {}
+var results =
+        session.createSelectionQuery("select new IsbnTitle(isbn, title) from Book",
+                                     IsbnTitle.class)
+            .getResultList();
+for (var result : results) {
+    var isbn = result.isbn();
+    var title = result.title();
+    ...
+}
+----
+Notice that we're able to declare the `record` right before the line which executes the query.
+
+Now, this is only _superficially_ more typesafe, since the query itself is not checked statically, and so we can't say it's objectively better.
+But perhaps you find it more aesthetically pleasing.
+
+On the other hand, when we're passing query results around the system, the use of `select new` with a `record` type is much better than manually unpacking an `Object[]` array.
+====
+
 By default, Hibernate dirty checks entities in the persistence context before executing a query, in order to determine if the session should be flushed.
 If there are many entities association with the persistence context, then this can be an expensive operation.
 

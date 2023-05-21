@@ -506,7 +506,9 @@ public abstract class AbstractEntityPersister
 
 		final Dialect dialect = creationContext.getDialect();
 
-		batchSize = persistentClass.getBatchSize();
+		batchSize = persistentClass.getBatchSize() < 0
+				? factory.getSessionFactoryOptions().getDefaultBatchFetchSize()
+				: persistentClass.getBatchSize();
 		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections();
 		hasPartitionedSelectionMapping = persistentClass.hasPartitionedSelectionMapping();
 		hasCollectionNotReferencingPK = persistentClass.hasCollectionNotReferencingPK();

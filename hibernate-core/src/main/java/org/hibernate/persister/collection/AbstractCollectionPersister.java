@@ -309,7 +309,9 @@ public abstract class AbstractCollectionPersister
 
 		hasOrphanDelete = collectionBootDescriptor.hasOrphanDelete();
 
-		batchSize = collectionBootDescriptor.getBatchSize();
+		batchSize = collectionBootDescriptor.getBatchSize() < 0
+				? factory.getSessionFactoryOptions().getDefaultBatchFetchSize()
+				: collectionBootDescriptor.getBatchSize();
 
 		isVersioned = collectionBootDescriptor.isOptimisticLocked();
 

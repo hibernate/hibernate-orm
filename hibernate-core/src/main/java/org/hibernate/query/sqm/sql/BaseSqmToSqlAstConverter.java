@@ -2975,14 +2975,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return;
 		}
 		final TableGroup actualTableGroup;
+		final EntityNameUse finalEntityNameUse;
 		if ( tableGroup instanceof PluralTableGroup ) {
 			actualTableGroup = ( (PluralTableGroup) tableGroup ).getElementTableGroup();
+			finalEntityNameUse = entityNameUse;
 		}
 		else if ( tableGroup instanceof CorrelatedTableGroup ) {
 			actualTableGroup = ( (CorrelatedTableGroup) tableGroup ).getCorrelatedTableGroup();
+			// For correlated table groups we can't apply filters,
+			// as the context is in which the use happens may only affect the result of the subquery
+			finalEntityNameUse = entityNameUse == EntityNameUse.EXPRESSION ? entityNameUse : EntityNameUse.PROJECTION;
 		}
 		else {
 			actualTableGroup = tableGroup;
+			finalEntityNameUse = entityNameUse;
 		}
 		final Map<String, EntityNameUse> entityNameUses = tableGroupEntityNameUses.computeIfAbsent(
 				actualTableGroup,
@@ -2990,13 +2996,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		entityNameUses.compute(
 				hibernateEntityName,
-				(s, existingUse) -> entityNameUse.stronger( existingUse )
+				(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 		);
 
 		// Resolve the table reference for all types which we register an entity name use for
 		actualTableGroup.resolveTableReference( null, persister.getTableName() );
 
-		if ( entityNameUse == EntityNameUse.PROJECTION ) {
+		if ( finalEntityNameUse == EntityNameUse.PROJECTION ) {
 			// For projections also register uses of all super and subtypes,
 			// as well as resolve the respective table references
 			EntityMappingType superMappingType = persister;
@@ -3016,7 +3022,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				actualTableGroup.resolveTableReference( null, persister.getSubclassTableName( i ) );
 			}
 		}
-		else if ( entityNameUse == EntityNameUse.TREAT ) {
+		else if ( finalEntityNameUse == EntityNameUse.TREAT ) {
 			// If we encounter a treat use, we also want register the use for all subtypes.
 			// We do this here to not have to expand entity name uses during pruning later on
 			for ( EntityMappingType subType : persister.getSubMappingTypes() ) {

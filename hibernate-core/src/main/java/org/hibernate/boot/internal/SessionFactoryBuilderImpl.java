@@ -231,6 +231,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applySubselectFetchEnabled(boolean enabled) {
+		this.optionsBuilder.applySubselectFetchEnabled( enabled );
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
 		this.optionsBuilder.applyDefaultNullPrecedence( nullPrecedence );
 		return this;

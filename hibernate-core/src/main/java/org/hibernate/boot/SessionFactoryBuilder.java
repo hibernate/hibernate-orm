@@ -304,8 +304,19 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyMaximumFetchDepth(int depth);
 
 	/**
-	 * Apply a null precedence (NULLS FIRST, NULLS LAST) to be applied to
-	 * order by clauses rendered in SQL queries.
+	 * Enable the use of subselect fetching.
+	 *
+	 * @param enabled {@code true} indicates that subselect fetching is enabled
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_SUBSELECT_FETCH
+	 */
+	SessionFactoryBuilder applySubselectFetchEnabled(boolean enabled);
+
+	/**
+	 * Apply a null precedence, {@code NULLS FIRST} or {@code NULLS LAST},
+	 * to {@code order by} clauses rendered in SQL queries.
 	 *
 	 * @param nullPrecedence The default null precedence to use.
 	 *

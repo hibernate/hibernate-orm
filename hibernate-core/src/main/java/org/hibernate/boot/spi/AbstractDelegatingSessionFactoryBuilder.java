@@ -179,6 +179,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	public SessionFactoryBuilder applySubselectFetchEnabled(boolean enabled) {
+		delegate.applySubselectFetchEnabled( enabled );
+		return getThis();
+	}
+
+	@Override
 	public T applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
 		delegate.applyDefaultNullPrecedence( nullPrecedence );
 		return getThis();

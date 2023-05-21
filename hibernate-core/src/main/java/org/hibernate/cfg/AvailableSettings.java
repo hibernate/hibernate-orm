@@ -1025,7 +1025,12 @@ public interface AvailableSettings {
 	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
 
 	/**
-	 * Specifies the default batch size for batch fetching.
+	 * Specifies the default batch size for batch fetching. When set to
+	 * a value greater than one, Hibernate will use batch fetching, when
+	 * possible, to fetch any association.
+	 * <p>
+	 * By default, Hibernate only uses batch fetching for associations
+	 * explicitly annotated {@code @BatchSize}.
 	 *
 	 * @see org.hibernate.annotations.BatchSize
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultBatchFetchSize(int)
@@ -1040,6 +1045,7 @@ public interface AvailableSettings {
 	 * explicitly annotated {@code @Fetch(SUBSELECT)}.
 	 *
 	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applySubselectFetchEnabled(boolean)
 	 */
 	String USE_SUBSELECT_FETCH = "hibernate.use_subselect_fetch";
 

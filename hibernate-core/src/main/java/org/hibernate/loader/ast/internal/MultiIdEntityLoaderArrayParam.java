@@ -48,12 +48,20 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 /**
  * @author Steve Ebersole
  */
-public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E> implements SqlArrayMultiKeyLoader, Preparable {
-	private JdbcMapping arrayJdbcMapping;
-	private JdbcParameter jdbcParameter;
+public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E> implements SqlArrayMultiKeyLoader {
+	private final JdbcMapping arrayJdbcMapping;
+	private final JdbcParameter jdbcParameter;
 
 	public MultiIdEntityLoaderArrayParam(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
+		final Class<?> arrayClass = createTypedArray( 0 ).getClass();
+		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
+				getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
+				getIdentifierMapping().getJdbcMapping(),
+				arrayClass,
+				getSessionFactory()
+		);
+		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
 	}
 
 	@Override
@@ -386,18 +394,5 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 	private <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
 		return (X[]) Array.newInstance( getIdentifierMapping().getJavaType().getJavaTypeClass(), length );
-	}
-
-	@Override
-	public void prepare() {
-		super.prepare();
-		final Class<?> arrayClass = createTypedArray( 0 ).getClass();
-		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
-				getIdentifierMapping().getJdbcMapping(),
-				arrayClass,
-				getSessionFactory()
-		);
-		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
 	}
 }

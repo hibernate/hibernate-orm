@@ -76,7 +76,6 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CollectionKey;
@@ -118,20 +117,17 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderArrayParam;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderStandard;
-import org.hibernate.loader.ast.internal.Preparable;
 import org.hibernate.loader.ast.internal.SingleIdArrayLoadPlan;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
 import org.hibernate.loader.ast.internal.SingleUniqueKeyEntityLoaderStandard;
 import org.hibernate.loader.ast.spi.BatchLoaderFactory;
-import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
@@ -3393,31 +3389,13 @@ public abstract class AbstractEntityPersister
 			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
 			final NamedQueryMemento memento = getNamedQueryMemento( null );
 			singleIdLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
-			prepareLoader( singleIdLoader );
 		}
 		else {
-			singleIdLoader = createAndPrepareSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+			singleIdLoader = createSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
 		}
-		multiIdLoader = buildAndPrepareMultiIdLoader();
+		multiIdLoader = buildMultiIdLoader();
 	}
 
-	private MultiIdEntityLoader<Object> buildAndPrepareMultiIdLoader() {
-		MultiIdEntityLoader<Object> multiIdLoader = buildMultiIdLoader();
-		prepareLoader( multiIdLoader );
-		return multiIdLoader;
-	}
-
-	private SingleIdEntityLoader<?> createAndPrepareSingleIdEntityLoader(LoadQueryInfluencers influencers) {
-		SingleIdEntityLoader<?> singleIdLoader = createSingleIdEntityLoader( influencers );
-		prepareLoader( singleIdLoader );
-		return singleIdLoader;
-	}
-
-	private void prepareLoader(Loader loader) {
-		if ( loader instanceof Preparable ) {
-			( (Preparable) loader ).prepare();
-		}
-	}
 	/**
 	 * Load an instance using either the {@code forUpdateLoader} or the outer joining {@code loader},
 	 * depending upon the value of the {@code lock} parameter
@@ -3463,7 +3441,7 @@ public abstract class AbstractEntityPersister
 			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
 			// no subselect fetching for entities for now
 			return isAffectedByInfluencers( influencers )
-					? createAndPrepareSingleIdEntityLoader( influencers )
+					? createSingleIdEntityLoader( influencers )
 					: getSingleIdLoader();
 		}
 	}

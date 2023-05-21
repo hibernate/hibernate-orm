@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
-import java.util.Collections;
 
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -33,6 +32,8 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 
+import static java.util.Collections.singletonList;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
@@ -49,6 +50,7 @@ public class CollectionBatchLoaderArrayParam
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlSelect;
 	private final JdbcOperationQuerySelect jdbcSelectOperation;
+	private final CollectionLoaderSingleKey singleKeyLoader;
 
 	public CollectionBatchLoaderArrayParam(
 			int domainBatchSize,
@@ -68,7 +70,7 @@ public class CollectionBatchLoaderArrayParam
 		final SimpleForeignKeyDescriptor keyDescriptor = (SimpleForeignKeyDescriptor) getLoadable().getKeyDescriptor();
 
 		arrayElementType = keyDescriptor.getJavaType().getJavaTypeClass();
-		Class<?> arrayClass = Array.newInstance( arrayElementType, 0 ).getClass();
+		final Class<?> arrayClass = Array.newInstance( arrayElementType, 0 ).getClass();
 
 		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
 				.getBasicTypeRegistry()
@@ -95,6 +97,8 @@ public class CollectionBatchLoaderArrayParam
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( getSessionFactory(), sqlSelect )
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+
+		singleKeyLoader = new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, sessionFactory );
 	}
 
 	@Override
@@ -103,12 +107,13 @@ public class CollectionBatchLoaderArrayParam
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch loading entity `%s#%s`", getLoadable().getNavigableRole().getFullPath(), key );
 		}
 
-		final Object[] keysToInitialize = resolveKeysToInitialize( key, session );
-		initializeKeys( keysToInitialize, session );
+		final Object[] keys = resolveKeysToInitialize( key, session );
 
-		for ( int i = 0; i < keysToInitialize.length; i++ ) {
-			finishInitializingKey( keysToInitialize[i], session );
+		if ( hasSingleId( keys ) ) {
+			return singleKeyLoader.load( key, session );
 		}
+
+		initializeKeys( keys, session );
 
 		final CollectionKey collectionKey = new CollectionKey( getLoadable().getCollectionDescriptor(), key );
 		return session.getPersistenceContext().getCollection( collectionKey );
@@ -138,7 +143,7 @@ public class CollectionBatchLoaderArrayParam
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 				session.getPersistenceContext().getBatchFetchQueue(),
 				sqlSelect,
-				Collections.singletonList( jdbcParameter ),
+				singletonList( jdbcParameter ),
 				jdbcParameterBindings
 		);
 
@@ -152,6 +157,10 @@ public class CollectionBatchLoaderArrayParam
 				RowTransformerStandardImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
+
+		for ( int i = 0; i < keysToInitialize.length; i++ ) {
+			finishInitializingKey( keysToInitialize[i], session );
+		}
 	}
 
 	public void prepare() {

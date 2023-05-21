@@ -10,7 +10,6 @@ import java.lang.reflect.Array;
 import java.util.Locale;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -28,6 +27,8 @@ import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
+import static org.hibernate.engine.internal.BatchFetchQueueHelper.removeBatchLoadableEntityKey;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
@@ -48,6 +49,7 @@ public class EntityBatchLoaderArrayParam<T>
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlAst;
 	private final JdbcOperationQuerySelect jdbcSelectOperation;
+	private final SingleIdEntityLoaderStandardImpl<T> singleIdLoader;
 
 
 	/**
@@ -100,7 +102,10 @@ public class EntityBatchLoaderArrayParam<T>
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );	}
+				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+
+		singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
+	}
 
 	@Override
 	public int getDomainBatchSize() {
@@ -119,6 +124,11 @@ public class EntityBatchLoaderArrayParam<T>
 		}
 
 		final Object[] ids = resolveIdsToInitialize( pkValue, session );
+
+		if ( hasSingleId( ids ) ) {
+			return singleIdLoader.load( pkValue, entityInstance, lockOptions, readOnly, session );
+		}
+
 		initializeEntities( ids, pkValue, entityInstance, lockOptions, readOnly, session );
 
 		final EntityKey entityKey = session.generateEntityKey( pkValue, getLoadable().getEntityPersister() );
@@ -167,7 +177,7 @@ public class EntityBatchLoaderArrayParam<T>
 				continue;
 			}
 			// found or not, remove the key from the batch-fetch queue
-			BatchFetchQueueHelper.removeBatchLoadableEntityKey( id, getLoadable(), session );
+			removeBatchLoadableEntityKey( id, getLoadable(), session );
 		}
 	}
 

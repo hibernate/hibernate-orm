@@ -25,7 +25,7 @@ public class MultiKeyLoadHelper {
 
 	public static boolean supportsSqlArrayType(Dialect dialect) {
 		return dialect.supportsStandardArrays()
-				&& dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
+			&& dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
 	}
 
 	public static JdbcMapping resolveArrayJdbcMapping(
@@ -55,5 +55,14 @@ public class MultiKeyLoadHelper {
 				null,
 				typeConfiguration.getCurrentBaseSqlTypeIndicators()
 		);
+	}
+
+	static boolean hasSingleId(Object[] ids) {
+		for ( int i=1; i<ids.length; i++ ) {
+			if ( ids[i] != null ) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

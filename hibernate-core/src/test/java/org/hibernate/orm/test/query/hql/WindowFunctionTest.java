@@ -211,4 +211,15 @@ public class WindowFunctionTest {
 			}
 		} );
 	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16655" )
+	public void testParseWindowFrame(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+				session.createQuery(
+						"select rank() over (order by theInt rows between current row and unbounded following) from EntityOfBasics",
+						Long.class
+				);
+		} );
+	}
 }

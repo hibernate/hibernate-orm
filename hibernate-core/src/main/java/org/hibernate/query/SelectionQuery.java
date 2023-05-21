@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -34,6 +35,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import org.hibernate.graph.GraphSemantic;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -185,6 +187,14 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	Optional<R> uniqueResultOptional();
 
 	SelectionQuery<R> setHint(String hintName, Object value);
+
+	/**
+	 * Apply an {@link EntityGraph} to the query.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 */
+	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
 
 	@Override
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);

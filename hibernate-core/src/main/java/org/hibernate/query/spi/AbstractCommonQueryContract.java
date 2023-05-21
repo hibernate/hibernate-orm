@@ -368,7 +368,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			applyGraph( (String) value, graphSemantic );
 		}
 		else {
-			QueryLogging.QUERY_LOGGER.debugf( "The %s hint was set, but the value was neither an EntityGraph nor String", hintName );
+			throw new IllegalArgumentException( "The value of the hint '" + hintName
+					+ "' must be an instance of EntityGraph or the string name of a named EntityGraph" );
 		}
 	}
 

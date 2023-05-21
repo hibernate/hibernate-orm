@@ -22,6 +22,7 @@ import java.util.stream.StreamSupport;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
@@ -41,7 +42,9 @@ import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -576,6 +579,11 @@ public abstract class AbstractSelectionQuery<R>
 		return this;
 	}
 
+	@Override
+	public SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+		applyGraph( (RootGraphImplementor<R>) graph, semantic );
+		return this;
+	}
 
 	@Override
 	public LockOptions getLockOptions() {

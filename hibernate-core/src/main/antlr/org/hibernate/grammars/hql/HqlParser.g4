@@ -1211,9 +1211,9 @@ frameClause
  * The start of the window content
  */
 frameStart
-	: UNBOUNDED PRECEDING
+	: CURRENT ROW
+	| UNBOUNDED PRECEDING
 	| expression PRECEDING
-	| CURRENT ROW
 	| expression FOLLOWING
 	;
 
@@ -1221,10 +1221,10 @@ frameStart
  * The end of the window content
  */
 frameEnd
-	: expression PRECEDING
-	| CURRENT ROW
-	| expression FOLLOWING
+	: CURRENT ROW
 	| UNBOUNDED FOLLOWING
+	| expression PRECEDING
+	| expression FOLLOWING
 	;
 
 /**

@@ -35,10 +35,10 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
- * An EntityBatchLoader using one or more SQL queries, which each initialize up to
- * {@linkplain #getSqlBatchSize()} entities using a SQL IN predicate restriction -
+ * An {@link EntityBatchLoader} using one or more SQL queries, which each initialize up
+ * to {@linkplain #getSqlBatchSize()} entities using a SQL IN predicate restriction -
  * e.g., {@code ... where id in (?,?,...)}.
- * <p/>
+ * <p>
  * The number of parameters rendered into the SQL is controlled by {@linkplain #getSqlBatchSize()}.
  * Any unused parameter slots for a particular execution are set to {@code null}.
  *
@@ -46,13 +46,13 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  */
 public class EntityBatchLoaderInPredicate<T>
 		extends SingleIdEntityLoaderSupport<T>
-		implements EntityBatchLoader<T>, SqlInPredicateMultiKeyLoader, Preparable {
+		implements EntityBatchLoader<T>, SqlInPredicateMultiKeyLoader {
 	private final int domainBatchSize;
 	private final int sqlBatchSize;
 
-	private List<JdbcParameter> jdbcParameters;
-	private SelectStatement sqlAst;
-	private JdbcOperationQuerySelect jdbcSelectOperation;
+	private final List<JdbcParameter> jdbcParameters;
+	private final SelectStatement sqlAst;
+	private final JdbcOperationQuerySelect jdbcSelectOperation;
 
 	/**
 	 * @param domainBatchSize The maximum number of entities we will initialize for each {@link #load load}
@@ -77,6 +77,31 @@ public class EntityBatchLoaderInPredicate<T>
 					sqlBatchSize
 			);
 		}
+
+		EntityIdentifierMapping identifierMapping = getLoadable().getIdentifierMapping();
+
+		final int expectedNumberOfParameters = identifierMapping.getJdbcTypeCount() * sqlBatchSize;
+
+		jdbcParameters = arrayList( expectedNumberOfParameters );
+		sqlAst = LoaderSelectBuilder.createSelect(
+				getLoadable(),
+				// null here means to select everything
+				null,
+				identifierMapping,
+				null,
+				sqlBatchSize,
+				new LoadQueryInfluencers( sessionFactory ),
+				LockOptions.NONE,
+				jdbcParameters::add,
+				sessionFactory
+		);
+		assert jdbcParameters.size() == expectedNumberOfParameters;
+
+		jdbcSelectOperation = sessionFactory.getJdbcServices()
+				.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildSelectTranslator( sessionFactory, sqlAst )
+				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override
@@ -298,34 +323,6 @@ public class EntityBatchLoaderInPredicate<T>
 		);
 
 		entityKeys.forEach( batchFetchQueue::removeBatchLoadableEntityKey );
-	}
-
-	@Override
-	public void prepare() {
-		EntityIdentifierMapping identifierMapping = getLoadable().getIdentifierMapping();
-
-		final int expectedNumberOfParameters = identifierMapping.getJdbcTypeCount() * sqlBatchSize;
-
-		jdbcParameters = arrayList( expectedNumberOfParameters );
-		sqlAst = LoaderSelectBuilder.createSelect(
-				getLoadable(),
-				// null here means to select everything
-				null,
-				identifierMapping,
-				null,
-				sqlBatchSize,
-				new LoadQueryInfluencers( sessionFactory ),
-				LockOptions.NONE,
-				jdbcParameters::add,
-				sessionFactory
-		);
-		assert jdbcParameters.size() == expectedNumberOfParameters;
-
-		jdbcSelectOperation = sessionFactory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override

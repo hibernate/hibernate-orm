@@ -32,7 +32,7 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
- * SingleIdEntityLoaderSupport implementation based on using a single
+ * {@link SingleIdEntityLoaderSupport} implementation based on using a single
  * {@linkplain org.hibernate.type.SqlTypes#ARRAY array} parameter to pass the
  * entire batch of ids.
  *
@@ -40,14 +40,14 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  */
 public class EntityBatchLoaderArrayParam<T>
 		extends SingleIdEntityLoaderSupport<T>
-		implements EntityBatchLoader<T>, SqlArrayMultiKeyLoader, Preparable {
+		implements EntityBatchLoader<T>, SqlArrayMultiKeyLoader {
 	private final int domainBatchSize;
 
-	private BasicEntityIdentifierMapping identifierMapping;
-	private JdbcMapping arrayJdbcMapping;
-	private JdbcParameter jdbcParameter;
-	private SelectStatement sqlAst;
-	private JdbcOperationQuerySelect jdbcSelectOperation;
+	private final BasicEntityIdentifierMapping identifierMapping;
+	private final JdbcMapping arrayJdbcMapping;
+	private final JdbcParameter jdbcParameter;
+	private final SelectStatement sqlAst;
+	private final JdbcOperationQuerySelect jdbcSelectOperation;
 
 
 	/**
@@ -75,7 +75,32 @@ public class EntityBatchLoaderArrayParam<T>
 					domainBatchSize
 			);
 		}
-	}
+
+		identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
+		final Class<?> arrayClass =
+				Array.newInstance( identifierMapping.getJavaType().getJavaTypeClass(), 0 ).getClass();
+		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
+				sessionFactory.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
+				identifierMapping.getJdbcMapping(),
+				arrayClass,
+				sessionFactory
+		);
+
+		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
+		sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
+				getLoadable(),
+				identifierMapping,
+				new LoadQueryInfluencers( sessionFactory ),
+				LockOptions.NONE,
+				jdbcParameter,
+				sessionFactory
+		);
+
+		jdbcSelectOperation = sessionFactory.getJdbcServices()
+				.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildSelectTranslator( sessionFactory, sqlAst )
+				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );	}
 
 	@Override
 	public int getDomainBatchSize() {
@@ -149,35 +174,6 @@ public class EntityBatchLoaderArrayParam<T>
 	@Override
 	public T load(Object pkValue, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session) {
 		return load( pkValue, null, lockOptions, readOnly, session );
-	}
-
-	@Override
-	public void prepare() {
-		identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
-		final Class<?> arrayClass =
-				Array.newInstance( identifierMapping.getJavaType().getJavaTypeClass(), 0 ).getClass();
-		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				sessionFactory.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
-				identifierMapping.getJdbcMapping(),
-				arrayClass,
-				sessionFactory
-		);
-
-		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
-		sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
-				getLoadable(),
-				identifierMapping,
-				new LoadQueryInfluencers( sessionFactory ),
-				LockOptions.NONE,
-				jdbcParameter,
-				sessionFactory
-		);
-
-		jdbcSelectOperation = sessionFactory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override

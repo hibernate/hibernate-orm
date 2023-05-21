@@ -24,11 +24,11 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 /**
- * Standard implementation of SingleIdEntityLoader
+ * Standard implementation of {@link org.hibernate.loader.ast.spi.SingleIdEntityLoader}.
  *
  * @author Steve Ebersole
  */
-public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSupport<T> implements Preparable {
+public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSupport<T> {
 	private EnumMap<LockMode, SingleIdLoadPlan> selectByLockMode = new EnumMap<>( LockMode.class );
 	private EnumMap<CascadingFetchProfile, SingleIdLoadPlan> selectByInternalCascadeProfile;
 
@@ -43,10 +43,6 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			SessionFactoryImplementor sessionFactory) {
 		// todo (6.0) : consider creating a base AST and "cloning" it
 		super( entityDescriptor, sessionFactory );
-	}
-
-	@Override
-	public void prepare() {
 		// see `org.hibernate.persister.entity.AbstractEntityPersister#createLoaders`
 		//		we should pre-load a few - maybe LockMode.NONE and LockMode.READ
 		final LockOptions lockOptions = LockOptions.NONE;

@@ -628,6 +628,10 @@ public class OracleDialect extends Dialect {
 			case REAL:
 				// Oracle's 'real' type is actually double precision
 				return "float(24)";
+			case DOUBLE:
+				// Oracle's 'double precision' means float(126), and
+				// we never need 126 bits (38 decimal digits)
+				return "float(53)";
 
 			case NUMERIC:
 			case DECIMAL:
@@ -723,12 +727,20 @@ public class OracleDialect extends Dialect {
 				}
 				break;
 			case NUMERIC:
-				if ( scale == -127 ) {
-					// For some reason, the Oracle JDBC driver reports FLOAT
-					// as NUMERIC with scale -127
-					return precision <= getFloatPrecision()
-							? jdbcTypeRegistry.getDescriptor( FLOAT )
-							: jdbcTypeRegistry.getDescriptor( DOUBLE );
+				if ( precision > 8 // precision of 0 means something funny
+						// For some reason, the Oracle JDBC driver reports
+						// FLOAT or DOUBLE as NUMERIC with scale -127
+						// (but note that expressions with unknown type
+						//  also get reported this way, so take care)
+						&& scale == -127 ) {
+					if ( precision <= 24 ) {
+						// Can be represented as a Java float
+						return jdbcTypeRegistry.getDescriptor( FLOAT );
+					}
+					else if ( precision <= 53 ) {
+						// Can be represented as a Java double
+						return jdbcTypeRegistry.getDescriptor( DOUBLE );
+					}
 				}
 				//intentional fall-through:
 			case DECIMAL:

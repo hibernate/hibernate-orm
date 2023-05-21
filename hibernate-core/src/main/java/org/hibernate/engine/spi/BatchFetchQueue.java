@@ -370,14 +370,15 @@ public class BatchFetchQueue {
 			return;
 		}
 
-		int i = 1;
-		int end = -1;
-		boolean checkForEnd = false;
-
-		final LinkedHashMap<CollectionEntry, PersistentCollection<?>> map = batchLoadableCollections.get( pluralAttributeMapping.getNavigableRole().getFullPath() );
+		final LinkedHashMap<CollectionEntry, PersistentCollection<?>> map =
+				batchLoadableCollections.get( pluralAttributeMapping.getNavigableRole().getFullPath() );
 		if ( map == null ) {
 			return;
 		}
+
+		int i = 1;
+		int end = -1;
+		boolean checkForEnd = false;
 
 		for ( Entry<CollectionEntry, PersistentCollection<?>> me : map.entrySet() ) {
 			final CollectionEntry ce = me.getKey();

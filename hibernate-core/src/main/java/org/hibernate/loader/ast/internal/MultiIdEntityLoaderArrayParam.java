@@ -40,8 +40,6 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -385,7 +383,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		return ids;
 	}
 
-	private  <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
+	private <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
 		return (X[]) Array.newInstance( getIdentifierMapping().getJavaType().getJavaTypeClass(), length );
 	}
@@ -393,14 +391,9 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 	@Override
 	public void prepare() {
 		super.prepare();
-
 		final Class<?> arrayClass = createTypedArray( 0 ).getClass();
-
-		final BasicTypeRegistry basicTypeRegistry = getSessionFactory().getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<?> arrayBasicType = basicTypeRegistry.getRegisteredType( arrayClass );
-
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				arrayBasicType,
+				getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
 				getIdentifierMapping().getJdbcMapping(),
 				arrayClass,
 				getSessionFactory()

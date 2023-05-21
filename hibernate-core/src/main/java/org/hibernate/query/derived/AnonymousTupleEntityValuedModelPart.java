@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
@@ -727,5 +728,20 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public boolean containsTableReference(String tableExpression) {
 		return ( (TableGroupProducer) delegate ).containsTableReference( tableExpression );
+	}
+
+	@Override
+	public int getBatchSize() {
+		return -1;
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return false;
+	}
+
+	@Override
+	public boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return true;
 	}
 }

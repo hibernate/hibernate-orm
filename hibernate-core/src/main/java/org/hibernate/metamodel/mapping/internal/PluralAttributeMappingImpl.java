@@ -886,6 +886,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public int getBatchSize() {
+		return getCollectionDescriptor().getBatchSize();
+	}
+
+	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers );
 	}

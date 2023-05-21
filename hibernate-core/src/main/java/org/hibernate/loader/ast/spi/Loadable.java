@@ -30,16 +30,20 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 
 	default boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
 		return isAffectedByEntityGraph( influencers )
-				|| isAffectedByEnabledFetchProfiles( influencers )
-				|| isAffectedByEnabledFilters( influencers );
+			|| isAffectedByEnabledFetchProfiles( influencers )
+			|| isAffectedByEnabledFilters( influencers )
+			|| influencers.getBatchSize() != getBatchSize();
 	}
 
 	default boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
 		return !isAffectedByEntityGraph( influencers )
-				&& !isAffectedByEnabledFetchProfiles( influencers )
-				&& !isAffectedByEnabledFilters( influencers )
-				&& influencers.getEnabledCascadingFetchProfile() == null;
+			&& !isAffectedByEnabledFetchProfiles( influencers )
+			&& !isAffectedByEnabledFilters( influencers )
+			&& influencers.getBatchSize() == getBatchSize()
+			&& influencers.getEnabledCascadingFetchProfile() == null;
 	}
+
+	int getBatchSize();
 
 	/**
 	 * Whether any of the "influencers" affect this loadable.

@@ -44,6 +44,7 @@ import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -301,6 +302,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toTypeArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 import static org.hibernate.metamodel.RepresentationMode.POJO;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
@@ -327,8 +329,8 @@ public abstract class AbstractEntityPersister
 
 	private final String sqlAliasStem;
 
-	private final SingleIdEntityLoader<?> singleIdLoader;
-	private final MultiIdEntityLoader<?> multiIdLoader;
+	private SingleIdEntityLoader<?> singleIdLoader;
+	private MultiIdEntityLoader<?> multiIdLoader;
 	private NaturalIdLoader<?> naturalIdLoader;
 	private MultiNaturalIdLoader<?> multiNaturalIdLoader;
 
@@ -432,6 +434,8 @@ public abstract class AbstractEntityPersister
 	protected AttributeMappingsMap declaredAttributeMappings = AttributeMappingsMap.builder().build();
 	protected AttributeMappingsList staticFetchableList;
 
+	private final String queryLoaderName;
+
 	private BeforeExecutionGenerator versionGenerator;
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
@@ -524,22 +528,7 @@ public abstract class AbstractEntityPersister
 		final String rowId = persistentClass.getRootTable().getRowId();
 		rowIdName = rowId == null ? null : dialect.rowId( rowId );
 
-		if ( persistentClass.getLoaderName() != null ) {
-			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
-			final NamedQueryMemento namedQueryMemento =
-					factory.getQueryEngine().getNamedObjectRepository()
-						.resolve( factory, creationContext.getBootModel(), persistentClass.getLoaderName() );
-			if ( namedQueryMemento == null ) {
-				throw new IllegalArgumentException( "Could not resolve named load-query [" + getEntityName()
-						+ "] : " + persistentClass.getLoaderName() );
-			}
-			singleIdLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, namedQueryMemento );
-		}
-		else {
-			singleIdLoader = createSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
-		}
-
-		multiIdLoader = buildMultiIdLoader( persistentClass );
+		queryLoaderName = persistentClass.getLoaderName();
 
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
@@ -805,12 +794,29 @@ public abstract class AbstractEntityPersister
 
 		fullDiscriminatorSQLValues = toStringArray( sqlValues );
 		fullDiscriminatorValues = toObjectArray( values );
+
+		if ( hasNamedQueryLoader() ) {
+			getNamedQueryMemento( creationContext.getBootModel() );
+		}
+	}
+
+	private NamedQueryMemento getNamedQueryMemento(MetadataImplementor bootModel) {
+		final NamedQueryMemento memento =
+				factory.getQueryEngine().getNamedObjectRepository()
+						.resolve( factory, bootModel, queryLoaderName );
+		if ( memento == null ) {
+			throw new IllegalArgumentException( "Could not resolve named query '" + queryLoaderName
+					+ "' for loading entity '" + getEntityName() + "'" );
+		}
+		return memento;
 	}
 
 	private SingleIdEntityLoader<?> createSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
-			return createBatchingIdEntityLoader( this, batchSize, factory );
+			return factory.getServiceRegistry()
+					.getService( BatchLoaderFactory.class )
+					.createEntityBatchLoader( batchSize, this, factory );
 		}
 		else {
 			return new SingleIdEntityLoaderStandardImpl<>( this, factory );
@@ -836,12 +842,14 @@ public abstract class AbstractEntityPersister
 		return entityNameByTableNameMap;
 	}
 
-	private MultiIdEntityLoader<Object> buildMultiIdLoader(PersistentClass persistentClass) {
-		if ( persistentClass.getIdentifier() instanceof BasicValue
-				&& MultiKeyLoadHelper.supportsSqlArrayType( factory.getServiceRegistry().getService( JdbcServices.class ).getDialect() ) ) {
+	private MultiIdEntityLoader<Object> buildMultiIdLoader() {
+		if ( getIdentifierType() instanceof BasicType
+				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {
 			return new MultiIdEntityLoaderArrayParam<>( this, factory );
 		}
-		return new MultiIdEntityLoaderStandard<>( this, persistentClass, factory );
+		else {
+			return new MultiIdEntityLoaderStandard<>( this, identifierColumnSpan, factory );
+		}
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {
@@ -1049,15 +1057,6 @@ public abstract class AbstractEntityPersister
 			tableNames[i] = getTableName( i );
 		}
 		return tableNames;
-	}
-
-	private static SingleIdEntityLoader<?> createBatchingIdEntityLoader(
-			EntityMappingType entityDescriptor,
-			int domainBatchSize,
-			SessionFactoryImplementor factory) {
-		return factory.getServiceRegistry()
-				.getService( BatchLoaderFactory.class )
-				.createEntityBatchLoader( domainBatchSize, entityDescriptor, factory );
 	}
 
 	/**
@@ -3390,8 +3389,28 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
-		prepareLoader( singleIdLoader );
+		if ( hasNamedQueryLoader() ) {
+			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
+			final NamedQueryMemento memento = getNamedQueryMemento( null );
+			singleIdLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
+			prepareLoader( singleIdLoader );
+		}
+		else {
+			singleIdLoader = createAndPrepareSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+		}
+		multiIdLoader = buildAndPrepareMultiIdLoader();
+	}
+
+	private MultiIdEntityLoader<Object> buildAndPrepareMultiIdLoader() {
+		MultiIdEntityLoader<Object> multiIdLoader = buildMultiIdLoader();
 		prepareLoader( multiIdLoader );
+		return multiIdLoader;
+	}
+
+	private SingleIdEntityLoader<?> createAndPrepareSingleIdEntityLoader(LoadQueryInfluencers influencers) {
+		SingleIdEntityLoader<?> singleIdLoader = createSingleIdEntityLoader( influencers );
+		prepareLoader( singleIdLoader );
+		return singleIdLoader;
 	}
 
 	private void prepareLoader(Loader loader) {
@@ -3430,12 +3449,27 @@ public abstract class AbstractEntityPersister
 			LOG.tracev( "Fetching entity: {0}", infoString( this, id, getFactory() ) );
 		}
 
-		if ( optionalObject == null ) {
-			return singleIdLoader.load( id, lockOptions, readOnly, session );
+		final SingleIdEntityLoader<?> loader = determineLoaderToUse( session );
+		return optionalObject == null
+				? loader.load( id, lockOptions, readOnly, session )
+				: loader.load( id, optionalObject, lockOptions, readOnly, session );
+	}
+
+	protected SingleIdEntityLoader<?> determineLoaderToUse(SharedSessionContractImplementor session) {
+		if ( hasNamedQueryLoader() ) {
+			return getSingleIdLoader();
 		}
 		else {
-			return singleIdLoader.load( id, optionalObject, lockOptions, readOnly, session );
+			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
+			// no subselect fetching for entities for now
+			return isAffectedByInfluencers( influencers )
+					? createAndPrepareSingleIdEntityLoader( influencers )
+					: getSingleIdLoader();
 		}
+	}
+
+	private boolean hasNamedQueryLoader() {
+		return queryLoaderName != null;
 	}
 
 	public SingleIdEntityLoader<?> getSingleIdLoader() {
@@ -3461,7 +3495,7 @@ public abstract class AbstractEntityPersister
 				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
 			}
 			if ( loaded == null ) {
-				loaded = singleIdLoader.load( identifier, entity, LockOptions.NONE, session );
+				loaded = determineLoaderToUse( session ).load( identifier, entity, LockOptions.NONE, session );
 			}
 
 			if ( loaded == null ) {
@@ -3517,7 +3551,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers loadQueryInfluencers) {
-		if ( affectingFetchProfileNames != null ) {
+		if ( affectingFetchProfileNames != null && loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 			for ( String profileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
 				if ( affectingFetchProfileNames.contains( profileName ) ) {
 					return true;
@@ -3529,7 +3563,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
-		if ( loadQueryInfluencers.hasEnabledFilters() && filterHelper != null ) {
+		if ( filterHelper != null && loadQueryInfluencers.hasEnabledFilters() ) {
 			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
 				return true;
 			}

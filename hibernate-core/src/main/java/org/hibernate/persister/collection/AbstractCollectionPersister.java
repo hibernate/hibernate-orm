@@ -6,17 +6,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
@@ -27,6 +16,7 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.TransientObjectException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -124,13 +114,23 @@ import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
 import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -228,7 +228,7 @@ public abstract class AbstractCollectionPersister
 	private final Comparator<?> comparator;
 
 	private CollectionLoader collectionLoader;
-	private volatile CollectionLoader standardCollectionLoader;
+//	private volatile CollectionLoader standardCollectionLoader;
 	private CollectionElementLoaderByIndex collectionElementLoaderByIndex;
 
 	private PluralAttributeMapping attributeMapping;
@@ -570,14 +570,8 @@ public abstract class AbstractCollectionPersister
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// "mapping model"
 
-		if ( queryLoaderName != null ) {
-			final NamedQueryMemento namedQueryMemento = factory
-					.getQueryEngine()
-					.getNamedObjectRepository()
-					.resolve( factory, collectionBootDescriptor.getMetadata(), queryLoaderName );
-			if ( namedQueryMemento == null ) {
-				throw new IllegalArgumentException( "Could not resolve named load-query [" + navigableRole + "] : " + queryLoaderName );
-			}
+		if ( hasNamedQueryLoader() ) {
+			getNamedQueryMemento( collectionBootDescriptor.getMetadata() );
 		}
 
 		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, getTableName(), getCollectionSpaces() );
@@ -614,14 +608,12 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void postInstantiate() throws MappingException {
-		if ( queryLoaderName == null ) {
-			collectionLoader = createCollectionLoader( new LoadQueryInfluencers( factory ) );
+		if ( hasNamedQueryLoader() ) {
+			// We pass null as metamodel because we did the initialization during construction already
+			collectionLoader = new CollectionLoaderNamedQuery( this, getNamedQueryMemento( null ) );
 		}
 		else {
-			// We pass null as metamodel because we did the initialization during construction already
-			final NamedQueryMemento namedQueryMemento = factory.getQueryEngine().getNamedObjectRepository()
-					.resolve( factory, null, queryLoaderName );
-			collectionLoader = new CollectionLoaderNamedQuery( this, namedQueryMemento );
+			collectionLoader = createCollectionLoader( new LoadQueryInfluencers( factory ) );
 		}
 
 		if ( attributeMapping.getIndexDescriptor() != null ) {
@@ -633,6 +625,17 @@ public abstract class AbstractCollectionPersister
 		}
 
 		logStaticSQL();
+	}
+
+	private NamedQueryMemento getNamedQueryMemento(MetadataImplementor bootModel) {
+		final NamedQueryMemento memento =
+				factory.getQueryEngine().getNamedObjectRepository()
+						.resolve( factory, bootModel, queryLoaderName );
+		if ( memento == null ) {
+			throw new IllegalArgumentException( "Could not resolve named query '" + queryLoaderName
+					+ "' for loading collection '" + getName() + "'" );
+		}
+		return memento;
 	}
 
 	protected void logStaticSQL() {
@@ -676,51 +679,50 @@ public abstract class AbstractCollectionPersister
 
 	// lazily initialize instance field via 'double-checked locking'
 	// see https://en.wikipedia.org/wiki/Double-checked_locking on why 'volatile' and local copy is used
-	protected CollectionLoader getStandardCollectionLoader() {
-		CollectionLoader localCopy = standardCollectionLoader;
-		if ( localCopy == null ) {
-			synchronized (this) {
-				localCopy = standardCollectionLoader;
-				if ( localCopy == null ) {
-					if ( queryLoaderName != null ) {
-						localCopy = collectionLoader;
-					}
-					else {
-						localCopy = createCollectionLoader( new LoadQueryInfluencers( factory ) );
-					}
-					standardCollectionLoader  = localCopy;
-				}
-			}
-		}
-		return localCopy;
+//	protected CollectionLoader getStandardCollectionLoader() {
+//		CollectionLoader localCopy = standardCollectionLoader;
+//		if ( localCopy == null ) {
+//			synchronized (this) {
+//				localCopy = standardCollectionLoader;
+//				if ( localCopy == null ) {
+//					localCopy = createCollectionLoader( new LoadQueryInfluencers( factory ) );
+//					standardCollectionLoader  = localCopy;
+//				}
+//			}
+//		}
+//		return localCopy;
+//	}
+
+	private boolean hasNamedQueryLoader() {
+		return queryLoaderName != null;
+	}
+
+	public CollectionLoader getCollectionLoader() {
+		return collectionLoader;
 	}
 
 	protected CollectionLoader determineLoaderToUse(Object key, SharedSessionContractImplementor session) {
-		if ( queryLoaderName != null ) {
+		if ( hasNamedQueryLoader() ) {
 			// if there is a user-specified loader, return that
-			return getStandardCollectionLoader();
+			return getCollectionLoader();
 		}
-		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
-		if ( loadQueryInfluencers.effectiveSubselectFetchEnabled( this ) ) {
+		final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
+
+		if ( influencers.effectiveSubselectFetchEnabled( this ) ) {
 			final CollectionLoader subSelectLoader = resolveSubSelectLoader( key, session );
 			if ( subSelectLoader != null ) {
 				return subSelectLoader;
 			}
 		}
 
-		if ( !loadQueryInfluencers.hasEnabledFilters()
-				&& !isAffectedByEnabledFetchProfiles( loadQueryInfluencers ) ) {
-			return getStandardCollectionLoader();
-		}
-		else {
-			return createCollectionLoader( loadQueryInfluencers );
-		}
+		return attributeMapping.isAffectedByInfluencers( influencers )
+				? createCollectionLoader( influencers )
+				: getCollectionLoader();
 	}
 
 	private CollectionLoader resolveSubSelectLoader(Object key, SharedSessionContractImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-
 		final SubselectFetch subselect =
 				persistenceContext.getBatchFetchQueue()
 						.getSubselect( session.generateEntityKey( key, getOwnerEntityPersister() ) );
@@ -728,50 +730,47 @@ public abstract class AbstractCollectionPersister
 			return null;
 		}
 		else {
-			// Take care of any entities that might have
-			// been evicted!
+			// Remove keys of any entities that have been evicted
 			subselect.getResultingEntityKeys()
 					.removeIf( entityKey -> !persistenceContext.containsEntity( entityKey ) );
-
 			// Run a subquery loader
 			return createSubSelectLoader( subselect, session );
 		}
 	}
 
 	protected CollectionLoader createSubSelectLoader(SubselectFetch subselect, SharedSessionContractImplementor session) {
-		//noinspection RedundantCast
-		return new CollectionLoaderSubSelectFetch( attributeMapping, (DomainResult<?>) null, subselect, session );
+		return new CollectionLoaderSubSelectFetch( attributeMapping, null, subselect, session );
 	}
+//
+//	private CollectionLoader reusableCollectionLoader;
+//
+//	protected CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+//		if ( canUseReusableCollectionLoader( loadQueryInfluencers ) ) {
+//			if ( reusableCollectionLoader == null ) {
+//				reusableCollectionLoader = generateCollectionLoader( new LoadQueryInfluencers( factory ) );
+//			}
+//			return reusableCollectionLoader;
+//		}
+//		else {
+//			// create a one-off
+//			return generateCollectionLoader( loadQueryInfluencers );
+//		}
+//	}
+//
+//	private boolean canUseReusableCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+//		// we can reuse it so long as none of the enabled influencers affect it
+//		return attributeMapping.isNotAffectedByInfluencers( loadQueryInfluencers );
+//	}
 
-	private CollectionLoader reusableCollectionLoader;
-
-	protected CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
-		if ( canUseReusableCollectionLoader( loadQueryInfluencers ) ) {
-			if ( reusableCollectionLoader == null ) {
-				reusableCollectionLoader = generateCollectionLoader( new LoadQueryInfluencers( factory ) );
-			}
-			return reusableCollectionLoader;
-		}
-		else {
-			// create a one-off
-			return generateCollectionLoader( loadQueryInfluencers );
-		}
-	}
-
-	private boolean canUseReusableCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
-		// we can reuse it so long as none of the enabled influencers affect it
-		return attributeMapping.isNotAffectedByInfluencers( loadQueryInfluencers );
-	}
-
-	private CollectionLoader generateCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	private CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
-			return getFactory().getServiceRegistry()
+			return factory.getServiceRegistry()
 					.getService( BatchLoaderFactory.class )
-					.createCollectionBatchLoader( batchSize, loadQueryInfluencers, attributeMapping, getFactory() );
+					.createCollectionBatchLoader( batchSize, loadQueryInfluencers, attributeMapping, factory );
 		}
 		else {
-			return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, getFactory() );
+			return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, factory );
 		}
 	}
 
@@ -1564,16 +1563,13 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
-		if ( affectingFetchProfiles == null ) {
-			return false;
-		}
-
-		for ( Map.Entry<String, Fetch.Style> entry : affectingFetchProfiles.entrySet() ) {
-			if ( influencers.isFetchProfileEnabled( entry.getKey() ) ) {
-				return true;
+		if ( affectingFetchProfiles != null && influencers.hasEnabledFetchProfiles() ) {
+			for ( String profileName : affectingFetchProfiles.keySet() ) {
+				if ( influencers.isFetchProfileEnabled( profileName ) ) {
+					return true;
+				}
 			}
 		}
-
 		return false;
 	}
 
@@ -1581,11 +1577,12 @@ public abstract class AbstractCollectionPersister
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		if ( influencers.hasEnabledFilters() ) {
 			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
-			return ( filterHelper != null && filterHelper.isAffectedBy( enabledFilters ) )
-					|| ( manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters ) );
+			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
+				|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters );
 		}
-
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	@Override

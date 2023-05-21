@@ -56,16 +56,18 @@ public class EntityBatchLoaderInPredicate<T>
 
 	/**
 	 * @param domainBatchSize The maximum number of entities we will initialize for each {@link #load load}
-	 * @param sqlBatchSize The number of keys our SQL AST should be able to fetch
 	 */
 	public EntityBatchLoaderInPredicate(
 			int domainBatchSize,
-			int sqlBatchSize,
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
 		this.domainBatchSize = domainBatchSize;
-		this.sqlBatchSize = sqlBatchSize;
+		int idColumnCount = entityDescriptor.getEntityPersister().getIdentifierType().getColumnSpan( sessionFactory );
+		this.sqlBatchSize = sessionFactory.getJdbcServices()
+				.getDialect()
+				.getBatchLoadSizingStrategy()
+				.determineOptimalBatchLoadSize( idColumnCount, domainBatchSize, false );
 
 		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(

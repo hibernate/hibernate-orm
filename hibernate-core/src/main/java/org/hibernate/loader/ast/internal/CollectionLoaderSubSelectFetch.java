@@ -46,7 +46,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 
 	public CollectionLoaderSubSelectFetch(
 			PluralAttributeMapping attributeMapping,
-			DomainResult cachedDomainResult,
+			DomainResult<?> cachedDomainResult,
 			SubselectFetch subselect,
 			SharedSessionContractImplementor session) {
 		this.attributeMapping = attributeMapping;

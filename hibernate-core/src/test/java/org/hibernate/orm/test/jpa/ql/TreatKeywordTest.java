@@ -30,6 +30,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -203,6 +204,34 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 		List results = s.createQuery( "select treat (a as Dog) from Animal a where a.fast = TRUE" ).list();
 
 		assertEquals( Arrays.asList( greyhound ), results );
+
+		tx.commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-16657")
+	public void testTypeFilterInSubquery() {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+
+		JoinedEntitySubclass2 child1 = new JoinedEntitySubclass2(3, "child1");
+		JoinedEntitySubSubclass2 child2 = new JoinedEntitySubSubclass2(4, "child2");
+		JoinedEntitySubclass root1 = new JoinedEntitySubclass(1, "root1", child1);
+		JoinedEntitySubSubclass root2 = new JoinedEntitySubSubclass(2, "root2", child2);
+		s.persist( child1 );
+		s.persist( child2 );
+		s.persist( root1 );
+		s.persist( root2 );
+
+		List<String> results = s.createSelectionQuery(
+				"select (select o.name from j.other o where type(j) = JoinedEntitySubSubclass) from JoinedEntitySubclass j order by j.id",
+				String.class
+		).list();
+
+		assertEquals( 2, results.size() );
+		assertNull( results.get( 0 ) );
+		assertEquals( "child2", results.get( 1 ) );
 
 		tx.commit();
 		s.close();

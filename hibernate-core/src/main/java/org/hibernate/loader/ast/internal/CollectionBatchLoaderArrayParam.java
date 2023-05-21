@@ -7,6 +7,7 @@
 package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.hibernate.LockOptions;
@@ -44,7 +45,6 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
 public class CollectionBatchLoaderArrayParam
 		extends AbstractCollectionBatchLoader
 		implements CollectionBatchLoader, SqlArrayMultiKeyLoader {
-	private final  Class<?> arrayElementType;
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlSelect;
@@ -65,10 +65,10 @@ public class CollectionBatchLoaderArrayParam
 			);
 		}
 
-		final SimpleForeignKeyDescriptor keyDescriptor = (SimpleForeignKeyDescriptor) getLoadable().getKeyDescriptor();
+		final SimpleForeignKeyDescriptor keyDescriptor = getKeyDescriptor();
 
-		arrayElementType = keyDescriptor.getJavaType().getJavaTypeClass();
-		Class<?> arrayClass = Array.newInstance( arrayElementType, 0 ).getClass();
+		final Class<?> keyType = keyDescriptor.getJavaType().getJavaTypeClass();
+		final Class<?> arrayClass = Array.newInstance( keyType, 0 ).getClass();
 
 		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
 				.getBasicTypeRegistry()
@@ -97,6 +97,10 @@ public class CollectionBatchLoaderArrayParam
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
+	private SimpleForeignKeyDescriptor getKeyDescriptor() {
+		return (SimpleForeignKeyDescriptor) getLoadable().getKeyDescriptor();
+	}
+
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
@@ -115,14 +119,21 @@ public class CollectionBatchLoaderArrayParam
 	}
 
 	private Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
-		final Object[] keysToInitialize = (Object[]) Array.newInstance( arrayElementType, getDomainBatchSize() );
-		session.getPersistenceContextInternal().getBatchFetchQueue().collectBatchLoadableCollectionKeys(
-				getDomainBatchSize(),
-				(index, value) -> keysToInitialize[index] = value,
-				keyBeingLoaded,
-				getLoadable()
-		);
-		return keysToInitialize;
+		final int length = getDomainBatchSize();
+		final Class<?> keyType = getKeyDescriptor().getJavaType().getJavaTypeClass();
+		final Object[] keysToInitialize = (Object[]) Array.newInstance( keyType, length );
+		session.getPersistenceContextInternal().getBatchFetchQueue()
+				.collectBatchLoadableCollectionKeys(
+						length,
+						(index, value) -> keysToInitialize[index] = value,
+						keyBeingLoaded,
+						getLoadable()
+				);
+		int newLength = length;
+		while ( newLength>1 && keysToInitialize[newLength-1] == null ) {
+			newLength--;
+		}
+		return newLength < length ? Arrays.copyOf( keysToInitialize, newLength ) : keysToInitialize;
 	}
 
 	private void initializeKeys(Object[] keysToInitialize, SharedSessionContractImplementor session) {

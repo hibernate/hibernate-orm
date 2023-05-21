@@ -7,7 +7,7 @@
 package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Locale;
 
 import org.hibernate.LockOptions;
@@ -110,14 +110,20 @@ public class EntityBatchLoaderArrayParam<T>
 	}
 
 	protected Object[] resolveIdsToInitialize(Object pkValue, SharedSessionContractImplementor session) {
-		final Object[] idsToLoad = (Object[]) Array.newInstance( identifierMapping.getJavaType().getJavaTypeClass(), domainBatchSize );
-		session.getPersistenceContextInternal().getBatchFetchQueue().collectBatchLoadableEntityIds(
-				domainBatchSize,
-				(index, value) -> idsToLoad[index] = value,
-				pkValue,
-				getLoadable()
-		);
-		return idsToLoad;
+		final Class<?> idType = identifierMapping.getJavaType().getJavaTypeClass();
+		final Object[] idsToLoad = (Object[]) Array.newInstance( idType, domainBatchSize );
+		session.getPersistenceContextInternal().getBatchFetchQueue()
+				.collectBatchLoadableEntityIds(
+						domainBatchSize,
+						(index, value) -> idsToLoad[index] = value,
+						pkValue,
+						getLoadable()
+				);
+		int newLength = domainBatchSize;
+		while ( newLength>1 && idsToLoad[newLength-1] == null ) {
+			newLength--;
+		}
+		return newLength < domainBatchSize ? Arrays.copyOf( idsToLoad, newLength ) : idsToLoad;
 	}
 
 	private void initializeEntities(

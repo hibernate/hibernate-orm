@@ -312,7 +312,7 @@ public class EntityBatchLoaderInPredicate<T>
 				identifierMapping,
 				null,
 				sqlBatchSize,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				LockOptions.NONE,
 				jdbcParameters::add,
 				sessionFactory

@@ -84,9 +84,8 @@ public class MultiNaturalIdLoadingBatcher {
 
 		this.keyValueResolver = keyValueResolver;
 
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
 		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
 				.translate( null, QueryOptions.NONE );
 	}
@@ -139,10 +138,7 @@ public class MultiNaturalIdLoadingBatcher {
 	private <E> List<E> performLoad(JdbcParameterBindings jdbcParamBindings, SharedSessionContractImplementor session) {
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
 
-		final EntityPersister persister = entityDescriptor.getEntityPersister();
-		if ( persister.hasCollections()
-					&& session.getSessionFactory().getSessionFactoryOptions().isSubselectFetchEnabled()
-				|| persister.hasSubselectLoadableCollections() ) {
+		if ( session.getLoadQueryInfluencers().hasSubselectLoadableCollections( entityDescriptor.getEntityPersister() ) ) {
 			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 					session.getPersistenceContext().getBatchFetchQueue(),
 					sqlSelect,

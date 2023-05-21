@@ -239,7 +239,7 @@ public class SessionImpl
 			}
 		}
 
-		loadQueryInfluencers = new LoadQueryInfluencers( factory );
+		loadQueryInfluencers = new LoadQueryInfluencers( factory, options );
 
 		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
@@ -1932,6 +1932,7 @@ public class SessionImpl
 		loadQueryInfluencers.disableFetchProfile( name );
 	}
 
+	// TODO: unused for now, should we promote to Session?
 	public void setSubselectFetchingEnabled(boolean enabled) {
 		loadQueryInfluencers.setSubselectFetchEnabled( enabled );
 	}
@@ -1940,6 +1941,7 @@ public class SessionImpl
 		return loadQueryInfluencers.getSubselectFetchEnabled();
 	}
 
+	// TODO: unused for now, should we promote to Session?
 	public void setFetchBatchSize(int batchSize) {
 		loadQueryInfluencers.setBatchSize( batchSize );
 	}
@@ -2145,6 +2147,28 @@ public class SessionImpl
 		public SharedSessionBuilderImpl flushMode() {
 			flushMode( session.getHibernateFlushMode() );
 			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl defaultBatchFetchSize(int batchSize) {
+			super.defaultBatchFetchSize( batchSize );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl subselectFetchEnabled(boolean enabled) {
+			super.subselectFetchEnabled( enabled );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilder defaultBatchFetchSize() {
+			return defaultBatchFetchSize( session.getFetchBatchSize() );
+		}
+
+		@Override
+		public SharedSessionBuilder subselectFetchEnabled() {
+			return subselectFetchEnabled( session.isSubselectFetchingEnabled() );
 		}
 
 		@Override
@@ -2911,11 +2935,7 @@ public class SessionImpl
 	}
 
 	private Boolean getReadOnlyFromLoadQueryInfluencers() {
-		Boolean readOnly = null;
-		if ( loadQueryInfluencers != null ) {
-			readOnly = loadQueryInfluencers.getReadOnly();
-		}
-		return readOnly;
+		return loadQueryInfluencers != null ? loadQueryInfluencers.getReadOnly() : null;
 	}
 
 	@Override @Deprecated(forRemoval = true)

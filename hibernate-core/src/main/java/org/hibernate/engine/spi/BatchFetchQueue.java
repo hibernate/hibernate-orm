@@ -145,7 +145,7 @@ public class BatchFetchQueue {
 	 * already associated with the {@link PersistenceContext}.
 	 */
 	public void addBatchLoadableEntityKey(EntityKey key) {
-		if ( key.isBatchLoadable() ) {
+		if ( key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() ) ) {
 			if ( batchLoadableEntityKeys == null ) {
 				batchLoadableEntityKeys = CollectionHelper.mapOfSize( 12 );
 			}
@@ -165,10 +165,11 @@ public class BatchFetchQueue {
 	 * if necessary
 	 */
 	public void removeBatchLoadableEntityKey(EntityKey key) {
-		if ( batchLoadableEntityKeys != null && key.isBatchLoadable() ) {
-			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName() );
+		if ( batchLoadableEntityKeys != null
+				&& key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() ) ) {
+			final LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName() );
 			if ( set != null ) {
-				set.remove(key);
+				set.remove( key );
 			}
 		}
 	}
@@ -177,7 +178,8 @@ public class BatchFetchQueue {
 	 * Intended for test usage.  Really has no use-case in Hibernate proper.
 	 */
 	public boolean containsEntityKey(EntityKey key) {
-		if ( batchLoadableEntityKeys != null && key.isBatchLoadable() ) {
+		if ( batchLoadableEntityKeys != null
+				&& key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() ) ) {
 			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName() );
 			if ( set != null ) {
 				return set.contains( key );
@@ -523,4 +525,7 @@ public class BatchFetchQueue {
 		return false;
 	}
 
+	public SharedSessionContractImplementor getSession() {
+		return context.getSession();
+	}
 }

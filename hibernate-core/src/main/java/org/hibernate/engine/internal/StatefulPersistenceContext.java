@@ -868,7 +868,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id) {
 		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
 		addCollection( collection, ce, id );
-		if ( session.getLoadQueryInfluencers().effectiveBatchSize( persister ) > 1 ) {
+		if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
 		}
 	}
@@ -877,7 +877,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection<?> collection) {
 		final CollectionEntry ce = new CollectionEntry( persister, collection.getKey() );
 		addCollection( collection, ce, collection.getKey() );
-		if ( session.getLoadQueryInfluencers().effectiveBatchSize( persister ) > 1 ) {
+		if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
 		}
 	}

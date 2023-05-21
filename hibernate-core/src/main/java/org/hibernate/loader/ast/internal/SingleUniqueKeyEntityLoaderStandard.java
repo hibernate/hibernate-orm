@@ -34,6 +34,8 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
+import static java.util.Collections.singletonList;
+
 /**
  * @author Steve Ebersole
  */
@@ -73,7 +75,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				Collections.emptyList(),
 				uniqueKeyAttribute,
 				null,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				LockOptions.NONE,
 				jdbcParameters::add,
 				sessionFactory
@@ -125,10 +127,10 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
-				Collections.singletonList( entityDescriptor.getIdentifierMapping() ),
+				singletonList( entityDescriptor.getIdentifierMapping() ),
 				uniqueKeyAttribute,
 				null,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				LockOptions.NONE,
 				jdbcParameters::add,
 				sessionFactory

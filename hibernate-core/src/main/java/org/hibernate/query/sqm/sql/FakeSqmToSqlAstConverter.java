@@ -66,7 +66,7 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 
 	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
-		return LoadQueryInfluencers.NONE;
+		return new LoadQueryInfluencers( getCreationContext().getSessionFactory() );
 	}
 
 	@Override

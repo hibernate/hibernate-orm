@@ -110,7 +110,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.LazyValue;
 import org.hibernate.internal.util.StringHelper;
@@ -507,13 +506,8 @@ public abstract class AbstractEntityPersister
 
 		final Dialect dialect = creationContext.getDialect();
 
-		int batch = persistentClass.getBatchSize();
-		if ( batch == -1 ) {
-			batch = creationContext.getSessionFactoryOptions().getDefaultBatchFetchSize();
-		}
-		batchSize = batch;
-		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections()
-				|| entityMetamodel.hasCollections() && factory.getSessionFactoryOptions().isSubselectFetchEnabled();
+		batchSize = persistentClass.getBatchSize();
+		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections();
 		hasPartitionedSelectionMapping = persistentClass.hasPartitionedSelectionMapping();
 		hasCollectionNotReferencingPK = persistentClass.hasCollectionNotReferencingPK();
 
@@ -532,19 +526,17 @@ public abstract class AbstractEntityPersister
 
 		if ( persistentClass.getLoaderName() != null ) {
 			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
-			final NamedQueryMemento namedQueryMemento = factory.getQueryEngine().getNamedObjectRepository()
-					.resolve( factory, creationContext.getBootModel(), persistentClass.getLoaderName() );
+			final NamedQueryMemento namedQueryMemento =
+					factory.getQueryEngine().getNamedObjectRepository()
+						.resolve( factory, creationContext.getBootModel(), persistentClass.getLoaderName() );
 			if ( namedQueryMemento == null ) {
 				throw new IllegalArgumentException( "Could not resolve named load-query [" + getEntityName()
 						+ "] : " + persistentClass.getLoaderName() );
 			}
 			singleIdLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, namedQueryMemento );
 		}
-		else if ( batchSize > 1 ) {
-			singleIdLoader = createBatchingIdEntityLoader( this, batchSize, factory );
-		}
 		else {
-			singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( this, factory );
+			singleIdLoader = createSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
 		}
 
 		multiIdLoader = buildMultiIdLoader( persistentClass );
@@ -813,6 +805,16 @@ public abstract class AbstractEntityPersister
 
 		fullDiscriminatorSQLValues = toStringArray( sqlValues );
 		fullDiscriminatorValues = toObjectArray( values );
+	}
+
+	private SingleIdEntityLoader<?> createSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
+		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
+			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
+			return createBatchingIdEntityLoader( this, batchSize, factory );
+		}
+		else {
+			return new SingleIdEntityLoaderStandardImpl<>( this, factory );
+		}
 	}
 
 	public static Map<String, String> getEntityNameByTableNameMap(PersistentClass persistentClass) {
@@ -1188,7 +1190,7 @@ public abstract class AbstractEntityPersister
 					getIdentifierMapping(),
 					null,
 					1,
-					LoadQueryInfluencers.NONE,
+					new LoadQueryInfluencers( factory ),
 					LockOptions.NONE,
 					jdbcParameters::add,
 					factory
@@ -1644,6 +1646,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public int getBatchSize() {
+		return batchSize;
+	}
+
+	@Override
 	public String[] getIdentifierColumnNames() {
 		return rootTableKeyColumnNames;
 	}
@@ -1707,8 +1714,8 @@ public abstract class AbstractEntityPersister
 				LockOptions.NONE,
 				this::fetchProcessor,
 				true,
-				LoadQueryInfluencers.NONE,
-				getFactory()
+				new LoadQueryInfluencers( factory ),
+				factory
 		);
 
 		final NavigablePath entityPath = new NavigablePath( getRootPathName() );

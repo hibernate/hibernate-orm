@@ -280,8 +280,7 @@ public abstract class AbstractCollectionPersister
 		// isSet = collectionBinding.isSet();
 		// isSorted = collectionBinding.isSorted();
 		isPrimitiveArray = collectionBootDescriptor.isPrimitiveArray();
-		subselectLoadable = collectionBootDescriptor.isSubselectLoadable()
-				|| factory.getSessionFactoryOptions().isSubselectFetchEnabled();
+		subselectLoadable = collectionBootDescriptor.isSubselectLoadable();
 
 		qualifiedTableName = determineTableName( table );
 
@@ -310,11 +309,7 @@ public abstract class AbstractCollectionPersister
 
 		hasOrphanDelete = collectionBootDescriptor.hasOrphanDelete();
 
-		int batch = collectionBootDescriptor.getBatchSize();
-		if ( batch == -1 ) {
-			batch = creationContext.getSessionFactoryOptions().getDefaultBatchFetchSize();
-		}
-		batchSize = batch;
+		batchSize = collectionBootDescriptor.getBatchSize();
 
 		isVersioned = collectionBootDescriptor.isOptimisticLocked();
 
@@ -620,7 +615,7 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public void postInstantiate() throws MappingException {
 		if ( queryLoaderName == null ) {
-			collectionLoader = createCollectionLoader( LoadQueryInfluencers.NONE );
+			collectionLoader = createCollectionLoader( new LoadQueryInfluencers( factory ) );
 		}
 		else {
 			// We pass null as metamodel because we did the initialization during construction already
@@ -632,8 +627,8 @@ public abstract class AbstractCollectionPersister
 		if ( attributeMapping.getIndexDescriptor() != null ) {
 			collectionElementLoaderByIndex = new CollectionElementLoaderByIndex(
 					attributeMapping,
-					LoadQueryInfluencers.NONE,
-					getFactory()
+					new LoadQueryInfluencers( factory ),
+					factory
 			);
 		}
 
@@ -691,7 +686,7 @@ public abstract class AbstractCollectionPersister
 						localCopy = collectionLoader;
 					}
 					else {
-						localCopy = createCollectionLoader( LoadQueryInfluencers.NONE );
+						localCopy = createCollectionLoader( new LoadQueryInfluencers( factory ) );
 					}
 					standardCollectionLoader  = localCopy;
 				}
@@ -753,7 +748,7 @@ public abstract class AbstractCollectionPersister
 	protected CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( canUseReusableCollectionLoader( loadQueryInfluencers ) ) {
 			if ( reusableCollectionLoader == null ) {
-				reusableCollectionLoader = generateCollectionLoader( LoadQueryInfluencers.NONE );
+				reusableCollectionLoader = generateCollectionLoader( new LoadQueryInfluencers( factory ) );
 			}
 			return reusableCollectionLoader;
 		}
@@ -769,8 +764,8 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private CollectionLoader generateCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
-		final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
-		if ( batchSize > 1 ) {
+		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
+			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return getFactory().getServiceRegistry()
 					.getService( BatchLoaderFactory.class )
 					.createCollectionBatchLoader( batchSize, loadQueryInfluencers, attributeMapping, getFactory() );
@@ -894,8 +889,8 @@ public abstract class AbstractCollectionPersister
 				LockOptions.NONE,
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
-				LoadQueryInfluencers.NONE,
-				getFactory()
+				new LoadQueryInfluencers( factory ),
+				factory
 		);
 
 		final NavigablePath entityPath = new NavigablePath( attributeMapping.getRootPathName() );
@@ -1523,6 +1518,11 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public int getBatchSize() {
 		return batchSize;
+	}
+
+	@Override
+	public boolean isBatchLoadable() {
+		return batchSize > 1;
 	}
 
 	@Override

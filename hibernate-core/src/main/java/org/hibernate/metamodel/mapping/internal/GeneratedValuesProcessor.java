@@ -69,7 +69,7 @@ public class GeneratedValuesProcessor {
 					entityDescriptor.getIdentifierMapping(),
 					null,
 					1,
-					LoadQueryInfluencers.NONE,
+					new LoadQueryInfluencers( sessionFactory ),
 					LockOptions.READ,
 					jdbcParameters::add,
 					sessionFactory

@@ -310,7 +310,10 @@ public interface CollectionPersister extends Restrictable {
 	boolean elementExists(Object key, Object element, SharedSessionContractImplementor session);
 	Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner);
 	default int getBatchSize() {
-		return 0;
+		return -1;
+	}
+	default boolean isBatchLoadable() {
+		return getBatchSize() > 1;
 	}
 	default boolean isSubselectLoadable() {
 		return false;

@@ -178,7 +178,7 @@ public class EntityBatchLoaderArrayParam<T>
 		sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				identifierMapping,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				LockOptions.NONE,
 				jdbcParameter,
 				sessionFactory

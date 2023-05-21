@@ -62,13 +62,13 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSession {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
 
-	private static final LoadQueryInfluencers NO_INFLUENCERS = new LoadQueryInfluencers( null ) {
-		@Override
+	private static final LoadQueryInfluencers NO_INFLUENCERS = new LoadQueryInfluencers() {
+		@Override @Deprecated
 		public String getInternalFetchProfile() {
 			return null;
 		}
 
-		@Override
+		@Override @Deprecated
 		public void setInternalFetchProfile(String internalFetchProfile) {
 		}
 	};

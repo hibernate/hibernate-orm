@@ -150,13 +150,9 @@ public class SubselectFetch {
 		}
 
 		public void addKey(EntityKey key, LoadingEntityEntry entry) {
-
-			final EntityPersister persister = entry.getDescriptor();
-			boolean subselectsPossible =
-					persister.hasCollections()
-							&& persister.getFactory().getSessionFactoryOptions().isSubselectFetchEnabled()
-						|| persister.hasSubselectLoadableCollections();
-			if ( subselectsPossible && shouldAddSubselectFetch( entry ) ) {
+			if ( batchFetchQueue.getSession().getLoadQueryInfluencers()
+						.hasSubselectLoadableCollections( entry.getDescriptor() )
+					&& shouldAddSubselectFetch( entry ) ) {
 				final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
 						entry.getEntityInitializer().getNavigablePath(),
 						navigablePath -> new SubselectFetch(
@@ -178,17 +174,18 @@ public class SubselectFetch {
 			if ( entry.getEntityInitializer() instanceof EntityResultInitializer ) {
 				return true;
 			}
+			else {
+				final NavigablePath entityInitializerParent = entry.getEntityInitializer().getNavigablePath().getParent();
 
-			final NavigablePath entityInitializerParent = entry.getEntityInitializer().getNavigablePath().getParent();
-
-			// We want to add only the collections of the loading entities
-			for ( DomainResult<?> domainResult : loadingSqlAst.getDomainResultDescriptors() ) {
-				if ( domainResult.getNavigablePath().equals( entityInitializerParent ) ) {
-					return true;
+				// We want to add only the collections of the loading entities
+				for ( DomainResult<?> domainResult : loadingSqlAst.getDomainResultDescriptors() ) {
+					if ( domainResult.getNavigablePath().equals( entityInitializerParent ) ) {
+						return true;
+					}
 				}
-			}
 
-			return false;
+				return false;
+			}
 		}
 	}
 }

@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -74,6 +75,11 @@ public class JdbcValuesMappingImpl extends StandardJdbcValuesMapping {
 				@Override
 				public SqlAstCreationContext getSqlAstCreationContext() {
 					return creationState.getSqlAstCreationContext();
+				}
+
+				@Override
+				public ExecutionContext getExecutionContext() {
+					return creationState.getExecutionContext();
 				}
 			};
 		}

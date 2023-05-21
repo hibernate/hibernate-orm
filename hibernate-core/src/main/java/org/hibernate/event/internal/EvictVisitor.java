@@ -73,21 +73,23 @@ public class EvictVisitor extends AbstractVisitor {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionEntry ce = persistenceContext.removeCollectionEntry( collection );
 		final CollectionPersister persister = ce.getLoadedPersister();
+		final Object loadedKey = ce.getLoadedKey();
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Evicting collection: %s",
-					collectionInfoString( persister, collection, ce.getLoadedKey(), session )
+					collectionInfoString( persister, collection, loadedKey, session )
 			);
 		}
 
-		if ( persister != null
-				&& session.getLoadQueryInfluencers().effectiveBatchSize(persister) > 1 ) {
-			persistenceContext.getBatchFetchQueue().removeBatchLoadableCollection( ce );
-		}
-		if ( persister != null && ce.getLoadedKey() != null ) {
-			//TODO: is this 100% correct?
-			persistenceContext.removeCollectionByKey( new CollectionKey( persister, ce.getLoadedKey() ) );
+		if ( persister != null ) {
+			if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
+				persistenceContext.getBatchFetchQueue().removeBatchLoadableCollection( ce );
+			}
+			if ( loadedKey != null ) {
+				//TODO: is this 100% correct?
+				persistenceContext.removeCollectionByKey( new CollectionKey( persister, loadedKey) );
+			}
 		}
 	}
 	

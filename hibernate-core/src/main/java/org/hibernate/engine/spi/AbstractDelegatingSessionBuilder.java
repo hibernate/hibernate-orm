@@ -32,7 +32,6 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		this.delegate = delegate;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected SessionBuilder getThis() {
 		return this;
 	}
@@ -121,6 +120,18 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 	@Override
 	public SessionBuilder flushMode(FlushMode flushMode) {
 		delegate.flushMode( flushMode );
+		return this;
+	}
+
+	@Override
+	public SessionBuilder defaultBatchFetchSize(int batchSize) {
+		delegate.defaultBatchFetchSize( batchSize );
+		return this;
+	}
+
+	@Override
+	public SessionBuilder subselectFetchEnabled(boolean enabled) {
+		delegate.subselectFetchEnabled( enabled );
 		return this;
 	}
 }

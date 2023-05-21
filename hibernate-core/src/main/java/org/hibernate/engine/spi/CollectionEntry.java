@@ -204,7 +204,7 @@ public final class CollectionEntry implements Serializable {
 				: null;
 		collection.setSnapshot( loadedKey, role, snapshot );
 		final SharedSessionContractImplementor session = ((AbstractPersistentCollection<?>) collection).getSession();
-		if ( session.getLoadQueryInfluencers().effectiveBatchSize( loadedPersister ) > 1 ) {
+		if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( loadedPersister ) ) {
 			session.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.removeBatchLoadableCollection( this );

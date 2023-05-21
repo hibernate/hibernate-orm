@@ -156,7 +156,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				lockOptions,
 				fetchProcessor,
 				true,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				sessionFactory
 		);
 

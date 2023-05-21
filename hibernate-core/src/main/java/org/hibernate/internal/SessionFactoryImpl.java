@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -1195,6 +1196,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		private String tenantIdentifier;
 		private TimeZone jdbcTimeZone;
 		private boolean explicitNoInterceptor;
+		private int defaultBatchFetchSize;
+		private boolean subselectFetchEnabled;
 
 		// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
 		// (Need a fresh build for each Session as the listener instances can't be reused across sessions)
@@ -1212,6 +1215,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			this.statementInspector = sessionFactoryOptions.getStatementInspector();
 			this.connectionHandlingMode = sessionFactoryOptions.getPhysicalConnectionHandlingMode();
 			this.autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
+			this.defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
+			this.subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
 
 			final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( currentTenantIdentifierResolver != null ) {
@@ -1239,6 +1244,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		@Override
 		public FlushMode getInitialSessionFlushMode() {
 			return flushMode;
+		}
+
+		@Override
+		public boolean isSubselectFetchEnabled() {
+			return subselectFetchEnabled;
+		}
+
+		@Override
+		public int getDefaultBatchFetchSize() {
+			return defaultBatchFetchSize;
 		}
 
 		@Override
@@ -1346,6 +1361,18 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		@Override
+		public SessionBuilder defaultBatchFetchSize(int batchSize) {
+			defaultBatchFetchSize = batchSize;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder subselectFetchEnabled(boolean enabled) {
+			subselectFetchEnabled = enabled;
+			return null;
+		}
+
+		@Override
 		public SessionBuilderImpl flushMode(FlushMode flushMode) {
 			this.flushMode = flushMode;
 			return this;
@@ -1426,6 +1453,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		@Override
 		public FlushMode getInitialSessionFlushMode() {
 			return FlushMode.ALWAYS;
+		}
+
+		@Override
+		public boolean isSubselectFetchEnabled() {
+			return false;
+		}
+
+		@Override
+		public int getDefaultBatchFetchSize() {
+			return -1;
 		}
 
 		@Override

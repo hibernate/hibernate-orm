@@ -1029,8 +1029,8 @@ public interface AvailableSettings {
 	 * a value greater than one, Hibernate will use batch fetching, when
 	 * possible, to fetch any association.
 	 * <p>
-	 * By default, Hibernate only uses batch fetching for associations
-	 * explicitly annotated {@code @BatchSize}.
+	 * By default, Hibernate only uses batch fetching for entities and
+	 * collections explicitly annotated {@code @BatchSize}.
 	 *
 	 * @see org.hibernate.annotations.BatchSize
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultBatchFetchSize(int)

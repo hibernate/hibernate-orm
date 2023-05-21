@@ -227,9 +227,8 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				getSessionFactory()
 		);
 
-		final JdbcServices jdbcServices = getSessionFactory().getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory =
+				getSessionFactory().getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = 0;
@@ -252,10 +251,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
-		final EntityPersister persister = getLoadable().getEntityPersister();
-		if ( persister.hasCollections()
-					&& session.getSessionFactory().getSessionFactoryOptions().isSubselectFetchEnabled()
-				|| persister.hasSubselectLoadableCollections() ) {
+		if ( session.getLoadQueryInfluencers().hasSubselectLoadableCollections( getLoadable().getEntityPersister() ) ) {
 			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 					session.getPersistenceContext().getBatchFetchQueue(),
 					sqlAst,

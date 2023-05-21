@@ -121,6 +121,11 @@ public class ResultsHelper {
 					public SqlAstCreationContext getSqlAstCreationContext() {
 						return sessionFactory;
 					}
+
+					@Override
+					public ExecutionContext getExecutionContext() {
+						return executionContext;
+					}
 				}
 		);
 

@@ -120,7 +120,7 @@ public class ManyToOneType extends EntityType {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
 			final EntityPersister persister = getAssociatedEntityPersister( session.getFactory() );
-			if ( persister.isBatchLoadable() ) {
+			if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
 				final EntityKey entityKey = session.generateEntityKey( id, persister );
 				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 				if ( !persistenceContext.containsEntity( entityKey ) ) {

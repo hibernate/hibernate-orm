@@ -76,7 +76,7 @@ class DatabaseSnapshotExecutor {
 				LockOptions.NONE,
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				sessionFactory
 		);
 

@@ -61,8 +61,8 @@ public final class EntityKey implements Serializable {
 		return result;
 	}
 
-	public boolean isBatchLoadable() {
-		return persister.isBatchLoadable();
+	public boolean isBatchLoadable(LoadQueryInfluencers influencers) {
+		return influencers.effectivelyBatchLoadable( persister );
 	}
 
 	public Object getIdentifierValue() {

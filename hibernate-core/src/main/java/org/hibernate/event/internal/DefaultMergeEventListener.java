@@ -217,45 +217,52 @@ public class DefaultMergeEventListener
 
 	protected void entityIsTransient(MergeEvent event, MergeContext copyCache) {
 		LOG.trace( "Merging transient instance" );
-
 		final Object entity = event.getEntity();
 		final EventSource session = event.getSession();
-		final String entityName = event.getEntityName();
-		final EntityPersister persister = session.getEntityPersister( entityName, entity );
-		final Object id = persister.hasIdentifierProperty()
-				? persister.getIdentifier( entity, session )
-				: null;
-		final Object copy = copyEntity( copyCache, entity, session, persister, id );
 
-		// cascade first, so that all unsaved objects get their
-		// copy created before we actually copy
-		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
-		super.cascadeBeforeSave( session, persister, entity, copyCache );
-		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.FROM_PARENT );
+		final Object mergedEntity = session.getPersistenceContext().getMergedEntity( entity );
+		if ( mergedEntity != null ) {
+			entityIsMerged( event, entity, mergedEntity, copyCache, session );
+		}
+		else {
+			final String entityName = event.getEntityName();
+			final EntityPersister persister = session.getEntityPersister( entityName, entity );
+			final Object id = persister.hasIdentifierProperty()
+					? persister.getIdentifier( entity, session )
+					: null;
+			final Object copy = copyEntity( copyCache, entity, session, persister, id );
+			session.getPersistenceContext().addMergedEntity( entity, copy );
 
-		saveTransientEntity( copy, entityName, event.getRequestedId(), session, copyCache );
+			// cascade first, so that all unsaved objects get their
+			// copy created before we actually copy
+			//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
+			super.cascadeBeforeSave( session, persister, entity, copyCache );
+			copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.FROM_PARENT );
 
-		// cascade first, so that all unsaved objects get their
-		// copy created before we actually copy
-		super.cascadeAfterSave( session, persister, entity, copyCache );
-		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.TO_PARENT );
+			saveTransientEntity( copy, entityName, event.getRequestedId(), session, copyCache );
 
-		// saveTransientEntity has been called using a copy that contains empty collections
-		// (copyValues uses `ForeignKeyDirection.FROM_PARENT`) then the PC may contain a wrong
-		// collection snapshot, the CollectionVisitor realigns the collection snapshot values
-		// with the final copy
-		new CollectionVisitor( copy, id, session )
-				.processEntityPropertyValues(
-						persister.getPropertyValuesToInsert( copy, getMergeMap( copyCache ), session ),
-						persister.getPropertyTypes()
-				);
+			// cascade first, so that all unsaved objects get their
+			// copy created before we actually copy
+			super.cascadeAfterSave( session, persister, entity, copyCache );
+			copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.TO_PARENT );
 
-		event.setResult( copy );
+			// saveTransientEntity has been called using a copy that contains empty collections
+			// (copyValues uses `ForeignKeyDirection.FROM_PARENT`) then the PC may contain a wrong
+			// collection snapshot, the CollectionVisitor realigns the collection snapshot values
+			// with the final copy
+			new CollectionVisitor( copy, id, session )
+					.processEntityPropertyValues(
+							persister.getPropertyValuesToInsert( copy, getMergeMap( copyCache ), session ),
+							persister.getPropertyTypes()
+					);
 
-		if ( isPersistentAttributeInterceptable( copy ) ) {
-			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( copy ).$$_hibernate_getInterceptor();
-			if ( interceptor == null ) {
-				persister.getBytecodeEnhancementMetadata().injectInterceptor( copy, id, session );
+			event.setResult( copy );
+
+			if ( isPersistentAttributeInterceptable( copy ) ) {
+				final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( copy ).$$_hibernate_getInterceptor();
+				if ( interceptor == null ) {
+					persister.getBytecodeEnhancementMetadata().injectInterceptor( copy, id, session );
+				}
 			}
 		}
 	}
@@ -323,40 +330,54 @@ public class DefaultMergeEventListener
 
 		final Object entity = event.getEntity();
 		final EventSource source = event.getSession();
+		final Object mergedEntity = source.getPersistenceContext().getMergedEntity( entity );
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-		final String entityName = persister.getEntityName();
-
-		Object id = getDetachedEntityId( event, entity, persister );
-		// we must clone embedded composite identifiers, or we will get back the same instance that we pass in
-		final Object clonedIdentifier = persister.getIdentifierType().deepCopy( id, source.getFactory() );
-		// apply the special MERGE fetch profile and perform the resolution (Session#get)
-		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
-				CascadingFetchProfile.MERGE,
-				() -> source.get( entityName, clonedIdentifier )
-
-		);
-		if ( result == null ) {
-			//TODO: we should throw an exception if we really *know* for sure
-			//      that this is a detached instance, rather than just assuming
-			//throw new StaleObjectStateException(entityName, id);
-
-			// we got here because we assumed that an instance
-			// with an assigned id was detached, when it was
-			// really persistent
-			entityIsTransient( event, copyCache );
+		if ( mergedEntity != null ) {
+			copyValues( persister, entity, mergedEntity, source, copyCache );
+			entityIsMerged( event, entity, mergedEntity, copyCache, source );
 		}
 		else {
-			// before cascade!
-			copyCache.put( entity, result, true );
-			final Object target = targetEntity( event, entity, persister, id, result );
-			// cascade first, so that all unsaved objects get their
-			// copy created before we actually copy
-			cascadeOnMerge( source, persister, entity, copyCache );
-			copyValues( persister, entity, target, source, copyCache );
-			//copyValues works by reflection, so explicitly mark the entity instance dirty
-			markInterceptorDirty( entity, target );
-			event.setResult( result );
+			final String entityName = persister.getEntityName();
+
+			Object id = getDetachedEntityId( event, entity, persister );
+			// we must clone embedded composite identifiers, or we will get back the same instance that we pass in
+			final Object clonedIdentifier = persister.getIdentifierType().deepCopy( id, source.getFactory() );
+			// apply the special MERGE fetch profile and perform the resolution (Session#get)
+			final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
+					CascadingFetchProfile.MERGE,
+					() -> source.get( entityName, clonedIdentifier )
+
+			);
+			if ( result == null ) {
+				//TODO: we should throw an exception if we really *know* for sure
+				//      that this is a detached instance, rather than just assuming
+				//throw new StaleObjectStateException(entityName, id);
+
+				// we got here because we assumed that an instance
+				// with an assigned id was detached, when it was
+				// really persistent
+				entityIsTransient( event, copyCache );
+			}
+			else {
+				// before cascade!
+				copyCache.put( entity, result, true );
+				final Object target = targetEntity( event, entity, persister, id, result );
+				source.getPersistenceContext().addMergedEntity( entity, target );
+				// cascade first, so that all unsaved objects get their
+				// copy created before we actually copy
+				cascadeOnMerge( source, persister, entity, copyCache );
+				copyValues( persister, entity, target, source, copyCache );
+				//copyValues works by reflection, so explicitly mark the entity instance dirty
+				markInterceptorDirty( entity, target );
+				event.setResult( result );
+			}
 		}
+	}
+
+	protected void entityIsMerged(MergeEvent event, Object entity, Object merged, MergeContext copyCache, EventSource source) {
+		copyCache.put( entity, merged, true );
+		cascadeOnMerge( source, source.getEntityPersister( event.getEntityName(), entity ), entity, copyCache );
+		event.setResult( merged );
 	}
 
 	private static Object targetEntity(MergeEvent event, Object entity, EntityPersister persister, Object id, Object result) {

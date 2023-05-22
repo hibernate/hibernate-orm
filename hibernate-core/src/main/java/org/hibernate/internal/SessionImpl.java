@@ -18,7 +18,6 @@ import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -106,7 +105,6 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jpa.internal.LegacySpecHelper;
@@ -138,7 +136,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FlushModeType;
@@ -1414,6 +1411,7 @@ public class SessionImpl
 			fastSessionServices.eventListenerGroup_FLUSH
 					.fireEventOnEachListener( event, FlushEventListener::onFlush );
 			delayedAfterCompletion();
+			persistenceContext.clearMergedEntities();
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );

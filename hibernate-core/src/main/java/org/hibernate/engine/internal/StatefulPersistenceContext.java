@@ -148,6 +148,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	// May be empty or not contains all relation
 	private IdentityHashMap<Object,Object> parentsByChild;
 
+	// The key is the entity that has been merged and the value is the merged copy created by the merge process
+	private IdentityHashMap<Object,Object> mergedEntities;
+
 	private int cascading;
 	private int loadCounter;
 	private int removeOrphanBeforeUpdatesCounter;
@@ -265,6 +268,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			loadContexts.cleanup();
 		}
 		naturalIdResolutions = null;
+
+		mergedEntities = null;
 	}
 
 	@Override
@@ -1933,4 +1938,49 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return naturalIdResolutions;
 	}
 
+	@Override
+	public void addMergedEntity(Object merged, Object managed) {
+		if ( mergedEntities == null ) {
+			mergedEntities = new IdentityHashMap<>();
+		}
+		mergedEntities.put( merged, managed );
+	}
+
+	@Override
+	public boolean isMergedEntity(Object object) {
+		if ( mergedEntities == null ) {
+			return false;
+		}
+		final Object o = mergedEntities.get( object );
+		// the merged entity may have been evicted
+		if ( entitiesByKey != null && entitiesByKey.containsValue( o ) ) {
+			return true;
+		}
+		else {
+			mergedEntities.remove( object );
+		}
+		return false;
+	}
+
+	@Override
+	public void clearMergedEntities() {
+		if ( mergedEntities != null ) {
+			mergedEntities.clear();
+		}
+	}
+
+	@Override
+	public Object getMergedEntity(Object object) {
+		if ( mergedEntities == null ) {
+			return null;
+		}
+		final Object o = mergedEntities.get( object );
+		if ( entitiesByKey != null && entitiesByKey.containsValue( o ) ) {
+			return o;
+		}
+		else {
+			mergedEntities.remove( object );
+		}
+		return null;
+	}
 }

@@ -102,6 +102,41 @@ public class OneToManyMergeTest {
 
 	@Test
 	@JiraKey("HHH-16627")
+	public void testMergeManagedInstance2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Student s1 = session.createQuery( "from Student where name = :name", Student.class )
+							.setParameter( "name", STUDENT_NAME ).uniqueResult();
+
+					Course c1 = session.createQuery( "from Course where name = :name", Course.class )
+							.setParameter( "name", COURSE_1_NAME ).uniqueResult();
+
+					Enrollment e1 = new Enrollment( 10 );
+
+					s1.addEnrollment( e1 );
+
+					c1.addEnrollment( e1 );
+
+					Student mergedStudent = session.merge( s1 );
+					Course mergedCourse = session.merge( c1 );
+
+					assertSameEnrollmentInstance( mergedStudent, mergedCourse );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					List<Enrollment> enrls = session.createQuery(
+							"from Enrollment e where e.student.name = :name",
+							Enrollment.class
+					).setParameter( "name", STUDENT_NAME ).list();
+					assertThat( enrls.size() ).isEqualTo( 1 );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-16627")
 	public void testMergeDetachedInstance(SessionFactoryScope scope) {
 
 		scope.inTransaction(
@@ -118,6 +153,41 @@ public class OneToManyMergeTest {
 					c1.addEnrollment( e1 );
 
 					session.merge( s1 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					List<Enrollment> enrls = session.createQuery(
+							"from Enrollment e where e.student.name = :name",
+							Enrollment.class
+					).setParameter( "name", STUDENT_NAME ).list();
+					assertThat( enrls.size() ).isEqualTo( 1 );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-16627")
+	public void testMergeDetachedInstance2(SessionFactoryScope scope) {
+
+		scope.inTransaction(
+				session -> {
+
+					Student s1 = new Student( STUDENT_NAME );
+
+					Course c1 = session.createQuery( "from Course where name = :name", Course.class )
+							.setParameter( "name", COURSE_1_NAME ).uniqueResult();
+
+					Enrollment e1 = new Enrollment( 10 );
+
+					s1.addEnrollment( e1 );
+					c1.addEnrollment( e1 );
+
+					Student mergedStudent = session.merge( s1 );
+					Course mergedCourse = session.merge( c1 );
+
+					assertSameEnrollmentInstance( mergedStudent, mergedCourse );
 				}
 		);
 
@@ -152,6 +222,43 @@ public class OneToManyMergeTest {
 					c1.addEnrollment( e1 );
 
 					session.merge( s1 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					List<Enrollment> enrls = session.createQuery(
+							"from Enrollment e where e.student.name = :name",
+							Enrollment.class
+					).setParameter( "name", newStudentName ).list();
+					assertThat( enrls.size() ).isEqualTo( 1 );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-16627")
+	public void testMergeTransientInstance2(SessionFactoryScope scope) {
+
+		final String newStudentName = "Bill";
+		scope.inTransaction(
+				session -> {
+
+					Student s1 = new Student( newStudentName );
+					session.persist( s1 );
+
+					Course c1 = session.createQuery( "from Course where name = :name", Course.class )
+							.setParameter( "name", COURSE_1_NAME ).uniqueResult();
+
+					Enrollment e1 = new Enrollment( 10 );
+
+					s1.addEnrollment( e1 );
+					c1.addEnrollment( e1 );
+
+					Student mergedStudent = session.merge( s1 );
+					Course mergedCourse = session.merge( c1 );
+
+					assertSameEnrollmentInstance( mergedStudent, mergedCourse );
 				}
 		);
 
@@ -351,6 +458,18 @@ public class OneToManyMergeTest {
 					session.merge( course );
 				}
 		);
+	}
+
+	private static void assertSameEnrollmentInstance(Student mergedStudent, Course mergedCourse) {
+		Set<Enrollment> mergedCourseEnrollments = mergedCourse.getEnrollments();
+		assertThat( mergedCourseEnrollments.size() ).isEqualTo( 1 );
+
+		Set<Enrollment> mergedStudentEnrollments = mergedStudent.getEnrollments();
+		assertThat( mergedStudentEnrollments.size() ).isEqualTo( 1 );
+
+		Enrollment courseEnrollment = mergedCourseEnrollments.iterator().next();
+		Enrollment studentEnrollment = mergedStudentEnrollments.iterator().next();
+		assertThat( courseEnrollment ).isEqualTo( studentEnrollment );
 	}
 
 	@Entity(name = "Student")

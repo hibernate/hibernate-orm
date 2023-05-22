@@ -804,4 +804,16 @@ public interface PersistenceContext {
 	 * @return This persistence context's natural-id helper
 	 */
 	NaturalIdResolutions getNaturalIdResolutions();
+
+	default void addMergedEntity(Object merging, Object merged){}
+
+	default boolean isMergedEntity(Object object){
+		return false;
+	}
+
+	default Object getMergedEntity(Object object) {
+		return null;
+	}
+
+	default void clearMergedEntities(){}
 }

@@ -168,25 +168,31 @@ public abstract class AbstractSaveEventListener<C>
 			C context,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
+		final PersistenceContext persistenceContext = source.getPersistenceContext();
+		if ( !persistenceContext.isMergedEntity( entity ) ) {
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Saving {0}", infoString( persister, id, source.getFactory() ) );
-		}
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Saving {0}", infoString( persister, id, source.getFactory() ) );
+			}
 
-		final EntityKey key = entityKey( entity, id, persister, useIdentityColumn, source );
-		if ( invokeSaveLifecycle( entity, persister, source ) ) {
-			return id;
+			final EntityKey key = entityKey( entity, id, persister, useIdentityColumn, source );
+			if ( invokeSaveLifecycle( entity, persister, source ) ) {
+				return id;
+			}
+			else {
+				return performSaveOrReplicate(
+						entity,
+						key,
+						persister,
+						useIdentityColumn,
+						context,
+						source,
+						requiresImmediateIdAccess
+				);
+			}
 		}
 		else {
-			return performSaveOrReplicate(
-					entity,
-					key,
-					persister,
-					useIdentityColumn,
-					context,
-					source,
-					requiresImmediateIdAccess
-			);
+			return persistenceContext.getEntity( source.generateEntityKey( id, persister ) );
 		}
 	}
 

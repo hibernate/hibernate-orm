@@ -1003,7 +1003,7 @@ Here, the `Book` table has a foreign key column holding the identifier of the as
 A very unfortunate misfeature of JPA is that `@ManyToOne` associations are fetched eagerly by default.
 This is almost never what we want.
 Almost all associations should be lazy.
-The only scenario in which `fetch=EAGER` makes sense is if we think there's always a _very_ high probability that the associated object will be found in the second-level cache.
+The only scenario in which `fetch=EAGER` makes sense is if we think there's always a _very_ high probability that the <<caching-and-fetching,associated object will be found in the second-level cache>>.
 Whenever this isn't the case, remember to explicitly specify `fetch=LAZY`.
 ====
 

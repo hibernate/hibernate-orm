@@ -33,6 +33,7 @@ import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.Fetches;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.FilterJoinTables;
@@ -64,11 +65,11 @@ import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLSelect;
-import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLOrder;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Synchronize;
@@ -1454,17 +1455,47 @@ public abstract class CollectionBinder {
 	}
 
 	private void handleFetch() {
-		if ( property.isAnnotationPresent( Fetch.class ) ) {
+		if ( !handleHibernateFetchMode() ) {
 			// Hibernate @Fetch annotation takes precedence
-			handleHibernateFetchMode();
-		}
-		else {
 			collection.setFetchMode( getFetchMode( getJpaFetchType() ) );
 		}
 	}
 
-	private void handleHibernateFetchMode() {
-		switch ( property.getAnnotation( Fetch.class ).value() ) {
+	private boolean handleHibernateFetchMode() {
+		if ( property.isAnnotationPresent( Fetch.class ) ) {
+			final Fetch fetch = property.getAnnotation( Fetch.class );
+			if ( fetch.profile().isEmpty() ) {
+				setHibernateFetchMode( fetch.value() );
+				return true;
+			}
+			else {
+				buildingContext.getMetadataCollector()
+						.addSecondPass( new FetchSecondPass( fetch, propertyHolder, propertyName, buildingContext ) );
+				return false;
+			}
+		}
+		else if ( property.isAnnotationPresent( Fetches.class ) ) {
+			boolean result = false;
+			for ( Fetch fetch: property.getAnnotation( Fetches.class ).value() ) {
+				if ( fetch.profile().isEmpty() ) {
+					if ( result ) {
+						throw new AnnotationException( "Collection '" + safeCollectionRole()
+								+ "' had multiple '@Fetch' annotations which did not specify a named fetch 'profile'"
+								+ " (only one annotation may be specified for the default profile)" );
+					}
+					setHibernateFetchMode( fetch.value() );
+					result = true;
+				}
+			}
+			return result;
+		}
+		else {
+			return false;
+		}
+	}
+
+	private void setHibernateFetchMode(org.hibernate.annotations.FetchMode fetchMode) {
+		switch ( fetchMode ) {
 			case JOIN:
 				collection.setFetchMode( FetchMode.JOIN );
 				collection.setLazy( false );

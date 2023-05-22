@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses = {NewFetchTest.class,NewFetchTest.E.class, NewFetchTest.F.class, NewFetchTest.G.class})
 @FetchProfile(name = NewFetchTest.NEW_PROFILE)
 @FetchProfile(name = NewFetchTest.OLD_PROFILE,
-		fetchOverrides = @FetchProfile.FetchOverride(entity = NewFetchTest.E.class, association = "f", mode = JOIN))
+		fetchOverrides = @FetchProfile.FetchOverride(entity = NewFetchTest.E.class, association = "f"))
 public class NewFetchTest {
 
 	public static final String NEW_PROFILE = "new-profile";

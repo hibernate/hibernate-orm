@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -51,7 +52,44 @@ public abstract class AbstractEntityBatchLoader<T>
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
 
-		if ( hasSingleId( ids ) ) {
+		return load( id, ids, hasSingleId( ids ), entityInstance, lockOptions, readOnly, session );
+	}
+
+	@Override
+	public T load(
+			Object id,
+			Object entityInstance,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
+		}
+
+		final Object[] ids = resolveIdsToInitialize( id, session );
+		final boolean hasSingleId = hasSingleId( ids );
+
+		final T entity = load( id, ids, hasSingleId, entityInstance, lockOptions, null, session );;
+
+		if ( hasSingleId ) {
+			return entity;
+		}
+		else if ( Hibernate.isInitialized( entity ) ) {
+			return entity;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private T load(
+			Object id,
+			Object[] ids,
+			boolean hasSingleId,
+			Object entityInstance,
+			LockOptions lockOptions,
+			Boolean readOnly,
+			SharedSessionContractImplementor session) {
+		if ( hasSingleId ) {
 			return singleIdLoader.load( id, entityInstance, lockOptions, readOnly, session );
 		}
 
@@ -61,5 +99,4 @@ public abstract class AbstractEntityBatchLoader<T>
 		//noinspection unchecked
 		return (T) session.getPersistenceContext().getEntity( entityKey );
 	}
-
 }

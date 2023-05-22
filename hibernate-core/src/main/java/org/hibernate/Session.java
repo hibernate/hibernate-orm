@@ -273,6 +273,59 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	/**
+	 * Get the maximum batch size for batch fetching associations by
+	 * id in this session.
+	 *
+	 * @since 6.3
+	 */
+	int getFetchBatchSize();
+
+	/**
+	 * Set the maximum batch size for batch fetching associations by
+	 * id in this session. Override the
+	 * {@linkplain org.hibernate.boot.spi.SessionFactoryOptions#getDefaultBatchFetchSize()
+	 * factory-level} default controlled by the configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_BATCH_FETCH_SIZE}.
+	 * <p>
+	 * <ul>
+	 * <li>If {@code batchSize>1}, then batch fetching is enabled.
+	 * <li>If {@code batchSize<0}, the batch size is inherited from
+	 *     the factory-level setting.
+	 * <li>Otherwise, batch fetching is disabled.
+	 * </ul>
+	 *
+	 * @param batchSize the maximum batch size for batch fetching
+	 *
+	 * @since 6.3
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_BATCH_FETCH_SIZE
+	 */
+	void setFetchBatchSize(int batchSize);
+
+	/**
+	 * Determine if subselect fetching is enabled in this session.
+	 *
+	 * @return {@code true} is subselect fetching is enabled
+	 *
+	 * @since 6.3
+	 */
+	boolean isSubselectFetchingEnabled();
+
+	/**
+	 * Enable or disable subselect fetching in this session. Override the
+	 * {@linkplain org.hibernate.boot.spi.SessionFactoryOptions#isSubselectFetchEnabled()
+	 * factory-level} default controlled by the configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#USE_SUBSELECT_FETCH}.
+	 *
+	 * @param enabled {@code true} to enable subselect fetching
+	 *
+	 * @since 6.3
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_SUBSELECT_FETCH
+	 */
+	void setSubselectFetchingEnabled(boolean enabled);
+
+	/**
 	 * Get the session factory which created this session.
 	 *
 	 * @return the session factory

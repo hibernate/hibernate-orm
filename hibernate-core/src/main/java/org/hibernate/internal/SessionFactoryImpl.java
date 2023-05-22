@@ -31,7 +31,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
-import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -1358,18 +1357,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		public SessionBuilderImpl autoClear(boolean autoClear) {
 			this.autoClear = autoClear;
 			return this;
-		}
-
-		@Override
-		public SessionBuilder defaultBatchFetchSize(int batchSize) {
-			defaultBatchFetchSize = batchSize;
-			return this;
-		}
-
-		@Override
-		public SessionBuilder subselectFetchEnabled(boolean enabled) {
-			subselectFetchEnabled = enabled;
-			return null;
 		}
 
 		@Override

@@ -1202,6 +1202,26 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isSubselectFetchingEnabled() {
+		return delegate.isSubselectFetchingEnabled();
+	}
+
+	@Override
+	public void setSubselectFetchingEnabled(boolean enabled) {
+		delegate.setSubselectFetchingEnabled( enabled );
+	}
+
+	@Override
+	public int getFetchBatchSize() {
+		return delegate.getFetchBatchSize();
+	}
+
+	@Override
+	public void setFetchBatchSize(int batchSize) {
+		delegate.setFetchBatchSize( batchSize );
+	}
+
+	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
 	}

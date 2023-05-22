@@ -88,6 +88,7 @@ import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.singletonList;
+import static org.hibernate.engine.profile.Fetch.Style;
 import static org.hibernate.query.results.ResultsHelper.attributeName;
 
 /**
@@ -553,7 +554,7 @@ public class LoaderSelectBuilder {
 	}
 
 	private LoaderSqlAstCreationState createSqlAstCreationState(QuerySpec rootQuerySpec) {
-		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
+		return new LoaderSqlAstCreationState(
 				rootQuerySpec,
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
@@ -563,7 +564,6 @@ public class LoaderSelectBuilder {
 				loadQueryInfluencers,
 				creationContext
 		);
-		return sqlAstCreationState;
 	}
 
 	private void applyRestriction(
@@ -875,31 +875,25 @@ public class LoaderSelectBuilder {
 						for ( String enabledFetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
 							final FetchProfile enabledFetchProfile = creationContext.getSessionFactory()
 									.getFetchProfile( enabledFetchProfileName );
-							final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole(
-									fetchableRole );
-
+							final org.hibernate.engine.profile.Fetch profileFetch =
+									enabledFetchProfile.getFetchByRole( fetchableRole );
 							if ( profileFetch != null ) {
 								fetchTiming = FetchTiming.IMMEDIATE;
-								joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+								joined = joined || profileFetch.getStyle() == Style.JOIN;
 								explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
 							}
 						}
 					}
 				}
 				else if ( loadQueryInfluencers.getEnabledCascadingFetchProfile() != null ) {
-					final CascadeStyle cascadeStyle = fetchable.asAttributeMapping().getAttributeMetadata()
-							.getCascadeStyle();
-					final CascadingAction<?> cascadingAction = loadQueryInfluencers.getEnabledCascadingFetchProfile()
-							.getCascadingAction();
+					final CascadeStyle cascadeStyle = fetchable.
+							asAttributeMapping().getAttributeMetadata().getCascadeStyle();
+					final CascadingAction<?> cascadingAction =
+							loadQueryInfluencers.getEnabledCascadingFetchProfile().getCascadingAction();
 					if ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) ) {
 						fetchTiming = FetchTiming.IMMEDIATE;
 						// In 5.x the CascadeEntityJoinWalker only join fetched the first collection fetch
-						if ( isFetchablePluralAttributeMapping ) {
-							joined = rowCardinality == RowCardinality.SINGLE;
-						}
-						else {
-							joined = true;
-						}
+						joined = !isFetchablePluralAttributeMapping || rowCardinality == RowCardinality.SINGLE;
 					}
 				}
 			}

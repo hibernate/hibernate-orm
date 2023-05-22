@@ -1486,6 +1486,10 @@ public abstract class CollectionBinder {
 					setHibernateFetchMode( fetch.value() );
 					result = true;
 				}
+				else {
+					buildingContext.getMetadataCollector()
+							.addSecondPass( new FetchSecondPass( fetch, propertyHolder, propertyName, buildingContext ) );
+				}
 			}
 			return result;
 		}

@@ -56,49 +56,59 @@ public class StandardTableExporter implements Exporter<Table> {
 		try {
 			final String formattedTableName = context.format( tableName );
 
-			final StringBuilder extra = new StringBuilder();
+			final StringBuilder createTable = new StringBuilder();
 
-			final StringBuilder createTable =
-					new StringBuilder( tableCreateString( table.hasPrimaryKey() ) )
-							.append( ' ' )
-							.append( formattedTableName )
-							.append( " (" );
+			final String viewQuery = table.getViewQuery();
+			if ( viewQuery != null ) {
+				createTable.append("create view ")
+						.append( formattedTableName )
+						.append(" as ")
+						.append( viewQuery );
+			}
+			else {
+				final StringBuilder extra = new StringBuilder();
 
-			boolean isFirst = true;
-			for ( Column column : table.getColumns() ) {
-				if ( isFirst ) {
-					isFirst = false;
+				createTable.append( tableCreateString( table.hasPrimaryKey() ) )
+						.append( ' ' )
+						.append( formattedTableName )
+						.append( " (" );
+
+				boolean isFirst = true;
+				for ( Column column : table.getColumns() ) {
+					if ( isFirst ) {
+						isFirst = false;
+					}
+					else {
+						createTable.append( ", " );
+					}
+					appendColumn( createTable, column, table, metadata, dialect, context );
+
+					extra.append( column.getValue().getExtraCreateTableInfo() );
 				}
-				else {
-					createTable.append( ", " );
+				if ( table.getRowId() != null ) {
+					String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
+					if ( rowIdColumn != null ) {
+						createTable.append(", ").append( rowIdColumn );
+					}
 				}
-				appendColumn( createTable, column, table, metadata, dialect, context );
-
-				extra.append( column.getValue().getExtraCreateTableInfo() );
-			}
-			if ( table.getRowId() != null ) {
-				String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
-				if ( rowIdColumn != null ) {
-					createTable.append(", ").append( rowIdColumn );
+				if ( table.hasPrimaryKey() ) {
+					createTable.append( ", " ).append( table.getPrimaryKey().sqlConstraintString( dialect ) );
 				}
+
+				createTable.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
+
+				applyTableCheck( table, createTable );
+
+				createTable.append( ')' );
+
+				createTable.append( extra );
+
+				if ( table.getComment() != null ) {
+					createTable.append( dialect.getTableComment( table.getComment() ) );
+				}
+
+				applyTableTypeString( createTable );
 			}
-			if ( table.hasPrimaryKey() ) {
-				createTable.append( ", " ).append( table.getPrimaryKey().sqlConstraintString( dialect ) );
-			}
-
-			createTable.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
-
-			applyTableCheck( table, createTable );
-
-			createTable.append( ')' );
-
-			createTable.append( extra );
-
-			if ( table.getComment() != null ) {
-				createTable.append( dialect.getTableComment( table.getComment() ) );
-			}
-
-			applyTableTypeString( createTable );
 
 			final List<String> sqlStrings = new ArrayList<>();
 			sqlStrings.add( createTable.toString() );
@@ -301,16 +311,22 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	@Override
 	public String[] getSqlDropStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
-		StringBuilder buf = new StringBuilder( "drop table " );
-		if ( dialect.supportsIfExistsBeforeTableName() ) {
-			buf.append( "if exists " );
+		final StringBuilder dropTable = new StringBuilder();
+		if ( table.getViewQuery() == null ) {
+			dropTable.append( "drop table " );
 		}
-		buf.append( context.format( getTableName( table ) ) )
+		else {
+			dropTable.append( "drop view " );
+		}
+		if ( dialect.supportsIfExistsBeforeTableName() ) {
+			dropTable.append( "if exists " );
+		}
+		dropTable.append( context.format( getTableName( table ) ) )
 				.append( dialect.getCascadeConstraintsString() );
 		if ( dialect.supportsIfExistsAfterTableName() ) {
-			buf.append( " if exists" );
+			dropTable.append( " if exists" );
 		}
-		return new String[] { buf.toString() };
+		return new String[] { dropTable.toString() };
 	}
 
 	private static QualifiedName getTableName(Table table) {

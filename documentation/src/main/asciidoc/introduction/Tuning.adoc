@@ -161,9 +161,9 @@ It's saying that you must explicitly specify eager fetching for associations pre
 If you need eager fetching in some particular transaction, use:
 
 - `left join fetch` in HQL,
-- `fetch()` in a criteria query,
+- `From.fetch()` in a criteria query,
 - a JPA `EntityGraph`, or
-- a fetch profile.
+- a <<fetch-profiles,fetch profile>>.
 
 You can find much more information about association fetching in the {association-fetching}[User Guide].
 

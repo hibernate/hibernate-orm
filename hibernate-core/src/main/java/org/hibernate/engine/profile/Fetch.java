@@ -9,7 +9,7 @@ package org.hibernate.engine.profile;
 import java.util.Locale;
 
 /**
- * Models an individual fetch override within a profile.
+ * Models an individual fetch override within a {@link FetchProfile}.
  *
  * @author Steve Ebersole
  */
@@ -18,7 +18,7 @@ public class Fetch {
 	private final Style style;
 
 	/**
-	 * Constructs a Fetch
+	 * Constructs a {@link Fetch}.
 	 *
 	 * @param association The association to be fetched
 	 * @param style How to fetch it
@@ -28,10 +28,16 @@ public class Fetch {
 		this.style = style;
 	}
 
+	/**
+	 * The association to which the fetch style applies.
+	 */
 	public Association getAssociation() {
 		return association;
 	}
 
+	/**
+	 * The fetch style applied to the association.
+	 */
 	public Style getStyle() {
 		return style;
 	}

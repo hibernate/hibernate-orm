@@ -745,6 +745,29 @@ class Author {
 }
 ----
 
+For collections, we may even request subselect fetching:
+
+[source,java]
+----
+@FetchProfile(name = "EagerBook")
+@FetchProfile(name = "BookWithAuthorsBySubselect")
+@Entity
+class Book {
+    ...
+
+    @OneToOne
+    @Fetch(profile = "EagerBook", value = JOIN)
+    Person person;
+
+    @ManyToMany
+    @Fetch(profile = "EagerBook", value = JOIN)
+    @Fetch(profile = "BookWithAuthorsBySubselect", value = SUBSELECT)
+    Set<Author> authors;
+
+	...
+}
+----
+
 We may define as many different fetch profiles as we like.
 
 [NOTE]
@@ -773,10 +796,13 @@ Book eagerBook = session.find(Book.class, bookId);
 
 [TIP]
 ====
-To make this a bit typesafe, it's a really good idea to put the name of the fetch profile in a `static final` constant.
+To make this a bit typesafe, it's a good idea to put the name of the fetch profile in a `static final` constant.
 ====
 
-So why might we prefer named fetch profiles to entity graphs?
-Well, that's really hard to say.
+So why or when might we prefer named fetch profiles to entity graphs?
+Well, it's really hard to say.
 It's nice that this feature _exists_, and if you love it, that's great.
 But Hibernate offers alternatives that we think are more compelling most of the time.
+
+The one and only advantage unique to fetch profiles is that they let us very selectively request subselect fetching.
+We can't do that with entity graphs, and we can't do it with HQL.

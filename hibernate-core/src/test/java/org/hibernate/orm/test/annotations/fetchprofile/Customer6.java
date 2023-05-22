@@ -12,7 +12,7 @@ import jakarta.persistence.OneToOne;
 
 @Entity
 @FetchProfile(name = "customer-with-address", fetchOverrides = {
-		@FetchProfile.FetchOverride(entity = Customer6.class, association = "address", mode = FetchMode.JOIN)
+		@FetchProfile.FetchOverride(entity = Customer6.class, association = "address")
 })
 public class Customer6 {
 

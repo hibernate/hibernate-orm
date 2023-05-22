@@ -25,8 +25,8 @@ import org.hibernate.annotations.FetchProfile;
 @FetchProfile(
 		name = Employee.FETCH_PROFILE_TREE,
 		fetchOverrides = {
-				@FetchProfile.FetchOverride(entity = Employee.class, association = "manager", mode = FetchMode.JOIN),
-				@FetchProfile.FetchOverride(entity = Employee.class, association = "minions", mode = FetchMode.JOIN)
+				@FetchProfile.FetchOverride(entity = Employee.class, association = "manager"),
+				@FetchProfile.FetchOverride(entity = Employee.class, association = "minions")
 		}
 )
 public class Employee {

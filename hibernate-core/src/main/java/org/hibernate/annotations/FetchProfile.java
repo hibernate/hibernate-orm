@@ -13,6 +13,7 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.hibernate.annotations.FetchMode.JOIN;
 
 /**
  * Defines a fetch profile, by specifying its {@link #name}, together
@@ -112,6 +113,6 @@ public @interface FetchProfile {
 		 * The {@linkplain FetchMode fetching strategy} to apply to
 		 * the association in the fetch profile being defined.
 		 */
-		FetchMode mode();
+		FetchMode mode() default JOIN;
 	}
 }

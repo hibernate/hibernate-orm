@@ -119,7 +119,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "MidEntity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Mid.class, association = "finish", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Mid.class, association = "finish")
 	})
 	public static class Mid {
 
@@ -157,8 +157,8 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "StartEntity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Start.class, association = "via1", mode = FetchMode.JOIN),
-			@FetchProfile.FetchOverride(entity = Start.class, association = "via2", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Start.class, association = "via1"),
+			@FetchProfile.FetchOverride(entity = Start.class, association = "via2")
 	})
 	public static class Start {
 
@@ -208,7 +208,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Via1Entity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Via1.class, association = "mid", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Via1.class, association = "mid")
 	})
 	public static class Via1 {
 
@@ -246,7 +246,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Via2Entity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Via2.class, association = "mid", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Via2.class, association = "mid")
 	})
 	public static class Via2 {
 

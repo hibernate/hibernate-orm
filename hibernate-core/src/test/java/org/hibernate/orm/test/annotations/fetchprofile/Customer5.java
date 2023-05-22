@@ -23,7 +23,7 @@ import org.hibernate.annotations.FetchProfile;
  */
 @Entity
 @FetchProfile(name = "orders-profile", fetchOverrides = {
-		@FetchProfile.FetchOverride(entity = Customer5.class, association = "foo", mode = FetchMode.JOIN)
+		@FetchProfile.FetchOverride(entity = Customer5.class, association = "foo")
 })
 public class Customer5 {
 	@Id

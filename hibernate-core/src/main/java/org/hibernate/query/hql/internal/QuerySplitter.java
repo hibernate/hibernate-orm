@@ -746,7 +746,7 @@ public class QuerySplitter {
 
 			final SqmBagJoin copy = new SqmBagJoin<>(
 					findSqmFromCopy( join.getLhs() ),
-					join.getReferencedPathSource(),
+					join.getAttribute(),
 					join.getExplicitAlias(),
 					join.getSqmJoinType(),
 					join.isFetched(),
@@ -846,7 +846,7 @@ public class QuerySplitter {
 
 			final SqmListJoin copy = new SqmListJoin<>(
 					findSqmFromCopy( join.getLhs() ),
-					join.getReferencedPathSource(),
+					join.getAttribute(),
 					join.getExplicitAlias(),
 					join.getSqmJoinType(),
 					join.isFetched(),
@@ -867,7 +867,7 @@ public class QuerySplitter {
 
 			final SqmMapJoin copy = new SqmMapJoin<>(
 					findSqmFromCopy( join.getLhs() ),
-					join.getReferencedPathSource(),
+					join.getAttribute(),
 					join.getExplicitAlias(),
 					join.getSqmJoinType(),
 					join.isFetched(),
@@ -888,7 +888,7 @@ public class QuerySplitter {
 
 			final SqmSetJoin copy = new SqmSetJoin<>(
 					findSqmFromCopy( join.getLhs() ),
-					join.getReferencedPathSource(),
+					join.getAttribute(),
 					join.getExplicitAlias(),
 					join.getSqmJoinType(),
 					join.isFetched(),
@@ -909,7 +909,7 @@ public class QuerySplitter {
 
 			final SqmSingularJoin copy = new SqmSingularJoin<>(
 					findSqmFromCopy( join.getLhs() ),
-					join.getReferencedPathSource(),
+					join.getAttribute(),
 					join.getExplicitAlias(),
 					join.getSqmJoinType(),
 					join.isFetched(),

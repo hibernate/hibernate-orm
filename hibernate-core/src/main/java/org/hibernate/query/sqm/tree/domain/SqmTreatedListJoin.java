@@ -68,17 +68,17 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public ListPersistentAttribute<O, S> getModel() {
-		return super.getModel();
-	}
-
-	@Override
 	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
 	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
+	}
+
+	@Override
+	public EntityDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 

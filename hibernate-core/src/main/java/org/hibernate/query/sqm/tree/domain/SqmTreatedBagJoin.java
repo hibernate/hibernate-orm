@@ -76,6 +76,11 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	}
 
 	@Override
+	public EntityDomainType<S> getReferencedPathSource() {
+		return treatTarget;
+	}
+
+	@Override
 	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmTreatedBagJoin<>( wrappedPath, treatTarget, getAlias() );
 	}

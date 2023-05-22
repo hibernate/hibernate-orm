@@ -76,6 +76,11 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	}
 
 	@Override
+	public EntityDomainType<S> getReferencedPathSource() {
+		return getTreatTarget();
+	}
+
+	@Override
 	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmTreatedSingularJoin<>( wrappedPath, treatTarget, getAlias() );
 	}

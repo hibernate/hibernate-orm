@@ -2797,10 +2797,37 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
 
-		fromClauseIndex.register( sqmRoot, tableGroup );
+		registerSqmFromTableGroup( sqmRoot, tableGroup );
 		currentQuerySpec.getFromClause().addRoot( tableGroup );
 
 		consumeJoins( sqmRoot, fromClauseIndex, tableGroup );
+	}
+
+	private void registerSqmFromTableGroup(SqmFrom<?, ?> sqmFrom, TableGroup tableGroup) {
+		getFromClauseIndex().register( sqmFrom, tableGroup );
+		// We also need to register the table group for the treats
+		if ( tableGroup instanceof PluralTableGroup ) {
+			final PluralTableGroup pluralTableGroup = (PluralTableGroup) tableGroup;
+			for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
+				if ( pluralTableGroup.getElementTableGroup() != null ) {
+					getFromClauseAccess().registerTableGroup(
+							sqmTreat.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() ),
+							pluralTableGroup.getElementTableGroup()
+					);
+				}
+				if ( pluralTableGroup.getIndexTableGroup() != null ) {
+					getFromClauseAccess().registerTableGroup(
+							sqmTreat.getNavigablePath().append( CollectionPart.Nature.INDEX.getName() ),
+							pluralTableGroup.getIndexTableGroup()
+					);
+				}
+			}
+		}
+		else {
+			for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
+				getFromClauseAccess().registerTableGroup( sqmTreat.getNavigablePath(), tableGroup );
+			}
+		}
 	}
 
 	private TableGroup createCteTableGroup(
@@ -3291,34 +3318,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
 
-		getFromClauseIndex().register( sqmJoin, joinedTableGroup );
+		registerSqmFromTableGroup( sqmJoin, joinedTableGroup );
 		registerPluralTableGroupParts( joinedTableGroup );
-		// For joins, we also need to register the table groups for the treats
-		if ( joinedTableGroup instanceof PluralTableGroup ) {
-			final PluralTableGroup pluralTableGroup = (PluralTableGroup) joinedTableGroup;
-			for ( SqmFrom<?, ?> sqmTreat : sqmJoin.getSqmTreats() ) {
-				if ( pluralTableGroup.getElementTableGroup() != null ) {
-					getFromClauseAccess().registerTableGroup(
-							sqmTreat.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() ),
-							pluralTableGroup.getElementTableGroup()
-					);
-				}
-				if ( pluralTableGroup.getIndexTableGroup() != null ) {
-					getFromClauseAccess().registerTableGroup(
-							sqmTreat.getNavigablePath().append( CollectionPart.Nature.INDEX.getName() ),
-							pluralTableGroup.getIndexTableGroup()
-					);
-				}
-			}
-		}
-		else {
-			for ( SqmFrom<?, ?> sqmTreat : sqmJoin.getSqmTreats() ) {
-				getFromClauseAccess().registerTableGroup(
-						sqmTreat.getNavigablePath(),
-						joinedTableGroup
-				);
-			}
-		}
 		if ( sqmJoin.isFetched() ) {
 			// A fetch is like a projection usage, so register that properly
 			registerEntityNameProjectionUsage( sqmJoin, getActualTableGroup( joinedTableGroup, sqmJoin ) );
@@ -3373,7 +3374,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 
-		getFromClauseIndex().register( sqmJoin, tableGroup );
+		registerSqmFromTableGroup( sqmJoin, tableGroup );
 
 		if ( transitive ) {
 			consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
@@ -3393,8 +3394,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				null,
 				() -> p -> predicate.set( combinePredicates( predicate.get(), p ) ),
 				this
-				);
-		getFromClauseIndex().register( sqmJoin, tableGroup );
+		);
+		registerSqmFromTableGroup( sqmJoin, tableGroup );
 
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
@@ -5149,9 +5150,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, EntityDomainType<?> treatTarget) {
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
-		final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
-		return createTreatTypeRestriction( lhs, subclassEntityNames );
+		final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
+		if ( entityDescriptor.isPolymorphic() ) {
+			final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
+			return createTreatTypeRestriction( lhs, subclassEntityNames );
+		}
+		return null;
 	}
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, Set<String> subclassEntityNames) {

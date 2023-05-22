@@ -64,7 +64,7 @@ public class SqmListJoin<O,E>
 				new SqmListJoin<>(
 						getLhs().copy( context ),
 						getNavigablePath(),
-						getReferencedPathSource(),
+						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -76,13 +76,8 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
-	public ListPersistentAttribute<O, E> getReferencedPathSource() {
-		return (ListPersistentAttribute<O, E>) super.getReferencedPathSource();
-	}
-
-	@Override
 	public ListPersistentAttribute<O, E> getModel() {
-		return getReferencedPathSource();
+		return (ListPersistentAttribute<O, E>) super.getModel();
 	}
 
 	@Override
@@ -92,13 +87,12 @@ public class SqmListJoin<O,E>
 
 	@Override
 	public ListPersistentAttribute<O,E> getAttribute() {
-		//noinspection unchecked
-		return (ListPersistentAttribute<O, E>) super.getAttribute();
+		return getModel();
 	}
 
 	@Override
 	public SqmPath<Integer> index() {
-		final SqmPathSource<Integer> indexPathSource = getReferencedPathSource().getIndexPathSource();
+		final SqmPathSource<Integer> indexPathSource = getAttribute().getIndexPathSource();
 		return resolvePath( indexPathSource.getPathName(), indexPathSource );
 	}
 
@@ -155,7 +149,7 @@ public class SqmListJoin<O,E>
 	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmListJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
+				getAttribute(),
 				getExplicitAlias(),
 				getSqmJoinType(),
 				isFetched(),

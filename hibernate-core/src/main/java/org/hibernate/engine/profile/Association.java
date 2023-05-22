@@ -5,10 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.engine.profile;
+
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Models the association of a given fetch.
+ * Identifies the association referenced by a {@link Fetch}.
  *
  * @author Steve Ebersole
  */
@@ -29,15 +30,29 @@ public class Association {
 		this.role = owner.getEntityName() + '.' + associationPath;
 	}
 
+	/**
+	 * The persister of the owning entity.
+	 */
 	public EntityPersister getOwner() {
 		return owner;
 	}
 
+	/**
+	 * The property path
+	 */
 	public String getAssociationPath() {
 		return associationPath;
 	}
 
+	/**
+	 * The fully qualified role name
+	 */
 	public String getRole() {
 		return role;
+	}
+
+	@Override
+	public String toString() {
+		return "Association[" + role + "]";
 	}
 }

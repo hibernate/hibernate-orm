@@ -61,7 +61,7 @@ public class FetchProfileHelper {
 			}
 
 			// then register the association with the FetchProfile
-			fetchProfile.addFetch( association, fetchStyle );
+			fetchProfile.addFetch( new Fetch( association, fetchStyle ) );
 		}
 		return fetchProfile;
 	}

@@ -63,7 +63,7 @@ public class SqmSetJoin<O, E>
 				new SqmSetJoin<>(
 						getLhs().copy( context ),
 						getNavigablePath(),
-						getReferencedPathSource(),
+						getModel(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -75,13 +75,8 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SetPersistentAttribute<O,E> getReferencedPathSource() {
-		return (SetPersistentAttribute<O, E>) super.getReferencedPathSource();
-	}
-
-	@Override
-	public SetPersistentAttribute<O,E> getModel() {
-		return getReferencedPathSource();
+	public SetPersistentAttribute<O, E> getModel() {
+		return (SetPersistentAttribute<O, E>) super.getNodeType();
 	}
 
 	@Override
@@ -90,8 +85,8 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SetPersistentAttribute<O,E> getAttribute() {
-		return getReferencedPathSource();
+	public SetPersistentAttribute<O, E> getAttribute() {
+		return getModel();
 	}
 
 	@Override
@@ -153,7 +148,7 @@ public class SqmSetJoin<O, E>
 	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmSetJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
+				getModel(),
 				getExplicitAlias(),
 				getSqmJoinType(),
 				isFetched(),

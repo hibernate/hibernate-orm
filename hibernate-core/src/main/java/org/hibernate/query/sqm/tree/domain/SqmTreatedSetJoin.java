@@ -66,11 +66,6 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
-	public SetPersistentAttribute<O,S> getModel() {
-		return super.getModel();
-	}
-
-	@Override
 	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
@@ -81,8 +76,8 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
-	public SetPersistentAttribute<O,S> getReferencedPathSource() {
-		return super.getReferencedPathSource();
+	public EntityDomainType<S> getReferencedPathSource() {
+		return treatTarget;
 	}
 
 	@Override

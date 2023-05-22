@@ -72,8 +72,7 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 
 	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
-		//noinspection unchecked
-		return (EntityDomainType<S>) wrappedPath.getReferencedPathSource();
+		return treatTarget;
 	}
 
 	@Override

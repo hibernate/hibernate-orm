@@ -9,6 +9,7 @@
 
 = An introduction to Hibernate 6
 Gavin King and the Hibernate team
+:title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3
 

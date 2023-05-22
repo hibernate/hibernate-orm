@@ -267,7 +267,8 @@ public class BatchFetchQueue {
 
 		// TODO: this needn't exclude subclasses...
 
-		LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( entityDescriptor.getEntityName() );
+		final LinkedHashSet<EntityKey> set =
+				batchLoadableEntityKeys.get( entityDescriptor.getEntityName() );
 		if ( set != null ) {
 			for ( EntityKey key : set ) {
 				if ( checkForEnd && i == end ) {

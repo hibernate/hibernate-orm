@@ -8,7 +8,6 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.Map;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.ast.spi.BatchLoaderFactory;

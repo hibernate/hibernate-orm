@@ -16,6 +16,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.util.Arrays;
+
 /**
  * @author Steve Ebersole
  */
@@ -57,6 +59,16 @@ public class MultiKeyLoadHelper {
 		);
 	}
 
+	static int countIds(Object[] ids) {
+		int count = 0;
+		for ( int i=1; i<ids.length; i++ ) {
+			if ( ids[i] != null ) {
+				count++;
+			}
+		}
+		return count;
+	}
+
 	static boolean hasSingleId(Object[] ids) {
 		for ( int i=1; i<ids.length; i++ ) {
 			if ( ids[i] != null ) {
@@ -64,5 +76,13 @@ public class MultiKeyLoadHelper {
 			}
 		}
 		return true;
+	}
+
+	static Object[] trimIdBatch(int length, Object[] keysToInitialize) {
+		int newLength = length;
+		while ( newLength>1 && keysToInitialize[newLength-1] == null ) {
+			newLength--;
+		}
+		return newLength < length ? Arrays.copyOf(keysToInitialize, newLength) : keysToInitialize;
 	}
 }

@@ -57,7 +57,7 @@ You'll also need to add a dependency for the JDBC
 driver for your database.
 
 .JDBC driver dependencies
-[cols="40,~"]
+[cols="50,~"]
 |===
 | Database                  | Driver dependency
 
@@ -77,37 +77,64 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 === Optional dependencies
 
 :slf4j: http://www.slf4j.org/
-:enhancer: https://docs.jboss.org/hibernate/orm/5.4/topical/html_single/bytecode/BytecodeEnhancement.html
+:enhancer: {userGuideBase}#tooling-gradle
 :agroal: https://agroal.github.io
 :jackson: https://github.com/FasterXML/jackson
 :yasson: https://projects.eclipse.org/projects/ee4j.yasson
 :validator: https://hibernate.org/validator
 :ehcache: https://www.ehcache.org
 :infinispan: https://infinispan.org
+:generator: https://hibernate.org/orm/tooling/
+:caffeine: https://github.com/ben-manes/caffeine/
 
 Optionally, you might also add any of the following additional features:
 
 .Optional dependencies
-[cols="40,~"]
+[cols="50,~"]
 |===
 | Optional feature | Dependencies
 
-| An {slf4j}[SLF4J] logging implementation | `org.apache.logging.log4j:log4j-core` or `org.slf4j:slf4j-jdk14`
-| A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal` and `io.agroal:agroal-pool`
-| The Hibernate metamodel generator, if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
-| {validator}[Hibernate Validator] | `org.hibernate.validator:hibernate-validator` and `org.glassfish:jakarta.el`
-| Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` along with `org.ehcache:ehcache`
+| An {slf4j}[SLF4J] logging implementation |
+`org.apache.logging.log4j:log4j-core` +
+or `org.slf4j:slf4j-jdk14`
+| A JDBC connection pool, for example, {agroal}[Agroal] |
+`org.hibernate.orm:hibernate-agroal` +
+and `io.agroal:agroal-pool`
+| The {generator}[Hibernate Metamodel Generator], especially if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
+| {validator}[Hibernate Validator] |
+`org.hibernate.validator:hibernate-validator` +
+and `org.glassfish:jakarta.el`
+| Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` +
+and `org.ehcache:ehcache`
+| Local second-level cache support via JCache and {caffeine}[Caffeine]| `org.hibernate.orm:hibernate-jcache` +
+and `com.github.ben-manes.caffeine:jcache`
 | Distributed second-level cache support via {infinispan}[Infinispan] | `org.infinispan:infinispan-hibernate-cache-v60`
 // | SCRAM authentication support for PostgreSQL | `com.ongres.scram:client:2.1`
-| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] | `com.fasterxml.jackson.core:jackson-databind` or `org.eclipse:yasson`
+| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] |
+`com.fasterxml.jackson.core:jackson-databind` +
+or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
-Gradle build if you want to use field-level  lazy fetching.
+Gradle build if you want to use <<bytecode-enhancer,field-level lazy fetching>>.
 
-TIP: Field-level lazy fetching is an advanced feature that most programs
-don't need. Stick to the basics for now.
+[[metamodel-generator]]
+.The Metamodel Generator
+****
+
+:generator-guide: {userGuideBase}#tooling-modelgen
+
+Hibernate's {generator}[Metamodel Generator] is an annotation processor that produces what JPA calls a _static metamodel_.
+That is, it produces a typed model of the persistent classes in our program, giving us a type-safe way to refer to their attributes in Java code.
+In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
+
+We've already seen how to set up the annotation processor in the <<hello-hibernate,gradle build>> we saw earlier.
+
+Now, you don't have to use the Metamodel Generator with Hibernate—the APIs we just mentioned also accept plain strings—but we find that it works well with gradle and integrates well with our IDE, and the advantage in typesafety is compelling.
+
+You can find more information in the {generator-guide}[User Guide].
+****
 
 [[configuration-jpa]]
 === Configuration using JPA XML
@@ -194,24 +221,31 @@ Alternatively, the venerable class `org.hibernate.cfg.Configuration` allows an i
 
 [source,java]
 ----
-SessionFactory sessionFactory = new Configuration()
-    .addAnnotatedClass(Book.class)
-    .addAnnotatedClass(Author.class)
-    .setProperty(AvailableSettings.JAKARTA_JDBC_URL, "jdbc:postgresql://localhost/example")
-    .setProperty(AvailableSettings.JAKARTA_JDBC_USER, user)
-    .setProperty(AvailableSettings.JAKARTA_JDBC_PASSWORD, password)
-    .setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE)
-    .setProperty(AvailableSettings.SHOW_SQL, true)
-    .setProperty(AvailableSettings.FORMAT_SQL, true)
-    .setProperty(AvailableSettings.HIGHLIGHT_SQL, true)
-    .buildSessionFactory();
+SessionFactory sessionFactory =
+        new Configuration()
+            .addAnnotatedClass(Book.class)
+            .addAnnotatedClass(Author.class)
+            // PostgreSQL
+            .setProperty(AvailableSettings.JAKARTA_JDBC_URL, "jdbc:postgresql://localhost/example")
+            // Credentials
+            .setProperty(AvailableSettings.JAKARTA_JDBC_USER, user)
+            .setProperty(AvailableSettings.JAKARTA_JDBC_PASSWORD, password)
+            // Automatic schema export
+            .setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+                         Action.CREATE.getExternalJpaName())
+            // SQL statement logging
+            .setProperty(AvailableSettings.SHOW_SQL, TRUE.toString())
+            .setProperty(AvailableSettings.FORMAT_SQL, TRUE.toString())
+            .setProperty(AvailableSettings.HIGHLIGHT_SQL, TRUE.toString())
+            // Create a new SessionFactory
+            .buildSessionFactory();
 ----
 
 The `Configuration` class has survived almost unchanged since the very earliest (pre-1.0) versions of Hibernate, and so it doesn't look particularly modern.
 On the other hand, it's very easy to use, and exposes some options that `persistence.xml` doesn't support.
 
-:native-bootstrap: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#bootstrap-native
-:boot: https://docs.jboss.org/hibernate/orm/6.2/javadocs/org/hibernate/boot/package-summary.html
+:native-bootstrap: {userGuideBase}#bootstrap-native
+:boot: {versionDocBase}/javadocs/org/hibernate/boot/package-summary.html
 
 .Advanced configuration options
 ****
@@ -341,37 +375,47 @@ Alternatively, the `SchemaManager` API allow you to control schema export progra
 sessionFactory.getSchemaManager().exportMappedObjects(true);
 ====
 
-
+[[logging-generated-sql]]
 === Logging the generated SQL
 
 :log4j: https://github.com/hibernate/hibernate-reactive/blob/main/examples/session-example/src/main/resources/log4j2.properties
 
-To see the generated SQL as it's sent to the database, either:
+To see the generated SQL as it's sent to the database, you have two options.
 
-- set the property `hibernate.show_sql` to `true`, or
-- enable debug-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
-
-For example, if you're using Log4J 2 (as above in <<optional-dependencies>>), add these lines to your `log4j2.properties` file:
-
-[source,properties]
-----
-logger.hibernate.name = org.hibernate.SQL
-logger.hibernate.level = debug
-----
-
-You can make the SQL logged to the console more readable by enabling formatting or highlighting.
+One way is to set the property `hibernate.show_sql` to `true`, and Hibernate will log SQL direct to the console.
+You can make the output much more readable by enabling formatting or highlighting.
+These settings really help when troubleshooting the generated SQL statements.
 
 .Settings for SQL logging to the console
 [cols="35,~"]
 |===
 | Configuration property name | Purpose
 
-| `hibernate.show_sql` | If `true`, log SQL directly to the console
+| `hibernate.show_sql`        | If `true`, log SQL directly to the console
 | `hibernate.format_sql`      | If `true`, log SQL in a multiline, indented format
 | `hibernate.highlight_sql`   | If `true`, log SQL with syntax highlighting via ANSI escape codes
 |===
 
-These settings can really help when troubleshooting SQL.
+Alternatively, you can enable debug-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
+
+For example, if you're using Log4J 2 (as above in <<optional-dependencies>>), add these lines to your `log4j2.properties` file:
+
+[source,properties]
+----
+# SQL execution
+logger.hibernate.name = org.hibernate.SQL
+logger.hibernate.level = debug
+
+# JDBC parameter binding
+logger.jdbc-bind.name=org.hibernate.orm.jdbc.bind
+logger.jdbc-bind.level=trace
+# JDBC result set extraction
+logger.jdbc-extract.name=org.hibernate.orm.jdbc.extract
+logger.jdbc-extract.level=trace
+
+----
+
+But with this approach we miss out on the pretty highlighting.
 
 [[minimizing]]
 === Minimizing repetitive mapping information

@@ -354,6 +354,14 @@ public class LoaderSelectBuilder {
 		this.entityGraphTraversalState = entityGraphTraversalState;
 		this.forceIdentifierSelection = forceIdentifierSelection;
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
+		if ( loadable instanceof PluralAttributeMapping ) {
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+			if ( pluralAttributeMapping.getMappedType()
+					.getCollectionSemantics()
+					.getCollectionClassification() == CollectionClassification.BAG ) {
+				rowCardinality = RowCardinality.BAG;
+			}
+		}
 	}
 
 	private LoaderSelectBuilder(
@@ -440,15 +448,6 @@ public class LoaderSelectBuilder {
 	}
 
 	private SelectStatement generateSelect() {
-		if ( loadable instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
-			if ( pluralAttributeMapping.getMappedType()
-					.getCollectionSemantics()
-					.getCollectionClassification() == CollectionClassification.BAG ) {
-				rowCardinality = RowCardinality.BAG;
-			}
-		}
-
 		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
@@ -1076,7 +1075,6 @@ public class LoaderSelectBuilder {
 		// generate and apply the restriction
 		applySubSelectRestriction(
 				rootQuerySpec,
-				rootNavigablePath,
 				rootTableGroup,
 				subselect,
 				sqlAstCreationState
@@ -1107,7 +1105,6 @@ public class LoaderSelectBuilder {
 
 	private void applySubSelectRestriction(
 			QuerySpec querySpec,
-			NavigablePath rootNavigablePath,
 			TableGroup rootTableGroup,
 			SubselectFetch subselect,
 			LoaderSqlAstCreationState sqlAstCreationState) {
@@ -1115,7 +1112,6 @@ public class LoaderSelectBuilder {
 
 		final PluralAttributeMapping attributeMapping = (PluralAttributeMapping) loadable;
 		final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
-		final NavigablePath navigablePath = rootNavigablePath.append( attributeMapping.getAttributeName() );
 
 		final Expression fkExpression;
 
@@ -1124,7 +1120,8 @@ public class LoaderSelectBuilder {
 			assert fkDescriptor instanceof SimpleForeignKeyDescriptor;
 			final SimpleForeignKeyDescriptor simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
 			final TableReference tableReference = rootTableGroup.resolveTableReference(
-					navigablePath,
+					null,
+					fkDescriptor,
 					simpleFkDescriptor.getContainingTableExpression()
 			);
 			fkExpression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
@@ -1137,7 +1134,8 @@ public class LoaderSelectBuilder {
 			fkDescriptor.forEachSelectable(
 					(columnIndex, selection) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference(
-								navigablePath,
+								null,
+								fkDescriptor,
 								selection.getContainingTableExpression()
 						);
 						columnReferences.add(
@@ -1168,24 +1166,19 @@ public class LoaderSelectBuilder {
 			SubselectFetch subselect,
 			LoaderSqlAstCreationState creationState) {
 		final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
-
 		final QuerySpec subQuery = new QuerySpec( false );
-
 		final QuerySpec loadingSqlAst = subselect.getLoadingSqlAst();
-
-		// todo (6.0) : we need to find the owner's TableGroup in the `loadingSqlAst`
 		final TableGroup ownerTableGroup = subselect.getOwnerTableGroup();
 
 		// transfer the from-clause
 		loadingSqlAst.getFromClause().visitRoots( subQuery.getFromClause()::addRoot );
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
-		final NavigablePath navigablePath = ownerTableGroup.getNavigablePath().append( attributeMapping.getAttributeName() );
 
 		fkDescriptor.visitTargetSelectables(
 				(valuesPosition, selection) -> {
 					// for each column, resolve a SqlSelection and add it to the sub-query select-clause
-					final TableReference tableReference = ownerTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
+					final TableReference tableReference = ownerTableGroup.resolveTableReference( null, fkDescriptor, selection.getContainingTableExpression() );
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
 							tableReference,
 							selection

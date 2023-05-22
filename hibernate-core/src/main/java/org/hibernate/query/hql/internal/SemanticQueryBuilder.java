@@ -1306,11 +1306,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmDynamicInstantiation<?> dynamicInstantiation;
 		final ParseTree instantiationTarget = ctx.instantiationTarget().getChild( 0 );
 		if ( instantiationTarget instanceof HqlParser.SimplePathContext ) {
-			final String className = instantiationTarget.getText();
+			String className = instantiationTarget.getText();
+			if ( expectedResultType!=null && expectedResultType.getSimpleName().equals( className ) ) {
+				className = expectedResultType.getName();
+			}
 			try {
-				final JavaType<?> jtd = resolveInstantiationTargetJtd( className );
 				dynamicInstantiation = SqmDynamicInstantiation.forClassInstantiation(
-						jtd,
+						resolveInstantiationTargetJtd( className ),
 						creationContext.getNodeBuilder()
 				);
 			}

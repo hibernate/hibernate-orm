@@ -79,7 +79,7 @@ Instead, you'll use a container-managed datasource, as we saw in <<basic-configu
 An easy way to improve performance of some transactions, with almost no work at all, is to turn on automatic DML statement batching.
 Batching only helps in cases where a program executes many inserts, updates, or deletes against the same table in a single transaction.
 
-All you need to do is set a single property:
+All we need to do is set a single property:
 
 .Enabling JDBC batching
 [%autowidth.stretch]
@@ -97,24 +97,17 @@ Even better than DML statement batching is the use of HQL `update` or `delete` q
 [[association-fetching]]
 === Association fetching
 
-:association-fetching: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#fetching
+:association-fetching: {userGuideBase}#fetching
 
-Achieving high performance in ORM means minimizing the number of round
-trips to the database. This goal should be uppermost in your mind
-whenever you're writing data access code with Hibernate. The most
-fundamental rule of thumb in ORM is:
+Achieving high performance in ORM means minimizing the number of round trips to the database. This goal should be uppermost in your mind whenever you're writing data access code with Hibernate. The most fundamental rule of thumb in ORM is:
 
-- explicitly specify all the data you're going to need right at the start
-of a session/transaction, and fetch it immediately in one or two queries,
+- explicitly specify all the data you're going to need right at the start of a session/transaction, and fetch it immediately in one or two queries,
 - and only then start navigating associations between persistent entities.
 
-image:images/fetching.png[width=700,align="center"]
+image::images/fetching.png[Fetching process,width=700,align="center"]
 
-Without question, the most common cause of poorly-performing data access
-code in Java programs is the problem of _N+1 selects_. Here, a list of N
-rows is retrieved from the database in an initial query, and then
-associated instances of a related entity are fetched using N subsequent
-queries.
+Without question, the most common cause of poorly-performing data access code in Java programs is the problem of _N+1 selects_.
+Here, a list of N rows is retrieved from the database in an initial query, and then associated instances of a related entity are fetched using N subsequent queries.
 
 [IMPORTANT]
 // .This problem is your responsibility
@@ -125,47 +118,57 @@ But that's OK.
 Hibernate gives you all the tools you need.
 ====
 
-Hibernate provides several strategies for efficiently fetching
-associations and avoiding N+1 selects:
+Hibernate provides several strategies for efficiently fetching associations and avoiding N+1 selects:
 
-- outer join fetching,
-- batch fetching, and
-- subselect fetching.
+- _outer join fetching_—where an association is fetched using a `left outer join`,
+- _batch fetching_—where an association is fetched using a subsequent `select` with a batch of primary keys, and
+- _subselect fetching_—where an association is fetched using a subsequent `select` with keys re-queried in a subselect.
 
-Of these, you should almost always use outer join fetching. Batch
-fetching and subselect fetching are only useful in rare cases where
-outer join fetching would result in a cartesian product and a huge
-result set. Unfortunately, outer join fetching simply isn't possible
-with lazy fetching.
+Of these, you should almost always use outer join fetching.
 
-TIP: Avoid the use of lazy fetching, which is often the source of
-N+1 selects.
+Batch fetching is disabled by default, but we may enable it using this configuration property:
 
-Now, we're not saying that associations should be mapped for eager
-fetching by default! That would be a terrible idea, resulting in
-simple session operations that fetch almost the entire database.
+[cols="35,~"]
+|===
+| Configuration property name | Property value
+
+| `hibernate.default_batch_fetch_size` | A sensible batch size
+|===
+
+That's all there is to it.
+So easy, right?
+
+Sadly, that's not the end of the story.
+While batch fetching might _mitigate_ problems involving N+1 selects, it won't solve them.
+The truly correct solution is to fetch associations using joins.
+Batch fetching (or subselect fetching) can only be the best solution in rare cases where outer join fetching would result in a cartesian product and a huge result set.
+
+Unfortunately, outer join fetching, by nature, simply can't be lazy.
+
+TIP: Avoid the use of lazy fetching, which is often the source of N+1 selects.
+
+Now, we're not saying that associations should be mapped for eager fetching by default!
+That would be a terrible idea, resulting in simple session operations that fetch almost the entire database.
 Therefore:
 
 TIP: Most associations should be mapped for lazy fetching by default.
 
-It sounds as if this tip is in contradiction to the previous one, but
-it's not. It's saying that you must explicitly specify eager fetching
-for associations precisely when and where they are needed.
+It sounds as if this tip is in contradiction to the previous one, but it's not.
+It's saying that you must explicitly specify eager fetching for associations precisely when and where they are needed.
 
 If you need eager fetching in some particular transaction, use:
 
 - `left join fetch` in HQL,
-- a fetch profile,
+- `fetch()` in a criteria query,
 - a JPA `EntityGraph`, or
-- `fetch()` in a criteria query.
+- a fetch profile.
 
-You can find much more information about association fetching in the
-{association-fetching}[User Guide].
+You can find much more information about association fetching in the {association-fetching}[User Guide].
 
 [[second-level-cache]]
 === The second-level cache
 
-:second-level-cache: https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#caching
+:second-level-cache: {userGuideBase}#caching
 
 A classic way to reduce the number of accesses to the database is to use a second-level cache, allowing  data cached in memory to be shared between sessions.
 
@@ -230,7 +233,7 @@ The cache defined by a `@Cache` annotation is automatically utilized by Hibernat
 [WARNING]
 ====
 The `@Cache` annotation must be specified on the _root class_ of an entity inheritance hierarchy.
-It is an error to place it on a subclass entity.
+It's an error to place it on a subclass entity.
 ====
 
 The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
@@ -326,13 +329,12 @@ But in case it helps, we often test Hibernate with the following configuration, 
 
 :ehcache-config: https://www.ehcache.org/documentation/
 
-.EHCache provider configuration
+.EHCache configuration
 [cols="35,~"]
 |===
 | Configuration property name              | Property value
 
 | `hibernate.cache.region.factory_class`   | `jcache`
-| `hibernate.javax.cache.provider`         | `org.ehcache.jsr107.EhcacheCachingProvider`
 | `hibernate.javax.cache.uri`              | `/ehcache.xml`
 |===
 
@@ -340,6 +342,25 @@ If you're using EHCache, you'll also need to include an `ehcache.xml` file
 that explicitly configures the behavior of each cache region belonging to
 your entities and collections.
 You'll find more information about configuring EHCache {ehcache-config}[here].
+
+:caffeine: https://github.com/ben-manes/caffeine/
+
+We may use any other implementation of JCache, such as {caffeine}[Caffeine].
+JCache automatically selects whichever implementation it finds on the classpath.
+If there are multiple implementations on the classpath, we must disambiguate using:
+
+.Disambiguating the JCache implementation
+[cols="35,~"]
+|===
+| Configuration property name        | Property value
+
+| `hibernate.javax.cache.provider`   a| The implementation of `javax.cache.spiCachingProvider`, for example:
+[cols="~,20"]
+!===
+! `org.ehcache.jsr107.EhcacheCachingProvider` ! for EHCache
+! `com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider` ! for Caffeine
+!===
+|===
 
 Alternatively, to use Infinispan as the cache implementation, the following settings are required:
 
@@ -362,7 +383,7 @@ Alternatively, to use Infinispan as the cache implementation, the following sett
 |===
 
 Infinispan is usually used when distributed caching is required.
-You'll find more information about using Infinispan with Hibernate {infinispan-hibernate}[here] .
+There's more about using Infinispan with Hibernate {infinispan-hibernate}[here].
 
 Finally, there's a way to globally disable the second-level cache:
 
@@ -680,6 +701,38 @@ an entity is written to the database using
 | `PESSIMISTIC_FORCE_INCREMENT` | A pessimistic lock enforced using an immediate
 `update` to increment the version
 |===
+
+[[statistics]]
+=== Collecting statistics
+
+We may ask Hibernate to collect statistics about its activity by setting this configuration property:
+
+[cols="35,~"]
+|===
+| Configuration property name | Property value
+
+| `hibernate.generate_statistics` | `true` to enable collection of statistics
+|===
+
+The statistics are exposed by the `Statistics` object:
+
+[source,java]
+----
+long failedVersionChecks =
+        sessionFactory.getStatistics()
+            .getOptimisticFailureCount();
+
+long publisherCacheMissCount =
+        sessionFactory.getStatistics()
+            .getEntityStatistics(Publisher.class.getName())
+                .getCacheMissCount()
+----
+
+:micrometer: https://quarkus.io/guides/micrometer
+:smallrye-metrics: https://quarkus.io/guides/microprofile-metrics
+
+Hibernate's statistics enable observability.
+Both {micrometer}[Micrometer] and {smallrye-metrics}[SmallRye Metrics] are capable of exposing these metrics.
 
 [[hibernate-reactive]]
 === Reactive programming with Hibernate

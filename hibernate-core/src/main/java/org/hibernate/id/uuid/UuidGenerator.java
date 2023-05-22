@@ -72,9 +72,9 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 
 	public UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
-			Member idMember,
+			Member member,
 			GeneratorCreationContext creationContext) {
-		this(config, idMember);
+		this(config, member);
 	}
 
 	/**

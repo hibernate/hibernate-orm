@@ -78,8 +78,8 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 
 		final MutationExecutorService mutationExecutorService = session
 				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
+				.getFastSessionServices()
+				.getMutationExecutorService();
 		final ForeignKeyDescriptor fkDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
 
 		for ( MutationOperationGroupSingle operationGroup : operationGroups ) {

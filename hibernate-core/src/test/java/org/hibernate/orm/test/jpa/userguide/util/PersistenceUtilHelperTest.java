@@ -130,7 +130,7 @@ public class PersistenceUtilHelperTest {
 	public void testIsLoadedWithNullInterceptor() {
 		assertEquals(
 				LoadState.LOADED,
-				PersistenceUtilHelper.isLoaded(
+				PersistenceUtilHelper.getLoadState(
 						new PersistentAttributeInterceptable() {
 
 							@Override

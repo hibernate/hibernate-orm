@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa;
 
+import jakarta.persistence.EntityManagerFactory;
+
 /**
  * List of Hibernate-specific (extension) hints available to query,
  * load, and lock scenarios.
@@ -156,4 +158,12 @@ public interface HibernateHints {
 	 * to a function rather than a call to a procedure.
 	 */
 	String HINT_CALLABLE_FUNCTION = "org.hibernate.callableFunction";
+
+	/**
+	 * Hint for specifying the tenant-id to use when creating an
+	 * {@linkplain EntityManagerFactory#createEntityManager(java.util.Map) EntityManager}.
+	 *
+	 * @see org.hibernate.SessionBuilder#tenantIdentifier
+	 */
+	String HINT_TENANT_ID = "org.hibernate.tenantId";
 }

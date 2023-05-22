@@ -46,7 +46,12 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	public RegionFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final RegionFactory regionFactory = resolveRegionFactory( configurationValues, registry );
 
-		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
+		if ( regionFactory instanceof NoCachingRegionFactory ) {
+			LOG.noRegionFactory();
+		}
+		else {
+			LOG.regionFactory( regionFactory.getClass().getTypeName() );
+		}
 
 		return regionFactory;
 	}

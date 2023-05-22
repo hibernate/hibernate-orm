@@ -63,8 +63,8 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 		final MutationOperationGroupSingle operationGroup = resolveDeleteGroup();
 		final MutationExecutorService mutationExecutorService = session
 				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
+				.getFastSessionServices()
+				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-DELETE" ),
 				operationGroup,
@@ -124,8 +124,8 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 		final MutationOperationGroupSingle operationGroup = resolveInsertGroup();
 		final MutationExecutorService mutationExecutorService = session
 				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
+				.getFastSessionServices()
+				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-INSERT" ),
 				operationGroup,

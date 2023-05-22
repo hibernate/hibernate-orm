@@ -106,7 +106,7 @@ public enum Action {
 				return "create";
 			case DROP:
 				return "drop";
-			case CREATE_DROP:
+			case CREATE:
 				return "drop-and-create";
 			default:
 				return null;

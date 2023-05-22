@@ -98,6 +98,14 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Cache provider: %s", id = 24)
 	void cacheProvider(String name);
 
+	@LogMessage(level = INFO)
+	@Message(value = "Second-level cache region factory [%s]", id = 25)
+	void regionFactory(String name);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Second-level cache disabled", id = 26)
+	void noRegionFactory();
+
 	@LogMessage(level = WARN)
 	@Message(value = "Calling joinTransaction() on a non JTA EntityManager", id = 27)
 	void callingJoinTransactionOnNonJtaEntityManager();
@@ -1362,7 +1370,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	/**
 	 * @deprecated Use {@link org.hibernate.dialect.DialectLogging#usingDialect} instead
 	 */
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Using dialect: %s", id = 400)
 	@Deprecated
 	void usingDialect(Dialect dialect);
@@ -1673,11 +1681,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Cannot locate column information using identifier [%s]; ignoring index [%s]", id = 475 )
 	void logCannotLocateIndexColumnInformation(String columnIdentifierText, String indexIdentifierText);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Executing script [%s]", id = 476)
 	void executingScript(String scriptName);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Starting delayed evictData of schema as part of SessionFactory shut-down'", id = 477)
 	void startingDelayedSchemaDrop();
 

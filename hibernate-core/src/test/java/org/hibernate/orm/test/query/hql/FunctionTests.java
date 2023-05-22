@@ -1920,4 +1920,23 @@ public class FunctionTests {
 		);
 	}
 
+	static class Pair {
+		int integer; double floating;
+		Pair(int integer, double floating) {
+			this.integer = integer;
+			this.floating = floating;
+		}
+	}
+	static class Triple {
+		int integer; double floating; String string;
+	}
+	@Test
+	public void testInstantiateLocalClass(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("select new Pair(theInt, theDouble) from EntityOfBasics", Pair.class).getResultList();
+					session.createSelectionQuery("select new Triple(theInt as integer, theDouble as floating, 'hello' as string) from EntityOfBasics", Triple.class).getResultList();
+				}
+		);
+	}
 }

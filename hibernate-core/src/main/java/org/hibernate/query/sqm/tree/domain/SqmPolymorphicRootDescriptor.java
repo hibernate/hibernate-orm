@@ -91,8 +91,8 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	private static boolean isACommonAttribute(List<EntityDomainType<?>> subList, PersistentAttribute<?, ?> attribute) {
 		// for each of its attributes, check whether the other implementors also expose it
-		for ( EntityDomainType navigable : subList ) {
-			if ( navigable.findAttribute( attribute.getName() ) != null ) {
+		for ( EntityDomainType<?> navigable : subList ) {
+			if ( navigable.findAttribute( attribute.getName() ) == null ) {
 				// we found an implementor that does not expose that attribute,
 				// so break-out to the next attribute
 				return false;

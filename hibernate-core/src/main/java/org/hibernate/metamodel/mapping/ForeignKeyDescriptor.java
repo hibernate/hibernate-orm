@@ -10,7 +10,6 @@ import java.util.function.IntFunction;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;

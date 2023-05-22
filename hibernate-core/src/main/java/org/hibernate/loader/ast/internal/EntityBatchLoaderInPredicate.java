@@ -24,11 +24,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
-import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
@@ -45,8 +42,8 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  * @author Steve Ebersole
  */
 public class EntityBatchLoaderInPredicate<T>
-		extends SingleIdEntityLoaderSupport<T>
-		implements EntityBatchLoader<T>, SqlInPredicateMultiKeyLoader {
+		extends AbstractEntityBatchLoader<T>
+		implements SqlInPredicateMultiKeyLoader {
 	private final int domainBatchSize;
 	private final int sqlBatchSize;
 
@@ -78,7 +75,7 @@ public class EntityBatchLoaderInPredicate<T>
 			);
 		}
 
-		EntityIdentifierMapping identifierMapping = getLoadable().getIdentifierMapping();
+		final EntityIdentifierMapping identifierMapping = getLoadable().getIdentifierMapping();
 
 		final int expectedNumberOfParameters = identifierMapping.getJdbcTypeCount() * sqlBatchSize;
 
@@ -118,37 +115,12 @@ public class EntityBatchLoaderInPredicate<T>
 		return load( pkValue, null, lockOptions, readOnly, session );
 	}
 
+	protected Object[] resolveIdsToInitialize(Object id, SharedSessionContractImplementor session) {
+		return session.getPersistenceContextInternal().getBatchFetchQueue()
+				.getBatchLoadableEntityIds( getLoadable(), id, domainBatchSize );
+	}
+
 	@Override
-	public final T load(
-			Object pkValue,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Batch loading entity `%s#%s`", getLoadable().getEntityName(), pkValue );
-		}
-
-		final Object[] idsToInitialize = resolveIdsToLoad( pkValue, session );
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Ids to batch-fetch initialize (`%s#%s`) %s", getLoadable().getEntityName(), pkValue, Arrays.toString(idsToInitialize) );
-		}
-
-		initializeEntities( idsToInitialize, pkValue, entityInstance, lockOptions, readOnly, session );
-
-		final EntityKey entityKey = session.generateEntityKey( pkValue, getLoadable().getEntityPersister() );
-		//noinspection unchecked
-		return (T) session.getPersistenceContext().getEntity( entityKey );
-	}
-
-	protected Object[] resolveIdsToLoad(Object pkValue, SharedSessionContractImplementor session) {
-		return session.getPersistenceContextInternal().getBatchFetchQueue().getBatchLoadableEntityIds(
-				getLoadable(),
-				pkValue,
-				domainBatchSize
-		);
-	}
-
 	protected void initializeEntities(
 			Object[] idsToInitialize,
 			Object pkValue,
@@ -156,6 +128,10 @@ public class EntityBatchLoaderInPredicate<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
+		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+			MULTI_KEY_LOAD_LOGGER.debugf( "Ids to batch-fetch initialize (`%s#%s`) %s",
+					getLoadable().getEntityName(), pkValue, Arrays.toString(idsToInitialize) );
+		}
 		final MultiKeyLoadChunker<Object> chunker = new MultiKeyLoadChunker<>(
 				sqlBatchSize,
 				getLoadable().getIdentifierMapping().getJdbcTypeCount(),
@@ -227,103 +203,103 @@ public class EntityBatchLoaderInPredicate<T>
 //		}
 	}
 
-	private void initializeChunk(
-			Object[] idsToInitialize,
-			int start,
-			Object pkValue,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
-		initializeChunk(
-				idsToInitialize,
-				getLoadable(),
-				start,
-				sqlBatchSize,
-				jdbcParameters,
-				sqlAst,
-				jdbcSelectOperation,
-				pkValue,
-				entityInstance,
-				lockOptions,
-				readOnly,
-				session
-		);
-	}
+//	private void initializeChunk(
+//			Object[] idsToInitialize,
+//			int start,
+//			Object pkValue,
+//			Object entityInstance,
+//			LockOptions lockOptions,
+//			Boolean readOnly,
+//			SharedSessionContractImplementor session) {
+//		initializeChunk(
+//				idsToInitialize,
+//				getLoadable(),
+//				start,
+//				sqlBatchSize,
+//				jdbcParameters,
+//				sqlAst,
+//				jdbcSelectOperation,
+//				pkValue,
+//				entityInstance,
+//				lockOptions,
+//				readOnly,
+//				session
+//		);
+//	}
 
-	private static void initializeChunk(
-			Object[] idsToInitialize,
-			EntityMappingType entityMapping,
-			int startIndex,
-			int numberOfKeys,
-			List<JdbcParameter> jdbcParameters,
-			SelectStatement sqlAst,
-			JdbcOperationQuerySelect jdbcSelectOperation,
-			Object pkValue,
-			Object entityInstance,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContext().getBatchFetchQueue();
-
-		final int numberOfJdbcParameters = entityMapping.getIdentifierMapping().getJdbcTypeCount() * numberOfKeys;
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( numberOfJdbcParameters );
-
-		final List<EntityKey> entityKeys = arrayList( numberOfKeys );
-		int bindCount = 0;
-		for ( int i = 0; i < numberOfKeys; i++ ) {
-			final int idPosition = i + startIndex;
-			final Object value;
-			if ( idPosition >= idsToInitialize.length ) {
-				value = null;
-			}
-			else {
-				value = idsToInitialize[idPosition];
-			}
-			if ( value != null ) {
-				entityKeys.add( session.generateEntityKey( value, entityMapping.getEntityPersister() ) );
-			}
-			bindCount += jdbcParameterBindings.registerParametersForEachJdbcValue(
-					value,
-					bindCount,
-					entityMapping.getIdentifierMapping(),
-					jdbcParameters,
-					session
-			);
-		}
-		assert bindCount == jdbcParameters.size();
-
-		if ( entityKeys.isEmpty() ) {
-			// there are no non-null keys in the chunk
-			return;
-		}
-
-		// Create a SubselectFetch.RegistrationHandler for handling any subselect fetches we encounter here
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-				batchFetchQueue,
-				sqlAst,
-				jdbcParameters,
-				jdbcParameterBindings
-		);
-
-		session.getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelectOperation,
-				jdbcParameterBindings,
-				new SingleIdExecutionContext(
-						pkValue,
-						entityInstance,
-						entityMapping.getRootEntityDescriptor(),
-						readOnly,
-						lockOptions,
-						subSelectFetchableKeysHandler,
-						session
-				),
-				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
-		);
-
-		entityKeys.forEach( batchFetchQueue::removeBatchLoadableEntityKey );
-	}
+//	private static void initializeChunk(
+//			Object[] idsToInitialize,
+//			EntityMappingType entityMapping,
+//			int startIndex,
+//			int numberOfKeys,
+//			List<JdbcParameter> jdbcParameters,
+//			SelectStatement sqlAst,
+//			JdbcOperationQuerySelect jdbcSelectOperation,
+//			Object pkValue,
+//			Object entityInstance,
+//			LockOptions lockOptions,
+//			Boolean readOnly,
+//			SharedSessionContractImplementor session) {
+//		final BatchFetchQueue batchFetchQueue = session.getPersistenceContext().getBatchFetchQueue();
+//
+//		final int numberOfJdbcParameters = entityMapping.getIdentifierMapping().getJdbcTypeCount() * numberOfKeys;
+//		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( numberOfJdbcParameters );
+//
+//		final List<EntityKey> entityKeys = arrayList( numberOfKeys );
+//		int bindCount = 0;
+//		for ( int i = 0; i < numberOfKeys; i++ ) {
+//			final int idPosition = i + startIndex;
+//			final Object value;
+//			if ( idPosition >= idsToInitialize.length ) {
+//				value = null;
+//			}
+//			else {
+//				value = idsToInitialize[idPosition];
+//			}
+//			if ( value != null ) {
+//				entityKeys.add( session.generateEntityKey( value, entityMapping.getEntityPersister() ) );
+//			}
+//			bindCount += jdbcParameterBindings.registerParametersForEachJdbcValue(
+//					value,
+//					bindCount,
+//					entityMapping.getIdentifierMapping(),
+//					jdbcParameters,
+//					session
+//			);
+//		}
+//		assert bindCount == jdbcParameters.size();
+//
+//		if ( entityKeys.isEmpty() ) {
+//			// there are no non-null keys in the chunk
+//			return;
+//		}
+//
+//		// Create a SubselectFetch.RegistrationHandler for handling any subselect fetches we encounter here
+//		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
+//				batchFetchQueue,
+//				sqlAst,
+//				jdbcParameters,
+//				jdbcParameterBindings
+//		);
+//
+//		session.getJdbcServices().getJdbcSelectExecutor().list(
+//				jdbcSelectOperation,
+//				jdbcParameterBindings,
+//				new SingleIdExecutionContext(
+//						pkValue,
+//						entityInstance,
+//						entityMapping.getRootEntityDescriptor(),
+//						readOnly,
+//						lockOptions,
+//						subSelectFetchableKeysHandler,
+//						session
+//				),
+//				RowTransformerStandardImpl.instance(),
+//				ListResultsConsumer.UniqueSemantic.FILTER
+//		);
+//
+//		entityKeys.forEach( batchFetchQueue::removeBatchLoadableEntityKey );
+//	}
 
 	@Override
 	public String toString() {

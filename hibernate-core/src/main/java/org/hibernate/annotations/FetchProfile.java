@@ -17,6 +17,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Defines a fetch profile, by specifying its {@link #name}, together
  * with a list of {@linkplain #fetchOverrides fetch strategy overrides}.
+ * The definition of a single named fetch profile may be split over
+ * multiple {@link FetchProfile @FetchProfile} annotations which share
+ * the same {@link #name}.
+ * <p>
+ * Additional fetch strategy overrides may be added to a named fetch
+ * profile by annotating the fetched associations themselves with the
+ * {@link Fetch @Fetch} annotation, specifying the
+ * {@linkplain Fetch#profile() name of the fetch profile}.
  * <p>
  * A named fetch profile must be explicitly enabled in a given session
  * by calling {@link org.hibernate.Session#enableFetchProfile(String)}
@@ -74,8 +82,12 @@ public @interface FetchProfile {
 
 	/**
 	 * The list of association fetching strategy overrides.
+	 * <p>
+	 * Additional overrides may be specified by marking the
+	 * fetched associations themselves with the {@link Fetch @Fetch}
+	 * annotation.
 	 */
-	FetchOverride[] fetchOverrides();
+	FetchOverride[] fetchOverrides() default {};
 
 	/**
 	 * Overrides the fetching strategy pf a particular association

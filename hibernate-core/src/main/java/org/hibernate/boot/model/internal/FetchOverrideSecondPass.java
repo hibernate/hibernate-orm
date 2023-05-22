@@ -5,27 +5,28 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.boot.model.internal;
-import java.util.Locale;
-import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfile.FetchOverride;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
-import org.hibernate.mapping.MetadataSource;
+import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
+
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author Hardy Ferentschik
  */
-public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
+public class FetchOverrideSecondPass implements SecondPass {
 	private final String fetchProfileName;
-	private final FetchProfile.FetchOverride fetch;
+	private final FetchOverride fetch;
 	private final MetadataBuildingContext buildingContext;
 
-	public VerifyFetchProfileReferenceSecondPass(
+	public FetchOverrideSecondPass(
 			String fetchProfileName,
-			FetchProfile.FetchOverride fetch,
+			FetchOverride fetch,
 			MetadataBuildingContext buildingContext) {
 		this.fetchProfileName = fetchProfileName;
 		this.fetch = fetch;
@@ -34,21 +35,13 @@ public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		org.hibernate.mapping.FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( fetchProfileName );
-		if ( profile != null ) {
-			if ( profile.getSource() != MetadataSource.ANNOTATIONS ) {
-				return;
-			}
-		}
-		else {
-			profile = new org.hibernate.mapping.FetchProfile( fetchProfileName, MetadataSource.ANNOTATIONS );
-			buildingContext.getMetadataCollector().addFetchProfile( profile );
-		}
-
-		PersistentClass clazz = buildingContext.getMetadataCollector().getEntityBinding( fetch.entity().getName() );
 		// throws MappingException in case the property does not exist
-		clazz.getProperty( fetch.association() );
+		buildingContext.getMetadataCollector()
+				.getEntityBinding( fetch.entity().getName() )
+				.getProperty( fetch.association() );
 
+		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( fetchProfileName );
+		// we already know that the FetchProfile exists and is good to use
 		profile.addFetch(
 				fetch.entity().getName(),
 				fetch.association(),

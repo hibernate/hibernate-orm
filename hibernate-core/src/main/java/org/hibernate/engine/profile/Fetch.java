@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.profile;
 
+import java.util.Locale;
+
 /**
  * Models an individual fetch override within a profile.
  *
@@ -35,31 +37,25 @@ public class Fetch {
 	}
 
 	/**
-	 * The type or style of fetch.  For the moment we limit this to
-	 * join and select, though technically subselect would be valid
-	 * here as well; however, to support subselect here would
-	 * require major changes to the subselect loading code (which is
-	 * needed for other things as well anyway).
+	 * The type or style of fetch.
 	 */
 	public enum Style {
 		/**
 		 * Fetch via a join
 		 */
-		JOIN( "join" ),
+		JOIN,
 		/**
 		 * Fetch via a subsequent select
 		 */
-		SELECT( "select" );
-
-		private final String name;
-
-		Style(String name) {
-			this.name = name;
-		}
+		SELECT,
+		/**
+		 * Fetch via a subsequent subselect
+		 */
+		SUBSELECT;
 
 		@Override
 		public String toString() {
-			return name;
+			return name().toLowerCase(Locale.ROOT);
 		}
 
 		/**
@@ -70,13 +66,12 @@ public class Fetch {
 		 * @return The style; {@link #JOIN} is returned if not recognized
 		 */
 		public static Style parse(String name) {
-			if ( SELECT.name.equals( name ) ) {
-				return SELECT;
+			for ( Style style: values() ) {
+				if ( style.name().equalsIgnoreCase( name ) ) {
+					return style;
+				}
 			}
-			else {
-				// the default...
-				return JOIN;
-			}
+			return JOIN;
 		}
 	}
 

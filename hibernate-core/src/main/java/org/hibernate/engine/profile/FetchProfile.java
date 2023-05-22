@@ -167,4 +167,9 @@ public class FetchProfile {
 	public boolean isContainsJoinFetchedBag() {
 		return containsJoinFetchedBag;
 	}
+
+	@Override
+	public String toString() {
+		return "FetchProfile[" + name + "]";
+	}
 }

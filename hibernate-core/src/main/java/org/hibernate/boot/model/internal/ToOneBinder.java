@@ -361,6 +361,11 @@ public class ToOneBinder {
 					setHibernateFetchMode( toOne, property, fetch.value() );
 					result = true;
 				}
+				else {
+					final MetadataBuildingContext context = toOne.getBuildingContext();
+					context.getMetadataCollector()
+							.addSecondPass( new FetchSecondPass( fetch, propertyHolder, inferredData.getPropertyName(), context ) );
+				}
 			}
 			return result;
 		}

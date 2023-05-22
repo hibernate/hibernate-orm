@@ -22,7 +22,6 @@ import org.hibernate.annotations.ConverterRegistration;
 import org.hibernate.annotations.ConverterRegistrations;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistrations;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfile.FetchOverride;
 import org.hibernate.annotations.FetchProfiles;
@@ -853,9 +852,7 @@ public final class AnnotationBinder {
 		final String name = fetchProfile.name();
 		if ( reuseOrCreateFetchProfile( context, name ) ) {
 			for ( FetchOverride fetch : fetchProfile.fetchOverrides() ) {
-				if ( fetch.mode() != FetchMode.JOIN ) {
-					throw new MappingException( "Only 'FetchMode.JOIN' is currently supported" );
-				}
+				// TODO: validate which modes are valid where
 				context.getMetadataCollector()
 						.addSecondPass( new FetchOverrideSecondPass( name, fetch, context ) );
 			}

@@ -17,11 +17,16 @@ import java.util.function.Supplier;
 
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.SessionCreationOptions;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+
+import static java.util.Collections.emptySet;
+import static org.hibernate.engine.profile.Fetch.Style.SUBSELECT;
 
 /**
  * Centralize all options which can influence the SQL query needed to load an
@@ -157,7 +162,7 @@ public class LoadQueryInfluencers implements Serializable {
 	 */
 	public Set<String> getEnabledFilterNames() {
 		if ( enabledFilters == null ) {
-			return Collections.emptySet();
+			return emptySet();
 		}
 		else {
 			return Collections.unmodifiableSet( enabledFilters.keySet() );
@@ -221,7 +226,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Set<String> getEnabledFetchProfileNames() {
-		return Objects.requireNonNullElse( enabledFetchProfileNames, Collections.emptySet() );
+		return Objects.requireNonNullElse( enabledFetchProfileNames, emptySet() );
 	}
 
 	private void checkFetchProfileName(String name) {
@@ -302,7 +307,24 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public boolean effectiveSubselectFetchEnabled(CollectionPersister persister) {
-		return subselectFetchEnabled || persister.isSubselectLoadable();
+		return subselectFetchEnabled
+			|| persister.isSubselectLoadable()
+			|| isSubselectFetchEnabledInProfile( persister );
+	}
+
+	private boolean isSubselectFetchEnabledInProfile(CollectionPersister persister) {
+		if ( hasEnabledFetchProfiles() ) {
+			for ( String profile : getEnabledFetchProfileNames() ) {
+				final FetchProfile fetchProfile = sessionFactory.getFetchProfile( profile );
+				if ( fetchProfile != null ) {
+					final Fetch fetch = fetchProfile.getFetchByRole( persister.getRole() );
+					if ( fetch != null && fetch.getStyle() == SUBSELECT ) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	private void checkMutability() {
@@ -315,6 +337,23 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public boolean hasSubselectLoadableCollections(EntityPersister persister) {
 		return persister.hasSubselectLoadableCollections()
-			|| subselectFetchEnabled && persister.hasCollections();
+			|| subselectFetchEnabled && persister.hasCollections()
+			|| hasSubselectLoadableCollectionsEnabledInProfile( persister );
 	}
+
+	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {
+		if ( hasEnabledFetchProfiles() ) {
+			for ( String profile : getEnabledFetchProfileNames() ) {
+				final FetchProfile fetchProfile = sessionFactory.getFetchProfile( profile );
+				for ( Fetch fetch : fetchProfile.getFetches().values() ) {
+					// TODO: check that it's relevant to this persister??
+					if ( fetch.getStyle() == SUBSELECT ) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 }

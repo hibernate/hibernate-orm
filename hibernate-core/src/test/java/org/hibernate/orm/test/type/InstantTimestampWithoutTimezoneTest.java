@@ -12,12 +12,14 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.TimeZone;
 
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -85,7 +87,8 @@ public class InstantTimestampWithoutTimezoneTest {
 		}
 	}
 
-	@Test
+	@Test @SkipForDialect(dialectClass = OracleDialect.class,
+			reason = "on latest oracle JDBC drivers this fails (doesn't like us reading a timestamp to an OffsetDateTime)")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		TimeZone timeZone = TimeZone.getDefault();
 		try {

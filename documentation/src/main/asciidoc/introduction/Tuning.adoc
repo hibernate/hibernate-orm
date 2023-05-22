@@ -126,7 +126,11 @@ Hibernate provides several strategies for efficiently fetching associations and 
 
 Of these, you should almost always use outer join fetching.
 
-Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other using properties:
+[[batch-subselect-fetch]]
+=== Batch fetching and subselect fetching
+
+Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
+Later, we'll see how we can use <<fetch-profiles,fetch profiles>> to do this more selectively.
 
 .Configuration settings to enable batch and subselect fetching
 [cols="35,~"]
@@ -138,12 +142,31 @@ Both batch fetching and subselect fetching are disabled by default, but we may e
 |===
 
 That's all there is to it.
-So easy, right?
+Too easy, right?
 
 Sadly, that's not the end of the story.
 While batch fetching might _mitigate_ problems involving N+1 selects, it won't solve them.
 The truly correct solution is to fetch associations using joins.
-Batch fetching (or subselect fetching) can only be the best solution in rare cases where outer join fetching would result in a cartesian product and a huge result set.
+Batch fetching (or subselect fetching) can only be the _best_ solution in rare cases where outer join fetching would result in a cartesian product and a huge result set.
+
+[TIP]
+====
+We may request subselect fetching more selectively by annotating a collection or many-valued association with the `@Fetch` annotation.
+[source,java]
+----
+@ManyToMany @Fetch(SUBSELECT)
+Set<Author> authors;
+----
+Note that `@Fetch(SUBSELECT)` is equivalent to `@Fetch(SELECT)`, except after execution of a
+HQL or criteria query.
+
+We'll see more of `@Fetch` when we discuss <<fetch-profiles,fetch profiles>>.
+====
+
+Batch fetching and subselect fetching have one important characteristic in common: they can be performed _lazily_.
+
+[[join-fetch]]
+==== Join fetching
 
 Unfortunately, outer join fetching, by nature, simply can't be lazy.
 
@@ -164,6 +187,30 @@ If you need eager fetching in some particular transaction, use:
 - `From.fetch()` in a criteria query,
 - a JPA `EntityGraph`, or
 - a <<fetch-profiles,fetch profile>>.
+
+We've already seen how to do join fetching with an <<entity-graph,entity graph>>.
+This is how we can do it in HQL:
+
+[source,java]
+----
+List<Book> booksWithJoinFetchedAuthors =
+        session.createSelectionQuery("from Book join fetch authors order by isbn")
+            .getResultList();
+----
+
+And this is the same query, written using the criteria API:
+
+[source,java]
+----
+var builder = sessionFactory.getCriteriaBuilder();
+var query = builder.createQuery(Book.class);
+var book = query.from(Book.class);
+book.fetch(Book_.authors);
+query.select(book);
+query.orderBy(builder.asc(book.get(Book_.isbn)));
+List<Book> booksWithJoinFetchedAuthors =
+        session.createSelectionQuery(query).getResultList();
+----
 
 You can find much more information about association fetching in the {association-fetching}[User Guide].
 
@@ -213,16 +260,13 @@ If no region name is explicitly specified, the region name is just the name of t
 ----
 @Entity
 @Cache(usage=NONSTRICT_READ_WRITE, region="Publishers")
-class Publisher { ... }
-----
-[source,java]
-----
-@Entity
 class Publisher {
     ...
-    @Cache(usage=NONSTRICT_READ_WRITE, region="PublishedBooks")
+
+    @Cache(usage=READ_WRITE, region="PublishedBooks")
     @OneToMany(mappedBy="publisher")
     Set<Book> books;
+
     ...
 }
 ----
@@ -319,6 +363,54 @@ Book book = session.byNaturalId().using("isbn", isbn, "printing", printing).load
 [NOTE]
 ====
 Since the natural id cache doesn't contain the actual state of the entity, it doesn't make sense to annotate an entity `@NaturalIdCache` unless it's already eligible for storage in the second-level cache, that is, unless it's also annotated `@Cache`.
+====
+
+We must now consider a subtlety that often arises when we have to deal with so-called "reference data", that is, data which fits easily in memory, and doesn't change much.
+
+[[caching-and-fetching]]
+=== Caching and association fetching
+
+Let's consider again our `Publisher` class:
+
+[source,java]
+----
+@Cache(usage=NONSTRICT_READ_WRITE, region="Publishers")
+@Entity
+class Publisher { ... }
+----
+
+Data about publishers doesn't change very often, and there aren't so many of them.
+Suppose we've set everything up so that the publishers are almost _always_ available in the second-level cache.
+
+Then in this case we need to think carefully about associations of type `Publisher`.
+
+[source,java]
+----
+@ManyToOne
+Publisher publisher;
+----
+
+There's no need for this association to be lazily fetched, since we're expecting it to be available in memory, so we won't set it `fetch=LAZY`.
+But on the other hand, if we leave it marked for eager fetching then, by default, Hibernate will often fetch it using a join.
+This places completely unnecessary load on the database.
+
+The solution is the `@Fetch` annotation:
+
+[source,java]
+----
+@ManyToOne @Fetch(SELECT)
+Publisher publisher;
+----
+
+By annotating the association `@Fetch(SELECT)`, we suppress join fetching, giving Hibernate a chance to find the associated `Publisher` in the cache.
+
+Therefore, we arrive at this rule of thumb:
+
+[TIP]
+====
+Many-to-one associations to "reference data", or to any other data that will almost always be available in the cache, should be mapped `EAGER`,`SELECT`.
+
+Other associations, as we've <<many-to-one,already made clear>>, should be `LAZY`.
 ====
 
 Once we've marked an entity or collection as eligible for storage in the second-level cache, we still need to set up an actual cache.

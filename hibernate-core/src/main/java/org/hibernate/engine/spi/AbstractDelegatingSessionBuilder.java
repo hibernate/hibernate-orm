@@ -122,16 +122,4 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		delegate.flushMode( flushMode );
 		return this;
 	}
-
-	@Override
-	public SessionBuilder defaultBatchFetchSize(int batchSize) {
-		delegate.defaultBatchFetchSize( batchSize );
-		return this;
-	}
-
-	@Override
-	public SessionBuilder subselectFetchEnabled(boolean enabled) {
-		delegate.subselectFetchEnabled( enabled );
-		return this;
-	}
 }

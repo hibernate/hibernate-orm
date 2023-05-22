@@ -145,8 +145,4 @@ public interface SessionBuilder {
 	 * @see jakarta.persistence.PersistenceContextType
 	 */
 	SessionBuilder autoClose(boolean autoClose);
-
-	SessionBuilder defaultBatchFetchSize(int batchSize);
-
-	SessionBuilder subselectFetchEnabled(boolean enabled);
 }

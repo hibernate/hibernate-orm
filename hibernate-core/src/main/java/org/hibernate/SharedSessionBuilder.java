@@ -60,10 +60,6 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	 */
 	SharedSessionBuilder flushMode();
 
-	SharedSessionBuilder defaultBatchFetchSize();
-
-	SharedSessionBuilder subselectFetchEnabled();
-
 	/**
 	 * Signifies that the autoClose flag from the original session should be used to create the new session.
 	 *
@@ -88,10 +84,4 @@ public interface SharedSessionBuilder extends SessionBuilder {
 
 	@Override
 	SharedSessionBuilder autoClose(boolean autoClose);
-
-	@Override
-	SharedSessionBuilder defaultBatchFetchSize(int batchSize);
-
-	@Override
-	SharedSessionBuilder subselectFetchEnabled(boolean enabled);
 }

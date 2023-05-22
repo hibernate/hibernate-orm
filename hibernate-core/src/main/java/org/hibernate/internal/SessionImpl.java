@@ -1939,20 +1939,22 @@ public class SessionImpl
 		loadQueryInfluencers.disableFetchProfile( name );
 	}
 
-	// TODO: unused for now, should we promote to Session?
+	@Override
 	public void setSubselectFetchingEnabled(boolean enabled) {
 		loadQueryInfluencers.setSubselectFetchEnabled( enabled );
 	}
 
+	@Override
 	public boolean isSubselectFetchingEnabled() {
 		return loadQueryInfluencers.getSubselectFetchEnabled();
 	}
 
-	// TODO: unused for now, should we promote to Session?
+	@Override
 	public void setFetchBatchSize(int batchSize) {
 		loadQueryInfluencers.setBatchSize( batchSize );
 	}
 
+	@Override
 	public int getFetchBatchSize() {
 		return loadQueryInfluencers.getBatchSize();
 	}
@@ -2065,7 +2067,9 @@ public class SessionImpl
 		}
 	}
 
-	private static class SharedSessionBuilderImpl extends SessionFactoryImpl.SessionBuilderImpl implements SharedSessionBuilder, SharedSessionCreationOptions {
+	private static class SharedSessionBuilderImpl
+			extends SessionFactoryImpl.SessionBuilderImpl
+			implements SharedSessionBuilder, SharedSessionCreationOptions {
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
 
@@ -2154,28 +2158,6 @@ public class SessionImpl
 		public SharedSessionBuilderImpl flushMode() {
 			flushMode( session.getHibernateFlushMode() );
 			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl defaultBatchFetchSize(int batchSize) {
-			super.defaultBatchFetchSize( batchSize );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilderImpl subselectFetchEnabled(boolean enabled) {
-			super.subselectFetchEnabled( enabled );
-			return this;
-		}
-
-		@Override
-		public SharedSessionBuilder defaultBatchFetchSize() {
-			return defaultBatchFetchSize( session.getFetchBatchSize() );
-		}
-
-		@Override
-		public SharedSessionBuilder subselectFetchEnabled() {
-			return subselectFetchEnabled( session.isSubselectFetchingEnabled() );
 		}
 
 		@Override

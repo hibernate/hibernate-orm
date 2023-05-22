@@ -164,28 +164,4 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		delegate.jdbcTimeZone( timeZone );
 		return this;
 	}
-
-	@Override
-	public SharedSessionBuilder defaultBatchFetchSize(int batchSize) {
-		delegate.defaultBatchFetchSize( batchSize );
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilder subselectFetchEnabled(boolean enabled) {
-		delegate.subselectFetchEnabled( enabled );
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilder defaultBatchFetchSize() {
-		delegate.defaultBatchFetchSize();
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilder subselectFetchEnabled() {
-		delegate.subselectFetchEnabled();
-		return this;
-	}
 }

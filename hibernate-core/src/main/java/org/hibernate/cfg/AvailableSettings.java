@@ -1033,6 +1033,7 @@ public interface AvailableSettings {
 	 * collections explicitly annotated {@code @BatchSize}.
 	 *
 	 * @see org.hibernate.annotations.BatchSize
+	 * @see org.hibernate.Session#setFetchBatchSize(int)
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultBatchFetchSize(int)
 	 */
 	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
@@ -1045,6 +1046,7 @@ public interface AvailableSettings {
 	 * explicitly annotated {@code @Fetch(SUBSELECT)}.
 	 *
 	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
+	 * @see org.hibernate.Session#setSubselectFetchingEnabled(boolean)
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applySubselectFetchEnabled(boolean)
 	 */
 	String USE_SUBSELECT_FETCH = "hibernate.use_subselect_fetch";

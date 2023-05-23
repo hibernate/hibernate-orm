@@ -416,7 +416,7 @@ Hibernate has a better way:
 ----
 var graph = session.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
-session.byId(Book.class).fetching(graph).load(bookId);
+session.byId(Book.class).withFetchGraph(graph).load(bookId);
 ----
 
 This code adds a `left outer join` to our SQL query, fetching the associated `Publisher` along with the `Book`.
@@ -428,7 +428,7 @@ We may even attach additional nodes to our `EntityGraph`:
 var graph = session.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
 graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
-session.byId(Book.class).fetching(graph).load(bookId);
+session.byId(Book.class).withFetchGraph(graph).load(bookId);
 
 ----
 

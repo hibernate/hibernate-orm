@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
+import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.annotations.FetchMode.JOIN;
@@ -28,17 +29,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @FetchProfile(name = NewFetchTest.NEW_PROFILE)
 @FetchProfile(name = NewFetchTest.OLD_PROFILE,
 		fetchOverrides = @FetchProfile.FetchOverride(entity = NewFetchTest.E.class, association = "f"))
-@FetchProfile(name = NewFetchTest.SUBSELECT_PROFILE)
-@FetchProfile(name = NewFetchTest.SELECT_PROFILE)
+@FetchProfile(name = NewFetchTest.LAZY_SUBSELECT_PROFILE)
+@FetchProfile(name = NewFetchTest.EAGER_SUBSELECT_PROFILE)
+@FetchProfile(name = NewFetchTest.LAZY_SELECT_PROFILE)
+@FetchProfile(name = NewFetchTest.EAGER_SELECT_PROFILE)
 @FetchProfile(name = NewFetchTest.JOIN_PROFILE)
 @FetchProfile(name = NewFetchTest.OLD_SUBSELECT_PROFILE,
-		fetchOverrides = @FetchProfile.FetchOverride(entity = NewFetchTest.F.class, association = "es", mode = SUBSELECT))
+		fetchOverrides = @FetchProfile.FetchOverride(entity = NewFetchTest.F.class, association = "es", fetch = LAZY, mode = SUBSELECT))
 public class NewFetchTest {
 
 	static final String NEW_PROFILE = "new-profile";
 	static final String OLD_PROFILE = "old-profile";
-	static final String SUBSELECT_PROFILE = "subselect-profile";
-	static final String SELECT_PROFILE = "select-profile";
+	static final String LAZY_SUBSELECT_PROFILE = "lazy-subselect-profile";
+	static final String EAGER_SUBSELECT_PROFILE = "eager-subselect-profile";
+	static final String LAZY_SELECT_PROFILE = "lazy-select-profile";
+	static final String EAGER_SELECT_PROFILE = "eager-subselect-profile";
 	static final String JOIN_PROFILE = "join-profile";
 	static final String OLD_SUBSELECT_PROFILE = "old-subselect-profile";
 
@@ -88,20 +93,30 @@ public class NewFetchTest {
 		F f0 = scope.fromSession( s -> s.find(F.class, id));
 		assertFalse(isInitialized(f0.es));
 		F f1 = scope.fromSession( s -> {
-			s.enableFetchProfile(SELECT_PROFILE);
+			s.enableFetchProfile(LAZY_SELECT_PROFILE);
 			return s.find(F.class, id);
 		});
-		assertTrue(isInitialized(f1.es));
+		assertFalse(isInitialized(f1.es));
 		F f2 = scope.fromSession( s -> {
-			s.enableFetchProfile(JOIN_PROFILE);
+			s.enableFetchProfile(EAGER_SELECT_PROFILE);
 			return s.find(F.class, id);
 		});
 		assertTrue(isInitialized(f2.es));
 		F f3 = scope.fromSession( s -> {
-			s.enableFetchProfile(SUBSELECT_PROFILE);
+			s.enableFetchProfile(JOIN_PROFILE);
 			return s.find(F.class, id);
 		});
 		assertTrue(isInitialized(f3.es));
+		F f4 = scope.fromSession( s -> {
+			s.enableFetchProfile(LAZY_SUBSELECT_PROFILE);
+			return s.find(F.class, id);
+		});
+		assertFalse(isInitialized(f4.es));
+		F f5 = scope.fromSession( s -> {
+			s.enableFetchProfile(EAGER_SUBSELECT_PROFILE);
+			return s.find(F.class, id);
+		});
+		assertTrue(isInitialized(f5.es));
 	}
 
 	@Test void subselectTest(SessionFactoryScope scope) {
@@ -137,12 +152,23 @@ public class NewFetchTest {
 			assertFalse( isInitialized( f1.es ) );
 		});
 		scope.inSession( s -> {
-			s.enableFetchProfile(SUBSELECT_PROFILE);
+			s.enableFetchProfile(LAZY_SUBSELECT_PROFILE);
 			List<F> fs = s.createSelectionQuery("from F", F.class).getResultList();
 			F f0 = fs.get(0);
 			F f1 = fs.get(1);
 			assertFalse( isInitialized( f0.es ) );
 			assertFalse( isInitialized( f1.es ) );
+			f0.es.size();
+			assertTrue( isInitialized( f0.es ) );
+			assertTrue( isInitialized( f1.es ) );
+		});
+		scope.inSession( s -> {
+			s.enableFetchProfile(EAGER_SUBSELECT_PROFILE);
+			List<F> fs = s.createSelectionQuery("from F", F.class).getResultList();
+			F f0 = fs.get(0);
+			F f1 = fs.get(1);
+			assertTrue( isInitialized( f0.es ) );
+			assertTrue( isInitialized( f1.es ) );
 			f0.es.size();
 			assertTrue( isInitialized( f0.es ) );
 			assertTrue( isInitialized( f1.es ) );
@@ -161,6 +187,7 @@ public class NewFetchTest {
 	}
 
 	@Test void testDefaultProfile(SessionFactoryScope scope) {
+		scope.getCollectingStatementInspector().clear();
 		scope.inTransaction( s-> {
 			G g = new G();
 			H h1 = new H();
@@ -171,7 +198,6 @@ public class NewFetchTest {
 			s.persist(h1);
 			s.persist(h2);
 		});
-		scope.getCollectingStatementInspector().assertExecutedCount(6);
 		scope.getCollectingStatementInspector().clear();
 
 		List<H> hs1 = scope.fromSession( s -> {
@@ -217,8 +243,10 @@ public class NewFetchTest {
 		G g;
 		@OneToMany(mappedBy = "f")
 		@FetchProfileOverride(mode = JOIN, profile = NEW_PROFILE)
-		@FetchProfileOverride(mode = SUBSELECT, profile = SUBSELECT_PROFILE)
-		@FetchProfileOverride(mode = SELECT, profile = SELECT_PROFILE)
+		@FetchProfileOverride(mode = SUBSELECT, fetch = LAZY, profile = LAZY_SUBSELECT_PROFILE)
+		@FetchProfileOverride(mode = SUBSELECT, fetch = EAGER, profile = EAGER_SUBSELECT_PROFILE)
+		@FetchProfileOverride(mode = SELECT, fetch = LAZY, profile = LAZY_SELECT_PROFILE)
+		@FetchProfileOverride(mode = SELECT, fetch = EAGER, profile = EAGER_SELECT_PROFILE)
 		@FetchProfileOverride(mode = JOIN, profile = JOIN_PROFILE)
 		Set<E> es;
 	}

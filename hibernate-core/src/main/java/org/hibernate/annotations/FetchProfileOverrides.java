@@ -14,10 +14,12 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * A group of {@link FetchProfileOverride}s.
+ *
  * @author Gavin King
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-public @interface Fetches {
-	Fetch[] value();
+public @interface FetchProfileOverrides {
+	FetchProfileOverride[] value();
 }

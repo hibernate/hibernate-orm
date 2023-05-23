@@ -27,8 +27,8 @@ import static org.hibernate.annotations.FetchMode.JOIN;
  * <p>
  * Additional fetch strategy overrides may be added to a named fetch
  * profile by annotating the fetched associations themselves with the
- * {@link Fetch @Fetch} annotation, specifying the
- * {@linkplain Fetch#profile() name of the fetch profile}.
+ * {@link FetchProfileOverride @Fetch} annotation, specifying the
+ * {@linkplain FetchProfileOverride#profile name of the fetch profile}.
  * <p>
  * A named fetch profile must be explicitly enabled in a given session
  * by calling {@link org.hibernate.Session#enableFetchProfile(String)}
@@ -65,11 +65,12 @@ import static org.hibernate.annotations.FetchMode.JOIN;
  * the determination of the fetch graph.
  * <p>
  * A JPA {@link jakarta.persistence.EntityGraph} may be constructed in
- * Java code at runtime. But this amounts to separate, albeit extremely
+ * Java code at runtime. But this amounts to a separate, albeit extremely
  * limited, query facility that competes with JPA's own {@linkplain
  * jakarta.persistence.criteria.CriteriaBuilder criteria queries}.
  * There's no such capability for fetch profiles.
  *
+ * @see FetchProfileOverride
  * @see org.hibernate.Session#enableFetchProfile(String)
  * @see org.hibernate.SessionFactory#containsFetchProfileDefinition(String)
  *
@@ -94,11 +95,17 @@ public @interface FetchProfile {
 	FetchOverride[] fetchOverrides() default {};
 
 	/**
-	 * Overrides the fetching strategy of a particular association in
-	 * the named fetch profile being defined. If {@link #mode} and
-	 * {@link #fetch} are both unspecified, the strategy defaults to
-	 * {@linkplain FetchType#EAGER eager} {@linkplain FetchMode#JOIN join}
-	 * fetching.
+	 * Overrides the fetching strategy for a particular association in
+	 * the named fetch profile being defined. A "strategy" is a fetching
+	 * {@linkplain #mode method}, together with the {@linkplain #fetch
+	 * timing}. If {@link #mode} and {@link #fetch} are both unspecified,
+	 * the strategy defaults to {@linkplain FetchType#EAGER eager}
+	 * {@linkplain FetchMode#JOIN join} fetching.
+	 * <p>
+	 * Additional fetch strategy overrides may be specified using the
+	 * {@link FetchProfileOverride @FetchProfileOverride} annotation.
+	 *
+	 * @see FetchProfileOverride
 	 */
 	@Target({ TYPE, PACKAGE })
 	@Retention(RUNTIME)

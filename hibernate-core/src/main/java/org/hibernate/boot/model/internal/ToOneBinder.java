@@ -15,7 +15,8 @@ import org.hibernate.FetchMode;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.Fetches;
+import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.FetchProfileOverrides;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFound;
@@ -308,14 +309,8 @@ public class ToOneBinder {
 			PropertyData inferredData,
 			PropertyHolder propertyHolder) {
 		handleLazy( toOne, property, inferredData, propertyHolder );
-		handleFetch( toOne, property, propertyHolder, inferredData );
-	}
-
-	private static void handleFetch(ToOne toOne, XProperty property, PropertyHolder propertyHolder, PropertyData inferredData) {
-		if ( !handleHibernateFetchMode( toOne, property, propertyHolder, inferredData ) ) {
-			// Hibernate @Fetch annotation takes precedence
-			toOne.setFetchMode( getFetchMode( getJpaFetchType( property ) ) );
-		}
+		handleFetch( toOne, property );
+		handleFetchProfileOverrides( toOne, property, propertyHolder, inferredData );
 	}
 
 	private static void handleLazy(ToOne toOne, XProperty property, PropertyData inferredData, PropertyHolder propertyHolder) {
@@ -331,46 +326,33 @@ public class ToOneBinder {
 		}
 	}
 
-	private static boolean handleHibernateFetchMode(
+	private static void handleFetchProfileOverrides(
 			ToOne toOne,
 			XProperty property,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData) {
-		if ( property.isAnnotationPresent( Fetch.class ) ) {
-			final Fetch fetch = property.getAnnotation( Fetch.class );
-			if ( fetch.profile().isEmpty() ) {
-				setHibernateFetchMode( toOne, property, fetch.value() );
-				return true;
-			}
-			else {
+		if ( property.isAnnotationPresent( FetchProfileOverride.class ) ) {
+			final FetchProfileOverride fetch = property.getAnnotation( FetchProfileOverride.class );
+			final MetadataBuildingContext context = toOne.getBuildingContext();
+			context.getMetadataCollector()
+					.addSecondPass( new FetchSecondPass( fetch, propertyHolder, inferredData.getPropertyName(), context ) );
+		}
+		else if ( property.isAnnotationPresent( FetchProfileOverrides.class ) ) {
+			for ( FetchProfileOverride fetch: property.getAnnotation( FetchProfileOverrides.class ).value() ) {
 				final MetadataBuildingContext context = toOne.getBuildingContext();
 				context.getMetadataCollector()
 						.addSecondPass( new FetchSecondPass( fetch, propertyHolder, inferredData.getPropertyName(), context ) );
-				return false;
 			}
 		}
-		else if ( property.isAnnotationPresent( Fetches.class ) ) {
-			boolean result = false;
-			for ( Fetch fetch: property.getAnnotation( Fetches.class ).value() ) {
-				if ( fetch.profile().isEmpty() ) {
-					if ( result ) {
-						throw new AnnotationException( "Association '" + getPath( propertyHolder, inferredData )
-								+ "' had multiple '@Fetch' annotations which did not specify a named fetch 'profile'"
-								+ " (only one annotation may be specified for the default profile)" );
-					}
-					setHibernateFetchMode( toOne, property, fetch.value() );
-					result = true;
-				}
-				else {
-					final MetadataBuildingContext context = toOne.getBuildingContext();
-					context.getMetadataCollector()
-							.addSecondPass( new FetchSecondPass( fetch, propertyHolder, inferredData.getPropertyName(), context ) );
-				}
-			}
-			return result;
+	}
+
+	private static void handleFetch(ToOne toOne, XProperty property) {
+		if ( property.isAnnotationPresent( Fetch.class ) ) {
+			// Hibernate @Fetch annotation takes precedence
+			setHibernateFetchMode( toOne, property, property.getAnnotation( Fetch.class ).value() );
 		}
 		else {
-			return false;
+			toOne.setFetchMode( getFetchMode( getJpaFetchType( property ) ) );
 		}
 	}
 

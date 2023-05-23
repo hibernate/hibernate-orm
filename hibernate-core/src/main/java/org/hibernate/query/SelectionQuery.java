@@ -76,6 +76,7 @@ import org.hibernate.graph.GraphSemantic;
  *     {@link #setEntityGraph(EntityGraph, GraphSemantic)}, or
  * <li>enabling a fetch profile, using {@link Session#enableFetchProfile(String)}.
  * </ul>
+ * <p>
  * The special built-in fetch profile named
  * {@value org.hibernate.mapping.FetchProfile#HIBERNATE_DEFAULT_PROFILE} adds
  * a fetch join for every {@link jakarta.persistence.FetchType#EAGER eager}

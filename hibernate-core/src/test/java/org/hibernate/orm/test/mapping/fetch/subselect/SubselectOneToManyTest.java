@@ -109,7 +109,7 @@ public class SubselectOneToManyTest {
 			assertThat( parent.getChildren() ).hasSize( 2 );
 			statementInspector.assertExecutedCount( 3 ); // 1 query for parent, 1 for grandparent, 1 for children
 			statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
-			statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 1 );
+			statementInspector.assertNumberOfOccurrenceInQuery( 2, "join", 0 );
 		} );
 	}
 

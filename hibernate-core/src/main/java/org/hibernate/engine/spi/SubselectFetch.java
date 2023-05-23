@@ -13,15 +13,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 
 /**
  * Encapsulates details related to entities which contain sub-select-fetchable
@@ -151,8 +148,7 @@ public class SubselectFetch {
 
 		public void addKey(EntityKey key, LoadingEntityEntry entry) {
 			if ( batchFetchQueue.getSession().getLoadQueryInfluencers()
-						.hasSubselectLoadableCollections( entry.getDescriptor() )
-					&& shouldAddSubselectFetch( entry ) ) {
+					.hasSubselectLoadableCollections( entry.getDescriptor() ) ) {
 				final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
 						entry.getEntityInitializer().getNavigablePath(),
 						navigablePath -> new SubselectFetch(
@@ -167,24 +163,6 @@ public class SubselectFetch {
 				);
 				subselectFetch.resultingEntityKeys.add( key );
 				batchFetchQueue.addSubselect( key, subselectFetch );
-			}
-		}
-
-		private boolean shouldAddSubselectFetch(LoadingEntityEntry entry) {
-			if ( entry.getEntityInitializer() instanceof EntityResultInitializer ) {
-				return true;
-			}
-			else {
-				final NavigablePath entityInitializerParent = entry.getEntityInitializer().getNavigablePath().getParent();
-
-				// We want to add only the collections of the loading entities
-				for ( DomainResult<?> domainResult : loadingSqlAst.getDomainResultDescriptors() ) {
-					if ( domainResult.getNavigablePath().equals( entityInitializerParent ) ) {
-						return true;
-					}
-				}
-
-				return false;
 			}
 		}
 	}

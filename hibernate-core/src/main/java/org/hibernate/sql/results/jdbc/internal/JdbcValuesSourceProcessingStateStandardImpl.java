@@ -20,6 +20,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -35,6 +37,8 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
  * @author Steve Ebersole
  */
 public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSourceProcessingState {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcValuesSourceProcessingStateStandardImpl.class );
 
 	private final ExecutionContext executionContext;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
@@ -97,7 +101,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		if ( loadingEntityMap == null ) {
 			loadingEntityMap = new HashMap<>();
 		}
-		executionContext.registerLoadingEntityEntry( entityKey, loadingEntry );
 		loadingEntityMap.put( entityKey, loadingEntry );
 	}
 
@@ -135,6 +138,22 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 
 		return loadingCollectionMap.get( key );
+	}
+
+	@Override
+	public void registerSubselect() {
+		if ( loadingEntityMap != null && loadingEntityMap.size() > 1 ) {
+			loadingEntityMap.forEach(
+					(entityKey, loadingEntityEntry) ->
+							executionContext.registerSubselect( entityKey, loadingEntityEntry )
+			);
+		}
+		else {
+			LOG.tracef(
+					"Skipping create subselects because there are fewer than 2 results, so query by key is more efficient.",
+					getClass().getName()
+			);
+		}
 	}
 
 	@Override

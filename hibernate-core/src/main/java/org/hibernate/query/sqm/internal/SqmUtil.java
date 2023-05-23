@@ -9,9 +9,9 @@ package org.hibernate.query.sqm.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,12 +31,8 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -50,12 +46,16 @@ import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -118,7 +118,7 @@ public class SqmUtil {
 		final int queryParameterCount = domainParameterXref.getQueryParameterCount();
 		final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> result = new IdentityHashMap<>( queryParameterCount );
 
-		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter<?>>> entry : domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
+		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter<?>>> entry : domainParameterXref.getQueryParameters().entrySet() ) {
 			final QueryParameterImplementor<?> queryParam = entry.getKey();
 			final List<SqmParameter<?>> sqmParams = entry.getValue();
 
@@ -211,7 +211,7 @@ public class SqmUtil {
 		);
 
 		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter<?>>> entry :
-				domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
+				domainParameterXref.getQueryParameters().entrySet() ) {
 			final QueryParameterImplementor<?> queryParam = entry.getKey();
 			final List<SqmParameter<?>> sqmParameters = entry.getValue();
 
@@ -480,7 +480,7 @@ public class SqmUtil {
 
 		public void process(SqmParameter<?> parameter) {
 			if ( sqmParameters == null ) {
-				sqmParameters = new HashSet<>();
+				sqmParameters = new LinkedHashSet<>();
 			}
 
 			if ( parameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {

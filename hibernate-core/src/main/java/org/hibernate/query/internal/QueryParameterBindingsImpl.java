@@ -12,7 +12,6 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
@@ -167,29 +166,30 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@Override
-	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
-		final MutableCacheKeyImpl mutableCacheKey = new MutableCacheKeyImpl(parameterBindingMap.size());
+	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
+		final MutableCacheKeyImpl mutableCacheKey = new MutableCacheKeyImpl( parameterBindingMap.size() );
+		// We know that parameters are consumed in processing order, this ensures consistency of generated cache keys
+		parameterMetadata.visitParameters( queryParameter -> {
+			final QueryParameterBinding<?> binding = parameterBindingMap.get( queryParameter );
+			assert binding != null : "Found unbound query parameter while generating cache key";
 
-		for ( Map.Entry<QueryParameter<?>, QueryParameterBinding<?>> entry : parameterBindingMap.entrySet() ) {
-			final QueryParameterBinding<?> binding = entry.getValue();
 			final MappingModelExpressible<?> mappingType = determineMappingType(
 					binding,
-					entry.getKey(),
-					persistenceContext
+					queryParameter,
+					session
 			);
-
 			if ( binding.isMultiValued() ) {
 				for ( Object bindValue : binding.getBindValues() ) {
 					assert bindValue != null;
-					mappingType.addToCacheKey( mutableCacheKey, bindValue, persistenceContext );
+					mappingType.addToCacheKey( mutableCacheKey, bindValue, session );
 				}
 			}
 			else {
 				final Object bindValue = binding.getBindValue();
-				mappingType.addToCacheKey( mutableCacheKey, bindValue, persistenceContext );
+				mappingType.addToCacheKey( mutableCacheKey, bindValue, session );
 			}
-		}
-
+		} );
+		// Finally, build the overall cache key
 		return mutableCacheKey.build();
 	}
 

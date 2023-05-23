@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.hibernate.internal.util.collections.LinkedIdentityHashMap;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -45,7 +46,7 @@ public class DomainParameterXref {
 			return empty();
 		}
 
-		final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam = new IdentityHashMap<>();
+		final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam = new LinkedIdentityHashMap<>();
 
 		final int sqmParamCount = parameterResolutions.getSqmParameters().size();
 		final Map<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>( sqmParamCount );
@@ -164,14 +165,6 @@ public class DomainParameterXref {
 			return 0;
 		}
 		return sqmParameters.size();
-	}
-
-	/**
-	 * Get the mapping of all QueryParameters to the List of its corresponding
-	 * SqmParameters
-	 */
-	public Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> getSqmParamByQueryParam() {
-		return sqmParamsByQueryParam;
 	}
 
 	public SqmStatement.ParameterResolutions getParameterResolutions() {

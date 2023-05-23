@@ -49,11 +49,10 @@ public class SchemaValidator {
 		validate( metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
 	}
 
-	@SuppressWarnings("unchecked")
 	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
 		LOG.runningSchemaValidator();
 
-		Map config = new HashMap( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		Map<String, Object> config = new HashMap<>( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
 
 		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
 

@@ -5,8 +5,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -172,13 +172,13 @@ public class NewFetchTest {
 		@Id @GeneratedValue
 		Long id;
 		@ManyToOne(fetch = LAZY)
-		@Fetch(value = JOIN, profile = NEW_PROFILE)
+		@FetchProfileOverride(mode = JOIN, profile = NEW_PROFILE)
 		G g;
 		@OneToMany(mappedBy = "f")
-		@Fetch(value = JOIN, profile = NEW_PROFILE)
-		@Fetch(value = SUBSELECT, profile = SUBSELECT_PROFILE)
-		@Fetch(value = SELECT, profile = SELECT_PROFILE)
-		@Fetch(value = JOIN, profile = JOIN_PROFILE)
+		@FetchProfileOverride(mode = JOIN, profile = NEW_PROFILE)
+		@FetchProfileOverride(mode = SUBSELECT, profile = SUBSELECT_PROFILE)
+		@FetchProfileOverride(mode = SELECT, profile = SELECT_PROFILE)
+		@FetchProfileOverride(mode = JOIN, profile = JOIN_PROFILE)
 		Set<E> es;
 	}
 	@Entity(name = "G")

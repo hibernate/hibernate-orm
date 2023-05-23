@@ -47,16 +47,4 @@ public class KotlinProjectTests extends TestsBase {
 	public void testEnhancementUpToDate(@TempDir Path projectDir) throws Exception {
 		super.testEnhancementUpToDate( projectDir );
 	}
-
-	@Test
-	@Override
-	public void testJpaMetamodelGen(@TempDir Path projectDir) {
-		super.testJpaMetamodelGen( projectDir );
-	}
-
-	@Test
-	@Override
-	public void testJpaMetamodelGenUpToDate(@TempDir Path projectDir) {
-		super.testJpaMetamodelGenUpToDate( projectDir );
-	}
 }

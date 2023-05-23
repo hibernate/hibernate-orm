@@ -10,6 +10,7 @@ import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.Locale;
 
+import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.spi.EntityKey;
@@ -107,6 +108,21 @@ public class EntityBatchLoaderArrayParam<T>
 		final EntityKey entityKey = session.generateEntityKey( pkValue, getLoadable().getEntityPersister() );
 		//noinspection unchecked
 		return (T) session.getPersistenceContext().getEntity( entityKey );
+	}
+
+	@Override
+	public T load(
+			Object pkValue,
+			Object entityInstance,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		final T entity = load( pkValue, entityInstance, lockOptions, null, session );
+		if ( Hibernate.isInitialized( entity ) ) {
+			return entity;
+		}
+		else {
+			return null;
+		}
 	}
 
 	protected Object[] resolveIdsToInitialize(Object pkValue, SharedSessionContractImplementor session) {

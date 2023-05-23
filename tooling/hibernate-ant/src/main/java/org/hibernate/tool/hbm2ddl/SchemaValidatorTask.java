@@ -53,7 +53,7 @@ import org.apache.tools.ant.types.FileSet;
  * @author Gavin King
  */
 public class SchemaValidatorTask extends MatchingTask {
-	private List<FileSet> fileSets = new LinkedList<>();
+	private final List<FileSet> fileSets = new LinkedList<>();
 
 	private File propertiesFile;
 	private File configurationFile;
@@ -62,7 +62,6 @@ public class SchemaValidatorTask extends MatchingTask {
 	private String physicalNamingStrategy = null;
 
 
-	@SuppressWarnings("UnusedDeclaration")
 	public void addFileset(FileSet fileSet) {
 		fileSets.add( fileSet );
 	}
@@ -93,17 +92,14 @@ public class SchemaValidatorTask extends MatchingTask {
 		this.configurationFile = configurationFile;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	public void setNamingStrategy(String namingStrategy) {
 		DeprecationLogger.DEPRECATION_LOGGER.logDeprecatedNamingStrategyAntArgument();
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	public void setImplicitNamingStrategy(String implicitNamingStrategy) {
 		this.implicitNamingStrategy = implicitNamingStrategy;
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
 	public void setPhysicalNamingStrategy(String physicalNamingStrategy) {
 		this.physicalNamingStrategy = physicalNamingStrategy;
 	}
@@ -182,9 +178,8 @@ public class SchemaValidatorTask extends MatchingTask {
 	private String[] collectFiles() {
 		List<String> files = new ArrayList<>();
 
-		for ( Object fileSet : fileSets ) {
-			final FileSet fs = (FileSet) fileSet;
-			final DirectoryScanner ds = fs.getDirectoryScanner( getProject() );
+		for ( FileSet fileSet : fileSets ) {
+			final DirectoryScanner ds = fileSet.getDirectoryScanner( getProject() );
 
 			for ( String dsFile : ds.getIncludedFiles() ) {
 				File f = new File( dsFile );
@@ -198,7 +193,6 @@ public class SchemaValidatorTask extends MatchingTask {
 		return ArrayHelper.toStringArray( files );
 	}
 
-	@SuppressWarnings("deprecation")
 	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		if ( implicitNamingStrategy != null ) {

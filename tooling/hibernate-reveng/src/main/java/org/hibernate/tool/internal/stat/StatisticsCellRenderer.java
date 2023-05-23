@@ -8,7 +8,6 @@ import javax.swing.JLabel;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
-import org.hibernate.stat.internal.CategorizedStatistics;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
@@ -33,11 +32,6 @@ public class StatisticsCellRenderer extends DefaultTreeCellRenderer {
 			tooltip = stats.toString();
 		}
 		
-		if(value instanceof CategorizedStatistics) {
-			CategorizedStatistics stats = (CategorizedStatistics) value;
-			text = stats.getCategoryName();
-			
-		}
 		if(value instanceof EntityStatistics) {
 			//EntityStatistics stats = (EntityStatistics) value;
 			

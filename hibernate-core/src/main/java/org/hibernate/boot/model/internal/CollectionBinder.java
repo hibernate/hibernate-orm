@@ -1463,7 +1463,6 @@ public abstract class CollectionBinder {
 					.addSecondPass( new FetchSecondPass( fetch, propertyHolder, propertyName, buildingContext ) );
 		}
 		else if ( property.isAnnotationPresent( FetchProfileOverrides.class ) ) {
-			boolean result = false;
 			for ( FetchProfileOverride fetch: property.getAnnotation( FetchProfileOverrides.class ).value() ) {
 				buildingContext.getMetadataCollector()
 						.addSecondPass( new FetchSecondPass( fetch, propertyHolder, propertyName, buildingContext ) );

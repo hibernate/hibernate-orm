@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
-@DomainModel(annotatedClasses = {NewFetchTest.class,NewFetchTest.E.class, NewFetchTest.F.class, NewFetchTest.G.class})
+@DomainModel(annotatedClasses = {NewFetchTest.class,NewFetchTest.E.class, NewFetchTest.F.class, NewFetchTest.G.class, NewFetchTest.H.class})
 @FetchProfile(name = NewFetchTest.NEW_PROFILE)
 @FetchProfile(name = NewFetchTest.OLD_PROFILE,
 		fetchOverrides = @FetchProfile.FetchOverride(entity = NewFetchTest.E.class, association = "f"))
@@ -160,6 +160,47 @@ public class NewFetchTest {
 		});
 	}
 
+	@Test void testDefaultProfile(SessionFactoryScope scope) {
+		scope.inTransaction( s-> {
+			G g = new G();
+			H h1 = new H();
+			h1.g = g;
+			H h2 = new H();
+			h2.g = g;
+			s.persist(g);
+			s.persist(h1);
+			s.persist(h2);
+		});
+		scope.getCollectingStatementInspector().assertExecutedCount(6);
+		scope.getCollectingStatementInspector().clear();
+
+		List<H> hs1 = scope.fromSession( s -> {
+			return s.createSelectionQuery("from H", H.class).getResultList();
+		});
+		assertTrue( isInitialized( hs1.get(0).g ) );
+		scope.getCollectingStatementInspector().assertExecutedCount(2);
+		scope.getCollectingStatementInspector().assertNumberOfJoins(0, 0);
+		scope.getCollectingStatementInspector().assertNumberOfJoins(1, 0);
+
+		scope.getCollectingStatementInspector().clear();
+		List<H> hs2 = scope.fromSession( s -> {
+			s.enableFetchProfile( org.hibernate.mapping.FetchProfile.HIBERNATE_DEFAULT_PROFILE );
+			return s.createSelectionQuery("from H", H.class).getResultList();
+		});
+		assertTrue( isInitialized( hs2.get(0).g ) );
+		scope.getCollectingStatementInspector().assertExecutedCount(1);
+		scope.getCollectingStatementInspector().assertNumberOfJoins(0,1);
+
+		scope.getCollectingStatementInspector().clear();
+		List<H> hs3 = scope.fromSession( s -> {
+			s.enableFetchProfile("test");
+			return s.createSelectionQuery("from H", H.class).getResultList();
+		});
+		assertTrue( isInitialized( hs3.get(0).g ) );
+		scope.getCollectingStatementInspector().assertExecutedCount(1);
+		scope.getCollectingStatementInspector().assertNumberOfJoins(0,1);
+	}
+
 	@Entity(name = "E")
 	static class E {
 		@Id @GeneratedValue
@@ -185,5 +226,14 @@ public class NewFetchTest {
 	static class G {
 		@Id @GeneratedValue
 		Long id;
+	}
+
+	@FetchProfile(name = "test")
+	@Entity(name = "H")
+	static class H {
+		@Id @GeneratedValue
+		Long id;
+		@FetchProfileOverride(profile = "test", mode = JOIN)
+		@ManyToOne G g;
 	}
 }

@@ -130,7 +130,6 @@ Of these, you should almost always use outer join fetching.
 === Batch fetching and subselect fetching
 
 Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
-Later, we'll see how we can use <<fetch-profiles,fetch profiles>> to do this more selectively.
 
 .Configuration settings to enable batch and subselect fetching
 [cols="35,~"]
@@ -141,13 +140,13 @@ Later, we'll see how we can use <<fetch-profiles,fetch profiles>> to do this mor
 | `hibernate.use_subselect_fetch` | `true` to enable subselect fetching
 |===
 
-That's all there is to it.
-Too easy, right?
+Alternatively, we can enable one or the other in a given session:
 
-Sadly, that's not the end of the story.
-While batch fetching might _mitigate_ problems involving N+1 selects, it won't solve them.
-The truly correct solution is to fetch associations using joins.
-Batch fetching (or subselect fetching) can only be the _best_ solution in rare cases where outer join fetching would result in a cartesian product and a huge result set.
+[source,java]
+----
+session.setFetchBatchSize(5);
+session.setSubselectFetchingEnabled(true);
+----
 
 [TIP]
 ====
@@ -160,15 +159,24 @@ Set<Author> authors;
 Note that `@Fetch(SUBSELECT)` is equivalent to `@Fetch(SELECT)`, except after execution of a
 HQL or criteria query.
 
-We'll see more of `@Fetch` when we discuss <<fetch-profiles,fetch profiles>>.
+Later, we'll see how we can use <<fetch-profiles,fetch profiles>> to do this even more selectively.
 ====
+
+That's all there is to it.
+Too easy, right?
+
+Sadly, that's not the end of the story.
+While batch fetching might _mitigate_ problems involving N+1 selects, it won't solve them.
+The truly correct solution is to fetch associations using joins.
+Batch fetching (or subselect fetching) can only be the _best_ solution in rare cases where outer join fetching would result in a cartesian product and a huge result set.
 
 Batch fetching and subselect fetching have one important characteristic in common: they can be performed _lazily_.
 
 [[join-fetch]]
-==== Join fetching
+=== Join fetching
 
 Unfortunately, outer join fetching, by nature, simply can't be lazy.
+So:
 
 TIP: Avoid the use of lazy fetching, which is often the source of N+1 selects.
 

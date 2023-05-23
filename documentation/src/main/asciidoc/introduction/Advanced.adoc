@@ -721,11 +721,11 @@ class Book {
     ...
 
     @ManyToOne(fetch = LAZY)
-    @Fetch(profile = "EagerBook", value = JOIN)
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
     Publisher publisher;
 
     @ManyToMany
-    @Fetch(profile = "EagerBook", value = JOIN)
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
     Set<Author> authors;
 
 	...
@@ -738,7 +738,7 @@ class Author {
     ...
 
     @OneToOne
-    @Fetch(profile = "EagerBook", value = JOIN)
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
     Person person;
 
     ...
@@ -756,12 +756,12 @@ class Book {
     ...
 
     @OneToOne
-    @Fetch(profile = "EagerBook", value = JOIN)
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
     Person person;
 
     @ManyToMany
-    @Fetch(profile = "EagerBook", value = JOIN)
-    @Fetch(profile = "BookWithAuthorsBySubselect", value = SUBSELECT)
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
+    @FetchProfileOverride(profile = "BookWithAuthorsBySubselect", mode = SUBSELECT)
     Set<Author> authors;
 
 	...
@@ -783,7 +783,7 @@ But the format of this annotation is _even worse_ than the format of the `@Fetch
 
 | `@FetchProfile` | Declares a named fetch profile, optionally including a list of ``@FetchOverride``s
 | `@FetchProfile.FetchOverride` | Declares a fetch strategy override as part of the `@FetchProfile` declaration
-| `@Fetch` | Specifies the fetch strategy for the annotated association, in a given fetch profile
+| `@FetchProfileOverride` | Specifies the fetch strategy for the annotated association, in a given fetch profile
 |===
 
 A fetch profile must be explicitly enabled for a given session:
@@ -806,3 +806,18 @@ But Hibernate offers alternatives that we think are more compelling most of the 
 
 The one and only advantage unique to fetch profiles is that they let us very selectively request subselect fetching.
 We can't do that with entity graphs, and we can't do it with HQL.
+
+[TIP]
+====
+There's a special built-in fetch profile named `org.hibernate.defaultProfile` which is defined as the profile with `@FetchProfileOverride(mode=JOIN)` applied to every eager `@ManyToOne` or `@OneToOne` association.
+If you enable this profile:
+
+[source,java]
+----
+session.enableFetchProfile("org.hibernate.defaultProfile");
+----
+
+Then ``outer join``s for such associations will _automatically_ be added to every HQL or criteria query.
+This is nice if you can't be bothered typing out those ``join fetch``es explicitly.
+And in principle it even helps partially mitigate the <<many-to-one,problem>> of JPA having specified the wrong default for the `fetch` member of `@ManyToOne`.
+====

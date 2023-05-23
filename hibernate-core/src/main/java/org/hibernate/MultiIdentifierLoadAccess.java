@@ -36,15 +36,16 @@ public interface MultiIdentifierLoadAccess<T> {
 	 */
 	MultiIdentifierLoadAccess<T> with(CacheMode cacheMode);
 
-	default MultiIdentifierLoadAccess<T> fetching(RootGraph<T> graph) {
+	default MultiIdentifierLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
 	}
-	default MultiIdentifierLoadAccess<T> loading(RootGraph<T> graph) {
+
+	default MultiIdentifierLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
 	/**
-	 * @deprecated use {@link #loading}
+	 * @deprecated use {@link #withLoadGraph}
 	 */
 	@Deprecated(since = "6.3")
 	default MultiIdentifierLoadAccess<T> with(RootGraph<T> graph) {

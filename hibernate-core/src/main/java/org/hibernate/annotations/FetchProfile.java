@@ -27,8 +27,9 @@ import static org.hibernate.annotations.FetchMode.JOIN;
  * <p>
  * Additional fetch strategy overrides may be added to a named fetch
  * profile by annotating the fetched associations themselves with the
- * {@link FetchProfileOverride @Fetch} annotation, specifying the
- * {@linkplain FetchProfileOverride#profile name of the fetch profile}.
+ * {@link FetchProfileOverride @FetchProfileOverride} annotation,
+ * specifying the {@linkplain FetchProfileOverride#profile name of the
+ * fetch profile}.
  * <p>
  * A named fetch profile must be explicitly enabled in a given session
  * by calling {@link org.hibernate.Session#enableFetchProfile(String)}

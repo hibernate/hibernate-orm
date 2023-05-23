@@ -1045,6 +1045,8 @@ public interface AvailableSettings {
 	 * By default, Hibernate only uses subselect fetching for collections
 	 * explicitly annotated {@code @Fetch(SUBSELECT)}.
 	 *
+	 * @since 6.3
+	 *
 	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
 	 * @see org.hibernate.Session#setSubselectFetchingEnabled(boolean)
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applySubselectFetchEnabled(boolean)

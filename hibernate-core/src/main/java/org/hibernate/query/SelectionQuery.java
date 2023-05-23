@@ -67,6 +67,20 @@ import org.hibernate.graph.GraphSemantic;
  *     {@link #setParameter(int, Object)} allow arguments to be bound to named
  *     and ordinal parameters defined by the query.
  * </ul>
+ * <p>
+ * A query may have explicit <em>fetch joins</em>, specified using the syntax
+ * {@code join fetch} in HQL, or via {@link jakarta.persistence.criteria.From#fetch}
+ * in the criteria API. Additional fetch joins may be added by:
+ * <ul>
+ * <li>setting an {@link EntityGraph} by calling
+ *     {@link #setEntityGraph(EntityGraph, GraphSemantic)}, or
+ * <li>enabling a fetch profile, using {@link Session#enableFetchProfile(String)}.
+ * </ul>
+ * The special built-in fetch profile named
+ * {@value org.hibernate.mapping.FetchProfile#HIBERNATE_DEFAULT_PROFILE} adds
+ * a fetch join for every {@link jakarta.persistence.FetchType#EAGER eager}
+ * {@code @ManyToOne} or {@code @OneToOne} association belonging to an entity
+ * returned by the query.
  *
  * @author Steve Ebersole
  */
@@ -193,6 +207,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * <p>
 	 * This is an alternative way to specify the associations which
 	 * should be fetched as part of the initial query.
+	 *
+	 * @since 6.3
 	 */
 	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
 

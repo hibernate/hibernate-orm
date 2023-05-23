@@ -7,6 +7,8 @@
 package org.hibernate.annotations;
 
 
+import org.hibernate.Incubating;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -62,6 +64,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Gavin King
  */
+@Incubating
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface View {

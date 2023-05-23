@@ -22,8 +22,8 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -38,10 +38,8 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
@@ -108,17 +106,17 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public void registerTreat(TableGroup tableGroup, EntityDomainType<?> treatType) {
+	public void registerTreatedFrom(SqmFrom<?, ?> sqmFrom) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void registerTreatUsage(TableGroup tableGroup, EntityDomainType<?> treatType) {
+	public void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Map<TableGroup, Map<EntityDomainType<?>, Boolean>> getTreatRegistrations() {
+	public Map<SqmFrom<?, ?>, Boolean> getFromRegistrations() {
 		return Collections.emptyMap();
 	}
 

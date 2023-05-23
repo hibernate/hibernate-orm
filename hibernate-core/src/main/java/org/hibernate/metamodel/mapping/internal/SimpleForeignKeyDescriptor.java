@@ -224,6 +224,17 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart) {
+		return new SimpleForeignKeyDescriptor(
+				keySide.getModelPart(),
+				(BasicValuedModelPart) targetPart,
+				refersToPrimaryKey,
+				hasConstraint,
+				false
+		);
+	}
+
+	@Override
 	public DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
 			TableGroup targetTableGroup,

@@ -616,14 +616,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private void collectSelectableOwners(LinkedHashMap<String, Map<String, SelectableMapping>> selectables) {
-		if ( isAbstract() ) {
-			for ( EntityMappingType subMappingType : getSubMappingTypes() ) {
-				if ( !subMappingType.isAbstract() ) {
-					( (UnionSubclassEntityPersister) subMappingType ).collectSelectableOwners( selectables );
-				}
-			}
-		}
-		else {
+		if ( !isAbstract() ) {
 			final SelectableConsumer selectableConsumer = (i, selectable) -> {
 				Map<String, SelectableMapping> selectableMapping = selectables.computeIfAbsent(
 						selectable.getSelectionExpression(),
@@ -646,11 +639,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final int size = attributeMappings.size();
 			for ( int i = 0; i < size; i++ ) {
 				attributeMappings.get( i ).forEachSelectable( selectableConsumer );
-			}
-			for ( EntityMappingType subMappingType : getSubMappingTypes() ) {
-				if ( !subMappingType.isAbstract() ) {
-					( (UnionSubclassEntityPersister) subMappingType ).collectSelectableOwners( selectables );
-				}
 			}
 		}
 	}

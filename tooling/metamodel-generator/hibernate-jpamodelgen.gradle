@@ -27,8 +27,8 @@ dependencies {
     xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 
     testImplementation project( ':hibernate-core' )
-
     testImplementation jakartaLibs.validation
+    testImplementation jakartaLibs.annotation
 }
 
 sourceSets.main {

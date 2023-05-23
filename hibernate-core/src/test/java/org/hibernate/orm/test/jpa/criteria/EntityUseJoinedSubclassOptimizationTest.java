@@ -55,35 +55,35 @@ public class EntityUseJoinedSubclassOptimizationTest {
 							"select " +
 									"t1_0.id," +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end," +
-									"t1_6.seats," +
-									"t1_1.nr," +
-									"t1_5.doors," +
-									"t1_2.familyName," +
-									"t1_3.architectName," +
+									"t1_1.seats," +
+									"t1_2.nr," +
 									"t1_3.doors," +
-									"t1_4.name " +
+									"t1_4.familyName," +
+									"t1_5.architectName," +
+									"t1_5.doors," +
+									"t1_6.name " +
 									"from Thing t1_0 " +
-									"join Building t1_1 on t1_0.id=t1_1.id " +
-									"join House t1_2 on t1_0.id=t1_2.id " +
-									"left join Skyscraper t1_3 on t1_0.id=t1_3.id " +
-									"left join Vehicle t1_4 on t1_0.id=t1_4.id " +
-									"left join Car t1_5 on t1_0.id=t1_5.id " +
-									"left join Airplane t1_6 on t1_0.id=t1_6.id " +
+									"left join Airplane t1_1 on t1_0.id=t1_1.id " +
+									"join Building t1_2 on t1_0.id=t1_2.id " +
+									"left join Car t1_3 on t1_0.id=t1_3.id " +
+									"join House t1_4 on t1_0.id=t1_4.id " +
+									"left join Skyscraper t1_5 on t1_0.id=t1_5.id " +
+									"left join Vehicle t1_6 on t1_0.id=t1_6.id " +
 									"where " +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end=2",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
@@ -160,35 +160,35 @@ public class EntityUseJoinedSubclassOptimizationTest {
 							"select " +
 									"t1_0.id," +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end," +
-									"t1_6.seats," +
-									"t1_1.nr," +
-									"t1_5.doors," +
-									"t1_2.familyName," +
-									"t1_3.architectName," +
+									"t1_1.seats," +
+									"t1_2.nr," +
 									"t1_3.doors," +
-									"t1_4.name " +
+									"t1_4.familyName," +
+									"t1_5.architectName," +
+									"t1_5.doors," +
+									"t1_6.name " +
 									"from Thing t1_0 " +
-									"left join Building t1_1 on t1_0.id=t1_1.id " +
-									"left join House t1_2 on t1_0.id=t1_2.id " +
-									"left join Skyscraper t1_3 on t1_0.id=t1_3.id " +
-									"left join Vehicle t1_4 on t1_0.id=t1_4.id " +
-									"left join Car t1_5 on t1_0.id=t1_5.id " +
-									"left join Airplane t1_6 on t1_0.id=t1_6.id " +
+									"left join Airplane t1_1 on t1_0.id=t1_1.id " +
+									"left join Building t1_2 on t1_0.id=t1_2.id " +
+									"left join Car t1_3 on t1_0.id=t1_3.id " +
+									"left join House t1_4 on t1_0.id=t1_4.id " +
+									"left join Skyscraper t1_5 on t1_0.id=t1_5.id " +
+									"left join Vehicle t1_6 on t1_0.id=t1_6.id " +
 									"where " +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end!=2",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
@@ -209,35 +209,35 @@ public class EntityUseJoinedSubclassOptimizationTest {
 							"select " +
 									"t1_0.id," +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end," +
-									"t1_6.seats," +
-									"t1_1.nr," +
-									"t1_5.doors," +
-									"t1_2.familyName," +
-									"t1_3.architectName," +
+									"t1_1.seats," +
+									"t1_2.nr," +
 									"t1_3.doors," +
-									"t1_4.name " +
+									"t1_4.familyName," +
+									"t1_5.architectName," +
+									"t1_5.doors," +
+									"t1_6.name " +
 									"from Thing t1_0 " +
-									"left join Building t1_1 on t1_0.id=t1_1.id " +
-									"left join House t1_2 on t1_0.id=t1_2.id " +
-									"left join Skyscraper t1_3 on t1_0.id=t1_3.id " +
-									"left join Vehicle t1_4 on t1_0.id=t1_4.id " +
-									"left join Car t1_5 on t1_0.id=t1_5.id " +
-									"left join Airplane t1_6 on t1_0.id=t1_6.id " +
+									"left join Airplane t1_1 on t1_0.id=t1_1.id " +
+									"left join Building t1_2 on t1_0.id=t1_2.id " +
+									"left join Car t1_3 on t1_0.id=t1_3.id " +
+									"left join House t1_4 on t1_0.id=t1_4.id " +
+									"left join Skyscraper t1_5 on t1_0.id=t1_5.id " +
+									"left join Vehicle t1_6 on t1_0.id=t1_6.id " +
 									"where " +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end in (2,5)",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
@@ -258,35 +258,35 @@ public class EntityUseJoinedSubclassOptimizationTest {
 							"select " +
 									"t1_0.id," +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end," +
-									"t1_6.seats," +
-									"t1_1.nr," +
-									"t1_5.doors," +
-									"t1_2.familyName," +
-									"t1_3.architectName," +
+									"t1_1.seats," +
+									"t1_2.nr," +
 									"t1_3.doors," +
-									"t1_4.name " +
+									"t1_4.familyName," +
+									"t1_5.architectName," +
+									"t1_5.doors," +
+									"t1_6.name " +
 									"from Thing t1_0 " +
-									"join Building t1_1 on t1_0.id=t1_1.id " +
-									"left join House t1_2 on t1_0.id=t1_2.id " +
-									"left join Skyscraper t1_3 on t1_0.id=t1_3.id " +
-									"left join Vehicle t1_4 on t1_0.id=t1_4.id " +
-									"left join Car t1_5 on t1_0.id=t1_5.id " +
-									"left join Airplane t1_6 on t1_0.id=t1_6.id " +
+									"left join Airplane t1_1 on t1_0.id=t1_1.id " +
+									"join Building t1_2 on t1_0.id=t1_2.id " +
+									"left join Car t1_3 on t1_0.id=t1_3.id " +
+									"left join House t1_4 on t1_0.id=t1_4.id " +
+									"left join Skyscraper t1_5 on t1_0.id=t1_5.id " +
+									"left join Vehicle t1_6 on t1_0.id=t1_6.id " +
 									"where " +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end in (2,3)",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
@@ -307,35 +307,35 @@ public class EntityUseJoinedSubclassOptimizationTest {
 							"select " +
 									"t1_0.id," +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end," +
-									"t1_6.seats," +
-									"t1_1.nr," +
-									"t1_5.doors," +
-									"t1_2.familyName," +
-									"t1_3.architectName," +
+									"t1_1.seats," +
+									"t1_2.nr," +
 									"t1_3.doors," +
-									"t1_4.name " +
+									"t1_4.familyName," +
+									"t1_5.architectName," +
+									"t1_5.doors," +
+									"t1_6.name " +
 									"from Thing t1_0 " +
-									"left join Building t1_1 on t1_0.id=t1_1.id " +
-									"left join House t1_2 on t1_0.id=t1_2.id " +
-									"left join Skyscraper t1_3 on t1_0.id=t1_3.id " +
-									"left join Vehicle t1_4 on t1_0.id=t1_4.id " +
-									"left join Car t1_5 on t1_0.id=t1_5.id " +
-									"left join Airplane t1_6 on t1_0.id=t1_6.id " +
+									"left join Airplane t1_1 on t1_0.id=t1_1.id " +
+									"left join Building t1_2 on t1_0.id=t1_2.id " +
+									"left join Car t1_3 on t1_0.id=t1_3.id " +
+									"left join House t1_4 on t1_0.id=t1_4.id " +
+									"left join Skyscraper t1_5 on t1_0.id=t1_5.id " +
+									"left join Vehicle t1_6 on t1_0.id=t1_6.id " +
 									"where " +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_4.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_3.id is not null then 5 " +
+									"when t1_1.id is not null then 6 " +
+									"when t1_2.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end not in (2,5)",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
@@ -358,29 +358,54 @@ public class EntityUseJoinedSubclassOptimizationTest {
 							"select " +
 									"t1_0.id," +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_1.id is not null then 2 " +
+									"when t1_5.id is not null then 3 " +
+									"when t1_4.id is not null then 5 " +
+									"when t1_2.id is not null then 6 " +
+									"when t1_3.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end," +
-									"t1_6.seats," +
-									"t1_1.nr," +
-									"t1_5.doors," +
-									"t1_2.familyName," +
-									"t1_3.architectName," +
-									"t1_3.doors," +
-									"t1_4.name " +
+									"t1_2.seats," +
+									"t1_3.nr," +
+									"t1_4.doors," +
+									"t1_1.familyName," +
+									"t1_5.architectName," +
+									"t1_5.doors,t1_6.name " +
 									"from Thing t1_0 " +
-									"join Building t1_1 on t1_0.id=t1_1.id " +
-									"join House t1_2 on t1_0.id=t1_2.id " +
-									"left join Skyscraper t1_3 on t1_0.id=t1_3.id " +
-									"left join Vehicle t1_4 on t1_0.id=t1_4.id " +
-									"left join Car t1_5 on t1_0.id=t1_5.id " +
-									"left join Airplane t1_6 on t1_0.id=t1_6.id " +
+									"left join House t1_1 on t1_0.id=t1_1.id " +
+									"left join Airplane t1_2 on t1_0.id=t1_2.id " +
+									"left join Building t1_3 on t1_0.id=t1_3.id " +
+									"left join Car t1_4 on t1_0.id=t1_4.id " +
+									"left join Skyscraper t1_5 on t1_0.id=t1_5.id " +
+									"left join Vehicle t1_6 on t1_0.id=t1_6.id " +
+									"where t1_1.familyName is not null",
+							sqlStatementInterceptor.getSqlQueries().get( 0 )
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testTreatPathEverywhere(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
+		scope.inTransaction(
+				entityManager -> {
+					sqlStatementInterceptor.clear();
+					entityManager.createSelectionQuery( "select treat(t as House) from Thing t where treat(t as House).familyName is not null" )
+							.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					// We need to join all tables because the EntityResult will create fetches for all subtypes.
+					// See #testEqTypeRestriction() for further explanation
+					assertEquals(
+							"select " +
+									"t1_1.id," +
+									"t1_2.nr," +
+									"t1_1.familyName " +
+									"from Thing t1_0 " +
+									"join House t1_1 on t1_0.id=t1_1.id " +
+									"join Building t1_2 on t1_0.id=t1_2.id " +
 									"where " +
-									"t1_2.familyName is not null",
+									"t1_1.familyName is not null",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
 				}
@@ -400,36 +425,65 @@ public class EntityUseJoinedSubclassOptimizationTest {
 							"select " +
 									"t1_0.id," +
 									"case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
+									"when t1_5.id is not null then 2 " +
+									"when t1_1.id is not null then 3 " +
+									"when t1_4.id is not null then 5 " +
+									"when t1_2.id is not null then 6 " +
+									"when t1_3.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
 									"end," +
-									"t1_6.seats," +
-									"t1_1.nr," +
-									"t1_5.doors," +
-									"t1_2.familyName," +
-									"t1_3.architectName," +
-									"t1_3.doors," +
-									"t1_4.name " +
+									"t1_2.seats," +
+									"t1_3.nr," +
+									"t1_4.doors," +
+									"t1_5.familyName," +
+									"t1_1.architectName," +
+									"t1_1.doors," +
+									"t1_6.name " +
 									"from Thing t1_0 " +
-									"join Building t1_1 on t1_0.id=t1_1.id " +
-									"left join House t1_2 on t1_0.id=t1_2.id " +
-									"join Skyscraper t1_3 on t1_0.id=t1_3.id " +
-									"left join Vehicle t1_4 on t1_0.id=t1_4.id " +
-									"left join Car t1_5 on t1_0.id=t1_5.id " +
-									"left join Airplane t1_6 on t1_0.id=t1_6.id " +
+									"left join Skyscraper t1_1 on t1_0.id=t1_1.id " +
+									"left join Airplane t1_2 on t1_0.id=t1_2.id " +
+									"left join Building t1_3 on t1_0.id=t1_3.id " +
+									"left join Car t1_4 on t1_0.id=t1_4.id " +
+									"left join House t1_5 on t1_0.id=t1_5.id " +
+									"left join Vehicle t1_6 on t1_0.id=t1_6.id " +
 									"where " +
 									"case when case " +
-									"when t1_2.id is not null then 2 " +
-									"when t1_3.id is not null then 3 " +
-									"when t1_5.id is not null then 5 " +
-									"when t1_6.id is not null then 6 " +
-									"when t1_1.id is not null then 1 " +
-									"when t1_4.id is not null then 4 " +
-									"end=3 then t1_3.doors end is not null",
+									"when t1_5.id is not null then 2 " +
+									"when t1_1.id is not null then 3 " +
+									"when t1_4.id is not null then 5 " +
+									"when t1_2.id is not null then 6 " +
+									"when t1_3.id is not null then 1 " +
+									"when t1_6.id is not null then 4 " +
+									"end=3 then t1_1.doors end is not null",
+							sqlStatementInterceptor.getSqlQueries().get( 0 )
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testTreatPathEverywhereSharedColumn(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
+		scope.inTransaction(
+				entityManager -> {
+					sqlStatementInterceptor.clear();
+					entityManager.createSelectionQuery( "select treat(t as Skyscraper) from Thing t where treat(t as Skyscraper).doors is not null" )
+							.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals(
+							"select " +
+									"t1_1.id," +
+									"t1_2.nr," +
+									"t1_1.architectName," +
+									"t1_1.doors " +
+									"from Thing t1_0 " +
+									"join Skyscraper t1_1 on t1_0.id=t1_1.id " +
+									"join Building t1_2 on t1_0.id=t1_2.id " +
+									"where " +
+									"case when case " +
+									"when t1_1.id is not null then 3 " +
+									"when t1_2.id is not null then 1 " +
+									"end=3 then t1_1.doors end is not null",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
 				}

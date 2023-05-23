@@ -239,7 +239,7 @@ public class EntityUseSingleTableOptimizationTest {
 									"t1_0.familyName," +
 									"t1_0.architectName," +
 									"t1_0.name " +
-									"from (select * from Thing t where t.DTYPE='House') t1_0 " +
+									"from Thing t1_0 " +
 									"where " +
 									"t1_0.familyName is not null",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
@@ -267,7 +267,7 @@ public class EntityUseSingleTableOptimizationTest {
 									"t1_0.familyName," +
 									"t1_0.architectName," +
 									"t1_0.name " +
-									"from (select * from Thing t where t.DTYPE='Skyscraper') t1_0 " +
+									"from Thing t1_0 " +
 									"where " +
 									"case when t1_0.DTYPE='Skyscraper' then t1_0.doors end is not null",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )

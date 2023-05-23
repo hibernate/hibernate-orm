@@ -176,6 +176,11 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess);
 
+	/**
+	 * Return a copy of this foreign key descriptor with the target part as given by the argument.
+	 */
+	ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart);
+
 	AssociationKey getAssociationKey();
 
 	boolean hasConstraint();

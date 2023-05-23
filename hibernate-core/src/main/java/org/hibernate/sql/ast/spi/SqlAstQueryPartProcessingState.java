@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.spi;
 import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 
@@ -24,12 +25,19 @@ public interface SqlAstQueryPartProcessingState extends SqlAstProcessingState {
 	 */
 	QueryPart getInflightQueryPart();
 
-	void registerTreat(TableGroup tableGroup, EntityDomainType<?> treatType);
-
-	void registerTreatUsage(TableGroup tableGroup, EntityDomainType<?> treatType);
+	/**
+	 * Registers that the given SqmFrom is treated.
+	 */
+	void registerTreatedFrom(SqmFrom<?, ?> sqmFrom);
 
 	/**
-	 * The treat registrations. The boolean indicates whether the treat is used in the query part.
+	 * Registers that the given SqmFrom was used in an expression and whether to downgrade {@link org.hibernate.persister.entity.EntityNameUse#TREAT} of it.
 	 */
-	Map<TableGroup, Map<EntityDomainType<?>, Boolean>> getTreatRegistrations();
+	void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses);
+
+	/**
+	 * Returns the treated SqmFroms and whether their {@link org.hibernate.persister.entity.EntityNameUse#TREAT}
+	 * should be downgraded to {@link org.hibernate.persister.entity.EntityNameUse#EXPRESSION}.
+	 */
+	Map<SqmFrom<?, ?>, Boolean> getFromRegistrations();
 }

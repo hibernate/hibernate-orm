@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
@@ -20,7 +21,6 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
@@ -36,7 +36,7 @@ public class SqlAstQueryPartProcessingStateImpl
 		implements SqlAstQueryPartProcessingState {
 
 	private final QueryPart queryPart;
-	private final Map<TableGroup, Map<EntityDomainType<?>, Boolean>> treatRegistrations = new HashMap<>();
+	private final Map<SqmFrom<?, ?>, Boolean> sqmFromRegistrations = new HashMap<>();
 	private final boolean deduplicateSelectionItems;
 	private FetchParent nestingFetchParent;
 
@@ -77,27 +77,32 @@ public class SqlAstQueryPartProcessingStateImpl
 	}
 
 	@Override
-	public void registerTreat(TableGroup tableGroup, EntityDomainType<?> treatType) {
-		treatRegistrations.computeIfAbsent( tableGroup, tg -> new HashMap<>() ).put( treatType, Boolean.FALSE );
+	public void registerTreatedFrom(SqmFrom<?, ?> sqmFrom) {
+		sqmFromRegistrations.put( sqmFrom, null );
 	}
 
 	@Override
-	public void registerTreatUsage(TableGroup tableGroup, EntityDomainType<?> treatType) {
-		final Map<EntityDomainType<?>, Boolean> treatUses = treatRegistrations.get( tableGroup );
-		if ( treatUses == null ) {
-			final SqlAstProcessingState parentState = getParentState();
-			if ( parentState instanceof SqlAstQueryPartProcessingState ) {
-				( (SqlAstQueryPartProcessingState) parentState ).registerTreatUsage( tableGroup, treatType );
+	public void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses) {
+		if ( !( sqmFrom instanceof SqmTreatedPath<?, ?> ) ) {
+			if ( !sqmFromRegistrations.containsKey( sqmFrom ) ) {
+				final SqlAstProcessingState parentState = getParentState();
+				if ( parentState instanceof SqlAstQueryPartProcessingState ) {
+					( (SqlAstQueryPartProcessingState) parentState ).registerFromUsage( sqmFrom, downgradeTreatUses );
+				}
+			}
+			else {
+				// If downgrading was once forcibly disabled, don't overwrite that anymore
+				final Boolean currentValue = sqmFromRegistrations.get( sqmFrom );
+				if ( currentValue != Boolean.FALSE ) {
+					sqmFromRegistrations.put( sqmFrom, downgradeTreatUses );
+				}
 			}
 		}
-		else {
-			treatUses.put( treatType, Boolean.TRUE );
-		}
 	}
 
 	@Override
-	public Map<TableGroup, Map<EntityDomainType<?>, Boolean>> getTreatRegistrations() {
-		return treatRegistrations;
+	public Map<SqmFrom<?, ?>, Boolean> getFromRegistrations() {
+		return sqmFromRegistrations;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

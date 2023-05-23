@@ -16,9 +16,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -193,48 +195,128 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-9411")
 	public void testTreatWithRestrictionOnAbstractClass() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		inTransaction(
+				s -> {
+					Greyhound greyhound = new Greyhound();
+					Dachshund dachshund = new Dachshund();
+					s.persist( greyhound );
+					s.persist( dachshund );
 
-		Greyhound greyhound = new Greyhound();
-		Dachshund dachshund = new Dachshund();
-		s.save( greyhound );
-		s.save( dachshund );
+					List results = s.createQuery( "select treat (a as Dog) from Animal a where a.fast = TRUE" ).list();
 
-		List results = s.createQuery( "select treat (a as Dog) from Animal a where a.fast = TRUE" ).list();
-
-		assertEquals( Arrays.asList( greyhound ), results );
-
-		tx.commit();
-		s.close();
+					assertEquals( Arrays.asList( greyhound ), results );
+					s.remove( greyhound );
+					s.remove( dachshund );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-16657")
 	public void testTypeFilterInSubquery() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		inTransaction(
+				s -> {
+					JoinedEntitySubclass2 child1 = new JoinedEntitySubclass2(3, "child1");
+					JoinedEntitySubSubclass2 child2 = new JoinedEntitySubSubclass2(4, "child2");
+					JoinedEntitySubclass root1 = new JoinedEntitySubclass(1, "root1", child1);
+					JoinedEntitySubSubclass root2 = new JoinedEntitySubSubclass(2, "root2", child2);
+					s.persist( child1 );
+					s.persist( child2 );
+					s.persist( root1 );
+					s.persist( root2 );
+				}
+		);
+		inSession(
+				s -> {
+					List<String> results = s.createSelectionQuery(
+							"select (select o.name from j.other o where type(j) = JoinedEntitySubSubclass) from JoinedEntitySubclass j order by j.id",
+							String.class
+					).list();
 
-		JoinedEntitySubclass2 child1 = new JoinedEntitySubclass2(3, "child1");
-		JoinedEntitySubSubclass2 child2 = new JoinedEntitySubSubclass2(4, "child2");
-		JoinedEntitySubclass root1 = new JoinedEntitySubclass(1, "root1", child1);
-		JoinedEntitySubSubclass root2 = new JoinedEntitySubSubclass(2, "root2", child2);
-		s.persist( child1 );
-		s.persist( child2 );
-		s.persist( root1 );
-		s.persist( root2 );
+					assertEquals( 2, results.size() );
+					assertNull( results.get( 0 ) );
+					assertEquals( "child2", results.get( 1 ) );
+				}
+		);
+		inTransaction(
+				s -> {
+					s.createMutationQuery( "update JoinedEntity j set j.other = null" ).executeUpdate();
+					s.createMutationQuery( "delete from JoinedEntity" ).executeUpdate();
+				}
+		);
+	}
 
-		List<String> results = s.createSelectionQuery(
-				"select (select o.name from j.other o where type(j) = JoinedEntitySubSubclass) from JoinedEntitySubclass j order by j.id",
-				String.class
-		).list();
+	@Test
+	@TestForIssue(jiraKey = "HHH-16658")
+	public void testPropagateEntityNameUsesFromDisjunction() {
+		inSession(
+				s -> {
+					s.createSelectionQuery(
+							"select 1 from Animal a where (type(a) <> Dachshund or treat(a as Dachshund).fast) and (type(a) <> Greyhound or treat(a as Greyhound).fast)",
+							Integer.class
+					).list();
+				}
+		);
+	}
 
-		assertEquals( 2, results.size() );
-		assertNull( results.get( 0 ) );
-		assertEquals( "child2", results.get( 1 ) );
+	@Test
+	@TestForIssue(jiraKey = "HHH-16658")
+	public void testPropagateEntityNameUsesFromDisjunction2() {
+		inSession(
+				s -> {
+					s.createSelectionQuery(
+							"select 1 from JoinedEntity j where type(j) <> JoinedEntitySubclass or length(coalesce(treat(j as JoinedEntitySubclass).name,'')) > 1",
+							Integer.class
+					).list();
+				}
+		);
+	}
 
-		tx.commit();
-		s.close();
+	@Test
+	@TestForIssue(jiraKey = "HHH-16657")
+	public void testTreatInSelect() {
+		inTransaction(
+				s -> {
+					JoinedEntitySubclass root1 = new JoinedEntitySubclass(1, "root1");
+					JoinedEntitySubSubclass root2 = new JoinedEntitySubSubclass(2, "root2");
+					s.persist( root1 );
+					s.persist( root2 );
+				}
+		);
+		inSession(
+				s -> {
+					List<String> results = s.createSelectionQuery(
+							"select treat(j as JoinedEntitySubSubclass).name from JoinedEntitySubclass j order by j.id",
+							String.class
+					).list();
+
+					assertEquals( 2, results.size() );
+					assertNull( results.get( 0 ) );
+					assertEquals( "root2", results.get( 1 ) );
+				}
+		);
+		inTransaction(
+				s -> {
+					s.createMutationQuery( "delete from JoinedEntity" ).executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-16571") // Sort of related to that issue
+	public void testJoinSubclassOneToMany() {
+		// Originally, the FK for "others" used the primary key of the root table JoinedEntity
+		// Since we didn't register an entity use, we wrongly pruned that table before.
+		// This was fixed by letting the FK descriptor point to the primary key of JoinedEntitySubclass2,
+		// i.e. the plural attribute declaring type, which has the nice benefit of saving us a join
+		inSession(
+				s -> {
+					s.createSelectionQuery(
+							"select 1 from JoinedEntitySubclass2 s left join s.others o",
+							Integer.class
+					).list();
+				}
+		);
 	}
 
 	@Entity( name = "JoinedEntity" )
@@ -295,6 +377,8 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 	@Entity( name = "JoinedEntitySubclass2" )
 	@Table( name = "JoinedEntitySubclass2" )
 	public static class JoinedEntitySubclass2 extends JoinedEntity {
+		@OneToMany(mappedBy = "other")
+		Set<JoinedEntity> others;
 		public JoinedEntitySubclass2() {
 		}
 

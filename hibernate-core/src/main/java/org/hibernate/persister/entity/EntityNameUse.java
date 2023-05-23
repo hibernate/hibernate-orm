@@ -17,13 +17,14 @@ public final class EntityNameUse {
 	public static final EntityNameUse PROJECTION = new EntityNameUse( UseKind.PROJECTION, true );
 	public static final EntityNameUse EXPRESSION = new EntityNameUse( UseKind.EXPRESSION, true );
 	public static final EntityNameUse TREAT = new EntityNameUse( UseKind.TREAT, true );
+	public static final EntityNameUse BASE_TREAT = new EntityNameUse( UseKind.TREAT, null );
 	public static final EntityNameUse OPTIONAL_TREAT = new EntityNameUse( UseKind.TREAT, false );
 	public static final EntityNameUse FILTER = new EntityNameUse( UseKind.FILTER, true );
 
 	private final UseKind kind;
-	private final boolean requiresRestriction;
+	private final Boolean requiresRestriction;
 
-	private EntityNameUse(UseKind kind, boolean requiresRestriction) {
+	private EntityNameUse(UseKind kind, Boolean requiresRestriction) {
 		this.kind = kind;
 		this.requiresRestriction = requiresRestriction;
 	}
@@ -47,15 +48,27 @@ public final class EntityNameUse {
 	}
 
 	public boolean requiresRestriction() {
-		return requiresRestriction;
+		return requiresRestriction != Boolean.FALSE;
 	}
 
 	public EntityNameUse stronger(EntityNameUse other) {
-		return other == null || kind.isStrongerThan( other.kind ) ? this : get( other.kind );
+		if ( other == null || kind.isStrongerThan( other.kind ) ) {
+			return this;
+		}
+		if ( kind == other.kind && kind == UseKind.TREAT ) {
+			return requiresRestriction == null ? other : this;
+		}
+		return other.kind.isStrongerThan( kind ) ? other : get( other.kind );
 	}
 
 	public EntityNameUse weaker(EntityNameUse other) {
-		return other == null || kind.isWeakerThan( other.kind ) ? this : get( other.kind );
+		if ( other == null || kind.isWeakerThan( other.kind ) ) {
+			return this;
+		}
+		if ( kind == other.kind && kind == UseKind.TREAT ) {
+			return requiresRestriction == null ? other : this;
+		}
+		return other.kind.isWeakerThan( kind ) ? other : get( other.kind );
 	}
 
 	public enum UseKind {

@@ -3519,11 +3519,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void registerAffectingFetchProfile(String fetchProfileName, org.hibernate.engine.profile.Fetch.Style fetchStyle) {
-		registerAffectingFetchProfile( fetchProfileName );
-	}
-
-	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
 		final RootGraphImplementor<?> graph = loadQueryInfluencers.getEffectiveEntityGraph().getGraph();
 		return graph != null && graph.appliesTo( getEntityName() );

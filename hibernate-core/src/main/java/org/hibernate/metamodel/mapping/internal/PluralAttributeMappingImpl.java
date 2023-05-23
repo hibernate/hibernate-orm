@@ -901,9 +901,9 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public void registerAffectingFetchProfile(String fetchProfileName, org.hibernate.engine.profile.Fetch.Style fetchStyle) {
+	public void registerAffectingFetchProfile(String fetchProfileName) {
 		if ( collectionDescriptor instanceof FetchProfileAffectee ) {
-			( (FetchProfileAffectee) collectionDescriptor ).registerAffectingFetchProfile( fetchProfileName, fetchStyle );
+			( (FetchProfileAffectee) collectionDescriptor ).registerAffectingFetchProfile( fetchProfileName);
 		}
 	}
 

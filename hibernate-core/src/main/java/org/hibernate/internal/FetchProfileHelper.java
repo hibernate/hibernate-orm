@@ -8,6 +8,8 @@ package org.hibernate.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
@@ -44,24 +46,24 @@ public class FetchProfileHelper {
 			org.hibernate.mapping.FetchProfile mappingProfile) {
 		final String profileName = mappingProfile.getName();
 		final FetchProfile fetchProfile = new FetchProfile( profileName );
-
 		for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 			// resolve the persister owning the fetch
 			final EntityPersister owner = getEntityPersister( mappingMetamodel, fetchProfile, mappingFetch );
-			( (FetchProfileAffectee) owner ).registerAffectingFetchProfile( profileName, null );
+			( (FetchProfileAffectee) owner ).registerAffectingFetchProfile( profileName);
 
 			final Association association = new Association( owner, mappingFetch.getAssociation() );
-			final Fetch.Style fetchStyle = Fetch.Style.parse( mappingFetch.getStyle() );
+			final FetchStyle fetchStyle = Fetch.Style.forMethod( mappingFetch.getMethod() ).toFetchStyle();
+			final FetchTiming fetchTiming = FetchTiming.forType( mappingFetch.getType() );
 
 			// validate the specified association fetch
 			final ModelPart fetchablePart = owner.findByPath( association.getAssociationPath() );
 			validateFetchablePart( fetchablePart, profileName, association );
 			if ( fetchablePart instanceof FetchProfileAffectee ) {
-				( (FetchProfileAffectee) fetchablePart ).registerAffectingFetchProfile( profileName, fetchStyle );
+				( (FetchProfileAffectee) fetchablePart ).registerAffectingFetchProfile( profileName );
 			}
 
 			// then register the association with the FetchProfile
-			fetchProfile.addFetch( new Fetch( association, fetchStyle ) );
+			fetchProfile.addFetch( new Fetch( association, fetchStyle, fetchTiming ) );
 		}
 		return fetchProfile;
 	}
@@ -86,7 +88,7 @@ public class FetchProfileHelper {
 
 	private static boolean isAssociation(ModelPart fetchablePart) {
 		return fetchablePart instanceof EntityValuedModelPart
-				|| fetchablePart instanceof PluralAttributeMapping;
+			|| fetchablePart instanceof PluralAttributeMapping;
 	}
 
 	private static EntityPersister getEntityPersister(
@@ -95,7 +97,7 @@ public class FetchProfileHelper {
 			org.hibernate.mapping.FetchProfile.Fetch mappingFetch) {
 		final String entityName = mappingMetamodel.getImportedName( mappingFetch.getEntity() );
 		if ( entityName != null ) {
-			EntityPersister persister = mappingMetamodel.getEntityDescriptor( entityName );
+			final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entityName );
 			if ( persister != null ) {
 				return persister;
 			}

@@ -38,6 +38,7 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -7643,20 +7644,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							final FetchProfile enabledFetchProfile = getCreationContext()
 									.getSessionFactory()
 									.getFetchProfile( enabledFetchProfileName );
-							final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole(
-									fetchableRole );
+							final org.hibernate.engine.profile.Fetch profileFetch =
+									enabledFetchProfile.getFetchByRole( fetchableRole );
 
 							if ( profileFetch != null ) {
-								fetchTiming = FetchTiming.IMMEDIATE;
-								joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+								fetchTiming = profileFetch.getTiming();
+								joined = joined || profileFetch.getMethod() == FetchStyle.JOIN;
 								if ( shouldExplicitFetch( maxDepth, fetchable ) ) {
 									explicitFetch = true;
 								}
 
 								if ( currentBagRole != null && fetchable instanceof PluralAttributeMapping ) {
-									final CollectionClassification collectionClassification = ( (PluralAttributeMapping) fetchable ).getMappedType()
-											.getCollectionSemantics()
-											.getCollectionClassification();
+									final CollectionClassification collectionClassification =
+											( (PluralAttributeMapping) fetchable ).getMappedType()
+													.getCollectionSemantics()
+													.getCollectionClassification();
 									if ( collectionClassification == CollectionClassification.BAG ) {
 										// To avoid a MultipleBagFetchException due to fetch profiles in a circular model,
 										// we skip join fetching in case we encounter an existing bag role

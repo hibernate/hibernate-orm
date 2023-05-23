@@ -26,7 +26,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static java.util.Collections.emptySet;
-import static org.hibernate.engine.profile.Fetch.Style.SUBSELECT;
+import static org.hibernate.engine.FetchStyle.SUBSELECT;
 
 /**
  * Centralize all options which can influence the SQL query needed to load an
@@ -318,7 +318,7 @@ public class LoadQueryInfluencers implements Serializable {
 				final FetchProfile fetchProfile = sessionFactory.getFetchProfile( profile );
 				if ( fetchProfile != null ) {
 					final Fetch fetch = fetchProfile.getFetchByRole( persister.getRole() );
-					if ( fetch != null && fetch.getStyle() == SUBSELECT ) {
+					if ( fetch != null && fetch.getMethod() == SUBSELECT) {
 						return true;
 					}
 				}
@@ -347,7 +347,7 @@ public class LoadQueryInfluencers implements Serializable {
 				final FetchProfile fetchProfile = sessionFactory.getFetchProfile( profile );
 				for ( Fetch fetch : fetchProfile.getFetches().values() ) {
 					// TODO: check that it's relevant to this persister??
-					if ( fetch.getStyle() == SUBSELECT ) {
+					if ( fetch.getMethod() == SUBSELECT ) {
 						return true;
 					}
 				}

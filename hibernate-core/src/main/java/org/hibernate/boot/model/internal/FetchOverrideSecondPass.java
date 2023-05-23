@@ -13,7 +13,6 @@ import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
 
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -43,9 +42,12 @@ public class FetchOverrideSecondPass implements SecondPass {
 		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( fetchProfileName );
 		// we already know that the FetchProfile exists and is good to use
 		profile.addFetch(
-				fetch.entity().getName(),
-				fetch.association(),
-				fetch.mode().toString().toLowerCase(Locale.ROOT)
+				new FetchProfile.Fetch(
+						fetch.entity().getName(),
+						fetch.association(),
+						fetch.mode(),
+						fetch.fetch()
+				)
 		);
 	}
 }

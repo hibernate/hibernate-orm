@@ -22,7 +22,6 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-@SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface Graph<J> extends GraphNode<J> {
 
 	/**

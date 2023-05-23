@@ -26,6 +26,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.AccessType;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
@@ -331,18 +332,33 @@ public class ToOneBinder {
 			XProperty property,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData) {
+		final MetadataBuildingContext context = toOne.getBuildingContext();
+		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( property.isAnnotationPresent( FetchProfileOverride.class ) ) {
 			final FetchProfileOverride fetch = property.getAnnotation( FetchProfileOverride.class );
-			final MetadataBuildingContext context = toOne.getBuildingContext();
-			context.getMetadataCollector()
-					.addSecondPass( new FetchSecondPass( fetch, propertyHolder, inferredData.getPropertyName(), context ) );
+			collector.addSecondPass( new FetchSecondPass( fetch, propertyHolder, inferredData.getPropertyName(), context ) );
 		}
 		else if ( property.isAnnotationPresent( FetchProfileOverrides.class ) ) {
 			for ( FetchProfileOverride fetch: property.getAnnotation( FetchProfileOverrides.class ).value() ) {
-				final MetadataBuildingContext context = toOne.getBuildingContext();
-				context.getMetadataCollector()
-						.addSecondPass( new FetchSecondPass( fetch, propertyHolder, inferredData.getPropertyName(), context ) );
+				collector.addSecondPass( new FetchSecondPass( fetch, propertyHolder, inferredData.getPropertyName(), context ) );
 			}
+		}
+		if ( !toOne.isLazy()
+				&& !propertyHolder.isOrWithinEmbeddedId()
+				&& !propertyHolder.isWithinElementCollection()
+				&& !propertyHolder.isInIdClass()
+				// this is a bit of a problem: embeddable classes don't
+				// come with the entity name attached, so we can't
+				// create a Fetch that refers to their fields
+				&& !propertyHolder.isComponent()
+				// not sure exactly what the story is here:
+				&& !collector.isInSecondPass() ) {
+			collector.addSecondPass( new FetchSecondPass(
+					DefaultFetchProfileOverride.INSTANCE,
+					propertyHolder,
+					inferredData.getPropertyName(),
+					context
+			) );
 		}
 	}
 

@@ -7636,7 +7636,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
 					// There is no point in checking the fetch profile if it can't affect this fetchable
-					if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
+//					if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
 						final String fetchableRole = fetchable.getNavigableRole().getFullPath();
 
 						for ( String enabledFetchProfileName : getLoadQueryInfluencers()
@@ -7666,7 +7666,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									}
 								}
 							}
-						}
+//						}
 					}
 				}
 			}

@@ -17,6 +17,7 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.mapping.FetchProfile.HIBERNATE_DEFAULT_PROFILE;
 import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
 
 /**
@@ -42,19 +43,18 @@ public class FetchSecondPass implements SecondPass {
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 
-		//TODO: handle propertyHolder.getPath() !!!!
-
-		// throws MappingException in case the property does not exist
-		buildingContext.getMetadataCollector()
-				.getEntityBinding( propertyHolder.getEntityName() )
-				.getProperty( propertyName );
-
 		FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( fetch.profile() );
 		if ( profile == null ) {
-			throw new AnnotationException( "Property '" + qualify( propertyHolder.getPath(), propertyName )
-					+ "' refers to an unknown fetch profile named '" + fetch.profile() + "'" );
+			if ( fetch.profile().equals( HIBERNATE_DEFAULT_PROFILE ) ) {
+				profile = new FetchProfile( HIBERNATE_DEFAULT_PROFILE, ANNOTATIONS );
+				buildingContext.getMetadataCollector().addFetchProfile( profile );
+			}
+			else {
+				throw new AnnotationException( "Property '" + qualify( propertyHolder.getPath(), propertyName )
+						+ "' refers to an unknown fetch profile named '" + fetch.profile() + "'" );
+			}
 		}
-		else if ( profile.getSource() == ANNOTATIONS ) {
+		if ( profile.getSource() == ANNOTATIONS ) {
 			profile.addFetch(
 					new FetchProfile.Fetch(
 							propertyHolder.getEntityName(),

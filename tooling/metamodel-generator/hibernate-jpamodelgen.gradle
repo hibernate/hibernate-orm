@@ -21,7 +21,6 @@ ext {
 dependencies {
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb
-    implementation jakartaLibs.annotation
 
     xjc jakartaLibs.xjc
     xjc jakartaLibs.jaxb

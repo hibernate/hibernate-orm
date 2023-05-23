@@ -33,6 +33,8 @@ import static org.hibernate.annotations.FetchMode.JOIN;
  *
  * @author Gavin King
  *
+ * @since 6.3
+ *
  * @see FetchMode
  * @see FetchProfile
  * @see FetchProfile.FetchOverride

@@ -15,6 +15,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.FetchStyle.JOIN;
+
 /**
  * The runtime representation of a Hibernate
  * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
@@ -97,7 +99,7 @@ public class FetchProfile {
 
 			// couple of things for which to account in the case of collection
 			// join fetches
-			if ( Fetch.Style.JOIN == fetch.getStyle() ) {
+			if ( fetch.getMethod() == JOIN ) {
 				// first, if this is a bag we need to ignore it if we previously
 				// processed collection join fetches
 				if ( associationType instanceof BagType ) {

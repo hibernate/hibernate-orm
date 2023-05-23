@@ -6,10 +6,13 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.FetchType;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static jakarta.persistence.FetchType.EAGER;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -91,8 +94,11 @@ public @interface FetchProfile {
 	FetchOverride[] fetchOverrides() default {};
 
 	/**
-	 * Overrides the fetching strategy pf a particular association
-	 * in the named fetch profile being defined.
+	 * Overrides the fetching strategy of a particular association in
+	 * the named fetch profile being defined. If {@link #mode} and
+	 * {@link #fetch} are both unspecified, the strategy defaults to
+	 * {@linkplain FetchType#EAGER eager} {@linkplain FetchMode#JOIN join}
+	 * fetching.
 	 */
 	@Target({ TYPE, PACKAGE })
 	@Retention(RUNTIME)
@@ -110,9 +116,15 @@ public @interface FetchProfile {
 		String association();
 
 		/**
-		 * The {@linkplain FetchMode fetching strategy} to apply to
-		 * the association in the fetch profile being defined.
+		 * The {@linkplain FetchMode method} used for fetching the
+		 * association in the fetch profile being defined.
 		 */
 		FetchMode mode() default JOIN;
+
+		/**
+		 * The {@link FetchType timing} of association fetching in
+		 * the fetch profile being defined.
+		 */
+		FetchType fetch() default EAGER;
 	}
 }

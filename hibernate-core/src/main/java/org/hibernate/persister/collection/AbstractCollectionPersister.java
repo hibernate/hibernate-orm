@@ -30,7 +30,6 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -127,6 +126,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -232,7 +232,7 @@ public abstract class AbstractCollectionPersister
 	private CollectionElementLoaderByIndex collectionElementLoaderByIndex;
 
 	private PluralAttributeMapping attributeMapping;
-	private volatile Map<String, Fetch.Style> affectingFetchProfiles;
+	private volatile Set<String> affectingFetchProfiles;
 
 
 	@Deprecated(since = "6.0")
@@ -1556,17 +1556,17 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public void registerAffectingFetchProfile(String fetchProfileName, Fetch.Style fetchStyle) {
+	public void registerAffectingFetchProfile(String fetchProfileName) {
 		if ( affectingFetchProfiles == null ) {
-			affectingFetchProfiles = new HashMap<>();
+			affectingFetchProfiles = new HashSet<>();
 		}
-		affectingFetchProfiles.put( fetchProfileName, fetchStyle );
+		affectingFetchProfiles.add( fetchProfileName );
 	}
 
 	@Override
 	public boolean isAffectedByEnabledFetchProfiles(LoadQueryInfluencers influencers) {
 		if ( affectingFetchProfiles != null && influencers.hasEnabledFetchProfiles() ) {
-			for ( String profileName : affectingFetchProfiles.keySet() ) {
+			for ( String profileName : affectingFetchProfiles ) {
 				if ( influencers.isFetchProfileEnabled( profileName ) ) {
 					return true;
 				}

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
@@ -22,6 +23,7 @@ import org.hibernate.annotations.ConverterRegistration;
 import org.hibernate.annotations.ConverterRegistrations;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistrations;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfile.FetchOverride;
 import org.hibernate.annotations.FetchProfiles;
@@ -852,7 +854,11 @@ public final class AnnotationBinder {
 		final String name = fetchProfile.name();
 		if ( reuseOrCreateFetchProfile( context, name ) ) {
 			for ( FetchOverride fetch : fetchProfile.fetchOverrides() ) {
-				// TODO: validate which modes are valid where
+				if ( fetch.fetch() == FetchType.LAZY && fetch.mode() == FetchMode.JOIN ) {
+					throw new AnnotationException( "Fetch profile '" + name
+							+ "' has a '@FetchOverride' with 'fetch=LAZY' and 'mode=JOIN'"
+							+ " (join fetching is eager by nature)");
+				}
 				context.getMetadataCollector()
 						.addSecondPass( new FetchOverrideSecondPass( name, fetch, context ) );
 			}

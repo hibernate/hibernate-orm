@@ -88,7 +88,6 @@ import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.singletonList;
-import static org.hibernate.engine.profile.Fetch.Style;
 import static org.hibernate.query.results.ResultsHelper.attributeName;
 
 /**
@@ -878,8 +877,8 @@ public class LoaderSelectBuilder {
 							final org.hibernate.engine.profile.Fetch profileFetch =
 									enabledFetchProfile.getFetchByRole( fetchableRole );
 							if ( profileFetch != null ) {
-								fetchTiming = FetchTiming.IMMEDIATE;
-								joined = joined || profileFetch.getStyle() == Style.JOIN;
+								fetchTiming = profileFetch.getTiming();
+								joined = joined || profileFetch.getMethod() == FetchStyle.JOIN;
 								explicitFetch = shouldExplicitFetch( maximumFetchDepth, fetchable, creationState );
 							}
 						}

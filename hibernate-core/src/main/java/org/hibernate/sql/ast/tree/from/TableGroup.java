@@ -193,4 +193,20 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 		}
 		return null;
 	}
+
+	default boolean hasRealJoins() {
+		for ( TableGroupJoin join : getTableGroupJoins() ) {
+			final TableGroup joinedGroup = join.getJoinedGroup();
+			if ( !( joinedGroup instanceof VirtualTableGroup ) || joinedGroup.hasRealJoins() ) {
+				return true;
+			}
+		}
+		for ( TableGroupJoin join : getNestedTableGroupJoins() ) {
+			final TableGroup joinedGroup = join.getJoinedGroup();
+			if ( !( joinedGroup instanceof VirtualTableGroup ) || joinedGroup.hasRealJoins() ) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

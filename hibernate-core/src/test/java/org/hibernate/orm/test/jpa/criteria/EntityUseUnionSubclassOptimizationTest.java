@@ -58,7 +58,7 @@ public class EntityUseUnionSubclassOptimizationTest {
 									"t1_0.architectName," +
 									"t1_0.name " +
 									"from (" +
-									"select id, nr, familyName, null as architectName, null as doors, null as name, null as seats, 2 as clazz_ from House" +
+									"select id, nr, null as name, null as seats, null as architectName, null as doors, familyName, 2 as clazz_ from House" +
 									") t1_0 " +
 									"where " +
 									"t1_0.clazz_=2",
@@ -81,7 +81,7 @@ public class EntityUseUnionSubclassOptimizationTest {
 							"select " +
 									"1 " +
 									"from (" +
-									"select id, nr, null as familyName, null as architectName, null as doors, 1 as clazz_ from Building" +
+									"select id, nr, 1 as clazz_ from Building" +
 									") t1_0 " +
 									"where " +
 									"t1_0.clazz_=1",
@@ -134,15 +134,15 @@ public class EntityUseUnionSubclassOptimizationTest {
 									"t1_0.architectName," +
 									"t1_0.name " +
 									"from (" +
-									"select id, null as nr, null as familyName, null as architectName, null as doors, name, seats, 6 as clazz_ from Airplane " +
+									"select id, null as nr, name, seats, null as architectName, null as doors, null as familyName, 6 as clazz_ from Airplane " +
 									"union all " +
-									"select id, nr, null as familyName, null as architectName, null as doors, null as name, null as seats, 1 as clazz_ from Building " +
+									"select id, nr, null as name, null as seats, null as architectName, null as doors, null as familyName, 1 as clazz_ from Building " +
 									"union all " +
-									"select id, null as nr, null as familyName, null as architectName, doors, name, null as seats, 5 as clazz_ from Car " +
+									"select id, null as nr, name, null as seats, null as architectName, doors, null as familyName, 5 as clazz_ from Car " +
 									"union all " +
-									"select id, nr, null as familyName, architectName, doors, null as name, null as seats, 3 as clazz_ from Skyscraper " +
+									"select id, nr, null as name, null as seats, architectName, doors, null as familyName, 3 as clazz_ from Skyscraper " +
 									"union all " +
-									"select id, null as nr, null as familyName, null as architectName, null as doors, name, null as seats, 4 as clazz_ from Vehicle" +
+									"select id, null as nr, name, null as seats, null as architectName, null as doors, null as familyName, 4 as clazz_ from Vehicle" +
 									") t1_0 " +
 									"where " +
 									"t1_0.clazz_!=2",
@@ -172,9 +172,9 @@ public class EntityUseUnionSubclassOptimizationTest {
 									"t1_0.architectName," +
 									"t1_0.name " +
 									"from (" +
-									"select id, null as nr, null as familyName, null as architectName, doors, name, null as seats, 5 as clazz_ from Car " +
+									"select id, null as nr, name, null as seats, null as architectName, doors, null as familyName, 5 as clazz_ from Car " +
 									"union all " +
-									"select id, nr, familyName, null as architectName, null as doors, null as name, null as seats, 2 as clazz_ from House" +
+									"select id, nr, null as name, null as seats, null as architectName, null as doors, familyName, 2 as clazz_ from House" +
 									") t1_0 " +
 									"where " +
 									"t1_0.clazz_ in (2,5)",
@@ -204,9 +204,9 @@ public class EntityUseUnionSubclassOptimizationTest {
 									"t1_0.architectName," +
 									"t1_0.name " +
 									"from (" +
-									"select id, nr, familyName, null as architectName, null as doors, null as name, null as seats, 2 as clazz_ from House " +
+									"select id, nr, null as name, null as seats, null as architectName, null as doors, familyName, 2 as clazz_ from House " +
 									"union all " +
-									"select id, nr, null as familyName, architectName, doors, null as name, null as seats, 3 as clazz_ from Skyscraper" +
+									"select id, nr, null as name, null as seats, architectName, doors, null as familyName, 3 as clazz_ from Skyscraper" +
 									") t1_0 " +
 									"where " +
 									"t1_0.clazz_ in (2,3)",
@@ -236,13 +236,13 @@ public class EntityUseUnionSubclassOptimizationTest {
 									"t1_0.architectName," +
 									"t1_0.name " +
 									"from (" +
-									"select id, null as nr, null as familyName, null as architectName, null as doors, name, seats, 6 as clazz_ from Airplane " +
+									"select id, null as nr, name, seats, null as architectName, null as doors, null as familyName, 6 as clazz_ from Airplane " +
 									"union all " +
-									"select id, nr, null as familyName, null as architectName, null as doors, null as name, null as seats, 1 as clazz_ from Building " +
+									"select id, nr, null as name, null as seats, null as architectName, null as doors, null as familyName, 1 as clazz_ from Building " +
 									"union all " +
-									"select id, nr, null as familyName, architectName, doors, null as name, null as seats, 3 as clazz_ from Skyscraper " +
+									"select id, nr, null as name, null as seats, architectName, doors, null as familyName, 3 as clazz_ from Skyscraper " +
 									"union all " +
-									"select id, null as nr, null as familyName, null as architectName, null as doors, name, null as seats, 4 as clazz_ from Vehicle" +
+									"select id, null as nr, name, null as seats, null as architectName, null as doors, null as familyName, 4 as clazz_ from Vehicle" +
 									") t1_0 " +
 									"where " +
 									"t1_0.clazz_ not in (2,5)",
@@ -272,7 +272,42 @@ public class EntityUseUnionSubclassOptimizationTest {
 									"t1_0.architectName," +
 									"t1_0.name " +
 									"from (" +
-									"select id, nr, familyName, null as architectName, null as doors, null as name, null as seats, 2 as clazz_ from House" +
+									"select id, nr, familyName, null as architectName, null as doors, null as name, null as seats, 2 as clazz_ from House " +
+									"union all " +
+									"select id, nr, null as familyName, architectName, doors, null as name, null as seats, 3 as clazz_ from Skyscraper " +
+									"union all " +
+									"select id, null as nr, null as familyName, null as architectName, doors, name, null as seats, 5 as clazz_ from Car " +
+									"union all " +
+									"select id, null as nr, null as familyName, null as architectName, null as doors, name, seats, 6 as clazz_ from Airplane " +
+									"union all " +
+									"select id, nr, null as familyName, null as architectName, null as doors, null as name, null as seats, 1 as clazz_ from Building " +
+									"union all " +
+									"select id, null as nr, null as familyName, null as architectName, null as doors, name, null as seats, 4 as clazz_ from Vehicle" +
+									") t1_0 " +
+									"where " +
+									"t1_0.familyName is not null",
+							sqlStatementInterceptor.getSqlQueries().get( 0 )
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testTreatPathEverywhere(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
+		scope.inTransaction(
+				entityManager -> {
+					sqlStatementInterceptor.clear();
+					entityManager.createSelectionQuery( "select treat(t as House) from Thing t where treat(t as House).familyName is not null" )
+							.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals(
+							"select " +
+									"t1_0.id," +
+									"t1_0.nr," +
+									"t1_0.familyName " +
+									"from (" +
+									"select id, nr, familyName, 2 as clazz_ from House" +
 									") t1_0 " +
 									"where " +
 									"t1_0.familyName is not null",
@@ -302,7 +337,43 @@ public class EntityUseUnionSubclassOptimizationTest {
 									"t1_0.architectName," +
 									"t1_0.name " +
 									"from (" +
-									"select id, nr, null as familyName, architectName, doors, null as name, null as seats, 3 as clazz_ from Skyscraper" +
+									"select id, nr, familyName, null as architectName, null as doors, null as name, null as seats, 2 as clazz_ from House " +
+									"union all " +
+									"select id, nr, null as familyName, architectName, doors, null as name, null as seats, 3 as clazz_ from Skyscraper " +
+									"union all " +
+									"select id, null as nr, null as familyName, null as architectName, doors, name, null as seats, 5 as clazz_ from Car " +
+									"union all " +
+									"select id, null as nr, null as familyName, null as architectName, null as doors, name, seats, 6 as clazz_ from Airplane " +
+									"union all " +
+									"select id, nr, null as familyName, null as architectName, null as doors, null as name, null as seats, 1 as clazz_ from Building " +
+									"union all " +
+									"select id, null as nr, null as familyName, null as architectName, null as doors, name, null as seats, 4 as clazz_ from Vehicle" +
+									") t1_0 " +
+									"where " +
+									"case when t1_0.clazz_=3 then t1_0.doors end is not null",
+							sqlStatementInterceptor.getSqlQueries().get( 0 )
+					);
+				}
+		);
+	}
+
+	@Test
+	public void testTreatPathEverywhereSharedColumn(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
+		scope.inTransaction(
+				entityManager -> {
+					sqlStatementInterceptor.clear();
+					entityManager.createSelectionQuery( "select treat(t as Skyscraper) from Thing t where treat(t as Skyscraper).doors is not null" )
+							.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals(
+							"select " +
+									"t1_0.id," +
+									"t1_0.nr," +
+									"t1_0.architectName," +
+									"t1_0.doors " +
+									"from (" +
+									"select id, nr, architectName, doors, 3 as clazz_ from Skyscraper" +
 									") t1_0 " +
 									"where " +
 									"case when t1_0.clazz_=3 then t1_0.doors end is not null",

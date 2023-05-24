@@ -409,27 +409,6 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 		}
 	}
 
-	@Internal
-	public boolean queuedRemove(Object element) {
-		final CollectionEntry entry = getSession().getPersistenceContextInternal().getCollectionEntry( PersistentBag.this );
-		if ( entry == null ) {
-			throwLazyInitializationExceptionIfNotConnected();
-			throwLazyInitializationException("collection not associated with session");
-		}
-		else {
-			final CollectionPersister persister = entry.getLoadedPersister();
-			if ( hasQueuedOperations() ) {
-				getSession().flush();
-			}
-			if ( persister.elementExists( entry.getLoadedKey(), element, getSession() ) ) {
-				elementRemoved = true;
-				queueOperation( new PersistentBag.SimpleRemove( (E) element ) );
-				return true;
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public boolean containsAll(Collection<?> c) {
 		read();

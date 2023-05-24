@@ -9,69 +9,88 @@ package org.hibernate;
 import java.util.Optional;
 
 /**
- * Loads an entity by its natural identifier.
+ * Loads an entity by its natural identifier. This simplified API is
+ * used when the entity has exactly one field or property annotated
+ * {@link org.hibernate.annotations.NaturalId @NaturalId}. If an
+ * entity has multiple attributes annotated {@code @NaturalId}, then
+ * {@link NaturalIdLoadAccess} should be used instead.
+ * <p>
+ * <pre>
+ * Book book = session.bySimpleNaturalId(Book.class).load(isbn);
+ * </pre>
  * 
  * @author Eric Dalquist
  * @author Steve Ebersole
  *
+ * @see Session#bySimpleNaturalId(Class)
  * @see org.hibernate.annotations.NaturalId
  * @see NaturalIdLoadAccess
  */
 public interface SimpleNaturalIdLoadAccess<T> {
 	/**
-	 * Specify the {@link LockOptions} to use when retrieving the entity.
+	 * Specify the {@linkplain LockOptions lock options} to use when
+	 * querying the database.
 	 *
-	 * @param lockOptions The lock options to use.
+	 * @param lockOptions The lock options to use
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	SimpleNaturalIdLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
-	 * For entities with mutable natural ids, should Hibernate perform "synchronization" prior to performing 
-	 * lookups?  The default is to perform "synchronization" (for correctness).
+	 * For entities with mutable natural ids, should Hibernate perform
+	 * "synchronization" prior to performing lookups? The default is
+	 * to perform "synchronization" (for correctness).
 	 * <p>
-	 * See {@link NaturalIdLoadAccess#setSynchronizationEnabled} for detailed discussion.
+	 * See {@link NaturalIdLoadAccess#setSynchronizationEnabled} for
+	 * detailed discussion.
 	 *
-	 * @param enabled Should synchronization be performed?  {@code true} indicates synchronization will be performed;
-	 * {@code false} indicates it will be circumvented.
+	 * @param enabled Should synchronization be performed?
+	 *                {@code true} indicates synchronization will be performed;
+	 *                {@code false} indicates it will be circumvented.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	SimpleNaturalIdLoadAccess<T> setSynchronizationEnabled(boolean enabled);
 
 	/**
-	 * Return the persistent instance with the given natural id value, assuming that the instance exists. This method
-	 * might return a proxied instance that is initialized on-demand, when a non-identifier method is accessed.
+	 * Return the persistent instance with the given natural id value,
+	 * assuming that the instance exists. This method might return a
+	 * proxied instance that is initialized on-demand, when a
+	 * non-identifier method is accessed.
+	 * <p>
+	 * You should not use this method to determine if an instance exists;
+	 * to check for existence, use {@link #load} instead. Use this only to
+	 * retrieve an instance that you assume exists, where non-existence
+	 * would be an actual error.
 	 *
-	 * You should not use this method to determine if an instance exists; to check for existence, use {@link #load}
-	 * instead.  Use this only to retrieve an instance that you assume exists, where non-existence would be an
-	 * actual error.
+	 * @param naturalIdValue The value of the natural id
 	 *
-	 * @param naturalIdValue The value of the natural-id for the entity to retrieve
-	 *
-	 * @return The persistent instance or proxy, if an instance exists.  Otherwise, {@code null}.
+	 * @return The persistent instance or proxy, if an instance exists.
+	 *         Otherwise, {@code null}.
 	 */
 	T getReference(Object naturalIdValue);
 
 	/**
-	 * Return the persistent instance with the given natural id value, or {@code null} if there is no such persistent
-	 * instance.  If the instance is already associated with the session, return that instance, initializing it if
-	 * needed.  This method never returns an uninitialized instance.
+	 * Return the persistent instance with the given natural id value,
+	 * or {@code null} if there is no such persistent instance. If the
+	 * instance is already associated with the session, return that
+	 * instance, initializing it if needed. This method never returns
+	 * an uninitialized instance.
 	 *
-	 * @param naturalIdValue The value of the natural-id for the entity to retrieve
+	 * @param naturalIdValue The value of the natural-id
 	 * 
 	 * @return The persistent instance or {@code null}
 	 */
 	T load(Object naturalIdValue);
 
 	/**
-	 * Same semantic as {@link #load} except that here {@link Optional} is returned to
-	 * handle nullability.
+	 * Just like {@link #load}, except that here an {@link Optional}
+	 * is returned.
 	 *
 	 * @param naturalIdValue The identifier
 	 *
-	 * @return The persistent instance, if one, wrapped in Optional
+	 * @return The persistent instance, if any, as an {@link Optional}
 	 */
 	Optional<T> loadOptional(Object naturalIdValue);
 }

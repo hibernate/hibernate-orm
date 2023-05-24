@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
-import java.util.Collections;
 import java.util.Locale;
 
 import org.hibernate.Hibernate;
@@ -17,7 +16,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
@@ -27,15 +25,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
-import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
@@ -102,7 +94,7 @@ public class EntityBatchLoaderArrayParam<T>
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), pkValue );
 		}
 
-		final Object[] ids = resolveIdsToInitialize( pkValue, session );
+		Object[] ids = resolveIdsToInitialize( pkValue, session );
 		initializeEntities( ids, pkValue, entityInstance, lockOptions, readOnly, session );
 
 		final EntityKey entityKey = session.generateEntityKey( pkValue, getLoadable().getEntityPersister() );
@@ -125,11 +117,14 @@ public class EntityBatchLoaderArrayParam<T>
 		}
 	}
 
-	protected Object[] resolveIdsToInitialize(Object pkValue, SharedSessionContractImplementor session) {
-		final Object[] idsToLoad = (Object[]) Array.newInstance( identifierMapping.getJavaType().getJavaTypeClass(), domainBatchSize );
+	@SuppressWarnings( "unchecked" )
+	protected <X> X[] resolveIdsToInitialize(Object pkValue, SharedSessionContractImplementor session) {
+		final X[] idsToLoad = (X[]) Array.newInstance( identifierMapping.getJdbcMapping().getJdbcJavaType().getJavaTypeClass(), domainBatchSize );
+
 		session.getPersistenceContextInternal().getBatchFetchQueue().collectBatchLoadableEntityIds(
 				domainBatchSize,
-				(index, value) -> idsToLoad[index] = value,
+				(index, value) -> idsToLoad[index] = (X) identifierMapping.getJdbcMapping()
+						.convertToRelationalValue( value ),
 				pkValue,
 				getLoadable()
 		);
@@ -180,11 +175,8 @@ public class EntityBatchLoaderArrayParam<T>
 		identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
 		final Class<?> arrayClass = Array.newInstance( identifierMapping.getJavaType().getJavaTypeClass(), 0 ).getClass();
 
-		final BasicTypeRegistry basicTypeRegistry = sessionFactory.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<?> arrayBasicType = basicTypeRegistry.getRegisteredType( arrayClass );
-
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				arrayBasicType,
+				sessionFactory.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
 				identifierMapping.getJdbcMapping(),
 				arrayClass,
 				sessionFactory

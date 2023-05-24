@@ -20,8 +20,12 @@ import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.QueryKey;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.FilterImpl;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
@@ -32,6 +36,8 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.engine.internal.CacheHelper.addBasicValueToCacheKey;
 
 /**
  * Manages the group of QueryParameterBinding for a particular query.
@@ -188,6 +194,17 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				final Object bindValue = binding.getBindValue();
 				mappingType.addToCacheKey( mutableCacheKey, bindValue, session );
 			}
+		} );
+		// Add any enabled filter parameter values to the cache key, sorting by filter name and parameter name
+		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+		loadQueryInfluencers.getEnabledFilterNames().stream().sorted().forEach( filterName -> {
+			final FilterImpl filter = (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName );
+			final FilterDefinition filterDefinition = filter.getFilterDefinition();
+			filterDefinition.getParameterNames().stream().sorted().forEach( paramName -> {
+				final Object paramValue = filter.getParameter( paramName );
+				final JdbcMapping jdbcMapping = filterDefinition.getParameterJdbcMapping( paramName );
+				addBasicValueToCacheKey( mutableCacheKey, paramValue, jdbcMapping, session );
+			} );
 		} );
 		// Finally, build the overall cache key
 		return mutableCacheKey.build();

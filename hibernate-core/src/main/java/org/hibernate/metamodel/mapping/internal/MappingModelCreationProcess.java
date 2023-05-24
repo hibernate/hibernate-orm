@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.internal.EntityPersisterConcurrentMap;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -33,7 +34,7 @@ public class MappingModelCreationProcess {
 	 * Triggers creation of the mapping model
 	 */
 	public static void process(
-			Map<String,EntityPersister> entityPersisterMap,
+			EntityPersisterConcurrentMap entityPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		final MappingModelCreationProcess process = new MappingModelCreationProcess(
 				entityPersisterMap,
@@ -42,14 +43,14 @@ public class MappingModelCreationProcess {
 		process.execute();
 	}
 
-	private final Map<String,EntityPersister> entityPersisterMap;
+	private final EntityPersisterConcurrentMap entityPersisterMap;
 	private final RuntimeModelCreationContext creationContext;
 
 	private String currentlyProcessingRole;
 	private List<PostInitCallbackEntry> postInitCallbacks;
 
 	private MappingModelCreationProcess(
-			Map<String, EntityPersister> entityPersisterMap,
+			EntityPersisterConcurrentMap entityPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		this.entityPersisterMap = entityPersisterMap;
 		this.creationContext = creationContext;

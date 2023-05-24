@@ -21,6 +21,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.util.List;
 
+import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
+import static org.hibernate.type.SqlTypes.isStringType;
+
 class ColumnDefinitions {
 
 	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
@@ -51,17 +54,30 @@ class ColumnDefinitions {
 	}
 
 	static boolean hasMatchingLength(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
-		final int actualSize = columnInformation.getColumnSize();
-		if ( actualSize == 0 ) {
-			return true;
-		}
-		else {
+		int sqlType = columnInformation.getTypeCode();
+		if ( isStringType( sqlType ) ) {
+			final int actualLength = columnInformation.getColumnSize();
 			final Size size = column.getColumnSize( dialect, metadata );
 			final Long requiredLength = size.getLength();
+			return requiredLength == null
+				|| requiredLength == actualLength;
+		}
+		else if ( isNumericOrDecimal( sqlType ) ) {
+			// Postgres, H2, SQL Server, and MySQL agree on the following:
+			final int actualPrecision = columnInformation.getColumnSize();
+			final int actualScale = columnInformation.getDecimalDigits();
+			final Size size = column.getColumnSize( dialect, metadata );
 			final Integer requiredPrecision = size.getPrecision();
-			return requiredLength != null && requiredLength == actualSize
-				|| requiredPrecision != null && requiredPrecision == actualSize
-				|| requiredPrecision == null && requiredLength == null;
+			final Integer requiredScale = size.getScale();
+			return requiredPrecision == null
+				|| requiredScale == null
+				|| requiredScale == actualScale && requiredPrecision == actualPrecision;
+		}
+		// I would really love this to be able to change the binary
+		// precision of a float/double type, but there simply doesn't
+		// seem to be any good way to implement it
+		else {
+			return true;
 		}
 	}
 

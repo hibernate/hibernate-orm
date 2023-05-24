@@ -45,15 +45,21 @@ class ColumnDefinitions {
 
 	static boolean hasMatchingLength(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
 		final int actualSize = columnInformation.getColumnSize();
-		if ( actualSize == 0 ) {
+		final int actualDecimalDigits = columnInformation.getDecimalDigits();
+		if (actualSize == 0 && actualDecimalDigits == 0) {
 			return true;
 		}
 		else {
-			final Size size = column.getColumnSize( dialect, metadata );
+			final Size size = column.getColumnSize(dialect, metadata);
 			final Long requiredLength = size.getLength();
 			final Integer requiredPrecision = size.getPrecision();
 			return requiredLength != null && requiredLength == actualSize
+				|| requiredPrecision != null && requiredPrecision == actualDecimalDigits
 				|| requiredPrecision != null && requiredPrecision == actualSize
+				// precision of 53 bit ~ up to 17 decimal digits
+				|| (requiredPrecision != null && requiredPrecision == 53 && requiredLength == null && actualDecimalDigits == 17)
+				// precision of 24 bit ~ up to 8 decimal digits
+				|| (requiredPrecision != null && requiredPrecision == 24 && requiredLength == null && actualDecimalDigits == 8)
 				|| requiredPrecision == null && requiredLength == null;
 		}
 	}

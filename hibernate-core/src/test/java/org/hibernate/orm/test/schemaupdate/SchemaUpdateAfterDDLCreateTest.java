@@ -16,12 +16,9 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
@@ -33,16 +30,20 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.util.Date;
 import java.util.EnumSet;
 
 /**
- * @author Nils Israel, adapted test case from Yoann Rodiere
+ * @author Nils Israel, adapted a test case from Yoann Rodiere
+ *
+ * Create the schema based on the provided entities and check for each entity individually whether the
+ * in 6.2 added possiblilty to change column types in schema update wants to change the schema afterward.
+ * That shouldn't be the case.
  */
 @JiraKey("HHH-16360")
-@RequiresDialect(PostgreSQLDialect.class)
-@RequiresDialect(H2Dialect.class)
 class SchemaUpdateAfterDDLCreateTest extends BaseNonConfigCoreFunctionalTestCase {
 	protected static ServiceRegistry serviceRegistry;
 	protected static MetadataImplementor metadata;
@@ -51,47 +52,47 @@ class SchemaUpdateAfterDDLCreateTest extends BaseNonConfigCoreFunctionalTestCase
 	@BeforeAll
 	public static void setUp() {
 		serviceRegistry = new StandardServiceRegistryBuilder()
-				.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "false" )
-				.applySetting( Environment.DEFAULT_SCHEMA, "public" )
-				.build();
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClasses( getEntities() )
-				.buildMetadata();
+			.applySetting(Environment.GLOBALLY_QUOTED_IDENTIFIERS, "false")
+			.applySetting(Environment.DEFAULT_SCHEMA, "public")
+			.build();
+		metadata = (MetadataImplementor) new MetadataSources(serviceRegistry)
+			.addAnnotatedClasses(getEntities())
+			.buildMetadata();
 		new SchemaUpdate()
-			.setHaltOnError( true )
-			.setDelimiter( DELIMITER )
-			.setFormat( true )
-			.execute( EnumSet.of( TargetType.DATABASE ), metadata);
+			.setHaltOnError(true)
+			.setDelimiter(DELIMITER)
+			.setFormat(true)
+			.execute(EnumSet.of(TargetType.DATABASE), metadata);
 	}
 
 	@ParameterizedTest
-	@ValueSource(ints = {0, 1, 2, 3})
+	@ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7, 8})
 	void testEntities(int index) throws Exception {
 		setUp();
-			File output = File.createTempFile( "update_script", ".sql" );
-			output.deleteOnExit();
+		File output = File.createTempFile("update_script", ".sql");
+		output.deleteOnExit();
 
-			Metadata updateMetadata = new MetadataSources(serviceRegistry)
-				.addAnnotatedClass(getEntities()[index])
-				.buildMetadata();
+		Metadata updateMetadata = new MetadataSources(serviceRegistry)
+			.addAnnotatedClass(getEntities()[index])
+			.buildMetadata();
 
-			new SchemaUpdate()
-				.setHaltOnError( true )
-				.setOutputFile( output.getAbsolutePath() )
-				.setDelimiter( DELIMITER )
-				.setFormat( true )
-				.execute( EnumSet.of( TargetType.SCRIPT ), updateMetadata);
+		new SchemaUpdate()
+			.setHaltOnError(true)
+			.setOutputFile(output.getAbsolutePath())
+			.setDelimiter(DELIMITER)
+			.setFormat(true)
+			.execute(EnumSet.of(TargetType.SCRIPT), updateMetadata);
 
-			String outputContent = new String(Files.readAllBytes(output.toPath()));
+		String outputContent = new String(Files.readAllBytes(output.toPath()));
 
-			Assert.assertEquals("", outputContent);
+		Assert.assertEquals("", outputContent);
 	}
 
 
 	@AfterAll
 	public static void tearDown() {
-		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		new SchemaExport().drop(EnumSet.of(TargetType.DATABASE, TargetType.STDOUT), metadata);
+		StandardServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 
 	@Entity
@@ -109,7 +110,6 @@ class SchemaUpdateAfterDDLCreateTest extends BaseNonConfigCoreFunctionalTestCase
 		Long id;
 		@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 		String contents;
-
 	}
 
 	@Entity
@@ -128,12 +128,57 @@ class SchemaUpdateAfterDDLCreateTest extends BaseNonConfigCoreFunctionalTestCase
 		Double aDouble = 0.0;
 	}
 
+	@Entity
+	public static class EntityWithFloat {
+		@Id
+		@GeneratedValue
+		Long id;
+		float aFloat = 0.0f;
+	}
+
+	@Entity
+	public static class EntityWithInt {
+		@Id
+		@GeneratedValue
+		Long id;
+		Integer aInt = 0;
+	}
+
+	@Entity
+	public static class EntityWithBigDecimal {
+		@Id
+		@GeneratedValue
+		Long id;
+		BigDecimal aBigDecimal = BigDecimal.ZERO;
+	}
+
+	@Entity
+	public static class EntityWithBigInteger {
+		@Id
+		@GeneratedValue
+		Long id;
+		BigInteger aBigInteger = BigInteger.ZERO;
+	}
+
+	@Entity
+	public static class EntityWithBoolean {
+		@Id
+		@GeneratedValue
+		Long id;
+		Boolean aBoolean = false;
+	}
+
 	protected static Class[] getEntities() {
 		return new Class[]{
 			EntityWithVarchar.class,
 			EntityWithDate.class,
 			EntityWithText.class,
-			EntityWithDouble.class
+			EntityWithDouble.class,
+			EntityWithFloat.class,
+			EntityWithInt.class,
+			EntityWithBigDecimal.class,
+			EntityWithBigInteger.class,
+			EntityWithBoolean.class
 		};
 	}
 }

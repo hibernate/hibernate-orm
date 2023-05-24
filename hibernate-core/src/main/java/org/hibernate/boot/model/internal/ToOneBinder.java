@@ -343,23 +343,6 @@ public class ToOneBinder {
 				collector.addSecondPass( new FetchSecondPass( fetch, propertyHolder, inferredData.getPropertyName(), context ) );
 			}
 		}
-		if ( !toOne.isLazy()
-				&& !propertyHolder.isOrWithinEmbeddedId()
-				&& !propertyHolder.isWithinElementCollection()
-				&& !propertyHolder.isInIdClass()
-				// this is a bit of a problem: embeddable classes don't
-				// come with the entity name attached, so we can't
-				// create a Fetch that refers to their fields
-				&& !propertyHolder.isComponent()
-				// not sure exactly what the story is here:
-				&& !collector.isInSecondPass() ) {
-			collector.addSecondPass( new FetchSecondPass(
-					DefaultFetchProfileOverride.INSTANCE,
-					propertyHolder,
-					inferredData.getPropertyName(),
-					context
-			) );
-		}
 	}
 
 	private static void handleFetch(ToOne toOne, XProperty property) {

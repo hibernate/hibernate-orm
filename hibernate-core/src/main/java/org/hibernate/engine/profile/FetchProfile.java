@@ -12,10 +12,12 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.engine.FetchStyle.JOIN;
+import static org.hibernate.engine.FetchStyle.SUBSELECT;
 
 /**
  * The runtime representation of a Hibernate
@@ -180,5 +182,15 @@ public class FetchProfile {
 	@Override
 	public String toString() {
 		return "FetchProfile[" + name + "]";
+	}
+
+	public boolean hasSubselectLoadableCollectionsEnabled(EntityPersister persister) {
+		for ( Fetch fetch : getFetches().values() ) {
+			if ( fetch.getMethod() == SUBSELECT
+					&& fetch.getAssociation().getOwner() == persister ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

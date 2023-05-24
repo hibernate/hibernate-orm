@@ -22,10 +22,6 @@ import static jakarta.persistence.FetchType.EAGER;
  * @see org.hibernate.engine.profile.FetchProfile
  */
 public class FetchProfile {
-	/**
-	 * The name of an implicit fetch profile which includes all eager to-one associations.
-	 */
-	public static final String HIBERNATE_DEFAULT_PROFILE = "org.hibernate.defaultProfile";
 
 	private final String name;
 	private final MetadataSource source;

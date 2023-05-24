@@ -272,7 +272,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 			// this needs to happen after the mapping metamodel is
 			// completely built, since we need to use the persisters
-			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodels.getMappingMetamodel() );
+			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodels );
 
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();

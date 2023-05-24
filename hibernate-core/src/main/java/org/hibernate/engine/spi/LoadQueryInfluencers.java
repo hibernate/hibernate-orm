@@ -344,12 +344,9 @@ public class LoadQueryInfluencers implements Serializable {
 	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			for ( String profile : getEnabledFetchProfileNames() ) {
-				final FetchProfile fetchProfile = sessionFactory.getFetchProfile( profile );
-				for ( Fetch fetch : fetchProfile.getFetches().values() ) {
-					// TODO: check that it's relevant to this persister??
-					if ( fetch.getMethod() == SUBSELECT ) {
-						return true;
-					}
+				if ( sessionFactory.getFetchProfile( profile )
+						.hasSubselectLoadableCollectionsEnabled( persister ) ) {
+					return true;
 				}
 			}
 		}

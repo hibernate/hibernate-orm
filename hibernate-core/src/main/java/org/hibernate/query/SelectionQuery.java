@@ -35,6 +35,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import org.hibernate.engine.profile.DefaultFetchProfile;
 import org.hibernate.graph.GraphSemantic;
 
 /**
@@ -78,7 +79,7 @@ import org.hibernate.graph.GraphSemantic;
  * </ul>
  * <p>
  * The special built-in fetch profile named
- * {@value org.hibernate.mapping.FetchProfile#HIBERNATE_DEFAULT_PROFILE} adds
+ * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds
  * a fetch join for every {@link jakarta.persistence.FetchType#EAGER eager}
  * {@code @ManyToOne} or {@code @OneToOne} association belonging to an entity
  * returned by the query.

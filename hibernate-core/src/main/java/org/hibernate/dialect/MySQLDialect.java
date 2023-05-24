@@ -963,7 +963,7 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
 		// no way to change just the column type, leaving other attributes intact
-		return "modify column " + columnName + " " + columnDefinition;
+		return "modify column " + columnName + " " + columnDefinition.trim();
 	}
 
 	@Override

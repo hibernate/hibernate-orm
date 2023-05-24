@@ -293,7 +293,7 @@ To set up cascading, we specify the `cascade` member of one of the association m
 @Entity
 class Order {
     ...
-    @OneToMany(mappedby="order",
+    @OneToMany(mappedby=Item_.ORDER,
                // cascade persist(), remove(), and refresh() from Order to Item
                cascade={PERSIST,REMOVE,REFRESH},
                // also remove() orphaned Items

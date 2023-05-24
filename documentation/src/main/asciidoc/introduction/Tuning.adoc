@@ -272,7 +272,7 @@ class Publisher {
     ...
 
     @Cache(usage=READ_WRITE, region="PublishedBooks")
-    @OneToMany(mappedBy="publisher")
+    @OneToMany(mappedBy=Book_.PUBLISHER)
     Set<Book> books;
 
     ...
@@ -363,10 +363,18 @@ This cache is utilized when the entity is retrieved using one of the operations 
 - `bySimpleNaturalId()` if just one attribute is annotation `@NaturalId`, or
 - `byNaturalId()` if multiple attributes are annotated `@NaturalId`.
 
+Here's how we can retrieve an entity by its composite natural id:
+
 [source,java]
 ----
-Book book = session.byNaturalId().using("isbn", isbn, "printing", printing).load();
+Book book =
+        session.byNaturalId(Book.class)
+            .using(Book_.isbn, isbn)
+            .using(Book_.printing, printing)
+            .load();
 ----
+
+Notice that this code fragment is completely typesafe.
 
 [NOTE]
 ====

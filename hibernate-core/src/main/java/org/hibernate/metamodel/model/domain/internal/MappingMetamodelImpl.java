@@ -115,7 +115,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// RuntimeModel
 
-	private final Map<String, EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
+	private final EntityPersisterConcurrentMap entityPersisterMap = new EntityPersisterConcurrentMap();
 	private final Map<String, CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
 	private final Map<String, Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
 
@@ -375,12 +375,14 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override
 	public void forEachEntityDescriptor(Consumer<EntityPersister> action) {
-		entityPersisterMap.values().forEach( action );
+		for ( EntityPersister value : entityPersisterMap.values() ) {
+			action.accept( value );
+		}
 	}
 
 	@Override
 	public Stream<EntityPersister> streamEntityDescriptors() {
-		return entityPersisterMap.values().stream();
+		return Arrays.stream( entityPersisterMap.values() );
 	}
 
 	@Override
@@ -547,7 +549,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override @SuppressWarnings("deprecation")
 	public Map<String, EntityPersister> entityPersisters() {
-		return entityPersisterMap;
+		return entityPersisterMap.convertToMap();
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -634,7 +636,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override
 	public String[] getAllEntityNames() {
-		return ArrayHelper.toStringArray( entityPersisterMap.keySet() );
+		return entityPersisterMap.keys();
 	}
 
 	@Override

@@ -190,8 +190,8 @@ public class CompoundNaturalIdTests {
 					final NaturalIdMultiLoadAccess<Account> loadAccess = session.byMultipleNaturalId( Account.class );
 					loadAccess.enableOrderedReturn( false );
 					final List<Account> accounts = loadAccess.multiLoad(
-							NaturalIdMultiLoadAccess.compoundValue( "system", "matrix", "username", "neo" ),
-							NaturalIdMultiLoadAccess.compoundValue( "system", "matrix", "username", "trinity" )
+							Map.of( "system", "matrix", "username", "neo" ),
+							Map.of( "system", "matrix", "username", "trinity" )
 					);
 					assertThat( accounts.size(), is( 2 ) );
 

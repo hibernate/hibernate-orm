@@ -887,10 +887,11 @@ public class LoaderSelectBuilder {
 					}
 				}
 				else if ( loadQueryInfluencers.getEnabledCascadingFetchProfile() != null ) {
-					final CascadeStyle cascadeStyle = fetchable.asAttributeMapping().getAttributeMetadata()
-							.getCascadeStyle();
-					final CascadingAction<?> cascadingAction = loadQueryInfluencers.getEnabledCascadingFetchProfile()
-							.getCascadingAction();
+					final CascadeStyle cascadeStyle = fetchable.asAttributeMapping() != null ?
+							fetchable.asAttributeMapping().getAttributeMetadata().getCascadeStyle() :
+							null;
+					final CascadingAction<?> cascadingAction =
+							loadQueryInfluencers.getEnabledCascadingFetchProfile().getCascadingAction();
 					if ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) ) {
 						fetchTiming = FetchTiming.IMMEDIATE;
 						// In 5.x the CascadeEntityJoinWalker only join fetched the first collection fetch

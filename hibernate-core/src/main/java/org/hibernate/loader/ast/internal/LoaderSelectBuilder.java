@@ -885,8 +885,9 @@ public class LoaderSelectBuilder {
 					}
 				}
 				else if ( loadQueryInfluencers.getEnabledCascadingFetchProfile() != null ) {
-					final CascadeStyle cascadeStyle = fetchable.
-							asAttributeMapping().getAttributeMetadata().getCascadeStyle();
+					final CascadeStyle cascadeStyle = fetchable.asAttributeMapping() != null ?
+							fetchable.asAttributeMapping().getAttributeMetadata().getCascadeStyle() :
+							null;
 					final CascadingAction<?> cascadingAction =
 							loadQueryInfluencers.getEnabledCascadingFetchProfile().getCascadingAction();
 					if ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) ) {

@@ -29,6 +29,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
@@ -368,7 +369,10 @@ public class EmbeddableBinder {
 		for ( PropertyData propertyAnnotatedElement : classElements ) {
 			processElementAnnotations(
 					subholder,
-					isNullable ? Nullability.NO_CONSTRAINT : Nullability.FORCED_NOT_NULL,
+					entityBinder.getPersistentClass() instanceof SingleTableSubclass
+							// subclasses in single table inheritance can't have not null constraints
+							? Nullability.FORCED_NULL
+							: ( isNullable ? Nullability.NO_CONSTRAINT : Nullability.FORCED_NOT_NULL ),
 					propertyAnnotatedElement,
 					new HashMap<>(),
 					entityBinder,

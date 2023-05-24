@@ -21,6 +21,7 @@ import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.annotations.FetchMode.JOIN;
 import static org.hibernate.annotations.FetchMode.SELECT;
 import static org.hibernate.annotations.FetchMode.SUBSELECT;
+import static org.hibernate.engine.profile.DefaultFetchProfile.HIBERNATE_DEFAULT_PROFILE;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -210,7 +211,7 @@ public class NewFetchTest {
 
 		scope.getCollectingStatementInspector().clear();
 		List<H> hs2 = scope.fromSession( s -> {
-			s.enableFetchProfile( org.hibernate.mapping.FetchProfile.HIBERNATE_DEFAULT_PROFILE );
+			s.enableFetchProfile( HIBERNATE_DEFAULT_PROFILE );
 			return s.createSelectionQuery("from H", H.class).getResultList();
 		});
 		assertTrue( isInitialized( hs2.get(0).g ) );

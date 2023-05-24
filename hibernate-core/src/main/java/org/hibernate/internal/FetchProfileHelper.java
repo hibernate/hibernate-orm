@@ -11,10 +11,12 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.Association;
+import org.hibernate.engine.profile.DefaultFetchProfile;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -22,6 +24,8 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.hibernate.engine.profile.DefaultFetchProfile.HIBERNATE_DEFAULT_PROFILE;
 
 /**
  * Create {@link FetchProfile} references from {@link org.hibernate.mapping.FetchProfile} references
@@ -32,12 +36,13 @@ public class FetchProfileHelper {
 
 	public static Map<String, FetchProfile> getFetchProfiles(
 			MetadataImplementor bootMetamodel,
-			MappingMetamodel mappingMetamodel) {
+			RuntimeMetamodels runtimeMetamodels) {
 		final Map<String, FetchProfile> fetchProfiles = new HashMap<>();
 		for ( org.hibernate.mapping.FetchProfile mappingProfile : bootMetamodel.getFetchProfiles() ) {
-			final FetchProfile fetchProfile = createFetchProfile( mappingMetamodel, mappingProfile );
+			final FetchProfile fetchProfile = createFetchProfile( runtimeMetamodels.getMappingMetamodel(), mappingProfile );
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
+		fetchProfiles.put( HIBERNATE_DEFAULT_PROFILE, new DefaultFetchProfile( runtimeMetamodels ) );
 		return fetchProfiles;
 	}
 

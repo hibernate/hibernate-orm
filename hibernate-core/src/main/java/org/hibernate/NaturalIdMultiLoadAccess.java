@@ -19,6 +19,13 @@ import static org.hibernate.internal.util.collections.CollectionHelper.asMap;
  * specifying a list of natural id values. This allows the entities
  * to be fetched from the database in batches.
  * <p>
+ * <pre>
+ * List&lt;Book&gt; books =
+ *         session.byMultipleNaturalId(Book.class)
+ *             .withBatchSize(10)
+ *             .multiLoad(isbnList);
+ * </pre>
+ * <p>
  * Composite natural ids may be accommodated by passing a list of
  * maps of type {@code Map<String,Object>}  to {@link #multiLoad}.
  * Each map must contain the natural id attribute values keyed by
@@ -30,6 +37,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.asMap;
  * </pre>
  *
  * @see Session#byMultipleNaturalId(Class)
+ * @see org.hibernate.annotations.NaturalId
  */
 public interface NaturalIdMultiLoadAccess<T> {
 	/**

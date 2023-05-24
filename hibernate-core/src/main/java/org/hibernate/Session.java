@@ -1303,6 +1303,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @see #setDefaultReadOnly(boolean)
 	 * @see Query#setReadOnly(boolean)
+	 * @see IdentifierLoadAccess#withReadOnly(boolean)
 	 *
 	 * @param entityOrProxy an entity or proxy
 	 * @param readOnly {@code true} if the entity or proxy should be made read-only;

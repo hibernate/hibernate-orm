@@ -19,8 +19,24 @@ import org.hibernate.graph.RootGraph;
  * <pre>
  * var graph = session.createEntityGraph(Book.class);
  * graph.addSubgraph(Book_.publisher);
- * graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
- * session.byId(Book.class).withFetchGraph(graph).load(bookId);
+ * graph.addPluralSubgraph(Book_.authors)
+ *     .addSubgraph(Author_.person);
+ *
+ * Book book =
+ *         session.byId(Book.class)
+ *             .withFetchGraph(graph)
+ *             .load(bookId);
+ * </pre>
+ * <p>
+ * It's also useful for loading entity instances with a specific
+ * {@linkplain CacheMode cache interaction mode} in effect, or in
+ * {@linkplain Session#setReadOnly(Object, boolean) read-only mode}.
+ * <pre>
+ * Book book =
+ *         session.byId(Book.class)
+ *             .with(CacheMode.GET)
+ *             .withReadOnly(true)
+ *             .load(bookId);
  * </pre>
  *
  * @author Eric Dalquist

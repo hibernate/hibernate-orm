@@ -951,17 +951,17 @@ There are three annotations for mapping associations: `@ManyToOne`, `@OneToMany`
 They share some common annotation members:
 
 .Association-defining annotation members
-[cols="14,~,35"]
+[cols="13,~,35"]
 |===
 | Member | Interpretation | Default value
 
 | `cascade` | Persistence operations which should <<cascade,cascade>> to the associated entity; a list of ``CascadeType``s | `{}`
-| `fetch` | Whether the association is eagerly <<association-fetching,fetched>> or may be <<proxies-and-lazy-fetching,proxied>>
+| `fetch` | Whether the association is <<entity-graph,eagerly>> <<association-fetching,fetched>> or may be <<proxies-and-lazy-fetching,proxied>>
 a|
 - `LAZY` for `@OneToMany` and `@ManyToMany`
 - `EAGER` for `@ManyToOne` 💀💀💀
 | `targetEntity` | The associated entity class | Determined from the attribute type declaration
-| `optional` | For `@ManyToOne` or `@OneToOne` associations, whether the association can be `null` | `true`
+| `optional` | For a `@ManyToOne` or `@OneToOne` association, whether the association can be `null` | `true`
 | `mappedBy` | For a bidirectional association, an attribute of the associated entity which maps the association | By default, the association is assumed unidirectional
 |===
 
@@ -974,6 +974,7 @@ Let's begin with the most common association multiplicity.
 
 A many-to-one association is the most basic sort of association we can imagine.
 It maps completely naturally to a foreign key in the database.
+Almost all the associations in your domain model are going to be of this form.
 
 [TIP]
 // .One-to-many join table mappings
@@ -981,7 +982,7 @@ It maps completely naturally to a foreign key in the database.
 Later, we'll see how to map a many-to-one association to an <<join-table-mappings,association table>>.
 ====
 
-The `@ManyToOne` annotation marks the "one" side of the association, and so a unidirectional many-to-one association looks like this:
+The `@ManyToOne` annotation marks the "to one" side of the association, and so a unidirectional many-to-one association looks like this:
 
 [source,java]
 ----
@@ -1007,7 +1008,11 @@ The only scenario in which `fetch=EAGER` makes sense is if we think there's alwa
 Whenever this isn't the case, remember to explicitly specify `fetch=LAZY`.
 ====
 
-To make this association bidirectional, we need to add a collection-valued attribute to the `Publisher` class, and annotate it `@OneToMany`, using the `mappedBy` member to refer back to `Book.publisher`.
+Most of the time, we would like to be able to easily navigate our associations in both directions.
+We do need a way to get the `Publisher` of a given `Book`, but we would also like to be able to obtain all the ``Book``s belonging to a given publisher.
+
+To make this association bidirectional, we need to add a collection-valued attribute to the `Publisher` class, and annotate it `@OneToMany`.
+To indicate clearly that this is a bidirectional association, and to reuse any mapping information already specified in the `Book` entity, we must use the `mappedBy` annotation member to refer back to `Book.publisher`.
 
 [source,java]
 ----
@@ -1023,6 +1028,16 @@ class Publisher {
 ----
 
 The `Publisher.books` field is called the _unowned_ side of the association.
+
+Now, we passionately _hate_ the stringly-typed `mappedBy` reference to the owning side of the association.
+Thankfully, the <<metamodel-generator, Metamodel Generator>> gives us a way to make it a
+bit more typesafe:
+[source,java]
+----
+@OneToMany(mappedBy=Book_.PUBLISHER)  // get used to doing it this way!
+Set<Book> books;
+----
+We're going to use this approach for the rest of the Introduction.
 
 [WARNING]
 // .To modify a bidirectional association, you must change the _owning side_!
@@ -1052,7 +1067,7 @@ In particular, the `List` may not contain duplicate elements, and its order will
 
 [source,java]
 ----
-@OneToMany(mappedBy="publisher")
+@OneToMany(mappedBy=Book_.PUBLISHER)
 Collection<Book> books;
 ----
 
@@ -1119,7 +1134,7 @@ class Person {
     @Id @GeneratedValue
     Long id;
 
-    @OneToOne(mappedBy = "person")
+    @OneToOne(mappedBy = Author_.PERSON)
     Author author;
 
     ...
@@ -1142,7 +1157,7 @@ On the other hand, if _every_ `Person` was an `Author`, that is, if the associat
 
 [source,java]
 ----
-@OneToOne(optional=false, mappedBy = "person", fetch=LAZY)
+@OneToOne(optional=false, mappedBy = Author_.PERSON, fetch=LAZY)
 Author author;
 ----
 ****
@@ -1182,7 +1197,7 @@ Here, there's no extra foreign key column in the `Author` table, since the `id` 
 That is, the primary key of the `Author` table does double duty as the foreign key referring to the `Person` table.
 
 The `Person` class doesn't change.
-If the association is bidirectional, we annotate the unowned side `@OneToOne(mappedBy = "person")` just as before.
+If the association is bidirectional, we annotate the unowned side `@OneToOne(mappedBy = Author_.PERSON)` just as before.
 
 [[many-to-many]]
 === Many-to-many
@@ -1215,7 +1230,7 @@ class Book {
     @Id @GeneratedValue
     Long id;
 
-    @ManyToMany(mappedBy="authors")
+    @ManyToMany(mappedBy=Author_.BOOKS)
     Set<Author> authors;
     
     ...

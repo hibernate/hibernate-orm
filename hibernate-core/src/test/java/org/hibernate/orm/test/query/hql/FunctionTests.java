@@ -710,14 +710,37 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRepeat.class)
+	public void testRepeatFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select repeat('hello', 3)", String.class).getSingleResult(),
+							is("hellohellohello") );
+					assertThat( session.createQuery("select repeat(?1, 3)", String.class)
+									.setParameter(1, "hello")
+									.getSingleResult(),
+							is("hellohellohello") );
+					//HSQLDB doesn't like the second parameter
+//					assertThat( session.createQuery("select repeat(?1, ?2)", String.class)
+//									.setParameter(1, "hello")
+//									.setParameter(2, 3)
+//									.getSingleResult(),
+//							is("hellohellohello") );
+				}
+		);
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsReplace.class)
 	public void testReplaceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.createQuery("select replace(e.theString, 'hello', 'goodbye') from EntityOfBasics e", String.class)
 							.list();
-					assertThat( session.createQuery("select replace('hello world', 'hello', 'goodbye')", String.class).getSingleResult(), is("goodbye world") );
-					assertThat( session.createQuery("select replace('hello world', 'o', 'ooo')", String.class).getSingleResult(), is("hellooo wooorld") );
+					assertThat( session.createQuery("select replace('hello world', 'hello', 'goodbye')", String.class).getSingleResult(),
+							is("goodbye world") );
+					assertThat( session.createQuery("select replace('hello world', 'o', 'ooo')", String.class).getSingleResult(),
+							is("hellooo wooorld") );
 				}
 		);
 

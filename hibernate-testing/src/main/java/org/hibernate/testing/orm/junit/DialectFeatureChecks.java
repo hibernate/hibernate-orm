@@ -318,6 +318,14 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsRepeat implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
+			// Derby doesn't support the `REPLACE` function
+			return !( dialect instanceof DerbyDialect );
+		}
+	}
+
 	public static class SupportsTemporaryTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsTemporaryTables();

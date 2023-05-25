@@ -27,7 +27,6 @@ import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -259,7 +258,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
 		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
 			final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) sqlAstCreationState.getCurrentSqmQueryPart();
-			if ( currentClause == Clause.ORDER && !groupByClauseContains( navigablePath, querySpec ) ) {
+			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath ) ) {
 				// We must ensure that the order by expression be expanded but only if the group by
 				// contained the same expression, and that was expanded as well
 				expandToAllColumns = false;
@@ -368,15 +367,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				if ( selectableNodeContains( argument.getSelectableNode(), path ) ) {
 					return true;
 				}
-			}
-		}
-		return false;
-	}
-
-	private static boolean groupByClauseContains(NavigablePath path, SqmQuerySpec<?> sqmQuerySpec) {
-		for ( SqmExpression<?> expression : sqmQuerySpec.getGroupByClauseExpressions() ) {
-			if ( expression instanceof SqmPath && ( (SqmPath<?>) expression ).getNavigablePath() == path ) {
-				return true;
 			}
 		}
 		return false;

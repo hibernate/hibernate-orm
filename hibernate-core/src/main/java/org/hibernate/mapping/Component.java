@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -32,6 +31,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
+import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
@@ -48,7 +48,6 @@ import org.hibernate.type.EmbeddedComponentType;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
-import static org.hibernate.id.IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
@@ -659,11 +658,12 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		@Override
 		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
 			if ( !subgenerator.generatedOnExecution() ) {
-				Object generatedId = ( (BeforeExecutionGenerator) subgenerator).generate( session, incomingObject, null, INSERT );
+				final Object generatedId = ( (BeforeExecutionGenerator) subgenerator)
+						.generate( session, incomingObject, null, INSERT );
 				injector.set( injectionContext, generatedId );
 			}
 			else {
-				injector.set( injectionContext, POST_INSERT_INDICATOR );
+				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
 			}
 		}
 

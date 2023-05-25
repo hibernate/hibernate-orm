@@ -883,8 +883,6 @@ We may now use our `Name` class (or record) as the type of an entity attribute:
 ----
 @Entity
 class Author {
-    Author() {}
-    
     @Id @GeneratedValue
     Long id;
     
@@ -982,7 +980,7 @@ Almost all the associations in your domain model are going to be of this form.
 Later, we'll see how to map a many-to-one association to an <<join-table-mappings,association table>>.
 ====
 
-The `@ManyToOne` annotation marks the "to one" side of the association, and so a unidirectional many-to-one association looks like this:
+The `@ManyToOne` annotation marks the "to one" side of the association, so a unidirectional many-to-one association looks like this:
 
 [source,java]
 ----

@@ -1465,6 +1465,21 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaFunction<String> repeat(Expression<String> x, Expression<Integer> times) {
+		return criteriaBuilder.repeat( x, times );
+	}
+
+	@Override
+	public JpaFunction<String> repeat(Expression<String> x, int times) {
+		return criteriaBuilder.repeat( x, times );
+	}
+
+	@Override
+	public JpaFunction<String> repeat(String x, Expression<Integer> times) {
+		return criteriaBuilder.repeat( x, times );
+	}
+
+	@Override
 	public JpaFunction<String> left(Expression<String> x, int length) {
 		return criteriaBuilder.left( x, length );
 	}

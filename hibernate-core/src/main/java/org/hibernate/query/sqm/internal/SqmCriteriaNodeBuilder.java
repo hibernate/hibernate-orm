@@ -57,6 +57,7 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSearchOrder;
@@ -2965,6 +2966,26 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
+	}
+
+	@Override
+	public JpaFunction<String> repeat(Expression<String> x, Expression<Integer> times) {
+		return getFunctionDescriptor( "repeat" ).generateSqmExpression(
+				asList( (SqmExpression<String>) x, (SqmExpression<Integer>) times ),
+				null,
+				getQueryEngine(),
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public JpaFunction<String> repeat(Expression<String> x, int times) {
+		return repeat( x, value( times ) );
+	}
+
+	@Override
+	public JpaFunction<String> repeat(String x, Expression<Integer> times) {
+		return repeat( value( x), times );
 	}
 
 	@Override

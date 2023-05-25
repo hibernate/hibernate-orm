@@ -1197,6 +1197,36 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			Expression<Character> padChar);
 
 	/**
+	 * Concatenate the given string expression with itself the given number of times.
+	 *
+	 * @param x the string expression to concatenate
+	 * @param times the number of times it should be repeated
+	 *
+	 * @return repeat expression
+	 */
+	JpaFunction<String> repeat(Expression<String> x, Expression<Integer> times);
+
+	/**
+	 * Concatenate the given string expression with itself the given number of times.
+	 *
+	 * @param x the string expression to concatenate
+	 * @param times the number of times it should be repeated
+	 *
+	 * @return repeat expression
+	 */
+	JpaFunction<String> repeat(Expression<String> x, int times);
+
+	/**
+	 * Concatenate the given string expression with itself the given number of times.
+	 *
+	 * @param x the string expression to concatenate
+	 * @param times the number of times it should be repeated
+	 *
+	 * @return repeat expression
+	 */
+	JpaFunction<String> repeat(String x, Expression<Integer> times);
+
+	/**
 	 * @see #left(Expression, Expression)
 	 */
 	@Incubating

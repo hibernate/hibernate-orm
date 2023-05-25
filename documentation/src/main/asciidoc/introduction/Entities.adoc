@@ -996,6 +996,7 @@ class Book {
 
 Here, the `Book` table has a foreign key column holding the identifier of the associated `Publisher`.
 
+[[lazy-problem]]
 [TIP]
 // .Almost all associations should be lazy
 ====
@@ -1037,6 +1038,7 @@ Set<Book> books;
 ----
 We're going to use this approach for the rest of the Introduction.
 
+[[bidirectional-problem]]
 [WARNING]
 // .To modify a bidirectional association, you must change the _owning side_!
 ====
@@ -1120,7 +1122,7 @@ Here, the `Author` table has a foreign key column holding the identifier of the 
 ====
 A one-to-one association often models a "type of" relationship.
 In our example, an `Author` is a type of `Person`.
-An alternative—and often more natural—way to represent "type of" relationships in Java is via <<entity-inheritance>>.
+An alternative—and often more natural—way to represent "type of" relationships in Java is via <<entity-inheritance,entity class inheritance>>.
 ====
 
 We can make this association bidirectional by adding a reference back to the `Author` in the `Person` entity:

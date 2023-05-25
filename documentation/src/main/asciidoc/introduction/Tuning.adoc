@@ -424,7 +424,7 @@ Therefore, we arrive at this rule of thumb:
 ====
 Many-to-one associations to "reference data", or to any other data that will almost always be available in the cache, should be mapped `EAGER`,`SELECT`.
 
-Other associations, as we've <<many-to-one,already made clear>>, should be `LAZY`.
+Other associations, as we've <<bidirectional-problem,already made clear>>, should be `LAZY`.
 ====
 
 Once we've marked an entity or collection as eligible for storage in the second-level cache, we still need to set up an actual cache.

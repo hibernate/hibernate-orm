@@ -819,5 +819,5 @@ session.enableFetchProfile("org.hibernate.defaultProfile");
 
 Then ``outer join``s for such associations will _automatically_ be added to every HQL or criteria query.
 This is nice if you can't be bothered typing out those ``join fetch``es explicitly.
-And in principle it even helps partially mitigate the <<many-to-one,problem>> of JPA having specified the wrong default for the `fetch` member of `@ManyToOne`.
+And in principle it even helps partially mitigate the <<lazy-problem,problem>> of JPA having specified the wrong default for the `fetch` member of `@ManyToOne`.
 ====

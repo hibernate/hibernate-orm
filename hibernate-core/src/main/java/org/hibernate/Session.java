@@ -1123,112 +1123,140 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @since 6.0
 	 */
 	<T> T getReference(T object);
-	
-	/**
-	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity type by
-	 * primary key.
-	 * 
-	 * @param entityName the entity name of the entity type to be retrieved
-	 *
-	 * @return load delegate for loading the specified entity type by primary key
-	 *
-	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
-	 */
-	<T> IdentifierLoadAccess<T> byId(String entityName);
 
 	/**
-	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple entities at once
-	 * as specified by primary key values.
+	 * Create an {@link IdentifierLoadAccess} instance to retrieve an instance of the given
+	 * entity type by its primary key.
 	 *
 	 * @param entityClass the entity type to be retrieved
 	 *
-	 * @return load delegate for loading the specified entity type by primary key values
+	 * @return an instance of {@link IdentifierLoadAccess} for executing the lookup
 	 *
-	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
-	 */
-	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
-
-	/**
-	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple entities at once
-	 * as specified by primary key values.
-	 *
-	 * @param entityName the entity name of the entity type to be retrieved
-	 *
-	 * @return load delegate for loading the specified entity type by primary key values
-	 *
-	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
-	 */
-	<T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName);
-
-	/**
-	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity by
-	 * primary key.
-	 *
-	 * @param entityClass the entity type to be retrieved
-	 *
-	 * @return load delegate for loading the specified entity type by primary key
-	 *
-	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
+	 * @throws HibernateException If the given class does not resolve as a mapped entity
 	 */
 	<T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
 
 	/**
-	 * Create a {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
-	 * its natural id.
+	 * Create an {@link IdentifierLoadAccess} instance to retrieve an instance of the named
+	 * entity type by its primary key.
 	 * 
 	 * @param entityName the entity name of the entity type to be retrieved
 	 *
-	 * @return load delegate for loading the specified entity type by natural id
+	 * @return an instance of {@link IdentifierLoadAccess} for executing the lookup
 	 *
-	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
+	 * @throws HibernateException If the given name does not resolve to a mapped entity
 	 */
-	<T> NaturalIdLoadAccess<T> byNaturalId(String entityName);
+	<T> IdentifierLoadAccess<T> byId(String entityName);
 
 	/**
-	 * Create a {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
-	 * its natural id.
-	 * 
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple instances
+	 * of the given entity type by their primary key values, using batching.
+	 *
 	 * @param entityClass the entity type to be retrieved
 	 *
-	 * @return load delegate for loading the specified entity type by natural id
+	 * @return an instance of {@link MultiIdentifierLoadAccess} for executing the lookup
 	 *
-	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
+	 * @throws HibernateException If the given class does not resolve as a mapped entity
+	 */
+	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
+
+	/**
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple instances
+	 * of the named entity type by their primary key values, using batching.
+	 *
+	 * @param entityName the entity name of the entity type to be retrieved
+	 *
+	 * @return an instance of {@link MultiIdentifierLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given name does not resolve to a mapped entity
+	 */
+	<T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName);
+
+	/**
+	 * Create a {@link NaturalIdLoadAccess} instance to retrieve an instance of the given
+	 * entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
+	 * which may be a composite natural id. The entity must have at least one attribute
+	 * annotated {@link org.hibernate.annotations.NaturalId}.
+	 *
+	 * @param entityClass the entity type to be retrieved
+	 *
+	 * @return an instance of {@link NaturalIdLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given class does not resolve as a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
 	<T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
 
 	/**
-	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
-	 * its {@link org.hibernate.annotations.NaturalId natural id}.
-	 *
+	 * Create a {@link NaturalIdLoadAccess} instance to retrieve an instance of the named
+	 * entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
+	 * which may be a composite natural id. The entity must have at least one attribute
+	 * annotated {@link org.hibernate.annotations.NaturalId}.
+	 * 
 	 * @param entityName the entity name of the entity type to be retrieved
 	 *
-	 * @return load delegate for loading the specified entity type by natural id
+	 * @return an instance of {@link NaturalIdLoadAccess} for executing the lookup
 	 *
-	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped
-	 * entity or if the entity does not define a natural id
+	 * @throws HibernateException If the given name does not resolve to a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
-	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName);
+	<T> NaturalIdLoadAccess<T> byNaturalId(String entityName);
 
 	/**
-	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
-	 * its simple (single attribute) {@link org.hibernate.annotations.NaturalId natural id}.
+	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve an instance of the
+	 * given entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
+	 * which must be a simple (non-composite) value. The entity must have exactly one
+	 * attribute annotated {@link org.hibernate.annotations.NaturalId}.
 	 *
 	 * @param entityClass the entity type to be retrieved
 	 *
-	 * @return load delegate for loading the specified entity type by natural id
+	 * @return an instance of {@link SimpleNaturalIdLoadAccess} for executing the lookup
 	 *
-	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped
-	 * entity or if the entity does not define a natural id
+	 * @throws HibernateException If the given class does not resolve as a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass);
 
 	/**
-	 * Access to load multiple entities by {@link org.hibernate.annotations.NaturalId natural id}.
+	 * Create a {@link SimpleNaturalIdLoadAccess} instance to retrieve an instance of the
+	 * named entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
+	 * which must be a simple (non-composite) value. The entity must have exactly one
+	 * attribute annotated {@link org.hibernate.annotations.NaturalId}.
+	 *
+	 * @param entityName the entity name of the entity type to be retrieved
+	 *
+	 * @return an instance of {@link SimpleNaturalIdLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given name does not resolve to a mapped entity,
+	 *                            or if the entity does not declare a natural id
+	 */
+	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName);
+
+	/**
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple instances
+	 * of the given entity type by their by {@linkplain org.hibernate.annotations.NaturalId
+	 * natural id} values, using batching.
+	 *
+	 * @param entityClass the entity type to be retrieved
+	 *
+	 * @return an instance of {@link NaturalIdMultiLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given class does not resolve as a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass);
 
 	/**
-	 * Access to load multiple entities by {@link org.hibernate.annotations.NaturalId natural id}.
+	 * Create a {@link MultiIdentifierLoadAccess} instance to retrieve multiple instances
+	 * of the named entity type by their by {@linkplain org.hibernate.annotations.NaturalId
+	 * natural id} values, using batching.
+	 *
+	 * @param entityName the entity name of the entity type to be retrieved
+	 *
+	 * @return an instance of {@link NaturalIdMultiLoadAccess} for executing the lookup
+	 *
+	 * @throws HibernateException If the given name does not resolve to a mapped entity,
+	 *                            or if the entity does not declare a natural id
 	 */
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName);
 

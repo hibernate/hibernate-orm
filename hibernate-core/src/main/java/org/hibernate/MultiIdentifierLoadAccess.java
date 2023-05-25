@@ -21,7 +21,7 @@ import org.hibernate.graph.RootGraph;
  * graph.addSubgraph(Book_.publisher);
  *
  * List&lt;Book&gt; books =
- *         session.byId(Book.class)
+ *         session.byMultipleIds(Book.class)
  *             .withFetchGraph(graph)
  *             .withBatchSize(20)
  *             .multiLoad(bookIds);

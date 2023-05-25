@@ -36,10 +36,11 @@ The connection pool built in to Hibernate is suitable for testing, but isn't int
 Instead, Hibernate supports a range of different connection pools, including our favorite, Agroal.
 
 To select and configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
-For example:
+Properties with the prefix `hibernate.agroal` are passed through to Agroal:
 
 [source,properties]
 ----
+# configure Agroal connection pool
 hibernate.agroal.maxSize 20
 hibernate.agroal.minSize 10
 hibernate.agroal.acquisitionTimeout PT1s
@@ -47,6 +48,7 @@ hibernate.agroal.reapTimeout PT10s
 ----
 
 As long as you set at least one property with the prefix `hibernate.agroal`, the `AgroalConnectionProvider` will be selected automatically.
+There's many to choose from:
 
 .Settings for configuring Agroal
 [cols="37,~"]
@@ -63,6 +65,13 @@ As long as you set at least one property with the prefix `hibernate.agroal`, the
 | `hibernate.agroal.idleValidationTimeout` | A foreground validation is executed if a connection has been idle on the pool for longer than this duration
 | `hibernate.agroal.validationTimeout` | The interval between background validation checks
 | `hibernate.agroal.initialSql` | A SQL command to be executed when a connection is created
+|===
+
+The following settings are common to all connection pools supported by Hibernate:
+
+.Common settings for connection pools
+[cols="37,~"]
+|===
 | `hibernate.connection.autocommit` | The default autocommit mode
 | `hibernate.connection.isolation` | The default transaction isolation level
 |===
@@ -358,23 +367,7 @@ class Book {
 }
 ----
 
-This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs lookup by natural id:
-
-- `bySimpleNaturalId()` if just one attribute is annotation `@NaturalId`, or
-- `byNaturalId()` if multiple attributes are annotated `@NaturalId`.
-
-Here's how we can retrieve an entity by its composite natural id:
-
-[source,java]
-----
-Book book =
-        session.byNaturalId(Book.class)
-            .using(Book_.isbn, isbn)
-            .using(Book_.printing, printing)
-            .load();
-----
-
-Notice that this code fragment is completely typesafe.
+This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs <<load-access,lookup by natural id>>.
 
 [NOTE]
 ====
@@ -589,37 +582,30 @@ entityManager.setCacheRetrieveMode(CacheRetrieveMode.BYPASS);
 entityManager.setCacheStoreMode(CacheStoreMode.BYPASS);
 ----
 
-The JPA-defined cache modes are:
+The JPA-defined cache modes come in two flavors: `CacheRetrieveMode` and `CacheStoreMode`.
 
-.JPA-defined cache modes
+.JPA-defined cache retrieval modes
 [cols="30,~"]
 |===
 | Mode | Interpretation
 
 | `CacheRetrieveMode.USE` | Read data from the cache if available
 | `CacheRetrieveMode.BYPASS` | Don't read data from the cache; go direct to the database
+|===
+
+We might select `CacheRetrieveMode.BYPASS` if we're concerned about the possibility of reading stale data from the cache.
+
+.JPA-defined cache storage modes
+[cols="30,~"]
+|===
+| Mode | Interpretation
 
 | `CacheStoreMode.USE` | Write data to the cache when read from the database or when modified; do not update already-cached items when reading
 | `CacheStoreMode.REFRESH` | Write data to the cache when read from the database or when modified; always update cached items when reading
 | `CacheStoreMode.BYPASS` | Don't write data to the cache
 |===
 
-A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
-
-.Hibernate cache modes and JPA equivalents
-[cols="30,~"]
-|===
-| Hibernate `CacheMode` | Equivalent JPA modes
-
-| `NORMAL` | `CacheRetrieveMode.USE`, `CacheStoreMode.USE`
-| `IGNORE` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.BYPASS`
-| `GET` | `CacheRetrieveMode.USE`, `CacheStoreMode.BYPASS`
-| `PUT` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.USE`
-| `REFRESH` | `CacheRetrieveMode.REFRESH`, `CacheStoreMode.BYPASS`
-|===
-
-There's no particular reason to prefer Hibernate's `CacheMode` to the JPA equivalents.
-This enumeration only exists because Hibernate had cache modes long before they were added to JPA.
+We might select `CacheStoreMode.BYPASS` if we're querying data that we don't expect to use again soon.
 
 [TIP]
 // .A good time to `BYPASS` the cache
@@ -649,6 +635,23 @@ List<Publisher> allpubs =
 ----
 ====
 
+A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
+
+.Hibernate cache modes and JPA equivalents
+[cols="30,~"]
+|===
+| Hibernate `CacheMode` | Equivalent JPA modes
+
+| `NORMAL` | `CacheRetrieveMode.USE`, `CacheStoreMode.USE`
+| `IGNORE` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.BYPASS`
+| `GET` | `CacheRetrieveMode.USE`, `CacheStoreMode.BYPASS`
+| `PUT` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.USE`
+| `REFRESH` | `CacheRetrieveMode.REFRESH`, `CacheStoreMode.BYPASS`
+|===
+
+There's no particular reason to prefer Hibernate's `CacheMode` over the JPA equivalents.
+This enumeration only exists because Hibernate had cache modes long before they were added to JPA.
+
 [TIP]
 ====
 For "reference" data, that is, for data which is expected to always be found in the second-level cache, it's a good idea to _prime_ the cache at startup.
@@ -657,7 +660,9 @@ There's a really easy way to do this: just execute a query immediately after obt
 
 [source,java]
 ----
-SessionFactory sessionFactory = setupHibernate(new Configuration()).buildSessionFactory();
+SessionFactory sessionFactory =
+        setupHibernate(new Configuration())
+            .buildSessionFactory();
 // prime the second-level cache
 sessionFactory.inSession(session -> {
     session.createSelectionQuery("from Countries"))

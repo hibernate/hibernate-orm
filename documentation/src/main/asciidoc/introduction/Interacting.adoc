@@ -406,7 +406,7 @@ The JPA-standard API for this is a bit unwieldy:
 ----
 var graph = entityManager.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
-entityManager.find(Book.class, bookId, Map.of(SpecHints.HINT_SPEC_FETCH_GRAPH, graph));
+Book book = entityManager.find(Book.class, bookId, Map.of(SpecHints.HINT_SPEC_FETCH_GRAPH, graph));
 ----
 
 This is untypesafe and unnecessarily verbose.
@@ -416,7 +416,7 @@ Hibernate has a better way:
 ----
 var graph = session.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
-session.byId(Book.class).withFetchGraph(graph).load(bookId);
+Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
 ----
 
 This code adds a `left outer join` to our SQL query, fetching the associated `Publisher` along with the `Book`.
@@ -428,7 +428,7 @@ We may even attach additional nodes to our `EntityGraph`:
 var graph = session.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
 graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
-session.byId(Book.class).withFetchGraph(graph).load(bookId);
+Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
 
 ----
 
@@ -566,7 +566,7 @@ List<Book> matchingBooks =
             .getResultList();
 ----
 
-The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed a Mutation.
+The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed an `insert`, `delete`, or `update`.
 
 In the query above, `:titleSearchPattern` is called a _named parameter_.
 We may also identify parameters by a number.
@@ -609,46 +609,7 @@ Book bookOrNull =
             .getSingleResultOrNull();
 ----
 
-The difference, of course, is that `getSingleResult()` throws an exception if there is no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
-
-[TIP]
-====
-Since Java has no tuple types, representing the type of a query projection list in Java has always been a problem for JPA and Hibernate.
-Traditionally, we've just used `Object[]`:
-[source,java]
-----
-var results =
-        session.createSelectionQuery("select isbn, title from Book",
-                                     Object[].class)
-            .getResultList();
-for (var result : results) {
-    var isbn = (String) result[0];
-    var title = (String) result[1];
-    ...
-}
-----
-This is really a bit ugly.
-Java's `record` types now offer an interesting alternative:
-[source,java]
-----
-record IsbnTitle(String isbn, String title) {}
-var results =
-        session.createSelectionQuery("select new IsbnTitle(isbn, title) from Book",
-                                     IsbnTitle.class)
-            .getResultList();
-for (var result : results) {
-    var isbn = result.isbn();
-    var title = result.title();
-    ...
-}
-----
-Notice that we're able to declare the `record` right before the line which executes the query.
-
-Now, this is only _superficially_ more typesafe, since the query itself is not checked statically, and so we can't say it's objectively better.
-But perhaps you find it more aesthetically pleasing.
-
-On the other hand, when we're passing query results around the system, the use of `select new` with a `record` type is much better than manually unpacking an `Object[]` array.
-====
+The difference, of course, is that `getSingleResult()` throws an exception if there's no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
 
 By default, Hibernate dirty checks entities in the persistence context before executing a query, in order to determine if the session should be flushed.
 If there are many entities association with the persistence context, then this can be an expensive operation.
@@ -880,6 +841,50 @@ List<Book> books =
             .getResultList();
 ----
 
+[[projection-lists]]
+=== Representing projection lists
+
+A _projection list_ is the list of things that a query returns, that is, the list of expressions in the `select` clause.
+Since Java has no tuple types, representing query projection lists in Java has always been a problem for JPA and Hibernate.
+Traditionally, we've just used `Object[]` most of the time:
+
+[source,java]
+----
+var results =
+        session.createSelectionQuery("select isbn, title from Book", Object[].class)
+            .getResultList();
+
+for (var result : results) {
+    var isbn = (String) result[0];
+    var title = (String) result[1];
+    ...
+}
+----
+
+This is really a bit ugly.
+Java's `record` types now offer an interesting alternative:
+
+[source,java]
+----
+record IsbnTitle(String isbn, String title) {}
+
+var results =
+        session.createSelectionQuery("select new IsbnTitle(isbn, title) from Book", IsbnTitle.class)
+            .getResultList();
+
+for (var result : results) {
+    var isbn = result.isbn();
+    var title = result.title();
+    ...
+}
+----
+Notice that we're able to declare the `record` right before the line which executes the query.
+
+Now, this is only _superficially_ more typesafe, since the query itself is not checked statically, and so we can't say it's objectively better.
+But perhaps you find it more aesthetically pleasing.
+
+On the other hand, when we're passing query results around the system, the use of `select new` with a `record` type is much better than manually unpacking an `Object[]` array.
+
 [[named-queries]]
 === Named queries
 
@@ -899,8 +904,8 @@ We have to make sure that the class with the `@NamedQuery` annotation will be sc
 - by adding `<class>org.hibernate.example.BookQueries</class>` to `persistence.xml`, or
 - by calling `configuration.addClass(BookQueries.class)`.
 
-The `@NamedNativeQuery` lets us do the same for native SQL queries.
-There is much less advantage to using `@NamedNativeQuery`, because there is very little that Hibernate can do to validate the correctness of a query written in the native SQL dialect of your database.
+The `@NamedNativeQuery` annotation lets us do the same for native SQL queries.
+There's much less advantage to using `@NamedNativeQuery`, because there is very little that Hibernate can do to validate the correctness of a query written in the native SQL dialect of your database.
 
 .Executing named queries
 [cols="10,36,32,22"]
@@ -922,6 +927,69 @@ List<Book> books =
 ----
 
 Note that the code which executes the named query is not aware of whether the query was written in HQL or in native SQL, making it slightly easier to change and optimize the query later.
+
+[[load-access]]
+=== Controlling lookup by id
+
+We can do almost anything via HQL, criteria, or native SQL queries.
+But when we already know the identifier of the entity we need, a query can feel like overkill.
+And queries don't make efficient use of the <<second-level-cache,second level cache>>.
+
+We met the <<persistence-operations,`find()`>> method earlier.
+It's the most basic way to perform a _lookup_ by id.
+But as we also <<entity-graph,already saw>>, it can't quite do everything.
+Therefore, Hibernate has some APIs that streamline certain more complicated lookups:
+
+.Operations for lookup by id
+[cols="30,~"]
+|===
+| Method name | Purpose
+
+| `byId()` | Lets us specify association fetching via an `EntityGraph`, as we saw; also lets us specify some additional options, including how the lookup <<second-level-cache-management,interacts with the second level cache>>, and whether the entity should be loaded in read-only mode
+| `byMultipleIds()` | Lets us load a _batch_ of ids at the same time
+|===
+
+Batch loading is very useful when we need to retrieve multiple instances of the same entity class by id:
+
+[source,java]
+----
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.publisher);
+
+List<Book> books =
+        session.byMultipleIds(Book.class)
+            .withFetchGraph(graph)  // control association fetching
+            .withBatchSize(20)      // specify an explicit batch size
+            .with(CacheMode.GET)    // control interaction with the cache
+            .multiLoad(bookIds);
+----
+
+The given list of `bookIds` will be broken into batches, and each batch will be fetched from the database in a single `select`.
+If we don't specify the batch size explicitly, a batch size will be chosen automatically.
+
+We also have some operations for working with lookups by <<natural-identifiers, natural id>>:
+
+[cols="30,~"]
+|===
+| Method name | Purpose
+
+| `bySimpleNaturalId()` | For an entity with just one attribute is annotated `@NaturalId`
+| `byNaturalId()` | For an entity with multiple attributes are annotated `@NaturalId`
+| `byMultipleNaturalId()` | Lets us load a _batch_ of natural ids at the same time
+|===
+
+Here's how we can retrieve an entity by its composite natural id:
+
+[source,java]
+----
+Book book =
+        session.byNaturalId(Book.class)
+            .using(Book_.isbn, isbn)
+            .using(Book_.printing, printing)
+            .load();
+----
+
+Notice that this code fragment is completely typesafe, again thanks to the <<metamodel-generator,Metamodel Generator>>.
 
 [[jdbc]]
 === Interacting directly with JDBC

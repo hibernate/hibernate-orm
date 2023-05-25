@@ -28,6 +28,7 @@ import jakarta.persistence.criteria.Order;
 import static org.hibernate.query.sqm.FrameExclusion.NO_OTHERS;
 import static org.hibernate.query.sqm.FrameKind.CURRENT_ROW;
 import static org.hibernate.query.sqm.FrameKind.UNBOUNDED_PRECEDING;
+import static org.hibernate.query.sqm.FrameMode.GROUPS;
 import static org.hibernate.query.sqm.FrameMode.RANGE;
 import static org.hibernate.query.sqm.FrameMode.ROWS;
 
@@ -114,28 +115,28 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 
 	@Override
 	public JpaWindow frameRows(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
-		return this.setFrames(FrameMode.ROWS, startFrame, endFrame);
+		return this.setFrames( ROWS, startFrame, endFrame );
 	}
 
 	@Override
 	public JpaWindow frameRange(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
-		return this.setFrames(FrameMode.RANGE, startFrame, endFrame);
+		return this.setFrames( RANGE, startFrame, endFrame );
 
 	}
 
 	@Override
 	public JpaWindow frameGroups(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
-		return this.setFrames(FrameMode.GROUPS, startFrame, endFrame);
+		return this.setFrames( GROUPS, startFrame, endFrame );
 
 	}
 
 	private SqmWindow setFrames(FrameMode frameMode, JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
 		this.mode = frameMode;
-		if (startFrame != null) {
+		if ( startFrame != null ) {
 			this.startKind = startFrame.getKind();
 			this.startExpression = (SqmExpression<?>) startFrame.getExpression();
 		}
-		if (endFrame != null) {
+		if ( endFrame != null ) {
 			this.endKind = endFrame.getKind();
 			this.endExpression = (SqmExpression<?>) endFrame.getExpression();
 		}
@@ -150,15 +151,15 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 
 	@Override
 	public JpaWindow partitionBy(Expression<?>... expressions) {
-		for (Expression<?> expression : expressions) {
-			this.partitions.add((SqmExpression<?>) expression);
+		for ( Expression<?> expression : expressions ) {
+			this.partitions.add( (SqmExpression<?>) expression );
 		}
 		return this;
 	}
 
 	@Override
 	public JpaWindow orderBy(Order... orders) {
-		for (Order order : orders) {
+		for ( Order order : orders ) {
 			this.orderList.add( (SqmSortSpecification) order );
 		}
 		return this;
@@ -169,13 +170,13 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		if ( existing != null ) {
 			return existing;
 		}
-		final List<SqmExpression<?>> partitionsCopy = new ArrayList<>( this.partitions.size() );
-		for ( SqmExpression<?> partition : this.partitions ) {
-			partitions.add( partition.copy( context ) );
+		final List<SqmExpression<?>> partitionsCopy = new ArrayList<>( partitions.size() );
+		for ( SqmExpression<?> partition : partitions ) {
+			partitionsCopy.add( partition.copy( context ) );
 		}
-		final List<SqmSortSpecification> orderListCopy = new ArrayList<>( this.orderList.size() );
-		for ( SqmSortSpecification sortSpecification : this.orderList ) {
-			orderList.add( sortSpecification.copy( context ) );
+		final List<SqmSortSpecification> orderListCopy = new ArrayList<>( orderList.size() );
+		for ( SqmSortSpecification sortSpecification : orderList ) {
+			orderListCopy.add( sortSpecification.copy( context ) );
 		}
 		return context.registerCopy(
 				this,

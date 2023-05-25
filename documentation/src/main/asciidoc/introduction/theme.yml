@@ -87,7 +87,7 @@ table:
   caption:
     text-align: center
     side: top
-    font-size: 0.9em
+    font-size: 0.94em
   grid:
     color: #f0f0f0
     style: solid

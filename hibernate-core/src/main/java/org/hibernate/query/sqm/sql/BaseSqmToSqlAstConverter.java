@@ -762,6 +762,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return currentSqmQueryPart;
 	}
 
+	@Override
+	public SqmStatement<?> getCurrentSqmStatement() {
+		return currentSqmStatement;
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Statements
 
@@ -891,16 +896,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			throw new SemanticException( "user-defined version types not supported for increment option" );
 		}
 
+		currentClauseStack.push( Clause.SET );
 		final EntityVersionMapping versionMapping = persister.getVersionMapping();
 		final List<ColumnReference> targetColumnReferences = BasicValuedPathInterpretation.from(
 				(SqmBasicValuedSimplePath<?>) sqmStatement
 						.getRoot()
 						.get( versionMapping.getPartName() ),
 				this,
-				this,
-				jpaQueryComplianceEnabled,
-				Clause.SET
+				jpaQueryComplianceEnabled
 		).getColumnReferences();
+		currentClauseStack.pop();
 		assert targetColumnReferences.size() == 1;
 
 		final ColumnReference versionColumn = targetColumnReferences.get( 0 );
@@ -1344,9 +1349,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					(SqmBasicValuedSimplePath<?>) sqmStatement.getTarget()
 							.get( versionAttributeName ),
 					this,
-					this,
-					jpaQueryComplianceEnabled,
-					getCurrentClauseStack().getCurrent()
+					jpaQueryComplianceEnabled
 			);
 			final List<ColumnReference> targetColumnReferences = versionPath.getColumnReferences();
 			assert targetColumnReferences.size() == 1;
@@ -4151,9 +4154,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				() -> BasicValuedPathInterpretation.from(
 						sqmPath,
 						this,
-						this,
-						jpaQueryComplianceEnabled,
-						getCurrentClauseStack().getCurrent()
+						jpaQueryComplianceEnabled
 				)
 		);
 		Expression result = path;
@@ -4254,9 +4255,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						() -> EmbeddableValuedPathInterpretation.from(
 								sqmPath,
 								this,
-								this,
-								jpaQueryComplianceEnabled,
-								getCurrentClauseStack().getCurrent()
+								jpaQueryComplianceEnabled
 						)
 				),
 				sqmPath

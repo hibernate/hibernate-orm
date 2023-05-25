@@ -51,7 +51,7 @@ As long as you set at least one property with the prefix `hibernate.agroal`, the
 There's many to choose from:
 
 .Settings for configuring Agroal
-[cols="37,~"]
+[%breakable,cols="37,~"]
 |===
 | Configuration property name | Purpose
 
@@ -70,7 +70,7 @@ There's many to choose from:
 The following settings are common to all connection pools supported by Hibernate:
 
 .Common settings for connection pools
-[cols="37,~"]
+[%breakable,cols="37,~"]
 |===
 | `hibernate.connection.autocommit` | The default autocommit mode
 | `hibernate.connection.isolation` | The default transaction isolation level
@@ -141,7 +141,7 @@ Of these, you should almost always use outer join fetching.
 Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
 
 .Configuration settings to enable batch and subselect fetching
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name | Property value
 
@@ -302,7 +302,7 @@ It's an error to place it on a subclass entity.
 The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
 
 .Cache concurrency
-[cols="20,30,~"]
+[%breakable,cols="20,30,~"]
 |===
 | Concurrency policy | Interpretation | Explanation
 
@@ -348,7 +348,10 @@ Unfortunately, it's almost useless to us, since:
 - it may not be used to annotate associations, and so we can't even use it to mark collection roles as eligible for storage in the second-level cache.
 ====
 
-If our entity has a <<natural-id-attributes,natural id>>, we can enable an additional cache, which holds a mapping from natural id to id, by annotating the entity `@NaturalIdCache`.
+[[natural-id-cache]]
+=== Caching by natural id
+
+If our entity has a <<natural-id-attributes,natural id>>, we can enable an additional cache, which holds cross-references from natural id to primary id, by annotating the entity `@NaturalIdCache`.
 By default, the natural id cache is stored in a dedicated region of the second-level cache, separate from the cached entity data.
 
 [source,java]
@@ -373,6 +376,8 @@ This cache is utilized when the entity is retrieved using one of the operations 
 ====
 Since the natural id cache doesn't contain the actual state of the entity, it doesn't make sense to annotate an entity `@NaturalIdCache` unless it's already eligible for storage in the second-level cache, that is, unless it's also annotated `@Cache`.
 ====
+
+It's worth noticing that, unlike the primary identifier of an entity, a natural id might be mutable.
 
 We must now consider a subtlety that often arises when we have to deal with so-called "reference data", that is, data which fits easily in memory, and doesn't change much.
 
@@ -433,7 +438,7 @@ But in case it helps, we often test Hibernate with the following configuration, 
 :ehcache-config: https://www.ehcache.org/documentation/
 
 .EHCache configuration
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name              | Property value
 
@@ -453,12 +458,12 @@ JCache automatically selects whichever implementation it finds on the classpath.
 If there are multiple implementations on the classpath, we must disambiguate using:
 
 .Disambiguating the JCache implementation
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name        | Property value
 
 | `hibernate.javax.cache.provider`   a| The implementation of `javax.cache.spiCachingProvider`, for example:
-[cols="~,20"]
+[%breakable,cols="~,20"]
 !===
 ! `org.ehcache.jsr107.EhcacheCachingProvider` ! for EHCache
 ! `com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider` ! for Caffeine
@@ -470,13 +475,13 @@ Alternatively, to use Infinispan as the cache implementation, the following sett
 :infinispan-hibernate: https://infinispan.org/docs/stable/titles/hibernate/hibernate.html
 
 .Infinispan provider configuration
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name              | Property value
 
 | `hibernate.cache.region.factory_class`   | `infinispan`
 | `hibernate.cache.infinispan.cfg`         a| Path to infinispan configuration file, for example:
-[cols="~,35"]
+[%breakable,cols="~,35"]
 !===
 ! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs.xml`
 ! for a distributed cache
@@ -491,7 +496,7 @@ There's more about using Infinispan with Hibernate {infinispan-hibernate}[here].
 Finally, there's a way to globally disable the second-level cache:
 
 .Setting to disable caching
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name              | Property value
 
@@ -516,7 +521,7 @@ Hibernate also has a way to cache the result sets of queries, though this is onl
 The query cache must be enabled explicitly:
 
 .Setting to enable the query cache
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name | Property value
 
@@ -585,7 +590,7 @@ entityManager.setCacheStoreMode(CacheStoreMode.BYPASS);
 The JPA-defined cache modes come in two flavors: `CacheRetrieveMode` and `CacheStoreMode`.
 
 .JPA-defined cache retrieval modes
-[cols="30,~"]
+[%breakable,cols="30,~"]
 |===
 | Mode | Interpretation
 
@@ -596,7 +601,7 @@ The JPA-defined cache modes come in two flavors: `CacheRetrieveMode` and `CacheS
 We might select `CacheRetrieveMode.BYPASS` if we're concerned about the possibility of reading stale data from the cache.
 
 .JPA-defined cache storage modes
-[cols="30,~"]
+[%breakable,cols="30,~"]
 |===
 | Mode | Interpretation
 
@@ -605,7 +610,7 @@ We might select `CacheRetrieveMode.BYPASS` if we're concerned about the possibil
 | `CacheStoreMode.BYPASS` | Don't write data to the cache
 |===
 
-We might select `CacheStoreMode.BYPASS` if we're querying data that we don't expect to use again soon.
+We should select `CacheStoreMode.BYPASS` if we're querying data that doesn't need to be cached.
 
 [TIP]
 // .A good time to `BYPASS` the cache
@@ -638,7 +643,7 @@ List<Publisher> allpubs =
 A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
 
 .Hibernate cache modes and JPA equivalents
-[cols="30,~"]
+[%breakable,cols="30,~"]
 |===
 | Hibernate `CacheMode` | Equivalent JPA modes
 
@@ -687,8 +692,8 @@ sessionFactory.getCache().evictEntityData(Book.class, bookId);
 [CAUTION]
 // .Second-level cache management is not transaction-aware
 ====
-Second-level cache management is not transaction-aware.
-None of the operations of the `Cache` interface respect any isolation or transactional semantics associated with the underlying caches. In particular, eviction via the methods of this interface causes an immediate "hard" removal outside any current transaction and/or locking scheme.
+Second-level cache management via the `Cache` interface is not transaction-aware.
+None of the operations of `Cache` respect any isolation or transactional semantics associated with the underlying caches. In particular, eviction via the methods of this interface causes an immediate "hard" removal outside any current transaction and/or locking scheme.
 ====
 
 Ordinarily, however, Hibernate automatically evicts or updates cached data after modifications, and, in addition, cached data which is unused will eventually be expired according to the configured policies.
@@ -794,7 +799,7 @@ lock mode can be used to request a pessimistic lock, or to customize the behavio
 of optimistic locking:
 
 .Optimistic and pessimistic lock modes
-[cols="26,~"]
+[%breakable,cols="26,~"]
 |===
 | `LockMode` type | Meaning
 
@@ -822,7 +827,7 @@ an entity is written to the database using
 
 We may ask Hibernate to collect statistics about its activity by setting this configuration property:
 
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name | Property value
 

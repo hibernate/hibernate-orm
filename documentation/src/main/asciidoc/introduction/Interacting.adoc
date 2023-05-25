@@ -214,7 +214,7 @@ Of course, the main reason we need an `EntityManager` is to do stuff to the data
 The following important operations let us interact with the persistence context and schedule modifications to the data:
 
 .Methods for modifying data and managing the persistence context
-[cols="30,~"]
+[%breakable,cols="30,~"]
 |===
 | Method name and parameters | Effect
 
@@ -241,7 +241,7 @@ Modifications are automatically detected when the session is <<flush,flushed>>.
 On the other hand, the following operations all result in immediate access to the database:
 
 .Methods for reading and locking data
-[cols="30,~"]
+[%breakable,cols="30,~"]
 |===
 | Method name and parameters | Effect
 
@@ -491,7 +491,7 @@ session.setHibernateFlushMode(FlushMode.MANUAL);
 Since flushing is a somewhat expensive operation (the session must dirty-check every entity in the persistence context), setting the flush mode to `COMMIT` can occasionally be a useful optimization.
 
 .Flush modes
-[cols="15,15,~"]
+[%breakable,cols="15,15,~"]
 |===
 | Hibernate `FlushMode` | JPA `FlushModeType` | Interpretation
 
@@ -538,7 +538,7 @@ The method we call depends on what Kind it is:
 Selection queries usually start with the keyword `select` or `from`, whereas mutation queries begin with the keyword `insert`, `update`, or `delete`.
 
 .Executing HQL
-[cols="10,36,32,22"]
+[%breakable,cols="10,36,32,22"]
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
@@ -717,7 +717,7 @@ If you change the default behavior, and set the property to `INLINE` instead of 
 Execution of a criteria query works almost exactly like execution of HQL.
 
 .Executing criteria queries
-[cols="10,36,32,22"]
+[%breakable,cols="10,36,32,22"]
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
@@ -744,7 +744,7 @@ But ultimately, the true value of ORM is not in avoiding SQL, but in alleviating
 As we said <<introduction,right up front>>, Hibernate's generated SQL is meant to be used in conjunction with handwritten SQL, and native SQL queries are one of the facilities we provide to make that easy.
 
 .Executing SQL
-[cols="10,36,32,22"]
+[%breakable,cols="10,36,32,22"]
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
@@ -908,7 +908,7 @@ The `@NamedNativeQuery` annotation lets us do the same for native SQL queries.
 There's much less advantage to using `@NamedNativeQuery`, because there is very little that Hibernate can do to validate the correctness of a query written in the native SQL dialect of your database.
 
 .Executing named queries
-[cols="10,36,32,22"]
+[%breakable,cols="10,36,32,22"]
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
@@ -941,7 +941,7 @@ But as we also <<entity-graph,already saw>>, it can't quite do everything.
 Therefore, Hibernate has some APIs that streamline certain more complicated lookups:
 
 .Operations for lookup by id
-[cols="30,~"]
+[%breakable,cols="30,~"]
 |===
 | Method name | Purpose
 
@@ -969,7 +969,7 @@ If we don't specify the batch size explicitly, a batch size will be chosen autom
 
 We also have some operations for working with lookups by <<natural-identifiers, natural id>>:
 
-[cols="30,~"]
+[%breakable,cols="30,~"]
 |===
 | Method name | Purpose
 

@@ -178,7 +178,7 @@ Native SQL queries are _not_ automatically filtered by tenant id; you'll have to
 ====
 
 .Multi-tenancy configuration
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name           | Purpose
 
@@ -316,7 +316,7 @@ However, the older APIs are still available and custom ``IdentifierGenerator``s 
 Hibernate has a range of built-in generators which are defined in terms of this new framework.
 
 .Built-in generators
-[cols="20,25,~"]
+[%breakable,cols="20,25,~"]
 |===
 | Annotation | Implementation | Purpose
 
@@ -433,7 +433,7 @@ A popular `PhysicalNamingStrategy` produces snake case identifiers.
 Custom naming strategies may be enabled using the configuration properties we already mentioned without much explanation back in <<minimizing>>.
 
 .Naming strategy configuration
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name           | Purpose
 

@@ -6,7 +6,7 @@ Unfortunately, there's several distinct ways to configure and bootstrap Hibernat
 
 The four basic ways to obtain an instance of Hibernate are shown in the following table:
 
-[cols="50,50"]
+[%breakable,cols="50,50"]
 |===
 
 | Using the standard JPA-defined XML, and the operation `Persistence.createEntityManagerFactory()`
@@ -57,7 +57,7 @@ You'll also need to add a dependency for the JDBC
 driver for your database.
 
 .JDBC driver dependencies
-[cols="50,~"]
+[%breakable,cols="50,~"]
 |===
 | Database                  | Driver dependency
 
@@ -90,7 +90,7 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 Optionally, you might also add any of the following additional features:
 
 .Optional dependencies
-[cols="50,~"]
+[%breakable,cols="50,~"]
 |===
 | Optional feature | Dependencies
 
@@ -272,7 +272,7 @@ With rare exception, the default behavior of every one of these settings was car
 The properties you really do need to get started are these three:
 
 .JDBC connection settings
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name | Purpose
 
@@ -294,7 +294,7 @@ Pooling JDBC connections is an extremely important performance optimization.
 You can set the size of Hibernate's built-in connection pool using this property:
 
 .Built-in connection pool size
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name | Purpose
 
@@ -311,7 +311,7 @@ This pool is not meant for use in production, and later, when we discuss perform
 Alternatively, in a container environment, you'll need at least one of these properties:
 
 .Transaction management settings
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name            | Purpose
 
@@ -333,7 +333,7 @@ initialization time by specifying one or more of the following configuration
 properties:
 
 .Schema management settings
-[cols="52,~"]
+[%breakable,cols="52,~"]
 |===
 | Configuration property name                                | Purpose
 
@@ -387,7 +387,7 @@ You can make the output much more readable by enabling formatting or highlightin
 These settings really help when troubleshooting the generated SQL statements.
 
 .Settings for SQL logging to the console
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name | Purpose
 
@@ -423,7 +423,7 @@ But with this approach we miss out on the pretty highlighting.
 The following properties are very useful for minimizing the amount of information you'll need to explicitly specify in `@Table` and `@Column` annotations, which we'll discuss below in <<object-relational-mapping>>:
 
 .Settings for minimizing explicit mapping information
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name           | Purpose
 
@@ -446,7 +446,7 @@ We'll have more to say about them in <<naming-strategies>>.
 _By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode data. But a Java string may contain any Unicode character. So, if you're working with SQL Server, you might need to force Hibernate to use the `nchar` and `nvarchar` column types.
 
 .Setting the use of nationalized character data
-[cols="40,~"]
+[%breakable,cols="40,~"]
 |===
 | Configuration property name                 | Purpose
 

@@ -50,6 +50,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
@@ -844,6 +845,26 @@ public class ActionQueue {
 				|| ( deletions != null && !deletions.isEmpty()) || ( collectionUpdates != null && !collectionUpdates.isEmpty() )
 				|| ( collectionQueuedOps != null && !collectionQueuedOps.isEmpty() ) || ( collectionRemovals != null && !collectionRemovals.isEmpty() )
 				|| ( collectionCreations != null && !collectionCreations.isEmpty() );
+	}
+
+	public void unScheduleUnloadedDeletion(Object newEntity) {
+		final EntityPersister entityPersister = session.getEntityPersister( null, newEntity );
+		final Object identifier = entityPersister.getIdentifier( newEntity, session );
+		if ( deletions != null ) {
+			for ( int i = 0; i < deletions.size(); i++ ) {
+				EntityDeleteAction action = deletions.get( i );
+				if ( action.getInstance() == null
+						&& action.getEntityName().equals( entityPersister.getEntityName() )
+						&& entityPersister.getIdentifierMapping().areEqual( action.getId(), identifier, session ) ) {
+					session.getPersistenceContextInternal().removeDeletedUnloadedEntityKey(
+							session.generateEntityKey( identifier, entityPersister )
+					);
+					deletions.remove( i );
+					return;
+				}
+			}
+		}
+		throw new AssertionFailure( "Unable to perform un-delete for unloaded entity delete " + entityPersister.getEntityName() );
 	}
 
 	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {

@@ -25,7 +25,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
@@ -156,6 +155,19 @@ public class DefaultMergeEventListener
 				entityIsPersistent(event, copiedAlready);
 				break;
 			default: //DELETED
+				if ( event.getSession().getPersistenceContext().getEntry( entity ) == null ) {
+					assert event.getSession().getPersistenceContext().containsDeletedUnloadedEntityKey(
+							event.getSession().generateEntityKey(
+									event.getSession()
+											.getEntityPersister( event.getEntityName(), entity )
+											.getIdentifier( entity, event.getSession() ),
+									event.getSession().getEntityPersister( event.getEntityName(), entity )
+							)
+					);
+					event.getSession().getActionQueue().unScheduleUnloadedDeletion( entity );
+					entityIsDetached(event, copiedAlready);
+					break;
+				}
 				throw new ObjectDeletedException(
 						"deleted instance passed to merge",
 						null,
@@ -174,7 +186,8 @@ public class DefaultMergeEventListener
 			EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 			Object id = persister.getIdentifier( entity, source );
 			if ( id != null ) {
-				final Object managedEntity = persistenceContext.getEntity( source.generateEntityKey( id, persister ) );
+				final EntityKey entityKey = source.generateEntityKey( id, persister );
+				final Object managedEntity = persistenceContext.getEntity( entityKey );
 				entry = persistenceContext.getEntry( managedEntity );
 				if ( entry != null ) {
 					// we have a special case of a detached entity from the

@@ -46,12 +46,12 @@ image:
   align: center
 codespan:
   font:
-    size: 8.5
+    size: 0.94em
     family: Inconsolata Light
     color: #281e5d
 code:
   font:
-    size: 8.5
+    size: 0.94em
     color: #281e5d
     family: Inconsolata Light
   border-width: 0
@@ -83,11 +83,11 @@ list:
   indent: $base-font-size * 1.5
   item-spacing: 2
 table:
-  font-size: 8.5
+  font-size: 0.94em
   caption:
-    text-align: right
+    text-align: center
     side: top
-    font-size: 8
+    font-size: 0.9em
   grid:
     color: #f0f0f0
     style: solid

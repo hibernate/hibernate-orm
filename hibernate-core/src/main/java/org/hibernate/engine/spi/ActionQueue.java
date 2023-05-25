@@ -47,7 +47,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
@@ -105,125 +104,114 @@ public class ActionQueue {
 	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
 	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
 
-	/**
-	 * A LinkedHashMap containing providers for all the ExecutableLists, inserted in execution order
-	 */
-	private static final LinkedHashMap<Class<? extends Executable>,ListProvider<?>> EXECUTABLE_LISTS_MAP;
-	static {
-		EXECUTABLE_LISTS_MAP = CollectionHelper.linkedMapOfSize( 8 );
-		/*
-			CollectionRemoveAction actions have to be executed before OrphanRemovalAction actions, to prevent a constraint violation
-			when deleting an orphan Entity that contains an ElementCollection (see HHH-15159)
-		 */
-		EXECUTABLE_LISTS_MAP.put(
-				CollectionRemoveAction.class,
-				new ListProvider<CollectionRemoveAction>() {
-					ExecutableList<CollectionRemoveAction> get(ActionQueue instance) {
-						return instance.collectionRemovals;
-					}
-					ExecutableList<CollectionRemoveAction> init(ActionQueue instance) {
-						return instance.collectionRemovals = new ExecutableList<>(
-								instance.isOrderUpdatesEnabled()
-						);
-					}
+	//Extract this as a constant to perform efficient iterations:
+	//method values() otherwise allocates a new array on each invocation.
+	private static final OrderedActions[] ORDERED_OPERATIONS = OrderedActions.values();
+
+	//The order of these operations is very important
+	private enum OrderedActions {
+		CollectionRemoveAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.collectionRemovals;
+			}
+			@Override
+			public void ensureInitialized(ActionQueue instance) {
+				if ( instance.collectionRemovals == null ) {
+					instance.collectionRemovals = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
-		);
-		EXECUTABLE_LISTS_MAP.put(
-				OrphanRemovalAction.class,
-				new ListProvider<OrphanRemovalAction>() {
-					ExecutableList<OrphanRemovalAction> get(ActionQueue instance) {
-						return instance.orphanRemovals;
-					}
-					ExecutableList<OrphanRemovalAction> init(ActionQueue instance) {
-						// OrphanRemovalAction executables never require sorting.
-						return instance.orphanRemovals = new ExecutableList<>( false );
-					}
+			}
+		},
+		OrphanRemovalAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.orphanRemovals;
+			}
+			@Override
+			public void ensureInitialized(ActionQueue instance) {
+				if ( instance.orphanRemovals == null ) {
+					instance.orphanRemovals = new ExecutableList<>( false );
 				}
-		);
-		EXECUTABLE_LISTS_MAP.put(
-				AbstractEntityInsertAction.class,
-				new ListProvider<AbstractEntityInsertAction>() {
-					ExecutableList<AbstractEntityInsertAction> get(ActionQueue instance) {
-						return instance.insertions;
-					}
-					ExecutableList<AbstractEntityInsertAction> init(ActionQueue instance) {
-						if ( instance.isOrderInsertsEnabled() ) {
-							return instance.insertions = new ExecutableList<>(
-									InsertActionSorter.INSTANCE
-							);
-						}
-						else {
-							return instance.insertions = new ExecutableList<>(
-									false
-							);
-						}
-					}
+			}
+		},
+		EntityInsertAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.insertions;
+			}
+			@Override
+			public void ensureInitialized(final ActionQueue instance) {
+				if ( instance.insertions == null ) {
+					//Special case of initialization
+					instance.insertions = instance.isOrderInsertsEnabled()
+							? new ExecutableList<>( InsertActionSorter.INSTANCE )
+							: new ExecutableList<>( false );
 				}
-		);
-		EXECUTABLE_LISTS_MAP.put(
-				EntityUpdateAction.class,
-				new ListProvider<EntityUpdateAction>() {
-					ExecutableList<EntityUpdateAction> get(ActionQueue instance) {
-						return instance.updates;
-					}
-					ExecutableList<EntityUpdateAction> init(ActionQueue instance) {
-						return instance.updates = new ExecutableList<>(
-								instance.isOrderUpdatesEnabled()
-						);
-					}
+			}
+		},
+		EntityUpdateAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.updates;
+			}
+			@Override
+			public void ensureInitialized(ActionQueue instance) {
+				if ( instance.updates == null ) {
+					instance.updates = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
-		);
-		EXECUTABLE_LISTS_MAP.put(
-				QueuedOperationCollectionAction.class,
-				new ListProvider<QueuedOperationCollectionAction>() {
-					ExecutableList<QueuedOperationCollectionAction> get(ActionQueue instance) {
-						return instance.collectionQueuedOps;
-					}
-					ExecutableList<QueuedOperationCollectionAction> init(ActionQueue instance) {
-						return instance.collectionQueuedOps = new ExecutableList<>(
-								instance.isOrderUpdatesEnabled()
-						);
-					}
+			}
+		},
+		QueuedOperationCollectionAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.collectionQueuedOps;
+			}
+			@Override
+			public void ensureInitialized(ActionQueue instance) {
+				if ( instance.collectionQueuedOps == null ) {
+					instance.collectionQueuedOps = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
-		);
-		EXECUTABLE_LISTS_MAP.put(
-				CollectionUpdateAction.class,
-				new ListProvider<CollectionUpdateAction>() {
-					ExecutableList<CollectionUpdateAction> get(ActionQueue instance) {
-						return instance.collectionUpdates;
-					}
-					ExecutableList<CollectionUpdateAction> init(ActionQueue instance) {
-						return instance.collectionUpdates = new ExecutableList<>(
-								instance.isOrderUpdatesEnabled()
-						);
-					}
+			}
+		},
+		CollectionUpdateAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.collectionUpdates;
+			}
+			@Override
+			public void ensureInitialized(ActionQueue instance) {
+				if ( instance.collectionUpdates == null ) {
+					instance.collectionUpdates = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
-		);
-		EXECUTABLE_LISTS_MAP.put(
-				CollectionRecreateAction.class,
-				new ListProvider<CollectionRecreateAction>() {
-					ExecutableList<CollectionRecreateAction> get(ActionQueue instance) {
-						return instance.collectionCreations;
-					}
-					ExecutableList<CollectionRecreateAction> init(ActionQueue instance) {
-						return instance.collectionCreations = new ExecutableList<>(
-								instance.isOrderUpdatesEnabled()
-						);
-					}
+			}
+		},
+		CollectionRecreateAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.collectionCreations;
+			}
+			@Override
+			public void ensureInitialized(ActionQueue instance) {
+				if ( instance.collectionCreations == null ) {
+					instance.collectionCreations = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
-		);
-		EXECUTABLE_LISTS_MAP.put(
-				EntityDeleteAction.class,
-				new ListProvider<EntityDeleteAction>() {
-					ExecutableList<EntityDeleteAction> get(ActionQueue instance) {
-						return instance.deletions;
-					}
-					ExecutableList<EntityDeleteAction> init(ActionQueue instance) {
-						// EntityDeleteAction executables never require sorting.
-						return instance.deletions = new ExecutableList<>( false );
-					}
+			}
+		},
+		EntityDeleteAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.deletions;
+			}
+			@Override
+			public void ensureInitialized(ActionQueue instance) {
+				if ( instance.deletions == null ) {
+					instance.deletions = new ExecutableList<>( false );
 				}
-		);
+			}
+		};
+
+		public abstract ExecutableList<?> getActions(ActionQueue instance);
+		public abstract void ensureInitialized(ActionQueue instance);
 	}
 
 	/**
@@ -237,12 +225,12 @@ public class ActionQueue {
 	}
 
 	public void clear() {
-		EXECUTABLE_LISTS_MAP.forEach( (k,listProvider) -> {
-			ExecutableList<?> l = listProvider.get( this );
-			if ( l != null ) {
-				l.clear();
+		for ( OrderedActions value : ORDERED_OPERATIONS ) {
+			final ExecutableList<?> list = value.getActions( this );
+			if ( list != null ) {
+				list.clear();
 			}
-		} );
+		}
 		if ( unresolvedInsertions != null ) {
 			unresolvedInsertions.clear();
 		}
@@ -291,7 +279,8 @@ public class ActionQueue {
 		}
 		else {
 			LOG.trace( "Adding resolved non-early insert action." );
-			addAction( AbstractEntityInsertAction.class, insert );
+			OrderedActions.EntityInsertAction.ensureInitialized( this );
+			this.insertions.add( insert );
 		}
 		if ( !insert.isVeto() ) {
 			insert.makeEntityManaged();
@@ -310,15 +299,6 @@ public class ActionQueue {
 		}
 	}
 
-	private <T extends Executable & Comparable<? super T> & Serializable> void addAction(Class<T> executableClass, T action) {
-		listProvider( executableClass ).getOrInit( this ).add( action );
-	}
-
-	@SuppressWarnings("unchecked")
-	private <T extends Executable & Comparable<? super T> & Serializable> ListProvider<T> listProvider(Class<T> actionClass) {
-		return (ListProvider<T>) EXECUTABLE_LISTS_MAP.get(actionClass);
-	}
-
 	/**
 	 * Adds an entity (IDENTITY) insert action
 	 *
@@ -335,7 +315,8 @@ public class ActionQueue {
 	 * @param action The action representing the entity deletion
 	 */
 	public void addAction(EntityDeleteAction action) {
-		addAction( EntityDeleteAction.class, action );
+		OrderedActions.EntityDeleteAction.ensureInitialized( this );
+		this.deletions.add( action );
 	}
 
 	/**
@@ -343,8 +324,9 @@ public class ActionQueue {
 	 *
 	 * @param action The action representing the orphan removal
 	 */
-	public void addAction(OrphanRemovalAction action) {
-		addAction( OrphanRemovalAction.class, action );
+	public void addAction(final OrphanRemovalAction action) {
+		OrderedActions.OrphanRemovalAction.ensureInitialized( this );
+		this.orphanRemovals.add( action );
 	}
 
 	/**
@@ -352,8 +334,9 @@ public class ActionQueue {
 	 *
 	 * @param action The action representing the entity update
 	 */
-	public void addAction(EntityUpdateAction action) {
-		addAction( EntityUpdateAction.class, action );
+	public void addAction(final EntityUpdateAction action) {
+		OrderedActions.EntityUpdateAction.ensureInitialized( this );
+		this.updates.add( action );
 	}
 
 	/**
@@ -361,8 +344,9 @@ public class ActionQueue {
 	 *
 	 * @param action The action representing the (re)creation of a collection
 	 */
-	public void addAction(CollectionRecreateAction action) {
-		addAction( CollectionRecreateAction.class, action );
+	public void addAction(final CollectionRecreateAction action) {
+		OrderedActions.CollectionRecreateAction.ensureInitialized( this );
+		this.collectionCreations.add( action );
 	}
 
 	/**
@@ -370,8 +354,9 @@ public class ActionQueue {
 	 *
 	 * @param action The action representing the removal of a collection
 	 */
-	public void addAction(CollectionRemoveAction action) {
-		addAction( CollectionRemoveAction.class, action );
+	public void addAction(final CollectionRemoveAction action) {
+		OrderedActions.CollectionRemoveAction.ensureInitialized( this );
+		this.collectionRemovals.add( action );
 	}
 
 	/**
@@ -379,8 +364,9 @@ public class ActionQueue {
 	 *
 	 * @param action The action representing the update of a collection
 	 */
-	public void addAction(CollectionUpdateAction action) {
-		addAction( CollectionUpdateAction.class, action );
+	public void addAction(final CollectionUpdateAction action) {
+		OrderedActions.CollectionUpdateAction.ensureInitialized( this );
+		this.collectionUpdates.add( action );
 	}
 
 	/**
@@ -389,7 +375,8 @@ public class ActionQueue {
 	 * @param action The action representing the queued operation
 	 */
 	public void addAction(QueuedOperationCollectionAction action) {
-		addAction( QueuedOperationCollectionAction.class, action );
+		OrderedActions.QueuedOperationCollectionAction.ensureInitialized( this );
+		this.collectionQueuedOps.add( action );
 	}
 
 	/**
@@ -484,12 +471,9 @@ public class ActionQueue {
 			throw new IllegalStateException( "About to execute actions, but there are unresolved entity insert actions." );
 		}
 
-		EXECUTABLE_LISTS_MAP.forEach( (k,listProvider) -> {
-			ExecutableList<?> l = listProvider.get( this );
-			if ( l != null && !l.isEmpty() ) {
-				executeActions( l );
-			}
-		} );
+		for ( OrderedActions action : ORDERED_OPERATIONS ) {
+			executeActions( action.getActions( this ) );
+		}
 	}
 
 	/**
@@ -562,9 +546,9 @@ public class ActionQueue {
 		if ( tables.isEmpty() ) {
 			return false;
 		}
-		for ( ListProvider<?> listProvider : EXECUTABLE_LISTS_MAP.values() ) {
-			ExecutableList<?> l = listProvider.get( this );
-			if ( areTablesToBeUpdated( l, tables ) ) {
+		for ( OrderedActions action : ORDERED_OPERATIONS ) {
+			final ExecutableList<?> list = action.getActions( this );
+			if ( areTablesToBeUpdated( list, tables ) ) {
 				return true;
 			}
 		}
@@ -610,6 +594,9 @@ public class ActionQueue {
 	 */
 	private <E extends Executable & Comparable<? super E> & Serializable> void executeActions(ExecutableList<E> list)
 			throws HibernateException {
+		if ( list == null || list.isEmpty() ) {
+			return;
+		}
 		// todo : consider ways to improve the double iteration of Executables here:
 		//		1) we explicitly iterate list here to perform Executable#execute()
 		//		2) ExecutableList#getQuerySpaces also iterates the Executables to collect query spaces.
@@ -908,8 +895,8 @@ public class ActionQueue {
 		}
 		unresolvedInsertions.serialize( oos );
 
-		for ( ListProvider<?> p : EXECUTABLE_LISTS_MAP.values() ) {
-			ExecutableList<?> l = p.get( this );
+		for ( OrderedActions action : ORDERED_OPERATIONS ) {
+			ExecutableList<?> l = action.getActions( this );
 			if ( l == null ) {
 				oos.writeBoolean( false );
 			}
@@ -939,12 +926,14 @@ public class ActionQueue {
 
 		rtn.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
 
-		for ( ListProvider<?> provider : EXECUTABLE_LISTS_MAP.values() ) {
-			ExecutableList<?> l = provider.get( rtn );
+		for ( OrderedActions action : ORDERED_OPERATIONS ) {
+			ExecutableList<?> l = action.getActions( rtn );
 			boolean notNull = ois.readBoolean();
 			if ( notNull ) {
 				if ( l == null ) {
-					l = provider.init( rtn );
+					//sorry.. trying hard to avoid generic initializations mess.
+					action.ensureInitialized( rtn );
+					l = action.getActions( rtn );
 				}
 				l.readExternal( ois );
 

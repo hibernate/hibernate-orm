@@ -8,23 +8,7 @@ package org.hibernate.boot.registry.selector.internal;
 
 import java.util.Objects;
 
-import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JOTMJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JOnASJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JRun4JtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.OC4JJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.OrionJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SapNetWeaverJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.*;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatform> {
@@ -41,6 +25,7 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 			case 'B': return caseB( name );
 			case 'J': return caseJ( name );
 			case 'W': return caseW( name );
+			case 'T': return caseT( name );
 			case 'o': return caseLegacy( name, this );
 			default: return caseOthers( name );
 		}
@@ -87,6 +72,13 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 		}
 		if ( "WebSphereExtended".equals( name ) ) {
 			return WebSphereExtendedJtaPlatform.class;
+		}
+		return null;
+	}
+
+	private static Class<? extends JtaPlatform> caseT(final String name) {
+		if ( "TongWeb".equals( name ) ) {
+			return TongWebJtaPlatform.class;
 		}
 		return null;
 	}
@@ -138,6 +130,10 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 		//code faithfully.
 		if ( name.equals( "org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform" ) ) {
 			return WebSphereLibertyJtaPlatform.class;
+		}
+
+		if ( name.equals( "org.hibernate.engine.transaction.jta.platform.internal.TongWebJtaPlatform" ) ) {
+			return TongWebJtaPlatform.class;
 		}
 
 		//All other ones follow a pattern, beginning with the same prefix and ending with the same postfix,

@@ -7,23 +7,7 @@
 package org.hibernate.test.strategyselectors;
 
 import org.hibernate.boot.registry.selector.internal.DefaultJtaPlatformSelector;
-import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JOTMJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JOnASJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JRun4JtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.OC4JJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.OrionJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SapNetWeaverJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.*;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 import org.junit.Assert;
@@ -157,6 +141,12 @@ public class JtaPlatformSelectorTest {
 				WebSphereExtendedJtaPlatform.class,
 				"WebSphereExtended",
 				"org.hibernate.service.jta.platform.internal.WebSphereExtendedJtaPlatform"
+		);
+		testJtaPlatformResolves(
+				strategySelector,
+				TongWebJtaPlatform.class,
+				"TongWeb",
+				"org.hibernate.service.jta.platform.internal.TongWebJtaPlatform"
 		);
 	}
 

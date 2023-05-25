@@ -1427,18 +1427,23 @@ public class SessionImpl
 
 	@Override
 	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
+		forceFlush( entityEntry.getEntityKey() );
+	}
+
+	@Override
+	public void forceFlush(EntityKey key) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
 					"Flushing to force deletion of re-saved object: %s",
-					MessageHelper.infoString( entityEntry.getPersister(), entityEntry.getId(), getFactory() )
+					MessageHelper.infoString( key.getPersister(), key.getIdentifier(), getFactory() )
 			);
 		}
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
 			throw new ObjectDeletedException(
 					"deleted object would be re-saved by cascade (remove deleted object from associations)",
-					entityEntry.getId(),
-					entityEntry.getPersister().getEntityName()
+					key.getIdentifier(),
+					key.getPersister().getEntityName()
 			);
 		}
 		checkOpenOrWaitingForAutoClose();

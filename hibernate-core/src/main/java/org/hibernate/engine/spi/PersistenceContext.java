@@ -757,6 +757,10 @@ public interface PersistenceContext {
 
 	void registerDeletedUnloadedEntityKey(EntityKey key);
 
+	void removeDeletedUnloadedEntityKey(EntityKey key);
+
+	boolean containsDeletedUnloadedEntityKeys();
+
 	/**
 	 * The size of the internal map storing all collection entries.
 	 * (The map is not exposed directly, but the size is often useful)

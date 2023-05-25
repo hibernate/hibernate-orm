@@ -87,6 +87,10 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * Initiate a flush to force deletion of a re-persisted entity.
 	 */
 	void forceFlush(EntityEntry e) throws HibernateException;
+	/**
+	 * Initiate a flush to force deletion of a re-persisted entity.
+	 */
+	void forceFlush(EntityKey e) throws HibernateException;
 
 	/**
 	 * Cascade the lock operation to the given child entity.

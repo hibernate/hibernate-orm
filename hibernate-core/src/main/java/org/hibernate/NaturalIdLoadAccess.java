@@ -103,20 +103,26 @@ public interface NaturalIdLoadAccess<T> {
 	NaturalIdLoadAccess<T> using(Object... mappings);
 
 	/**
-	 * For entities with mutable natural ids, should natural ids be
-	 * synchronized prior to executing a query? The default, for
-	 * correctness, is to synchronize.
+	 * Determines if cached natural id cross-references are synchronized
+	 * before query execution with unflushed modifications made in memory
+	 * to {@linkplain org.hibernate.annotations.NaturalId#mutable mutable}
+	 * natural ids .
+	 * <p>
+	 * By default, every cached cross-reference is updated to reflect any
+	 * modification made in memory.
 	 * <p>
 	 * Here "synchronization" means updating the natural id to
 	 * primary key cross-reference maintained by the session. When
-	 * enabled, prior to performing the lookup, Hibernate will check
-	 * all entities of the given type associated with the session to
-	 * see if any natural id values have changed and, if so, update
-	 * the cross-reference. There is a performance penalty associated
-	 * with this, so if it is completely certain the no natural id in
-	 * play has changed, this setting can be disabled to circumvent
-	 * that impact. Disabling this setting when natural id values
-	 * <em>have</em> changed can lead to incorrect results!
+	 * enabled, before performing the lookup, Hibernate will check
+	 * all entities associated with the session of the given type to
+	 * determine if any natural id values have changed and, if so,
+	 * update the cross-references.
+	 * <p>
+	 * There's some cost associated with this synchronization, so if
+	 * it's completely certain the no natural ids have been modified,
+	 * synchronization may be safely disabled to avoid that cost.
+	 * Disabling this setting when natural id values <em>have</em>
+	 * been modified may lead to incorrect results.
 	 *
 	 * @param enabled Should synchronization be performed?
 	 *                {@code true} indicates synchronization will be performed;

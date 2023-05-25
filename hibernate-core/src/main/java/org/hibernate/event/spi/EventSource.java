@@ -9,6 +9,7 @@ package org.hibernate.event.spi;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -32,6 +33,10 @@ public interface EventSource extends SessionImplementor {
 	 * Force an immediate flush
 	 */
 	void forceFlush(EntityEntry e) throws HibernateException;
+	/**
+	 * Force an immediate flush
+	 */
+	void forceFlush(EntityKey e) throws HibernateException;
 
 	/**
 	 * Cascade merge an entity instance

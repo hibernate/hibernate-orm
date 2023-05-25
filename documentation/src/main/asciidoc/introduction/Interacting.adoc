@@ -332,7 +332,7 @@ Now for the gotchas:
 We're getting a bit ahead of ourselves here, but let's quickly mention the general strategy we recommend to navigate past these gotchas:
 
 - All associations should be set `fetch=LAZY` to avoid fetching extra data when it's not needed.
-  As we mentioned in <<many-to-one>>, this setting is not the default for `@ManyToOne` associations, and must be specified explicitly.
+  As we mentioned <<lazy-problem,earlier>>, this setting is not the default for `@ManyToOne` associations, and must be specified explicitly.
 - But strive to avoid writing code which triggers lazy fetching.
   Instead, fetch all the data you'll need upfront at the beginning of a unit of work, using one of the techniques described in <<association-fetching>>, usually, using _join fetch_ in HQL or an `EntityGraph`.
 ====
@@ -1035,10 +1035,9 @@ In this section we'll quickly sketch some general strategies for avoiding "quagm
   Hibernate is not about "transparent persistence" for Java objects.
   It's about making two excellent technologies work smoothly together.
 - <<logging-generated-sql,Log the SQL>> executed by Hibernate.
-//   Look, this seems obvious, until you've met users who didn't realize it was possible or useful.
   You cannot know that your persistence logic is correct until you've actually inspected the SQL that's being executed.
   Even when everything seems to be "working", there might be a lurking <<association-fetching,N+1 selects monster>>.
-- Be careful when <<many-to-one,modifying bidirectional associations>>.
+- Be careful when <<bidirectional-problem,modifying bidirectional associations>>.
   In principle, you should update _both ends_ of the association.
   But Hibernate doesn't strictly enforce that, since there are some situations where such a rule would be too heavy-handed.
   Whatever the case, it's up to you to maintain consistency across your model.

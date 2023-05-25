@@ -939,6 +939,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <li> <code>right(string, length)</code>
 	 * <li> <code>replace(string, pattern, replacement)</code>
 	 * <li> <code>pad(string with length spec[ character])</code>
+	 * <li> <code>repeat(string, times)</code>
 	 * </ul>
 	 *
 	 * <ul>

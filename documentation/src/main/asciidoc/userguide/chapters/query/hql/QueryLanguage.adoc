@@ -892,6 +892,7 @@ Naturally, there are a good number of functions for working with strings.
 | `left()` | The leftmost characters of a string | `left(string, length)` | &cross; / &cross;
 | `right()` | The rightmost characters of a string | `right(string, length)`  | &cross; / &cross;
 | `replace()` | Replace every occurrence of a pattern in a string | `replace(string, pattern, replacement)` | &cross; / &cross;
+| `repeat()` | Concatenate a string with itself multiple times | `replace(string, times)` | &cross; / &cross;
 | `collate()` | Select a collation | `collate(p.name as collation)` | &cross; / &cross;
 |===
 

@@ -111,6 +111,10 @@ public class LoadQueryInfluencers implements Serializable {
 		return enabledCascadingFetchProfile;
 	}
 
+	public boolean hasEnabledCascadingFetchProfile() {
+		return enabledCascadingFetchProfile != null;
+	}
+
 	/**
 	 * Set the effective {@linkplain #getEnabledCascadingFetchProfile() cascading fetch-profile}
 	 */

@@ -4102,7 +4102,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) actualModelPart;
 			result = new EmbeddableValuedPathInterpretation<>(
 					mapping.toSqlExpression(
-							getFromClauseAccess().findTableGroup( path.getLhs().getNavigablePath() ),
+							findTableGroup( navigablePath.getParent() ),
 							currentClauseStack.getCurrent(),
 							this,
 							getSqlAstCreationState()

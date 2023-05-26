@@ -1420,7 +1420,7 @@ Your opinions on the subject are very welcome on the forum.
 === Generating Envers schema with Hibernate hbm2ddl tool
 
 If you would like to generate the database schema file with Hibernate,
-you simply need to use the hbm2ddl too.
+you simply need to use the hbm2ddl tool.
 
 This task will generate the definitions of all entities, both of those which are audited by Envers and those which are not.
 

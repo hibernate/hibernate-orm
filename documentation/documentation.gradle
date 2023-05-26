@@ -194,6 +194,57 @@ tasks.register('renderIntroduction', AsciidoctorTask) {task->
 	}
 }
 
+tasks.register('renderQLPdf', AsciidoctorPdfTask) {task->
+	group = "Documentation"
+	description = 'Renders the Query Language document in PDF format using Asciidoctor.'
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
+	inputs.property "hibernate-version", project.ormVersion
+
+	sourceDir = file( 'src/main/asciidoc/querylanguage' )
+	baseDir = file( 'src/main/asciidoc/querylanguage' )
+	sources {
+		include 'Hibernate_Query_Language.adoc'
+	}
+	outputDir = "$buildDir/asciidoc/querylanguage/pdf"
+
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+}
+
+tasks.register('renderQL', AsciidoctorTask) {task->
+	group = "Documentation"
+	description = 'Renders the Query Language document in HTML format using Asciidoctor.'
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
+	inputs.property "hibernate-version", project.ormVersion
+
+	sourceDir = file( 'src/main/asciidoc/querylanguage' )
+	sources {
+		include 'Hibernate_Query_Language.adoc'
+	}
+	outputDir = "$buildDir/asciidoc/querylanguage/html_single"
+
+	attributes linkcss: true,
+			stylesheet: "css/hibernate.css",
+			docinfo: 'private',
+			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+	resources {
+		from('src/main/asciidoc/querylanguage/') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'css/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'js/**'
+		}
+	}
+}
+
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tasks.register('renderUserGuide', AsciidoctorTask) { task ->

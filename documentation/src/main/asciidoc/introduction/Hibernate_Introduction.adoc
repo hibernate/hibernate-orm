@@ -1,8 +1,8 @@
-:pdf-theme: theme.yml
+:pdf-theme: ../pdf/theme.yml
 :source-highlighter: rouge
 :icons: font
 :doctype: book
-:pdf-fontsdir: fonts
+:pdf-fontsdir: ../pdf/fonts
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/6.3
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
@@ -39,7 +39,7 @@ include::Mapping.adoc[]
 
 include::Interacting.adoc[]
 
-// include::../userguide/chapters/query/hql/QueryLanguage.adoc[]
+// include::../userguide/chapters/query/hql/Hibernate_Query_Language.adoc[]
 
 <<<
 

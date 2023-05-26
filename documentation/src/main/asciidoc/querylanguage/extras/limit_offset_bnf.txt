@@ -1,0 +1,11 @@
+limitClause
+    : "LIMIT" parameterOrIntegerLiteral
+
+offsetClause
+    : "OFFSET" parameterOrIntegerLiteral ("ROW" | "ROWS")?
+
+fetchClause
+    : "FETCH" ("FIRST" | "NEXT")
+      (parameterOrIntegerLiteral | parameterOrNumberLiteral "%")
+      ("ROW" | "ROWS")
+      ("ONLY" | "WITH" "TIES")

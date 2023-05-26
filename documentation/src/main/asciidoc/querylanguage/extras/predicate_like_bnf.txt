@@ -1,0 +1,1 @@
+expression "NOT"? ("LIKE" | "ILIKE") expression ("ESCAPE" character)?

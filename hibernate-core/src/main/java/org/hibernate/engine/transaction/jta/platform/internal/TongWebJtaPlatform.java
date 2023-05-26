@@ -4,7 +4,7 @@ import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
 /**
- * @author shijianliang   shijl@tongtech.com
+ * @author shijianliang
  */
 public class TongWebJtaPlatform extends AbstractJtaPlatform {
     public static final String TM_NAME = "java:comp/TransactionManager";

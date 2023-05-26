@@ -1,0 +1,2 @@
+deleteStatement
+    : "DELETE" "FROM"? targetEntity whereClause?

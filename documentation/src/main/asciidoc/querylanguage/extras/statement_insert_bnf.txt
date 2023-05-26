@@ -1,0 +1,14 @@
+insertStatement
+    : "INSERT" "INTO"? targetEntity targetFields (queryExpression | valuesList)
+
+targetEntity
+	: entityName variable?
+
+targetFields
+	: "(" simplePath ("," simplePath)* ")"
+
+valuesList
+	: "VALUES" values ("," values)*
+
+values
+	: "(" expression ("," expression)* ")"

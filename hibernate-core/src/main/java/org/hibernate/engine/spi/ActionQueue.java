@@ -592,7 +592,7 @@ public class ActionQueue {
 	 * @param list The list of Executable elements to be performed
 	 *
 	 */
-	private <E extends Executable & Comparable<? super E> & Serializable> void executeActions(ExecutableList<E> list)
+	private <E extends ComparableExecutable> void executeActions(ExecutableList<E> list)
 			throws HibernateException {
 		if ( list == null || list.isEmpty() ) {
 			return;
@@ -601,7 +601,7 @@ public class ActionQueue {
 		//		1) we explicitly iterate list here to perform Executable#execute()
 		//		2) ExecutableList#getQuerySpaces also iterates the Executables to collect query spaces.
 		try {
-			for ( E e : list ) {
+			for ( ComparableExecutable e : list ) {
 				try {
 					e.execute();
 				}
@@ -1354,7 +1354,7 @@ public class ActionQueue {
 
 	}
 
-	private abstract static class ListProvider<T extends Executable & Comparable<? super T> & Serializable> {
+	private abstract static class ListProvider<T extends ComparableExecutable> {
 		abstract ExecutableList<T> get(ActionQueue instance);
 		abstract ExecutableList<T> init(ActionQueue instance);
 		ExecutableList<T> getOrInit( ActionQueue instance ) {

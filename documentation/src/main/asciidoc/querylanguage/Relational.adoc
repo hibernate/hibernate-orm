@@ -101,6 +101,7 @@ So let's restrict our result set to data from our own more civilized times:
 
 [[group-by-having-example]]
 [source, hql]
+[%unbreakable]
 ----
 select book.isbn,
     year(order.dateTime) as year,
@@ -120,13 +121,21 @@ The `having` restriction is applied after grouping and aggregation has already b
 === Projection
 
 The `select` list identifies which objects and values to return as the query results.
+This operation is called _projection_.
 
-NOTE: This operation is called _projection_.
+[source,antlrv4]
+----
+selectClause
+    : "SELECT" "DISTINCT"? selection (","" selection)*
+----
 
 Any of the expression types discussed in <<expressions>> may occur in the projection list, unless otherwise noted.
 
-TIP: If a query has no explicit `select` list, the projection is inferred from the entities and joins occurring in the `from` clause, together with the result type specified by the call to `createQuery()`.
-It's better to specify the projection explicitly, except in the simplest cases.
+[TIP]
+====
+If a query has no explicit `select` list, then, as we saw <<select-simplest-example,much earlier>>, the projection is inferred from the entities and joins occurring in the `from` clause, together with the result type specified by the call to `createQuery()`.
+But it's better to specify the projection explicitly, except in the simplest cases.
+====
 
 There might be multiple items in a projection list, in which case each query result is a tuple, and this poses a problem:
 Java doesn't have a good way to represent tuples.
@@ -134,13 +143,19 @@ Java doesn't have a good way to represent tuples.
 If there's just one projected item in the `select` list, then, no sweat, that's the type of each query result.
 There's no need to bother with trying to represent a "tuple of length 1".
 
-But if there are multiple expressions in the select list then:
+[source, java]
+[%unbreakable]
+----
+List<String> results =
+        entityManager.createQuery("select title from Book", String.class)
+            .getResultList();
+----
 
-- by default, each query result is packaged as an array of type `Object[]`, or
-- if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `javax.persistence.Tuple`.
+But if there are multiple expressions in the select list then, by default, each query result is packaged as an array of type `Object[]`.
 
 [[select-clause-projection-example]]
 [source, java]
+[%unbreakable]
 ----
 List<Object[]> results =
         entityManager.createQuery("select title, left(book.text, 200) from Book",
@@ -151,7 +166,11 @@ for (var result : results) {
 	String preamble = (String) result[1];
 }
 ----
+
+Or, if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `javax.persistence.Tuple`.
+
 [source, java]
+[%unbreakable]
 ----
 List<Tuple> results =
         entityManager.createQuery("select title as title, left(book.text, 200) as preamble from Book",
@@ -164,10 +183,9 @@ for (Tuple tuple : tuples) {
 ----
 
 The names of the `Tuple` elements are determined by the aliases given to the projected items in the select list.
-If no aliases are specified, the elements may be accessed by their position in the list (positions are numbered from 0).
+If no aliases are specified, the elements may be accessed by their position in the list, where the first item is assigned the position zero.
 
-Unfortunately, neither `Object[]` nor `Tuple` lets us access an individual item in a result tuple of an HQL query without explicitly specifying the type of the item.
-(Using a typecast in the case of `Object[]`, or by passing the class object to `get()` in the case of `Tuple`.)
+Unfortunately, neither `Object[]` nor `Tuple` lets us access an individual item in a result tuple of an HQL query without explicitly specifying the type of the item, either using a typecast in the case of `Object[]`, or by passing the class object to `get()` in the case of `Tuple`.
 But there's another option, as we're about to see.
 
 Simplifying slightly, the BNF for a projected item is:
@@ -175,13 +193,20 @@ Simplifying slightly, the BNF for a projected item is:
 [[select-item-bnf]]
 [source, antlrv4]
 ----
-include::{extrasdir}/select_item_bnf.txt[]
+selection
+    : (expression | instantiation) alias?
+
+instantiation
+    : "NEW" instantiationTarget "(" selection ("," selection)* ")"
+
+alias
+    : "AS"? identifier
 ----
 
-where `instantiatiationArgs` is essentially a nested projection list.
+Where the list of ``selection``s in an `instantiation` is essentially a nested projection list.
 
 So there's a special expression type that's only legal in the select clause: the `instantiation` rule in the BNF above.
-Let's see what it does.
+// Let's see what it does.
 
 [[select-new]]
 ==== Instantiation
@@ -190,6 +215,7 @@ The `select new` construct packages the query results into a user-written Java c
 
 [[select-clause-dynamic-instantiation-example]]
 [source, java]
+[%unbreakable]
 ----
 record BookSummary(String title, String summary) {}
 
@@ -216,6 +242,7 @@ Alternatively, using the syntax `select new map`, the query may specify that eac
 
 [[select-clause-dynamic-map-instantiation-example]]
 [source, java]
+[%unbreakable]
 ----
 List<Map> results =
         entityManager.createQuery("select new map(title as title, left(book.text, 200) as summary) from Book",
@@ -224,12 +251,13 @@ List<Map> results =
 ----
 
 The keys of the map are determined by the aliases given to the projected items in the select list.
-If no aliases are specified, the key of an item is its position in the list (positions are numbered from 0).
+If no aliases are specified, the key of an item is its position in the list, where the first item is assigned the position zero.
 
 Or, using the syntax `select new list`, the query may specify that each result should be packaged as a list:
 
 [[select-clause-dynamic-list-instantiation-example]]
 [source, java]
+[%unbreakable]
 ----
 List<List> results =
         entityManager.createQuery("select new list(title as title, left(book.text, 200) as summary) from Book",
@@ -242,7 +270,7 @@ List<List> results =
 This is an older syntax, that predates JPQL.
 In hindsight, it's hard to see what advantage `List<Object>` offers compared to `Object[]`.
 We mention it here only for completeness.
-On the other hand, `Map` is a perfectly fine alternative `Tuple`, but of course isn't portable to other implementations of JPA.
+On the other hand, `Map` is a perfectly fine alternative `Tuple`, but of course it isn't portable to other implementations of JPA.
 ====
 
 [[distinct]]
@@ -295,18 +323,21 @@ The standard aggregate functions defined in both ANSI SQL and JPQL are these one
 
 [[aggregate-functions-example]]
 [source, hql]
+[%unbreakable]
 ----
 select count(distinct item.book)
 from Item as item
 where year(item.order.dateTime) = :year
 ----
 [source, hql]
+[%unbreakable]
 ----
 select sum(item.quantity) as totalSales
 from Item as item
 where item.book.isbn = :isbn
 ----
 [source, hql]
+[%unbreakable]
 ----
 select
     year(item.order.dateTime) as year,
@@ -316,6 +347,7 @@ where item.book.isbn = :isbn
 group by year(item.order.dateTime)
 ----
 [source, hql]
+[%unbreakable]
 ----
 select
     month(item.order.dateTime) as month,
@@ -385,6 +417,7 @@ All aggregate functions support the inclusion of a _filter clause_, a sort of mi
 
 [[aggregate-functions-filter-example]]
 [source, hql]
+[%unbreakable]
 ----
 select
     year(item.order.dateTime) as year,

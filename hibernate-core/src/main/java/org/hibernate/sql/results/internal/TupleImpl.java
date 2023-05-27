@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
+import java.util.Arrays;
 import java.util.List;
 import jakarta.persistence.TupleElement;
 
@@ -111,5 +112,10 @@ public class TupleImpl implements JpaTuple {
 	@Override
 	public List<TupleElement<?>> getElements() {
 		return tupleMetadata.getList();
+	}
+
+	@Override
+	public String toString() {
+		return Arrays.toString( row );
 	}
 }

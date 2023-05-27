@@ -452,7 +452,7 @@ The example above is equivalent to:
 ----
 select book
 from Book as book
-    join book.publisher pub
+    join book.publisher as pub
 where pub.name like :pubName
 ----
 

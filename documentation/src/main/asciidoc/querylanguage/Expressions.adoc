@@ -957,7 +957,7 @@ where total > 100.0
 ----
 
 [[between-predicate]]
-==== `between` predicate
+==== The `between` predicate
 
 The ternary `between` operator, and its negation, `not between`, determine if a value falls within a range.
 
@@ -986,6 +986,32 @@ The following operators make it easier to deal with null values.
 [source, hql]
 ----
 from Author where nomDePlume is not null
+----
+
+[[collection-operators]]
+==== Collection predicates
+
+The following operators apply to collection-valued attributes and to-many associations.
+
+[cols="15,15,20,~"]
+|===
+| Operator | Negation | Type | Semantics
+
+| `is empty` | `is not empty` | Unary postfix | `true` if the collection or association on the left has no elements
+| `member of` | `not member of` | Binary | `true` if the value on the left is a member of the collection or association on the right
+|===
+
+[[empty-collection-predicate-example]]
+[source, hql]
+----
+from Author where books is empty
+----
+
+[[member-of-collection-predicate-example]]
+[source, hql]
+----
+from Author as author, Book as book
+where author member of book.authors
 ----
 
 [[like-predicate]]
@@ -1019,7 +1045,7 @@ The optional `escape` character allows a pattern to include a literal `_` or `%`
 As you can guess, `not like` and `not ilike` are the enemies of `like` and `ilike`, and evaluate to the exact opposite boolean values.
 
 [[in-predicate]]
-==== `in` predicate
+==== The `in` predicate
 
 The `in` predicates evaluates to true if the value to its left is in ... well, whatever it finds to its right.
 
@@ -1062,6 +1088,11 @@ where type(payment) in (CreditCardPayment, WireTransferPayment)
 ----
 from Author as author
 where author.person.name in (select name from OldAuthorData)
+----
+[source, hql]
+----
+from Book as book
+where :edition in elements(book.editions)
 ----
 
 This example doesn't work on every database:
@@ -1118,7 +1149,7 @@ from Publisher pub where :title = some(select title from pub.books)
 ----
 
 [[exists-predicate]]
-==== `exists` predicate
+==== The `exists` predicate
 
 The unary prefix `exists` operator evaluates to true if the thing to its right is nonempty.
 
@@ -1142,34 +1173,6 @@ where exists (
     where book in elements(author.books)
 )
 ----
-
-
-[[collection-operators]]
-==== Collection predicates
-
-The following operators apply to collection-valued attributes and to-many associations.
-
-[cols="15,15,20,~"]
-|===
-| Operator | Negation | Type | Semantics
-
-| `is empty` | `is not empty` | Unary postfix | `true` if the collection or association on the left has no elements
-| `member of` | `not member of` | Binary | `true` if the value on the left is a member of the collection or association on the right
-|===
-
-[[empty-collection-predicate-example]]
-[source, hql]
-----
-from Author where books is empty
-----
-
-[[member-of-collection-predicate-example]]
-[source, hql]
-----
-from Author as author, Book as book
-where author member of book.authors
-----
-
 
 [[logical-operators]]
 ==== Logical operators

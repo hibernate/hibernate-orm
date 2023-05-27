@@ -1,0 +1,1089 @@
+[[selection-projection-aggregation]]
+== Selection, projection, and aggregation
+
+Joining is one kind of _relational operation_.
+It's an operation that produces relations (tables) from other relations.
+Such operations, taken together, form the _relational algebra_.
+
+We must now understand the rest of this family: restriction a.k.a. selection, projection, aggregation, union/intersection, and, finally, ordering and limiting, operations which are not strictly part of the calculus of relations, but which usually come along for the ride because they're very _useful_.
+
+We'll start with the operation that's easiest to understand.
+
+[[where-clause]]
+=== Restriction
+
+The `where` clause restricts the results returned by a `select` query or limits the scope of an `update` or `delete` query.
+
+NOTE: This operation is usually called _selection_, but since that term is often confused with the `select` keyword, and since both projection and selection involve "selecting" things, here we'll use the less-ambiguous term _restriction_.
+
+A restriction is nothing more than a single logical expression, a topic we exhausted above in <<conditional-expressions>>.
+Therefore, we'll move quickly onto the next, and more interesting, operation.
+
+[[aggregation]]
+=== Aggregation
+
+An aggregate query is one with <<aggregate-functions,aggregate functions>> in its projection list.
+It collapses multiple rows into a single row.
+Aggregate queries are used for summarizing and analysing data.
+
+An aggregate query might have a `group by` clause.
+The `group by` clause divides the result set into groups, so that a query with aggregate functions in the select list returns not a single result for the whole query, but one result for each group.
+If an aggregate query _doesn't_ have a `group by` clause, it always produces a single row of results.
+
+NOTE: In short, _grouping_ controls the effect of _aggregation_.
+
+A query with aggregation may also have a `having` clause, a restriction applied to the groups.
+
+[[group-by]]
+==== Aggregation and grouping
+
+The `group by` clause looks quite similar to the `select` clause—it has a list of grouped items, but:
+
+- if there's just one item, then the query will have a single result for each unique value of that item, or
+- if there are multiple items, the query will have a result for each unique _combination_ or their values.
+
+The BNF for a grouped item is just:
+
+[[group-by-item-bnf]]
+[source, antlrv4]
+----
+include::{extrasdir}/group_by_item_bnf.txt[]
+----
+
+Consider the following queries:
+
+[source, hql]
+[%unbreakable]
+----
+select book.isbn,
+    sum(quantity) as totalSold,
+    sum(quantity * book.price) as totalBilled
+from Item
+where book.isbn = :isbn
+----
+
+[[group-by-example]]
+[source, hql]
+[%unbreakable]
+----
+select book.isbn,
+    year(order.dateTime) as year,
+    sum(quantity) as yearlyTotalSold,
+    sum(quantity * book.price) as yearlyTotalBilled
+from Item
+where book.isbn = :isbn
+group by year(order.dateTime)
+----
+
+The first query calculates complete totals over all orders in years.
+The second calculates totals for each year, after grouping the orders by year.
+
+[[group-by-rollup-cube]]
+==== Totals and subtotals
+
+The special functions `rollup()` and `cube()` may be used in the `group by` clause, when supported by the database.
+The semantics are identical to SQL.
+
+These functions are especially useful for reporting.
+
+* A `group by` clause with `rollup()` is used to produce subtotals and grand totals.
+* A `group by` clause with `cube()` allows totals for every combination of columns.
+
+[[having]]
+==== Aggregation and restriction
+
+In a grouped query, the `where` clause applies to the non-aggregated values (it determines which rows will make it into the aggregation).
+The `having` clause also restricts results, but it operates on the aggregated values.
+
+In an <<group-by-example,example above>>, we calculated totals for every year for which data was available.
+But our dataset might extend far back into the past, perhaps even as far back as those terrible dark ages before Hibernate 2.0.
+So let's restrict our result set to data from our own more civilized times:
+
+[[group-by-having-example]]
+[source, hql]
+----
+select book.isbn,
+    year(order.dateTime) as year,
+    sum(quantity) as yearlyTotalSold,
+    sum(quantity * book.price) as yearlyTotalBilled
+from Item
+where book.isbn = :isbn
+group by year(order.dateTime)
+having year(order.dateTime) > 2003
+   and sum(quantity) > 0
+----
+
+The `having` clause follows the same rules as the `where` clause and is also just a logical predicate.
+The `having` restriction is applied after grouping and aggregation has already been performed, whereas the `where` clause is applied before the data is grouped or aggregated.
+
+[[select-clause]]
+=== Projection
+
+The `select` list identifies which objects and values to return as the query results.
+
+NOTE: This operation is called _projection_.
+
+Any of the expression types discussed in <<expressions>> may occur in the projection list, unless otherwise noted.
+
+TIP: If a query has no explicit `select` list, the projection is inferred from the entities and joins occurring in the `from` clause, together with the result type specified by the call to `createQuery()`.
+It's better to specify the projection explicitly, except in the simplest cases.
+
+There might be multiple items in a projection list, in which case each query result is a tuple, and this poses a problem:
+Java doesn't have a good way to represent tuples.
+
+If there's just one projected item in the `select` list, then, no sweat, that's the type of each query result.
+There's no need to bother with trying to represent a "tuple of length 1".
+
+But if there are multiple expressions in the select list then:
+
+- by default, each query result is packaged as an array of type `Object[]`, or
+- if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `javax.persistence.Tuple`.
+
+[[select-clause-projection-example]]
+[source, java]
+----
+List<Object[]> results =
+        entityManager.createQuery("select title, left(book.text, 200) from Book",
+                                  Object[].class)
+            .getResultList();
+for (var result : results) {
+	String title = (String) result[0];
+	String preamble = (String) result[1];
+}
+----
+[source, java]
+----
+List<Tuple> results =
+        entityManager.createQuery("select title as title, left(book.text, 200) as preamble from Book",
+                                  Tuple.class)
+            .getResultList();
+for (Tuple tuple : tuples) {
+    String title = tuple.get("title", String.class);
+    String preamble = tuple.get("preamble", String.class);
+}
+----
+
+The names of the `Tuple` elements are determined by the aliases given to the projected items in the select list.
+If no aliases are specified, the elements may be accessed by their position in the list (positions are numbered from 0).
+
+Unfortunately, neither `Object[]` nor `Tuple` lets us access an individual item in a result tuple of an HQL query without explicitly specifying the type of the item.
+(Using a typecast in the case of `Object[]`, or by passing the class object to `get()` in the case of `Tuple`.)
+But there's another option, as we're about to see.
+
+Simplifying slightly, the BNF for a projected item is:
+
+[[select-item-bnf]]
+[source, antlrv4]
+----
+include::{extrasdir}/select_item_bnf.txt[]
+----
+
+where `instantiatiationArgs` is essentially a nested projection list.
+
+So there's a special expression type that's only legal in the select clause: the `instantiation` rule in the BNF above.
+Let's see what it does.
+
+[[select-new]]
+==== Instantiation
+
+The `select new` construct packages the query results into a user-written Java class instead of an array.
+
+[[select-clause-dynamic-instantiation-example]]
+[source, java]
+----
+record BookSummary(String title, String summary) {}
+
+List<BookSummary> results =
+        entityManager.createQuery("select new BookSummary(title, left(book.text, 200)) from Book",
+                                  BookSummary.class)
+            .getResultList();
+for (var result : results) {
+	String title = result.title();
+    String preamble = resukt.summary();
+}
+----
+
+The class must have a matching constructor.
+
+[IMPORTANT]
+====
+This class does not need to be mapped or annotated in any way.
+
+Even if the class _is_ an entity class, the resulting instances are _not_ managed entities and are _not_ associated with the session.
+====
+
+Alternatively, using the syntax `select new map`, the query may specify that each result should be packaged as a map:
+
+[[select-clause-dynamic-map-instantiation-example]]
+[source, java]
+----
+List<Map> results =
+        entityManager.createQuery("select new map(title as title, left(book.text, 200) as summary) from Book",
+                                  Map.class)
+            .getResultList();
+----
+
+The keys of the map are determined by the aliases given to the projected items in the select list.
+If no aliases are specified, the key of an item is its position in the list (positions are numbered from 0).
+
+Or, using the syntax `select new list`, the query may specify that each result should be packaged as a list:
+
+[[select-clause-dynamic-list-instantiation-example]]
+[source, java]
+----
+List<List> results =
+        entityManager.createQuery("select new list(title as title, left(book.text, 200) as summary) from Book",
+                                  List.class)
+            .getResultList();
+----
+
+[NOTE]
+====
+This is an older syntax, that predates JPQL.
+In hindsight, it's hard to see what advantage `List<Object>` offers compared to `Object[]`.
+We mention it here only for completeness.
+On the other hand, `Map` is a perfectly fine alternative `Tuple`, but of course isn't portable to other implementations of JPA.
+====
+
+[[distinct]]
+==== Duplicate removal
+
+The `distinct` keyword helps remove duplicate results from the query result list.
+It's only effect is to add `distinct` to the generated SQL.
+
+[[distinct-projection-query-example]]
+[source, hql]
+----
+select distinct lastName from Person
+----
+[source, hql]
+----
+select distinct author
+from Publisher as pub
+    join pub.books as book
+    join book.authors as author
+where pub.id = :pid
+----
+
+
+[NOTE]
+====
+As of Hibernate 6, duplicate results arising from the use of `join fetch` are automatically removed by Hibernate in memory, _after_ reading the database results and materializing entity instances as Java objects.
+It's no longer necessary to remove duplicate results explicitly, and, in particular, `distinct` should not be used for this purpose.
+====
+
+[[aggregate-functions]]
+==== Aggregate functions
+
+It's common to have aggregate functions like `count()`, `sum()`, and `max()` in a select list.
+Aggregate functions are special functions that reduce the size of the result set.
+
+The standard aggregate functions defined in both ANSI SQL and JPQL are these ones:
+
+[cols="30,~,~,^15"]
+|===
+| Aggregate function | Argument type | Result type | JPA standard / ANSI SQL standard
+
+| `count()`, including `count(distinct)`, `count(all)`, and `count(*)` | Any | `Long` | ✔/✔
+| `avg()` | Any numeric type | `Double` | ✔/✔
+| `min()` | Any numeric type, or string | Same as the argument type | ✔/✔
+| `max()` | Any numeric type, or string | Same as the argument type | ✔/✔
+| `sum()` | Any numeric type | See table below | ✔/✔
+| `var_pop()`, `var_samp()` | Any numeric type | `Double` | ✖/✔
+| `stddev_pop()`, `stddev_samp()` | Any numeric type | `Double` | ✖/✔
+|===
+
+[[aggregate-functions-example]]
+[source, hql]
+----
+select count(distinct item.book)
+from Item as item
+where year(item.order.dateTime) = :year
+----
+[source, hql]
+----
+select sum(item.quantity) as totalSales
+from Item as item
+where item.book.isbn = :isbn
+----
+[source, hql]
+----
+select
+    year(item.order.dateTime) as year,
+    sum(item.quantity) as yearlyTotal
+from Item as item
+where item.book.isbn = :isbn
+group by year(item.order.dateTime)
+----
+[source, hql]
+----
+select
+    month(item.order.dateTime) as month,
+    avg(item.quantity) as monthlyAverage
+from Item as item
+where item.book.isbn = :isbn
+group by month(item.order.dateTime)
+----
+
+In the case of `sum()`, the rules for assigning a result type are:
+|===
+| Argument type | Result type
+
+| Any integral numeric type except `BigInteger` | `Long`
+| Any floating point numeric type | `Double`
+| `BigInteger` | `BigInteger`
+| `BigDecimal` |  `BigDecimal`
+|===
+
+HQL defines two additional aggregate functions which accept a logical predicate as an argument.
+
+[cols="30,~,~,^15"]
+|===
+| Aggregate function | Argument type | Result type | JPA standard
+
+| `any()` | Logical predicate | `Boolean` | ✖
+| `every()` | Logical predicate | `Boolean` | ✖
+|===
+
+We may write, for example, `every(p.amount < 1000.0)`.
+
+Below, we'll meet the <<aggregate-functions-orderedset,ordered set aggregate functions>>.
+
+NOTE: Aggregate functions usually appear in the `select` clause, but control over aggregation is the responsibility of the `group by` clause, as described <<group-by,below>>.
+
+[[aggregate-functions-collections]]
+==== Aggregate functions and collections
+
+The `elements()` and `indices()` functions we met <<elements-indices,earlier>> let us apply aggregate functions to a collection:
+
+[cols="18,15,~,~"]
+|===
+| New syntax | Legacy HQL function | Applies to | Purpose
+
+| `max(elements(x))` | `maxelement(x)` | Any collection with sortable elements | The maximum element or map value
+| `min(elements(x))` | `minelement(x)` | Any collection with sortable elements | The minimum element or map value
+| `sum(elements(x))` | — | Any collection with numeric elements | The sum of the elements or map values
+| `avg(elements(x))` | — | Any collection with numeric elements | The average of the elements or map values
+| `max(indices(x))` | `maxindex(x)` | Indexed collections (lists and maps) | The maximum list index or map key
+| `min(indices(x))` | `minindex(x)` | Indexed collections (lists and maps) | The minimum list index or map key
+| `sum(indices(x))` | — | Indexed collections (lists and maps) | The sum of the list indexes or map keys
+| `avg(indices(x))` | — | Indexed collections (lists and maps) | The average of the list indexes or map keys
+|===
+
+These operations are mostly useful when working with ``@ElementCollection``s.
+
+[[collection-expressions-example]]
+[source, hql]
+----
+select title, max(indices(authors))+1, max(elements(editions)) from Book
+----
+
+[[aggregate-functions-filter]]
+==== Aggregate functions with restriction
+
+All aggregate functions support the inclusion of a _filter clause_, a sort of mini-`where` applying a restriction to just one item of the select list:
+
+[[aggregate-functions-filter-example]]
+[source, hql]
+----
+select
+    year(item.order.dateTime) as year,
+    sum(item.quantity) filter (where not item.order.fulfilled) as unfulfilled,
+    sum(item.quantity) filter (where item.order.fulfilled) as fulfilled,
+    sum(item.quantity * item.book.price) filter (where item.order.paid)
+from Item as item
+where item.book.isbn = :isbn
+group by year(item.order.dateTime)
+----
+
+The BNF for the `filter` clause is simple:
+
+[source,antlrv4]
+----
+filterClause
+	: "FILTER" "(" "WHERE" predicate ")"
+----
+
+[[aggregate-functions-orderedset]]
+==== Ordered set aggregate functions
+
+An _ordered set aggregate function_ is a special aggregate function which has:
+
+- not only an optional filter clause, as above, but also
+- a `within group` clause containing a mini-`order by` specification.
+
+The BNF for `within group` is straightforward:
+
+[source,antlrv4]
+----
+withinGroupClause
+	: "WITHIN" "GROUP" "(" "ORDER" "BY" sortSpecification ("," sortSpecification)* ")"
+----
+
+There are two main types of ordered set aggregate function:
+
+- an _inverse distribution function_ calculates a value that characterizes the distribution of values within the group, for example, `percentile_cont(0.5)` is the median, and `percentile_cont(0.25)` is the lower quartile.
+- a _hypothetical set function_ determines the position of a "hypothetical" value within the ordered set of values.
+
+The following ordered set aggregate functions are available on many platforms:
+
+[cols="30,~"]
+|===
+| Type | Functions
+
+| Inverse distribution functions | `mode()`, `percentile_cont()`, `percentile_disc()`
+| Hypothetical set functions | `rank()`, `dense_rank()`, `percent_rank()`, `cume_dist()`
+| Other | `listagg()`
+|===
+
+This query calculates the median price of a book:
+
+[source, hql]
+----
+select percentile_cont(0.5)
+    within group (order by price)
+from Book
+----
+
+This query finds the percentage of books with prices less than 10 dollars:
+
+[source, hql]
+----
+select 100 * percent_rank(10.0)
+    within group (order by price)
+from Book
+----
+
+Actually, the most widely-supported ordered set aggregate function is one which builds a string by concatenating the values within a group.
+This function has different names on different databases, but HQL abstracts these differences, and—following ANSI SQL—calls it `listagg()`.
+
+[[aggregate-functions-within-group-example]]
+[source, hql]
+[%unbreakable]
+----
+select listagg(title, ', ')
+    within group (order by isbn)
+from Book
+group by elements(authors)
+----
+
+This very useful function produces a string by concatenation of the aggregated values of its argument.
+
+[[aggregate-functions-window]]
+==== Window functions
+
+A _window function_ is one which also has an `over` clause, for example:
+
+[source,hql]
+[%unbreakable]
+----
+select
+    item.order.dateTime,
+    sum(item.quantity)
+        over (order by item.order.dateTime)
+        as runningTotal
+from Item item
+----
+
+This query returns a running total of sales over time.
+That is, the `sum()` is taken over a window comprising the current row of the result set, together with all previous rows.
+
+A window function application may optionally specify any of the following clauses:
+
+[cols="23,18,~"]
+|===
+| Optional clause | Keyword | Purpose
+
+| _Partitioning_ of the result set | `partition by` | Very similar to `group by`, but doesn't collapse each partition to a single row
+| _Ordering_ of the partition | `order by` | Specifies the order of rows within a partition
+| _Windowing_ | `range`, `rows`, or `groups` | Defines the bounds of a window frame within a partition
+| _Restriction_ | `filter` | As aggregate functions, window functions may optionally specify a filter
+|===
+
+For example, we may partition the running total by book:
+
+[source,hql]
+----
+select
+    item.book.isbn,
+    item.order.dateTime,
+    sum(item.quantity)
+        over (partition by item.book
+              order by item.order.dateTime)
+        as runningTotal
+from Item item
+----
+
+Every partition runs in isolation, that is, rows can't leak across partitions.
+
+The full syntax for window function application is amazingly involved, as shown by this BNF:
+
+[source,antlrv4]
+----
+overClause
+	: "OVER" "(" partitionClause? orderByClause? frameClause? ")"
+
+partitionClause
+	: "PARTITION" "BY" expression ("," expression)*
+
+frameClause
+	: ("RANGE"|"ROWS"|"GROUPS") frameStart frameExclusion?
+	| ("RANGE"|"ROWS"|"GROUPS") "BETWEEN" frameStart "AND" frameEnd frameExclusion?
+
+frameStart
+	: "CURRENT" "ROW"
+	| "UNBOUNDED" "PRECEDING"
+	| expression "PRECEDING"
+	| expression "FOLLOWING"
+
+frameEnd
+	: "CURRENT" "ROW"
+	| "UNBOUNDED" "FOLLOWING"
+	| expression "PRECEDING"
+	| expression "FOLLOWING"
+
+frameExclusion
+	: "EXCLUDE" "CURRENT" "ROW"
+	| "EXCLUDE" "GROUP"
+	| "EXCLUDE" "TIES"
+	| "EXCLUDE" "NO" "OTHERS"
+----
+
+Window functions are similar to aggregate functions in the sense that they compute some value based on a "frame" comprising multiple rows.
+But unlike aggregate functions, window functions don't flatten rows within a window frame.
+
+[discrete]
+===== Window frames
+
+The _window frame_ is the set of rows within a given partition that is passed to the window function.
+There's a different window frame for each row of the result set.
+In our example, the window frame comprised all the preceding rows within the partition, that is, all the rows with the same `item.book` and with an earlier `item.order.dateTime`.
+
+The boundary of the window frame is controlled via the windowing clause, which may specify one of the following modes:
+
+[cols="8,40,20,~"]
+|===
+| Mode | Definition | Example | Interpretation
+
+|`rows` | Frame bounds defined by a given number of rows | `rows 5 preceding` | The previous 5 rows in the partition
+| `groups` | Frame bounds defined by a given number of _peer groups_, rows belonging to the same peer group if they are assigned the same position by `order by` | `groups 5 preceding` | The rows in the previous 5 peer groups in the partition
+| `range` | Frame bounds defined by a maximum difference in _value_ of the expression used to `order by` | `range between 1.0 preceding and 1.0 following` | The rows whose `order by` expression differs by a maximum absolute value of `1.0` from the current row
+|===
+
+The frame exclusion clause allows excluding rows around the current row:
+
+[cols="20,~"]
+|===
+| Option | Interpretation
+
+| `exclude current row` | Excludes the current row
+| `exclude group` | Excludes rows of the peer group of the current row
+| `exclude ties` | Excludes rows of the peer group of the current row except the current row
+| `exclude no others` | The default, does not exclude anything
+|===
+
+By default, the window frame is defined as `rows between unbounded preceding and current row exclude no others`, meaning every row up to and including the current row.
+
+[IMPORTANT]
+====
+The modes `range` and `groups`, along with frame exclusion modes, are not available on every database.
+====
+[discrete]
+===== Widely supported window functions
+
+The following window functions are available on all major platforms:
+
+[cols="15,~,30"]
+|===
+| Window function | Purpose | Signature
+
+| `row_number()` | The position of the current row within its frame | `row_number()`
+| `lead()` | The value of a subsequent row in the frame | `lead(x)`, `lead(x, i, x)`
+| `lag()` | The value of a previous row in the frame | `lag(x)`, `lag(x, i, x)`
+| `first_value()` | The value of a first row in the frame | `first_value(x)`
+| `last_value()` | The value of a last row in the frame | `last_value(x)`
+| `nth_value()` | The value of the `n`th row in the frame | `nth_value(x, n)`
+|===
+
+In principle every aggregate or ordered set aggregate function might also be used as a window function, just by specifying `over`, but not every function is supported on every database.
+
+[IMPORTANT]
+====
+Window functions and ordered set aggregate functions aren't available on every database.
+Even where they are available, support for particular features varies widely between databases.
+Therefore, we won't waste time going into further detail here.
+For more information about the syntax and semantics of these functions, consult the documentation for your dialect of SQL.
+====
+
+[[set-operators]]
+=== Operations on result sets
+
+These operators apply not to expressions, but to entire result sets:
+
+- `union` and `union all`,
+- `intersect` and `intersect all`, and
+- `except` and `except all`.
+
+Just like in SQL, `all` suppresses the elimination of duplicate results.
+
+[[union-example]]
+[source, hql]
+----
+select nomDePlume from Author where nomDePlume is not null
+union
+select name from Person
+----
+
+[[order-by]]
+=== Sorting
+
+By default, the results of the query are returned in an arbitrary order.
+
+[NOTE]
+====
+Imposing an order on a set is called _sorting_.
+
+A relation (a database table) is a set, and therefore certain particularly dogmatic purists have argued that sorting has no place in the algebra of relations.
+We think this is more than a bit silly: practical data analysis almost always involves sorting, which is a perfectly well-defined operation.
+====
+
+The `order by` clause specifies a list of projected items used to sort the results.
+Each sorted item may be:
+
+- an attribute of an entity or embeddable class,
+- a more complex <<expressions,expression>>,
+- the alias of a projected item declared in the select list, or
+- a literal integer indicating the ordinal position of a projected item in the select list.
+
+Of course, in principle, only certain types may be sorted: numeric types, string, and date and time types.
+But HQL is very permissive here and will allow an expression of almost any type to occur in a sort list.
+Even the identification variable of an entity with a sortable identifier type may occur as a sorted item.
+
+[NOTE]
+====
+The JPQL specification requires that every sorted item in the `order by` clause also occur in the `select` clause.
+HQL does not enforce this restriction, but applications desiring database portability should be aware that some databases _do_.
+
+Therefore, you might wish to avoid the use of complex expressions in the sort list.
+====
+
+The BNF for a sorted item is:
+
+[[order-by-item-bnf]]
+[source, antlrv4]
+----
+include::{extrasdir}/order_by_item_bnf.txt[]
+----
+
+Each sorted item listed in the `order by` clause may explicitly specify a direction, either:
+
+- `asc` for ascending order, or
+- `desc` for descending order.
+
+If no direction is explicitly specified, the results are returned in ascending order.
+
+Of course, there's an ambiguity with respect to null values.
+Therefore, the sorting of null values may be explicitly specified:
+
+[cols="20,~"]
+|===
+| Precedence | Interpretation
+
+| `nulls first` | Puts null values at the beginning of the result set
+| `nulls last` | Puts them at the end
+|===
+
+[[order-by-example]]
+[source, hql]
+----
+select title, publisher.name
+from Book
+order by title, publisher.name nulls last
+----
+[source, hql]
+----
+select book.isbn,
+    year(order.dateTime) as year,
+    sum(quantity) as yearlyTotalSold,
+    sum(quantity * book.price) as yearlyTotalBilled
+from Item
+where book.isbn = :isbn
+group by year(order.dateTime)
+having year(order.dateTime) > 2000
+   and sum(quantity) > 0
+order by yearlyTotalSold desc, year desc
+----
+
+Queries with an ordered result list may have limits or pagination.
+
+[[limit-offset]]
+==== Limits and offsets
+
+It's often useful to place a hard upper limit on the number of results that may be returned by a query.
+The `limit` and `offset` clauses are an alternative to the use of `setMaxResults()` and `setFirstResult()` respectively,
+and may similarly be used for pagination.
+
+[TIP]
+====
+If the `limit` or `offset` is parameterized, it's much easier to use `setMaxResults()` or `setFirstResult()`.
+====
+
+The SQL `fetch` syntax is supported as an alternative:
+
+[cols="25,45,~"]
+|===
+| Short form | Verbose form | Purpose
+
+| `limit 10` | `fetch first 10 rows only` | Limit result set
+| `limit 10 offset 20` | `offset 20 rows fetch next 10 rows only` | Paginate result set
+|===
+
+The BNF gets a bit complicated:
+
+[[limit-offset-bnf]]
+[source, antlrv4]
+----
+include::{extrasdir}/limit_offset_bnf.txt[]
+----
+
+These two queries are identical:
+
+[[limit-example]]
+[source, hql]
+----
+select title from Book
+order by title, published desc
+limit 50
+----
+[source, hql]
+----
+select title from Book
+order by title, published desc
+fetch first 50 rows only
+----
+
+These are well-defined limits: the number of results returned by the database will be limited to 50, as promised.
+But not every query is quite so well-behaved.
+
+[NOTE]
+====
+_Limiting_ certainly _isn't_ a well-defined relational operation, and must be used with care.
+
+In particular, limits don't play well with <<explicit-fetch-join,fetch joins>>.
+====
+
+This next query is accepted by HQL, and no more than 50 results are returned by `getResultList()`, just as expected:
+
+[[bad-limit-example]]
+[source, hql]
+----
+select title from Book
+    join fetch authors
+order by title, published desc
+limit 50
+----
+However, if you log the SQL executed by Hibernate, you'll notice something wrong:
+
+[source, sql]
+----
+select
+    b1_0.isbn,
+    a1_0.books_isbn,
+    a1_0.authors_ORDER,
+    a1_1.id,
+    a1_1.bio,
+    a1_1.name,
+    a1_1.person_id,
+    b1_0.price,
+    b1_0.published,
+    b1_0.publisher_id,
+    b1_0.title
+from
+    Book b1_0
+join
+    (Book_Author a1_0
+        join
+            Author a1_1
+                on a1_1.id=a1_0.authors_id)
+        on b1_0.isbn=a1_0.books_isbn
+order by
+    b1_0.title,
+    b1_0.published desc
+----
+
+What happened to the `limit` clause?
+
+[%unbreakable]
+[IMPORTANT]
+====
+When limits or pagination are combined with a fetch join, Hibernate must retrieve all matching results from the database and _apply the limit in memory_!
+
+This _almost certainly_ isn't the behavior you were hoping for, and in general will exhibit _terrible_ performance characteristics.
+====
+
+[[with-cte]]
+=== Common table expressions
+
+A _common table expression_ or CTE may be thought of as a sort of named subquery.
+Any query with an uncorrelated subquery can in principle be rewritten so that the subquery occurs in the `with` clause.
+
+But CTEs have capabilities that subqueries don't have.
+The `with` clause lets us:
+
+- specify materialization hints, and
+- write recursive queries.
+
+On databases which don't support CTEs natively, Hibernate attempts to rewrite any HQL query with CTEs as a SQL query with subqueries.
+This is impossible for recursive queries, unfortunately.
+
+Let's take a quick look at the BNF:
+
+[source,antlrv4]
+[%unbreakable]
+----
+withClause
+	: "WITH" cte ("," cte)*
+
+cte
+	: identifier AS ("NOT"? "MATERIALIZED")? "(" queryExpression ")"
+      searchClause? cycleClause?
+----
+
+The `with` clause comes right at the start of a query.
+It may declare multiple CTEs with different names.
+
+[source, hql]
+[%unbreakable]
+----
+with
+    paid as (
+        select ord.id as oid, sum(payment.amount) as amountPaid
+        from Order as ord
+            left join ord.payments as payment
+        group by ord
+        having local datetime - ord.dateTime < 365 day
+    ),
+    owed as (
+        select ord.id as oid, sum(item.quantity*item.book.price) as amountOwed
+        from Order as ord
+            left join ord.items as item
+        group by ord
+        having local datetime - ord.dateTime < 365 day
+    )
+select id, paid.amountPaid, owed.amountOwed
+from Order
+where paid.amountPaid < owed.amountOwed
+  and paid.oid = id and owed.oid = id
+----
+
+Notice that if we rewrote this query using subqueries, it would look quite a lot clumsier.
+
+[[materialization-hints]]
+==== Materialization hints
+
+The `materialized` keyword is a hint to the database that the subquery should be separately executed and its results stored in a temporary table.
+
+On the other hand, its nemesis, `not materialized`, is a hint that the subquery should be inlined at each use site, with each usage optimized independently.
+
+[CAUTION]
+====
+The precise impact of materialization hints is quite platform-dependant.
+====
+
+Our example query from above hardly changes.
+We just add `materialized` to the CTE declarations.
+
+[[cte-materialized-example]]
+[source, hql]
+[%unbreakable]
+----
+with
+    paid as materialized (
+        select ord.id as oid, sum(payment.amount) as amountPaid
+        from Order as ord
+            left join ord.payments as payment
+        group by ord
+        having local datetime - ord.dateTime < 365 day
+    ),
+    owed as materialized (
+        select ord.id as oid, sum(item.quantity*item.book.price) as amountOwed
+        from Order as ord
+            left join ord.items as item
+        group by ord
+        having local datetime - ord.dateTime < 365 day
+    )
+select id, paid.amountPaid, owed.amountOwed
+from Order
+where paid.amountPaid < owed.amountOwed
+  and paid.oid = id and owed.oid = id
+----
+
+[[recursive-queries]]
+==== Recursive queries
+
+A _recursive query_ is one where the CTE is defined self-referentially.
+Recursive queries follow a very particular pattern.
+The CTE is defined as a union of:
+
+- a base subquery returning an initial set of rows where the recursion begins,
+- a recursively-executed subquery which returns additional rows by joining against the CTE itself.
+
+Let's demonstrate this with an example.
+
+First we'll need some sort of tree-like entity:
+
+[source,java]
+[%unbreakable]
+----
+@Entity
+class Node {
+	@Id Long id;
+	String text;
+	@ManyToOne Node parent;
+}
+----
+
+We may obtain a tree of ``Node``s with the following recursive query:
+
+[[cte-recursive-example]]
+[source, hql]
+[%unbreakable]
+----
+with Tree as (
+    /* base query */
+    select root.id as id, root.text as text, 0 as level
+        from Node root
+        where root.parent is null
+    union all
+    /* recursion */
+    select child.id as id, child.text as text, level+1 as level
+        from Tree parent
+        join Node child on child.parent.id = parent.id
+)
+select text, level
+from Tree
+----
+
+When querying a tree-like of data structure, the base subquery usually returns the root node or nodes.
+The recursively-executed subquery returns the children of the current set of nodes.
+It's executed repeatedly with the results of the previous execution.
+Recursion terminates when the recursively-executed subquery returns no new nodes.
+
+[CAUTION]
+====
+Hibernate cannot emulate recursive queries on databases which don't support them natively.
+====
+
+Now, if a graph contains cycles, that is, if it isn't a tree, the recursion might never terminate.
+
+==== Cycle detection
+
+The `cycle` clause enables cycle detection, and aborts the recursion if a node is encountered twice.
+
+[[cte-cycle-example]]
+[source, hql]
+[%unbreakable]
+----
+with Tree as (
+    /* base query */
+    select root.id as id, root.text as text, 0 as level
+        from Node root
+        where root.parent is null
+    union all
+    /* recursion */
+    select child.id as id, child.text as text, level+1 as level
+        from Tree parent
+        join Node child on child.parent.id = parent.id
+) cycle id set abort to 'aborted!' default ''  /* cycle detection */
+select text, level, abort
+from Tree
+order by level
+----
+
+Here:
+
+- the `id` column is used to detect cycles, and
+- the `abort` column is set to the string value `'aborted!'` if a cycle is detected.
+
+Hibernate emulates the `cycle` clause on databases which don't support it natively.
+
+The BNF for `cycle` is:
+
+[[cte-recursive-cycle-bnf-example]]
+[source, antlrv4]
+[%unbreakable]
+----
+cycleClause
+    : "CYCLE" identifier ("," identifier)*
+      "SET" identifier ("TO" literal "DEFAULT" literal)?
+      ("USING" identifier)?
+----
+
+The column optionally specified by `using` holds the path to the current row.
+
+==== Ordering depth-first or breadth-first
+
+The `search` clause allows us to control whether we would like the results of our query returned in an order that emulates a depth-first recursive search, or a breadth-first recursive search.
+
+In our query above, we explicitly coded a `level` column that holds the recursion depth, and ordered our result set according to this depth.
+With the `search` clause, that bookkeeping is already taken care of for us.
+
+For depth-first search, we have:
+
+[source, hql]
+[%unbreakable]
+----
+with Tree as (
+    /* base query */
+    select root.id as id, root.text as text
+        from Node root
+        where root.parent is null
+    union all
+    /* recursion */
+    select child.id as id, child.text as text
+        from Tree parent
+        join Node child on child.parent.id = parent.id
+) search depth first by id set level  /* depth-first search */
+from Tree
+order by level
+----
+
+And for breadth-first search, we only need to change a single keyword:
+
+[source, hql]
+[%unbreakable]
+----
+with Tree as (
+    /* base query */
+    select root.id as id, root.text as text
+        from Node root
+        where root.parent is null
+    union all
+    /* recursion */
+    select child.id as id, child.text as text
+        from Tree parent
+        join Node child on child.parent.id = parent.id
+) search breadth first by id set level  /* breadth-first search */
+from Tree
+order by level desc
+----
+
+Hibernate emulates the `search` clause on databases which don't support it natively.
+
+The BNF for `search` is:
+
+[[cte-recursive-search-bnf-example]]
+[source, antlrv4]
+[%unbreakable]
+----
+searchClause
+    : "SEARCH" ("BREADTH"|"DEPTH") "FIRST"
+      "BY" searchSpecifications
+      "SET" identifier
+
+searchSpecifications
+    : searchSpecification ("," searchSpecification)*
+
+searchSpecification
+    : identifier sortDirection? nullsPrecedence?
+----

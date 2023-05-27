@@ -1,0 +1,488 @@
+[[basic-concepts]]
+== Basic concepts
+
+This document describes Hibernate Query Language (HQL), which is, in some sense, a dialect of the Java (now Jakarta) Persistence Query Language (JPQL).
+
+Or is it the other way around?
+
+[NOTE]
+====
+JPQL was inspired by early versions of HQL, and is a subset of modern HQL.
+Here we focus on describing the complete, more powerful HQL language as it exists today.
+
+If strict JPA compliance is what you're looking for, use the setting `hibernate.jpa.compliance.query=true`.
+With this configuration, any attempt to use HQL features beyond the JPQL subset will result in an exception.
+
+We don't recommend the use of this setting.
+====
+
+The truth is that HQL today has capabilities that go far beyond what is possible in plain JPQL.
+We're not going to fuss too much about not limiting ourselves to the standard here.
+Faced with a choice between writing database-specific native SQL, or database-independent HQL, we know what our preference is.
+
+[[and-sqk]]
+=== HQL and SQL
+
+Throughout this document, we'll assume you know SQL and the relational model, at least at a basic level.
+HQL and JPQL are loosely based on SQL and are easy to learn for anyone familiar with SQL.
+
+For example, if you understand this SQL query:
+
+[source,sql]
+----
+select book.title, pub.name
+from Book as book
+    join Publisher as pub
+        on book.publisherId = pub.id
+where book.title like 'Hibernate%'
+order by book.title
+----
+
+Then we bet you can already make sense of this HQL:
+
+[source,sql]
+----
+select book.title, pub.name
+from Book as book
+    join book.publisher as pub
+where book.title like 'Hibernate%'
+order by book.title
+----
+
+You might notice that even for this very simple example, the HQL version is slightly shorter.
+This is typical.
+Actually, HQL queries are usually much more compact than the SQL they compile to.
+
+In this chapter, we'll demonstrate how similar HQL is to SQL by giving a quick overview of the basic statement types.
+You'll be bored to discover they're exactly the ones you expect: `select`, `insert`, `update`, and `delete`.
+
+[WARNING]
+====
+This is a reference guide.
+We're not going to explain basic concepts like ternary logic, joins, aggregation, selection, or projection, because that information is freely available elsewhere, and anyway we couldn't possibly do these topics justice here.
+If you don't have a firm grasp of these ideas, it's time to pick up a book about SQL or about the relational model.
+====
+
+But first we need to mention something that's a bit different to SQL.
+HQL has a slightly complicated way of dealing with case sensitively.
+
+[[case-sensitivity]]
+=== Identifiers and case sensitivity
+
+An identifier is a name used to refer to an entity, an attribute of a Java class, an <<identification-variables,identification variable>>, or a function.
+
+For example, `Book`, `title`, `author`, and `upper` are all identifiers, but they refer to different kinds of things.
+In HQL and JPQL, the case sensitivity of an identifier depends on the kind of thing the identifier refers to.
+
+The rules for case sensitivity are:
+
+- keywords and function names are case-insensitive, but
+- identification variable names, Java class names, and the names of attributes of Java classes, are case-sensitive.
+
+We apologize for this inconsistency.
+In hindsight, it might have been better to define the whole language as case-sensitive.
+
+[%unbreakable]
+[NOTE]
+====
+Incidentally, it's standard practice to use lowercase keywords in HQL and JPQL.
+
+The use of uppercase keywords indicates an endearing but unhealthy attachment to the culture of the 1970's.
+====
+
+Just to reiterate these rules:
+
+[cols="45,~"]
+|===
+| `select`, `SeLeCT`, `sELEct`, and `SELECT` | All the same, `select` is a keyword
+| `upper(name)` and `UPPER(name)` | Same, `upper` is a function name
+| `from BackPack` and `from Backpack` | Different, refer to different Java classes
+| `person.nickName` and `person.nickname` | Different, since the path expression element `nickName` refers to an attribute of an entity defined in Java
+| `person.nickName`, `Person.nickName`, and `PERSON.nickName` | All different, since the first element of a path expression is an <<identification-variables,identification variable>>
+|===
+
+[CAUTION]
+====
+The JPQL specification defines identification variables as case-_insensitive_.
+
+And so in strict JPA-compliant mode, Hibernate treats `person.nickName`, `Person.nickName`, and `PERSON.nickName` as the _same_.
+====
+
+A _quoted identifier_ is written in backticks. Quoting lets you use a keyword as an identifier, for example `` thing.\`select` ``.
+
+[[type-system]]
+=== Type system
+
+JPA doesn't have a well-specified type system, but, reading between the lines a bit, the following types may be discerned:
+
+- entity types,
+- numeric values,
+- strings,
+- dates/times,
+- booleans, and
+- enumerated types.
+
+Such a coarse-grained type system is in some sense an insufficient constraint on implementors of the specification, or, viewed from a different perspective, it leaves us quite a lot of flexibility.
+
+The way HQL interprets this type system is to assign a Java type to every expression in the language.
+Thus, numeric expressions have types like `Long`, `Float`, or `BigInteger`, date/time expressions have types like `LocalDate`, `LocalDateTime`, or `Instant`, and boolean expressions are always of type `Boolean`.
+
+Going further, an expression like `local datetime - document.created` is assigned the Java type `java.time.Duration`, a type which doesn't appear anywhere in the JPA specification.
+
+Since the language must be executed on SQL databases, every type accommodates null values.
+
+[[null-values-and-ternary-logic]]
+==== Null values and ternary logic
+
+The SQL `null` behaves quite differently to a null value in Java.
+In Java, an expression like `number + 1` produces in an exception if `number` is null.
+But in SQL, and therefore also in HQL and JPQL, such an expression evaluates to `null`.
+
+[IMPORTANT]
+====
+It's almost always the case that an operation applied to a null value yields another null value.
+This applies to function application, to operators like `*` and `||`, to comparison operators like `<` and `=`, and even to logical operations like `and` and `not`.
+
+The exceptions to this rule are the functions `coalesce()` and `ifnull()` which are specifically designed for <<functions-null,dealing with null values>>.
+====
+
+This rule is the source of the famous (and controversial) _ternary logic_ of SQL.
+A logical expression like `firstName='Gavin' and team='Hibernate'` isn't restricted to the values `true` and `false`.
+It may also be `null`.
+
+This can in principle lead to some quite unintuitive results: we can't use the law of the excluded middle to reason about logical expressions in SQL!
+But in practice, we've once never run into a case where this caused us problems.
+
+As you probably know, when a logical predicate occurs as a <<where-clause,restriction>>, rows for which the predicate evaluates to `null` are _excluded_ from the result set.
+That is, in this context at least, a logical null is interpreted as "effectively false".
+
+[[statement-types]]
+=== Statement types
+
+HQL features four different kinds of statement:
+
+- `select` queries,
+- `update` statements,
+- `delete` statements, and
+- `insert ... values` and `insert ... select` statements.
+
+Collectively, `insert`, `update`, and `delete` statements are sometimes called _mutation queries_.
+We need to be a little bit careful when executing mutation queries via a stateful session.
+
+[IMPORTANT]
+====
+The effect of an `update` or `delete` statement is not reflected in the persistence context, nor in the state of entity objects held in memory at the time the statement is executed.
+
+It's the responsibility of the client program to maintain synchronization of state held in memory with the database after execution of an `update` or `delete` statement.
+====
+
+Let's consider each type of mutation query in turn, beginning with the most useful type.
+
+[[update]]
+==== Update statements
+
+The https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form[BNF] for an `update` statement is quite straightforward:
+
+[[update-bnf-example]]
+[source, antlrv4]
+----
+include::{extrasdir}/statement_update_bnf.txt[]
+----
+
+The `set` clause has a list of assignments to attributes of the given entity.
+
+For example:
+
+[[update-example]]
+[source, hql]
+----
+update Person set nickName = 'Nacho' where name = 'Ignacio'
+----
+
+Update statements are polymorphic, and affect mapped subclasses of the given entity class.
+Therefore, a single HQL `update` statement might result in multiple SQL update statements executed against the database.
+
+An `update` statement must be executed using `Query.executeUpdate()`.
+
+[[update-examples]]
+[source, java]
+----
+// JPA API
+int updatedEntities = entityManager.createQuery(
+        "update Person p set p.name = :newName where p.name = :oldName")
+            .setParameter("oldName", oldName)
+            .setParameter("newName", newName)
+            .executeUpdate();
+----
+[source, java]
+----
+// Hibernate native API
+int updatedEntities = session.createMutationQuery(
+        "update Person set name = :newName where name = :oldName")
+            .setParameter("oldName", oldName)
+            .setParameter("newName", newName)
+            .executeUpdate();
+----
+
+The integer value returned by `executeUpdate()` indicates the number of entity instances affected by the operation.
+
+[NOTE]
+====
+In a `JOINED` inheritance hierarchy, multiple rows are required to store a single entity instance.
+In this case, the update count returned by Hibernate might not be exactly the same as the number of rows affected in the database.
+====
+
+An `update` statement, by default, does not affect the column mapped by the `@Version` attribute of the affected entities.
+
+Adding the keyword `versioned`—writing `update versioned`—specifies that Hibernate should increment the version number or update the last modification timestamp.
+
+// [NOTE]
+// ====
+// `update versioned` does not work with custom version types defined by implementing `UserVersionType`, and is not available in JPQL.
+// ====
+
+[[update-versioned-example]]
+[source, hql]
+----
+update versioned Book set title = :newTitle where ssn = :ssn
+----
+
+Unfortunately, an `update` statement may not directly join other entities, not even using an <<implicit-join,implicit join>>, but it may have subqueries in its `set` clause, or in the `where` clause, which may contain joins.
+
+[[delete]]
+==== Delete statements
+
+The BNF for a `delete` statement is even simpler:
+
+[[delete-bnf-example]]
+[source, antlrv4]
+----
+include::{extrasdir}/statement_delete_bnf.txt[]
+----
+
+For example:
+
+[source,hql]
+----
+delete Author author where is empty author.books
+----
+
+As in SQL, the presence or absence of the `from` keyword has absolutely no effect on the semantics of the `update` statement.
+
+Just like update statements, delete statements are polymorphic, and affect mapped subclasses of the given entity class.
+Therefore, a single HQL `delete` statement might result in multiple SQL delete statements executed against the database.
+
+A `delete` statement is executed by calling `Query.executeUpdate()`.
+
+The integer value returned by `executeUpdate()` indicates the number of entity instances affected by the operation.
+
+A `delete` statement may not directly join other entities, but it may have subqueries in the `where` clause, which may contain joins.
+
+[[insert]]
+==== Insert statements
+
+There are two kinds of `insert` statement:
+
+- `insert ... values`, where the attribute values to insert are given directly as tuples, and
+- `insert ... select`, where the inserted attribute values are sourced from a subquery.
+
+The first form inserts a single row in the database, or multiple rows if you provide multiple tuples in the `values` clause.
+The second form may insert many new rows, or none at all.
+
+[%unbreakable]
+[TIP]
+====
+The first sort of `insert` statement is not as useful.
+It's usually better to just use `persist()`.
+
+On the other hand, you might consider using it to set up test data.
+====
+
+[NOTE]
+====
+`insert` statements are not part of JPQL.
+====
+
+The BNF for an `insert` statement is:
+
+[[insert-bnf-example]]
+[source, antlrv4]
+----
+include::{extrasdir}/statement_insert_bnf.txt[]
+----
+
+For example:
+
+[[insert-example]]
+[source, hql]
+----
+insert Person (id, name)
+    values (100L, 'Jane Doe'), (200L, 'John Roe')
+----
+
+[source, hql]
+----
+insert into Author (id, name, bio)
+    select id, name, name || ' is a newcomer for ' || str(year(local date))
+    from Person
+    where id = :pid
+----
+
+As in SQL, the presence or absence of the `into` keyword has no effect on the semantics of the `insert` statement.
+
+From these examples we might notice that `insert` statements are in one respect a bit different to `update` and `delete` statements.
+
+[IMPORTANT]
+====
+An `insert` statement is inherently _not_ polymorphic!
+Its list of target fields is of fixed length, whereas each subclass of an entity class might declare additional fields.
+If the entity is involved in a mapped inheritance hierarchy, only attributes declared directly by the named entity and its superclasses may occur in the list of target fields.
+Attributes declared by subclasses may not occur.
+====
+
+The `queryExpression` in an `insert ... select` statement may be any valid `select` query, with the caveat that the types of the values in the `select` list must match the types of the target fields.
+
+[NOTE]
+====
+This is checked during query compilation rather than allowing the type check to delegate to the database.
+This may cause problems when two Java types map to the same database type.
+For example, an attribute of type `LocalDateTime` and an attribute or type `Timestamp` both map to the SQL type `timestamp`, but are not considered assignable by the query compiler.
+====
+
+There are two ways to assign a value to the `@Id` attribute:
+
+- explicitly specify the id attribute in the list of target fields, and its value in the values assigned to the target fields, or
+- omit it, in which case a generated value is used.
+
+Of course, the second option is only available for entities with database-level id generation (sequences or identity/autoincrement columns).
+It's not available for entities whose id generator is implemented in Java, nor for entities whose id is assigned by the application.
+
+The same two options are available for a `@Version` attribute.
+When no version is explicitly specified, the version for a new entity instance is used.
+
+Like `update` and `delete` statements, an `insert` statement must be executed by calling `Query.executeUpdate()`.
+
+Now it's time to look at something _much_ more complicated.
+
+[[select]]
+==== Select statements
+
+Select statements retrieve and analyse data.
+This is what we're really here for.
+
+The full BNF for a `select` query is quite complicated, but there's no need to understand it now.
+We're displaying it here for future reference.
+
+[[select-bnf-example]]
+[source, antlrv4]
+----
+include::{extrasdir}/statement_select_bnf.txt[]
+----
+
+Most of the complexity here arises from the interplay of set operators (`union`, `intersect`, and `except`) with sorting.
+
+We'll describe the various clauses of a query later, in <<root-entities-and-joins>> and in <<selection-projection-aggregation>>, but for now, to summarize, a query might have these bits:
+
+[cols="22,22,~"]
+|===
+| Clause | Jargon | Purpose
+
+| `with` | Common table expressions | Declares <<with-cte,named subqueries>> to be used in the following query
+| `from` and `join` | Roots and joins | <<from-clause,Specifies>> the entities involved in the query, and how they're <<join,related>> to each other
+| `where` | Selection/restriction | Specifies a <<where-clause,restriction>> on the data returned by the query
+| `group by`| Aggregation/grouping | Controls <<group-by,aggregation>>
+| `having` | Selection/restriction | Specifies a <<having,restriction>> to apply _after_ aggregation
+| `select` | Projection | Specifies a <<select-clause,projection>> (the things to return from the query)
+| `union`, `intersect`, `except` | Set algebra | These are <<set-operators,set operators>> applied to the results of multiple subqueries
+| `order by` | Ordering | Specifies how the results should be <<order-by,sorted>>
+| `limit`, `offset`, `fetch` | Limits | Allows for <<limit-offset,limiting or paginating>> the results
+|===
+
+Every one of these clauses is optional!
+
+For example, the simplest query in HQL has no `select` clause at all:
+
+[[select-simplest-example]]
+[source, hql]
+----
+from Book
+----
+
+But we don't necessarily _recommend_ leaving off the `select` list.
+
+[NOTE]
+====
+HQL doesn't require a `select` clause, but JPQL _does_.
+====
+
+Naturally, the previous query may be written with a `select` clause:
+
+[source, hql]
+----
+select book from Book book
+----
+
+But when there's no explicit `select` clause, the select list is implied by the result type of the query:
+
+[source, java]
+[%unbreakable]
+----
+// result type Book, only the Book selected
+List<Book> books =
+        session.createQuery("from Book join authors", Book.class)
+            .getResultList();
+for (Person person: persons) {
+    ...
+}
+----
+
+[source, java]
+[%unbreakable]
+----
+// result type Object[], both Book and Author selected
+List<Object[]> booksWithAuthors =
+       session.createQuery("from Book join authors", Book.class, Object[].class)
+            .getResultList();
+for (var bookWithAuthor: booksWithAuthors) {
+    Book book = (Book) bookWithAuthor[0];
+    Author author = (Author) bookWithAuthor[1];
+    ...
+}
+----
+
+For complicated queries, it's probably best to explicitly specify a `select` list.
+
+An alternative "simplest" query has _only_ a `select` list:
+
+[[select-simplest-example-alt]]
+[source, hql]
+----
+select local datetime
+----
+
+This results in a SQL `from dual` query (or equivalent).
+
+[TIP]
+====
+Looking carefully at the BNF given above, you might notice that the `select` list may occur either at the beginning of a query, or near the end, right before `order by`.
+
+Of course, standard SQL, and JPQL, require that the `select` list comes at the beginning.
+But it's more natural to put it last:
+
+[source, hql]
+----
+from Book book select book.title, book.isbn
+----
+
+This form of the query is more readable, because the alias is declared _before_ it's used, just as God and nature intended.
+====
+
+Of course, queries are always polymorphic.
+Indeed, a fairly innocent-looking HQL query can easily translate to a SQL statement with many joins and unions.
+
+[TIP]
+====
+We need to be a _bit_ careful about that, but actually it's usually a good thing.
+HQL makes it very easy to fetch all the data we need in a single trip to the database, and that's absolutely key to achieving high performance in data access code.
+Typically, it's much worse to fetch exactly the data we need, but in many round trips to the database server, than it is to fetch just a bit more data than what we're going to need, all a single SQL query.
+====

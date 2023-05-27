@@ -1,7 +1,8 @@
-(expression | instantiation) alias?
+selection
+    : (expression | instantiation) alias?
 
 instantiation
-    : "NEW" instantiationTarget "(" instantiationArguments ")"
+    : "NEW" instantiationTarget "(" selection ("," selection)* ")"
 
 alias
     : "AS"? IDENTIFIER

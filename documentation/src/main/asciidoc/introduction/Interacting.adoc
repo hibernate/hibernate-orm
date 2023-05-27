@@ -690,7 +690,7 @@ We're ready to create a criteria query.
 ----
 CriteriaQuery<Book> query = cb.createQuery(Book.class);
 Root<Book> book = query.from(Book.class);
-Predicate where = conjunction();
+Predicate where = cb.conjunction();
 if (titlePattern != null) {
     where = cb.and(where, cb.like(book.get(Book_.title), titlePattern));
 }
@@ -884,6 +884,29 @@ Now, this is only _superficially_ more typesafe, since the query itself is not c
 But perhaps you find it more aesthetically pleasing.
 
 On the other hand, when we're passing query results around the system, the use of `select new` with a `record` type is much better than manually unpacking an `Object[]` array.
+
+Now, the criteria query API offers a much more satisfying solution to the problem.
+Consider the following code:
+
+[source,java]
+----
+var cb = sessionFactory.getCriteriaBuilder();
+var query = cb.createQuery(Tuple.class);
+var book = query.from(Book.class);
+var bookTitle = book.get(Book_.title);
+var bookIsbn = book.get(Book_.isbn);
+var bookPrice = book.get(Book_.price);
+query.select(cb.tuple(bookTitle, bookIsbn, bookPrice));
+var resultList = session.createSelectionQuery(query).getResultList();
+for (var result: resultList) {
+    String title = result.get(bookTitle);
+    String isbn = result.get(bookIsbn);
+	BigDecimal price = result.get(bookPrice);
+    ...
+}
+----
+
+This code is manifestly completely typesafe, and much better than we can hope to do with HQL.
 
 [[named-queries]]
 === Named queries

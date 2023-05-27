@@ -194,6 +194,8 @@ tasks.register('renderIntroduction', AsciidoctorTask) {task->
 	}
 }
 
+// HQL Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 tasks.register('renderQLPdf', AsciidoctorPdfTask) {task->
 	group = "Documentation"
 	description = 'Renders the Query Language document in PDF format using Asciidoctor.'

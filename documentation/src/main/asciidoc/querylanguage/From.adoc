@@ -1,0 +1,572 @@
+[[root-entities-and-joins]]
+== Root entities and joins
+
+The `from` clause, and its subordinate `join` clauses sit right at the heart of most queries.
+
+[[from-clause]]
+=== Declaring root entities
+
+The `from` clause is responsible for declaring the entities available in the rest of the query, and assigning them aliases, or, in the language of the JPQL specification, _identification variables_.
+
+[[identification-variables]]
+==== Identification variables
+
+An identification variable is just a name we can use to refer to an entity and its attributes from expressions in the query.
+It may be any legal Java identifier.
+According to the JPQL specification, identification variables must be treated as case-insensitive language elements.
+
+[TIP]
+====
+The identification variable is actually optional, but for queries involving more than one entity it's almost always a good idea to declare one.
+
+This _works_, but it isn't particularly good form:
+[source,hql]
+----
+from Publisher join books join authors join person where ssn = :ssn
+----
+====
+
+Identification variables may be declared with the `as` keyword, but this is optional.
+
+[[root-reference]]
+==== Root entity references
+
+A root entity reference, or what the JPQL specification calls a _range variable declaration_, is a direct reference to a mapped `@Entity` type by its entity name.
+
+[TIP]
+====
+Remember, the _entity name_ is the value of the `name` member of the `@Entity` annotation, or the unqualified Java class name by default.
+====
+
+[[root-reference-jpql-example]]
+[source, hql]
+----
+select book from Book as book
+----
+
+In this example, `Book` is the entity name, and `book` is the identification variable.
+The `as` keyword is optional.
+
+Alternatively, a fully-qualified Java class name may be specified.
+Then Hibernate will query every entity which inherits the named type.
+
+[[root-reference-jpql-fqn-example]]
+[source, hql]
+----
+select doc from org.hibernate.example.AbstractDocument where text like :pattern
+----
+
+Of course, there may be multiple root entities.
+
+[[multiple-root-reference-jpql-example]]
+[source, hql]
+----
+select a, b
+from Author a, Author b, Book book
+where a in elements(book.authors)
+  and b in elements(book.authors)
+----
+
+This query may even be written using the syntax `cross join` in place of the commas:
+
+[[cross-join-jpql-example]]
+[source, hql]
+----
+select a, b
+from Book book
+    cross join Author a
+    cross join Author b
+where a in elements(book.authors)
+  and b in elements(book.authors)
+----
+
+Of course, it's possible to write old-fashioned pre-ANSI-era joins:
+
+[source, hql]
+----
+select book.title, publisher.name
+from Book book, Publisher publisher
+where book.publisher = publisher
+  and book.title like :titlePattern
+----
+
+But we never write HQL this way.
+
+[[polymorphism]]
+==== Polymorphism
+
+HQL and JPQL queries are inherently polymorphic.
+Consider:
+
+[[polymorphism-example]]
+[source, hql]
+----
+select payment from Payment as payment
+----
+
+This query names the `Payment` entity explicitly.
+But the `CreditCardPayment` and `WireTransferPayment` entities inherit `Payment`, and so `payment` ranges over all three types.
+Instances of all these entities are returned by the query.
+
+[NOTE]
+====
+The query `from java.lang.Object` is completely legal. (But not very useful!)
+
+It returns every object of every mapped entity type.
+====
+
+// This behavior may be slightly adjusted using the `@Polymorphism` annotation.
+//
+// See <<chapters/domain/inheritance.adoc#entity-inheritance-polymorphism>> for more.
+
+[[derived-root]]
+==== Derived roots
+
+A _derived root_ is an uncorrelated subquery which occurs in the `from` clause.
+
+[[derived-root-example]]
+[source, hql]
+----
+select id, total
+from (
+    select ord.id as id, sum(item.book.price * item.quantity) as total
+    from Order as ord
+        join Item as item
+    group by ord
+)
+where total > 100.0
+----
+
+The derived root may declare an identification variable.
+
+[source, hql]
+----
+select stuff.id, stuff.total
+from (
+    select ord.id as id, sum(item.book.price * item.quantity) as total
+    from Order as ord
+        join Item as item
+    group by ord
+) as stuff
+where total > 100.0
+----
+
+This feature can be used to break a more complicated query into smaller pieces.
+
+[IMPORTANT]
+====
+We emphasize that a derived root must be an _uncorrelated_ subquery.
+It may not refer to other roots declared in the same `from` clause.
+====
+
+A subquery may also occur in a <<join-derived, join>>, in which case it may be a correlated subquery.
+
+[[from-cte]]
+==== Common table expressions in `from` clause
+
+A _common table expression (CTE)_ is like a derived root with a name.
+We'll discuss CTEs <<with-cte,later>>.
+
+[[join]]
+=== Declaring joined entities
+
+Joins allow us to navigate from one entity to another, via its associations, or via explicit join conditions.
+There are:
+
+- _explicit joins_, declared within the `from` clause using the keyword ``join``, and
+- _implicit joins_, which don't need to be declared in the `from` clause.
+
+An explicit join may be either:
+
+* an _inner join_, written as `join` or `inner join`,
+* a _left outer join_, written as `left join` or `left outer join`,
+* a _right outer join_, written as `right join` or `right outer join`, or
+* a _full outer join_, written as `full join` or `full outer join`.
+
+[[root-join]]
+==== Explicit root joins
+
+An explicit root join works just like an ANSI-style join in SQL.
+
+[[explicit-root-join-example]]
+[source, hql]
+----
+select book.title, publisher.name
+from Book book
+    join Publisher publisher
+        on book.publisher = publisher
+where book.title like :titlePattern
+----
+
+The join condition is written out explicitly in the `on` clause.
+
+[NOTE]
+====
+This looks nice and familiar, but it's _not_ the most common sort of join in HQL or JPQL.
+====
+
+[[explicit-join]]
+==== Explicit association joins
+
+Every explicit association join specifies an entity attribute to be joined.
+The specified attribute:
+
+* is usually a `@OneToMany`, `@ManyToMany`, `@OneToOne`, or `@ManyToOne` association, but
+* it could be an `@ElementCollection`, and
+* it might even be an attribute of embeddable type.
+
+In the case of an association or collection, the generated SQL will have a join of the same type.
+(For a many-to-many association it will have _two_ joins.)
+In the case of an embedded attribute, the join is purely logical and does not result in a join in the generated SQL.
+
+An explicit join may assign an identification variable to the joined entity.
+
+[[explicit-inner-join-example]]
+[source, hql]
+----
+from Book as book
+    join book.publisher as publisher
+    join book.authors as author
+where book.title like :titlePattern
+select book.title, author.name, publisher.name
+----
+
+For an outer join, we must write our query to accommodate the possibility that the joined association is missing.
+
+[[explicit-outer-join-example]]
+[source, hql]
+----
+from Book as book
+    left join book.publisher as publisher
+    join book.authors as author
+where book.title like :titlePattern
+select book.title, author.name, ifnull(publisher.name, '-')
+----
+
+For further information about collection-valued association references, see <<collection-valued-associations>>.
+
+[[explicit-join-conditions]]
+==== Explicit association joins with join conditions
+
+The `with` or `on` clause allows explicit qualification of the join conditions.
+
+[NOTE]
+====
+The specified join conditions are _added_ to the join conditions specified by the foreign key association.
+That's why, historically, HQL uses the keword `with` here:
+"with" emphasizes that the new condition doesn't _replace_ the original join conditions.
+
+The `with` keyword is specific to Hibernate. JPQL uses `on`.
+====
+
+Join conditions occurring in the `with` or `on` clause are added to the `on` clause in the generated SQL.
+
+[[explicit-join-with-example]]
+[source, hql]
+----
+from Book as book
+    left join book.publisher as publisher
+        with publisher.closureDate is not null
+    left join book.authors as author
+        with author.type <> COLLABORATION
+where book.title like :titlePattern
+select book.title, author.name, publisher.name
+----
+
+// The following query is arguably less clear, but it's semantically identical:
+//
+// [[explicit-join-jpql-on-example]]
+// [source, hql]
+// ----
+// from Book as book
+//     left join book.publisher as publisher
+//         on publisher.closureDate is not null
+//     left join book.authors as author
+//         on author.type <> COLLABORATION
+// where book.title like :titlePattern
+// select book.title, author.name, publisher.name
+// ----
+
+[[explicit-fetch-join]]
+==== Association fetching
+
+A _fetch join_  overrides the laziness of a given association, specifying that the association should be fetched with a SQL join.
+The join may be an inner or outer join.
+
+* A `join fetch`, or, more explicitly, `inner join fetch`, only returns base entities with an associated entity.
+* A `left join fetch`, or—for lovers of verbosity—``left outer join fetch``, returns all the base entities, including those which have no associated joined entity.
+
+[IMPORTANT]
+====
+This is one of the most important features of Hibernate.
+To achieve acceptable performance with HQL, you'll need to use `join fetch` quite often.
+Without it, you'll quickly run into the dreaded "n+1 selects" problem.
+====
+
+For example, if `Person` has a one-to-many association named `phones`, the use of `join fetch` in the following query specifies that the collection elements should be fetched in the same SQL query:
+
+[[explicit-fetch-join-example]]
+[source, hql]
+----
+select book
+from Book as book
+    left join fetch book.publisher
+    join fetch book.authors
+----
+
+In this example, we used a left outer join for `book.publisher` because we also wanted to obtain books with no publisher, but a regular inner join for `book.authors` because every book has at least one author.
+
+A query may have more than one fetch join, but be aware that:
+
+* it's perfectly safe to fetch several to-one associations in series or parallel in a single query, and
+* a single series of _nested_ fetch joins is also fine, but
+* fetching multiple collections or to-many associations in _parallel_ results in a Cartesian product at the database level, and might exhibit very poor performance.
+
+HQL doesn't disallow it, but it's usually a bad idea to apply a restriction to a ``join fetch``ed entity, since the elements of the fetched collection would be incomplete.
+Indeed, it's best to avoid even assigning an identification variable to a fetched joined entity except for the purpose of specifying a nested fetch join.
+
+[IMPORTANT]
+====
+Fetch joins should usually be avoided in limited or paged queries.
+This includes:
+
+- queries executed with limits specified via the `setFirstResult()` and `setMaxResults()` methods of `Query`, or
+- queries with a limit or offset declared in HQL, described below in <<limit-offset>>.
+
+Nor should they be used with the `scroll()` and `stream()` methods of the `Query` interface.
+====
+
+Fetch joins are disallowed in subqueries, where they would make no sense.
+
+[[join-treat]]
+==== Joins with typecasts
+
+An explicit join may narrow the type of the joined entity using `treat()`.
+
+[[join-treat-example]]
+[source, hql]
+----
+from Order as ord
+    join treat(ord.payments as CreditCardPayment) as creditCardPayment
+where length(creditCardPayment.cardNumber) between 16 and 20
+----
+
+Here, the identification variable `ccp` declared to the right of `treat()` has the narrowed type `CreditCardPayment`, instead of the declared type `Payment`.
+This allows the attribute `cardNumber` declared by the subtype `CreditCardPayment` to be referenced in the rest of the query.
+
+See <<functions-typecasts>> for more information about `treat()`.
+
+[[join-derived]]
+==== Subqueries in joins
+
+A `join` clause may contain a subquery, either:
+
+- an uncorrelated subquery, which is almost the same as a <<derived-root,derived root>>, except that it may have an `on` restriction, or
+- a _lateral join_, which is a correlated subquery, and may refer to other roots declared earlier in the same `from` clause.
+
+The `lateral` keyword just distinguishes the two cases.
+
+[[derived-join-example]]
+[source, hql]
+----
+from Phone as phone
+    left join (
+        select call.duration as duration, call.phone.id as cid
+        from Call as call
+        order by call.duration desc
+        limit 1
+    ) as longest on cid = phone.id
+where phone.number = :phoneNumber
+select longest.duration
+----
+
+This query may also be expressed using a `lateral` join:
+
+[source, hql]
+----
+from Phone as phone
+    left join lateral (
+       select call.duration as duration
+       from phone.calls as call
+       order by call.duration desc
+       limit 1
+    ) as longest
+where phone.number = :phoneNumber
+select longest.duration
+----
+
+A lateral join may be an inner or left outer join, but not a right join, nor a full join.
+
+[TIP]
+====
+Traditional SQL doesn't allow correlated subqueries in the `from` clause.
+A lateral join is essentially just that, but with a different syntax to what you might expect.
+
+On some databases, `join lateral` is written `cross apply`.
+And on Postgres it's plain `lateral`, without `join`.
+
+It's almost as if they're _deliberately trying_ to confuse us.
+====
+
+Lateral joins are particularly useful for computing top-N elements of multiple groups.
+
+[IMPORTANT]
+====
+Most databases support some flavor of `join lateral`, and Hibernate emulates the feature for databases which don't.
+But emulation is neither very efficient, nor does it support all possible query shapes, so it's important to test on your target database.
+====
+
+[[implicit-join]]
+==== Implicit association joins (path expressions)
+
+It's not necessary to explicitly `join` every entity that occurs in a query.
+Instead, entity associations may be _navigated_, just like in Java:
+
+* if an attribute is of embedded type, or is a to-one association, it may be further navigated, but
+* if an attribute is of basic type, it is considered terminal, and may not be further navigated, and
+* if an attribute is collection-valued, or is a to-many association, it may be navigated, but only with the help of `value()`, `element()`, or `key()`.
+
+It's clear that:
+
+* A path expression like `author.name` with only two elements just refers to state held directly by an entity with an alias `author` defined in `from` or `join`.
+* But a longer path expression, for example, `author.person.name`, might refer to state held by an associated entity.
+(Alternatively, it might refer to state held by an embedded class.)
+
+In the second case, Hibernate with automatically add a join to the generated SQL if necessary.
+
+[[implicit-join-example]]
+[source, hql]
+----
+from Book as book
+where book.publisher.name like :pubName
+----
+
+As in this example, implicit joins usually appear outside the `from` clause of the HQL query.
+However, they always affect the `from` clause of the SQL query.
+
+The example above is equivalent to:
+
+[[implicit-join-alt]]
+[source, hql]
+[%unbreakable]
+----
+select book
+from Book as book
+    join book.publisher pub
+where pub.name like :pubName
+----
+
+Note that:
+
+* Implicit joins are always treated as inner joins.
+* Multiple occurrences of the same implicit join always refer to the same SQL join.
+
+This query:
+
+[[implicit-join-alias-example]]
+[source, hql]
+----
+select book
+from Book as book
+where book.publisher.name like :pubName
+  and book.publisher.closureDate is null
+----
+
+results in just one SQL join, and is just a different way to write:
+
+[[implicit-join-alias-alt]]
+[source, hql]
+----
+select book
+from Book as book
+    join book.publisher as pub
+where pub.name like :pubName
+  and pub.closureDate is null
+----
+
+[[collection-valued-associations]]
+==== Joining collections and many-valued associations
+
+When a join involves a collection or many-valued association, the declared identification variable refers to the _elements_ of the collection, that is:
+
+- to the elements of a `Set`,
+- to the elements of a `List`, not to their indices in the list, or
+- to the values of a `Map`, not to their keys.
+
+[[collection-valued-associations-example]]
+[source, hql]
+----
+select publisher.name, author.name
+from Publisher as publisher
+    join publisher.books as book
+    join book.authors author
+where author.name like :namePattern
+----
+
+In this example, the identification variable `author` is of type `Author`, the element type of the list `Book.authors`.
+But if we need to refer to the index of an `Author` in the list, we need some extra syntax.
+
+You might recall that we mentioned <<list-functions>> and <<map-functions>> a bit earlier.
+These functions may be applied to the identification variable declared in a collection join or many-valued association join.
+
+[cols="12,20,~,~"]
+|===
+| Function | Applies to | Interpretation | Notes
+
+| `value()` or `element()` | Any collection | The collection element or map entry value
+| Often optional.
+| `index()` | Any `List` with an index column | The index of the element in the list
+| For backward compatibility, it's also an alternative to ``key()``, when applied to a map.
+| `key()` | Any `Map` | The key of the entry in the list | If the key is of entity type, it may be further navigated.
+| `entry()` | Any `Map` | The map entry, that is, the `Map.Entry` of key and value.
+| Only legal as a terminal path, and only allowed in the `select` clause.
+|===
+
+In particular, `index()` and `key()` obtain a reference to a list index or map key.
+
+[[collection-qualification-example]]
+[source, hql]
+[%unbreakable]
+----
+select book.title, author.name, index(author)
+from Book as book
+    join book.authors as author
+----
+[source, hql]
+[%unbreakable]
+----
+select publisher.name, leadAuthor.name
+from Publisher as publisher
+    join publisher.books as book
+    join book.authors leadAuthor
+where leadAuthor.name like :namePattern
+  and index(leadAuthor) == 0
+----
+
+
+[[implicit-collection-join]]
+==== Implicit joins involving collections
+
+A path expression like `book.authors.name` is not considered legal.
+We can't just navigate a many-valued association with this syntax.
+
+Instead, the functions `element()`, `index()`, `key()`, and `value()` may be applied to a path expression to express an implicit join.
+So we must write `element(book.authors).name`.
+
+[[collection-implicit-join-example]]
+[source, hql]
+----
+select book.title, element(book.authors).name, index(book.authors)
+from Book book
+----
+
+An element of an indexed collection (an array, list, or map) may even be identified using the index operator:
+
+[[collection-index-operator-example]]
+[source, hql]
+----
+select publisher.name, book.authors[0].name
+from Publisher as publisher
+    join publisher.books as book
+where book.authors[0].name like :namePattern
+----

@@ -224,8 +224,8 @@ List<BookSummary> results =
                                   BookSummary.class)
             .getResultList();
 for (var result : results) {
-	String title = result.title();
-    String preamble = resukt.summary();
+    String title = result.title();
+    String preamble = result.summary();
 }
 ----
 

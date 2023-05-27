@@ -2000,7 +2000,7 @@ select book.title, author.name, publisher.name
 // ----
 
 [[hql-explicit-fetch-join]]
-==== `join fetch` for association fetching
+==== Association fetching: `join fetch`
 
 A _fetch join_  overrides the laziness of a given association, specifying that the association should be fetched with a SQL join.
 The join may be an inner or outer join.
@@ -2286,6 +2286,121 @@ where book.authors[0].name like :namePattern
 [[selection-projection-aggregation]]
 == Selection, projection, and aggregation
 
+Joining is one kind of _relational operation_.
+It's an operation that produces relations (tables) from other relations.
+Such operations, taken together, form the _relational algebra_.
+
+We must now understand the rest of this family: restriction a.k.a. selection, projection, aggregation, union/intersection, and, finally, ordering and limiting, operations which are not strictly part of the calculus of relations, but which usually come along for the ride because they're very _useful_.
+
+We'll start with the operation that's easiest to understand.
+
+[[hql-where-clause]]
+=== Restriction: `where`
+
+The `where` clause restricts the results returned by a `select` query or limits the scope of an `update` or `delete` query.
+
+NOTE: This operation is usually called _selection_, but since that term is often confused with the `select` keyword, and since both projection and selection involve "selecting" things, here we'll use the less-ambiguous term _restriction_.
+
+A restriction is nothing more than a single logical expression, a topic we exhausted above in <<hql-conditional-expressions>>.
+Therefore, we'll move quickly onto the next, and more interesting, operation.
+
+[[hql-aggregation]]
+=== Aggregation: `group by` and `having`
+
+An aggregate query is one with <<hql-aggregate-functions,aggregate functions>> in its projection list.
+It collapses multiple rows into a single row.
+Aggregate queries are used for summarizing and analysing data.
+
+An aggregate query might have a `group by` clause.
+The `group by` clause divides the result set into groups, so that a query with aggregate functions in the select list returns not a single result for the whole query, but one result for each group.
+If an aggregate query _doesn't_ have a `group by` clause, it always produces a single row of results.
+
+NOTE: In short, _grouping_ controls the effect of _aggregation_.
+
+A query with aggregation may also have a `having` clause, a restriction applied to the groups.
+
+[[hql-group-by]]
+==== Aggregation and grouping: `group by`
+
+The `group by` clause looks quite similar to the `select` clause—it has a list of grouped items, but:
+
+- if there's just one item, then the query will have a single result for each unique value of that item, or
+- if there are multiple items, the query will have a result for each unique _combination_ or their values.
+
+The BNF for a grouped item is just:
+
+[[hql-group-by-item-bnf]]
+[source, antlrv4]
+----
+include::{extrasdir}/group_by_item_bnf.txt[]
+----
+
+Consider the following queries:
+
+[source, hql]
+[%unbreakable]
+----
+select book.isbn,
+    sum(quantity) as totalSold,
+    sum(quantity * book.price) as totalBilled
+from Item
+where book.isbn = :isbn
+----
+
+[[hql-group-by-example]]
+[source, hql]
+[%unbreakable]
+----
+select book.isbn,
+    year(order.dateTime) as year,
+    sum(quantity) as yearlyTotalSold,
+    sum(quantity * book.price) as yearlyTotalBilled
+from Item
+where book.isbn = :isbn
+group by year(order.dateTime)
+----
+
+The first query calculates complete totals over all orders in years.
+The second calculates totals for each year, after grouping the orders by year.
+
+[[hql-group-by-rollup-cube]]
+==== Totals and subtotals: `rollup` and `cube`
+
+The special functions `rollup()` and `cube()` may be used in the `group by` clause, when supported by the database.
+The semantics are identical to SQL.
+
+These functions are especially useful for reporting.
+
+* A `group by` clause with `rollup()` is used to produce subtotals and grand totals.
+* A `group by` clause with `cube()` allows totals for every combination of columns.
+
+[[hql-having]]
+==== Aggregation and restriction: `having`
+
+In a grouped query, the `where` clause applies to the non-aggregated values (it determines which rows will make it into the aggregation).
+The `having` clause also restricts results, but it operates on the aggregated values.
+
+In an <<hql-group-by-example,example above>>, we calculated totals for every year for which data was available.
+But our dataset might extend far back into the past, perhaps even as far back as those terrible dark ages before Hibernate 2.0.
+So let's restrict our result set to data from our own more civilized times:
+
+[[hql-group-by-having-example]]
+[source, hql]
+----
+select book.isbn,
+    year(order.dateTime) as year,
+    sum(quantity) as yearlyTotalSold,
+    sum(quantity * book.price) as yearlyTotalBilled
+from Item
+where book.isbn = :isbn
+group by year(order.dateTime)
+having year(order.dateTime) > 2003
+   and sum(quantity) > 0
+----
+
+The `having` clause follows the same rules as the `where` clause and is also just a logical predicate.
+The `having` restriction is applied after grouping and aggregation has already been performed, whereas the `where` clause is applied before the data is grouped or aggregated.
+
 [[hql-select-clause]]
 === Projection: `select`
 
@@ -2354,7 +2469,7 @@ So there's a special expression type that's only legal in the select clause: the
 Let's see what it does.
 
 [[hql-select-new]]
-==== `select new`
+==== Instantiation: `select new`
 
 The `select new` construct packages the query results into a user-written Java class instead of an array.
 
@@ -2416,7 +2531,7 @@ On the other hand, `Map` is a perfectly fine alternative `Tuple`, but of course 
 ====
 
 [[hql-distinct]]
-==== `distinct`
+==== Duplicate removal: `distinct`
 
 The `distinct` keyword helps remove duplicate results from the query result list.
 It's only effect is to add `distinct` to the generated SQL.
@@ -2566,6 +2681,14 @@ where item.book.isbn = :isbn
 group by year(item.order.dateTime)
 ----
 
+The BNF for the `filter` clause is simple:
+
+[source,antlrv4]
+----
+filterClause
+	: "FILTER" "(" "WHERE" predicate ")"
+----
+
 [[hql-aggregate-functions-orderedset]]
 ==== Ordered set aggregate functions: `within group`
 
@@ -2573,6 +2696,14 @@ An _ordered set aggregate function_ is a special aggregate function which has:
 
 - not only an optional filter clause, as above, but also
 - a `within group` clause containing a mini-`order by` specification.
+
+The BNF for `within group` is straightforward:
+
+[source,antlrv4]
+----
+withinGroupClause
+	: "WITHIN" "GROUP" "(" "ORDER" "BY" sortSpecification ("," sortSpecification)* ")"
+----
 
 There are two main types of ordered set aggregate function:
 
@@ -2590,11 +2721,30 @@ The following ordered set aggregate functions are available on many platforms:
 | Other | `listagg()`
 |===
 
+This query calculates the median price of a book:
+
+[source, hql]
+----
+select percentile_cont(0.5)
+    within group (order by price)
+from Book
+----
+
+This query finds the percentage of books with prices less than 10 dollars:
+
+[source, hql]
+----
+select 100 * percent_rank(10.0)
+    within group (order by price)
+from Book
+----
+
 Actually, the most widely-supported ordered set aggregate function is one which builds a string by concatenating the values within a group.
 This function has different names on different databases, but HQL abstracts these differences, and—following ANSI SQL—calls it `listagg()`.
 
 [[hql-aggregate-functions-within-group-example]]
 [source, hql]
+[%unbreakable]
 ----
 select listagg(title, ', ')
     within group (order by isbn)
@@ -2602,32 +2752,107 @@ from Book
 group by elements(authors)
 ----
 
+This very useful function produces a string by concatenation of the aggregated values of its argument.
+
 [[hql-aggregate-functions-window]]
 ==== Window functions: `over`
 
-A _window function_ is one which also has an `over` clause, which may specify:
+A _window function_ is one which also has an `over` clause, for example:
 
-- window frame _partitioning_, with `partition by`, which is very similar to `group by`,
-- ordering, with `order by`, which defines the order of rows within a window frame, and/or
-- _windowing_, with `range`, `rows`, or `groups`, which define the bounds of the window frame within a partition.
+[source,hql]
+[%unbreakable]
+----
+select
+    item.order.dateTime,
+    sum(item.quantity)
+        over (order by item.order.dateTime)
+        as runningTotal
+from Item item
+----
 
-The default partitioning and ordering is taken from the `group by` and `order by` clauses of the query.
+This query returns a running total of sales over time.
+That is, the `sum()` is taken over a window comprising the current row of the result set, together with all previous rows.
+
+A window function application may optionally specify any of the following clauses:
+
+[cols="23,18,~"]
+|===
+| Optional clause | Keyword | Purpose
+
+| _Partitioning_ of the result set | `partition by` | Very similar to `group by`, but doesn't collapse each partition to a single row
+| _Ordering_ of the partition | `order by` | Specifies the order of rows within a partition
+| _Windowing_ | `range`, `rows`, or `groups` | Defines the bounds of a window frame within a partition
+| _Restriction_ | `filter` | As aggregate functions, window functions may optionally specify a filter
+|===
+
+For example, we may partition the running total by book:
+
+[source,hql]
+----
+select
+    item.book.isbn,
+    item.order.dateTime,
+    sum(item.quantity)
+        over (partition by item.book
+              order by item.order.dateTime)
+        as runningTotal
+from Item item
+----
+
 Every partition runs in isolation, that is, rows can't leak across partitions.
 
-Like ordered set aggregate functions, window functions may optionally specify `filter` or `within group`.
+The full syntax for window function application is amazingly involved, as shown by this BNF:
+
+[source,antlrv4]
+----
+overClause
+	: "OVER" "(" partitionClause? orderByClause? frameClause? ")"
+
+partitionClause
+	: "PARTITION" "BY" expression ("," expression)*
+
+frameClause
+	: ("RANGE"|"ROWS"|"GROUPS") frameStart frameExclusion?
+	| ("RANGE"|"ROWS"|"GROUPS") "BETWEEN" frameStart "AND" frameEnd frameExclusion?
+
+frameStart
+	: "CURRENT" "ROW"
+	| "UNBOUNDED" "PRECEDING"
+	| expression "PRECEDING"
+	| expression "FOLLOWING"
+
+frameEnd
+	: "CURRENT" "ROW"
+	| "UNBOUNDED" "FOLLOWING"
+	| expression "PRECEDING"
+	| expression "FOLLOWING"
+
+frameExclusion
+	: "EXCLUDE" "CURRENT" "ROW"
+	| "EXCLUDE" "GROUP"
+	| "EXCLUDE" "TIES"
+	| "EXCLUDE" "NO" "OTHERS"
+----
 
 Window functions are similar to aggregate functions in the sense that they compute some value based on a "frame" comprising multiple rows.
 But unlike aggregate functions, window functions don't flatten rows within a window frame.
 
-The windowing clause specifies one of the following modes:
+[discrete]
+===== Window frames
 
-[cols="8,35,~"]
+The _window frame_ is the set of rows within a given partition that is passed to the window function.
+There's a different window frame for each row of the result set.
+In our example, the window frame comprised all the preceding rows within the partition, that is, all the rows with the same `item.book` and with an earlier `item.order.dateTime`.
+
+The boundary of the window frame is controlled via the windowing clause, which may specify one of the following modes:
+
+[cols="8,40,20,~"]
 |===
-| Mode | Interpretation | Example
+| Mode | Definition | Example | Interpretation
 
-|`rows` | For frame start/end defined by a set number of rows | `rows n preceding` means that only `n` preceding rows are part of a frame
-| `range` | For frame start/end defined by value offsets | `range n preceding` means a preceding row is part of a frame if the `abs(value, lag(value) over(..)) ≤ N`
-| `groups` | for frame start/end defined by group offsets | `groups n preceding` means `n` preceding peer groups are part of a frame, a peer group being rows with equivalent values for `order by` expressions
+|`rows` | Frame bounds defined by a given number of rows | `rows 5 preceding` | The previous 5 rows in the partition
+| `groups` | Frame bounds defined by a given number of _peer groups_, rows belonging to the same peer group if they are assigned the same position by `order by` | `groups 5 preceding` | The rows in the previous 5 peer groups in the partition
+| `range` | Frame bounds defined by a maximum difference in _value_ of the expression used to `order by` | `range between 1.0 preceding and 1.0 following` | The rows whose `order by` expression differs by a maximum absolute value of `1.0` from the current row
 |===
 
 The frame exclusion clause allows excluding rows around the current row:
@@ -2642,13 +2867,14 @@ The frame exclusion clause allows excluding rows around the current row:
 | `exclude no others` | The default, does not exclude anything
 |===
 
+By default, the window frame is defined as `rows between unbounded preceding and current row exclude no others`, meaning every row up to and including the current row.
+
 [IMPORTANT]
 ====
-Frame clause modes `range` and `groups`, as well as frame exclusion modes might not be available on every database.
+The modes `range` and `groups`, along with frame exclusion modes, are not available on every database.
 ====
-
-The default frame is `rows between unbounded preceding and current row exclude no others`,
-which means that all rows prior to the "current row" are considered.
+[discrete]
+===== Widely supported window functions
 
 The following window functions are available on all major platforms:
 
@@ -2673,108 +2899,6 @@ Even where they are available, support for particular features varies widely bet
 Therefore, we won't waste time going into further detail here.
 For more information about the syntax and semantics of these functions, consult the documentation for your dialect of SQL.
 ====
-
-[[hql-where-clause]]
-=== Restriction: `where`
-
-The `where` clause restricts the results returned by a `select` query or limits the scope of an `update` or `delete` query.
-
-NOTE: This operation is usually called _selection_, but since that term is often confused with the `select` keyword, and since both projection and selection involve "selecting" things, here we'll use the less-ambiguous term _restriction_.
-
-A restriction is nothing more than a single logical expression, a topic we exhausted above in <<hql-conditional-expressions>>.
-
-[[hql-aggregation]]
-=== Aggregation: `group by` and `having`
-
-An aggregate query is one with <<hql-aggregate-functions,aggregate functions>> in its projection list.
-
-The `group by` clause divides the result set into groups, so that a query with aggregate functions in the select list returns not a single result for the whole query, but one result for each group.
-
-NOTE: In short, _grouping_ controls the effect of _aggregation_.
-
-A query with aggregation may also have a `having` clause, a restriction applied to the groups.
-
-[[hql-group-by]]
-==== Aggregation and grouping: `group by`
-
-The `group by` clause looks quite similar to the `select` clause—it has a list of grouped items, but:
-
-- if there's just one item, then the query will have a single result for each unique value of that item, or
-- if there are multiple items, the query will have a result for each unique _combination_ or their values.
-
-The BNF for a grouped item is just:
-
-[[hql-group-by-item-bnf]]
-[source, antlrv4]
-----
-include::{extrasdir}/group_by_item_bnf.txt[]
-----
-
-Consider the following queries:
-
-[[hql-group-by-example]]
-[source, hql]
-[%unbreakable]
-----
-select book.isbn,
-    sum(quantity) as totalSold,
-    sum(quantity * book.price) as totalBilled
-from Item
-where book.isbn = :isbn
-----
-[source, hql]
-[%unbreakable]
-----
-select book.isbn,
-    year(order.dateTime) as year,
-    sum(quantity) as yearlyTotalSold,
-    sum(quantity * book.price) as yearlyTotalBilled
-from Item
-    join book as book
-where book.isbn = :isbn
-group by year(order.dateTime)
-----
-
-
-The first query calculates complete totals over all orders in years.
-The second calculates totals for each year, after grouping the orders by year.
-
-[[hql-group-by-rollup-cube]]
-==== Totals and subtotals: `rollup` and `cube`
-
-The special functions `rollup()` and `cube()` may be used in the `group by` clause, when supported by the database.
-The semantics are identical to SQL.
-
-These functions are especially useful for reporting:
-
-* A `group by` clause with `rollup()` is used to produce subtotals and grand totals.
-* A `group by` clause with `cube()` allows totals for every combination of columns.
-
-[[hql-having]]
-==== Aggregation and restriction: `having`
-
-In a grouped query, the `where` clause applies to the non-aggregated values (it determines which rows will make it into the aggregation).
-The `having` clause also restricts results, but it operates on the aggregated values.
-
-In an <<hql-group-by-example,example above>>, we retrieved `Call` duration totals for all persons.
-If that ended up being too much data to deal with, we might want to restrict the results to focus only on customers with a summed total of more than 1000:
-
-[[hql-group-by-having-example]]
-[source, hql]
-----
-select book.isbn,
-    year(order.dateTime) as year,
-    sum(quantity) as yearlyTotalSold,
-    sum(quantity * book.price) as yearlyTotalBilled
-from Item
-where book.isbn = :isbn
-group by year(order.dateTime)
-having year(order.dateTime) > 2000
-   and sum(quantity) > 0
-----
-
-The `having` clause follows the same rules as the `where` clause and is also made up of predicates.
-`having` is applied after the groupings and aggregations have been done, while the `where` clause is applied before.
 
 [[hql-set-operators]]
 === Operations on result sets: `union`, `intersect`, and `except`
@@ -2844,9 +2968,12 @@ Each sorted item listed in the `order by` clause may explicitly specify a direct
 If no direction is explicitly specified, the results are returned in ascending order.
 
 Of course, there's an ambiguity with respect to null values.
-Therefore, the sorting of null values may also be explicitly specified:
+Therefore, the sorting of null values may be explicitly specified:
 
+[cols="20,~"]
 |===
+| Precedence | Interpretation
+
 | `nulls first` | Puts null values at the beginning of the result set
 | `nulls last` | Puts them at the end
 |===
@@ -2997,15 +3124,14 @@ This is impossible for recursive queries, unfortunately.
 Let's take a quick look at the BNF:
 
 [source,antlrv4]
+[%unbreakable]
 ----
 withClause
 	: "WITH" cte ("," cte)*
 
 cte
-	: identifier AS ("NOT"? "MATERIALIZED")?
-      "(" queryExpression ")"
-      searchClause?
-      cycleClause?
+	: identifier AS ("NOT"? "MATERIALIZED")? "(" queryExpression ")"
+      searchClause? cycleClause?
 ----
 
 The `with` clause comes right at the start of a query.
@@ -3092,6 +3218,7 @@ Let's demonstrate this with an example.
 First we'll need some sort of tree-like entity:
 
 [source,java]
+[%unbreakable]
 ----
 @Entity
 class Node {
@@ -3165,6 +3292,8 @@ Here:
 
 Hibernate emulates the `cycle` clause on databases which don't support it natively.
 
+The BNF for `cycle` is:
+
 [[hql-cte-recursive-cycle-bnf-example]]
 [source, antlrv4]
 [%unbreakable]
@@ -3174,6 +3303,8 @@ cycleClause
       "SET" identifier ("TO" literal "DEFAULT" literal)?
       ("USING" identifier)?
 ----
+
+The column optionally specified by `using` holds the path to the current row.
 
 ==== Ordering depth-first or breadth-first
 
@@ -3223,6 +3354,8 @@ order by level desc
 ----
 
 Hibernate emulates the `search` clause on databases which don't support it natively.
+
+The BNF for `search` is:
 
 [[hql-cte-recursive-search-bnf-example]]
 [source, antlrv4]

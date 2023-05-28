@@ -748,7 +748,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			throw new QueryTypeMismatchException(
 					String.format(
 							Locale.ROOT,
-							"Query result-type error - expecting `%s`, but found `%s`",
+							"Incorrect query result type: query produces '%s' but type '%s' was given",
 							expectedResultType.getName(),
 							resultType.getName()
 					)

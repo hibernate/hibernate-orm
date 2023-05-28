@@ -60,6 +60,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -114,25 +115,35 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	private Class<?> determineResultType(SqmSelectStatement<?> sqm) {
-		if ( expectedResultType != null ) {
-			if ( expectedResultType.isArray() ) {
+		final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+		if ( selections.size() == 1 ) {
+			if ( Object[].class.equals( expectedResultType ) ) {
+				// for JPA compatibility
 				return Object[].class;
-			}
-			else if ( List.class.isAssignableFrom( expectedResultType ) ) {
-				return expectedResultType;
-			}
-			else if ( isTupleResultClass( expectedResultType ) ) {
-				return expectedResultType;
 			}
 			else {
-				return Object[].class;
+				final SqmSelection<?> selection = selections.get(0);
+				if ( selection!=null ) {
+					JavaType<?> javaType = selection.getNodeJavaType();
+					if ( javaType != null) {
+						return javaType.getJavaTypeClass();
+					}
+				}
+				// due to some error in the query,
+				// we don't have any information,
+				// so just let it through so the
+				// user sees the real error
+				return expectedResultType;
 			}
 		}
+		else if ( expectedResultType != null ) {
+			// assume we can repackage the tuple as
+			// the given type (worry about how later)
+			return expectedResultType;
+		}
 		else {
-			final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
-			return selections.size() == 1
-					? selections.get(0).getNodeJavaType().getJavaTypeClass()
-					: Object[].class;
+			// for JPA compatibility
+			return Object[].class;
 		}
 	}
 

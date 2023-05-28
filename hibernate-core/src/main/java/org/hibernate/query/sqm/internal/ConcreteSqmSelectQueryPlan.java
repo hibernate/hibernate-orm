@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.Query;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -50,6 +49,7 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
+import org.hibernate.sql.results.internal.RowTransformerConstructorImpl;
 import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
 import org.hibernate.sql.results.internal.RowTransformerListImpl;
 import org.hibernate.sql.results.internal.RowTransformerMapImpl;
@@ -178,43 +178,39 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( queryOptions.getTupleTransformer() != null ) {
 			return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 		}
-
-		if ( resultType == null ) {
+		else if ( resultType == null ) {
 			return RowTransformerStandardImpl.instance();
 		}
-
-		if ( resultType == Object[].class ) {
+		else if ( resultType == Object[].class ) {
 			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
 		}
-		else if ( List.class.equals( resultType ) ) {
+		else if ( resultType == List.class ) {
 			return (RowTransformer<T>) RowTransformerListImpl.instance();
 		}
+		else {
+			// NOTE : if we get here :
+			// 		1) there is no TupleTransformer specified
+			// 		2) an explicit result-type, other than an array, was specified
 
-		// NOTE : if we get here :
-		// 		1) there is no TupleTransformer specified
-		// 		2) an explicit result-type, other than an array, was specified
-
-		final List<SqmSelection<?>> selections =
-				sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
-		if ( tupleMetadata != null ) {
-			if ( Tuple.class.equals( resultType ) ) {
-				return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
-			}
-			else if ( Map.class.equals( resultType ) ) {
-				return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+			if ( tupleMetadata == null ) {
+				if ( sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections().size() == 1 ) {
+					return RowTransformerSingularReturnImpl.instance();
+				}
+				else {
+					throw new AssertionFailure( "Query defined multiple selections, should have had TupleMetadata" );
+				}
 			}
 			else {
-				throw new AssertionFailure( "Wrong result type for tuple handling: " + resultType );
+				if ( Tuple.class.equals( resultType ) ) {
+					return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
+				}
+				else if ( Map.class.equals( resultType ) ) {
+					return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+				}
+				else {
+					return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
+				}
 			}
-		}
-
-		// NOTE : if we get here we have a resultType of some kind
-
-		if ( selections.size() > 1 ) {
-			throw new IllegalQueryOperationException( "Query defined multiple selections, return cannot be typed (other that Object[] or Tuple)" );
-		}
-		else {
-			return RowTransformerSingularReturnImpl.instance();
 		}
 	}
 

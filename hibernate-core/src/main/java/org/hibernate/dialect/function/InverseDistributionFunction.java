@@ -10,9 +10,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -129,13 +130,12 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 
 	protected class SelfRenderingInverseDistributionFunction<T> extends SelfRenderingSqmOrderedSetAggregateFunction<T> {
 
-		private final SqmOrderByClause withinGroupClause;
-
 		public SelfRenderingInverseDistributionFunction(
 				List<? extends SqmTypedNode<?>> arguments,
 				SqmPredicate filter,
 				SqmOrderByClause withinGroupClause,
-				ReturnableType<T> impliedResultType, QueryEngine queryEngine) {
+				ReturnableType<T> impliedResultType,
+				QueryEngine queryEngine) {
 			super(
 					InverseDistributionFunction.this,
 					InverseDistributionFunction.this,
@@ -148,13 +148,18 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 					queryEngine.getCriteriaBuilder(),
 					InverseDistributionFunction.this.getName()
 			);
-			this.withinGroupClause = withinGroupClause;
+			if ( withinGroupClause == null ) {
+				throw new SemanticException("Inverse distribution function '" + getFunctionName()
+						+ "' must specify WITHIN GROUP");
+			}
 		}
 
 		@Override
 		protected ReturnableType<?> resolveResultType(TypeConfiguration typeConfiguration) {
-			return (ReturnableType<?>) withinGroupClause.getSortSpecifications().get( 0 ).getSortExpression()
-						.getExpressible();
+			return (ReturnableType<?>)
+					getWithinGroup().getSortSpecifications().get( 0 )
+							.getSortExpression()
+							.getExpressible();
 		}
 
 		@Override
@@ -171,21 +176,23 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 				// here we have something that is not a BasicType,
 				// and we have no way to get a BasicValuedMapping
 				// from it directly
-				final Expression expression = (Expression) withinGroupClause.getSortSpecifications().get( 0 )
-						.getSortExpression()
-						.accept( walker );
-				if ( expression.getExpressionType() instanceof BasicValuedMapping ) {
-					return (BasicValuedMapping) expression.getExpressionType();
+				final Expression expression = (Expression)
+						getWithinGroup().getSortSpecifications().get( 0 )
+								.getSortExpression()
+								.accept( walker );
+				final JdbcMappingContainer expressionType = expression.getExpressionType();
+				if ( expressionType instanceof BasicValuedMapping ) {
+					return (BasicValuedMapping) expressionType;
 				}
 				try {
-					final MappingMetamodelImplementor domainModel = walker.getCreationContext()
+					return walker.getCreationContext()
 							.getSessionFactory()
 							.getRuntimeMetamodels()
-							.getMappingMetamodel();
-					return domainModel.resolveMappingExpressible(
-							getNodeType(),
-							walker.getFromClauseAccess()::getTableGroup
-					);
+							.getMappingMetamodel()
+							.resolveMappingExpressible(
+									getNodeType(),
+									walker.getFromClauseAccess()::getTableGroup
+							);
 				}
 				catch (Exception e) {
 					return null; // this works at least approximately

@@ -1025,12 +1025,33 @@ public interface AvailableSettings {
 	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
 
 	/**
-	 * Specifies the default batch size for batch fetching.
+	 * Specifies the default batch size for batch fetching. When set to
+	 * a value greater than one, Hibernate will use batch fetching, when
+	 * possible, to fetch any association.
+	 * <p>
+	 * By default, Hibernate only uses batch fetching for entities and
+	 * collections explicitly annotated {@code @BatchSize}.
 	 *
 	 * @see org.hibernate.annotations.BatchSize
+	 * @see org.hibernate.Session#setFetchBatchSize(int)
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultBatchFetchSize(int)
 	 */
 	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
+
+	/**
+	 * When enabled, Hibernate will use subselect fetching, when possible, to
+	 * fetch any collection.
+	 * <p>
+	 * By default, Hibernate only uses subselect fetching for collections
+	 * explicitly annotated {@code @Fetch(SUBSELECT)}.
+	 *
+	 * @since 6.3
+	 *
+	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
+	 * @see org.hibernate.Session#setSubselectFetchingEnabled(boolean)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applySubselectFetchEnabled(boolean)
+	 */
+	String USE_SUBSELECT_FETCH = "hibernate.use_subselect_fetch";
 
 	/**
 	 * When enabled, specifies that JDBC scrollable {@code ResultSet}s may be used.

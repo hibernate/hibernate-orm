@@ -51,8 +51,14 @@ public class StandardTableMigrator implements TableMigrator {
 			Metadata metadata,
 			TableInformation tableInfo,
 			SqlStringGenerationContext context) {
-		return sqlAlterStrings( table, dialect, metadata, tableInfo, context )
-				.toArray( EMPTY_STRING_ARRAY );
+		if ( table.isView() ) {
+			// perhaps we could execute a 'create or replace view'
+			return EMPTY_STRING_ARRAY;
+		}
+		else {
+			return sqlAlterStrings( table, dialect, metadata, tableInfo, context )
+					.toArray( EMPTY_STRING_ARRAY );
+		}
 	}
 
 	@Internal

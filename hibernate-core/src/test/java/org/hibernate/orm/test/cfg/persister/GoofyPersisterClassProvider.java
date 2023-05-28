@@ -530,11 +530,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public boolean isBatchLoadable() {
-			return false;
-		}
-
-		@Override
 		public boolean isSelectBeforeUpdateRequired() {
 			return false;
 		}
@@ -966,10 +961,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public boolean isExtraLazy() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
 		public int getSize(Object key, SharedSessionContractImplementor session) {
 			return 0;  //To change body of implemented methods use File | Settings | File Templates.
 		}
@@ -984,11 +975,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public int getBatchSize() {
-			return 0;
 		}
 
 		@Override

@@ -546,11 +546,6 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public boolean isBatchLoadable() {
-			return false;
-		}
-
-		@Override
 		public boolean isSelectBeforeUpdateRequired() {
 			return false;
 		}

@@ -36,10 +36,11 @@ The connection pool built in to Hibernate is suitable for testing, but isn't int
 Instead, Hibernate supports a range of different connection pools, including our favorite, Agroal.
 
 To select and configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
-For example:
+Properties with the prefix `hibernate.agroal` are passed through to Agroal:
 
 [source,properties]
 ----
+# configure Agroal connection pool
 hibernate.agroal.maxSize 20
 hibernate.agroal.minSize 10
 hibernate.agroal.acquisitionTimeout PT1s
@@ -47,9 +48,10 @@ hibernate.agroal.reapTimeout PT10s
 ----
 
 As long as you set at least one property with the prefix `hibernate.agroal`, the `AgroalConnectionProvider` will be selected automatically.
+There's many to choose from:
 
 .Settings for configuring Agroal
-[cols="37,~"]
+[%breakable,cols="37,~"]
 |===
 | Configuration property name | Purpose
 
@@ -63,6 +65,13 @@ As long as you set at least one property with the prefix `hibernate.agroal`, the
 | `hibernate.agroal.idleValidationTimeout` | A foreground validation is executed if a connection has been idle on the pool for longer than this duration
 | `hibernate.agroal.validationTimeout` | The interval between background validation checks
 | `hibernate.agroal.initialSql` | A SQL command to be executed when a connection is created
+|===
+
+The following settings are common to all connection pools supported by Hibernate:
+
+.Common settings for connection pools
+[%breakable,cols="37,~"]
+|===
 | `hibernate.connection.autocommit` | The default autocommit mode
 | `hibernate.connection.isolation` | The default transaction isolation level
 |===
@@ -126,24 +135,57 @@ Hibernate provides several strategies for efficiently fetching associations and 
 
 Of these, you should almost always use outer join fetching.
 
-Batch fetching is disabled by default, but we may enable it using this configuration property:
+[[batch-subselect-fetch]]
+=== Batch fetching and subselect fetching
 
-[cols="35,~"]
+Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
+
+.Configuration settings to enable batch and subselect fetching
+[%breakable,cols="35,~"]
 |===
 | Configuration property name | Property value
 
-| `hibernate.default_batch_fetch_size` | A sensible batch size
+| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching
+| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching
 |===
 
+Alternatively, we can enable one or the other in a given session:
+
+[source,java]
+----
+session.setFetchBatchSize(5);
+session.setSubselectFetchingEnabled(true);
+----
+
+[TIP]
+====
+We may request subselect fetching more selectively by annotating a collection or many-valued association with the `@Fetch` annotation.
+[source,java]
+----
+@ManyToMany @Fetch(SUBSELECT)
+Set<Author> authors;
+----
+Note that `@Fetch(SUBSELECT)` is equivalent to `@Fetch(SELECT)`, except after execution of a
+HQL or criteria query.
+
+Later, we'll see how we can use <<fetch-profiles,fetch profiles>> to do this even more selectively.
+====
+
 That's all there is to it.
-So easy, right?
+Too easy, right?
 
 Sadly, that's not the end of the story.
 While batch fetching might _mitigate_ problems involving N+1 selects, it won't solve them.
 The truly correct solution is to fetch associations using joins.
-Batch fetching (or subselect fetching) can only be the best solution in rare cases where outer join fetching would result in a cartesian product and a huge result set.
+Batch fetching (or subselect fetching) can only be the _best_ solution in rare cases where outer join fetching would result in a cartesian product and a huge result set.
+
+Batch fetching and subselect fetching have one important characteristic in common: they can be performed _lazily_.
+
+[[join-fetch]]
+=== Join fetching
 
 Unfortunately, outer join fetching, by nature, simply can't be lazy.
+So:
 
 TIP: Avoid the use of lazy fetching, which is often the source of N+1 selects.
 
@@ -159,9 +201,33 @@ It's saying that you must explicitly specify eager fetching for associations pre
 If you need eager fetching in some particular transaction, use:
 
 - `left join fetch` in HQL,
-- `fetch()` in a criteria query,
+- `From.fetch()` in a criteria query,
 - a JPA `EntityGraph`, or
-- a fetch profile.
+- a <<fetch-profiles,fetch profile>>.
+
+We've already seen how to do join fetching with an <<entity-graph,entity graph>>.
+This is how we can do it in HQL:
+
+[source,java]
+----
+List<Book> booksWithJoinFetchedAuthors =
+        session.createSelectionQuery("from Book join fetch authors order by isbn")
+            .getResultList();
+----
+
+And this is the same query, written using the criteria API:
+
+[source,java]
+----
+var builder = sessionFactory.getCriteriaBuilder();
+var query = builder.createQuery(Book.class);
+var book = query.from(Book.class);
+book.fetch(Book_.authors);
+query.select(book);
+query.orderBy(builder.asc(book.get(Book_.isbn)));
+List<Book> booksWithJoinFetchedAuthors =
+        session.createSelectionQuery(query).getResultList();
+----
 
 You can find much more information about association fetching in the {association-fetching}[User Guide].
 
@@ -211,16 +277,13 @@ If no region name is explicitly specified, the region name is just the name of t
 ----
 @Entity
 @Cache(usage=NONSTRICT_READ_WRITE, region="Publishers")
-class Publisher { ... }
-----
-[source,java]
-----
-@Entity
 class Publisher {
     ...
-    @Cache(usage=NONSTRICT_READ_WRITE, region="PublishedBooks")
-    @OneToMany(mappedBy="publisher")
+
+    @Cache(usage=READ_WRITE, region="PublishedBooks")
+    @OneToMany(mappedBy=Book_.PUBLISHER)
     Set<Book> books;
+
     ...
 }
 ----
@@ -239,7 +302,7 @@ It's an error to place it on a subclass entity.
 The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
 
 .Cache concurrency
-[cols="20,30,~"]
+[%breakable,cols="20,30,~"]
 |===
 | Concurrency policy | Interpretation | Explanation
 
@@ -285,7 +348,10 @@ Unfortunately, it's almost useless to us, since:
 - it may not be used to annotate associations, and so we can't even use it to mark collection roles as eligible for storage in the second-level cache.
 ====
 
-If our entity has a <<natural-id-attributes,natural id>>, we can enable an additional cache, which holds a mapping from natural id to id, by annotating the entity `@NaturalIdCache`.
+[[natural-id-cache]]
+=== Caching by natural id
+
+If our entity has a <<natural-id-attributes,natural id>>, we can enable an additional cache, which holds cross-references from natural id to primary id, by annotating the entity `@NaturalIdCache`.
 By default, the natural id cache is stored in a dedicated region of the second-level cache, separate from the cached entity data.
 
 [source,java]
@@ -304,19 +370,61 @@ class Book {
 }
 ----
 
-This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs lookup by natural id:
-
-- `bySimpleNaturalId()` if just one attribute is annotation `@NaturalId`, or
-- `byNaturalId()` if multiple attributes are annotated `@NaturalId`.
-
-[source,java]
-----
-Book book = session.byNaturalId().using("isbn", isbn, "printing", printing).load();
-----
+This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs <<load-access,lookup by natural id>>.
 
 [NOTE]
 ====
 Since the natural id cache doesn't contain the actual state of the entity, it doesn't make sense to annotate an entity `@NaturalIdCache` unless it's already eligible for storage in the second-level cache, that is, unless it's also annotated `@Cache`.
+====
+
+It's worth noticing that, unlike the primary identifier of an entity, a natural id might be mutable.
+
+We must now consider a subtlety that often arises when we have to deal with so-called "reference data", that is, data which fits easily in memory, and doesn't change much.
+
+[[caching-and-fetching]]
+=== Caching and association fetching
+
+Let's consider again our `Publisher` class:
+
+[source,java]
+----
+@Cache(usage=NONSTRICT_READ_WRITE, region="Publishers")
+@Entity
+class Publisher { ... }
+----
+
+Data about publishers doesn't change very often, and there aren't so many of them.
+Suppose we've set everything up so that the publishers are almost _always_ available in the second-level cache.
+
+Then in this case we need to think carefully about associations of type `Publisher`.
+
+[source,java]
+----
+@ManyToOne
+Publisher publisher;
+----
+
+There's no need for this association to be lazily fetched, since we're expecting it to be available in memory, so we won't set it `fetch=LAZY`.
+But on the other hand, if we leave it marked for eager fetching then, by default, Hibernate will often fetch it using a join.
+This places completely unnecessary load on the database.
+
+The solution is the `@Fetch` annotation:
+
+[source,java]
+----
+@ManyToOne @Fetch(SELECT)
+Publisher publisher;
+----
+
+By annotating the association `@Fetch(SELECT)`, we suppress join fetching, giving Hibernate a chance to find the associated `Publisher` in the cache.
+
+Therefore, we arrive at this rule of thumb:
+
+[TIP]
+====
+Many-to-one associations to "reference data", or to any other data that will almost always be available in the cache, should be mapped `EAGER`,`SELECT`.
+
+Other associations, as we've <<bidirectional-problem,already made clear>>, should be `LAZY`.
 ====
 
 Once we've marked an entity or collection as eligible for storage in the second-level cache, we still need to set up an actual cache.
@@ -330,7 +438,7 @@ But in case it helps, we often test Hibernate with the following configuration, 
 :ehcache-config: https://www.ehcache.org/documentation/
 
 .EHCache configuration
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name              | Property value
 
@@ -350,12 +458,12 @@ JCache automatically selects whichever implementation it finds on the classpath.
 If there are multiple implementations on the classpath, we must disambiguate using:
 
 .Disambiguating the JCache implementation
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name        | Property value
 
 | `hibernate.javax.cache.provider`   a| The implementation of `javax.cache.spiCachingProvider`, for example:
-[cols="~,20"]
+[%breakable,cols="~,20"]
 !===
 ! `org.ehcache.jsr107.EhcacheCachingProvider` ! for EHCache
 ! `com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider` ! for Caffeine
@@ -367,13 +475,13 @@ Alternatively, to use Infinispan as the cache implementation, the following sett
 :infinispan-hibernate: https://infinispan.org/docs/stable/titles/hibernate/hibernate.html
 
 .Infinispan provider configuration
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name              | Property value
 
 | `hibernate.cache.region.factory_class`   | `infinispan`
 | `hibernate.cache.infinispan.cfg`         a| Path to infinispan configuration file, for example:
-[cols="~,35"]
+[%breakable,cols="~,35"]
 !===
 ! `org/infinispan/hibernate/cache/commons/builder/infinispan-configs.xml`
 ! for a distributed cache
@@ -388,7 +496,7 @@ There's more about using Infinispan with Hibernate {infinispan-hibernate}[here].
 Finally, there's a way to globally disable the second-level cache:
 
 .Setting to disable caching
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name              | Property value
 
@@ -413,7 +521,7 @@ Hibernate also has a way to cache the result sets of queries, though this is onl
 The query cache must be enabled explicitly:
 
 .Setting to enable the query cache
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name | Property value
 
@@ -479,37 +587,30 @@ entityManager.setCacheRetrieveMode(CacheRetrieveMode.BYPASS);
 entityManager.setCacheStoreMode(CacheStoreMode.BYPASS);
 ----
 
-The JPA-defined cache modes are:
+The JPA-defined cache modes come in two flavors: `CacheRetrieveMode` and `CacheStoreMode`.
 
-.JPA-defined cache modes
-[cols="30,~"]
+.JPA-defined cache retrieval modes
+[%breakable,cols="30,~"]
 |===
 | Mode | Interpretation
 
 | `CacheRetrieveMode.USE` | Read data from the cache if available
 | `CacheRetrieveMode.BYPASS` | Don't read data from the cache; go direct to the database
+|===
+
+We might select `CacheRetrieveMode.BYPASS` if we're concerned about the possibility of reading stale data from the cache.
+
+.JPA-defined cache storage modes
+[%breakable,cols="30,~"]
+|===
+| Mode | Interpretation
 
 | `CacheStoreMode.USE` | Write data to the cache when read from the database or when modified; do not update already-cached items when reading
 | `CacheStoreMode.REFRESH` | Write data to the cache when read from the database or when modified; always update cached items when reading
 | `CacheStoreMode.BYPASS` | Don't write data to the cache
 |===
 
-A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
-
-.Hibernate cache modes and JPA equivalents
-[cols="30,~"]
-|===
-| Hibernate `CacheMode` | Equivalent JPA modes
-
-| `NORMAL` | `CacheRetrieveMode.USE`, `CacheStoreMode.USE`
-| `IGNORE` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.BYPASS`
-| `GET` | `CacheRetrieveMode.USE`, `CacheStoreMode.BYPASS`
-| `PUT` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.USE`
-| `REFRESH` | `CacheRetrieveMode.REFRESH`, `CacheStoreMode.BYPASS`
-|===
-
-There's no particular reason to prefer Hibernate's `CacheMode` to the JPA equivalents.
-This enumeration only exists because Hibernate had cache modes long before they were added to JPA.
+We should select `CacheStoreMode.BYPASS` if we're querying data that doesn't need to be cached.
 
 [TIP]
 // .A good time to `BYPASS` the cache
@@ -539,6 +640,23 @@ List<Publisher> allpubs =
 ----
 ====
 
+A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
+
+.Hibernate cache modes and JPA equivalents
+[%breakable,cols="30,~"]
+|===
+| Hibernate `CacheMode` | Equivalent JPA modes
+
+| `NORMAL` | `CacheRetrieveMode.USE`, `CacheStoreMode.USE`
+| `IGNORE` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.BYPASS`
+| `GET` | `CacheRetrieveMode.USE`, `CacheStoreMode.BYPASS`
+| `PUT` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.USE`
+| `REFRESH` | `CacheRetrieveMode.REFRESH`, `CacheStoreMode.BYPASS`
+|===
+
+There's no particular reason to prefer Hibernate's `CacheMode` over the JPA equivalents.
+This enumeration only exists because Hibernate had cache modes long before they were added to JPA.
+
 [TIP]
 ====
 For "reference" data, that is, for data which is expected to always be found in the second-level cache, it's a good idea to _prime_ the cache at startup.
@@ -547,7 +665,9 @@ There's a really easy way to do this: just execute a query immediately after obt
 
 [source,java]
 ----
-SessionFactory sessionFactory = setupHibernate(new Configuration()).buildSessionFactory();
+SessionFactory sessionFactory =
+        setupHibernate(new Configuration())
+            .buildSessionFactory();
 // prime the second-level cache
 sessionFactory.inSession(session -> {
     session.createSelectionQuery("from Countries"))
@@ -572,8 +692,8 @@ sessionFactory.getCache().evictEntityData(Book.class, bookId);
 [CAUTION]
 // .Second-level cache management is not transaction-aware
 ====
-Second-level cache management is not transaction-aware.
-None of the operations of the `Cache` interface respect any isolation or transactional semantics associated with the underlying caches. In particular, eviction via the methods of this interface causes an immediate "hard" removal outside any current transaction and/or locking scheme.
+Second-level cache management via the `Cache` interface is not transaction-aware.
+None of the operations of `Cache` respect any isolation or transactional semantics associated with the underlying caches. In particular, eviction via the methods of this interface causes an immediate "hard" removal outside any current transaction and/or locking scheme.
 ====
 
 Ordinarily, however, Hibernate automatically evicts or updates cached data after modifications, and, in addition, cached data which is unused will eventually be expired according to the configured policies.
@@ -679,7 +799,7 @@ lock mode can be used to request a pessimistic lock, or to customize the behavio
 of optimistic locking:
 
 .Optimistic and pessimistic lock modes
-[cols="26,~"]
+[%breakable,cols="26,~"]
 |===
 | `LockMode` type | Meaning
 
@@ -707,7 +827,7 @@ an entity is written to the database using
 
 We may ask Hibernate to collect statistics about its activity by setting this configuration property:
 
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name | Property value
 

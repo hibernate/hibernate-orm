@@ -105,7 +105,7 @@ public class CollectionLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCa
 
 	@Entity(name = "OrgUnit")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = OrgUnit.class, association = "people", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = OrgUnit.class, association = "people")
 	})
 	public static class OrgUnit {
 
@@ -194,7 +194,7 @@ public class CollectionLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCa
 
 	@Entity(name = "Person")
 	@FetchProfile(name = FETCH_PROFILE_NAME_2, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Person.class, association = "orgUnits", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Person.class, association = "orgUnits")
 	})
 	public static class Person {
 

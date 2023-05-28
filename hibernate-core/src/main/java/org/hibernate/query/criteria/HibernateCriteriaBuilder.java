@@ -277,18 +277,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// Selections
 
 	@Override
-	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>[] selections);
+	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections);
 	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments);
 
 	@Override
-	JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections);
+	JpaCompoundSelection<Tuple> tuple(Selection<?>... selections);
 	JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections);
 
 	@Override
-	JpaCompoundSelection<Object[]> array(Selection<?>[] selections);
+	JpaCompoundSelection<Object[]> array(Selection<?>... selections);
 	JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections);
 
-	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>[] selections);
+	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections);
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections);
 
 
@@ -405,7 +405,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaExpression<T> literal(T value);
 	<T> SqmExpression<T> literal(T value, SqmExpression<? extends T> typeInferenceSource);
 
-	<T> List<? extends JpaExpression<T>> literals(T[] values);
+	<T> List<? extends JpaExpression<T>> literals(T... values);
 
 	<T> List<? extends JpaExpression<T>> literals(List<T> values);
 
@@ -498,7 +498,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Instant> currentInstant();
 
 	@Override
-	<T> JpaFunction<T> function(String name, Class<T> type, Expression<?>[] args);
+	<T> JpaFunction<T> function(String name, Class<T> type, Expression<?>... args);
 
 	@Override
 	<Y> JpaExpression<Y> all(Subquery<Y> subquery);
@@ -1195,6 +1195,36 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			Expression<String> x,
 			Expression<Integer> length,
 			Expression<Character> padChar);
+
+	/**
+	 * Concatenate the given string expression with itself the given number of times.
+	 *
+	 * @param x the string expression to concatenate
+	 * @param times the number of times it should be repeated
+	 *
+	 * @return repeat expression
+	 */
+	JpaFunction<String> repeat(Expression<String> x, Expression<Integer> times);
+
+	/**
+	 * Concatenate the given string expression with itself the given number of times.
+	 *
+	 * @param x the string expression to concatenate
+	 * @param times the number of times it should be repeated
+	 *
+	 * @return repeat expression
+	 */
+	JpaFunction<String> repeat(Expression<String> x, int times);
+
+	/**
+	 * Concatenate the given string expression with itself the given number of times.
+	 *
+	 * @param x the string expression to concatenate
+	 * @param times the number of times it should be repeated
+	 *
+	 * @return repeat expression
+	 */
+	JpaFunction<String> repeat(String x, Expression<Integer> times);
 
 	/**
 	 * @see #left(Expression, Expression)

@@ -115,7 +115,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testUnsupportedFetchMode() {
+	public void testNowSupportedFetchMode() {
 		final MetadataSources metadataSources = new MetadataSources()
 				.addAnnotatedClass( Customer4.class )
 				.addAnnotatedClass( Order.class )
@@ -123,10 +123,6 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 		try {
 			metadataSources.buildMetadata();
-			fail();
-		}
-		catch ( MappingException e ) {
-            log.trace("success");
 		}
 		finally {
 			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();

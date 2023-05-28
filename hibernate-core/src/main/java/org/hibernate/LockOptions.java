@@ -29,10 +29,10 @@ import static java.util.Collections.unmodifiableSet;
  * {@link Session#refresh(Object, LockOptions)}, the relevant options
  * are:
  * <ul>
- * <li>the {@link #getLockMode() lock mode},
- * <li>the {@link #getTimeOut() pessimistic lock timeout}, and
- * <li>the {@link #getLockScope() lock scope}, that is, whether the
- *     lock extends to rows of owned collections.
+ * <li>the {@linkplain #getLockMode() lock mode},
+ * <li>the {@linkplain #getTimeOut() pessimistic lock timeout}, and
+ * <li>the {@linkplain #getLockScope() lock scope}, that is, whether
+ *     the lock extends to rows of owned collections.
  * </ul>
  * <p>
  * Timeout and lock scope are ignored if the specified {@code LockMode}

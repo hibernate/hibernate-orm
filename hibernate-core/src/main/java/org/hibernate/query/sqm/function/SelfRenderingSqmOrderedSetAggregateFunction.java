@@ -40,7 +40,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 			FunctionRenderingSupport renderingSupport,
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			SqmOrderByClause withinGroup,
+			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
@@ -57,7 +57,7 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 				nodeBuilder,
 				name
 		);
-		this.withinGroup = withinGroup;
+		this.withinGroup = withinGroupClause;
 	}
 
 	@Override

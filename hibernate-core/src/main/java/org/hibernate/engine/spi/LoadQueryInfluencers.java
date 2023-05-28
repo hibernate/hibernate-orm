@@ -17,8 +17,16 @@ import java.util.function.Supplier;
 
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.internal.FilterImpl;
+import org.hibernate.internal.SessionCreationOptions;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
+
+import static java.util.Collections.emptySet;
+import static org.hibernate.engine.FetchStyle.SUBSELECT;
 
 /**
  * Centralize all options which can influence the SQL query needed to load an
@@ -35,7 +43,10 @@ public class LoadQueryInfluencers implements Serializable {
 	 * Static reference useful for cases where we are creating load SQL
 	 * outside the context of any influencers.  One such example is
 	 * anything created by the session factory.
+	 *
+	 * @deprecated use {@link #LoadQueryInfluencers(SessionFactoryImplementor)}
 	 */
+	@Deprecated(forRemoval = true)
 	public static final LoadQueryInfluencers NONE = new LoadQueryInfluencers();
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -48,21 +59,28 @@ public class LoadQueryInfluencers implements Serializable {
 	//Lazily initialized!
 	private HashMap<String,Filter> enabledFilters;
 
+	private boolean subselectFetchEnabled;
+
+	private int batchSize = -1;
+
 	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
 
 	private Boolean readOnly;
 
 	public LoadQueryInfluencers() {
-		this( null, null );
+		this.sessionFactory = null;
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
-		this(sessionFactory, null);
+		this.sessionFactory = sessionFactory;
+		batchSize = sessionFactory.getSessionFactoryOptions().getDefaultBatchFetchSize();
+		subselectFetchEnabled = sessionFactory.getSessionFactoryOptions().isSubselectFetchEnabled();
 	}
 
-	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, Boolean readOnly) {
+	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, SessionCreationOptions options) {
 		this.sessionFactory = sessionFactory;
-		this.readOnly = readOnly;
+		batchSize = options.getDefaultBatchFetchSize();
+		subselectFetchEnabled = options.isSubselectFetchEnabled();
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -73,13 +91,13 @@ public class LoadQueryInfluencers implements Serializable {
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public <T> T fromInternalFetchProfile(CascadingFetchProfile profile, Supplier<T> supplier) {
-		final CascadingFetchProfile previous = this.enabledCascadingFetchProfile;
-		this.enabledCascadingFetchProfile = profile;
+		final CascadingFetchProfile previous = enabledCascadingFetchProfile;
+		enabledCascadingFetchProfile = profile;
 		try {
 			return supplier.get();
 		}
 		finally {
-			this.enabledCascadingFetchProfile = previous;
+			enabledCascadingFetchProfile = previous;
 		}
 	}
 
@@ -91,6 +109,10 @@ public class LoadQueryInfluencers implements Serializable {
 	 */
 	public CascadingFetchProfile getEnabledCascadingFetchProfile() {
 		return enabledCascadingFetchProfile;
+	}
+
+	public boolean hasEnabledCascadingFetchProfile() {
+		return enabledCascadingFetchProfile != null;
 	}
 
 	/**
@@ -144,7 +166,7 @@ public class LoadQueryInfluencers implements Serializable {
 	 */
 	public Set<String> getEnabledFilterNames() {
 		if ( enabledFilters == null ) {
-			return Collections.emptySet();
+			return emptySet();
 		}
 		else {
 			return Collections.unmodifiableSet( enabledFilters.keySet() );
@@ -208,7 +230,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Set<String> getEnabledFetchProfileNames() {
-		return Objects.requireNonNullElse( enabledFetchProfileNames, Collections.emptySet() );
+		return Objects.requireNonNullElse( enabledFetchProfileNames, emptySet() );
 	}
 
 	private void checkFetchProfileName(String name) {
@@ -250,6 +272,65 @@ public class LoadQueryInfluencers implements Serializable {
 		this.readOnly = readOnly;
 	}
 
+	public int getBatchSize() {
+		return batchSize;
+	}
+
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
+	}
+
+	public int effectiveBatchSize(CollectionPersister persister) {
+		int persisterBatchSize = persister.getBatchSize();
+		// persister-specific batch size overrides global setting
+		// (note that due to legacy, -1 means no explicit setting)
+		return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
+	}
+
+	public boolean effectivelyBatchLoadable(CollectionPersister persister) {
+		return batchSize > 1 || persister.isBatchLoadable();
+	}
+
+	public int effectiveBatchSize(EntityPersister persister) {
+		int persisterBatchSize = persister.getBatchSize();
+		// persister-specific batch size overrides global setting
+		// (note that due to legacy, -1 means no explicit setting)
+		return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
+	}
+
+	public boolean effectivelyBatchLoadable(EntityPersister persister) {
+		return batchSize > 1 || persister.isBatchLoadable();
+	}
+
+	public boolean getSubselectFetchEnabled() {
+		return subselectFetchEnabled;
+	}
+
+	public void setSubselectFetchEnabled(boolean subselectFetchEnabled) {
+		this.subselectFetchEnabled = subselectFetchEnabled;
+	}
+
+	public boolean effectiveSubselectFetchEnabled(CollectionPersister persister) {
+		return subselectFetchEnabled
+			|| persister.isSubselectLoadable()
+			|| isSubselectFetchEnabledInProfile( persister );
+	}
+
+	private boolean isSubselectFetchEnabledInProfile(CollectionPersister persister) {
+		if ( hasEnabledFetchProfiles() ) {
+			for ( String profile : getEnabledFetchProfileNames() ) {
+				final FetchProfile fetchProfile = sessionFactory.getFetchProfile( profile );
+				if ( fetchProfile != null ) {
+					final Fetch fetch = fetchProfile.getFetchByRole( persister.getRole() );
+					if ( fetch != null && fetch.getMethod() == SUBSELECT) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 	private void checkMutability() {
 		if ( sessionFactory == null ) {
 			// that's the signal that this is the immutable, context-less
@@ -257,4 +338,23 @@ public class LoadQueryInfluencers implements Serializable {
 			throw new IllegalStateException( "Cannot modify context-less LoadQueryInfluencers" );
 		}
 	}
+
+	public boolean hasSubselectLoadableCollections(EntityPersister persister) {
+		return persister.hasSubselectLoadableCollections()
+			|| subselectFetchEnabled && persister.hasCollections()
+			|| hasSubselectLoadableCollectionsEnabledInProfile( persister );
+	}
+
+	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {
+		if ( hasEnabledFetchProfiles() ) {
+			for ( String profile : getEnabledFetchProfileNames() ) {
+				if ( sessionFactory.getFetchProfile( profile )
+						.hasSubselectLoadableCollectionsEnabled( persister ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 }

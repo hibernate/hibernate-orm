@@ -1142,6 +1142,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void forceFlush(EntityKey e) throws HibernateException {
+		delegate.forceFlush( e );
+	}
+
+	@Override
 	public void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException {
 		delegate.merge( entityName, object, copiedAlready );
 	}
@@ -1199,6 +1204,26 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void setJdbcBatchSize(Integer jdbcBatchSize) {
 		delegate.setJdbcBatchSize( jdbcBatchSize );
+	}
+
+	@Override
+	public boolean isSubselectFetchingEnabled() {
+		return delegate.isSubselectFetchingEnabled();
+	}
+
+	@Override
+	public void setSubselectFetchingEnabled(boolean enabled) {
+		delegate.setSubselectFetchingEnabled( enabled );
+	}
+
+	@Override
+	public int getFetchBatchSize() {
+		return delegate.getFetchBatchSize();
+	}
+
+	@Override
+	public void setFetchBatchSize(int batchSize) {
+		delegate.setFetchBatchSize( batchSize );
 	}
 
 	@Override

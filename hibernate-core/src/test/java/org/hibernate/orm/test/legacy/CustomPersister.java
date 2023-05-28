@@ -616,10 +616,6 @@ public class CustomPersister implements EntityPersister {
 		return true;
 	}
 
-	public boolean isBatchLoadable() {
-		return false;
-	}
-
 	public Type getPropertyType(String propertyName) {
 		throw new UnsupportedOperationException();
 	}

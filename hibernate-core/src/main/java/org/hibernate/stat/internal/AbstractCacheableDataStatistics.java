@@ -10,18 +10,21 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 
 import org.hibernate.cache.spi.Region;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.stat.CacheableDataStatistics;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractCacheableDataStatistics implements CacheableDataStatistics {
-	private final String cacheRegionName;
-	private final LongAdder cacheHitCount;
-	private final LongAdder cacheMissCount;
-	private final LongAdder cachePutCount;
+	private final @Nullable String cacheRegionName;
+	private final @Nullable LongAdder cacheHitCount;
+	private final @Nullable LongAdder cacheMissCount;
+	private final @Nullable LongAdder cachePutCount;
 
-	public AbstractCacheableDataStatistics(Supplier<Region> regionSupplier) {
+	public AbstractCacheableDataStatistics(Supplier<@Nullable Region> regionSupplier) {
 		final Region region = regionSupplier.get();
 		if ( region == null ) {
 			this.cacheRegionName = null;
@@ -38,7 +41,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 	}
 
 	@Override
-	public String getCacheRegionName() {
+	public @Nullable String getCacheRegionName() {
 		return cacheRegionName;
 	}
 
@@ -47,7 +50,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			return NOT_CACHED_COUNT;
 		}
 
-		return cacheHitCount.sum();
+		return NullnessUtil.castNonNull( cacheHitCount ).sum();
 	}
 
 	public long getCachePutCount() {
@@ -55,7 +58,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			return NOT_CACHED_COUNT;
 		}
 
-		return cachePutCount.sum();
+		return NullnessUtil.castNonNull( cachePutCount ).sum();
 	}
 
 	public long getCacheMissCount() {
@@ -63,7 +66,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			return NOT_CACHED_COUNT;
 		}
 
-		return cacheMissCount.sum();
+		return NullnessUtil.castNonNull( cacheMissCount ).sum();
 	}
 
 	public void incrementCacheHitCount() {
@@ -71,7 +74,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			throw new IllegalStateException( "Illegal attempt to increment cache hit count for non-cached data" );
 		}
 
-		cacheHitCount.increment();
+		NullnessUtil.castNonNull( cacheHitCount ).increment();
 	}
 
 	public void incrementCacheMissCount() {
@@ -79,7 +82,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			throw new IllegalStateException( "Illegal attempt to increment cache miss count for non-cached data" );
 		}
 
-		cacheMissCount.increment();
+		NullnessUtil.castNonNull( cacheMissCount ).increment();
 	}
 
 	public void incrementCachePutCount() {
@@ -87,7 +90,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			throw new IllegalStateException( "Illegal attempt to increment cache put count for non-cached data" );
 		}
 
-		cachePutCount.increment();
+		NullnessUtil.castNonNull( cachePutCount ).increment();
 	}
 
 	protected void appendCacheStats(StringBuilder buf) {

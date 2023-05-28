@@ -10,7 +10,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Decorates a ConcurrentHashMap implementation to make sure the methods are being
@@ -64,7 +67,7 @@ public final class StatsNamedContainer<V> {
 	 * sure the function is invoked at most once: we don't need this guarantee, and prefer to reduce risk of blocking.
 	 */
 	@SuppressWarnings("unchecked")
-	public V getOrCompute(final String key, final Function<String, V> function) {
+	public @Nullable V getOrCompute(final String key, final Function<String, V> function) {
 		final Object v1 = map.get( key );
 		if ( v1 != null ) {
 			if ( v1 == NULL_TOKEN ) {
@@ -90,7 +93,7 @@ public final class StatsNamedContainer<V> {
 		}
 	}
 
-	public V get(final String key) {
+	public @Nullable V get(final String key) {
 		final Object o = map.get( key );
 		if ( o == NULL_TOKEN) {
 			return null;

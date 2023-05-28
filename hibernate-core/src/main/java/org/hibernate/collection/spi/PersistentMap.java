@@ -197,28 +197,6 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 		return map.remove( key );
 	}
 
-	@Internal
-	public E queuedRemove(Object key) {
-		final CollectionEntry entry = getSession().getPersistenceContextInternal().getCollectionEntry( PersistentMap.this );
-		if ( entry == null ) {
-			throwLazyInitializationExceptionIfNotConnected();
-			throwLazyInitializationException("collection not associated with session");
-		}
-		else {
-			final CollectionPersister persister = entry.getLoadedPersister();
-			if ( hasQueuedOperations() ) {
-				getSession().flush();
-			}
-			Object element = persister.getElementByIndex( entry.getLoadedKey(), key, getSession(), getOwner() );
-			if ( element != null ) {
-				elementRemoved = true;
-				queueOperation( new Remove( (K) key, (E) element ) );
-				return (E) element;
-			}
-		}
-		return null;
-	}
-
 	@Override
 	public void putAll(Map<? extends K,? extends E> puts) {
 		if ( puts.size() > 0 ) {

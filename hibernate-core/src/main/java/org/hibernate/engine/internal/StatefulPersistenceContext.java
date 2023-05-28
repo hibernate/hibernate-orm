@@ -868,7 +868,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id) {
 		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
 		addCollection( collection, ce, id );
-		if ( persister.getBatchSize() > 1 ) {
+		if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
 		}
 	}
@@ -877,7 +877,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection<?> collection) {
 		final CollectionEntry ce = new CollectionEntry( persister, collection.getKey() );
 		addCollection( collection, ce, collection.getKey() );
-		if ( persister.getBatchSize() > 1 ) {
+		if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
 		}
 	}
@@ -1865,6 +1865,17 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			deletedUnloadedEntityKeys = new HashSet<>();
 		}
 		deletedUnloadedEntityKeys.add( key );
+	}
+
+	@Override
+	public void removeDeletedUnloadedEntityKey(EntityKey key) {
+		assert deletedUnloadedEntityKeys != null;
+		deletedUnloadedEntityKeys.remove( key );
+	}
+
+	@Override
+	public boolean containsDeletedUnloadedEntityKeys() {
+		return deletedUnloadedEntityKeys != null && !deletedUnloadedEntityKeys.isEmpty();
 	}
 
 	@Override

@@ -24,7 +24,10 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  * @author Gail Badner
+ *
+ * @deprecated No longer used
  */
+@Deprecated(since = "6")
 public class RowVersionJavaType extends AbstractClassJavaType<byte[]>
 		implements VersionJavaType<byte[]> {
 	public static final RowVersionJavaType INSTANCE = new RowVersionJavaType();

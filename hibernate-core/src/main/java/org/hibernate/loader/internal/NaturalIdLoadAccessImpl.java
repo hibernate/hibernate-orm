@@ -10,9 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
@@ -32,12 +32,24 @@ public class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> i
 	}
 
 	@Override
+	public <X> NaturalIdLoadAccess<T> using(SingularAttribute<? super T, X> attribute, X value) {
+		naturalIdParameters.put( attribute.getName(), value );
+		return this;
+	}
+
+	@Override
 	public NaturalIdLoadAccess<T> using(String attributeName, Object value) {
 		naturalIdParameters.put( attributeName, value );
 		return this;
 	}
 
 	@Override
+	public NaturalIdLoadAccess<T> using(Map<String, ?> mappings) {
+		naturalIdParameters.putAll( mappings );
+		return this;
+	}
+
+	@Override @Deprecated
 	public NaturalIdLoadAccess<T> using(Object... mappings) {
 		CollectionHelper.collectMapEntries( naturalIdParameters::put, mappings );
 		return this;

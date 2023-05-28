@@ -886,6 +886,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public int getBatchSize() {
+		return getCollectionDescriptor().getBatchSize();
+	}
+
+	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers );
 	}
@@ -896,9 +901,9 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public void registerAffectingFetchProfile(String fetchProfileName, org.hibernate.engine.profile.Fetch.Style fetchStyle) {
+	public void registerAffectingFetchProfile(String fetchProfileName) {
 		if ( collectionDescriptor instanceof FetchProfileAffectee ) {
-			( (FetchProfileAffectee) collectionDescriptor ).registerAffectingFetchProfile( fetchProfileName, fetchStyle );
+			( (FetchProfileAffectee) collectionDescriptor ).registerAffectingFetchProfile( fetchProfileName);
 		}
 	}
 

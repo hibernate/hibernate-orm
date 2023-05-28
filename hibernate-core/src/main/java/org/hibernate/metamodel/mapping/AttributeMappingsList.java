@@ -28,7 +28,7 @@ import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
  * @since 6.2
  */
 @Incubating
-public interface AttributeMappingsList extends Iterable<AttributeMapping> {
+public interface AttributeMappingsList {
 
 	int size();
 

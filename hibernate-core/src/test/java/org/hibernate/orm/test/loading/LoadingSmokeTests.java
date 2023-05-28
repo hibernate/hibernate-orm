@@ -62,10 +62,6 @@ public class LoadingSmokeTests {
 
 					final SingleIdEntityLoader singleIdEntityLoader = entityDescriptor.getSingleIdLoader();
 					assertThat( singleIdEntityLoader, instanceOf( SingleIdEntityLoaderStandardImpl.class ) );
-					assertThat(
-							( (SingleIdEntityLoaderStandardImpl) singleIdEntityLoader ).getNonReusablePlansGenerated().get(),
-							is( 0 )
-					);
 				}
 		);
 	}

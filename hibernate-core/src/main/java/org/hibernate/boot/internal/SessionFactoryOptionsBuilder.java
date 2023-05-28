@@ -124,6 +124,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_SCROLLABLE_RESULTSET;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
+import static org.hibernate.cfg.AvailableSettings.USE_SUBSELECT_FETCH;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -194,6 +195,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean delayBatchFetchLoaderCreations;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
+	private boolean subselectFetchEnabled;
 	private NullPrecedence defaultNullPrecedence;
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
@@ -361,6 +363,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.batchFetchStyle = BatchFetchStyle.interpret( configurationSettings.get( BATCH_FETCH_STYLE ) );
 		this.delayBatchFetchLoaderCreations = configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
 		this.defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, configurationSettings, -1 );
+		this.subselectFetchEnabled = getBoolean( USE_SUBSELECT_FETCH, configurationSettings );
 		this.maximumFetchDepth = getInteger( MAX_FETCH_DEPTH, configurationSettings );
 		final String defaultNullPrecedence = getString(
 				AvailableSettings.DEFAULT_NULL_ORDERING, configurationSettings, "none", "first", "last"
@@ -973,6 +976,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean isSubselectFetchEnabled() {
+		return subselectFetchEnabled;
+	}
+
+	@Override
 	public NullPrecedence getDefaultNullPrecedence() {
 		return defaultNullPrecedence;
 	}
@@ -1340,6 +1348,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyMaximumFetchDepth(int depth) {
 		this.maximumFetchDepth = depth;
+	}
+
+	public void applySubselectFetchEnabled(boolean subselectFetchEnabled) {
+		this.subselectFetchEnabled = subselectFetchEnabled;
 	}
 
 	public void applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {

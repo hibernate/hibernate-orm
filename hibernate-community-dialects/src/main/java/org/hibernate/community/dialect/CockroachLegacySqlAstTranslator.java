@@ -46,7 +46,7 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		else {
 			final boolean isNegated = booleanExpressionPredicate.isNegated();
 			if ( isNegated ) {
-				appendSql( "not(" );
+				appendSql( "not (" );
 			}
 			booleanExpressionPredicate.getExpression().accept( this );
 			if ( isNegated ) {
@@ -188,7 +188,7 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );
-		appendSql( " = ANY(" );
+		appendSql( " = any(" );
 		inArrayPredicate.getArrayParameter().accept( this );
 		appendSql( ')' );
 	}

@@ -12,44 +12,93 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 
 /**
- * Loads multiple entities at once by identifiers, ultimately via one of the
- * {@link #multiLoad} methods, using the various options specified (if any)
+ * Loads multiple instances of a given entity type at once, by
+ * specifying a list of identifier values. This allows the entities
+ * to be fetched from the database in batches.
+ * <p>
+ * <pre>
+ * var graph = session.createEntityGraph(Book.class);
+ * graph.addSubgraph(Book_.publisher);
+ *
+ * List&lt;Book&gt; books =
+ *         session.byMultipleIds(Book.class)
+ *             .withFetchGraph(graph)
+ *             .withBatchSize(20)
+ *             .multiLoad(bookIds);
+ * </pre>
+ *
+ * @see Session#byMultipleIds(Class)
  *
  * @author Steve Ebersole
  */
 public interface MultiIdentifierLoadAccess<T> {
 	/**
-	 * Specify the {@link LockOptions} to use when retrieving the entity.
+	 * Specify the {@linkplain LockOptions lock options} to use when
+	 * querying the database.
 	 *
-	 * @param lockOptions The lock options to use.
+	 * @param lockOptions The lock options to use
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	MultiIdentifierLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
-	 * Specify the {@link CacheMode} to use when retrieving the entity.
+	 * Specify the {@link CacheMode} to use when obtaining an entity.
 	 *
-	 * @param cacheMode The CacheMode to use.
+	 * @param cacheMode The {@code CacheMode} to use
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	MultiIdentifierLoadAccess<T> with(CacheMode cacheMode);
 
+	/**
+	 * Override the associations fetched by default by specifying
+	 * the complete list of associations to be fetched as an
+	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 */
+	default MultiIdentifierLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.FETCH );
+	}
+
+	/**
+	 * Augment the associations fetched by default by specifying a
+	 * list of additional associations to be fetched as an
+	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 */
+	default MultiIdentifierLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.LOAD );
+	}
+
+	/**
+	 * @deprecated use {@link #withLoadGraph}
+	 */
+	@Deprecated(since = "6.3")
 	default MultiIdentifierLoadAccess<T> with(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
+	/**
+	 * Customize the associations fetched by specifying an
+	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
+	 * and how it should be {@linkplain GraphSemantic interpreted}.
+	 */
 	MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
 	/**
-	 * Specify a batch size for loading the entities (how many at a time).  The default is
-	 * to use a batch sizing strategy defined by the Dialect in use.  Any greater-than-one
-	 * value here will override that default behavior.  If giving an explicit value here,
-	 * care should be taken to not exceed the capabilities of of the underlying database.
+	 * Specify a batch size, that is, how many entities should be
+	 * fetched in each request to the database.
+	 * <ul>
+	 * <li>By default, the batch sizing strategy is determined by the
+	 *     {@linkplain org.hibernate.dialect.Dialect#getBatchLoadSizingStrategy
+	 *    SQL dialect}, but
+	 * <li>if some {@code batchSize>1} is specified as an
+	 *     argument to this method, then that batch size will be used.
+	 * </ul>
 	 * <p>
-	 * Note that overall a batch-size is considered a hint.  How the underlying loading
-	 * mechanism interprets that is completely up to that underlying loading mechanism.
+	 * If an explicit batch size is set manually, care should be taken
+	 * to not exceed the capabilities of the underlying database.
+	 * <p>
+	 * A batch size is considered a hint.
 	 *
 	 * @param batchSize The batch size
 	 *
@@ -58,53 +107,58 @@ public interface MultiIdentifierLoadAccess<T> {
 	MultiIdentifierLoadAccess<T> withBatchSize(int batchSize);
 
 	/**
-	 * Specify whether we should check the {@link Session} to see whether the first-level cache already contains any of the
-	 * entities to be loaded in a managed state <b>for the purpose of not including those
-	 * ids to the batch-load SQL</b>.
+	 * Specifies whether the ids of managed entity instances already
+	 * cached in the current persistence context should be excluded
+	 * from the list of ids sent to the database.
+	 * <p>
+	 * By default, all ids are included and sent to the database.
 	 *
-	 * @param enabled {@code true} enables this checking; {@code false} (the default) disables it.
+	 * @param enabled {@code true} if they should be excluded;
+	 *                {@code false} if they should be included.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled);
 
 	/**
-	 * Should the multi-load operation be allowed to return entities that are locally
-	 * deleted?  A locally deleted entity is one which has been passed to this
-	 * Session's {@link Session#delete} / {@link Session#remove} method, but not
-	 * yet flushed.  The default behavior is to handle them as null in the return
-	 * (see {@link #enableOrderedReturn}).
+	 * Should {@link #multiLoad} return entity instances that have been
+	 * {@link Session#remove(Object) marked for removal} in the current
+	 * session, but not yet {@code delete}d in the database?
+	 * <p>
+	 * By default, instances marked for removal are replaced by null in
+	 * the returned list of entities when {@link #enableOrderedReturn}
+	 * is used.
 	 *
-	 * @param enabled {@code true} enables returning the deleted entities;
-	 * {@code false} (the default) disables it.
+	 * @param enabled {@code true} if removed entities should be returned;
+	 *                {@code false} if they should be replaced by null values.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	MultiIdentifierLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled);
 
 	/**
-	 * Should the return List be ordered and positional in relation to the
-	 * incoming ids?  If enabled (the default), the return List is ordered and
-	 * positional relative to the incoming ids.  In other words, a request to
-	 * {@code multiLoad([2,1,3])} will return {@code [Entity#2, Entity#1, Entity#3]}.
+	 * Should the returned list of entity instances be ordered, with the
+	 * position of an entity instance determined by the position of its
+	 * identifier in the list if ids passed to {@link #multiLoad}?
 	 * <p>
-	 * An important distinction is made here in regards to the handling of
-	 * unknown entities depending on this "ordered return" setting.  If enabled
-	 * a null is inserted into the List at the proper position(s).  If disabled,
-	 * the nulls are not put into the return List.  In other words, consumers of
-	 * the returned ordered List would need to be able to handle null elements.
+	 * By default, the returned list is ordered and the positions of the
+	 * entities correspond to the positions of their ids. In this case,
+	 * the {@linkplain #enableReturnOfDeletedEntities handling of entities
+	 * marked for removal} becomes important.
 	 *
-	 * @param enabled {@code true} (the default) enables ordering;
-	 * {@code false} disables it.
+	 * @param enabled {@code true} if entity instances should be ordered;
+	 *                {@code false} if they may be returned in any order.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	MultiIdentifierLoadAccess<T> enableOrderedReturn(boolean enabled);
 
 	/**
-	 * Perform a load of multiple entities by identifiers.  See {@link #enableOrderedReturn}
-	 * and {@link #enableReturnOfDeletedEntities} for options which effect
-	 * the size and "shape" of the return list.
+	 * Retrieve the entities with the given identifiers.
+	 * <p>
+	 * Note that the options {@link #enableReturnOfDeletedEntities} and
+	 * {@link #enableOrderedReturn} affect the size and shape of the
+	 * returned list of entity instances.
 	 *
 	 * @param <K> The identifier type
 	 *
@@ -114,9 +168,11 @@ public interface MultiIdentifierLoadAccess<T> {
 	<K> List<T> multiLoad(K... ids);
 
 	/**
-	 * Perform a load of multiple entities by identifiers.  See {@link #enableOrderedReturn}
-	 * and {@link #enableReturnOfDeletedEntities} for options which effect
-	 * the size and "shape" of the return list.
+	 * Retrieve the entities with the given identifiers.
+	 * <p>
+	 * Note that the options {@link #enableReturnOfDeletedEntities} and
+	 * {@link #enableOrderedReturn} affect the size and shape of the
+	 * returned list of entity instances.
 	 *
 	 * @param ids The ids to load
 	 * @param <K> The identifier type

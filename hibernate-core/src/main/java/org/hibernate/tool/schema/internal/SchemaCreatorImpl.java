@@ -413,6 +413,21 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			Namespace namespace) {
 		for ( Table table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
+					&& !table.isView()
+					&& options.getSchemaFilter().includeTable( table )
+					&& contributableInclusionMatcher.matches( table ) ) {
+				checkExportIdentifier( table, exportIdentifiers );
+				applySqlStrings(
+						dialect.getTableExporter().getSqlCreateStrings( table, metadata, context ),
+						formatter,
+						options,
+						targets
+				);
+			}
+		}
+		for ( Table table : namespace.getTables() ) {
+			if ( table.isPhysicalTable()
+					&& table.isView()
 					&& options.getSchemaFilter().includeTable( table )
 					&& contributableInclusionMatcher.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers );

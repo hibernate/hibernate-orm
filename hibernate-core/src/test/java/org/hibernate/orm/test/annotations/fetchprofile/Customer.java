@@ -26,13 +26,13 @@ import org.hibernate.annotations.FetchProfile;
  */
 @Entity
 @FetchProfile(name = "customer-with-orders", fetchOverrides = {
-		@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
+		@FetchProfile.FetchOverride(entity = Customer.class, association = "orders")
 })
 @FetchProfile(name = "customer-with-orders-and-country",
 		fetchOverrides = {
-	@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN),
-	@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder", mode = FetchMode.JOIN),
-	@FetchProfile.FetchOverride(entity = Order.class, association = "country", mode = FetchMode.JOIN)
+	@FetchProfile.FetchOverride(entity = Customer.class, association = "orders"),
+	@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder"),
+	@FetchProfile.FetchOverride(entity = Order.class, association = "country")
 })
 public class Customer {
 	@Id

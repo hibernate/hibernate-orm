@@ -214,7 +214,7 @@ Of course, the main reason we need an `EntityManager` is to do stuff to the data
 The following important operations let us interact with the persistence context and schedule modifications to the data:
 
 .Methods for modifying data and managing the persistence context
-[cols="30,~"]
+[%breakable,cols="30,~"]
 |===
 | Method name and parameters | Effect
 
@@ -241,7 +241,7 @@ Modifications are automatically detected when the session is <<flush,flushed>>.
 On the other hand, the following operations all result in immediate access to the database:
 
 .Methods for reading and locking data
-[cols="30,~"]
+[%breakable,cols="30,~"]
 |===
 | Method name and parameters | Effect
 
@@ -293,7 +293,7 @@ To set up cascading, we specify the `cascade` member of one of the association m
 @Entity
 class Order {
     ...
-    @OneToMany(mappedby="order",
+    @OneToMany(mappedby=Item_.ORDER,
                // cascade persist(), remove(), and refresh() from Order to Item
                cascade={PERSIST,REMOVE,REFRESH},
                // also remove() orphaned Items
@@ -332,7 +332,7 @@ Now for the gotchas:
 We're getting a bit ahead of ourselves here, but let's quickly mention the general strategy we recommend to navigate past these gotchas:
 
 - All associations should be set `fetch=LAZY` to avoid fetching extra data when it's not needed.
-  As we mentioned in <<many-to-one>>, this setting is not the default for `@ManyToOne` associations, and must be specified explicitly.
+  As we mentioned <<lazy-problem,earlier>>, this setting is not the default for `@ManyToOne` associations, and must be specified explicitly.
 - But strive to avoid writing code which triggers lazy fetching.
   Instead, fetch all the data you'll need upfront at the beginning of a unit of work, using one of the techniques described in <<association-fetching>>, usually, using _join fetch_ in HQL or an `EntityGraph`.
 ====
@@ -406,7 +406,7 @@ The JPA-standard API for this is a bit unwieldy:
 ----
 var graph = entityManager.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
-entityManager.find(Book.class, bookId, Map.of(SpecHints.HINT_SPEC_FETCH_GRAPH, graph));
+Book book = entityManager.find(Book.class, bookId, Map.of(SpecHints.HINT_SPEC_FETCH_GRAPH, graph));
 ----
 
 This is untypesafe and unnecessarily verbose.
@@ -416,7 +416,7 @@ Hibernate has a better way:
 ----
 var graph = session.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
-session.byId(Book.class).fetching(graph).load(bookId);
+Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
 ----
 
 This code adds a `left outer join` to our SQL query, fetching the associated `Publisher` along with the `Book`.
@@ -428,7 +428,7 @@ We may even attach additional nodes to our `EntityGraph`:
 var graph = session.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
 graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
-session.byId(Book.class).fetching(graph).load(bookId);
+Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
 
 ----
 
@@ -491,7 +491,7 @@ session.setHibernateFlushMode(FlushMode.MANUAL);
 Since flushing is a somewhat expensive operation (the session must dirty-check every entity in the persistence context), setting the flush mode to `COMMIT` can occasionally be a useful optimization.
 
 .Flush modes
-[cols="15,15,~"]
+[%breakable,cols="15,15,~"]
 |===
 | Hibernate `FlushMode` | JPA `FlushModeType` | Interpretation
 
@@ -538,7 +538,7 @@ The method we call depends on what Kind it is:
 Selection queries usually start with the keyword `select` or `from`, whereas mutation queries begin with the keyword `insert`, `update`, or `delete`.
 
 .Executing HQL
-[cols="10,36,32,22"]
+[%breakable,cols="10,36,32,22"]
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
@@ -566,7 +566,7 @@ List<Book> matchingBooks =
             .getResultList();
 ----
 
-The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed a Mutation.
+The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed an `insert`, `delete`, or `update`.
 
 In the query above, `:titleSearchPattern` is called a _named parameter_.
 We may also identify parameters by a number.
@@ -609,46 +609,7 @@ Book bookOrNull =
             .getSingleResultOrNull();
 ----
 
-The difference, of course, is that `getSingleResult()` throws an exception if there is no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
-
-[TIP]
-====
-Since Java has no tuple types, representing the type of a query projection list in Java has always been a problem for JPA and Hibernate.
-Traditionally, we've just used `Object[]`:
-[source,java]
-----
-var results =
-        session.createSelectionQuery("select isbn, title from Book",
-                                     Object[].class)
-            .getResultList();
-for (var result : results) {
-    var isbn = (String) result[0];
-    var title = (String) result[1];
-    ...
-}
-----
-This is really a bit ugly.
-Java's `record` types now offer an interesting alternative:
-[source,java]
-----
-record IsbnTitle(String isbn, String title) {}
-var results =
-        session.createSelectionQuery("select new IsbnTitle(isbn, title) from Book",
-                                     IsbnTitle.class)
-            .getResultList();
-for (var result : results) {
-    var isbn = result.isbn();
-    var title = result.title();
-    ...
-}
-----
-Notice that we're able to declare the `record` right before the line which executes the query.
-
-Now, this is only _superficially_ more typesafe, since the query itself is not checked statically, and so we can't say it's objectively better.
-But perhaps you find it more aesthetically pleasing.
-
-On the other hand, when we're passing query results around the system, the use of `select new` with a `record` type is much better than manually unpacking an `Object[]` array.
-====
+The difference, of course, is that `getSingleResult()` throws an exception if there's no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
 
 By default, Hibernate dirty checks entities in the persistence context before executing a query, in order to determine if the session should be flushed.
 If there are many entities association with the persistence context, then this can be an expensive operation.
@@ -729,7 +690,7 @@ We're ready to create a criteria query.
 ----
 CriteriaQuery<Book> query = cb.createQuery(Book.class);
 Root<Book> book = query.from(Book.class);
-Predicate where = conjunction();
+Predicate where = cb.conjunction();
 if (titlePattern != null) {
     where = cb.and(where, cb.like(book.get(Book_.title), titlePattern));
 }
@@ -756,7 +717,7 @@ If you change the default behavior, and set the property to `INLINE` instead of 
 Execution of a criteria query works almost exactly like execution of HQL.
 
 .Executing criteria queries
-[cols="10,36,32,22"]
+[%breakable,cols="10,36,32,22"]
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
@@ -783,7 +744,7 @@ But ultimately, the true value of ORM is not in avoiding SQL, but in alleviating
 As we said <<introduction,right up front>>, Hibernate's generated SQL is meant to be used in conjunction with handwritten SQL, and native SQL queries are one of the facilities we provide to make that easy.
 
 .Executing SQL
-[cols="10,36,32,22"]
+[%breakable,cols="10,36,32,22"]
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
@@ -880,6 +841,73 @@ List<Book> books =
             .getResultList();
 ----
 
+[[projection-lists]]
+=== Representing projection lists
+
+A _projection list_ is the list of things that a query returns, that is, the list of expressions in the `select` clause.
+Since Java has no tuple types, representing query projection lists in Java has always been a problem for JPA and Hibernate.
+Traditionally, we've just used `Object[]` most of the time:
+
+[source,java]
+----
+var results =
+        session.createSelectionQuery("select isbn, title from Book", Object[].class)
+            .getResultList();
+
+for (var result : results) {
+    var isbn = (String) result[0];
+    var title = (String) result[1];
+    ...
+}
+----
+
+This is really a bit ugly.
+Java's `record` types now offer an interesting alternative:
+
+[source,java]
+----
+record IsbnTitle(String isbn, String title) {}
+
+var results =
+        session.createSelectionQuery("select new IsbnTitle(isbn, title) from Book", IsbnTitle.class)
+            .getResultList();
+
+for (var result : results) {
+    var isbn = result.isbn();
+    var title = result.title();
+    ...
+}
+----
+Notice that we're able to declare the `record` right before the line which executes the query.
+
+Now, this is only _superficially_ more typesafe, since the query itself is not checked statically, and so we can't say it's objectively better.
+But perhaps you find it more aesthetically pleasing.
+
+On the other hand, when we're passing query results around the system, the use of `select new` with a `record` type is much better than manually unpacking an `Object[]` array.
+
+Now, the criteria query API offers a much more satisfying solution to the problem.
+Consider the following code:
+
+[source,java]
+----
+var cb = sessionFactory.getCriteriaBuilder();
+var query = cb.createQuery(Tuple.class);
+var book = query.from(Book.class);
+var bookTitle = book.get(Book_.title);
+var bookIsbn = book.get(Book_.isbn);
+var bookPrice = book.get(Book_.price);
+query.select(cb.tuple(bookTitle, bookIsbn, bookPrice));
+var resultList = session.createSelectionQuery(query).getResultList();
+for (var result: resultList) {
+    String title = result.get(bookTitle);
+    String isbn = result.get(bookIsbn);
+	BigDecimal price = result.get(bookPrice);
+    ...
+}
+----
+
+This code is manifestly completely typesafe, and much better than we can hope to do with HQL.
+
 [[named-queries]]
 === Named queries
 
@@ -899,11 +927,11 @@ We have to make sure that the class with the `@NamedQuery` annotation will be sc
 - by adding `<class>org.hibernate.example.BookQueries</class>` to `persistence.xml`, or
 - by calling `configuration.addClass(BookQueries.class)`.
 
-The `@NamedNativeQuery` lets us do the same for native SQL queries.
-There is much less advantage to using `@NamedNativeQuery`, because there is very little that Hibernate can do to validate the correctness of a query written in the native SQL dialect of your database.
+The `@NamedNativeQuery` annotation lets us do the same for native SQL queries.
+There's much less advantage to using `@NamedNativeQuery`, because there is very little that Hibernate can do to validate the correctness of a query written in the native SQL dialect of your database.
 
 .Executing named queries
-[cols="10,36,32,22"]
+[%breakable,cols="10,36,32,22"]
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
@@ -922,6 +950,69 @@ List<Book> books =
 ----
 
 Note that the code which executes the named query is not aware of whether the query was written in HQL or in native SQL, making it slightly easier to change and optimize the query later.
+
+[[load-access]]
+=== Controlling lookup by id
+
+We can do almost anything via HQL, criteria, or native SQL queries.
+But when we already know the identifier of the entity we need, a query can feel like overkill.
+And queries don't make efficient use of the <<second-level-cache,second level cache>>.
+
+We met the <<persistence-operations,`find()`>> method earlier.
+It's the most basic way to perform a _lookup_ by id.
+But as we also <<entity-graph,already saw>>, it can't quite do everything.
+Therefore, Hibernate has some APIs that streamline certain more complicated lookups:
+
+.Operations for lookup by id
+[%breakable,cols="30,~"]
+|===
+| Method name | Purpose
+
+| `byId()` | Lets us specify association fetching via an `EntityGraph`, as we saw; also lets us specify some additional options, including how the lookup <<second-level-cache-management,interacts with the second level cache>>, and whether the entity should be loaded in read-only mode
+| `byMultipleIds()` | Lets us load a _batch_ of ids at the same time
+|===
+
+Batch loading is very useful when we need to retrieve multiple instances of the same entity class by id:
+
+[source,java]
+----
+var graph = session.createEntityGraph(Book.class);
+graph.addSubgraph(Book_.publisher);
+
+List<Book> books =
+        session.byMultipleIds(Book.class)
+            .withFetchGraph(graph)  // control association fetching
+            .withBatchSize(20)      // specify an explicit batch size
+            .with(CacheMode.GET)    // control interaction with the cache
+            .multiLoad(bookIds);
+----
+
+The given list of `bookIds` will be broken into batches, and each batch will be fetched from the database in a single `select`.
+If we don't specify the batch size explicitly, a batch size will be chosen automatically.
+
+We also have some operations for working with lookups by <<natural-identifiers, natural id>>:
+
+[%breakable,cols="30,~"]
+|===
+| Method name | Purpose
+
+| `bySimpleNaturalId()` | For an entity with just one attribute is annotated `@NaturalId`
+| `byNaturalId()` | For an entity with multiple attributes are annotated `@NaturalId`
+| `byMultipleNaturalId()` | Lets us load a _batch_ of natural ids at the same time
+|===
+
+Here's how we can retrieve an entity by its composite natural id:
+
+[source,java]
+----
+Book book =
+        session.byNaturalId(Book.class)
+            .using(Book_.isbn, isbn)
+            .using(Book_.printing, printing)
+            .load();
+----
+
+Notice that this code fragment is completely typesafe, again thanks to the <<metamodel-generator,Metamodel Generator>>.
 
 [[jdbc]]
 === Interacting directly with JDBC
@@ -967,10 +1058,9 @@ In this section we'll quickly sketch some general strategies for avoiding "quagm
   Hibernate is not about "transparent persistence" for Java objects.
   It's about making two excellent technologies work smoothly together.
 - <<logging-generated-sql,Log the SQL>> executed by Hibernate.
-//   Look, this seems obvious, until you've met users who didn't realize it was possible or useful.
   You cannot know that your persistence logic is correct until you've actually inspected the SQL that's being executed.
   Even when everything seems to be "working", there might be a lurking <<association-fetching,N+1 selects monster>>.
-- Be careful when <<many-to-one,modifying bidirectional associations>>.
+- Be careful when <<bidirectional-problem,modifying bidirectional associations>>.
   In principle, you should update _both ends_ of the association.
   But Hibernate doesn't strictly enforce that, since there are some situations where such a rule would be too heavy-handed.
   Whatever the case, it's up to you to maintain consistency across your model.

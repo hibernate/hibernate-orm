@@ -247,6 +247,14 @@ task stageIntroduction(type: Copy) {
     into "${buildDir}/documentation/introduction"
 }
 
+task stageQL(type: Copy) {
+    group 'Release'
+
+    dependsOn ':documentation:renderQL'
+
+    from "${project( ':documentation' ).buildDir}/asciidoc/querylanguage"
+    into "${buildDir}/documentation/querylanguage"
+}
 
 task stageUserGuide(type: Copy) {
     group 'Release'

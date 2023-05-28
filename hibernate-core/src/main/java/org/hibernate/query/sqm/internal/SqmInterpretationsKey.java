@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.function.Supplier;
 
 import org.hibernate.LockOptions;
@@ -16,6 +18,7 @@ import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 
 import static java.lang.Boolean.TRUE;
+import static org.hibernate.query.spi.AbstractSelectionQuery.CRITERIA_HQL_STRING;
 
 /**
  * @author Steve Ebersole
@@ -33,49 +36,39 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	}
 
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
-		if ( ! isCacheable( keySource ) ) {
+		if ( isCacheable (keySource ) ) {
+			return new SqmInterpretationsKey(
+					keySource.getQueryString(),
+					keySource.getResultType(),
+					keySource.getQueryOptions().getLockOptions(),
+					keySource.getQueryOptions().getTupleTransformer(),
+					keySource.getQueryOptions().getResultListTransformer(),
+					new HashSet<>( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() )
+			);
+		}
+		else {
 			return null;
 		}
-
-		return new SqmInterpretationsKey(
-				keySource.getQueryString(),
-				keySource.getResultType(),
-				keySource.getQueryOptions().getLockOptions(),
-				keySource.getQueryOptions().getTupleTransformer(),
-				keySource.getQueryOptions().getResultListTransformer()
-		);
 	}
-	@SuppressWarnings("RedundantIfStatement")
+
 	private static boolean isCacheable(InterpretationsKeySource keySource) {
 		assert keySource.getQueryOptions().getAppliedGraph() != null;
 
-		if ( QuerySqmImpl.CRITERIA_HQL_STRING.equals( keySource.getQueryString() ) ) {
-			// for now at least, skip caching Criteria-based plans
-			//		- especially wrt parameters atm; this works with HQL because the parameters
-			//			are part of the query string; with Criteria, they are not.
-			return false;
-		}
-
-		if ( keySource.getLoadQueryInfluencers().hasEnabledFilters() ) {
-			// At the moment we cannot cache query plan if there is filter enabled.
-			return false;
-		}
-
-		if ( keySource.getQueryOptions().getAppliedGraph().getSemantic() != null ) {
-			// At the moment we cannot cache query plan if there is an
-			// EntityGraph enabled.
-			return false;
-		}
-
-		if ( keySource.hasMultiValuedParameterBindingsChecker().get() == TRUE ) {
-			// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling
-			//		- the expansion is done per-execution based on the "static" SQM
-			//  - Note from Christian: The call to domainParameterXref.clearExpansions() in ConcreteSqmSelectQueryPlan is a concurrency issue when cached
-			//  - This could be solved by using a method-local clone of domainParameterXref when multi-valued params exist
-			return false;
-		}
-
-		return true;
+		// for now at least, skip caching Criteria-based plans
+		// - especially wrt parameters atm; this works with HQL because the
+		// parameters are part of the query string; with Criteria, they're not.
+		return ! CRITERIA_HQL_STRING.equals( keySource.getQueryString() )
+				// At the moment we cannot cache query plan if there is filter enabled.
+			&& ! keySource.getLoadQueryInfluencers().hasEnabledFilters()
+				// At the moment we cannot cache query plan if it has an entity graph
+			&& keySource.getQueryOptions().getAppliedGraph().getSemantic() == null
+				// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling
+				// - the expansion is done per-execution based on the "static" SQM
+				// - Note from Christian: The call to domainParameterXref.clearExpansions()
+				//   in ConcreteSqmSelectQueryPlan is a concurrency issue when cached
+				// - This could be solved by using a method-local clone of domainParameterXref
+				//   when multi-valued params exist
+			&& ! keySource.hasMultiValuedParameterBindingsChecker().get() == TRUE;
 	}
 
 	public static QueryInterpretationCache.Key generateNonSelectKey(InterpretationsKeySource keyDetails) {
@@ -86,24 +79,26 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		return null;
 	}
 
-
 	private final String query;
 	private final Class<?> resultType;
 	private final LockOptions lockOptions;
 	private final TupleTransformer<?> tupleTransformer;
-	private final ResultListTransformer resultListTransformer;
+	private final ResultListTransformer<?> resultListTransformer;
+	private final Collection<String> enabledFetchProfiles;
 
 	private SqmInterpretationsKey(
 			String query,
 			Class<?> resultType,
 			LockOptions lockOptions,
 			TupleTransformer<?> tupleTransformer,
-			ResultListTransformer resultListTransformer) {
+			ResultListTransformer<?> resultListTransformer,
+			Collection<String> enabledFetchProfiles) {
 		this.query = query;
 		this.resultType = resultType;
 		this.lockOptions = lockOptions;
 		this.tupleTransformer = tupleTransformer;
 		this.resultListTransformer = resultListTransformer;
+		this.enabledFetchProfiles = enabledFetchProfiles;
 	}
 
 	@Override
@@ -114,7 +109,8 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 				// Since lock options are mutable, we need a copy for the cache key
 				lockOptions.makeCopy(),
 				tupleTransformer,
-				resultListTransformer
+				resultListTransformer,
+				enabledFetchProfiles
 		);
 	}
 
@@ -137,16 +133,12 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 				&& areEqual( resultType, that.resultType )
 				&& areEqual( lockOptions, that.lockOptions )
 				&& areEqual( tupleTransformer, that.tupleTransformer )
-				&& areEqual( resultListTransformer, that.resultListTransformer );
+				&& areEqual( resultListTransformer, that.resultListTransformer )
+				&& areEqual( enabledFetchProfiles, that.enabledFetchProfiles );
 	}
 
 	private <T> boolean areEqual(T o1, T o2) {
-		if ( o1 == null ) {
-			return o2 == null;
-		}
-		else {
-			return o1.equals( o2 );
-		}
+		return o1 == null ? o2 == null : o1.equals(o2);
 	}
 
 	@Override

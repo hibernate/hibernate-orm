@@ -35,7 +35,7 @@ import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
  *
  * @deprecated This remains around as an implementation detail of {@code hbm.xml} mappings.
  */
-@Deprecated(since = "6")
+@Deprecated(since = "6", forRemoval = true)
 public class ForeignGenerator implements IdentifierGenerator, StandardGenerator {
 	private static final CoreMessageLogger LOG = messageLogger( ForeignGenerator.class );
 

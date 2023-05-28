@@ -61,6 +61,7 @@ import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
 import org.hibernate.annotations.TypeBinderType;
+import org.hibernate.annotations.View;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -679,12 +680,14 @@ public class EntityBinder {
 			List<UniqueConstraintHolder> uniqueConstraints,
 			InFlightMetadataCollector collector) {
 		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
+		final View view = annotatedClass.getAnnotation( View.class );
 		bindTable(
 				schema,
 				catalog,
 				table,
 				uniqueConstraints,
 				rowId == null ? null : rowId.value(),
+				view == null ? null : view.query(),
 				inheritanceState.hasDenormalizedTable()
 						? collector.getEntityTableXref( superEntity.getEntityName() )
 						: null
@@ -1728,6 +1731,7 @@ public class EntityBinder {
 			String tableName,
 			List<UniqueConstraintHolder> uniqueConstraints,
 			String rowId,
+			String viewQuery,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 
 		final EntityTableNamingStrategyHelper namingStrategyHelper = new EntityTableNamingStrategyHelper(
@@ -1751,6 +1755,7 @@ public class EntityBinder {
 		);
 
 		table.setRowId( rowId );
+		table.setViewQuery( viewQuery );
 
 //		final Comment comment = annotatedClass.getAnnotation( Comment.class );
 //		if ( comment != null ) {

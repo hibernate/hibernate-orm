@@ -7,10 +7,8 @@
 package org.hibernate.orm.test.collection.basic;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.Basic;
@@ -33,8 +31,6 @@ public class Contact implements Serializable {
     private String name;
     private Set<EmailAddress> emailAddresses = new HashSet<>();
     private Set<EmailAddress> emailAddresses2 = new HashSet<>();
-
-    private List<EmailAddress> emailAddresses3 = new ArrayList<>();
     private Map<EmailAddress,Contact> contactsByEmail = new HashMap<>();
 
     @Id
@@ -54,16 +50,6 @@ public class Contact implements Serializable {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    @ElementCollection
-    @CollectionTable(name = "user_email_addresses3", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
-    public List<EmailAddress> getEmailAddresses3() {
-        return emailAddresses3;
-    }
-
-    public void setEmailAddresses3(List<EmailAddress> emailAddresses3) {
-        this.emailAddresses3 = emailAddresses3;
     }
 
     @ElementCollection

@@ -7,7 +7,7 @@
 package org.hibernate.annotations;
 
 /**
- * Enumerates strategies for fetching an association from the database.
+ * Enumerates methods for fetching an association from the database.
  * <p>
  * The JPA-defined {@link jakarta.persistence.FetchType} enumerates the
  * possibilities for <em>when</em> an association might be fetched. This
@@ -46,7 +46,7 @@ public enum FetchMode {
 	 * when it is almost certain that the associated data will be
 	 * available in the second-level cache.
 	 */
-	SELECT( org.hibernate.FetchMode.SELECT ),
+	SELECT,
 
 	/**
 	 * Use an outer join to load all instances of the related entity
@@ -62,7 +62,7 @@ public enum FetchMode {
 	 * since the associated data is retrieved as part of the initial
 	 * query.
 	 */
-	JOIN( org.hibernate.FetchMode.JOIN ),
+	JOIN,
 
 	/**
 	 * Use a secondary select with a subselect that re-executes an
@@ -84,15 +84,11 @@ public enum FetchMode {
 	 *     re-execution of the initial query within a SQL subselect.
 	 * </ul>
 	 */
-	SUBSELECT( org.hibernate.FetchMode.SELECT );
-
-	private final org.hibernate.FetchMode hibernateFetchMode;
-
-	FetchMode(org.hibernate.FetchMode hibernateFetchMode) {
-		this.hibernateFetchMode = hibernateFetchMode;
-	}
+	SUBSELECT;
 
 	public org.hibernate.FetchMode getHibernateFetchMode() {
-		return hibernateFetchMode;
+		return this == JOIN
+				? org.hibernate.FetchMode.JOIN
+				: org.hibernate.FetchMode.SELECT;
 	}
 }

@@ -178,7 +178,7 @@ Native SQL queries are _not_ automatically filtered by tenant id; you'll have to
 ====
 
 .Multi-tenancy configuration
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name           | Purpose
 
@@ -316,7 +316,7 @@ However, the older APIs are still available and custom ``IdentifierGenerator``s 
 Hibernate has a range of built-in generators which are defined in terms of this new framework.
 
 .Built-in generators
-[cols="20,25,~"]
+[%breakable,cols="20,25,~"]
 |===
 | Annotation | Implementation | Purpose
 
@@ -433,7 +433,7 @@ A popular `PhysicalNamingStrategy` produces snake case identifiers.
 Custom naming strategies may be enabled using the configuration properties we already mentioned without much explanation back in <<minimizing>>.
 
 .Naming strategy configuration
-[cols="35,~"]
+[%breakable,cols="35,~"]
 |===
 | Configuration property name           | Purpose
 
@@ -687,4 +687,137 @@ byte[] image;
 
 Interception is able to detect writes to the `image` field, that is, replacement of the whole array.
 It's not able to detect modifications made directly to the _elements_ of the array, and so such modifications may be lost.
+====
+
+[[fetch-profiles]]
+=== Named fetch profiles
+
+We've already seen two different ways to override the default <<association-fetching,fetching strategy>> for an association:
+
+- <<entity-graph,JPA entity graphs>>, and
+- the `join fetch` clause in <<hql-queries,HQL>>, or, equivalently, the method `From.fetch()` in the criteria query API.
+
+A third way is to define a named fetch profile.
+First, we must declare the profile, by annotating a class or package:
+
+[source,java]
+----
+@FetchProfile(name = "EagerBook")
+@Entity
+class Book { ... }
+----
+
+Note that even though we've placed this annotation on the `Book` entity, a fetch profile—unlike an entity graph—isn't "rooted" at any particular entity.
+
+We may specify association fetching strategies using the `fetchOverrides` member of the `@FetchProfile` annotation, but frankly it looks so messy that we're embarrassed to show it to you here.
+
+A better way is to annotate an association with the fetch profiles it should be fetched in:
+
+[source,java]
+----
+@FetchProfile(name = "EagerBook")
+@Entity
+class Book {
+    ...
+
+    @ManyToOne(fetch = LAZY)
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
+    Publisher publisher;
+
+    @ManyToMany
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
+    Set<Author> authors;
+
+	...
+}
+----
+[source,java]
+----
+@Entity
+class Author {
+    ...
+
+    @OneToOne
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
+    Person person;
+
+    ...
+}
+----
+
+For collections, we may even request subselect fetching:
+
+[source,java]
+----
+@FetchProfile(name = "EagerBook")
+@FetchProfile(name = "BookWithAuthorsBySubselect")
+@Entity
+class Book {
+    ...
+
+    @OneToOne
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
+    Person person;
+
+    @ManyToMany
+    @FetchProfileOverride(profile = "EagerBook", mode = JOIN)
+    @FetchProfileOverride(profile = "BookWithAuthorsBySubselect", mode = SUBSELECT)
+    Set<Author> authors;
+
+	...
+}
+----
+
+We may define as many different fetch profiles as we like.
+
+[NOTE]
+====
+JPA entity graphs may also be defined in annotations, using `@NamedEntityGraph`.
+But the format of this annotation is _even worse_ than the format of the `@FetchProfile` annotation, so we can't recommend it. 💀
+====
+
+.Annotations for defining fetch profiles
+[%autowidth.stretch]
+|===
+| Annotation | Purpose
+
+| `@FetchProfile` | Declares a named fetch profile, optionally including a list of ``@FetchOverride``s
+| `@FetchProfile.FetchOverride` | Declares a fetch strategy override as part of the `@FetchProfile` declaration
+| `@FetchProfileOverride` | Specifies the fetch strategy for the annotated association, in a given fetch profile
+|===
+
+A fetch profile must be explicitly enabled for a given session:
+
+[source,java]
+----
+session.enableFetchProfile("EagerBook");
+Book eagerBook = session.find(Book.class, bookId);
+----
+
+[TIP]
+====
+To make this a bit typesafe, it's a good idea to put the name of the fetch profile in a `static final` constant.
+====
+
+So why or when might we prefer named fetch profiles to entity graphs?
+Well, it's really hard to say.
+It's nice that this feature _exists_, and if you love it, that's great.
+But Hibernate offers alternatives that we think are more compelling most of the time.
+
+The one and only advantage unique to fetch profiles is that they let us very selectively request subselect fetching.
+We can't do that with entity graphs, and we can't do it with HQL.
+
+[TIP]
+====
+There's a special built-in fetch profile named `org.hibernate.defaultProfile` which is defined as the profile with `@FetchProfileOverride(mode=JOIN)` applied to every eager `@ManyToOne` or `@OneToOne` association.
+If you enable this profile:
+
+[source,java]
+----
+session.enableFetchProfile("org.hibernate.defaultProfile");
+----
+
+Then ``outer join``s for such associations will _automatically_ be added to every HQL or criteria query.
+This is nice if you can't be bothered typing out those ``join fetch``es explicitly.
+And in principle it even helps partially mitigate the <<lazy-problem,problem>> of JPA having specified the wrong default for the `fetch` member of `@ManyToOne`.
 ====

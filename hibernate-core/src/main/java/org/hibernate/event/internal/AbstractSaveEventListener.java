@@ -203,6 +203,9 @@ public abstract class AbstractSaveEventListener<C>
 					throw new NonUniqueObjectException( id, persister.getEntityName() );
 				}
 			}
+			else if ( persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
+				source.forceFlush( key );
+			}
 			persister.setIdentifier( entity, id, source );
 			return key;
 		}

@@ -6,10 +6,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
@@ -19,36 +16,26 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 /**
- * Standard implementation of SingleIdEntityLoader
+ * Standard implementation of {@link org.hibernate.loader.ast.spi.SingleIdEntityLoader}.
  *
  * @author Steve Ebersole
  */
-public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSupport<T> implements Preparable {
-	private EnumMap<LockMode, SingleIdLoadPlan> selectByLockMode = new EnumMap<>( LockMode.class );
-	private EnumMap<CascadingFetchProfile, SingleIdLoadPlan> selectByInternalCascadeProfile;
+public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSupport<T> {
 
-	private AtomicInteger nonReusablePlansGenerated = new AtomicInteger();
-
-	public AtomicInteger getNonReusablePlansGenerated() {
-		return nonReusablePlansGenerated;
-	}
+	private final EnumMap<LockMode, SingleIdLoadPlan<T>> selectByLockMode = new EnumMap<>( LockMode.class );
+	private EnumMap<CascadingFetchProfile, SingleIdLoadPlan<T>> selectByInternalCascadeProfile;
 
 	public SingleIdEntityLoaderStandardImpl(
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		// todo (6.0) : consider creating a base AST and "cloning" it
 		super( entityDescriptor, sessionFactory );
-	}
-
-	@Override
-	public void prepare() {
-		// see `org.hibernate.persister.entity.AbstractEntityPersister#createLoaders`
-		//		we should pre-load a few - maybe LockMode.NONE and LockMode.READ
+		// see org.hibernate.persister.entity.AbstractEntityPersister#createLoaders
+		// we should preload a few - maybe LockMode.NONE and LockMode.READ
 		final LockOptions lockOptions = LockOptions.NONE;
 		final LoadQueryInfluencers queryInfluencers = new LoadQueryInfluencers( sessionFactory );
 		final SingleIdLoadPlan<T> plan = createLoadPlan(
@@ -56,7 +43,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				queryInfluencers,
 				sessionFactory
 		);
-		if ( determineIfReusable( lockOptions, queryInfluencers ) ) {
+		if ( isLoadPlanReusable( lockOptions, queryInfluencers ) ) {
 			selectByLockMode.put( lockOptions.getLockMode(), plan );
 		}
 	}
@@ -68,7 +55,6 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				session.getLoadQueryInfluencers(),
 				session.getFactory()
 		);
-
 		return loadPlan.load( key, readOnly, true, session );
 	}
 
@@ -84,7 +70,6 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				session.getLoadQueryInfluencers(),
 				session.getFactory()
 		);
-
 		return loadPlan.load( key, entityInstance, readOnly, false, session );
 	}
 
@@ -93,81 +78,89 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			LockOptions lockOptions,
 			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
+
 		if ( getLoadable().isAffectedByEnabledFilters( loadQueryInfluencers ) ) {
-			// special case of not-cacheable based on enabled filters effecting this load.
-			//
 			// This case is special because the filters need to be applied in order to
-			// 		properly restrict the SQL/JDBC results.  For this reason it has higher
-			// 		precedence than even "internal" fetch profiles.
-			nonReusablePlansGenerated.incrementAndGet();
+			// properly restrict the SQL/JDBC results.  For this reason it has higher
+			// precedence than even "internal" fetch profiles.
 			return createLoadPlan( lockOptions, loadQueryInfluencers, sessionFactory );
 		}
+		else if ( loadQueryInfluencers.hasEnabledCascadingFetchProfile()
+				&& LockMode.WRITE.greaterThan( lockOptions.getLockMode() ) ) {
+			return getInternalCascadeLoadPlan(
+					lockOptions,
+					loadQueryInfluencers,
+					sessionFactory
+			);
+		}
+		else {
+			// otherwise see if the loader for the requested load can be cached,
+			// which also means we should look in the cache for an existing one
+			return getRegularLoadPlan(
+					lockOptions,
+					loadQueryInfluencers,
+					sessionFactory
+			);
+		}
+	}
 
-		final CascadingFetchProfile enabledCascadingFetchProfile = loadQueryInfluencers.getEnabledCascadingFetchProfile();
-		if ( enabledCascadingFetchProfile != null ) {
-			if ( LockMode.WRITE.greaterThan( lockOptions.getLockMode() ) ) {
-				if ( selectByInternalCascadeProfile == null ) {
-					selectByInternalCascadeProfile = new EnumMap<>( CascadingFetchProfile.class );
-				}
-				else {
-					final SingleIdLoadPlan existing = selectByInternalCascadeProfile.get( enabledCascadingFetchProfile );
-					if ( existing != null ) {
-						//noinspection unchecked
-						return existing;
-					}
-				}
+	private SingleIdLoadPlan<T> getRegularLoadPlan(
+			LockOptions lockOptions,
+			LoadQueryInfluencers loadQueryInfluencers,
+			SessionFactoryImplementor sessionFactory) {
 
+		if ( isLoadPlanReusable( lockOptions, loadQueryInfluencers )  ) {
+			final SingleIdLoadPlan<T> existing = selectByLockMode.get( lockOptions.getLockMode() );
+			if ( existing != null ) {
+				return existing;
+			}
+			else {
 				final SingleIdLoadPlan<T> plan = createLoadPlan(
 						lockOptions,
 						loadQueryInfluencers,
 						sessionFactory
 				);
-				selectByInternalCascadeProfile.put( enabledCascadingFetchProfile, plan );
+				selectByLockMode.put( lockOptions.getLockMode(), plan );
 				return plan;
 			}
 		}
-
-		// otherwise see if the loader for the requested load can be cached - which
-		// 		also means we should look in the cache for an existing one
-
-		final boolean reusable = determineIfReusable( lockOptions, loadQueryInfluencers );
-
-		if ( reusable ) {
-			final SingleIdLoadPlan existing = selectByLockMode.get( lockOptions.getLockMode() );
-			if ( existing != null ) {
-				//noinspection unchecked
-				return existing;
-			}
-
-			final SingleIdLoadPlan<T> plan = createLoadPlan(
-					lockOptions,
-					loadQueryInfluencers,
-					sessionFactory
-			);
-			selectByLockMode.put( lockOptions.getLockMode(), plan );
-
-			return plan;
+		else {
+			return createLoadPlan(lockOptions, loadQueryInfluencers, sessionFactory);
 		}
-
-		nonReusablePlansGenerated.incrementAndGet();
-		return createLoadPlan( lockOptions, loadQueryInfluencers, sessionFactory );
 	}
 
-	private boolean determineIfReusable(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
-		if ( getLoadable().isAffectedByEntityGraph( loadQueryInfluencers ) ) {
-			return false;
+	private SingleIdLoadPlan<T> getInternalCascadeLoadPlan(
+			LockOptions lockOptions,
+			LoadQueryInfluencers loadQueryInfluencers,
+			SessionFactoryImplementor sessionFactory) {
+
+		final CascadingFetchProfile fetchProfile =
+				loadQueryInfluencers.getEnabledCascadingFetchProfile();
+
+		if ( selectByInternalCascadeProfile == null ) {
+			selectByInternalCascadeProfile = new EnumMap<>( CascadingFetchProfile.class );
+		}
+		else {
+			final SingleIdLoadPlan<T> existing =
+					selectByInternalCascadeProfile.get( fetchProfile );
+			if ( existing != null ) {
+				return existing;
+			}
 		}
 
-		if ( getLoadable().isAffectedByEnabledFetchProfiles( loadQueryInfluencers ) ) {
-			return false;
-		}
+		final SingleIdLoadPlan<T> plan = createLoadPlan(
+				lockOptions,
+				loadQueryInfluencers,
+				sessionFactory
+		);
+		selectByInternalCascadeProfile.put( fetchProfile, plan );
+		return plan;
+	}
 
-		//noinspection RedundantIfStatement
-		if ( lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER ) {
-			return false;
-		}
-
-		return true;
+	private boolean isLoadPlanReusable(LockOptions lockOptions, LoadQueryInfluencers loadQueryInfluencers) {
+		return lockOptions.getTimeOut() == LockOptions.WAIT_FOREVER
+			&& !getLoadable().isAffectedByEntityGraph( loadQueryInfluencers )
+			&& !getLoadable().isAffectedByEnabledFetchProfiles( loadQueryInfluencers );
 	}
 
 	private SingleIdLoadPlan<T> createLoadPlan(
@@ -175,8 +168,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			LoadQueryInfluencers queryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
-
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
 				getLoadable(),
 				// null here means to select everything
@@ -186,15 +178,14 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				1,
 				queryInfluencers,
 				lockOptions,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
-
 		return new SingleIdLoadPlan<>(
-				(Loadable) getLoadable(),
+				getLoadable(),
 				getLoadable().getIdentifierMapping(),
 				sqlAst,
-				jdbcParameters,
+				jdbcParametersBuilder.build(),
 				lockOptions,
 				sessionFactory
 		);

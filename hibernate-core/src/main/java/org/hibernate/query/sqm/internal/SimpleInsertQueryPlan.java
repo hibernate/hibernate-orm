@@ -30,6 +30,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 /**
  * @author Gavin King
@@ -41,7 +42,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 
 	private JdbcOperationQueryInsert jdbcInsert;
 	private FromClauseAccess tableGroupAccess;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 
 	public SimpleInsertQueryPlan(
 			SqmInsertStatement<?> sqmInsert,

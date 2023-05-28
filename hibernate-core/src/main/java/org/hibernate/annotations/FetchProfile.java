@@ -6,17 +6,30 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.FetchType;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static jakarta.persistence.FetchType.EAGER;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.hibernate.annotations.FetchMode.JOIN;
 
 /**
  * Defines a fetch profile, by specifying its {@link #name}, together
  * with a list of {@linkplain #fetchOverrides fetch strategy overrides}.
+ * The definition of a single named fetch profile may be split over
+ * multiple {@link FetchProfile @FetchProfile} annotations which share
+ * the same {@link #name}.
+ * <p>
+ * Additional fetch strategy overrides may be added to a named fetch
+ * profile by annotating the fetched associations themselves with the
+ * {@link FetchProfileOverride @FetchProfileOverride} annotation,
+ * specifying the {@linkplain FetchProfileOverride#profile name of the
+ * fetch profile}.
  * <p>
  * A named fetch profile must be explicitly enabled in a given session
  * by calling {@link org.hibernate.Session#enableFetchProfile(String)}
@@ -53,11 +66,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * the determination of the fetch graph.
  * <p>
  * A JPA {@link jakarta.persistence.EntityGraph} may be constructed in
- * Java code at runtime. But this amounts to separate, albeit extremely
+ * Java code at runtime. But this amounts to a separate, albeit extremely
  * limited, query facility that competes with JPA's own {@linkplain
  * jakarta.persistence.criteria.CriteriaBuilder criteria queries}.
  * There's no such capability for fetch profiles.
  *
+ * @see FetchProfileOverride
  * @see org.hibernate.Session#enableFetchProfile(String)
  * @see org.hibernate.SessionFactory#containsFetchProfileDefinition(String)
  *
@@ -74,12 +88,25 @@ public @interface FetchProfile {
 
 	/**
 	 * The list of association fetching strategy overrides.
+	 * <p>
+	 * Additional overrides may be specified by marking the
+	 * fetched associations themselves with the {@link Fetch @Fetch}
+	 * annotation.
 	 */
-	FetchOverride[] fetchOverrides();
+	FetchOverride[] fetchOverrides() default {};
 
 	/**
-	 * Overrides the fetching strategy pf a particular association
-	 * in the named fetch profile being defined.
+	 * Overrides the fetching strategy for a particular association in
+	 * the named fetch profile being defined. A "strategy" is a fetching
+	 * {@linkplain #mode method}, together with the {@linkplain #fetch
+	 * timing}. If {@link #mode} and {@link #fetch} are both unspecified,
+	 * the strategy defaults to {@linkplain FetchType#EAGER eager}
+	 * {@linkplain FetchMode#JOIN join} fetching.
+	 * <p>
+	 * Additional fetch strategy overrides may be specified using the
+	 * {@link FetchProfileOverride @FetchProfileOverride} annotation.
+	 *
+	 * @see FetchProfileOverride
 	 */
 	@Target({ TYPE, PACKAGE })
 	@Retention(RUNTIME)
@@ -97,9 +124,15 @@ public @interface FetchProfile {
 		String association();
 
 		/**
-		 * The {@linkplain FetchMode fetching strategy} to apply to
-		 * the association in the fetch profile being defined.
+		 * The {@linkplain FetchMode method} used for fetching the
+		 * association in the fetch profile being defined.
 		 */
-		FetchMode mode();
+		FetchMode mode() default JOIN;
+
+		/**
+		 * The {@link FetchType timing} of association fetching in
+		 * the fetch profile being defined.
+		 */
+		FetchType fetch() default EAGER;
 	}
 }

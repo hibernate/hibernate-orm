@@ -21,6 +21,7 @@ import org.hibernate.mapping.Map;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
@@ -29,6 +30,7 @@ import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -79,6 +81,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		LazyTableGroup.ParentTableGroupUseChecker {
 	private ForeignKeyDescriptor foreignKey;
 	private ValuedModelPart fkTargetModelPart;
+	private boolean[] isInsertable;
+	private boolean[] isUpdatable;
 
 	public ManyToManyCollectionPart(
 			Nature nature,
@@ -122,9 +126,6 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		// This is not possible for one-to-many associations because we need to create the target table group eagerly,
 		// to preserve the cardinality. Also, the OneToManyTableGroup has no reference to the parent table group
 		if ( getTargetKeyPropertyNames().contains( name ) ) {
-			if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
-				return ( (ToOneAttributeMapping) fkTargetModelPart ).findSubPart( name, targetType );
-			}
 			final ModelPart keyPart = foreignKey.getKeyPart();
 			if ( keyPart instanceof EmbeddableValuedModelPart && keyPart instanceof VirtualModelPart ) {
 				return ( (ModelPartContainer) keyPart ).findSubPart( name, targetType );
@@ -159,6 +160,32 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
 		foreignKey.getKeyPart().forEachSelectable( offset, consumer );
 		return getJdbcTypeCount();
+	}
+
+	@Override
+	public void forEachInsertable(SelectableConsumer consumer) {
+		forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( !foreignKey.getKeyPart().getSelectable( selectionIndex ).isInsertable() ) {
+						return;
+					}
+
+					consumer.accept( selectionIndex, selectableMapping );
+				}
+		);
+	}
+
+	@Override
+	public void forEachUpdatable(SelectableConsumer consumer) {
+		forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( !foreignKey.getKeyPart().getSelectable( selectionIndex ).isUpdateable() ) {
+						return;
+					}
+
+					consumer.accept( selectionIndex, selectableMapping );
+				}
+		);
 	}
 
 	@Override
@@ -216,6 +243,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 
 	@Override
 	public ModelPart getKeyTargetMatchPart() {
+		if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
+			return foreignKey.getKeyPart();
+		}
 		return fkTargetModelPart;
 	}
 
@@ -418,8 +448,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 
 		if ( getNature() == Nature.ELEMENT ) {
+			final Value element = bootCollectionDescriptor.getElement();
 			foreignKey = createForeignKeyDescriptor(
-					bootCollectionDescriptor.getElement(),
+					element,
 					(EntityType) collectionDescriptor.getElementType(),
 					fkTargetModelPart,
 					creationProcess,
@@ -428,8 +459,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		}
 		else {
 			assert bootCollectionDescriptor.isIndexed();
+			final Value index = ( (IndexedCollection) bootCollectionDescriptor ).getIndex();
 			foreignKey = createForeignKeyDescriptor(
-					( (IndexedCollection) bootCollectionDescriptor ).getIndex(),
+					index,
 					(EntityType) collectionDescriptor.getIndexType(),
 					fkTargetModelPart,
 					creationProcess,
@@ -565,7 +597,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			if ( toOneAttributeMapping.getForeignKeyDescriptor() == null ) {
 				throw new IllegalStateException( "Not yet ready: " + toOneAttributeMapping );
 			}
-			return toOneAttributeMapping.getForeignKeyDescriptor();
+			return determineForeignKey(
+					toOneAttributeMapping.getForeignKeyDescriptor(),
+					fkBootDescriptorSource,
+					creationProcess
+			);
 		}
 
 		if ( fkTargetModelPart instanceof ManyToManyCollectionPart ) {
@@ -574,7 +610,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			if ( targetModelPart.getForeignKeyDescriptor() == null ) {
 				throw new IllegalStateException( "Not yet ready: " + targetModelPart );
 			}
-			return targetModelPart.getForeignKeyDescriptor();
+			return determineForeignKey(
+					targetModelPart.getForeignKeyDescriptor(),
+					fkBootDescriptorSource,
+					creationProcess
+			);
 		}
 
 		final String collectionTableName = ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping().getTableName();
@@ -609,6 +649,46 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		);
 	}
 
+	private ForeignKeyDescriptor determineForeignKey(
+			ForeignKeyDescriptor foreignKeyDescriptor,
+			Value fkBootDescriptorSource,
+			MappingModelCreationProcess creationProcess) {
+		final int selectableCount = foreignKeyDescriptor.getJdbcTypeCount();
+		final ValuedModelPart keyPart = foreignKeyDescriptor.getKeyPart();
+		for ( int i = 0; i < selectableCount; i++ ) {
+			if ( keyPart.getSelectable( i ).isInsertable() != fkBootDescriptorSource.isColumnInsertable( i )
+					|| keyPart.getSelectable( i ).isUpdateable() != fkBootDescriptorSource.isColumnUpdateable( i ) ) {
+				final AttributeMapping attributeMapping = keyPart.asAttributeMapping();
+				final ManagedMappingType declaringType;
+				if ( attributeMapping == null ) {
+					declaringType = null;
+				}
+				else {
+					declaringType = attributeMapping.getDeclaringType();
+				}
+				final SelectableMappings selectableMappings = SelectableMappingsImpl.from(
+						keyPart.getContainingTableExpression(),
+						fkBootDescriptorSource,
+						getPropertyOrder( fkBootDescriptorSource, creationProcess ),
+						creationProcess.getCreationContext().getMetadata(),
+						creationProcess.getCreationContext().getTypeConfiguration(),
+						fkBootDescriptorSource.getColumnInsertability(),
+						fkBootDescriptorSource.getColumnUpdateability(),
+						creationProcess.getCreationContext().getDialect(),
+						creationProcess.getSqmFunctionRegistry()
+				);
+				return foreignKeyDescriptor.withKeySelectionMapping(
+						declaringType,
+						this,
+						selectableMappings::getSelectable,
+						creationProcess
+				);
+			}
+		}
+
+		return foreignKeyDescriptor;
+	}
+
 	private SimpleForeignKeyDescriptor createSimpleForeignKeyDescriptor(
 			Value fkBootDescriptorSource,
 			EntityType entityType,
@@ -618,7 +698,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			BasicValuedModelPart basicFkTargetPart) {
 		final boolean columnInsertable;
 		final boolean columnUpdateable;
-		if ( getNature() == Nature.ELEMENT ) {
+		if ( getNature() == Nature.ELEMENT && !fkBootDescriptorSource.getSelectables().get( 0 ).isFormula() ) {
 			// Replicate behavior of AbstractCollectionPersister#elementColumnIsSettable
 			columnInsertable = true;
 			columnUpdateable = true;
@@ -627,26 +707,18 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			columnInsertable = fkBootDescriptorSource.isColumnInsertable( 0 );
 			columnUpdateable = fkBootDescriptorSource.isColumnUpdateable( 0 );
 		}
+		final SimpleValue fkValue = (SimpleValue) fkBootDescriptorSource;
 		final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
 				fkKeyTableName,
-				fkBootDescriptorSource.getSelectables().get(0),
+				fkBootDescriptorSource.getSelectables().get( 0 ),
 				basicFkTargetPart.getJdbcMapping(),
 				creationProcess.getCreationContext().getTypeConfiguration(),
 				columnInsertable,
 				columnUpdateable,
-				((SimpleValue) fkBootDescriptorSource).isPartitionKey(),
+				fkValue.isPartitionKey(),
 				dialect,
 				creationProcess.getSqmFunctionRegistry()
 		);
-
-		final boolean hasConstraint;
-		if ( fkBootDescriptorSource instanceof SimpleValue ) {
-			hasConstraint = ( (SimpleValue) fkBootDescriptorSource ).isConstrained();
-		}
-		else {
-			// We assume there is a constraint if the key is not nullable
-			hasConstraint = !fkBootDescriptorSource.isNullable();
-		}
 
 		// here we build a ModelPart that represents the many-to-many table key referring to the element table
 		return new SimpleForeignKeyDescriptor(
@@ -654,7 +726,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				keySelectableMapping,
 				basicFkTargetPart,
 				entityType.isReferenceToPrimaryKey(),
-				hasConstraint
+				fkValue.isConstrained()
 		);
 	}
 }

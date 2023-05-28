@@ -5,7 +5,14 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
+import jakarta.persistence.FetchType;
+import org.hibernate.annotations.FetchMode;
+
 import java.util.LinkedHashSet;
+import java.util.Locale;
+
+import static jakarta.persistence.FetchType.EAGER;
 
 /**
  * A mapping model object representing a {@link org.hibernate.annotations.FetchProfile}.
@@ -15,6 +22,7 @@ import java.util.LinkedHashSet;
  * @see org.hibernate.engine.profile.FetchProfile
  */
 public class FetchProfile {
+
 	private final String name;
 	private final MetadataSource source;
 	private final LinkedHashSet<Fetch> fetches = new LinkedHashSet<>();
@@ -63,9 +71,19 @@ public class FetchProfile {
 	 * @param entity The entity which contains the association to be fetched
 	 * @param association The association to fetch
 	 * @param style The style of fetch to apply
+	 *
+	 * @deprecated use {@link #addFetch(Fetch)}
 	 */
+	@Deprecated(forRemoval = true)
 	public void addFetch(String entity, String association, String style) {
-		fetches.add( new Fetch( entity, association, style ) );
+		addFetch( new Fetch( entity, association, style ) );
+	}
+
+	/**
+	 * Adds a fetch to this profile.
+	 */
+	public void addFetch(Fetch fetch) {
+		fetches.add( fetch );
 	}
 
 	@Override
@@ -89,17 +107,39 @@ public class FetchProfile {
 
 
 	/**
-	 * Defines an individual association fetch within the given profile.
+	 * An individual association fetch within the given profile.
 	 */
 	public static class Fetch {
 		private final String entity;
 		private final String association;
-		private final String style;
+		private final FetchMode method;
+		private final FetchType type;
 
+		public Fetch(String entity, String association, FetchMode method, FetchType type) {
+			this.entity = entity;
+			this.association = association;
+			this.method = method;
+			this.type = type;
+		}
+
+		/**
+		 * @deprecated use {@link FetchProfile.Fetch#Fetch(String,String,FetchMode,FetchType)}
+		 */
+		@Deprecated(forRemoval = true)
 		public Fetch(String entity, String association, String style) {
 			this.entity = entity;
 			this.association = association;
-			this.style = style;
+			this.method = fetchMode( style );
+			this.type = EAGER;
+		}
+
+		private FetchMode fetchMode(String style) {
+			for ( FetchMode mode: FetchMode.values() ) {
+				if ( mode.name().equalsIgnoreCase( style ) ) {
+					return mode;
+				}
+			}
+			throw new IllegalArgumentException( "Unknown FetchMode: " + style );
 		}
 
 		public String getEntity() {
@@ -110,8 +150,20 @@ public class FetchProfile {
 			return association;
 		}
 
+		/**
+		 * @deprecated use {@link #getMethod()}
+		 */
+		@Deprecated(forRemoval = true)
 		public String getStyle() {
-			return style;
+			return method.toString().toLowerCase(Locale.ROOT);
+		}
+
+		public FetchMode getMethod() {
+			return method;
+		}
+
+		public FetchType getType() {
+			return type;
 		}
 	}
 }

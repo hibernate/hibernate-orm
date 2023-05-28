@@ -8,6 +8,8 @@ package org.hibernate.stat;
 
 import java.time.Instant;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Exposes statistics collected from all sessions belonging to a
  * particular {@link org.hibernate.SessionFactory}.
@@ -101,7 +103,7 @@ public interface Statistics {
 	 *         if either query result caching is not enabled, or no
 	 *         query cache region exists with the given name
 	 */
-	CacheRegionStatistics getQueryRegionStatistics(String regionName);
+	@Nullable CacheRegionStatistics getQueryRegionStatistics(String regionName);
 
 	/**
 	 * Obtain the statistics for either a domain data or query result
@@ -120,7 +122,7 @@ public interface Statistics {
 	 * @return the statistics for the named region, or {@code null} if
 	 *         there is no region with the given name
 	 */
-	CacheRegionStatistics getCacheRegionStatistics(String regionName);
+	@Nullable CacheRegionStatistics getCacheRegionStatistics(String regionName);
 
     /**
      * The global number of entity deletes.
@@ -160,7 +162,7 @@ public interface Statistics {
 	/**
 	 * The query string for the slowest query.
 	 */
-	String getQueryExecutionMaxTimeQueryString();
+	@Nullable String getQueryExecutionMaxTimeQueryString();
 
     /**
      * The global number of cached queries successfully retrieved from
@@ -194,12 +196,12 @@ public interface Statistics {
 	/**
 	 * The region for the maximum natural id query time.
 	 */
-	String getNaturalIdQueryExecutionMaxTimeRegion();
+	@Nullable String getNaturalIdQueryExecutionMaxTimeRegion();
 
 	/**
 	 * The entity name for the maximum natural id query time.
 	 */
-	String getNaturalIdQueryExecutionMaxTimeEntity();
+	@Nullable String getNaturalIdQueryExecutionMaxTimeEntity();
 
     /**
      * The global number of cached natural id lookups successfully
@@ -309,7 +311,7 @@ public interface Statistics {
 	Instant getStart();
 
 	/**
-	 * The {@linkplain Instant#toEpochMilli()}  milliseconds}) since the
+	 * The {@linkplain Instant#toEpochMilli()}  milliseconds since the
 	 * initial creation of this instance, or since the last time
 	 * {@link #clear()} was called.
 	 *

@@ -1,0 +1,7 @@
+expression "NOT"? "IN" inList
+
+inList
+	: ("ELEMENTS"|"INDICES") "(" simplePath ")"
+	| "(" (expression ("," expression)*)? ")"
+	| "(" subquery ")"
+	| parameter

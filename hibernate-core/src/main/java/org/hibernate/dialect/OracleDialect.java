@@ -265,6 +265,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.addMonths();
 		functionFactory.monthsBetween();
 		functionFactory.everyAny_minMaxCase();
+		functionFactory.repeat_rpad();
 
 		functionFactory.radians_acos();
 		functionFactory.degrees_acos();

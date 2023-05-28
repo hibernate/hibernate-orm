@@ -211,7 +211,7 @@ class Book { ... }
 The `@Table` annotation can do more than just specify a name:
 
 .`@Table` annotation members
-[%autowidth.stretch]
+[%breakable,cols="20,~"]
 |===
 | Annotation member | Purpose
 
@@ -237,7 +237,7 @@ Instead:
 The `@SecondaryTable` annotation is even more interesting:
 
 .`@SecondaryTable` annotation members
-[%autowidth.stretch]
+[%breakable,cols="20,~"]
 |===
 | Annotation member | Purpose
 
@@ -299,7 +299,7 @@ class Author {
 Here, there should be a `UNIQUE` constraint on _both_ columns of the association table.
 
 .`@JoinTable` annotation members
-[%autowidth.stretch]
+[%breakable,cols="20,~"]
 |===
 | Annotation member | Purpose
 
@@ -341,7 +341,7 @@ We use the `@Column` annotation to map basic attributes.
 The `@Column` annotation is not only useful for specifying the column name.
 
 .`@Column` annotation members
-[%autowidth.stretch]
+[%breakable,cols="20,~"]
 |===
 | Annotation member | Purpose
 
@@ -395,7 +395,7 @@ We don't use `@Column` to map associations.
 The `@JoinColumn` annotation is used to customize a foreign key column.
 
 .`@JoinColumn` annotation members
-[%autowidth.stretch]
+[%breakable,cols="20,~"]
 |===
 | Annotation member | Purpose
 
@@ -508,7 +508,7 @@ The `@PrimaryKeyJoinColumn` is a special-purpose annotation for mapping:
 - the primary key column of the primary table mapped by a subclass in a `JOINED` inheritance hierarchy—which is also a foreign key referencing the primary table mapped by the root entity.
 
 .`@PrimaryKeyJoinColumn` annotation members
-[%autowidth.stretch]
+[%breakable,cols="20,~"]
 |===
 | Annotation member | Purpose
 
@@ -559,7 +559,7 @@ So we don't usually need to explicitly specify that a column should be of type `
 The constant values defined in the class `org.hibernate.Length` are very helpful here:
 
 .Predefined column lengths
-[cols="10,12,~"]
+[%breakable,cols="10,12,~"]
 |===
 | Constant | Value | Description
 

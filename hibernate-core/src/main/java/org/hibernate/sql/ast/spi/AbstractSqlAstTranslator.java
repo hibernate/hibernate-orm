@@ -6939,7 +6939,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				if ( inSubQueryPredicate.isNegated() ) {
 					appendSql( " not" );
 				}
-				appendSql( " in" );
+				appendSql( " in " );
 				inSubQueryPredicate.getSubQuery().accept( this );
 			}
 			else if ( !supportsRowValueConstructorSyntaxInInSubQuery() ) {
@@ -6957,7 +6957,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				if ( inSubQueryPredicate.isNegated() ) {
 					appendSql( " not" );
 				}
-				appendSql( " in" );
+				appendSql( " in " );
 				inSubQueryPredicate.getSubQuery().accept( this );
 			}
 		}
@@ -6966,7 +6966,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( inSubQueryPredicate.isNegated() ) {
 				appendSql( " not" );
 			}
-			appendSql( " in" );
+			appendSql( " in " );
 			inSubQueryPredicate.getSubQuery().accept( this );
 		}
 	}

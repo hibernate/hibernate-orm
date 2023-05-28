@@ -31,22 +31,22 @@ public class SelectOnlyArrayPropertyTest extends BaseEntityManagerFunctionalTest
 	@JiraKey("HHH-16606")
 	public void criteriaSelectOnlyIntArray() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			int[] result = new int[4];
+			final byte[] result = "Hello, World!".getBytes();
 
 			EntityWithIdAndIntegerArray myEntity = new EntityWithIdAndIntegerArray( 1, result );
 			entityManager.persist( myEntity );
 
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-			CriteriaQuery<int[]> cq = cb.createQuery( int[].class );
+			CriteriaQuery<byte[]> cq = cb.createQuery( byte[].class );
 
 			Root<EntityWithIdAndIntegerArray> root = cq.from( EntityWithIdAndIntegerArray.class );
 
-			cq.select( root.get( "ints" ) )
+			cq.select( root.get( "bytes" ) )
 					.where( cb.equal( root.get( "id" ), 1 ) );
 
-			TypedQuery<int[]> q = entityManager.createQuery( cq );
+			TypedQuery<byte[]> q = entityManager.createQuery( cq );
 
-			int[] bytes = q.getSingleResult();
+			byte[] bytes = q.getSingleResult();
 
 			assertArrayEquals( result, bytes );
 		} );
@@ -55,8 +55,7 @@ public class SelectOnlyArrayPropertyTest extends BaseEntityManagerFunctionalTest
 	@Test
 	public void criteriaSelectWrappedIntArray() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			int[] result = new int[4];
-			result[0] = 1;
+			final byte[] result = "Hi there!".getBytes();
 
 			EntityWithIdAndIntegerArray myEntity = new EntityWithIdAndIntegerArray( 2, result );
 			entityManager.persist( myEntity );
@@ -66,14 +65,14 @@ public class SelectOnlyArrayPropertyTest extends BaseEntityManagerFunctionalTest
 
 			Root<EntityWithIdAndIntegerArray> root = cq.from( EntityWithIdAndIntegerArray.class );
 
-			cq.select( root.get( "ints" ) )
+			cq.select( root.get( "bytes" ) )
 					.where( cb.equal( root.get( "id" ), 2 ) );
 
 			TypedQuery<Object[]> q = entityManager.createQuery( cq );
 
 			final Object[] objects = q.getSingleResult();
 			assertEquals( 1, objects.length );
-			int[] bytes = (int[]) objects[0];
+			byte[] bytes = (byte[]) objects[0];
 
 			assertArrayEquals( result, bytes );
 		} );
@@ -85,11 +84,11 @@ public class SelectOnlyArrayPropertyTest extends BaseEntityManagerFunctionalTest
 		@Id
 		private Integer id;
 
-		private int[] ints;
+		private byte[] bytes;
 
-		public EntityWithIdAndIntegerArray(Integer id, int[] ints) {
+		public EntityWithIdAndIntegerArray(Integer id, byte[] bytes) {
 			this.id = id;
-			this.ints = ints;
+			this.bytes = bytes;
 		}
 
 		public EntityWithIdAndIntegerArray() {
@@ -104,12 +103,12 @@ public class SelectOnlyArrayPropertyTest extends BaseEntityManagerFunctionalTest
 			this.id = id;
 		}
 
-		public int[] getInts() {
-			return ints;
+		public byte[] getBytes() {
+			return bytes;
 		}
 
-		public void setInts(int[] ints) {
-			this.ints = ints;
+		public void setBytes(byte[] bytes) {
+			this.bytes = bytes;
 		}
 	}
 }

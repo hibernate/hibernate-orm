@@ -114,25 +114,24 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	}
 
 	private Class<?> determineResultType(SqmSelectStatement<?> sqm) {
-		if ( expectedResultType != null ) {
-			if ( expectedResultType.isArray() ) {
+		final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+		if ( selections.size() == 1 ) {
+			if ( Object[].class.equals( expectedResultType ) ) {
+				// for JPA compatibility
 				return Object[].class;
-			}
-			else if ( List.class.isAssignableFrom( expectedResultType ) ) {
-				return expectedResultType;
-			}
-			else if ( isTupleResultClass( expectedResultType ) ) {
-				return expectedResultType;
 			}
 			else {
-				return Object[].class;
+				return selections.get(0).getNodeJavaType().getJavaTypeClass();
 			}
 		}
+		else if ( expectedResultType != null ) {
+			// assume we can repackage the tuple as
+			// the given type (worry about how later)
+			return expectedResultType;
+		}
 		else {
-			final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
-			return selections.size() == 1
-					? selections.get(0).getNodeJavaType().getJavaTypeClass()
-					: Object[].class;
+			// for JPA compatibility
+			return Object[].class;
 		}
 	}
 

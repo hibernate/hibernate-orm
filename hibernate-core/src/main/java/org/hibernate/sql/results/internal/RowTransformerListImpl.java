@@ -11,9 +11,9 @@ import org.hibernate.sql.results.spi.RowTransformer;
 import java.util.List;
 
 /**
- * RowTransformer used when an array is explicitly specified as the return type
+ * {@link RowTransformer} instantiating a {@link List}
  *
- * @author Steve Ebersole
+ * @author Gavin King
  */
 public class RowTransformerListImpl<T> implements RowTransformer<List<Object>> {
 	/**

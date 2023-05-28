@@ -7,7 +7,6 @@
 
 package org.hibernate.sql.results.internal;
 
-import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 import org.hibernate.sql.results.spi.RowTransformer;
 
@@ -16,9 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * RowTransformer generating a JPA {@link Tuple}
+ * {@link RowTransformer} instantiating a {@link Map}
  *
- * @author Steve Ebersole
+ * @author Gavin King
  */
 public class RowTransformerMapImpl implements RowTransformer<Map<String,Object>> {
 	private final TupleMetadata tupleMetadata;

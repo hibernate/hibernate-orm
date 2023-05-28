@@ -22,6 +22,34 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class ImplicitInstantiationTest {
 
+	static class Record {
+		Long id;
+		String name;
+		public Record(Long id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+		Long id() {
+			return id;
+		}
+		String name() {
+			return name;
+		}
+	}
+
+	@Test
+	public void testRecordInstantiationWithoutAlias(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist(new Thing(1L, "thing"));
+					Record result = session.createSelectionQuery("select id, upper(name) from Thing", Record.class).getSingleResult();
+					assertEquals( result.id(), 1L );
+					assertEquals( result.name(), "THING" );
+					session.getTransaction().setRollbackOnly();
+				}
+		);
+	}
+
 	@Test
 	public void testTupleInstantiationWithAlias(SessionFactoryScope scope) {
 		scope.inTransaction(

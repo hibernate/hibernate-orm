@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.Tuple;
+import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -41,7 +43,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -50,6 +51,8 @@ import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
+import org.hibernate.sql.results.internal.RowTransformerListImpl;
+import org.hibernate.sql.results.internal.RowTransformerMapImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
@@ -183,22 +186,26 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( resultType == Object[].class ) {
 			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
 		}
+		else if ( List.class.equals( resultType ) ) {
+			return (RowTransformer<T>) RowTransformerListImpl.instance();
+		}
 
 		// NOTE : if we get here :
 		// 		1) there is no TupleTransformer specified
 		// 		2) an explicit result-type, other than an array, was specified
 
-		final List<SqmSelection<?>> selections = sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
+		final List<SqmSelection<?>> selections =
+				sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
 		if ( tupleMetadata != null ) {
-			// resultType is Tuple..
-			if ( queryOptions.getTupleTransformer() == null ) {
+			if ( Tuple.class.equals( resultType ) ) {
 				return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
 			}
-
-			throw new IllegalArgumentException(
-					"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer : " +
-							queryOptions.getTupleTransformer()
-			);
+			else if ( Map.class.equals( resultType ) ) {
+				return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+			}
+			else {
+				throw new AssertionFailure( "Wrong result type for tuple handling: " + resultType );
+			}
 		}
 
 		// NOTE : if we get here we have a resultType of some kind

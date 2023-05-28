@@ -742,7 +742,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	protected static <R> void checkResultType(Class<R> expectedResultType, SqmSelectionQueryImpl<?> query) {
+	protected static <R> void checkResultType(Class<R> expectedResultType, SqmSelectionQueryImpl<R> query) {
 		final Class<?> resultType = query.getResultType();
 		if ( !expectedResultType.isAssignableFrom( resultType ) ) {
 			throw new QueryTypeMismatchException(
@@ -849,6 +849,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( Tuple.class.equals( resultClass ) ) {
 			query.setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
+		// TODO: handle Map, List as well
 		else if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 		}

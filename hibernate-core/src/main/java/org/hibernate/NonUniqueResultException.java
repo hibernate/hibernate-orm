@@ -23,7 +23,7 @@ public class NonUniqueResultException extends HibernateException {
 	 * @param resultCount The number of actual results.
 	 */
 	public NonUniqueResultException(int resultCount) {
-		super( "query did not return a unique result: " + resultCount );
+		super( "Query did not return a unique result: " + resultCount + " results were returned" );
 	}
 
 }

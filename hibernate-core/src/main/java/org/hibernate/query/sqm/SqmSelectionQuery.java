@@ -82,7 +82,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	SqmSelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	SqmSelectionQuery<R> setParameterList(String name, Collection values);
+	SqmSelectionQuery<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SqmSelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
@@ -100,7 +100,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
-	SqmSelectionQuery<R> setParameterList(int position, Collection values);
+	SqmSelectionQuery<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SqmSelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
@@ -139,7 +139,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	SqmSelectionQuery<R> setProperties(Object bean);
 
 	@Override
-	SqmSelectionQuery<R> setProperties(Map bean);
+	SqmSelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	@Override
 	SqmSelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);

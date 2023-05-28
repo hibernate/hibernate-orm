@@ -37,11 +37,11 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -56,6 +56,8 @@ import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
+
+import jakarta.persistence.criteria.CompoundSelection;
 
 import static org.hibernate.query.sqm.internal.QuerySqmImpl.CRITERIA_HQL_STRING;
 
@@ -180,7 +182,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			return RowTransformerStandardImpl.instance();
 		}
 
-		if ( resultType.isArray() ) {
+		final List<SqmSelection<?>> selections = sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
+		if ( isArrayResult( resultType, selections ) ) {
 			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
 		}
 
@@ -188,7 +191,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		// 		1) there is no TupleTransformer specified
 		// 		2) an explicit result-type, other than an array, was specified
 
-		final List<SqmSelection<?>> selections = sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
 		if ( tupleMetadata != null ) {
 			// resultType is Tuple..
 			if ( queryOptions.getTupleTransformer() == null ) {
@@ -209,6 +211,26 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		else {
 			return RowTransformerSingularReturnImpl.instance();
 		}
+	}
+
+	private static <T> boolean isArrayResult(Class<T> resultType, List<SqmSelection<?>> selections) {
+		if ( !resultType.isArray() ) {
+			return false;
+		}
+		// If more than one selection, use array row transformer
+		if ( selections.size() != 1 ) {
+			return true;
+		}
+		final SqmSelectableNode<?> node = selections.get( 0 ).getSelectableNode();
+		// If single selectable node type is not array ...
+		if ( !node.getJavaType().isArray() ||
+				// ... or it is compound selection with more than one item ...
+				node instanceof CompoundSelection && node.getSelectionItems().size() != 1 ) {
+			// ... use array row transformer
+			return true;
+		}
+		// If selectable node Java type is equal to required result type, do not use array row transformer
+		return !resultType.equals( node.getJavaType() );
 	}
 
 	private static <T> RowTransformer<T> makeRowTransformerTupleTransformerAdapter(
@@ -362,9 +384,11 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				session.getFactory().getRuntimeMetamodels().getMappingMetamodel(),
 				tableGroupAccess::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
-					@Override @SuppressWarnings("unchecked")
+					@Override
+					@SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) sqmInterpretation.getSqmParameterMappingModelTypeResolutions().get(parameter);
+						return (MappingModelExpressible<T>) sqmInterpretation.getSqmParameterMappingModelTypeResolutions()
+								.get( parameter );
 					}
 				},
 				session

@@ -140,6 +140,9 @@ But it's better to specify the projection explicitly, except in the simplest cas
 There might be multiple items in a projection list, in which case each query result is a tuple, and this poses a problem:
 Java doesn't have a good way to represent tuples.
 
+[[query-result-types]]
+==== Default query result types
+
 If there's just one projected item in the `select` list, then, no sweat, that's the type of each query result.
 There's no need to bother with trying to represent a "tuple of length 1".
 
@@ -151,7 +154,7 @@ List<String> results =
             .getResultList();
 ----
 
-But if there are multiple expressions in the select list then, by default, each query result is packaged as an array of type `Object[]`.
+But if there are multiple expressions in the select list then, by default, and in compliance with JPA, each query result is packaged as an array of type `Object[]`.
 
 [[select-clause-projection-example]]
 [source, java]
@@ -167,12 +170,17 @@ for (var result : results) {
 }
 ----
 
-Or, if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `javax.persistence.Tuple`.
+This is bearable, but let's explore some other options.
+
+[[query-alt-result-types]]
+==== Alternative generic result types
+
+If explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `javax.persistence.Tuple`, again, as specified by JPA.
 
 [source, java]
 [%unbreakable]
 ----
-List<Tuple> results =
+List<Tuple> tuples =
         entityManager.createQuery("select title as title, left(book.text, 200) as preamble from Book",
                                   Tuple.class)
             .getResultList();
@@ -185,8 +193,43 @@ for (Tuple tuple : tuples) {
 The names of the `Tuple` elements are determined by the aliases given to the projected items in the select list.
 If no aliases are specified, the elements may be accessed by their position in the list, where the first item is assigned the position zero.
 
-Unfortunately, neither `Object[]` nor `Tuple` lets us access an individual item in a result tuple of an HQL query without explicitly specifying the type of the item, either using a typecast in the case of `Object[]`, or by passing the class object to `get()` in the case of `Tuple`.
+As an extension to JPA, Hibernate lets us pass `Map` or `List` here:
+
+[source, java]
+[%unbreakable]
+----
+var results =
+        entityManager.createQuery("select title as title, left(book.text, 200) as preamble from Book",
+                                  Map.class)
+            .getResultList();
+for (var map : results) {
+    String title = (String) tuple.get("title");
+    String preamble = (String) tuple.get("preamble");
+}
+----
+[source, java]
+[%unbreakable]
+----
+var results =
+        entityManager.createQuery("select title, left(book.text, 200) from Book",
+                                  List.class)
+            .getResultList();
+for (var list : results) {
+    String title = (String) list.get(0);
+    String preamble = (String) tuple.get(1);
+}
+----
+
+Unfortunately, none of the types `Object[]`, `List`, `Map`, nor `Tuple` lets us access an individual item in a result tuple without explicitly specifying the type of the item, either using a typecast in the case of `Object[]`, `List`, or `Map`, or by passing the class object to `get()` in the case of `Tuple`.
 But there's another option, as we're about to see.
+
+[NOTE]
+====
+Actually, `Tuple` really exists to service the criteria query API, and in that context it _does_ enable truly typesafe access to query results.
+====
+
+[[select-new]]
+==== Instantiation
 
 Simplifying slightly, the BNF for a projected item is:
 
@@ -208,10 +251,7 @@ Where the list of ``selection``s in an `instantiation` is essentially a nested p
 So there's a special expression type that's only legal in the select clause: the `instantiation` rule in the BNF above.
 // Let's see what it does.
 
-[[select-new]]
-==== Instantiation
-
-The `select new` construct packages the query results into a user-written Java class instead of an array.
+This JPA-standard `select new` construct packages the query results into a user-written Java class instead of an array.
 
 [[select-clause-dynamic-instantiation-example]]
 [source, java]
@@ -238,40 +278,35 @@ This class does not need to be mapped or annotated in any way.
 Even if the class _is_ an entity class, the resulting instances are _not_ managed entities and are _not_ associated with the session.
 ====
 
-Alternatively, using the syntax `select new map`, the query may specify that each result should be packaged as a map:
+But Hibernate 6 goes one better and makes the `select new` syntax optional.
 
-[[select-clause-dynamic-map-instantiation-example]]
+[[select-clause-implicit-instantiation-example]]
 [source, java]
 [%unbreakable]
 ----
-List<Map> results =
-        entityManager.createQuery("select new map(title as title, left(book.text, 200) as summary) from Book",
-                                  Map.class)
+record BookSummary(String title, String summary) {}
+
+List<BookSummary> results =
+        entityManager.createQuery("select title, left(book.text, 200) from Book",
+                                  BookSummary.class)
             .getResultList();
+for (var result : results) {
+    String title = result.title();
+    String preamble = result.summary();
+}
 ----
 
-The keys of the map are determined by the aliases given to the projected items in the select list.
-If no aliases are specified, the key of an item is its position in the list, where the first item is assigned the position zero.
+In the past, this functionality required more ceremony.
 
-Or, using the syntax `select new list`, the query may specify that each result should be packaged as a list:
+[cols="25,~,~,^15"]
+|===
+| Result type | Legacy syntax | Streamlined syntax | JPA standard
 
-[[select-clause-dynamic-list-instantiation-example]]
-[source, java]
-[%unbreakable]
-----
-List<List> results =
-        entityManager.createQuery("select new list(title as title, left(book.text, 200) as summary) from Book",
-                                  List.class)
-            .getResultList();
-----
+| `Map` | `select new map(x, y)` | `select x, y` | ✖/✖
+| `List` | `select new list(x, y)` | `select x, y` | ✖/✖
+| Arbitrary class `Record` | `select new Record(x, y)` | `select x, y` | ✔/✖
+|===
 
-[NOTE]
-====
-This is an older syntax, that predates JPQL.
-In hindsight, it's hard to see what advantage `List<Object>` offers compared to `Object[]`.
-We mention it here only for completeness.
-On the other hand, `Map` is a perfectly fine alternative `Tuple`, but of course it isn't portable to other implementations of JPA.
-====
 
 [[distinct]]
 ==== Duplicate removal

@@ -873,7 +873,7 @@ Java's `record` types now offer an interesting alternative:
 record IsbnTitle(String isbn, String title) {}
 
 var results =
-        session.createSelectionQuery("select new IsbnTitle(isbn, title) from Book", IsbnTitle.class)
+        session.createSelectionQuery("select isbn, title from Book", IsbnTitle.class)
             .getResultList();
 
 for (var result : results) {
@@ -886,8 +886,7 @@ Notice that we're able to declare the `record` right before the line which execu
 
 Now, this is only _superficially_ more typesafe, since the query itself is not checked statically, and so we can't say it's objectively better.
 But perhaps you find it more aesthetically pleasing.
-
-On the other hand, when we're passing query results around the system, the use of `select new` with a `record` type is much better than manually unpacking an `Object[]` array.
+And if we're going to be passing query results around the system, the use of a `record` type is _much_ better.
 
 Now, the criteria query API offers a much more satisfying solution to the problem.
 Consider the following code:

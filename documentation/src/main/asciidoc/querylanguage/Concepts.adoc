@@ -1,13 +1,13 @@
 [[basic-concepts]]
 == Basic concepts
 
-This document describes Hibernate Query Language (HQL), which is, in some sense, a dialect of the Java (now Jakarta) Persistence Query Language (JPQL).
+This document describes Hibernate Query Language (HQL), which is, I suppose we could say, a dialect of the Java (now Jakarta) Persistence Query Language (JPQL).
 
 Or is it the other way around?
 
 [NOTE]
 ====
-JPQL was inspired by early versions of HQL, and is a subset of modern HQL.
+JPQL was inspired by early versions of HQL, and is a proper subset of modern HQL.
 Here we focus on describing the complete, more powerful HQL language as it exists today.
 
 If strict JPA compliance is what you're looking for, use the setting `hibernate.jpa.compliance.query=true`.
@@ -108,7 +108,15 @@ The JPQL specification defines identification variables as case-_insensitive_.
 And so in strict JPA-compliant mode, Hibernate treats `person.nickName`, `Person.nickName`, and `PERSON.nickName` as the _same_.
 ====
 
-A _quoted identifier_ is written in backticks. Quoting lets you use a keyword as an identifier, for example `` thing.\`select` ``.
+A _quoted identifier_ is written in backticks. Quoting lets you use a keyword as an identifier.
+
+[source,hql]
+----
+select thing.interval.`from` from Thing thing
+----
+
+Actually, in most contexts, HQL keywords are "soft", and don't need to be quoted.
+The parser is usually able to distinguish if the reserved word is being used as a keyword or as an identifier.
 
 [[type-system]]
 === Type system
@@ -135,13 +143,14 @@ Since the language must be executed on SQL databases, every type accommodates nu
 ==== Null values and ternary logic
 
 The SQL `null` behaves quite differently to a null value in Java.
-In Java, an expression like `number + 1` produces in an exception if `number` is null.
-But in SQL, and therefore also in HQL and JPQL, such an expression evaluates to `null`.
+
+- In Java, an expression like `number + 1` produces in an exception if `number` is null.
+- But in SQL, and therefore also in HQL and JPQL, such an expression evaluates to `null`.
 
 [IMPORTANT]
 ====
 It's almost always the case that an operation applied to a null value yields another null value.
-This applies to function application, to operators like `*` and `||`, to comparison operators like `<` and `=`, and even to logical operations like `and` and `not`.
+This rule applies to function application, to operators like `*` and `||`, to comparison operators like `<` and `=`, and even to logical operations like `and` and `not`.
 
 The exceptions to this rule are the functions `coalesce()` and `ifnull()` which are specifically designed for <<functions-null,dealing with null values>>.
 ====
@@ -295,7 +304,7 @@ The second form may insert many new rows, or none at all.
 The first sort of `insert` statement is not as useful.
 It's usually better to just use `persist()`.
 
-On the other hand, you might consider using it to set up test data.
+But you might consider using it to set up test data.
 ====
 
 [NOTE]
@@ -477,7 +486,7 @@ from Book book select book.title, book.isbn
 This form of the query is more readable, because the alias is declared _before_ it's used, just as God and nature intended.
 ====
 
-Of course, queries are always polymorphic.
+Naturally, queries are always polymorphic.
 Indeed, a fairly innocent-looking HQL query can easily translate to a SQL statement with many joins and unions.
 
 [TIP]
@@ -486,3 +495,196 @@ We need to be a _bit_ careful about that, but actually it's usually a good thing
 HQL makes it very easy to fetch all the data we need in a single trip to the database, and that's absolutely key to achieving high performance in data access code.
 Typically, it's much worse to fetch exactly the data we need, but in many round trips to the database server, than it is to fetch just a bit more data than what we're going to need, all a single SQL query.
 ====
+
+[[returning-to-java]]
+=== Representing result sets in Java
+
+One of the most uncomfortable aspects of working with data in Java is that there's no good way to represent a table.
+Languages designed for working with data—R is an excellent example—always feature some sort of built-in table or "data frame" type.
+Of course, Java's type system gets in the way here.
+This problem is much easier to solve in a dynamically-typed language.
+The fundamental problem for Java is that it doesn't have tuple types.
+
+Queries in Hibernate return tables.
+Sure, often a column holds whole entity objects, but we're not restricted to returning a single entity, and we often write queries that return multiple entities in each result, or which return things which aren't entities.
+
+So we're faced with the problem if representing such result sets, and, we're sad to say, there's no fully general and completely satisfying solution.
+
+Let's begin with the easy case.
+
+[[query-result-types-single]]
+==== Queries with a single projected item
+
+If there's just one projected item in the `select` list, then, no sweat, that's the type of each query result.
+
+[source, java]
+[%unbreakable]
+----
+List<String> results =
+        entityManager.createQuery("select title from Book", String.class)
+            .getResultList();
+----
+
+There's really no need to fuss about with trying to represent a "tuple of length 1".
+We're not even sure what to call those.
+
+Problems arise as soon as we have multiple items in the `select` list of a query.
+
+[[query-result-types-multiple]]
+==== Queries with multiple projected items
+
+When there are multiple expressions in the select list then, by default, and in compliance with JPA, each query result is packaged as an array of type `Object[]`.
+
+[[select-clause-projection-example]]
+[source, java]
+[%unbreakable]
+----
+List<Object[]> results =
+        entityManager.createQuery("select title, left(book.text, 200) from Book",
+                                  Object[].class)
+            .getResultList();
+for (var result : results) {
+	String title = (String) result[0];
+	String preamble = (String) result[1];
+}
+----
+
+This is bearable, but let's explore some other options.
+
+JPA lets us specify that we want each query result packaged as an instance of `javax.persistence.Tuple`.
+All we have to do is pass the class `Tuple` to `createQuery()`.
+
+[source, java]
+[%unbreakable]
+----
+List<Tuple> tuples =
+        entityManager.createQuery("select title as title, left(book.text, 200) as preamble from Book",
+                                  Tuple.class)
+            .getResultList();
+for (Tuple tuple : tuples) {
+    String title = tuple.get("title", String.class);
+    String preamble = tuple.get("preamble", String.class);
+}
+----
+
+The names of the `Tuple` elements are determined by the aliases given to the projected items in the select list.
+If no aliases are specified, the elements may be accessed by their position in the list, where the first item is assigned the position zero.
+
+As an extension to JPA, and in a similar vein, Hibernate lets us pass `Map` or `List`, and have each result packaged as a map or list:
+
+[source, java]
+[%unbreakable]
+----
+var results =
+        entityManager.createQuery("select title as title, left(book.text, 200) as preamble from Book",
+                                  Map.class)
+            .getResultList();
+for (var map : results) {
+    String title = (String) tuple.get("title");
+    String preamble = (String) tuple.get("preamble");
+}
+----
+[source, java]
+[%unbreakable]
+----
+var results =
+        entityManager.createQuery("select title, left(book.text, 200) from Book",
+                                  List.class)
+            .getResultList();
+for (var list : results) {
+    String title = (String) list.get(0);
+    String preamble = (String) tuple.get(1);
+}
+----
+
+Unfortunately, not one of the types `Object[]`, `List`, `Map`, nor `Tuple` lets us access an individual item in a result tuple without a type cast.
+Sure `Tuple` does the type cast for us when we pass a class object to `get()`, but it's logically identical.
+Fortunately there's one more option, as we're about to see.
+
+[NOTE]
+====
+Actually, `Tuple` really exists to service the criteria query API, and in that context it _does_ enable truly typesafe access to query results.
+====
+
+Hibernate 6 lets us pass an arbitrary class type with an appropriate constructor to `createQuery()` and will use it to package the query results.
+This works extremely nicely with `record` types.
+
+[[select-clause-implicit-instantiation-example]]
+[source, java]
+[%unbreakable]
+----
+record BookSummary(String title, String summary) {}
+
+List<BookSummary> results =
+        entityManager.createQuery("select title, left(book.text, 200) from Book",
+                                  BookSummary.class)
+            .getResultList();
+for (var result : results) {
+    String title = result.title();
+    String preamble = result.summary();
+}
+----
+
+It's important that the constructor of `BookSummary` has parameters which exactly match the items in the `select` list.
+
+[NOTE]
+====
+This class does not need to be mapped or annotated in any way.
+
+Even if the class _is_ an entity class, the resulting instances are _not_ managed entities and are _not_ associated with the session.
+====
+
+We must caution that this still isn't typesafe.
+In fact, we've just pushed the typecasts down into the call to `createQuery()`.
+But at least we don't have to write them explicitly.
+
+[[select-new]]
+==== Instantiation
+
+In JPA, and in older versions of Hibernate, this functionality required more ceremony.
+
+[cols="25,~,~,^15"]
+|===
+| Result type | Legacy syntax | Streamlined syntax | JPA standard
+
+| `Map` | `select new map(x, y)` | `select x, y` | ✖/✖
+| `List` | `select new list(x, y)` | `select x, y` | ✖/✖
+| Arbitrary class `Record` | `select new Record(x, y)` | `select x, y` | ✔/✖
+|===
+
+For example, the JPA-standard `select new` construct packages the query results into a user-written Java class instead of an array.
+
+[[select-clause-dynamic-instantiation-example]]
+[source, java]
+[%unbreakable]
+----
+record BookSummary(String title, String summary) {}
+
+List<BookSummary> results =
+        entityManager.createQuery("select new BookSummary(title, left(book.text, 200)) from Book",
+                                  BookSummary.class)
+            .getResultList();
+for (var result : results) {
+    String title = result.title();
+    String preamble = result.summary();
+}
+----
+
+Simplifying slightly, the BNF for a projected item is:
+
+[[select-item-bnf]]
+[source, antlrv4]
+----
+selection
+    : (expression | instantiation) alias?
+
+instantiation
+    : "NEW" instantiationTarget "(" selection ("," selection)* ")"
+
+alias
+    : "AS"? identifier
+----
+
+Where the list of ``selection``s in an `instantiation` is essentially a nested projection list.
+
+

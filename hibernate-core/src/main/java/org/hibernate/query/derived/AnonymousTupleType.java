@@ -22,6 +22,7 @@ import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -58,7 +59,8 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 			final SqmSelectableNode<?> component = components[i];
 			final String alias = component.getAlias();
 			if ( alias == null ) {
-				throw new IllegalArgumentException( "Component at index " + i + " has no alias, but alias is required" );
+				throw new SemanticException( "Select item at position " + (i+1) + " in select list has no alias"
+						+ " (aliases are required in CTEs and in subqueries occurring in from clause)" );
 			}
 			map.put( alias, i );
 		}

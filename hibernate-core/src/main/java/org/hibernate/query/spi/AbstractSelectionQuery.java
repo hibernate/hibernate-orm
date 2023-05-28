@@ -104,40 +104,56 @@ public abstract class AbstractSelectionQuery<R>
 		super( session );
 	}
 
-	protected TupleMetadata buildTupleMetadata(SqmStatement<?> statement, Class<R> resultType) {
-		if ( resultType != null && Tuple.class.isAssignableFrom( resultType ) ) {
-			final List<SqmSelection<?>> selections = ( (SqmSelectStatement<?>) statement ).getQueryPart()
-					.getFirstQuerySpec()
-					.getSelectClause()
-					.getSelections();
-			// resultType is Tuple..
-			if ( getQueryOptions().getTupleTransformer() == null ) {
-				final Map<TupleElement<?>, Integer> tupleElementMap;
-				if ( selections.size() == 1 && selections.get( 0 ).getSelectableNode() instanceof CompoundSelection<?> ) {
-					final List<? extends JpaSelection<?>> selectionItems = selections.get( 0 )
-							.getSelectableNode()
-							.getSelectionItems();
-					tupleElementMap = new IdentityHashMap<>( selectionItems.size() );
-					for ( int i = 0; i < selectionItems.size(); i++ ) {
-						tupleElementMap.put( selectionItems.get( i ), i );
-					}
-				}
-				else {
-					tupleElementMap = new IdentityHashMap<>( selections.size() );
-					for ( int i = 0; i < selections.size(); i++ ) {
-						final SqmSelection<?> selection = selections.get( i );
-						tupleElementMap.put( selection.getSelectableNode(), i );
-					}
-				}
-				return new TupleMetadata( tupleElementMap );
-			}
+	public static boolean isTupleResultClass(Class<?> resultType) {
+		return Tuple.class.isAssignableFrom( resultType )
+			|| Map.class.isAssignableFrom( resultType );
+	}
 
-			throw new IllegalArgumentException(
-					"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer : " +
-							getQueryOptions().getTupleTransformer()
-			);
+	protected TupleMetadata buildTupleMetadata(SqmStatement<?> statement, Class<R> resultType) {
+		if ( resultType == null ) {
+			return null;
 		}
-		return null;
+		else if ( isTupleResultClass( resultType ) ) {
+			final List<SqmSelection<?>> selections =
+					( (SqmSelectStatement<?>) statement ).getQueryPart()
+							.getFirstQuerySpec()
+							.getSelectClause()
+							.getSelections();
+			if ( getQueryOptions().getTupleTransformer() == null ) {
+				return new TupleMetadata( buildTupleElementMap( selections ) );
+			}
+			else {
+				throw new IllegalArgumentException(
+						"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer : " +
+								getQueryOptions().getTupleTransformer()
+				);
+			}
+		}
+		else {
+			return null;
+		}
+	}
+
+	private static Map<TupleElement<?>, Integer> buildTupleElementMap(List<SqmSelection<?>> selections) {
+		final Map<TupleElement<?>, Integer> tupleElementMap;
+		if ( selections.size() == 1
+				&& selections.get( 0 ).getSelectableNode() instanceof CompoundSelection<?> ) {
+			final List<? extends JpaSelection<?>> selectionItems =
+					selections.get( 0 ).getSelectableNode()
+							.getSelectionItems();
+			tupleElementMap = new IdentityHashMap<>( selectionItems.size() );
+			for ( int i = 0; i < selectionItems.size(); i++ ) {
+				tupleElementMap.put( selectionItems.get( i ), i );
+			}
+		}
+		else {
+			tupleElementMap = new IdentityHashMap<>( selections.size() );
+			for (int i = 0; i < selections.size(); i++ ) {
+				final SqmSelection<?> selection = selections.get( i );
+				tupleElementMap.put( selection.getSelectableNode(), i );
+			}
+		}
+		return tupleElementMap;
 	}
 
 	protected void applyOptions(NamedSqmQueryMemento memento) {
@@ -207,7 +223,7 @@ public abstract class AbstractSelectionQuery<R>
 	 */
 	protected void visitQueryReturnType(
 			SqmQueryPart<R> queryPart,
-			Class<R> resultType,
+			Class<R> expectedResultType,
 			SessionFactoryImplementor factory) {
 		assert getQueryString().equals( CRITERIA_HQL_STRING );
 
@@ -231,33 +247,35 @@ public abstract class AbstractSelectionQuery<R>
 				}
 			}
 
-			if ( resultType != null ) {
-				checkQueryReturnType( sqmQuerySpec, resultType, factory );
+			if ( expectedResultType != null ) {
+				checkQueryReturnType( sqmQuerySpec, expectedResultType, factory );
 			}
 		}
 		else {
 			final SqmQueryGroup<R> queryGroup = (SqmQueryGroup<R>) queryPart;
 			for ( SqmQueryPart<R> sqmQueryPart : queryGroup.getQueryParts() ) {
-				visitQueryReturnType( sqmQueryPart, resultType, factory );
+				visitQueryReturnType( sqmQueryPart, expectedResultType, factory );
 			}
 		}
 	}
 
 	protected static <T> void checkQueryReturnType(
 			SqmQuerySpec<T> querySpec,
-			Class<T> resultClass,
+			Class<T> expectedResultClass,
 			SessionFactoryImplementor sessionFactory) {
-		if ( resultClass == null || resultClass == Object.class ) {
+		if ( expectedResultClass == null || expectedResultClass == Object.class ) {
 			// nothing to check
 			return;
 		}
 
 		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
 
-		if ( resultClass.isArray() ) {
+		if ( expectedResultClass.isArray() ) {
 			// todo (6.0) : implement
 		}
-		else if ( Tuple.class.isAssignableFrom( resultClass ) ) {
+		else if ( Tuple.class.isAssignableFrom( expectedResultClass )
+				|| Map.class.isAssignableFrom( expectedResultClass )
+				|| List.class.isAssignableFrom( expectedResultClass ) ) {
 			// todo (6.0) : implement
 		}
 		else {
@@ -290,21 +308,18 @@ public abstract class AbstractSelectionQuery<R>
 			if ( jpaQueryComplianceEnabled ) {
 				return;
 			}
-			verifyResultType( resultClass, sqmSelection.getNodeType(), sessionFactory );
+			verifyResultType( expectedResultClass, sqmSelection.getNodeType() );
 		}
 	}
 
-	protected static <T> void verifyResultType(
-			Class<T> resultClass,
-			SqmExpressible<?> sqmExpressible,
-			SessionFactoryImplementor sessionFactory) {
+	protected static <T> void verifyResultType(Class<T> resultClass, SqmExpressible<?> sqmExpressible) {
 		assert sqmExpressible != null;
 		final JavaType<?> expressibleJavaType = sqmExpressible.getExpressibleJavaType();
 		assert expressibleJavaType != null;
 		final Class<?> javaTypeClass = expressibleJavaType.getJavaTypeClass();
 		if ( !resultClass.isAssignableFrom( javaTypeClass ) ) {
 			if ( expressibleJavaType instanceof PrimitiveJavaType ) {
-				if ( ( (PrimitiveJavaType) expressibleJavaType ).getPrimitiveClass() == resultClass ) {
+				if ( ( (PrimitiveJavaType<?>) expressibleJavaType ).getPrimitiveClass() == resultClass ) {
 					return;
 				}
 				throwQueryTypeMismatchException( resultClass, sqmExpressible );
@@ -887,7 +902,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setParameterList(String name, Collection values) {
+	public SelectionQuery<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( name, values );
 		return this;
 	}
@@ -995,7 +1010,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setProperties(Map map) {
+	public SelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map map) {
 		super.setProperties( map );
 		return this;
 	}

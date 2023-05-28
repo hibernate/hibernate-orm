@@ -1154,7 +1154,7 @@ listaggFunction
  * A 'on overflow' clause: what to do when the text data type used for 'listagg' overflows
  */
 onOverflowClause
-	: ON OVERFLOW (ERROR | (TRUNCATE expression? (WITH|WITHOUT) COUNT))
+	: ON OVERFLOW (ERROR | TRUNCATE expression? (WITH|WITHOUT) COUNT)
 	;
 
 /**

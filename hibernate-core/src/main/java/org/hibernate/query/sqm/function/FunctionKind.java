@@ -15,5 +15,5 @@ public enum FunctionKind {
 	NORMAL,
 	AGGREGATE,
 	ORDERED_SET_AGGREGATE,
-	WINDOW;
+	WINDOW
 }

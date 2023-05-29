@@ -551,7 +551,7 @@ A path expression like `book.authors.name` is not considered legal.
 We can't just navigate a many-valued association with this syntax.
 
 Instead, the functions `element()`, `index()`, `key()`, and `value()` may be applied to a path expression to express an implicit join.
-So we must write `element(book.authors).name`.
+So we must write `element(book.authors).name` or `index(book.authors)`.
 
 [[collection-implicit-join-example]]
 [source, hql]

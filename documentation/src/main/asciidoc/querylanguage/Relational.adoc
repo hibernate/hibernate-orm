@@ -390,7 +390,7 @@ The `elements()` and `indices()` functions we met <<elements-indices,earlier>> l
 
 [cols="18,15,~,~"]
 |===
-| New syntax | Legacy HQL function | Applies to | Purpose
+| New syntax | Legacy HQL function 💀 | Applies to | Purpose
 
 | `max(elements(x))` | `maxelement(x)` | Any collection with sortable elements | The maximum element or map value
 | `min(elements(x))` | `minelement(x)` | Any collection with sortable elements | The minimum element or map value

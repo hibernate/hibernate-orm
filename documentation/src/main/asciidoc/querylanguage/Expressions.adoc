@@ -215,6 +215,32 @@ See <<identification-variables>> and <<implicit-join>>.
 
 HQL has operators for working with strings, numeric values, and date/time types.
 
+The operator precedence is given by this table, from highest to lowest precedence:
+
+[cols="40,^20,~"]
+|===
+| Precedence class | Type | Operators
+
+| Grouping and tuple instantiation | | `( ... )` and `(x, y, z)`
+| Case lists |  | `case ... end`
+| Member reference | Binary infix | `a.b`
+| Function application | Postfix | `f(x,y)`
+| Indexing | Postfix | `a[i]`
+| Unary numeric | Unary prefix | `+`, `-`
+| Duration conversions | Unary postfix | `by day` and friends
+| Binary multiplicative | Binary infix | `*`, `/`, `%`
+| Binary additive | Binary infix | `+`, `-`
+| Concatenation | Binary infix | `\|\|`
+| Nullness | Unary postfix | `is null`, `is empty`
+| Containment | Binary infix | `in`, `not in`
+| Between | Ternary infix | `between`, `not between`
+| Pattern matching | Binary infix | `like`, `ilike`, `not like`, `not ilike`
+| Existence | Unary prefix | `exists`
+| Membership | Binary infix | `member of`, `not member of`
+| Unary logical | Unary prefix | `not`
+| Binary logical | Binary infix | `and`, `or`
+|===
+
 [[concatenation]]
 ==== String concatenation
 
@@ -494,7 +520,7 @@ The following functions make it easy to deal with null values:
 [discrete]
 ===== Handling null values
 
-An abbreviated `case` expression that returns the first non-null operand.
+The `coalesce()` function is a sort of abbreviated `case` expression that returns the first non-null operand.
 
 [[coalesce-example]]
 [source, hql]
@@ -520,7 +546,7 @@ from Author as author
 [discrete]
 ===== Producing null values
 
-Evaluates to null if its operands are equal, or to its first argument otherwise.
+On the other hand, `nullif()` evaluates to null if its operands are equal, or to its first argument otherwise.
 
 [[nullif-example]]
 [source, hql]
@@ -587,7 +613,7 @@ select year(created), month(created) from Order
 [discrete]
 ===== Formatting dates and times
 
-This function formats a date, time, or datetime according to a pattern.
+The `format()` function formats a date, time, or datetime according to a pattern.
 
 The syntax is `format(datetime as pattern)`, and the pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
 
@@ -597,7 +623,7 @@ For a full list of `format()` pattern elements, see the Javadoc for https://docs
 [discrete]
 ===== Truncating a date or time type
 
-This function truncates a date, time, or datetime to the temporal unit specified by field.
+The `truncate()` function truncates a date, time, or datetime to the temporal unit specified by field.
 
 The syntax is `truncate(datetime, field)`. Supported temporal units are: `year`, `month`, `day`, `hour`, `minute` or `second`.
 
@@ -651,8 +677,9 @@ Contrary to Java, positions of characters within strings are indexed from 1 inst
 [discrete]
 ===== Concatenating strings
 
-Accepts a variable number of arguments, and produces a string by concatenating them.
+The JPQL-standard and ANSI SQL-standard `concat()` function accepts a variable number of arguments, and produces a string by concatenating them.
 
+[%unbreakable]
 [source, hql]
 ----
 select concat(book.title, ' by ', listagg(author.name, ' & '))
@@ -663,6 +690,7 @@ group by book
 
 [discrete]
 ===== Finding substrings
+
 The JPQL function `locate()` determines the position of a substring within another string.
 
 - The optional third argument is used to specify a position at which to start the search.
@@ -684,7 +712,8 @@ select position('Hibernate' in title) from Book
 
 [discrete]
 ===== Slicing strings
-Returns a substring of the given string.
+
+Unsurprisingly, `substring()` returns a substring of the given string.
 
 - The second argument specifies the position of the first character of the substring.
 - The optional third argument specifies the maximum length of the substring.
@@ -788,7 +817,7 @@ The following functions apply to any identification variable that refers to a jo
 [discrete]
 ===== Collection sizes
 
-The number of elements of a collection or to-many association.
+The `size()` function returns the number of elements of a collection or to-many association.
 
 [[size-example]]
 [source, hql]
@@ -800,13 +829,13 @@ select name, size(books) from Author
 [discrete]
 ===== List elements and indexes
 
-A reference to an element or index of <<collection-valued-associations,joined list>>.
+The `element()` or `index()` function returns a reference to an element or index of a <<collection-valued-associations,joined list>>.
 
 [[map-functions]]
 [discrete]
 ===== Map keys, values, and entries
 
-A reference to a key, value, or entry of a <<collection-valued-associations,joined map>>.
+The `key()`, `value()`, or `entry()` function returns a reference to a key, value, or entry of a <<collection-valued-associations,joined map>>.
 
 [[elements-indices]]
 ==== Quantification over collections
@@ -873,7 +902,7 @@ There are several ways to call native or user-defined SQL functions.
 
 [TIP]
 ====
-Registering a function isn't hard, but is beyond the scope of this chapter.
+Registering a function isn't hard, but is beyond the scope of this guide.
 
 (It's even possible to use the APIs Hibernate provides to make your own _portable_ functions!)
 ====
@@ -1095,8 +1124,9 @@ from Book as book
 where :edition in elements(book.editions)
 ----
 
-This example doesn't work on every database:
+The next example doesn't work on every database:
 
+[%unbreakable]
 [source, hql]
 ----
 from Author as author
@@ -1106,6 +1136,7 @@ where (author.person.name, author.person.birthdate)
 
 Here we used a "row value" constructor, a seemingly pretty basic feature which is surprisingly-poorly supported.
 
+[%unbreakable]
 [TIP]
 ====
 Here's a very useful idiom:

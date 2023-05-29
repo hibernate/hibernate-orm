@@ -1939,7 +1939,7 @@ There's no need to bother with trying to represent a "tuple of length 1".
 But if there are multiple expressions in the select list then:
 
 - by default, each query result is packaged as an array of type `Object[]`, or
-- if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `javax.persistence.Tuple`.
+- if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `jakarta.persistence.Tuple`.
 
 [[hql-select-clause-projection-example]]
 //.Query results as lists

@@ -637,7 +637,7 @@ public class PropertyBinder {
 		return false;
 	}
 
-	private static boolean hasIdAnnotation(XAnnotatedElement element) {
+	static boolean hasIdAnnotation(XAnnotatedElement element) {
 		return element.isAnnotationPresent( Id.class )
 			|| element.isAnnotationPresent( EmbeddedId.class );
 	}

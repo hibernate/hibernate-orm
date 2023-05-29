@@ -104,7 +104,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 		initializers.finishUpRow( rowProcessingState );
 	}
 
-	@SuppressWarnings("ForLoopReplaceableByForEach")
 	private void coordinateInitializers(RowProcessingState rowProcessingState) {
 		initializers.resolveKeys( rowProcessingState );
 		initializers.resolveInstances( rowProcessingState );
@@ -112,7 +111,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	@Override
-	@SuppressWarnings("ForLoopReplaceableByForEach")
 	public void finishUp(JdbcValuesSourceProcessingState processingState) {
 		initializers.endLoading( processingState.getExecutionContext() );
 	}

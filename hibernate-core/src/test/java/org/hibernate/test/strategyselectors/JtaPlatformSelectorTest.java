@@ -24,6 +24,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJ
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.TongWebJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 import org.junit.Assert;
@@ -158,6 +159,14 @@ public class JtaPlatformSelectorTest {
 				"WebSphereExtended",
 				"org.hibernate.service.jta.platform.internal.WebSphereExtendedJtaPlatform"
 		);
+
+		testJtaPlatformResolves(
+				strategySelector,
+				TongWebJtaPlatform.class,
+				"TongWeb",
+				"org.hibernate.engine.transaction.jta.platform.internal.TongWebJtaPlatform"
+		);
+
 	}
 
 	private static void testJtaPlatformResolves(final DefaultJtaPlatformSelector strategySelector, final Class expectedType, final String shortname, final String longname) {

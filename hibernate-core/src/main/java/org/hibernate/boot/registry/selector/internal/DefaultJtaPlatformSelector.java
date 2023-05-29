@@ -25,6 +25,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJ
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.internal.TongWebJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatform> {
@@ -110,6 +111,9 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 		if ( "SunOne".equals( name ) ) {
 			return SunOneJtaPlatform.class;
 		}
+		if ( "TongWeb".equals( name ) ) {
+			return TongWebJtaPlatform.class;
+		}
 		return null;
 	}
 
@@ -138,6 +142,9 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 		//code faithfully.
 		if ( name.equals( "org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform" ) ) {
 			return WebSphereLibertyJtaPlatform.class;
+		}
+		if ( name.equals( "org.hibernate.engine.transaction.jta.platform.internal.TongWebJtaPlatform" ) ) {
+			return TongWebJtaPlatform.class;
 		}
 
 		//All other ones follow a pattern, beginning with the same prefix and ending with the same postfix,

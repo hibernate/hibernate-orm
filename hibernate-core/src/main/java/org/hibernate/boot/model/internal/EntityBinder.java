@@ -143,6 +143,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotations;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
+import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
@@ -960,46 +961,61 @@ public class EntityBinder {
 			Set<String> idPropertiesIfIdClass,
 			ElementsToProcess elementsToProcess,
 			Map<XClass, InheritanceState> inheritanceStates) {
-
 		final Set<String> missingIdProperties = new HashSet<>( idPropertiesIfIdClass );
+		final Set<String> missingEntityProperties = new HashSet<>();
 		for ( PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
 			final String propertyName = propertyAnnotatedElement.getPropertyName();
 			if ( !idPropertiesIfIdClass.contains( propertyName ) ) {
-				boolean subclassAndSingleTableStrategy =
-						inheritanceState.getType() == InheritanceType.SINGLE_TABLE
-								&& inheritanceState.hasParents();
-				processElementAnnotations(
-						propertyHolder,
-						subclassAndSingleTableStrategy
-								? Nullability.FORCED_NULL
-								: Nullability.NO_CONSTRAINT,
-						propertyAnnotatedElement,
-						generators,
-						this,
-						false,
-						false,
-						false,
-						context,
-						inheritanceStates
-				);
+				if ( !idPropertiesIfIdClass.isEmpty() && !isIgnoreIdAnnotations()
+						&& hasIdAnnotation( propertyAnnotatedElement.getProperty() ) ) {
+					missingEntityProperties.add( propertyName );
+				}
+				else {
+					boolean subclassAndSingleTableStrategy =
+							inheritanceState.getType() == InheritanceType.SINGLE_TABLE
+									&& inheritanceState.hasParents();
+					processElementAnnotations(
+							propertyHolder,
+							subclassAndSingleTableStrategy
+									? Nullability.FORCED_NULL
+									: Nullability.NO_CONSTRAINT,
+							propertyAnnotatedElement,
+							generators,
+							this,
+							false,
+							false,
+							false,
+							context,
+							inheritanceStates
+					);
+				}
 			}
 			else {
 				missingIdProperties.remove( propertyName );
 			}
 		}
 
-		if ( missingIdProperties.size() != 0 ) {
-			final StringBuilder missings = new StringBuilder();
-			for ( String property : missingIdProperties ) {
-				if ( missings.length() > 0 ) {
-					missings.append(", ");
-				}
-				missings.append("'").append( property ).append( "'" );
-			}
+		if ( !missingIdProperties.isEmpty() ) {
 			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
-					+ "' has an '@IdClass' with properties " + missings
+					+ "' has an '@IdClass' with properties " + getMissingPropertiesString( missingIdProperties )
 					+ " which do not match properties of the entity class" );
 		}
+		else if ( !missingEntityProperties.isEmpty() ) {
+			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
+					+ "' has '@Id' annotated properties " + getMissingPropertiesString( missingEntityProperties )
+					+ " which do not match properties of the specified '@IdClass'" );
+		}
+	}
+
+	private static String getMissingPropertiesString(Set<String> propertyNames) {
+		final StringBuilder sb = new StringBuilder();
+		for ( String property : propertyNames ) {
+			if ( sb.length() > 0 ) {
+				sb.append( ", " );
+			}
+			sb.append( "'" ).append( property ).append( "'" );
+		}
+		return sb.toString();
 	}
 
 	private static PersistentClass makePersistentClass(

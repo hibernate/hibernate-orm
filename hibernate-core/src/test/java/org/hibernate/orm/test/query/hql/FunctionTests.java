@@ -295,6 +295,43 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testAggregateIndexElementWithPath(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select max(index(eol.listOfNumbers)) from EntityOfLists eol", Integer.class)
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select max(element(eol.listOfNumbers)) from EntityOfLists eol", Double.class)
+							.getSingleResult(), is(2.0) );
+
+					assertThat( session.createQuery("select sum(index(eol.listOfNumbers)) from EntityOfLists eol", Long.class)
+							.getSingleResult(), is(1L) );
+					assertThat( session.createQuery("select sum(element(eol.listOfNumbers)) from EntityOfLists eol", Double.class)
+							.getSingleResult(), is(3.0) );
+
+					assertThat( session.createQuery("select avg(index(eol.listOfNumbers)) from EntityOfLists eol", Double.class)
+							.getSingleResult(), is(0.5) );
+					assertThat( session.createQuery("select avg(element(eol.listOfNumbers)) from EntityOfLists eol", Double.class)
+							.getSingleResult(), is(1.5) );
+
+					assertThat( session.createQuery("select max(key(eom.numberByNumber)) from EntityOfMaps eom", Integer.class)
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select max(element(eom.numberByNumber)) from EntityOfMaps eom", Double.class)
+							.getSingleResult(), is(1.0) );
+
+					assertThat( session.createQuery("select sum(key(eom.numberByNumber)) from EntityOfMaps eom", Long.class)
+							.getSingleResult(), is(1L) );
+					assertThat( session.createQuery("select sum(element(eom.numberByNumber)) from EntityOfMaps eom", Double.class)
+							.getSingleResult(), is(1.0) );
+
+					assertThat( session.createQuery("select avg(key(eom.numberByNumber)) from EntityOfMaps eom", Double.class)
+							.getSingleResult(), is(1.0) );
+					assertThat( session.createQuery("select avg(element(eom.numberByNumber)) from EntityOfMaps eom", Double.class)
+							.getSingleResult(), is(1.0) );
+				}
+		);
+	}
+
+	@Test
 	public void testAggregateIndexElementKeyValueWithAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

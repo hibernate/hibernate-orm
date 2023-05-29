@@ -106,7 +106,7 @@ public class SqmMapJoin<O, K, V>
 	}
 
 	@Override
-	public Path<V> value() {
+	public SqmPath<V> value() {
 		final SqmPathSource<V> elementPathSource = getReferencedPathSource().getElementPathSource();
 		return resolvePath( elementPathSource.getPathName(), elementPathSource );
 	}

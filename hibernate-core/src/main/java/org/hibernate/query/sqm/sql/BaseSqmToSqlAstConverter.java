@@ -5149,9 +5149,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, EntityDomainType<?> treatTarget) {
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
-		final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
-		return createTreatTypeRestriction( lhs, subclassEntityNames );
+		final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
+		if ( entityDescriptor.isPolymorphic() ) {
+			final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
+			return createTreatTypeRestriction( lhs, subclassEntityNames );
+		}
+		return null;
 	}
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, Set<String> subclassEntityNames) {

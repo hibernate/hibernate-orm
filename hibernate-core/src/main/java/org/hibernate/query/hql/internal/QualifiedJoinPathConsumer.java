@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -178,8 +179,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			boolean isTerminal,
 			boolean allowReuse,
 			SqmCreationState creationState) {
+		final SqmPathSource<?> pathSource = lhs instanceof SqmTreatedPath ?
+				( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget() :
+				lhs.getResolvedModel();
 		//noinspection unchecked
-		final SqmPathSource<Object> subPathSource = (SqmPathSource<Object>) lhs.getReferencedPathSource().getSubPathSource( name );
+		final SqmPathSource<Object> subPathSource = (SqmPathSource<Object>) pathSource.getSubPathSource( name );
 		if ( allowReuse && !isTerminal ) {
 			for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
 				if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {

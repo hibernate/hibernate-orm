@@ -1,7 +1,7 @@
 expression "NOT"? "IN" inList
 
 inList
-	: ("ELEMENTS"|"INDICES") "(" simplePath ")"
+	: collectionQuantifier "(" simplePath ")"
 	| "(" (expression ("," expression)*)? ")"
 	| "(" subquery ")"
 	| parameter

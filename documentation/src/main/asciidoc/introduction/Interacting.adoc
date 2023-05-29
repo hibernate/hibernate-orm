@@ -891,7 +891,7 @@ Consider the following code:
 [source,java]
 ----
 var cb = sessionFactory.getCriteriaBuilder();
-var query = cb.createQuery(Tuple.class);
+var query = cb.createTupleQuery();
 var book = query.from(Book.class);
 var bookTitle = book.get(Book_.title);
 var bookIsbn = book.get(Book_.isbn);

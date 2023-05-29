@@ -2443,31 +2443,58 @@ public abstract class AbstractEntityPersister
 
 		if ( attributeNames.length != 0 ) {
 			final boolean[] propertyUpdateability = entityMetamodel.getPropertyUpdateability();
-			// Sort attribute names so that we can traverse mappings efficiently
-			Arrays.sort( attributeNames );
-			int index = 0;
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				final String attributeName = attributeMapping.getAttributeName();
-				if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
-					final int position = attributeMapping.getStateArrayPosition();
-					if ( propertyUpdateability[position] && !fields.contains( position ) ) {
-						fields.add( position );
+			if ( superMappingType == null ) {
+				/*
+						Sort attribute names so that we can traverse mappings efficiently
+						we cannot do this when there is a supertype because given:
+
+						class SuperEntity {
+							private String bSuper;
+							private String aSuper;
+						}
+
+						class ChildEntity extends SuperEntity {
+							private String aChild;
+							private String bChild;
+						}
+
+						`attributeMappings` contains { aSuper, bSuper, aChild, bChild	}
+						while the sorted `attributeNames` { aChild, aSuper, bChild, bSuper }
+				 */
+
+				Arrays.sort( attributeNames );
+				int index = 0;
+				for ( int i = 0; i < attributeMappings.size(); i++ ) {
+					final AttributeMapping attributeMapping = attributeMappings.get( i );
+					final String attributeName = attributeMapping.getAttributeName();
+					if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
+						final int position = attributeMapping.getStateArrayPosition();
+						if ( propertyUpdateability[position] && !fields.contains( position ) ) {
+							fields.add( position );
+						}
+						index++;
+						if ( index < attributeNames.length ) {
+							// Skip duplicates
+							do {
+								if ( attributeNames[index].equals( attributeName ) ) {
+									index++;
+								}
+								else {
+									break;
+								}
+							} while ( index < attributeNames.length );
+						}
+						else {
+							break;
+						}
 					}
-					index++;
-					if ( index < attributeNames.length ) {
-						// Skip duplicates
-						do {
-							if ( attributeNames[index].equals( attributeName ) ) {
-								index++;
-							}
-							else {
-								break;
-							}
-						} while ( index < attributeNames.length );
-					}
-					else {
-						break;
+				}
+			}
+			else {
+				for ( String attributeName : attributeNames ) {
+					final Integer index = entityMetamodel.getPropertyIndexOrNull( attributeName );
+					if ( index != null && propertyUpdateability[index] && !fields.contains( index ) ) {
+						fields.add( index );
 					}
 				}
 			}

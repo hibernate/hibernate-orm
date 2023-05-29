@@ -239,12 +239,18 @@ JPA defines the following strategies for generating ids, which are enumerated by
 | `GenerationType.AUTO`     | `Long` or `Integer` | Selects `SEQUENCE`, `TABLE`, or `UUID` based on the identifier type and capabilities of the database
 |===
 
-For example, the following id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
+For example, this UUID is generated in Java code:
 
 [source,java]
 ----
-@Id @GeneratedValue(strategy=IDENTITY)
-Long id;
+@Id @GeneratedValue UUID id;  // AUTO strategy selects UUID based on the field type
+----
+
+This id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
+
+[source,java]
+----
+@Id @GeneratedValue(strategy=IDENTITY) Long id;
 ----
 
 The `@SequenceGenerator` and `@TableGenerator` annotations allow further control over `SEQUENCE` and `TABLE` generation respectively.
@@ -253,8 +259,7 @@ Consider this sequence generator:
 
 [source,java]
 ----
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book",
-                   initialValue = 5, allocationSize=10)
+@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
 ----
 
 Values are generated using a database sequence defined as follows:
@@ -279,7 +284,8 @@ Any identifier attribute may now make use of the generator named `bookSeq`:
 
 [source,java]
 ----
-@Id @GeneratedValue(strategy=SEQUENCE, generator="bookSeq")
+@Id
+@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined elsewhere
 Long id;
 ----
 
@@ -287,9 +293,9 @@ Actually, it's extremely common to place the `@SequenceGenerator` annotation on 
 
 [source,java]
 ----
-@Id @GeneratedValue(strategy=SEQUENCE, generator="bookSeq")
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book",
-                   initialValue = 5, allocationSize=10)
+@Id
+@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined below
+@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
 Long id;
 ----
 
@@ -753,7 +759,7 @@ We may explicitly specify a Java type using the `@JavaType` annotation, but for 
 
 [source,java]
 ----
-@JavaType(LongJavaType.class) // not needed, this is the default JavaType for long
+@JavaType(LongJavaType.class)  // not needed, this is the default JavaType for long
 long currentTimeMillis;
 ----
 
@@ -936,6 +942,7 @@ In this example data model, we can see the sorts of associations which are possi
 
 image::images/associations.png[Example data model,align="center",pdfwidth=90%]
 
+[%unbreakable]
 [TIP]
 // .One-to-one associations and subtyping
 ====

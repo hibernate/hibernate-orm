@@ -215,6 +215,7 @@ INTO 				: [iI] [nN] [tT] [oO];
 IS					: [iI] [sS];
 JOIN				: [jJ] [oO] [iI] [nN];
 KEY					: [kK] [eE] [yY];
+KEYS				: [kK] [eE] [yY] [sS];
 LAST				: [lL] [aA] [sS] [tT];
 LATERAL				: [lL] [aA] [tT] [eE] [rR] [aA] [lL];
 LEADING				: [lL] [eE] [aA] [dD] [iI] [nN] [gG];

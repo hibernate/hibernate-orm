@@ -27,6 +27,8 @@ import static java.util.Locale.ROOT;
  */
 public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, TypedTupleTransformer<Tuple> {
 
+	public static final NativeQueryTupleTransformer INSTANCE = new NativeQueryTupleTransformer();
+
 	@Override
 	public Tuple transformTuple(Object[] tuple, String[] aliases) {
 		return new NativeTupleImpl( tuple, aliases );

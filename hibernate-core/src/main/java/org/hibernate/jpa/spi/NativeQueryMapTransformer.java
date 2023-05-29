@@ -19,6 +19,9 @@ import static java.util.Locale.ROOT;
  * @author Gavin King
  */
 public class NativeQueryMapTransformer implements TupleTransformer<Map<String,Object>> {
+
+	public static final NativeQueryMapTransformer INSTANCE = new NativeQueryMapTransformer();
+
 	@Override
 	public Map<String,Object> transformTuple(Object[] tuple, String[] aliases) {
 		Map<String,Object> map = new HashMap<>( aliases.length );

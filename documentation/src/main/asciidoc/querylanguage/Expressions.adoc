@@ -202,14 +202,54 @@ See <<functions-typecasts>>.
 [[path-expressions]]
 === Identification variables and path expressions
 
-Identification variables, and path expressions beginning with an identification variable are legal expressions in almost every context.
+A path expression is either:
+
+- a reference to an <<identification-variables,identification variable>>, or
+- a _compound path_, beginning with a reference to an identification variable, and followed by a period-separated list of references to entity attributes.
+
+As an extension to the JPA spec, HQL, just like SQL, allows a compound path expression where the identification variable at the beginning of the path is missing.
+That is, instead of `var.foo.bar`, it's legal to write just `foo.bar`.
+But this is only allowed when the identification variable may be unambiguously inferred from the first element, `foo` of the compound path.
+The query must have exactly one identification variable `var` for which the path `var.foo` refers to an entity attribute.
+Note that we will continue to call these paths "compound", even if they only have one element.
+
+[TIP]
+====
+This streamlines the query rather nicely when there's just one root entity and no joins.
+But when the query has multiple identification variables it makes the query much harder to understand.
+====
+
+If an element of a compound path refers to an association, the path expression produces an <<implicit-join,implicit join>>.
 
 [source,hql]
 ----
 select book.publisher.name from Book book
 ----
 
-See <<identification-variables>> and <<implicit-join>>.
+An element of a compound path referring to a many-to-one or on-to-one association may have the <<function-treat,treat>> function applied to it.
+
+[source,hql]
+----
+select treat(order.payment as CreditCardPayment).creditCardNumber from Order order
+----
+
+If an element of a compound path refers to a collection or many-valued association, it must have one of <<collection-functions,these special functions>> applied to it.
+
+[source,hql]
+----
+select element(book.authors).name from Book book
+----
+
+No other function may be applied to a non-terminal element of a path expression.
+
+Alternatively, if the element of the compound path refers to a list or map, it may have the indexing operator applied to it:
+
+[source,hql]
+----
+select book.editions[0].date from Book book
+----
+
+No other operator may be applied to a non-terminal element of a path expression.
 
 === Operator expressions
 
@@ -475,6 +515,9 @@ where length(treat(payment as CreditCardPayment).cardNumber)
 The type of the expression `treat(p as CreditCardPayment)` is the narrowed type, `CreditCardPayment`, instead of the declared type `Payment` of `p`.
 This allows the attribute `cardNumber` declared by the subtype `CreditCardPayment` to be referenced.
 
+- The first argument is usually an identification variable.
+- The second argument is the target type given as an unqualified entity name.
+
 The `treat()` function may even occur in a <<join-treat,join>>.
 
 [[function-cast]]
@@ -482,9 +525,9 @@ The `treat()` function may even occur in a <<join-treat,join>>.
 ===== General typecasts
 
 The function `cast()` has a similar syntax, but is used to narrow basic types.
-Its first argument is usually an attribute of an entity, or a more complex expression involving entity attributes.
 
-The target type is an unqualified Java class name:
+- Its first argument is usually an attribute of an entity, or a more complex expression involving entity attributes.
+- Its second argument is the target type given as an unqualified Java class name:
 `String`, `Long`, `Integer`, `Double`, `Float`, `Character`, `Byte`, `BigInteger`, `BigDecimal`, `LocalDate`, `LocalTime`, `LocalDateTime`, etc.
 
 [source, hql]
@@ -576,6 +619,9 @@ There are some very important functions for working with dates and times.
 
 The special function `extract()` obtains a single field of a date, time, or datetime.
 
+- Its first argument is an expression that evaluates to a date, time, or datetime.
+- Its second argument is a date/time _field type_.
+
 Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time`, `epoch` and more.
 For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
 
@@ -615,7 +661,10 @@ select year(created), month(created) from Order
 
 The `format()` function formats a date, time, or datetime according to a pattern.
 
-The syntax is `format(datetime as pattern)`, and the pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
+- Its first argument is an expression that evaluates to a date, time, or datetime.
+- Its second argument is a formatting pattern, given as a string.
+
+The pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
 
 For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
 
@@ -623,11 +672,14 @@ For a full list of `format()` pattern elements, see the Javadoc for https://docs
 [discrete]
 ===== Truncating a date or time type
 
-The `truncate()` function truncates a date, time, or datetime to the temporal unit specified by field.
+The `truncate()` function truncates the precision of a date, time, or datetime to the temporal unit specified by field type.
 
-The syntax is `truncate(datetime, field)`. Supported temporal units are: `year`, `month`, `day`, `hour`, `minute` or `second`.
+- Its first argument is an expression that evaluates to a date, time, or datetime.
+- Its second argument is a date/time field type, specifying the precision of the truncated value.
 
-Truncating a date, time or datetime value translates to obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
+Supported temporal units are: `year`, `month`, `day`, `hour`, `minute` or `second`.
+
+Truncating a date, time or datetime value means obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
 For hours, minutes and second this means setting them to `00`. For months and days, this means setting them to `01`.
 
 [[string-functions]]
@@ -635,35 +687,35 @@ For hours, minutes and second this means setting them to `00`. For months and da
 
 Naturally, there are a good number of functions for working with strings.
 
-[cols="15,~,~,^15"]
+[cols="15,30,~,^15"]
 |===
 | Function | Purpose | Syntax | JPA standard / ANSI SQL Standard
 
-| `upper()` | The string, with lowercase characters converted to uppercase | `upper(s)` | ✔ / ✔
-| `lower()` | The string, with uppercase characters converted to lowercase | `lower(s)` | ✔ / ✔
-| `length()` | The length of the string | `length(s)` | ✔ / ✖
+| `upper()` | The string, with lowercase characters converted to uppercase | `upper(str)` | ✔ / ✔
+| `lower()` | The string, with uppercase characters converted to lowercase | `lower(str)` | ✔ / ✔
+| `length()` | The length of the string | `length(str)` | ✔ / ✖
 | `concat()` | Concatenate strings | `concat(x, y, z)` | ✔ / ✖
-| `locate()` | Location of string within a string | `locate(s, d)`, +
-`locate(s, d, i)` | ✔ / ✖
-| `position()` | Similar to `locate()` | `position(pattern in string)` | ✖ / ✔
-| `substring()` | Substring of a string (JPQL-style) | `substring(s, i)`, +
-`substring(s, i, l)` | ✔ / ✖
+| `locate()` | Location of string within a string | `locate(patt, str)`, +
+`locate(patt, str, start)` | ✔ / ✖
+| `position()` | Similar to `locate()` | `position(patt in str)` | ✖ / ✔
+| `substring()` | Substring of a string (JPQL-style) | `substring(str, start)`, +
+`substring(str, start, len)` | ✔ / ✖
 | `substring()` | Substring of a string (ANSI SQL-style)
-| `substring(string from start)`, +
-`substring(string from start for length)` | ✖ / ✔
+| `substring(str from start)`, +
+`substring(str from start for len)` | ✖ / ✔
 | `trim()` | Trim characters from string | See below | ✔ / ✔
 | `overlay()` | For replacing a substring
-| `overlay(string placing replacement from start)`, +
-`overlay(string placing replacement from start for length)` | ✖ / ✔
+| `overlay(str placing rep from start)`, +
+`overlay(str placing rep from start for len)` | ✖ / ✔
 | `pad()` | Pads a string with whitespace, or with a specified character
-| `pad(string with length)`, +
-`pad(string with length leading)`, +
-`pad(string with length trailing)`, or +
-`pad(string with length leading character)` | ✖ / ✖
-| `left()` | The leftmost characters of a string | `left(string, length)` | ✖ / ✖
-| `right()` | The rightmost characters of a string | `right(string, length)`  | ✖ / ✖
-| `replace()` | Replace every occurrence of a pattern in a string | `replace(string, pattern, replacement)` | ✖ / ✖
-| `repeat()` | Concatenate a string with itself multiple times | `replace(string, times)` | ✖ / ✖
+| `pad(str with len)`, +
+`pad(str with len leading)`, +
+`pad(str with len trailing)`, or +
+`pad(str with len leading char)` | ✖ / ✖
+| `left()` | The leftmost characters of a string | `left(str, len)` | ✖ / ✖
+| `right()` | The rightmost characters of a string | `right(str, len)`  | ✖ / ✖
+| `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✖ / ✖
+| `repeat()` | Concatenate a string with itself multiple times | `replace(str, times)` | ✖ / ✖
 | `collate()` | Select a collation | `collate(p.name as collation)` | ✖ / ✖
 |===
 
@@ -693,15 +745,14 @@ group by book
 
 The JPQL function `locate()` determines the position of a substring within another string.
 
+- The first argument is the pattern to search for within the second string.
+- The second argument is the string to search in.
 - The optional third argument is used to specify a position at which to start the search.
 
 [source, hql]
 ----
 select locate('Hibernate', title) from Book
 ----
-
-[discrete]
-===== Finding substrings
 
 The `position()` function has a similar purpose, but follows the ANSI SQL syntax.
 
@@ -793,26 +844,64 @@ Of course, we also have a number of functions for working with numeric values.
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | ✖
 |===
 
-We haven't included <<aggregate-functions,aggregate functions>>, <<aggregate-functions-orderedset,ordered set aggregate functions>>, or <<aggregate-functions-window>>
-in this list, because their purpose is more specialized, and because they come with extra special syntax.
+We haven't included <<aggregate-functions,aggregate functions>>, <<aggregate-functions-orderedset,ordered set aggregate functions>>, or <<aggregate-functions-window,window functions>> in this list, because their purpose is more specialized, and because they come with extra special syntax.
 
 [[functions-collections]]
 ==== Functions for dealing with collections
 
-The following functions apply to any identification variable that refers to a joined collection or many-valued association.
+The functions described in this section are especially useful when dealing with `@ElementCollection` mappings, or with collection mappings involving an `@OrderColumn` or `@MapKeyColumn`.
+
+The following functions accept either:
+
+1. an identification variable that refers to a <<collection-valued-associations,joined collection or many-valued association>>, or
+2. a <<path-expressions,compound path>> that refers to a collection or many-valued association of an entity.
+
+In case 2, application of the function produces an <<implicit-collection-join,implicit join>>.
 
 [[collection-functions]]
-[cols="12,20,~,^15"]
+[cols="15,20,~,^15"]
 |===
 | Function | Applies to | Purpose | JPA standard
 
-| `size()` | Any collection | The size of a collection | ✖
-| `element()` | Any collection | The element of a list | ✖
-| `index()`| Lists | The index of a list element | ✖
-| `key()`| Maps | The key of a map entry | ✖
-| `value()`| Maps | The value of a map entry | ✖
-| `entry()`| Maps | The whole entry in a map | ✖
+| `size()` | Any collection | The size of a collection | ✔
+| `element()` | Any collection | The element of a set or list | ✖
+| `index()` | Lists | The index of a list element | ✔
+| `key()` | Maps | The key of a map entry | ✔
+| `value()` | Maps | The value of a map entry | ✔
+| `entry()` 💀 | Maps | The whole entry in a map | ✔
 |===
+
+The next group of functions always accept a compound path referring to a collection or many-valued association of an entity.
+They're interpreted as referring to the collection as a whole.
+
+Application of one of these function produces implicit subquery.
+
+[[collective-collection-functions]]
+[cols="15,20,~,^15"]
+|===
+| Function | Applies to | Purpose | JPA standard
+
+| `elements()` | Any collection | The elements of a set or list, collectively | ✖
+| `indices()` | Lists | The indexes of a list, collectively | ✖
+| `keys()` | Maps | The keys of a map, collectively | ✖
+| `values()` | Maps | The values of a map, collectively | ✖
+|===
+
+This query has an implicit join:
+
+[[elements-join-example]]
+[source, hql]
+----
+select title, element(tags) from Book
+----
+
+This query has an implicit subquery:
+
+[[elements-subquery-example]]
+[source, hql]
+----
+select title from Book where 'hibernate' in elements(tags)
+----
 
 [discrete]
 ===== Collection sizes
@@ -825,34 +914,50 @@ The `size()` function returns the number of elements of a collection or to-many 
 select name, size(books) from Author
 ----
 
+[[set-functions]]
+[discrete]
+===== Set or list elements
+
+The `element()` function returns a reference to an element of a joined set or list.
+For an identification variable (case 1 above), this function is optional.
+For a compound path (case 2), it's required.
+
 [[list-functions]]
 [discrete]
-===== List elements and indexes
+===== List indexes
 
-The `element()` or `index()` function returns a reference to an element or index of a <<collection-valued-associations,joined list>>.
+The `index()` function returns a reference to the index of a joined list.
+
+In this example, `element()` is optional, but `index()` is required:
+
+[[index-example]]
+[source, hql]
+----
+select id(book), index(ed), element(ed)
+from Book book as book
+    join book.editions as ed
+----
 
 [[map-functions]]
 [discrete]
-===== Map keys, values, and entries
+===== Map keys and values
 
-The `key()`, `value()`, or `entry()` function returns a reference to a key, value, or entry of a <<collection-valued-associations,joined map>>.
+The `key()` function returns a reference to a key of a joined map.
+The `value()` function returns a reference to its value.
+
+[[key-value-example]]
+[source, hql]
+----
+select key(entry), value(entry)
+from Thing as thing
+    join thing.entries as entry
+----
 
 [[elements-indices]]
-==== Quantification over collections
+===== Quantification over collections
 
-There's two additional functions of collections which we didn't include in previous table because they're much less-used and a bit harder to understand.
-
-[cols="12,30,~"]
-|===
-| HQL Function | Applies to | Purpose
-
-| `elements()` |  Any collection | Refers to the elements of a collection as a whole
-
-| `indices()` | Indexed collections (lists and maps) | Similar to `elements()` but refers to the collections indices (keys/positions) as a whole
-|===
-
-The `elements()` and `indices()` functions give us a shortcut way to write a subquery:
-We may use these functions with:
+The functions `elements()`, `indices()`, `keys()`, and `values()` are used to quantify over collections.
+We may use them with:
 
 - an <<in-predicate,`in`>> or <<exists-predicate,`exists`>> predicate,
 - a <<relational-comparisons-subqueries,relational comparison>>, or
@@ -868,7 +973,33 @@ We may use these functions with:
 | `max(elements(book.printings))` | `(select max(pr) from book.printings as pr)`
 |===
 
-These functions are most useful with ``@ElementCollection``s.
+For example:
+
+[source, hql]
+----
+select title from Book where 'hibernate' in elements(tags)
+----
+
+Don't confuse the `elements()` function with `element()`, the `indices()` function with `index()`, the `keys()` function with `key()`, or the `values()` function with `value()`.
+The functions named in singular deal with elements of "flattened" collections.
+If not already joined, they add an implicit join to the query.
+The functions with plural naming do _not_ flatten a collection by joining it.
+
+[%unbreakable]
+[IMPORTANT]
+====
+The following queries are different:
+[source, hql]
+----
+select title, max(index(revisions)) from Book  /* implicit join */
+----
+[source, hql]
+----
+select title, max(indices(revisions)) from Book  /* implicit subquery */
+----
+The first query produces a single row, with `max()` taken over all books.
+The second query produces a row per book, with `max()` taken over the collection elements belonging to the given book.
+====
 
 [[functions-model]]
 ==== Functions for working with ids and versions
@@ -1090,7 +1221,7 @@ This less-than-lovely fragment of the HQL ANTLR grammar tells us that the thing 
 
 - a list of values enclosed in parentheses,
 - a subquery,
-- one of the functions `elements()` or `indices()`  defined <<elements-indices,above>>, or
+- one of the collection-handling functions defined <<elements-indices,above>>, or
 - a query parameter,
 
 The type of the expression on the left, and the types of all the values on the right must be compatible.
@@ -1155,7 +1286,7 @@ List<Book> books =
 The binary comparisons we met <<relational-comparisons,above>> may involve a quantifier, either:
 
 - a quantified subquery, or
-- a quantifier applied to one of the functions `elements()` or `indices()`  defined <<elements-indices,above>>.
+- a quantifier applied to one of the functions defined <<elements-indices,above>>.
 
 The quantifiers are unary prefix operators: `all`, `every`, `any`, and `some`.
 
@@ -1187,14 +1318,14 @@ The unary prefix `exists` operator evaluates to true if the thing to its right i
 The thing to its right might be:
 
 - a subquery, or
-- one of the functions `elements()` or `indices()`  defined <<elements-indices,above>>.
+- one of the functions defined <<elements-indices,above>>.
 
 As you can surely guess, `not exists` evaluates to true if the thing to the right _is_ empty.
 
 [[collection-expressions-exists-example]]
 [source, hql]
 ----
-from Author where exists elements(books)
+from Author where exists element(books)
 ----
 [source, hql]
 ----

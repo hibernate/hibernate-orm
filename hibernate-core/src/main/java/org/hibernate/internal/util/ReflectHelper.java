@@ -898,4 +898,11 @@ public final class ReflectHelper {
 			throw new AssertionFailure("member should have been a method or field");
 		}
 	}
+
+	public static boolean isClass(Class<?> resultClass) {
+		return !resultClass.isArray()
+			&& !resultClass.isPrimitive()
+			&& !resultClass.isEnum()
+			&& !resultClass.isInterface();
+	}
 }

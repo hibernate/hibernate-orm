@@ -16,6 +16,9 @@ import java.util.List;
  * @author Gavin King
  */
 public class NativeQueryListTransformer implements TupleTransformer<List<Object>> {
+
+	public static final NativeQueryListTransformer INSTANCE = new NativeQueryListTransformer();
+
 	@Override
 	public List<Object> transformTuple(Object[] tuple, String[] aliases) {
 		return List.of( tuple );

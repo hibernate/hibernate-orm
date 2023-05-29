@@ -13,6 +13,7 @@ import java.util.Map;
 
 import jakarta.persistence.Tuple;
 import org.hibernate.AssertionFailure;
+import org.hibernate.InstantiationException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -60,6 +61,7 @@ import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
+import static org.hibernate.internal.util.ReflectHelper.isClass;
 import static org.hibernate.query.sqm.internal.QuerySqmImpl.CRITERIA_HQL_STRING;
 
 /**
@@ -207,8 +209,11 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				else if ( Map.class.equals( resultType ) ) {
 					return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
 				}
-				else {
+				else if ( isClass( resultType ) ) {
 					return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
+				}
+				else {
+					throw new InstantiationException( "Query result type is not instantiable", resultType );
 				}
 			}
 		}

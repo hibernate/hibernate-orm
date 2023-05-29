@@ -18,6 +18,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.query.TypedTupleTransformer;
 import org.hibernate.transform.ResultTransformer;
 
+import static java.util.Locale.ROOT;
+
 /**
  * A {@link ResultTransformer} for handling JPA {@link Tuple} results from native queries.
  *
@@ -81,7 +83,7 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 				final String alias = aliases[i];
 				if ( alias != null ) {
 					aliasToValue.put( alias, tuple[i] );
-					aliasReferences.put( alias.toLowerCase(), alias );
+					aliasReferences.put( alias.toLowerCase(ROOT), alias );
 				}
 			}
 			size = tuple.length;
@@ -96,7 +98,7 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 
 		@Override
 		public Object get(String alias) {
-			final String aliasReference = aliasReferences.get( alias.toLowerCase() );
+			final String aliasReference = aliasReferences.get( alias.toLowerCase(ROOT) );
 			if ( aliasReference != null && aliasToValue.containsKey( aliasReference ) ) {
 				return aliasToValue.get( aliasReference );
 			}

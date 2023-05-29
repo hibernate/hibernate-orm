@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
@@ -44,6 +45,8 @@ import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.jpa.spi.NativeQueryListTransformer;
+import org.hibernate.jpa.spi.NativeQueryMapTransformer;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
@@ -849,7 +852,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( Tuple.class.equals( resultClass ) ) {
 			query.setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
-		// TODO: handle Map, List as well
+		else if ( Map.class.equals( resultClass ) ) {
+			query.setTupleTransformer( new NativeQueryMapTransformer() );
+		}
+		else if ( List.class.equals( resultClass ) ) {
+			query.setTupleTransformer( new NativeQueryListTransformer() );
+		}
 		else if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 		}

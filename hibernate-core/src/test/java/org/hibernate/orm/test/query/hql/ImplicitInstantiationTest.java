@@ -128,6 +128,52 @@ public class ImplicitInstantiationTest {
 		);
 	}
 
+	@Test
+	public void testSqlTupleInstantiationWithAlias(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist(new Thing(1L, "thing"));
+					Tuple result = session.createNativeQuery("select id as id, upper(name) as name from thingy_table", Tuple.class)
+							.addSynchronizedEntityClass(Thing.class)
+							.getSingleResult();
+					assertEquals( result.get("id"), 1L );
+					assertEquals( result.get("name"), "THING" );
+					session.getTransaction().setRollbackOnly();
+				}
+		);
+	}
+
+	@Test
+	public void testSqlMapInstantiationWithAlias(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist(new Thing(1L, "thing"));
+					Map result = session.createNativeQuery("select id as id, upper(name) as name from thingy_table", Map.class)
+							.addSynchronizedEntityClass(Thing.class)
+							.getSingleResult();
+					assertEquals( result.get("id"), 1L );
+					assertEquals( result.get("name"), "THING" );
+					session.getTransaction().setRollbackOnly();
+				}
+		);
+	}
+
+	@Test
+	public void testSqlListInstantiationWithoutAlias(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist(new Thing(1L, "thing"));
+					List result = session.createNativeQuery("select id as id, upper(name) as name from thingy_table", List.class)
+							.addSynchronizedEntityClass(Thing.class)
+							.getSingleResult();
+					assertEquals( result.get(0), 1L );
+					assertEquals( result.get(1), "THING" );
+					session.getTransaction().setRollbackOnly();
+				}
+		);
+	}
+
+
 	@Entity(name = "Thing")
 	@Table(name = "thingy_table")
 	public class Thing {

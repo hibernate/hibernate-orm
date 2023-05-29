@@ -191,7 +191,7 @@ But in SQL, and therefore also in HQL and JPQL, such an expression evaluates to 
 It's almost always the case that an operation applied to a null value yields another null value.
 This applies to function application, to operators like `*` and `||`, to comparison operators like `<` and `=`, and even to logical operations like `and` and `not`.
 
-The exceptions to this rule are the functions `coalesce()` and `ifnull()` which are specifically designed for <<functions-null,dealing with null values>>.
+The exceptions to this rule are the `is null` operator and the functions `coalesce()` and `ifnull()` which are specifically designed for <<functions-null,dealing with null values>>.
 ====
 
 This rule is the source of the famous (and controversial) _ternary logic_ of SQL.

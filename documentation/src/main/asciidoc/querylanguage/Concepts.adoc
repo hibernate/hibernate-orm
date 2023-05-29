@@ -601,7 +601,7 @@ for (var result : results) {
 
 This is bearable, but let's explore some other options.
 
-JPA lets us specify that we want each query result packaged as an instance of `javax.persistence.Tuple`.
+JPA lets us specify that we want each query result packaged as an instance of `jakarta.persistence.Tuple`.
 All we have to do is pass the class `Tuple` to `createQuery()`.
 
 [source, java]
@@ -630,8 +630,8 @@ var results =
                                   Map.class)
             .getResultList();
 for (var map : results) {
-    String title = (String) tuple.get("title");
-    String preamble = (String) tuple.get("preamble");
+    String title = (String) map.get("title");
+    String preamble = (String) map.get("preamble");
 }
 ----
 [source, java]
@@ -643,7 +643,7 @@ var results =
             .getResultList();
 for (var list : results) {
     String title = (String) list.get(0);
-    String preamble = (String) tuple.get(1);
+    String preamble = (String) list.get(1);
 }
 ----
 

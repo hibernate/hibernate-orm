@@ -1,7 +1,7 @@
 [[basic-concepts]]
 == Basic concepts
 
-This document describes Hibernate Query Language (HQL), which is, in some sense, a dialect of the Java (now Jakarta) Persistence Query Language (JPQL).
+This document describes _Hibernate Query Language_ (HQL), which is, I suppose we could say, a dialect of the _Java_ (now _Jakarta_) _Persistence Query Language_ (JPQL).
 
 Or is it the other way around?
 
@@ -30,28 +30,34 @@ For example, if you understand this SQL query:
 
 [source,sql]
 ----
-select book.title, pub.name
-from Book as book
-    join Publisher as pub
-        on book.publisherId = pub.id
-where book.title like 'Hibernate%'
-order by book.title
+select book.title, pub.name            /* projection */
+from Book as book                      /* root table */
+    join Publisher as pub              /* table join */
+        on book.publisherId = pub.id   /* join condition */
+where book.title like 'Hibernate%'     /* restriction (selection) */
+order by book.title                    /* sorting */
 ----
 
 Then we bet you can already make sense of this HQL:
 
 [source,sql]
 ----
-select book.title, pub.name
-from Book as book
-    join book.publisher as pub
-where book.title like 'Hibernate%'
-order by book.title
+select book.title, pub.name            /* projection */
+from Book as book                      /* root entity */
+    join book.publisher as pub         /* association join */
+where book.title like 'Hibernate%'     /* restriction (selection) */
+order by book.title                    /* sorting */
 ----
 
 You might notice that even for this very simple example, the HQL version is slightly shorter.
 This is typical.
 Actually, HQL queries are usually much more compact than the SQL they compile to.
+
+[IMPORTANT]
+====
+But there's one huge difference: in HQL, `Book` refers to an entity class written in Java, and `book.title` to a field of that class.
+We're not permitted to directly reference database tables and columns in HQL or JPQL.
+====
 
 In this chapter, we'll demonstrate how similar HQL is to SQL by giving a quick overview of the basic statement types.
 You'll be bored to discover they're exactly the ones you expect: `select`, `insert`, `update`, and `delete`.
@@ -66,8 +72,12 @@ If you don't have a firm grasp of these ideas, it's time to pick up a book about
 But first we need to mention something that's a bit different to SQL.
 HQL has a slightly complicated way of dealing with case sensitively.
 
+=== Lexical structure
+
+Lexically, JPQL is quite similar to SQL, so in this section we'll limit ourselves to mentioning those places where it differs.
+
 [[case-sensitivity]]
-=== Identifiers and case sensitivity
+==== Identifiers and case sensitivity
 
 An identifier is a name used to refer to an entity, an attribute of a Java class, an <<identification-variables,identification variable>>, or a function.
 
@@ -104,11 +114,49 @@ Just to reiterate these rules:
 [CAUTION]
 ====
 The JPQL specification defines identification variables as case-_insensitive_.
-
 And so in strict JPA-compliant mode, Hibernate treats `person.nickName`, `Person.nickName`, and `PERSON.nickName` as the _same_.
 ====
 
 A _quoted identifier_ is written in backticks. Quoting lets you use a keyword as an identifier, for example `` thing.\`select` ``.
+
+[[comments]]
+==== Comments
+
+Comments in HQL look like multiline comments in Java.
+They're delimited by `/\*` and `*/`.
+
+Neither SQL-style `--` nor Java-style `//` line-ending comments are allowed.
+
+It's quite rare to see comments in HQL, but perhaps it will be more common now that Java has text blocks.
+
+[[parameters]]
+==== Parameters
+
+Parameters come in two flavors in JPQL, and HQL supports a third flavor for historical reasons:
+
+[cols="35,25,~"]
+|===
+| Parameter type | Examples | Usage from Java
+
+| Named parameters | `:name`, `:title`, `:id` | `query.setParameter("name", name)`
+| Ordinal parameters | `?1`, `?2`, `?3` | `query.setParameter(1, name)`
+| JDBC-style parameters 💀 | `?` | `query.setParameter(1, name)`
+|===
+
+JDBC-style parameters of form `?` are like ordinal parameters where the index is inferred from the position in the text of the query.
+JDBC-style parameters are deprecated.
+
+[%unbreakable]
+[WARNING]
+====
+It's _extremely_ important to use parameters to pass user input to the database.
+Constructing a query by concatenating HQL fragments with user input is extremely dangerous, opening the door to the possibility of executing arbitrary code on the database server.
+====
+
+==== Literals
+
+Some of the syntax for literal values also departs from the standard syntax in ANSI SQL, especially in the area of date/time literals, but we'll discuss all that later, in <<literals>>.
+
 
 [[type-system]]
 === Type system
@@ -169,6 +217,7 @@ HQL features four different kinds of statement:
 Collectively, `insert`, `update`, and `delete` statements are sometimes called _mutation queries_.
 We need to be a little bit careful when executing mutation queries via a stateful session.
 
+[%unbreakable]
 [IMPORTANT]
 ====
 The effect of an `update` or `delete` statement is not reflected in the persistence context, nor in the state of entity objects held in memory at the time the statement is executed.
@@ -462,6 +511,7 @@ select local datetime
 
 This results in a SQL `from dual` query (or equivalent).
 
+[%unbreakable]
 [TIP]
 ====
 Looking carefully at the BNF given above, you might notice that the `select` list may occur either at the beginning of a query, or near the end, right before `order by`.

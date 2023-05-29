@@ -11,7 +11,6 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -128,36 +127,62 @@ public abstract class AbstractSelectionQuery<R>
 
 	private TupleMetadata getTupleMetadata(List<SqmSelection<?>> selections) {
 		if ( getQueryOptions().getTupleTransformer() == null ) {
-			return new TupleMetadata( buildTupleElementMap( selections ) );
+			return new TupleMetadata( buildTupleElementArray( selections ), buildTupleAliasArray( selections ) );
 		}
 		else {
 			throw new IllegalArgumentException(
-					"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer : " +
-							getQueryOptions().getTupleTransformer()
+					"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer: "
+							+ getQueryOptions().getTupleTransformer()
 			);
 		}
 	}
 
-	private static Map<TupleElement<?>, Integer> buildTupleElementMap(List<SqmSelection<?>> selections) {
-		final Map<TupleElement<?>, Integer> tupleElementMap;
-		if ( selections.size() == 1
-				&& selections.get( 0 ).getSelectableNode() instanceof CompoundSelection<?> ) {
-			final List<? extends JpaSelection<?>> selectionItems =
-					selections.get( 0 ).getSelectableNode()
-							.getSelectionItems();
-			tupleElementMap = new IdentityHashMap<>( selectionItems.size() );
-			for ( int i = 0; i < selectionItems.size(); i++ ) {
-				tupleElementMap.put( selectionItems.get( i ), i );
+	private static TupleElement<?>[] buildTupleElementArray(List<SqmSelection<?>> selections) {
+		final TupleElement<?>[] elements;
+		if ( selections.size() == 1 ) {
+			final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
+			if ( selectableNode instanceof CompoundSelection<?> ) {
+				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
+				elements  = new TupleElement<?>[ selectionItems.size() ];
+				for ( int i = 0; i < selectionItems.size(); i++ ) {
+					elements[i] = selectionItems.get( i );
+				}
+			}
+			else {
+				elements = new TupleElement<?>[] { selectableNode };
 			}
 		}
 		else {
-			tupleElementMap = new IdentityHashMap<>( selections.size() );
-			for (int i = 0; i < selections.size(); i++ ) {
-				final SqmSelection<?> selection = selections.get( i );
-				tupleElementMap.put( selection.getSelectableNode(), i );
+			elements = new TupleElement<?>[ selections.size() ];
+			for ( int i = 0; i < selections.size(); i++ ) {
+				elements[i] = selections.get(i).getSelectableNode();
 			}
 		}
-		return tupleElementMap;
+		return elements;
+	}
+
+	private static String[] buildTupleAliasArray(List<SqmSelection<?>> selections) {
+		final String[] elements;
+		if ( selections.size() == 1 ) {
+			final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
+			if ( selectableNode instanceof CompoundSelection<?> ) {
+				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
+				elements  = new String[ selectionItems.size() ];
+				for ( int i = 0; i < selectionItems.size(); i++ ) {
+					elements[i] = selectionItems.get( i ).getAlias();
+				}
+			}
+			else {
+				elements = new String[] { selectableNode.getAlias() };
+			}
+		}
+		else {
+			elements = new String[ selections.size() ];
+			for ( int i = 0; i < selections.size(); i++ ) {
+				elements[i] = selections.get(i).getAlias();
+			}
+		}
+		return elements;
 	}
 
 	protected void applyOptions(NamedSqmQueryMemento memento) {
@@ -173,10 +198,12 @@ public abstract class AbstractSelectionQuery<R>
 
 		if ( memento.getParameterTypes() != null ) {
 			for ( Map.Entry<String, String> entry : memento.getParameterTypes().entrySet() ) {
-				final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( entry.getKey() );
-				final BasicType<?> type = getSessionFactory().getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.getRegisteredType( entry.getValue() );
+				final QueryParameterImplementor<?> parameter =
+						getParameterMetadata().getQueryParameter( entry.getKey() );
+				final BasicType<?> type =
+						getSessionFactory().getTypeConfiguration()
+								.getBasicTypeRegistry()
+								.getRegisteredType( entry.getValue() );
 				parameter.applyAnticipatedType( type );
 			}
 		}

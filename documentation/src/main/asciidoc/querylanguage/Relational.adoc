@@ -497,7 +497,7 @@ This function has different names on different databases, but HQL abstracts thes
 select listagg(title, ', ')
     within group (order by isbn)
 from Book
-group by elements(authors)
+group by element(authors)
 ----
 
 This very useful function produces a string by concatenation of the aggregated values of its argument.

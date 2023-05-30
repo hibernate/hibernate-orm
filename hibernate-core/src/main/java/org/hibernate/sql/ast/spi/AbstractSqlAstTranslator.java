@@ -318,9 +318,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		this.sessionFactory = sessionFactory;
-		this.dialect = sessionFactory.getJdbcServices().getDialect();
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		this.dialect = jdbcServices.getDialect();
 		this.statementStack.push( statement );
-		this.parameterMarkerStrategy = sessionFactory.getServiceRegistry().getService( ParameterMarkerStrategy.class );
+		this.parameterMarkerStrategy = jdbcServices.getParameterMarkerStrategy();
 	}
 
 	private static Clause matchWithClause(Clause clause) {

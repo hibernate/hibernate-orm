@@ -178,7 +178,7 @@ Native SQL queries are _not_ automatically filtered by tenant id; you'll have to
 ====
 
 .Multi-tenancy configuration
-[%breakable,cols="35,~"]
+[%breakable,cols="36,~"]
 |===
 | Configuration property name           | Purpose
 

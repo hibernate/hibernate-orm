@@ -8,7 +8,6 @@ package org.hibernate.engine.jdbc.internal;
 
 import java.util.Map;
 
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -19,10 +18,10 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * Standard implementation of the {@link JdbcServices} contract
@@ -34,6 +33,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	private JdbcEnvironment jdbcEnvironment;
 
 	private SqlStatementLogger sqlStatementLogger;
+	private ParameterMarkerStrategy parameterMarkerStrategy;
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -46,6 +46,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
 
 		this.sqlStatementLogger = serviceRegistry.getService( SqlStatementLogger.class );
+		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
 	}
 
 	@Override
@@ -69,6 +70,11 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	@Override
 	public SqlStatementLogger getSqlStatementLogger() {
 		return sqlStatementLogger;
+	}
+
+	@Override
+	public ParameterMarkerStrategy getParameterMarkerStrategy() {
+		return parameterMarkerStrategy;
 	}
 
 	@Override

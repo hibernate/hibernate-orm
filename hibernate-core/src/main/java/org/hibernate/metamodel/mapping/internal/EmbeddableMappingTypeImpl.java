@@ -182,7 +182,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				updatable = componentProperty.isUpdateable();
 			}
 			this.aggregateMapping = SelectableMappingImpl.from(
-					bootDescriptor.getOwner().getTable().getQualifiedTableName().render(),
+					bootDescriptor.getOwner().getTable().getQualifiedName( creationContext.getSqlStringGenerationContext() ),
 					aggregateColumn,
 					bootDescriptor.getParentAggregateColumn() != null
 							? bootDescriptor.getParentAggregateColumn().getSelectablePath()

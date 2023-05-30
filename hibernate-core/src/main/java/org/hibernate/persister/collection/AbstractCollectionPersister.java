@@ -537,7 +537,8 @@ public abstract class AbstractCollectionPersister
 			}
 			else {
 				entityNameByTableNameMap = AbstractEntityPersister.getEntityNameByTableNameMap(
-						creationContext.getBootModel().getEntityBinding( elementPersister.getEntityName() )
+						creationContext.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
+						factory.getSqlStringGenerationContext()
 				);
 			}
 			filterHelper = new FilterHelper( collectionBootDescriptor.getFilters(), entityNameByTableNameMap, factory );

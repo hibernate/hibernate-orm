@@ -44,6 +44,7 @@ import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -763,9 +764,14 @@ public abstract class AbstractEntityPersister
 		propertyDefinedOnSubclass = toBooleanArray( definedBySubclass );
 
 		// Handle any filters applied to the class level
-		filterHelper = isNotEmpty( persistentClass.getFilters() )
-				? new FilterHelper( persistentClass.getFilters(), getEntityNameByTableNameMap( persistentClass ), factory )
-				: null;
+		filterHelper = isNotEmpty( persistentClass.getFilters() ) ? new FilterHelper(
+				persistentClass.getFilters(),
+				getEntityNameByTableNameMap(
+						persistentClass,
+						factory.getSqlStringGenerationContext()
+				),
+				factory
+		) : null;
 
 		useReferenceCacheEntries = shouldUseReferenceCacheEntries( creationContext.getSessionFactoryOptions() );
 		cacheEntryHelper = buildCacheEntryHelper( creationContext.getSessionFactoryOptions() );
@@ -824,20 +830,22 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	public static Map<String, String> getEntityNameByTableNameMap(PersistentClass persistentClass) {
+	public static Map<String, String> getEntityNameByTableNameMap(
+			PersistentClass persistentClass,
+			SqlStringGenerationContext stringGenerationContext) {
 		final Map<String, String> entityNameByTableNameMap = new HashMap<>();
 		PersistentClass superType = persistentClass.getSuperPersistentClass();
 		while ( superType != null ) {
-			entityNameByTableNameMap.put( superType.getTable().getName(), superType.getEntityName() );
+			entityNameByTableNameMap.put( superType.getTable().getQualifiedName( stringGenerationContext ), superType.getEntityName() );
 			for ( Join join : superType.getJoins() ) {
-				entityNameByTableNameMap.put( join.getTable().getName(), superType.getEntityName() );
+				entityNameByTableNameMap.put( join.getTable().getQualifiedName( stringGenerationContext ), superType.getEntityName() );
 			}
 			superType = superType.getSuperPersistentClass();
 		}
 		for ( PersistentClass subclass : persistentClass.getSubclassClosure() ) {
-			entityNameByTableNameMap.put( subclass.getTable().getName(), subclass.getEntityName() );
+			entityNameByTableNameMap.put( subclass.getTable().getQualifiedName( stringGenerationContext ), subclass.getEntityName() );
 			for ( Join join : subclass.getJoins() ) {
-				entityNameByTableNameMap.put( join.getTable().getName(), subclass.getEntityName() );
+				entityNameByTableNameMap.put( join.getTable().getQualifiedName( stringGenerationContext ), subclass.getEntityName() );
 			}
 		}
 		return entityNameByTableNameMap;

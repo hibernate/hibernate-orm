@@ -297,7 +297,8 @@ public class EmbeddableBinder {
 				compositeUserTypeClass,
 				columns,
 				context,
-				inheritanceStatePerClass
+				inheritanceStatePerClass,
+				false
 		);
 	}
 
@@ -315,7 +316,8 @@ public class EmbeddableBinder {
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			AnnotatedColumns columns,
 			MetadataBuildingContext context,
-			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			boolean isIdClass) {
 		// inSecondPass can only be used to apply right away the second pass of a composite-element
 		// Because it's a value type, there is no bidirectional association, hence second pass
 		// ordering does not matter
@@ -357,7 +359,7 @@ public class EmbeddableBinder {
 
 		final XClass annotatedClass = inferredData.getPropertyClass();
 		final List<PropertyData> classElements =
-				collectClassElements( propertyAccessor, context, returnedClassOrElement, annotatedClass );
+				collectClassElements( propertyAccessor, context, returnedClassOrElement, annotatedClass, isIdClass );
 		final List<PropertyData> baseClassElements =
 				collectBaseClassElements( baseInferredData, propertyAccessor, context, annotatedClass );
 		if ( baseClassElements != null
@@ -417,7 +419,8 @@ public class EmbeddableBinder {
 			AccessType propertyAccessor,
 			MetadataBuildingContext context,
 			XClass returnedClassOrElement,
-			XClass annotatedClass) {
+			XClass annotatedClass,
+			boolean isIdClass) {
 		final List<PropertyData> classElements = new ArrayList<>();
 		//embeddable elements can have type defs
 		final PropertyContainer container =
@@ -425,7 +428,8 @@ public class EmbeddableBinder {
 		addElementsOfClass( classElements, container, context);
 		//add elements of the embeddable's mapped superclasses
 		XClass superClass = annotatedClass.getSuperclass();
-		while ( superClass != null && superClass.isAnnotationPresent( MappedSuperclass.class ) ) {
+		while ( superClass != null && ( superClass.isAnnotationPresent( MappedSuperclass.class )
+				|| ( isIdClass && !Object.class.getName().equals( superClass.getName() ) ) ) ) {
 			//FIXME: proper support of type variables incl var resolved at upper levels
 			final PropertyContainer superContainer =
 					new PropertyContainer( superClass, annotatedClass, propertyAccessor );

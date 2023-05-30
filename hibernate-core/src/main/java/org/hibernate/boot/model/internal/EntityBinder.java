@@ -405,7 +405,8 @@ public class EntityBinder {
 						classWithIdClass,
 						compositeClass,
 						baseInferredData,
-						propertyAccessor
+						propertyAccessor,
+						true
 				);
 				setIgnoreIdAnnotations( ignoreIdAnnotations );
 				for ( Property property : mapper.getProperties() ) {
@@ -427,7 +428,8 @@ public class EntityBinder {
 			XClass classWithIdClass,
 			XClass compositeClass,
 			PropertyData baseInferredData,
-			AccessType propertyAccessor) {
+			AccessType propertyAccessor,
+			boolean isIdClass) {
 		final Component mapper = createMapper(
 				inheritanceStates,
 				persistentClass,
@@ -436,7 +438,8 @@ public class EntityBinder {
 				classWithIdClass,
 				compositeClass,
 				baseInferredData,
-				propertyAccessor
+				propertyAccessor,
+				isIdClass
 		);
 		final Property mapperProperty = new Property();
 		mapperProperty.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
@@ -456,7 +459,8 @@ public class EntityBinder {
 			XClass classWithIdClass,
 			XClass compositeClass,
 			PropertyData baseInferredData,
-			AccessType propertyAccessor) {
+			AccessType propertyAccessor,
+			boolean isIdClass) {
 		final Component mapper = fillEmbeddable(
 				propertyHolder,
 				new PropertyPreloadedData(
@@ -475,7 +479,8 @@ public class EntityBinder {
 				null,
 				null,
 				context,
-				inheritanceStates
+				inheritanceStates,
+				isIdClass
 		);
 		persistentClass.setIdentifierMapper( mapper );
 
@@ -575,7 +580,8 @@ public class EntityBinder {
 				null,
 				null,
 				buildingContext,
-				inheritanceStates
+				inheritanceStates,
+				true
 		);
 		id.setKey( true );
 		if ( rootClass.getIdentifier() != null ) {

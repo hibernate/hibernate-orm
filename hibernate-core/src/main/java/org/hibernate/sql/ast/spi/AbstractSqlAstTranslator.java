@@ -2489,8 +2489,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final AbstractSqmSelfRenderingFunctionDescriptor concat = findSelfRenderingFunction( "concat", 2 );
 		final AbstractSqmSelfRenderingFunctionDescriptor coalesce = findSelfRenderingFunction( "coalesce", 2 );
 		final BasicType<String> stringType = getStringType();
-		// Shift by 1 bit instead of multiplying by 2
-		final List<SqlAstNode> arguments = new ArrayList<>( currentCteStatement.getCycleColumns().size() << 1 );
+		// Shift by 2 bit instead of multiplying by 4
+		final List<SqlAstNode> arguments = new ArrayList<>( currentCteStatement.getCycleColumns().size() << 2 );
 		final Expression nullSeparator = createNullSeparator();
 
 		if ( isInRecursiveQueryPart() ) {
@@ -2512,6 +2512,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						.indexOf( cycleColumn );
 				final Expression selectionExpression = selectClause.getSqlSelections().get( selectionIndex )
 						.getExpression();
+				arguments.add( nullSeparator );
 				arguments.add(
 						new SelfRenderingFunctionSqlAstExpression(
 								"coalesce",
@@ -2564,6 +2565,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						.indexOf( cycleColumn );
 				final Expression selectionExpression = selectClause.getSqlSelections().get( selectionIndex )
 						.getExpression();
+				arguments.add( nullSeparator );
 				arguments.add(
 						new SelfRenderingFunctionSqlAstExpression(
 								"coalesce",

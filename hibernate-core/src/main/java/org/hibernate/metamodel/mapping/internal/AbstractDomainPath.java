@@ -69,7 +69,11 @@ public abstract class AbstractDomainPath implements DomainPath {
 					selection.getContainingTableExpression()
 			);
 			return creationState.getSqlExpressionResolver().resolveSqlExpression(
-					createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
+					createColumnReferenceKey(
+							tableReference,
+							selection.getSelectionExpression(),
+							selection.getJdbcMapping()
+					),
 					processingState -> new ColumnReference(
 							tableReference,
 							selection
@@ -250,7 +254,11 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SqlAstCreationState creationState) {
 		final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
-				createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
+				createColumnReferenceKey(
+						tableReference,
+						selection.getSelectionExpression(),
+						selection.getJdbcMapping()
+				),
 				processingState -> new ColumnReference(
 						tableReference,
 						selection
@@ -271,7 +279,6 @@ public abstract class AbstractDomainPath implements DomainPath {
 		if ( selectClause.isDistinct() && selectClauseDoesNotContainOrderExpression( expression, selectClause ) ) {
 			final int valuesArrayPosition = selectClause.getSqlSelections().size();
 			SqlSelection sqlSelection = new SqlSelectionImpl(
-					valuesArrayPosition + 1,
 					valuesArrayPosition,
 					expression
 			);

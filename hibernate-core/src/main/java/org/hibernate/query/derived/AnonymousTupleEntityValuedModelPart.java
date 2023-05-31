@@ -351,7 +351,8 @@ public class AnonymousTupleEntityValuedModelPart
 							(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
 									SqlExpressionResolver.createColumnReferenceKey(
 											tableReference,
-											keyMappings.get( i ).getSelectionExpression()
+											keyMappings.get( i ).getSelectionExpression(),
+											keyMappings.get( i ).getJdbcMapping()
 									),
 									state -> new ColumnReference(
 											tableReference,
@@ -371,7 +372,8 @@ public class AnonymousTupleEntityValuedModelPart
 						sqlExpressionResolver.resolveSqlExpression(
 								SqlExpressionResolver.createColumnReferenceKey(
 										tableReference,
-										targetMappings.get( i ).getSelectionExpression()
+										targetMappings.get( i ).getSelectionExpression(),
+										targetMappings.get( i ).getJdbcMapping()
 								),
 								state -> new ColumnReference(
 										tableReference,

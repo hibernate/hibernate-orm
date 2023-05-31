@@ -169,7 +169,6 @@ public class MatchingIdSelectionHelper {
 					idSelectionQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
 									position,
-									position + 1,
 									expression
 							)
 					);

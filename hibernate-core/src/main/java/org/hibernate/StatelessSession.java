@@ -98,6 +98,10 @@ public interface StatelessSession extends SharedSessionContract {
 	 */
 	void delete(String entityName, Object entity);
 
+	void upsert(Object entity);
+
+	void upsert(String entityName, Object entity);
+
 	/**
 	 * Retrieve a row.
 	 *

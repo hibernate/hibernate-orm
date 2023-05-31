@@ -169,7 +169,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 							table.getQualifiedTableName(),
 							columnInformation.getTypeName().toLowerCase(Locale.ROOT),
 							JdbcTypeNameMapper.getTypeName( columnInformation.getTypeCode() ),
-							column.getSqlType().toLowerCase(Locale.ROOT),
+							column.getSqlType( metadata ).toLowerCase(Locale.ROOT),
 							JdbcTypeNameMapper.getTypeName( column.getSqlTypeCode( metadata ) )
 					)
 			);

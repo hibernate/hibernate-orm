@@ -98,8 +98,27 @@ public interface StatelessSession extends SharedSessionContract {
 	 */
 	void delete(String entityName, Object entity);
 
+	/**
+	 * Use a SQL {@code merge into} statement to perform an upsert.
+	 *
+	 * @param entity a detached entity instance
+	 * @throws TransientObjectException is the entity is transient
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
 	void upsert(Object entity);
 
+	/**
+	 * Use a SQL {@code merge into} statement to perform an upsert.
+	 *
+	 * @param entityName The entityName for the entity to be merged
+	 * @param entity a detached entity instance
+	 * @throws TransientObjectException is the entity is transient
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
 	void upsert(String entityName, Object entity);
 
 	/**

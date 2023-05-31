@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
+import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
@@ -146,6 +147,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public void upsert(Object entity) {
+		checkOpen();
+		upsert( null, entity );
+	}
+
+	@Override
 	public void update(String entityName, Object entity) {
 		checkOpen();
 		final EntityPersister persister = getEntityPersister( entityName, entity );
@@ -162,6 +169,43 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			oldVersion = null;
 		}
 		persister.update( id, state, null, false, null, oldVersion, entity, null, this );
+	}
+
+	@Override
+	public void upsert(String entityName, Object entity) {
+		checkOpen();
+		final EntityPersister persister = getEntityPersister( entityName, entity );
+		Object id = persister.getIdentifier( entity, this );
+		Boolean knownTransient = persister.isTransient( entity, this );
+		if ( knownTransient!=null && knownTransient ) {
+			throw new TransientObjectException(
+					"Object passed to upsert() has a null identifier: "
+							+ persister.getEntityName() );
+//			final Generator generator = persister.getGenerator();
+//			if ( !generator.generatedOnExecution() ) {
+//				id = ( (BeforeExecutionGenerator) generator).generate( this, entity, null, INSERT );
+//			}
+		}
+		final Object[] state = persister.getValues( entity );
+		final Object oldVersion;
+		if ( persister.isVersioned() ) {
+			oldVersion = persister.getVersion( entity );
+			if ( oldVersion == null ) {
+				if ( seedVersion( entity, state, persister, this ) ) {
+					persister.setValues( entity, state );
+				}
+			}
+			else {
+				final Object newVersion = incrementVersion( entity, oldVersion, persister, this );
+				setVersion( state, newVersion, persister );
+				persister.setValues( entity, state );
+			}
+		}
+		else {
+			oldVersion = null;
+		}
+		persister.merge( id, state, null, false, null, oldVersion, entity, null, this );
+//		persister.setIdentifier( entity, id, this );
 	}
 
 
@@ -504,7 +548,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			throws HibernateException {
 		checkOpen();
 		return entityName == null
-				? getEntityPersister( guessEntityName(object) )
+				? getEntityPersister( guessEntityName( object ) )
 				: getEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
 	}
 

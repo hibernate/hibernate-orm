@@ -200,6 +200,7 @@ import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.MergeCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
@@ -388,6 +389,7 @@ public abstract class AbstractEntityPersister
 	private InsertCoordinator insertCoordinator;
 	private UpdateCoordinator updateCoordinator;
 	private DeleteCoordinator deleteCoordinator;
+	private UpdateCoordinator mergeCoordinator;
 
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
 	private SqmMultiTableInsertStrategy sqmMultiTableInsertStrategy;
@@ -2730,6 +2732,33 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	/**
+	 * Merge an object
+	 */
+	@Override
+	public void merge(
+			final Object id,
+			final Object[] values,
+			int[] dirtyAttributeIndexes,
+			final boolean hasDirtyCollection,
+			final Object[] oldValues,
+			final Object oldVersion,
+			final Object object,
+			final Object rowId,
+			final SharedSessionContractImplementor session) throws HibernateException {
+		mergeCoordinator.coordinateUpdate(
+				object,
+				id,
+				rowId,
+				values,
+				oldVersion,
+				oldValues,
+				dirtyAttributeIndexes,
+				hasDirtyCollection,
+				session
+		);
+	}
+
 	@Internal
 	public boolean hasLazyDirtyFields(int[] dirtyFields) {
 		final boolean[] propertyLaziness = getPropertyLaziness();
@@ -3189,6 +3218,7 @@ public abstract class AbstractEntityPersister
 		insertCoordinator = buildInsertCoordinator();
 		updateCoordinator = buildUpdateCoordinator();
 		deleteCoordinator = buildDeleteCoordinator();
+		mergeCoordinator = buildMergeCoordinator();
 
 		final int joinSpan = getTableSpan();
 
@@ -3412,6 +3442,18 @@ public abstract class AbstractEntityPersister
 			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping instanceof SingularAttributeMapping ) {
 				return new UpdateCoordinatorStandard( this, factory );
+			}
+		}
+		// otherwise, nothing to update
+		return new UpdateCoordinatorNoOp( this );
+	}
+
+	protected UpdateCoordinator buildMergeCoordinator() {
+		// we only have updates to issue for entities with one or more singular attributes
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			if ( attributeMapping instanceof SingularAttributeMapping ) {
+				return new MergeCoordinator( this, factory );
 			}
 		}
 		// otherwise, nothing to update
@@ -3862,7 +3904,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Boolean isTransient(Object entity, SharedSessionContractImplementor session) throws HibernateException {
-		final Object id = getIdentifier(entity, session);
+		final Object id = getIdentifier( entity, session );
 		// we *always* assume an instance with a null
 		// identifier or no identifier property is unsaved!
 		if ( id == null ) {
@@ -3870,11 +3912,10 @@ public abstract class AbstractEntityPersister
 		}
 
 		// check the version unsaved-value, if appropriate
-		final Object version = getVersion( entity );
 		if ( isVersioned() ) {
 			// let this take precedence if defined, since it works for
 			// assigned identifiers
-			final Boolean result = versionMapping.getUnsavedStrategy().isUnsaved( version );
+			final Boolean result = versionMapping.getUnsavedStrategy().isUnsaved( getVersion( entity ) );
 			if ( result != null ) {
 				return result;
 			}

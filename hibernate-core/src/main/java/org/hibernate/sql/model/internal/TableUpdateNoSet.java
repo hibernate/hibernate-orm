@@ -84,10 +84,6 @@ public class TableUpdateNoSet
 	}
 
 	@Override
-	public void forEachValueBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
-	}
-
-	@Override
 	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
 	}
 }

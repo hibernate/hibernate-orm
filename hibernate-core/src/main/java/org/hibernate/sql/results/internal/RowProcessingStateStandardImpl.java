@@ -116,7 +116,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 
 	@Override
 	public Object getJdbcValue(int position) {
-		return jdbcValues.getCurrentRowValuesArray()[ position ];
+		return jdbcValues.getCurrentRowValue( position );
 	}
 
 	@Override
@@ -130,6 +130,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 
 	@Override
 	public void finishRowProcessing() {
+		jdbcValues.finishRowProcessing( this );
 	}
 
 	@Override

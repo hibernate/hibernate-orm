@@ -1477,14 +1477,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( versionExpression != null ) {
 				if ( versionSelection == null ) {
 					// The position is irrelevant as this is only needed for insert
-					versionSelection = new SqlSelectionImpl( 1, 0, versionExpression );
+					versionSelection = new SqlSelectionImpl( 0, versionExpression );
 				}
 				selectClause.addSqlSelection( versionSelection );
 			}
 			if ( discriminatorExpression != null ) {
 				if ( discriminatorSelection == null ) {
 					// The position is irrelevant as this is only needed for insert
-					discriminatorSelection = new SqlSelectionImpl( 1, 0, discriminatorExpression );
+					discriminatorSelection = new SqlSelectionImpl( 0, discriminatorExpression );
 				}
 				selectClause.addSqlSelection( discriminatorSelection );
 			}
@@ -1504,7 +1504,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								return false;
 							}
 							identifierSelection = new SqlSelectionImpl(
-									1,
 									0,
 									SqmInsertStrategyHelper.createRowNumberingExpression( querySpec, sessionFactory )
 							);
@@ -1518,7 +1517,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							);
 					// The position is irrelevant as this is only needed for insert
 					identifierSelection = new SqlSelectionImpl(
-							1,
 							0,
 							new SelfRenderingSqlFragmentExpression( fragment )
 					);
@@ -2368,7 +2366,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 											new QueryLiteral<>(
 													selection.getValuesArrayPosition(),
 													basicType( Integer.class )
-											)
+											),
+											false
 									)
 							)
 					);
@@ -4468,7 +4467,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					integerType,
 					integerType
 			);
-			subQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, expression ) );
+			subQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, expression ) );
 
 			subQuerySpec.applyPredicate(
 					pluralAttributeMapping.getKeyDescriptor().generateJoinPredicate(
@@ -4652,7 +4651,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					).getJdbcMapping(),
 					modelPart
 			);
-			subQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, expression ) );
+			subQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, expression ) );
 
 			NavigablePath parent = pluralPartPath.getPluralDomainPath().getNavigablePath().getParent();
 			subQuerySpec.applyPredicate(
@@ -4786,7 +4785,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					for ( int i = 0; i < subQueryColumns.size(); i++ ) {
 						subQuerySpec.getSelectClause().addSqlSelection(
 								new SqlSelectionImpl(
-										i + 1,
 										i,
 										subQueryColumns.get( i )
 								)
@@ -4828,7 +4826,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 					subQuerySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									1,
 									0,
 									expression
 							)
@@ -7441,7 +7438,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			final JdbcLiteral<Integer> jdbcLiteral = new JdbcLiteral<>( 1, basicType( Integer.class ) );
 			subQuerySpec.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl( 1, 0, jdbcLiteral )
+					new SqlSelectionImpl( 0, jdbcLiteral )
 			);
 
 			return new ExistsPredicate( subQuerySpec, !predicate.isNegated(), getBooleanType() );

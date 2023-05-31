@@ -165,7 +165,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 							sqmInterpretation.getSqlExpressionResolver(),
 							factory
 					);
-					matchingIdSubQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, fkTargetColumnExpression ) );
+					matchingIdSubQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, fkTargetColumnExpression ) );
 
 					matchingIdSubQuery.getFromClause().addRoot(
 							tableGroup

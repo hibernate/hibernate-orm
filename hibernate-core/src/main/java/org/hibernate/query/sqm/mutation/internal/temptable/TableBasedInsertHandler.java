@@ -219,7 +219,6 @@ public class TableBasedInsertHandler implements InsertHandler {
 								targetPathColumns.add( new Assignment( columnReference, columnReference ) );
 								querySpec.getSelectClause().addSqlSelection(
 										new SqlSelectionImpl(
-												1,
 												0,
 												SqmInsertStrategyHelper.createRowNumberingExpression(
 														querySpec,
@@ -237,13 +236,12 @@ public class TableBasedInsertHandler implements InsertHandler {
 									null,
 									sessionUidColumn.getJdbcMapping()
 							);
-							insertStatement.getTargetColumns().add( sessionUidColumnReference );
-							targetPathColumns.add( new Assignment( sessionUidColumnReference, sessionUidParameter ) );
 							querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl(
 									insertStatement.getTargetColumns().size(),
-									insertStatement.getTargetColumns().size() - 1,
 									sessionUidParameter
 							) );
+							insertStatement.getTargetColumns().add( sessionUidColumnReference );
+							targetPathColumns.add( new Assignment( sessionUidColumnReference, sessionUidParameter ) );
 						}
 					}
 			);

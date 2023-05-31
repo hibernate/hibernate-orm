@@ -1417,7 +1417,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final int tablePosition = i;
 			consumer.consume(
 					tableName,
-					() -> columnConsumer -> columnConsumer.accept( tableName, constraintOrderedKeyColumnNames[tablePosition] )
+					() -> columnConsumer -> columnConsumer.accept(
+							tableName,
+							constraintOrderedKeyColumnNames[tablePosition],
+							getIdentifierMapping()::getJdbcMapping
+					)
 			);
 		}
 	}

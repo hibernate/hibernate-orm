@@ -1186,7 +1186,6 @@ public class LoaderSelectBuilder {
 					);
 					subQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									valuesPosition + 1,
 									valuesPosition,
 									expression
 							)

@@ -593,7 +593,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			for ( ColumnReference columnReference : columnReferences ) {
 				appendSql( separator );
 				columnReference.appendColumnForWrite( this );
-				separator = COMA_SEPARATOR_CHAR;
+				separator = COMMA_SEPARATOR_CHAR;
 			}
 			appendSql( ")=" );
 			assignment.getAssignedValue().accept( this );

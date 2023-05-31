@@ -25,7 +25,7 @@ class ColumnDefinitions {
 
 	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
 		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode(metadata), columnInformation.getTypeCode() )
-				|| stripArgs( column.getSqlType( metadata ) ).equalsIgnoreCase( columnInformation.getTypeName() );
+				|| stripArgs( getSqlType( column, metadata ) ).equalsIgnoreCase( columnInformation.getTypeName() );
 		if ( typesMatch ) {
 			return true;
 		}
@@ -41,6 +41,13 @@ class ColumnDefinitions {
 			);
 			return dialect.equivalentTypes( column.getSqlTypeCode(metadata), jdbcType.getDefaultSqlTypeCode() );
 		}
+	}
+
+	private static String getSqlType(Column column, Metadata metadata) {
+		if ( column.hasSpecializedTypeDeclaration() ) {
+			return column.getSpecializedTypeDeclaration();
+		}
+		return column.getSqlType( metadata );
 	}
 
 	static boolean hasMatchingLength(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
@@ -217,7 +224,7 @@ class ColumnDefinitions {
 	}
 
 	private static String stripArgs(String string) {
-		int i = string.indexOf('(');
-		return i>0 ? string.substring(0,i) : string;
+		int i = string.indexOf( '(' );
+		return i > 0 ? string.substring( 0, i ).trim() : string;
 	}
 }

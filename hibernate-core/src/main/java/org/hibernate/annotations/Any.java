@@ -42,6 +42,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * class Order {
  *     ...
  *     &#64;Any
+ *     &#64;AnyKeyJavaClass(UUID.class)   //the foreign key type
  *     &#64;JoinColumn(name="payment_id") //the foreign key column
  *     &#64;Column(name="payment_type")   //the discriminator column
  *     &#64;AnyDiscriminatorValue(discriminator="CASH", entity=CashPayment.class)

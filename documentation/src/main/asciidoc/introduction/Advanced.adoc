@@ -584,6 +584,7 @@ class Order {
     ...
 
     @Any
+    @AnyKeyJavaClass(UUID.class)   //the foreign key type
     @JoinColumn(name="payment_id") // the foreign key column
     @Column(name="payment_type")   // the discriminator column
     // map from discriminator values to target entity types
@@ -611,6 +612,21 @@ There are a number of annotations which are useful to express this sort of compl
 |===
 
 Of course, `@Any` mappings are disfavored, except in extremely special cases, since it's much more difficult to enforce referential integrity at the database level.
+
+There's also currently some limitations around querying `@Any` associations in HQL.
+This is allowed:
+
+[source,hql]
+----
+from Order ord
+    join CashPayment cash
+        on id(ord.payment) = cash.id
+----
+
+[CAUTION]
+====
+Polymorphic association joins for `@Any` mappings are not currently implemented.
+====
 
 [[bytecode-enhancer]]
 === Using the bytecode enhancer

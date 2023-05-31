@@ -107,6 +107,7 @@ import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
+import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
@@ -2748,21 +2749,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPath<?> visitEntityIdReference(HqlParser.EntityIdReferenceContext ctx) {
+		if ( ctx.getChildCount() == 5 ) {
+			throw new UnsupportedOperationException( "Path continuation from `id()` reference not yet implemented" );
+		}
+
 		final SqmPath<Object> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
 
 		if ( sqmPathType instanceof IdentifiableDomainType<?> ) {
 			final SqmPathSource<?> identifierDescriptor = ( (IdentifiableDomainType<?>) sqmPathType ).getIdentifierDescriptor();
-			final SqmPath<?> idPath = sqmPath.get( identifierDescriptor.getPathName() );
-
-			if ( ctx.getChildCount() != 5 ) {
-				return idPath;
-			}
-
-			throw new UnsupportedOperationException( "Path continuation from `id()` reference not yet implemented" );
+			return sqmPath.get( identifierDescriptor.getPathName() );
 		}
-
-		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );
+		else if ( sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
+			return sqmPath.resolvePathPart("id", true, getCurrentProcessingState().getCreationState() );
+		}
+		else {
+			throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );
+		}
 	}
 
 	@Override

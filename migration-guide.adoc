@@ -162,9 +162,6 @@ logical{fn-logical-1-1} one-to-one associations marked as optional.  That is not
 from a modeling perspective as the foreign-key should be constrained as unique.  Starting in
 6.2, those UNIQUE constraints are now created.
 
-If this causes problems for an application, creation of the UNIQUE constraint can be skipped
-using `@jakarta.persistence.ForeignKey(NO_CONSTRAINT)`.
-
 Often the association can also be remapped using `@ManyToOne` + `@UniqueConstraint` instead.
 
 [[oracle-number]]

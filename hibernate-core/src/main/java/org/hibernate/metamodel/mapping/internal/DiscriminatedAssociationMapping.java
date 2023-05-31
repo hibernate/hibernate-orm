@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Iterator;
 import java.util.Locale;
-import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;

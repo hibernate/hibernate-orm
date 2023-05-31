@@ -132,6 +132,24 @@ public class AnyTest {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-16732")
+	public void testHqlAnyIdQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<PropertySet> list1 = session.createQuery(
+							"select p from PropertyHolder p where id(p.property) = 666",
+							PropertySet.class ).list();
+					assertEquals( 0, list1.size() );
+					List<PropertySet> list2 = session.createQuery(
+							"select p from PropertyHolder p where type(p.property) = IntegerProperty",
+							PropertySet.class ).list();
+					assertEquals( 1, list2.size() );
+
+				}
+		);
+	}
+
+	@Test
 	@TestForIssue( jiraKey = "HHH-15323")
 	public void testHqlCollectionTypeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(

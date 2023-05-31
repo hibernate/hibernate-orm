@@ -918,7 +918,6 @@ public abstract class AbstractCollectionPersister
 					i,
 					new SqlSelectionImpl(
 							i,
-							i + 1,
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), keyAlias + columnSuffix )
 					)
 			);
@@ -931,7 +930,6 @@ public abstract class AbstractCollectionPersister
 						i,
 						new SqlSelectionImpl(
 								i,
-								i + 1,
 								new AliasedExpression( sqlSelections.get( i ).getExpression(), indexAlias + columnSuffix )
 						)
 				);
@@ -943,7 +941,6 @@ public abstract class AbstractCollectionPersister
 					i,
 					new SqlSelectionImpl(
 							i,
-							i + 1,
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierColumnAlias + columnSuffix )
 					)
 			);
@@ -956,7 +953,6 @@ public abstract class AbstractCollectionPersister
 					i,
 					new SqlSelectionImpl(
 							sqlSelection.getValuesArrayPosition(),
-							sqlSelection.getJdbcResultSetIndex(),
 							new AliasedExpression( sqlSelection.getExpression(), elementColumnAliases[columnIndex] + columnSuffix )
 					)
 			);

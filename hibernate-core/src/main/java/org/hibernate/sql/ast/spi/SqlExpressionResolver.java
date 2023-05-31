@@ -8,12 +8,14 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.function.Function;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -42,41 +44,42 @@ public interface SqlExpressionResolver {
 	 *
 	 * @see #resolveSqlExpression
 	 */
-	static ColumnReferenceKey createColumnReferenceKey(String tableExpression, String columnExpression) {
-		return new ColumnReferenceKey(tableExpression, new SelectablePath( columnExpression ) );
+	static ColumnReferenceKey createColumnReferenceKey(String tableExpression, String columnExpression, JdbcMapping jdbcMapping) {
+		return createColumnReferenceKey( tableExpression, new SelectablePath( columnExpression ), jdbcMapping );
 	}
 	/**
 	 * Helper for generating an expression key for a column reference.
 	 *
 	 * @see #resolveSqlExpression
 	 */
-	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, String columnExpression) {
-		return createColumnReferenceKey( tableReference, new SelectablePath( columnExpression ) );
+	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, String columnExpression, JdbcMapping jdbcMapping) {
+		return createColumnReferenceKey( tableReference, new SelectablePath( columnExpression ), jdbcMapping );
 	}
-	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, SelectablePath selectablePath) {
+	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, SelectablePath selectablePath, JdbcMapping jdbcMapping) {
 		assert tableReference != null : "tableReference expected to be non-null";
 		assert selectablePath != null : "selectablePath expected to be non-null";
 		assert tableReference.getIdentificationVariable() != null : "tableReference#identificationVariable expected to be non-null";
 		final String qualifier = tableReference.getIdentificationVariable();
-		return createColumnReferenceKey( qualifier, selectablePath );
+		return createColumnReferenceKey( qualifier, selectablePath, jdbcMapping );
 	}
 
-	static ColumnReferenceKey createColumnReferenceKey(String qualifier, SelectablePath selectablePath) {
+	static ColumnReferenceKey createColumnReferenceKey(String qualifier, SelectablePath selectablePath, JdbcMapping jdbcMapping) {
 		assert qualifier != null : "qualifier expected to be non-null";
 		assert selectablePath != null : "selectablePath expected to be non-null";
-		return new ColumnReferenceKey( qualifier, selectablePath );
+		assert jdbcMapping != null : "jdbcMapping expected to be non-null";
+		return new ColumnReferenceKey( qualifier, selectablePath, jdbcMapping );
 	}
 
 	static ColumnReferenceKey createColumnReferenceKey(String columnExpression) {
 		assert columnExpression != null : "columnExpression expected to be non-null";
-		return new ColumnReferenceKey( "", new SelectablePath( columnExpression ) );
+		return createColumnReferenceKey( "", new SelectablePath( columnExpression ), NullType.INSTANCE );
 	}
 
 	/**
 	 * Convenience form for creating a key from table expression and SelectableMapping
 	 */
 	static ColumnReferenceKey createColumnReferenceKey(String tableExpression, SelectableMapping selectable) {
-		return createColumnReferenceKey( tableExpression, selectable.getSelectablePath() );
+		return createColumnReferenceKey( tableExpression, selectable.getSelectablePath(), selectable.getJdbcMapping() );
 	}
 
 	/**
@@ -85,7 +88,7 @@ public interface SqlExpressionResolver {
 	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, SelectableMapping selectable) {
 		assert tableReference.containsAffectedTableName( selectable.getContainingTableExpression() )
 				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), selectable.getContainingTableExpression() );
-		return createColumnReferenceKey( tableReference, selectable.getSelectablePath() );
+		return createColumnReferenceKey( tableReference, selectable.getSelectablePath(), selectable.getJdbcMapping() );
 	}
 
 	default Expression resolveSqlExpression(TableReference tableReference, SelectableMapping selectableMapping) {
@@ -117,10 +120,12 @@ public interface SqlExpressionResolver {
 	final class ColumnReferenceKey {
 		private final String tableQualifier;
 		private final SelectablePath selectablePath;
+		private final JdbcMapping jdbcMapping;
 
-		public ColumnReferenceKey(String tableQualifier, SelectablePath selectablePath) {
+		public ColumnReferenceKey(String tableQualifier, SelectablePath selectablePath, JdbcMapping jdbcMapping) {
 			this.tableQualifier = tableQualifier;
 			this.selectablePath = selectablePath;
+			this.jdbcMapping = jdbcMapping;
 		}
 
 		@Override
@@ -132,18 +137,17 @@ public interface SqlExpressionResolver {
 				return false;
 			}
 
-			ColumnReferenceKey that = (ColumnReferenceKey) o;
-
-			if ( !tableQualifier.equals( that.tableQualifier ) ) {
-				return false;
-			}
-			return selectablePath.equals( that.selectablePath );
+			final ColumnReferenceKey that = (ColumnReferenceKey) o;
+			return tableQualifier.equals( that.tableQualifier )
+					&& selectablePath.equals( that.selectablePath )
+					&& jdbcMapping.equals( that.jdbcMapping );
 		}
 
 		@Override
 		public int hashCode() {
 			int result = tableQualifier.hashCode();
 			result = 31 * result + selectablePath.hashCode();
+			result = 31 * result + jdbcMapping.hashCode();
 			return result;
 		}
 	}

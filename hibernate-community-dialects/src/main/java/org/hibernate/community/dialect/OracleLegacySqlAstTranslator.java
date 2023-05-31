@@ -360,7 +360,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		}
 		final QuerySpec subquery = new QuerySpec( false, 1 );
 		for ( ColumnReference idColumnReference : idColumnReferences ) {
-			subquery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, -1, idColumnReference ) );
+			subquery.getSelectClause().addSqlSelection( new SqlSelectionImpl( idColumnReference ) );
 		}
 		subquery.getFromClause().addRoot( rootTableGroup );
 		subquery.applyPredicate( querySpec.getWhereClauseRestrictions() );

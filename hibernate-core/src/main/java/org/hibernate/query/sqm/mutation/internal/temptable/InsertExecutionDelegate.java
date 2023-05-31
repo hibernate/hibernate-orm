@@ -339,7 +339,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				for ( ColumnReference columnReference : assignable.getColumnReferences() ) {
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									1,
 									0,
 									new ColumnReference(
 											updatingTableReference.getIdentificationVariable(),
@@ -369,7 +368,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					identifierMapping.getJdbcMapping()
 			);
 			idSelectQuerySpec.getSelectClause()
-					.addSqlSelection( new SqlSelectionImpl( 1, 0, columnReference ) );
+					.addSqlSelection( new SqlSelectionImpl( 0, columnReference ) );
 			idSelectQuerySpec.addSortSpecification(
 					new SortSpecification(
 							columnReference,
@@ -528,7 +527,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				);
 				querySpec.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								1,
 								0,
 								new ColumnReference(
 										updatingTableReference.getIdentificationVariable(),
@@ -689,7 +687,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				for ( ColumnReference columnReference : assignment.getAssignable().getColumnReferences() ) {
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									1,
 									0,
 									new ColumnReference(
 											updatingTableReference.getIdentificationVariable(),
@@ -734,7 +731,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			);
 			querySpec.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
-							1,
 							0,
 							new ColumnReference(
 									updatingTableReference.getIdentificationVariable(),

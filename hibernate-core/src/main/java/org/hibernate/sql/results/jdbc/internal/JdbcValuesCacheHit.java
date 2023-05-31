@@ -8,9 +8,9 @@ package org.hibernate.sql.results.jdbc.internal;
 
 import java.util.List;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.results.ResultsLogger;
-import org.hibernate.sql.results.caching.internal.QueryCachePutManagerDisabledImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -29,12 +29,6 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	private int position = -1;
 
 	public JdbcValuesCacheHit(Object[][] cachedData, JdbcValuesMapping resolvedMapping) {
-		// if we have a cache hit we should not be writing back to the cache.
-		// its silly because the state would always be the same.
-		//
-		// well actually, there are times when we want to write values back to the cache even though we had a hit...
-		// the case is related to the domain-data cache
-		super( QueryCachePutManagerDisabledImpl.INSTANCE );
 		this.cachedData = cachedData;
 		this.numberOfRows = cachedData.length;
 		this.resolvedMapping = resolvedMapping;
@@ -237,7 +231,19 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	}
 
 	@Override
-	protected void release() {
+	public Object getCurrentRowValue(int valueIndex) {
+		if ( position >= numberOfRows ) {
+			return null;
+		}
+		return cachedData[position][valueIndex];
+	}
+
+	@Override
+	public void finishRowProcessing(RowProcessingState rowProcessingState) {
+	}
+
+	@Override
+	public void finishUp(SharedSessionContractImplementor session) {
 		cachedData = null;
 	}
 

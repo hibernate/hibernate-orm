@@ -279,7 +279,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 		else if ( options.isAllowProxyCreation() ) {
 			// return a new proxy
-			return proxyOrCached( event, persister, keyToLoad, options );
+			return createProxyIfNecessary( event, persister, keyToLoad, options );
 		}
 		else {
 			// return a newly loaded object
@@ -347,27 +347,6 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 		// entities with subclasses that define a ProxyFactory can create a HibernateProxy
 		return createProxy( event, persister, keyToLoad );
-	}
-
-	private static Object proxyOrCached(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
-		final PersistenceContext persistenceContext = event.getSession().getPersistenceContext();
-		final Object existing = persistenceContext.getEntity( keyToLoad );
-		if ( existing != null ) {
-			return options.isCheckDeleted() && wasDeleted( persistenceContext, existing ) ? null : existing;
-		}
-		if ( persister.hasSubclasses() ) {
-			final Object cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-					event.getSession(),
-					null,
-					LockMode.NONE,
-					persister,
-					keyToLoad
-			);
-			if ( cachedEntity != null ) {
-				return cachedEntity;
-			}
-		}
-		return createProxyIfNecessary( event, persister, keyToLoad, options );
 	}
 
 	/**

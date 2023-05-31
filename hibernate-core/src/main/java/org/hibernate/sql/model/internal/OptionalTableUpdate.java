@@ -25,6 +25,7 @@ import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableUpdate;
+import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 
 import static org.hibernate.sql.model.ast.AbstractTableUpdate.collectParameters;
@@ -115,13 +116,14 @@ public class OptionalTableUpdate
 		return valueBindings;
 	}
 
+	@Override
 	public void forEachValueBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
 		forEachThing( valueBindings, consumer );
 	}
 
 	@Override
 	public void accept(SqlAstWalker walker) {
-		throw new UnsupportedOperationException();
+		walker.visitOptionalTableUpdate( this );
 	}
 
 	@Override
@@ -143,6 +145,13 @@ public class OptionalTableUpdate
 			TableMapping tableDetails,
 			String updateSql,
 			List<JdbcParameterBinder> effectiveBinders) {
-		throw new UnsupportedOperationException();
+		return new JdbcUpdateMutation(
+				tableDetails,
+				getMutationTarget(),
+				updateSql,
+				isCallable(),
+				getExpectation(),
+				effectiveBinders
+		);
 	}
 }

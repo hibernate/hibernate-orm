@@ -199,7 +199,6 @@ import org.hibernate.sql.model.internal.TableInsertCustomSql;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
@@ -7930,67 +7929,82 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
 		getCurrentClauseStack().push( Clause.UPDATE );
 		try {
-			applySqlComment( tableUpdate.getMutationComment() );
+			visitTableUpdate( tableUpdate );
+			if ( tableUpdate.getWhereFragment() != null ) {
+				sqlBuffer.append( " and (" ).append( tableUpdate.getWhereFragment() ).append( ")" );
+			}
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+	}
 
-			sqlBuffer.append( "update " );
-			appendSql( tableUpdate.getMutatingTable().getTableName() );
-			registerAffectedTable( tableUpdate.getMutatingTable().getTableName() );
+	@Override
+	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+		getCurrentClauseStack().push( Clause.UPDATE );
+		try {
+			visitTableUpdate( tableUpdate );
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+	}
 
-			getCurrentClauseStack().push( Clause.SET );
-			try {
-				sqlBuffer.append( " set" );
-				tableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-					if ( columnPosition == 0 ) {
-						sqlBuffer.append( ' ' );
+	private void visitTableUpdate(RestrictedTableMutation<? extends MutationOperation> tableUpdate) {
+		applySqlComment( tableUpdate.getMutationComment() );
+
+		sqlBuffer.append( "update " );
+		appendSql( tableUpdate.getMutatingTable().getTableName() );
+		registerAffectedTable( tableUpdate.getMutatingTable().getTableName() );
+
+		getCurrentClauseStack().push( Clause.SET );
+		try {
+			sqlBuffer.append( " set" );
+			tableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+				if ( columnPosition == 0 ) {
+					sqlBuffer.append( ' ' );
+				}
+				else {
+					sqlBuffer.append( ',' );
+				}
+				sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+				sqlBuffer.append( '=' );
+				columnValueBinding.getValueExpression().accept( this );
+			} );
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+
+		getCurrentClauseStack().push( Clause.WHERE );
+		try {
+			sqlBuffer.append( " where" );
+			tableUpdate.forEachKeyBinding( (position, columnValueBinding) -> {
+				if ( position == 0 ) {
+					sqlBuffer.append( ' ' );
+				}
+				else {
+					sqlBuffer.append( " and " );
+				}
+				sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+				sqlBuffer.append( '=' );
+				columnValueBinding.getValueExpression().accept( this );
+			} );
+
+			if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
+				tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
+					sqlBuffer.append( " and " );
+					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+					if ( columnValueBinding.getValueExpression() == null ) {
+						sqlBuffer.append( " is null" );
 					}
 					else {
-						sqlBuffer.append( ',' );
+						sqlBuffer.append( "=" );
+						columnValueBinding.getValueExpression().accept( this );
 					}
-					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					sqlBuffer.append( '=' );
-					columnValueBinding.getValueExpression().accept( this );
 				} );
 			}
-			finally {
-				getCurrentClauseStack().pop();
-			}
 
-			getCurrentClauseStack().push( Clause.WHERE );
-			try {
-				sqlBuffer.append( " where" );
-				tableUpdate.forEachKeyBinding( (position, columnValueBinding) -> {
-					if ( position == 0 ) {
-						sqlBuffer.append( ' ' );
-					}
-					else {
-						sqlBuffer.append( " and " );
-					}
-					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					sqlBuffer.append( '=' );
-					columnValueBinding.getValueExpression().accept( this );
-				} );
-
-				if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
-					tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
-						sqlBuffer.append( " and " );
-						sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-						if ( columnValueBinding.getValueExpression() == null ) {
-							sqlBuffer.append( " is null" );
-						}
-						else {
-							sqlBuffer.append( "=" );
-							columnValueBinding.getValueExpression().accept( this );
-						}
-					} );
-				}
-
-				if ( tableUpdate.getWhereFragment() != null ) {
-					sqlBuffer.append( " and (" ).append( tableUpdate.getWhereFragment() ).append( ")" );
-				}
-			}
-			finally {
-				getCurrentClauseStack().pop();
-			}
 		}
 		finally {
 			getCurrentClauseStack().pop();

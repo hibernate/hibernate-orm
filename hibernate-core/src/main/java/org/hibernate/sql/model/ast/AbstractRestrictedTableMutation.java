@@ -52,4 +52,8 @@ public abstract class AbstractRestrictedTableMutation<O extends MutationOperatio
 	public void forEachOptimisticLockBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
 		forEachThing( optLockRestrictionBindings, consumer );
 	}
+
+	@Override
+	public void forEachValueBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
+	}
 }

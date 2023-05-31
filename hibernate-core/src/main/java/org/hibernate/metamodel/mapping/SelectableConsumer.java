@@ -6,7 +6,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.IntFunction;
 
 /**
  * Consumer used to visit selectable (column/formula) mappings
@@ -157,7 +159,7 @@ public interface SelectableConsumer {
 	 * Very limited functionality in terms of the visited SelectableMappings
 	 * will not have any defined JdbcMapping, etc
 	 */
-	default void accept(String tableName, String[] columnNames) {
+	default void accept(String tableName, String[] columnNames, IntFunction<JdbcMapping> jdbcMappings) {
 		class SelectableMappingIterator implements SelectableMapping {
 
 			private int index;
@@ -229,7 +231,7 @@ public interface SelectableConsumer {
 
 			@Override
 			public JdbcMapping getJdbcMapping() {
-				return null;
+				return jdbcMappings.apply( index );
 			}
 		}
 		for (

@@ -174,7 +174,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 						( (SqlExpressible) count).getJdbcMapping()
 				)
 		);
-		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );
+		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, count ) );
 		querySpec.getFromClause().addRoot(
 				new CteTableGroup(
 						new NamedTableReference(
@@ -280,7 +280,6 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				final CteColumn cteColumn = cteColumns.get( i );
 				subQuerySelectClause.addSqlSelection(
 						new SqlSelectionImpl(
-								i + 1,
 								i,
 								new ColumnReference(
 										idSelectTableReference,
@@ -295,7 +294,6 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			fkModelPart.forEachSelectable(
 					(selectionIndex, selectableMapping) -> subQuerySelectClause.addSqlSelection(
 							new SqlSelectionImpl(
-									selectionIndex + 1,
 									selectionIndex,
 									new ColumnReference(
 											idSelectTableReference,

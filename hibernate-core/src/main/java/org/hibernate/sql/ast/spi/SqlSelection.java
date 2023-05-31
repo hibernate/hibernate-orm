@@ -56,6 +56,12 @@ public interface SqlSelection extends SqlAstNode {
 	 */
 	JdbcMappingContainer getExpressionType();
 
+	/**
+	 * Whether this is a virtual or a real selection item.
+	 * Virtual selection items are not rendered into the SQL select clause.
+	 */
+	boolean isVirtual();
+
 	void accept(SqlAstWalker sqlAstWalker);
 
 	SqlSelection resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory);

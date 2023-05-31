@@ -1353,7 +1353,11 @@ public abstract class AbstractEntityPersister
 				(columnIndex, selection) -> {
 					final String rootPkColumnName = pkColumnNames[ columnIndex ];
 					final Expression pkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
-							createColumnReferenceKey( rootTableReference, rootPkColumnName ),
+							createColumnReferenceKey(
+									rootTableReference,
+									rootPkColumnName,
+									selection.getJdbcMapping()
+							),
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableReference.getIdentificationVariable(),
 									rootPkColumnName,
@@ -1365,7 +1369,11 @@ public abstract class AbstractEntityPersister
 
 					final String fkColumnName = fkColumnNames[ columnIndex ];
 					final Expression fkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
-							createColumnReferenceKey( joinedTableReference, fkColumnName ),
+							createColumnReferenceKey(
+									joinedTableReference,
+									fkColumnName,
+									selection.getJdbcMapping()
+							),
 							sqlAstProcessingState -> new ColumnReference(
 									joinedTableReference.getIdentificationVariable(),
 									fkColumnName,
@@ -1738,7 +1746,6 @@ public abstract class AbstractEntityPersister
 					i,
 					new SqlSelectionImpl(
 							i,
-							i + 1,
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierAlias + suffix )
 					)
 			);
@@ -1750,7 +1757,6 @@ public abstract class AbstractEntityPersister
 					i,
 					new SqlSelectionImpl(
 							i,
-							i + 1,
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), getDiscriminatorAlias() + suffix )
 					)
 			);
@@ -1762,7 +1768,6 @@ public abstract class AbstractEntityPersister
 					i,
 					new SqlSelectionImpl(
 							i,
-							i + 1,
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), ROWID_ALIAS + suffix )
 					)
 			);
@@ -1783,7 +1788,6 @@ public abstract class AbstractEntityPersister
 					i,
 					new SqlSelectionImpl(
 							sqlSelection.getValuesArrayPosition(),
-							sqlSelection.getJdbcResultSetIndex(),
 							new AliasedExpression( sqlSelection.getExpression(), selectAlias )
 					)
 			);
@@ -2985,14 +2989,16 @@ public abstract class AbstractEntityPersister
 			discriminatorExpression = getDiscriminatorFormulaTemplate();
 			columnReferenceKey = createColumnReferenceKey(
 					tableGroup.getPrimaryTableReference(),
-					getDiscriminatorFormulaTemplate()
+					getDiscriminatorFormulaTemplate(),
+					getDiscriminatorType()
 			);
 		}
 		else {
 			discriminatorExpression = getDiscriminatorColumnName();
 			columnReferenceKey = createColumnReferenceKey(
 					tableGroup.getPrimaryTableReference(),
-					getDiscriminatorColumnName()
+					getDiscriminatorColumnName(),
+					getDiscriminatorType()
 			);
 		}
 

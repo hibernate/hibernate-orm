@@ -108,7 +108,11 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			SqlAstCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		return expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableGroup.getPrimaryTableReference(), getSelectionExpression() ),
+				createColumnReferenceKey(
+						tableGroup.getPrimaryTableReference(),
+						getSelectionExpression(),
+						jdbcMappingToUse
+				),
 				sqlAstProcessingState -> createCaseSearchedExpression( tableGroup )
 		);
 	}

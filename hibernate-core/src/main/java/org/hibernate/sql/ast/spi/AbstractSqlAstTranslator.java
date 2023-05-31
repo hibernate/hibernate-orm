@@ -2916,7 +2916,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				for ( int i = 0; i < sqlSelectionsSize; i++ ) {
 					syntheticSelectClause.addSqlSelection(
 							new SqlSelectionImpl(
-									i + 1,
 									i,
 									new ColumnReference(
 											queryGroupAlias,
@@ -4590,6 +4589,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			int offset = 0;
 			for ( int i = 0; i < size; i++ ) {
 				final SqlSelection sqlSelection = sqlSelections.get( i );
+				if ( sqlSelection.isVirtual() ) {
+					continue;
+				}
 				if ( selectItemsToInline != null && selectItemsToInline.get( i ) ) {
 					parameterRenderingMode = SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
 				}
@@ -4640,6 +4642,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			String separator = NO_SEPARATOR;
 			for ( int i = 0; i < size; i++ ) {
 				final SqlSelection sqlSelection = sqlSelections.get( i );
+				if ( sqlSelection.isVirtual() ) {
+					continue;
+				}
 				appendSql( separator );
 				if ( selectItemsToInline != null && selectItemsToInline.get( i ) ) {
 					parameterRenderingMode = SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
@@ -5331,7 +5336,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							columnNames.add( "sort_col_" + i );
 							sqlSelections.add(
 									new SqlSelectionImpl(
-											sqlSelections.size() + 1,
 											sqlSelections.size(),
 											sortSpecification.getSortExpression()
 									)
@@ -5645,7 +5649,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				for ( ColumnReference columnReference : columnReferences ) {
 					lhsReferencesQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									1,
 									0,
 									columnReference
 							)
@@ -5695,7 +5698,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				final QuerySpec existsQuery = new QuerySpec( false, 1 );
 				existsQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								1,
 								0,
 								new QueryLiteral<>( 1, getIntegerType() )
 						)
@@ -5748,7 +5750,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			existsQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			existsQuery.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
-							1,
 							0,
 							new QueryLiteral<>( 1, getIntegerType() )
 					)
@@ -5785,7 +5786,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			countQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			countQuery.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
-							1,
 							0,
 							new SelfRenderingAggregateFunctionSqlAstExpression(
 									"count",

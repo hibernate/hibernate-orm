@@ -67,11 +67,6 @@ public class ResultSetMappingSqlSelection implements SqlSelection, Expression, S
 	}
 
 	@Override
-	public int getJdbcResultSetIndex() {
-		return valuesArrayPosition + 1;
-	}
-
-	@Override
 	public Expression getExpression() {
 		return this;
 	}
@@ -79,6 +74,11 @@ public class ResultSetMappingSqlSelection implements SqlSelection, Expression, S
 	@Override
 	public MappingModelExpressible getExpressionType() {
 		return valueMapping;
+	}
+
+	@Override
+	public boolean isVirtual() {
+		return false;
 	}
 
 	@Override

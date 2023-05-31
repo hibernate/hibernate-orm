@@ -53,7 +53,7 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-15125")
+//	@FailureExpected( jiraKey = "HHH-15125")
 	public void testProblematic() {
 		assertNoLoss( "select * from ((select e.id from Entity e union all select e.id from Entity e) union select e.id from Entity e) grp" );
 	}
@@ -65,6 +65,7 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 
 		log.debugf( "Original: {}", query );
 		log.debugf( "Formatted: {}", formattedQuery );
+		System.out.println( formattedQuery );
 
 		while ( formatted.hasMoreTokens() && plain.hasMoreTokens() ) {
 			String plainToken = plain.nextToken();

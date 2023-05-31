@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -639,10 +640,12 @@ public class MetadataBuildingProcess {
 		// add fallback type descriptors
 		final int preferredSqlTypeCodeForUuid = getPreferredSqlTypeCodeForUuid( serviceRegistry );
 		if ( preferredSqlTypeCodeForUuid != SqlTypes.UUID ) {
-			adaptToPreferredSqlTypeCodeForUuid(
+			adaptToPreferredSqlTypeCode(
 					typeConfiguration,
 					jdbcTypeRegistry,
-					preferredSqlTypeCodeForUuid
+					preferredSqlTypeCodeForUuid,
+					UUID.class,
+					"uuid"
 			);
 		}
 		else {
@@ -664,10 +667,12 @@ public class MetadataBuildingProcess {
 
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {
-			adaptToPreferredSqlTypeCodeForDuration(
+			adaptToPreferredSqlTypeCode(
 					typeConfiguration,
 					jdbcTypeRegistry,
-					preferredSqlTypeCodeForDuration
+					preferredSqlTypeCodeForDuration,
+					Duration.class,
+					"duration"
 			);
 		}
 		else {
@@ -712,7 +717,14 @@ public class MetadataBuildingProcess {
 		}
 		final int preferredSqlTypeCodeForInstant = getPreferredSqlTypeCodeForInstant( serviceRegistry );
 		if ( preferredSqlTypeCodeForInstant != SqlTypes.TIMESTAMP_UTC ) {
-			adaptToPreferredSqlTypeCodeForInstant( typeConfiguration, jdbcTypeRegistry, preferredSqlTypeCodeForInstant );
+			adaptToPreferredSqlTypeCode(
+					typeConfiguration,
+					jdbcTypeRegistry,
+					preferredSqlTypeCodeForInstant,
+					Instant.class,
+					"instant",
+					"org.hibernate.type.InstantType"
+			);
 		}
 	}
 
@@ -730,59 +742,24 @@ public class MetadataBuildingProcess {
 		// else warning?
 	}
 
-	private static void adaptToPreferredSqlTypeCodeForUuid(
+	private static void adaptToPreferredSqlTypeCode(
 			TypeConfiguration typeConfiguration,
 			JdbcTypeRegistry jdbcTypeRegistry,
-			int preferredSqlTypeCodeForUuid) {
+			int preferredSqlTypeCode,
+			Class<?> javaType,
+			String name,
+			String... additionalKeys) {
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<?> uuidType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.getDescriptor( UUID.class ),
-				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForUuid ),
-				"uuid"
+		final BasicType<?> basicType = new NamedBasicTypeImpl<>(
+				javaTypeRegistry.getDescriptor( javaType ),
+				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCode ),
+				name
 		);
-		basicTypeRegistry.register(
-				uuidType,
-				UUID.class.getSimpleName(),
-				UUID.class.getName()
-		);
-	}
-
-	private static void adaptToPreferredSqlTypeCodeForDuration(
-			TypeConfiguration typeConfiguration,
-			JdbcTypeRegistry jdbcTypeRegistry,
-			int preferredSqlTypeCodeForDuration) {
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<?> durationType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.getDescriptor( Duration.class ),
-				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForDuration ),
-				"duration"
-		);
-		basicTypeRegistry.register(
-				durationType,
-				Duration.class.getSimpleName(),
-				Duration.class.getName()
-		);
-	}
-
-	private static void adaptToPreferredSqlTypeCodeForInstant(
-			TypeConfiguration typeConfiguration,
-			JdbcTypeRegistry jdbcTypeRegistry,
-			int preferredSqlTypeCodeForInstant) {
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<?> instantType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.getDescriptor( Instant.class ),
-				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForInstant ),
-				"instant"
-		);
-		basicTypeRegistry.register(
-				instantType,
-				"org.hibernate.type.InstantType",
-				Instant.class.getSimpleName(),
-				Instant.class.getName()
-		);
+		final String[] keys = Arrays.copyOf( additionalKeys, additionalKeys.length + 2 );
+		keys[additionalKeys.length] = javaType.getSimpleName();
+		keys[additionalKeys.length + 1] = javaType.getName();
+		basicTypeRegistry.register( basicType, keys );
 	}
 
 	private static void adaptTimeTypesToDefaultTimeZoneStorage(

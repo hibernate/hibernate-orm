@@ -287,6 +287,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 		return getSelectable( index ).getJdbcMapping();
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		final List<JdbcMapping> results = new ArrayList<>();

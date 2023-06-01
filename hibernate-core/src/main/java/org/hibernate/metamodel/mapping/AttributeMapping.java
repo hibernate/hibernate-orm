@@ -6,6 +6,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.DatabaseSnapshotContributor;
@@ -117,6 +120,14 @@ public interface AttributeMapping
 
 	default boolean isEmbeddedAttributeMapping(){
 		return false;
+	}
+
+	@Deprecated(forRemoval = true)
+	@Override
+	default List<JdbcMapping> getJdbcMappings() {
+		final List<JdbcMapping> results = new ArrayList<>();
+		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
+		return results;
 	}
 
 }

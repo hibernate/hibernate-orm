@@ -214,6 +214,7 @@ public class AnonymousTupleEntityValuedModelPart
 				.setValue( instance, value );
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		final List<JdbcMapping> results = new ArrayList<>();

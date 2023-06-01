@@ -288,6 +288,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		return getJdbcTypeCount();
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( jdbcMapping );

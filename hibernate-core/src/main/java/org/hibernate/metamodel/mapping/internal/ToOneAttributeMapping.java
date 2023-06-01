@@ -2333,6 +2333,11 @@ public class ToOneAttributeMapping
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(final int index) {
+		return foreignKeyDescriptor.getJdbcMapping( index );
+	}
+
+	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 			return foreignKeyDescriptor.getSelectable( columnIndex );

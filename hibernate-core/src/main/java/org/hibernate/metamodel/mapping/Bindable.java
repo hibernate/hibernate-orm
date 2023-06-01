@@ -33,7 +33,10 @@ public interface Bindable extends JdbcMappingContainer {
 
 	/**
 	 * The list of JDBC mappings
+	 * @deprecated Prefer using {@link #getJdbcMapping(int)} or {@link #forEachJdbcType(IndexedConsumer)}
+	 * and its variations.
 	 */
+	@Deprecated(forRemoval = true)
 	@Override
 	default List<JdbcMapping> getJdbcMappings() {
 		final List<JdbcMapping> results = new ArrayList<>();

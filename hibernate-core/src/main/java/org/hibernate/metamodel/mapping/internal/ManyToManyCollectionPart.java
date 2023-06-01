@@ -30,6 +30,7 @@ import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -728,5 +729,10 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 				entityType.isReferenceToPrimaryKey(),
 				fkValue.isConstrained()
 		);
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(final int index) {
+		return getEntityMappingType().getJdbcMapping( index );
 	}
 }

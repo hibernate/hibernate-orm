@@ -30,6 +30,7 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPar
 		return 1;
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	default List<JdbcMapping> getJdbcMappings() {
 		return BasicValuedMapping.super.getJdbcMappings();

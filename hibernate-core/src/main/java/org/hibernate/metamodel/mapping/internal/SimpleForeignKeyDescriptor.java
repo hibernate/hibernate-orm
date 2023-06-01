@@ -562,6 +562,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		return associationKey;
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( targetSide.getModelPart().getJdbcMapping() );

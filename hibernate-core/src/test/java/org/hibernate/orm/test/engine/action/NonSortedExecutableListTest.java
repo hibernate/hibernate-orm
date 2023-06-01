@@ -40,7 +40,7 @@ public class NonSortedExecutableListTest {
 	private static class AnExecutable implements ComparableExecutable {
 
 		private final int n;
-		private final Serializable[] spaces;
+		private final String[] spaces;
 
 		private transient boolean afterDeserializeCalled;
 
@@ -75,7 +75,7 @@ public class NonSortedExecutableListTest {
 		}
 
 		@Override
-		public Serializable[] getPropertySpaces() {
+		public String[] getPropertySpaces() {
 			return spaces;
 		}
 

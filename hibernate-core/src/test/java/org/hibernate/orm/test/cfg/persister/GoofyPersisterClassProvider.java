@@ -250,8 +250,8 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Serializable[] getPropertySpaces() {
-			return new Serializable[0];
+		public String[] getPropertySpaces() {
+			return new String[0];
 		}
 
 		@Override
@@ -924,8 +924,8 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return false;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public Serializable[] getCollectionSpaces() {
-			return new Serializable[0];  //To change body of implemented methods use File | Settings | File Templates.
+		public String[] getCollectionSpaces() {
+			return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
 		public CollectionMetadata getCollectionMetadata() {

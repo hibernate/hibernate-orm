@@ -210,7 +210,7 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	 *
 	 * @return The property spaces.
 	 */
-	Serializable[] getPropertySpaces();
+	String[] getPropertySpaces();
 
 	/**
 	 * Returns an array of objects that identify spaces in which properties of

@@ -423,7 +423,7 @@ public class ActionQueue {
 			beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
 		}
 		if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
-			invalidateSpaces( (String[]) executable.getPropertySpaces() );
+			invalidateSpaces( executable.getPropertySpaces() );
 		}
 		if ( executable.getAfterTransactionCompletionProcess() != null ) {
 			if ( afterTransactionProcesses == null ) {

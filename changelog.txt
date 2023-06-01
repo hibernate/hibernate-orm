@@ -3,6 +3,16 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.30.Final (June 01, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32151
+
+** Bug
+    * [HHH-16485] - Insert ordering doesn't consider root entity names
+    * [HHH-15602] - ByteBuddy enhancement generates faulty code with many-to-many associations
+
+
 Changes in 5.3.29.Final (March 29, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

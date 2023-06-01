@@ -217,6 +217,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 	@Override
 	int getJdbcTypeCount();
 
+	@Deprecated(forRemoval = true)
 	@Override
 	List<JdbcMapping> getJdbcMappings();
 

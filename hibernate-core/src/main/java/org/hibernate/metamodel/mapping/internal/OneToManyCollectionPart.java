@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -248,4 +249,10 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		fetchAssociationKey = foreignKey.getAssociationKey();
 		return true;
 	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(final int index) {
+		return getEntityMappingType().getJdbcMapping( index );
+	}
+
 }

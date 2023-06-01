@@ -281,6 +281,7 @@ public class BasicValuedCollectionPart
 		);
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( getJdbcMapping() );

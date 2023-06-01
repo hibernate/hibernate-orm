@@ -215,13 +215,6 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
-		return results;
-	}
-
-	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return identifierMapping.getJdbcMapping( index );
 	}

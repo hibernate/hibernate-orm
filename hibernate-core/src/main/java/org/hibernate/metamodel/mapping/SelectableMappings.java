@@ -45,14 +45,4 @@ public interface SelectableMappings {
 		return forEachSelectable( 0, consumer );
 	}
 
-	/**
-	 * Obtain the JdbcMappings for the underlying selectable mappings
-	 *
-	 * @see SelectableMapping#getJdbcMapping()
-	 */
-	default List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
-		return results;
-	}
 }

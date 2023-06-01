@@ -218,9 +218,6 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 	int getJdbcTypeCount();
 
 	@Override
-	List<JdbcMapping> getJdbcMappings();
-
-	@Override
 	int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action);
 
 	// Make this abstract again to ensure subclasses implement this method

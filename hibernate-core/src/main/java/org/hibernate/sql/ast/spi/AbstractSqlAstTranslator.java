@@ -6236,7 +6236,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected final void renderParameterAsParameter(JdbcParameter jdbcParameter) {
-		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMapping( 0 ).getJdbcType();
 		assert jdbcType != null;
 		renderParameterAsParameter( parameterBinders.size() + 1, jdbcParameter );
 	}
@@ -6247,7 +6247,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * @param position
 	 */
 	protected void renderParameterAsParameter(int position, JdbcParameter jdbcParameter) {
-		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMapping( 0 ).getJdbcType();
 		assert jdbcType != null;
 		final String parameterMarker = parameterMarkerStrategy.createMarker( position, jdbcType );
 		jdbcType.appendWriteExpression( parameterMarker, this, dialect );

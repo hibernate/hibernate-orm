@@ -31,11 +31,6 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPar
 	}
 
 	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return BasicValuedMapping.super.getJdbcMappings();
-	}
-
-	@Override
 	default JdbcMapping getJdbcMapping(int index) {
 		return BasicValuedMapping.super.getJdbcMapping( index );
 	}

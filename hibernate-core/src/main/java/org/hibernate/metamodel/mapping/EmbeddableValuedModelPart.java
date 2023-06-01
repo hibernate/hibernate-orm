@@ -64,11 +64,6 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 	}
 
 	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return getEmbeddableTypeDescriptor().getJdbcMappings();
-	}
-
-	@Override
 	default JdbcMapping getJdbcMapping(int index) {
 		return getEmbeddableTypeDescriptor().getJdbcMapping( index );
 	}

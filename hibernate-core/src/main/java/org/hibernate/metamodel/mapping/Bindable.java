@@ -32,16 +32,6 @@ public interface Bindable extends JdbcMappingContainer {
 	}
 
 	/**
-	 * The list of JDBC mappings
-	 */
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
-		return results;
-	}
-
-	/**
 	 * Visit each of JdbcMapping
 	 *
 	 * @apiNote Same as {@link #forEachJdbcType(int, IndexedConsumer)} starting from `0`

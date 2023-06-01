@@ -56,11 +56,6 @@ public class EntityTypeLiteral
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return discriminatorType.getJdbcMappings();
-	}
-
-	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return discriminatorType.getJdbcMapping( index );
 	}

@@ -6,9 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -129,11 +126,6 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	@Override
 	default int getJdbcTypeCount() {
 		return 1;
-	}
-
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( this );
 	}
 
 	@Override

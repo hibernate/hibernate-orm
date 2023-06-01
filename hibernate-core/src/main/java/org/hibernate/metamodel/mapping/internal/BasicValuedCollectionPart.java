@@ -282,11 +282,6 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( getJdbcMapping() );
-	}
-
-	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );

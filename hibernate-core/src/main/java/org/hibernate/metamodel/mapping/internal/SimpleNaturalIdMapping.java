@@ -225,11 +225,6 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return attribute.getJdbcMappings();
-	}
-
-	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return attribute.getJdbcMapping( index );
 	}

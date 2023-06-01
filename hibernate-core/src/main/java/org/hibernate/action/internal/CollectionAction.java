@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
@@ -101,7 +99,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 	}
 
 	@Override
-	public Serializable[] getPropertySpaces() {
+	public String[] getPropertySpaces() {
 		return persister.getCollectionSpaces();
 	}
 

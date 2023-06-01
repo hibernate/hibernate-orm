@@ -277,8 +277,8 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public Serializable[] getPropertySpaces() {
-			return new Serializable[0];
+		public String[] getPropertySpaces() {
+			return new String[0];
 		}
 
 		@Override

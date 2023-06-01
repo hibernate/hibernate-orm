@@ -594,7 +594,7 @@ public class CustomPersister implements EntityPersister {
 		return "CUSTOMS";
 	}
 
-	public Serializable[] getPropertySpaces() {
+	public String[] getPropertySpaces() {
 		return new String[] { "CUSTOMS" };
 	}
 

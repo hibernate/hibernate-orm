@@ -16,6 +16,8 @@ import org.hibernate.tuple.NonIdentifierAttribute;
 
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.engine.FetchStyle.SUBSELECT;
 import static org.hibernate.engine.FetchTiming.IMMEDIATE;
 import static org.hibernate.engine.FetchStyle.JOIN;
@@ -36,7 +38,7 @@ public class DefaultFetchProfile extends FetchProfile {
 	}
 
 	@Override
-	public Fetch getFetchByRole(String role) {
+	public @Nullable Fetch getFetchByRole(String role) {
 		final int last = role.lastIndexOf('.');
 		final String entityName = role.substring( 0, last );
 		final String property = role.substring( last + 1 );

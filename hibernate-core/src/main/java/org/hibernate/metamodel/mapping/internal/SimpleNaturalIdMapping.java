@@ -224,6 +224,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 		return attribute.getJdbcTypeCount();
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return attribute.getJdbcMappings();

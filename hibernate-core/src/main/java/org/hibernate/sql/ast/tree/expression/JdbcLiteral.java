@@ -92,6 +92,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 		return 1;
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( jdbcMapping );

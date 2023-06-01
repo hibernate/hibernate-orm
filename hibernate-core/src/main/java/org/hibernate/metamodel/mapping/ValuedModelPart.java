@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,16 +26,6 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	@Override
 	default int getJdbcTypeCount() {
 		return ModelPart.super.getJdbcTypeCount();
-	}
-
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return ModelPart.super.getJdbcMappings();
-	}
-
-	@Override
-	default JdbcMapping getJdbcMapping(int index) {
-		return ModelPart.super.getJdbcMapping( index );
 	}
 
 	@Override
@@ -86,5 +77,13 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 					consumer.accept( selectionIndex, selectableMapping );
 				}
 		);
+	}
+
+	@Override
+	@Deprecated(forRemoval = true)
+	default List<JdbcMapping> getJdbcMappings() {
+		final List<JdbcMapping> results = new ArrayList<>();
+		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
+		return results;
 	}
 }

@@ -994,6 +994,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		throw new IndexOutOfBoundsException( index );
+	}
+
+	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		return null;
 	}

@@ -6,9 +6,13 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -65,5 +69,13 @@ public abstract class AbstractSingularAttributeMapping
 	@Override
 	public Generator getGenerator() {
 		return findContainingEntityMapping().getEntityPersister().getEntityMetamodel().getGenerators()[getStateArrayPosition()];
+	}
+
+	@Deprecated(forRemoval = true)
+	@Override
+	public List<JdbcMapping> getJdbcMappings() {
+		final List<JdbcMapping> results = new ArrayList<>();
+		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
+		return results;
 	}
 }

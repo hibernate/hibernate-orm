@@ -24,21 +24,21 @@ public interface JdbcMappingContainer {
 
 	/**
 	 * The list of JDBC mappings
+	 * @deprecated Prefer using {@link #getJdbcMapping(int)} or {@link #forEachJdbcType(IndexedConsumer)}
+	 * and its variations.
 	 */
+	@Deprecated(forRemoval = true)
 	default List<JdbcMapping> getJdbcMappings() {
 		final List<JdbcMapping> results = new ArrayList<>();
 		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
 		return results;
 	}
 
-	default JdbcMapping getJdbcMapping(int index) {
-		return getJdbcMappings().get( index );
-	}
+	JdbcMapping getJdbcMapping(int index);
 
 	default JdbcMapping getSingleJdbcMapping() {
-		final List<JdbcMapping> jdbcMappings = getJdbcMappings();
-		assert jdbcMappings.size() == 1;
-		return jdbcMappings.get( 0 );
+		assert getJdbcTypeCount() == 1;
+		return getJdbcMapping( 0 );
 	}
 
 	/**

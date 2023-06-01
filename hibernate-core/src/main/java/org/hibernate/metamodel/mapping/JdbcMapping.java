@@ -131,6 +131,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 		return 1;
 	}
 
+	@Deprecated(forRemoval = true)
 	@Override
 	default List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( this );

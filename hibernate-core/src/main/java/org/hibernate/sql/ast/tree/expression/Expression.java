@@ -55,7 +55,7 @@ public interface Expression extends SqlAstNode, SqlSelectionProducer {
 			expression = this;
 		}
 		else {
-			expression = expressionType.getJdbcMappings().get( 0 ).getJdbcType().wrapTopLevelSelectionExpression( this );
+			expression = expressionType.getJdbcMapping( 0 ).getJdbcType().wrapTopLevelSelectionExpression( this );
 		}
 		return expression == this
 			? createSqlSelection( jdbcPosition, valuesArrayPosition, javaType, typeConfiguration )

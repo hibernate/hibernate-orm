@@ -636,6 +636,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(final int index) {
+		return targetSide.getModelPart().getJdbcMapping( index );
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return targetSide.getModelPart().forEachJdbcType( offset, action );
 	}

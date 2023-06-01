@@ -262,6 +262,17 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(final int index) {
+		final int base = getDiscriminatorPart().getJdbcTypeCount();
+		if ( index >= base ) {
+			return getKeyPart().getJdbcMapping( index - base );
+		}
+		else {
+			return getDiscriminatorPart().getJdbcMapping( index );
+		}
+	}
+
+	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		return getDiscriminatorPart().getSelectable( columnIndex );
 	}

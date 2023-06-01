@@ -2062,6 +2062,11 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return getIdentifierMapping().getJdbcMapping( index );
+	}
+
 	protected LockingStrategy generateLocker(LockMode lockMode) {
 		return factory.getJdbcServices().getDialect().getLockingStrategy( this, lockMode );
 	}

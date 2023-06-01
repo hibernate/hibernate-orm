@@ -3,6 +3,65 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.4.Final (June 01, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32156
+
+** Bug
+    * [HHH-16725] - Persisting multiple entities with one-many association and composite key with ordered updates enabled fails
+    * [HHH-16691] - Avoid join table joins for SqmPath in some more scenarios
+    * [HHH-16690] - Re-saving deleted object leads to constraint violation when unloaded delete happened
+    * [HHH-16686] - LocalTime to java.sql.Time unwrap bug.
+    * [HHH-16669] - Batch loading prevents throwing ObjectNotFoundException on initialization of non-existent enhanced entity
+    * [HHH-16668] - ConcurrentModificationException when using a criteria with window functions in hibernate 6
+    * [HHH-16664] - NPE in MappingMetamodelImpl if inheritance is used in IdClass
+    * [HHH-16658] - Entity name uses not propagated upwards leading to missing joins
+    * [HHH-16657] - Type filter in subquery wrongly propagates as filter to table group
+    * [HHH-16656] - H2 1.4.200 lacks registration of ranking window functions
+    * [HHH-16655] - Parser error for window frames due to wrong rule order
+    * [HHH-16650] - Loss in precision due usage of Float data type instead of BigDecimal in case Oracle JDBC driver returning -127 for scale and 0 for precision if precision/scale is unknown. Might happen unexpectedly and requires very close inspection of used SQL
+    * [HHH-16649] - Hibernate.remove() doesn't work at all
+
+    * [HHH-16639] - Cannot load entity with EnumType identifier and batch size > 1
+    * [HHH-16621] - Fix migration guide for one-to-one uniqueness
+    * [HHH-16617] - When caching queries, filter parameters are not included in the cache key
+    * [HHH-16613] - @Lazy @ManyToOne @Cacheable association is retrieved as initialized
+    * [HHH-16594] - Query cache miss when query contains multiple parameters
+    * [HHH-16570] - Batch fetch with FetchMode JOIN might lead to multiplication in OneToMany items
+    * [HHH-16565] - ClassCastException when batch fetch and 2nd level cache are enabled for polymorphic entities
+    * [HHH-16560] - Nested @Embedded within an @EmbeddedId assertion failure "java.lang.AssertionError: isPartOfKey should have been true in this case"
+    * [HHH-16559] - Batch fetch does not initialize bi-directional entity in HQL
+    * [HHH-16558] - Detaching an entity removes natural-id cross-reference from shared cache
+    * [HHH-16543] - Attribute from MappedSuperClass can't be resolved if number of subclasses is greater than 2
+    * [HHH-16540] - UnknownTableReferenceException for entity with Embeddable key-value in map
+    * [HHH-16532] - Hibernate entity with @Any attribute throws a nullpointer exception when merging
+    * [HHH-16465] - CTE query cycle attribute evaluated incorrectly on MSSQL
+    * [HHH-16433] - “Locking with ORDER BY is not supported” error in a “select for update” query (Oracle DB)
+    * [HHH-16385] - QueryKey not serializable when working with @TenantId
+    * [HHH-16379] - @DynamicUpdate and 'enableDirtyTracking=true' leads to wrong update statement
+    * [HHH-16370] - Using MapKey on ManyToMany leads to wrong insert SQL
+
+** Improvement
+    * [HHH-16717] - Type pollution fix for ExecutableList having to implement Comparable
+    * [HHH-16716] - Expose ParameterMarkerStrategy on JDBCServices
+    * [HHH-16705] - AttributeMappingsList should not implement Iterable
+    * [HHH-16704] - Avoid iterating a LinkedHashMap during ActionQueue processing
+    * [HHH-16687] - Remove unused internal interface ComparableEntityAction
+    * [HHH-16685] - Avoid extreme cache misses on EntityPersister#implementsLifecycle()
+    * [HHH-16683] - Micro optimisations for MappingMetamodelImpl.getEntityDescriptor
+    * [HHH-16679] - Avoid type pollution problems on iterations of List<JdbcParameter>
+    * [HHH-16652] - Broken hyperlink in documentation: Hibernate Query Language / Expressions / String concatenation
+    * [HHH-16626] - JPA hint for Session (EntityManager) level tenant-id
+    * [HHH-16495] - A query with an non-cross entity join that lacks the on clause should fail with a SemanticQueryException
+
+** Remove Feature
+    * [HHH-16677] - Drop JPA static metamodel generation from Gradle plugin
+
+** Task
+    * [HHH-16676] - SqmQuerySpec#toHqlString doesn't handle treat expressions
+
+
 Changes in 6.2.3.Final (May 18, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -26,6 +26,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -138,6 +139,23 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.stringMap, is( stringMap ) );
 					assertThat( entityWithJson.objectMap, is( objectMap ) );
 					assertThat( entityWithJson.list, is( list ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( "HHH-16682" )
+	public void verifyDirtyChecking(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					EntityWithJson entityWithJson = session.find( EntityWithJson.class, 1 );
+					entityWithJson.stringMap.clear();
+				}
+		);
+		scope.inTransaction(
+				(session) -> {
+					EntityWithJson entityWithJson = session.find( EntityWithJson.class, 1 );
+					assertThat( entityWithJson.stringMap.isEmpty(), is( true ) );
 				}
 		);
 	}

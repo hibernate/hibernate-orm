@@ -6,9 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.internal.util.IndexedConsumer;
 
 /**
@@ -20,18 +17,6 @@ public interface JdbcMappingContainer {
 	 */
 	default int getJdbcTypeCount() {
 		return forEachJdbcType( (index, jdbcMapping) -> {} );
-	}
-
-	/**
-	 * The list of JDBC mappings
-	 * @deprecated Prefer using {@link #getJdbcMapping(int)} or {@link #forEachJdbcType(IndexedConsumer)}
-	 * and its variations.
-	 */
-	@Deprecated(forRemoval = true)
-	default List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
-		return results;
 	}
 
 	JdbcMapping getJdbcMapping(int index);

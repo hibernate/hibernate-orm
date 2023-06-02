@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -61,12 +60,6 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 	@Override
 	default int getJdbcTypeCount() {
 		return getEmbeddableTypeDescriptor().getJdbcTypeCount();
-	}
-
-	@Deprecated(forRemoval = true)
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return getEmbeddableTypeDescriptor().getJdbcMappings();
 	}
 
 	@Override

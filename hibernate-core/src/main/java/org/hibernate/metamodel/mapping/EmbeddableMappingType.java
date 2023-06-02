@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.internal.util.IndexedConsumer;
@@ -216,10 +215,6 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 
 	@Override
 	int getJdbcTypeCount();
-
-	@Deprecated(forRemoval = true)
-	@Override
-	List<JdbcMapping> getJdbcMappings();
 
 	@Override
 	int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action);

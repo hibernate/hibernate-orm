@@ -6,9 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Describes a ModelPart that is also a ValueMapping (and therefore also a SelectableMappings).
  * <p/>
@@ -79,11 +76,4 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 		);
 	}
 
-	@Override
-	@Deprecated(forRemoval = true)
-	default List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
-		return results;
-	}
 }

@@ -536,12 +536,6 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		);
 	}
 
-	@Deprecated(forRemoval = true)
-	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return getSelectableMappings().getJdbcMappings();
-	}
-
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return getSelectable( index ).getJdbcMapping();

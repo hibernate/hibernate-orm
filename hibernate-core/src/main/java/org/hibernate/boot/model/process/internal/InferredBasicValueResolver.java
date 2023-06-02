@@ -97,9 +97,15 @@ public class InferredBasicValueResolver {
 					jdbcMapping = new SerializableType( explicitJavaType );
 				}
 				else {
+					final BasicTypeImpl<T> basicType = new BasicTypeImpl<>( explicitJavaType, inferredJdbcType );
+
+					// if we are still building mappings, register this ad-hoc type
+					// via a unique code.  this is to support envers
+					bootstrapContext.registerAdHocBasicType( basicType );
+
 					jdbcMapping = resolveSqlTypeIndicators(
 							stdIndicators,
-							typeConfiguration.getBasicTypeRegistry().resolve( explicitJavaType, inferredJdbcType ),
+							basicType,
 							explicitJavaType
 					);
 				}

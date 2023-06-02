@@ -1,0 +1,9 @@
+// Checkerframework stubs for java.lang
+
+package java.lang.reflect;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+public final class Method extends Executable {
+    void invoke(@Nullable Object obj, Object @Nullable ... args);
+}

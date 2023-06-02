@@ -12,6 +12,7 @@ import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
@@ -28,7 +29,7 @@ public class JtaPlatformInaccessibleImpl implements JtaPlatform {
 	}
 
 	@Override
-	public TransactionManager retrieveTransactionManager() {
+	public @Nullable TransactionManager retrieveTransactionManager() {
 		if ( preferExceptions ) {
 			throw new JtaPlatformInaccessibleException();
 		}
@@ -36,7 +37,7 @@ public class JtaPlatformInaccessibleImpl implements JtaPlatform {
 	}
 
 	@Override
-	public UserTransaction retrieveUserTransaction() {
+	public @Nullable UserTransaction retrieveUserTransaction() {
 		if ( preferExceptions ) {
 			throw new JtaPlatformInaccessibleException();
 		}
@@ -44,7 +45,7 @@ public class JtaPlatformInaccessibleImpl implements JtaPlatform {
 	}
 
 	@Override
-	public Object getTransactionIdentifier(Transaction transaction) {
+	public @Nullable Object getTransactionIdentifier(Transaction transaction) {
 		if ( preferExceptions ) {
 			throw new JtaPlatformInaccessibleException();
 		}

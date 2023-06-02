@@ -15,7 +15,9 @@ import jakarta.transaction.UserTransaction;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jndi.spi.JndiService;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Configurable;
@@ -31,11 +33,29 @@ public abstract class AbstractJtaPlatform
 	private boolean cacheUserTransaction;
 	private ServiceRegistryImplementor serviceRegistry;
 
-	private final JtaSynchronizationStrategy tmSynchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
+	private final JtaSynchronizationStrategy tmSynchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy();
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
+	}
+
+	private final class TransactionManagerBasedSynchronizationStrategy implements JtaSynchronizationStrategy {
+
+		@Override
+		public void registerSynchronization(Synchronization synchronization) {
+			try {
+				AbstractJtaPlatform.this.getTransactionManager().getTransaction().registerSynchronization( synchronization );
+			}
+			catch (Exception e) {
+				throw new JtaPlatformException( "Could not access JTA Transaction to register synchronization", e );
+			}
+		}
+
+		@Override
+		public boolean canRegisterSynchronization() {
+			return JtaStatusHelper.isActive( AbstractJtaPlatform.this.getTransactionManager() );
+		}
 	}
 
 	protected ServiceRegistry serviceRegistry() {

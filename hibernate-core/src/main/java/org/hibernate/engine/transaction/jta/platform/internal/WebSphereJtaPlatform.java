@@ -9,8 +9,10 @@ package org.hibernate.engine.transaction.jta.platform.internal;
 import java.lang.reflect.Method;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
+import org.hibernate.internal.util.NullnessUtil;
 
 import org.jboss.logging.Logger;
 
@@ -46,7 +48,7 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 			throw new JtaPlatformException( "Could not locate WebSphere TransactionManager access class" );
 		}
 
-		this.transactionManagerAccessClass = tmAccessClass;
+		this.transactionManagerAccessClass = NullnessUtil.castNonNull( tmAccessClass );
 		this.webSphereEnvironment = webSphereEnvironment;
 	}
 
@@ -56,7 +58,7 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked"})
 	protected TransactionManager locateTransactionManager() {
 		try {
 			final Method method = transactionManagerAccessClass.getMethod( "getTransactionManager" );

@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.List;
-
 import org.hibernate.sql.results.graph.Fetchable;
 
 /**
@@ -28,12 +26,6 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPar
 	@Override
 	default int getJdbcTypeCount() {
 		return 1;
-	}
-
-	@Deprecated(forRemoval = true)
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return BasicValuedMapping.super.getJdbcMappings();
 	}
 
 	@Override

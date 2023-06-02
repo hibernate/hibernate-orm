@@ -6,14 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import java.util.List;
-
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -53,12 +51,6 @@ public class EntityTypeLiteral
 	@Override
 	public int getJdbcTypeCount() {
 		return discriminatorType.getJdbcTypeCount();
-	}
-
-	@Deprecated(forRemoval = true)
-	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return discriminatorType.getJdbcMappings();
 	}
 
 	@Override

@@ -6,10 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -29,12 +25,6 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 	@Override
 	default int getJdbcTypeCount() {
 		return 1;
-	}
-
-	@Deprecated(forRemoval = true)
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( getJdbcMapping() );
 	}
 
 	@Override

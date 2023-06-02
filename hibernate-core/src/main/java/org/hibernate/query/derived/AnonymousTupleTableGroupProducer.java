@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.derived;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -344,14 +343,6 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
-	}
-
-	@Deprecated(forRemoval = true)
-	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
-		return results;
 	}
 
 	@Override

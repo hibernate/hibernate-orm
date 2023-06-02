@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -23,7 +21,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * Support for {@link jakarta.persistence.EmbeddedId}
@@ -119,14 +116,6 @@ public class EmbeddedIdentifierMappingImpl
 	@Override
 	public String getAttributeName() {
 		return name;
-	}
-
-	@Deprecated(forRemoval = true)
-	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
-		return results;
 	}
 
 }

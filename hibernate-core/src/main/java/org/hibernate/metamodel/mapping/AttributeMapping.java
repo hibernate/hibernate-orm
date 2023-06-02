@@ -6,14 +6,11 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.hibernate.generator.Generator;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.DatabaseSnapshotContributor;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.generator.Generator;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
@@ -120,14 +117,6 @@ public interface AttributeMapping
 
 	default boolean isEmbeddedAttributeMapping(){
 		return false;
-	}
-
-	@Deprecated(forRemoval = true)
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
-		return results;
 	}
 
 }

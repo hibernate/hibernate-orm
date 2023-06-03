@@ -66,6 +66,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.hibernate.orm.test.cid.Customer;
 import org.hibernate.orm.test.cid.LineItem;
@@ -308,6 +309,21 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 							created.getId() + "foo"
 					);
 					assertEquals( expected, result );
+				}
+		);
+	}
+
+        @Test
+	@JiraKey("HHH-16605")
+	public void testBooleanAndIntegerComparision() {
+		inTransaction(
+				(session) -> {
+					final String qry = "select c from Constructor c where 1 = true";
+					QueryImplementor<Constructor> query = session.createQuery(qry, Constructor.class);
+                                        
+					//do not execute the query here because in H2, integer vs boolean comparison is only valid
+					//when MODE=MYSQL or MODE=MARIADB, however it has to be accepted by the HQL parser
+					assertNotNull(query);
 				}
 		);
 	}

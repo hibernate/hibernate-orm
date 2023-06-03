@@ -99,6 +99,8 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 			case "java.lang.Byte":
 			case "short":
 			case "java.lang.Short":
+			case "boolean":
+			case "java.lang.Boolean":
 				return true;
 			default:
 				return false;

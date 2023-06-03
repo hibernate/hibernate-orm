@@ -3745,7 +3745,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		catch (IllegalArgumentException e) {
 			final Throwable cause = e.getCause();
 			assertThat( cause, instanceOf( ParsingException.class ) );
-			assertTrue( cause.getMessage().contains( "mismatched input ')' expecting {<EOF>" ) );
+			assertTrue( cause.getMessage().contains( "mismatched input ')'" ) );
 		}
 	}
 

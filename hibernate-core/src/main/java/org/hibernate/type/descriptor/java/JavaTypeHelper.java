@@ -29,6 +29,10 @@ public class JavaTypeHelper {
 		);
 	}
 
+	public static boolean isLiteral(JavaType<?> javaType) {
+		return javaType.getClass() == StringJavaType.class;
+	}
+
 	public static boolean isTemporal(JavaType<?> javaType) {
 		return javaType != null && javaType.isTemporalType();
 	}

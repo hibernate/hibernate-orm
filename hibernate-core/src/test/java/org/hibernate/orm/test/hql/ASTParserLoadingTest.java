@@ -66,6 +66,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import org.hibernate.orm.test.cid.Customer;
 import org.hibernate.orm.test.cid.LineItem;
@@ -278,6 +279,21 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 							.setParameterList( 2, citiesArray )
 							.list();
 					assertEquals( 1, result.size() );
+				}
+		);
+	}
+
+        @Test
+	@JiraKey("HHH-16608")
+	public void testStringPredicate() {
+		// In MySQL/MariaDB and H2 with MODE=MYSQL it is possible to have predicates like dates or numbers or event booleans
+		// encapsulated in quotes, so any type should be accepted agains string and let the database handle it
+		inTransaction(
+				(session) -> {
+					assertNotNull(session.createQuery("select c from Constructor c where c.someNumber = '12345'", Constructor.class));
+					assertNotNull(session.createQuery("select c from Constructor c where c.someBoolean = 'true'", Constructor.class));
+					assertNotNull(session.createQuery("select c from Mammal c where c.birthdate = '2023-01-01 00:00:00'", org.hibernate.testing.orm.domain.animal.Mammal.class));
+					assertNotNull(session.createQuery("select c from Mammal c where c.birthdate = '2023-01-01'", org.hibernate.testing.orm.domain.animal.Mammal.class));
 				}
 		);
 	}

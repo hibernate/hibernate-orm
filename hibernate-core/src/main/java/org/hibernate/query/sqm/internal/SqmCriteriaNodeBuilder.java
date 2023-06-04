@@ -265,7 +265,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				|| rhsJavaType.isWider( lhsJavaType )
 				// Polymorphic entity comparison
 				|| lhsJavaType.getJavaTypeClass().isAssignableFrom( rhsJavaType.getJavaTypeClass() )
-				|| rhsJavaType.getJavaTypeClass().isAssignableFrom( lhsJavaType.getJavaTypeClass() );
+				|| rhsJavaType.getJavaTypeClass().isAssignableFrom( lhsJavaType.getJavaTypeClass() )
+				// Special cases for strings because for instance in MySQL/MariaDB, any
+				// value (date, boolean, integer) can be enclosed as string
+				|| JavaTypeHelper.isLiteral(lhsJavaType)
+				|| JavaTypeHelper.isLiteral(rhsJavaType);
 	}
 
 	private static boolean isDiscriminatorComparison(SqmExpressible<?> lhsType, SqmExpressible<?> rhsType) {

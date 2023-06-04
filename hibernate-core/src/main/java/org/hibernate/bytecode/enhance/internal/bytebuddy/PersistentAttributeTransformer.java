@@ -51,7 +51,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
 
 	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
-	private static final ModifierContributor.ForField REMOVE_PRIVATE_FINAL_MODIFIER = new ModifierContributor.ForField() {
+	private static final ModifierContributor.ForField FIELD_REMOVE_FINAL_MODIFIER = new ModifierContributor.ForField() {
 		@Override
 		public int getMask() {
 			return EMPTY_MASK; // Do not add any modifier
@@ -59,7 +59,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 		@Override
 		public int getRange() {
-			return Opcodes.ACC_FINAL | Opcodes.ACC_PRIVATE; // Remove the "final" and "private" modifier
+			return Opcodes.ACC_FINAL; // Remove the "final" modifier
 		}
 
 		@Override
@@ -67,7 +67,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			return false;
 		}
 	};
-	private static final ModifierContributor.ForMethod REMOVE_PRIVATE_MODIFIER = new ModifierContributor.ForMethod() {
+	private static final ModifierContributor.ForMethod METHOD_REMOVE_PRIVATE_MODIFIER = new ModifierContributor.ForMethod() {
 		@Override
 		public int getMask() {
 			return EMPTY_MASK; // Do not add any modifier
@@ -231,7 +231,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		builder = builder.visit(
 				new ModifierAdjustment().withConstructorModifiers(
 						ElementMatchers.isDefaultConstructor(),
-						REMOVE_PRIVATE_MODIFIER
+						METHOD_REMOVE_PRIVATE_MODIFIER
 				)
 		);
 
@@ -250,7 +250,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		builder = builder.visit(
 				new ModifierAdjustment().withFieldModifiers(
 						anyOf( enhancedFieldsAsDefined ),
-						REMOVE_PRIVATE_FINAL_MODIFIER
+						FIELD_REMOVE_FINAL_MODIFIER
 				)
 		);
 		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {

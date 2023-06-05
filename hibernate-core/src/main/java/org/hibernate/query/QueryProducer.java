@@ -29,10 +29,27 @@ public interface QueryProducer {
 	/**
 	 * Create a {@link Query} instance for the given HQL query, or
 	 * HQL insert, update, or delete statement.
+	 * <p>
+	 * If a query has no explicit {@code select} list, the select list
+	 * is inferred:
+	 * <ul>
+	 * <li>if there is exactly one root entity in the {@code from}
+	 *     clause, then that root entity is the only element of the
+	 *     select list, or
+	 * <li>otherwise, if there are multiple root entities in the
+	 *     {@code from} clause, then the select list contains every
+	 *     root entity and every non-{@code fetch} joined entity.
+	 * </ul>
 	 *
 	 * @apiNote Returns a raw {@code Query} type instead of a wildcard
 	 * type {@code Query<?>}, to match the signature of the JPA method
 	 * {@link jakarta.persistence.EntityManager#createQuery(String)}.
+	 *
+	 * @implNote This method interprets some queries with an implicit
+	 * {@code select} list in a quite unintuitive way. In some future
+	 * release, this method will be modified to throw an exception
+	 * when passed a query with a missing {@code select}. For now, use
+	 * {@link #createQuery(String, Class)} to avoid ambiguity.
 	 *
 	 * @param queryString The HQL query
 	 *
@@ -41,21 +58,47 @@ public interface QueryProducer {
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 *
 	 * @deprecated use {@link #createQuery(String, Class)},
-	 * {@link #createSelectionQuery} or {@link #createMutationQuery(String)}
-	 * depending on intention
+	 * {@link #createSelectionQuery(String, Class)}, or
+	 * {@link #createMutationQuery(String)} depending on intention
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);
 
 	/**
-	 * Create a typed {@link Query} instance for the given HQL query string.
+	 * Create a typed {@link Query} instance for the given HQL query
+	 * string and given query result type.
+	 * <ul>
+	 * <li>If the query has a single item in the {@code select} list,
+	 *     then the select item must be assignable to the given result
+	 *     type.
+	 * <li>Otherwise, if there are multiple select items, then the
+	 *     select items will be packaged into an instance of the
+	 *     result type. The result type must have an appropriate
+	 *     constructor with parameter types matching the select items,
+	 *     or it must be one of the types {@code Object[]},
+	 *     {@link java.util.List}, {@link java.util.Map}, or
+	 *     {@link jakarta.persistence.Tuple}.
+	 * </ul>
+	 * <p>
+	 * If a query has no explicit {@code select} list, the select list
+	 * is inferred from the given query result type:
+	 * <ul>
+	 * <li>if the result type is an entity type, the query must have
+	 *     exactly one root entity in the {@code from} clause, it must
+	 *     be assignable to the result type, and the inferred select
+	 *     list will contain just that entity, or
+	 * <li>otherwise, the select list contains every root entity and
+	 *     every non-{@code fetch} joined entity, and each query result
+	 *     will be packaged into an instance of the result type, just
+	 *     as specified above.
+	 * </ul>
 	 * <p>
 	 * The returned {@code Query} may be executed by calling
 	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
 	 *
 	 * @param queryString The HQL query
 	 * @param resultClass The type of the query result
-	 * @return The Query instance for manipulation and execution
+	 * @return The {@link Query} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String,Class)
 	 */
@@ -98,15 +141,25 @@ public interface QueryProducer {
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL query
-	 * using implicit mapping to the specified Java type.
-	 * <p>
-	 * If the given class is an entity class, this method is equivalent to
-	 * {@code createNativeQuery(sqlString).addEntity("alias1", resultClass)}.
+	 * using an implicit mapping to the specified Java type.
+	 * <ul>
+	 * <li>If the given class is an entity class, this method is equivalent
+	 *     to {@code createNativeQuery(sqlString).addEntity(resultClass)}.
+	 * <li>If the given class has a registered
+	 *     {@link org.hibernate.type.descriptor.java.JavaType}, then the
+	 *     query must return a result set with a single column whose
+	 *     {@code JdbcType} is compatible with that {@code JavaType}.
+	 * <li>Otherwise, the select items will be packaged into an instance of
+	 *     the result type. The result type must have an appropriate
+	 *     constructor with parameter types matching the select items, or it
+	 *     must be one of the types {@code Object[]}, {@link java.util.List},
+	 *     {@link java.util.Map}, or {@link jakarta.persistence.Tuple}.
+	 * </ul>
 	 *
 	 * @param sqlString The native (SQL) query string
-	 * @param resultClass The Java entity type to map results to
+	 * @param resultClass The Java type to map results to
 	 *
-	 * @return The NativeQuery instance for manipulation and execution
+	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 */
@@ -114,13 +167,13 @@ public interface QueryProducer {
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL query
-	 * using implicit mapping to the specified Java type.
+	 * using an implicit mapping to the specified Java entity type.
 	 * <p>
-	 * If the given class is an entity class, this method is equivalent to
+	 * The given class must be an entity class. This method is equivalent to
 	 * {@code createNativeQuery(sqlString).addEntity(tableAlias, resultClass)}.
 	 *
 	 * @param sqlString Native (SQL) query string
-	 * @param resultClass The Java entity type to map results to
+	 * @param resultClass The Java entity class to map results to
 	 * @param tableAlias The table alias for columns in the result set
 	 *
 	 * @return The {@link NativeQuery} instance for manipulation and execution
@@ -133,13 +186,13 @@ public interface QueryProducer {
 	 * Create a {@link NativeQuery} instance for the given native SQL query
 	 * using an explicit mapping to the specified Java type.
 	 * <p>
-	 * The given result set mapping name must identify a mapping defined by a
-	 * {@link jakarta.persistence.SqlResultSetMapping} annotation.
+	 * The given result set mapping name must identify a mapping defined by
+	 * a {@link jakarta.persistence.SqlResultSetMapping} annotation.
 	 *
 	 * @param sqlString The native (SQL) query string
 	 * @param resultSetMappingName The explicit result mapping name
 	 *
-	 * @return The NativeQuery instance for manipulation and execution
+	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 * @see jakarta.persistence.SqlResultSetMapping
@@ -153,8 +206,8 @@ public interface QueryProducer {
 	 * Create a {@link NativeQuery} instance for the given native SQL query
 	 * using an explicit mapping to the specified Java type.
 	 * <p>
-	 * The given result set mapping name must identify a mapping defined by a
-	 * {@link jakarta.persistence.SqlResultSetMapping} annotation.
+	 * The given result set mapping name must identify a mapping defined by
+	 * a {@link jakarta.persistence.SqlResultSetMapping} annotation.
 	 *
 	 * @param sqlString The native (SQL) query string
 	 * @param resultSetMappingName The explicit result mapping name
@@ -167,21 +220,69 @@ public interface QueryProducer {
 	<R> NativeQuery<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass);
 
 	/**
-	 * Create a {@link SelectionQuery} reference for the given HQL.
+	 * Create a {@link SelectionQuery} reference for the given HQL
+	 * {@code select} statement.
+	 * <p>
+	 * If the statement has no explicit {@code select} list, the
+	 * select list is inferred:
+	 * <ul>
+	 * <li>if there is exactly one root entity in the {@code from}
+	 *     clause, then that root entity is the only element of the
+	 *     select list, or
+	 * <li>otherwise, if there are multiple root entities in the
+	 *     {@code from} clause, then the select list contains every
+	 *     root entity and every non-{@code fetch} joined entity.
+	 * </ul>
 	 *
-	 * Only valid for select queries
-	 *
-	 * @see jakarta.persistence.EntityManager#createQuery(String)
+	 * @implNote This method interprets some queries with an implicit
+	 * {@code select} list in a quite unintuitive way. In some future
+	 * release, this method will be modified to throw an exception
+	 * when passed a query with a missing {@code select}. For now, use
+	 * {@link #createSelectionQuery(String, Class)} to avoid ambiguity.
 	 *
 	 * @throws IllegalSelectQueryException if the given HQL query
 	 * is an insert, update or delete query
+	 *
+	 * @deprecated Use {@link #createSelectionQuery(String, Class)}
 	 */
+	@Deprecated(since = "6.3")
 	SelectionQuery<?> createSelectionQuery(String hqlString);
 
 	/**
-	 * Create a {@link SelectionQuery} reference for the given HQL.
-	 *
-	 * Only valid for select queries
+	 * Create a {@link SelectionQuery} instance for the given HQL query
+	 * string and given query result type.
+	 * <ul>
+	 * <li>If the query has a single item in the {@code select} list,
+	 *     then the select item must be assignable to the given result
+	 *     type.
+	 * <li>Otherwise, if there are multiple select items, then the
+	 *     select items will be packaged into an instance of the
+	 *     result type. The result type must have an appropriate
+	 *     constructor with parameter types matching the select items,
+	 *     or it must be one of the types {@code Object[]},
+	 *     {@link java.util.List}, {@link java.util.Map}, or
+	 *     {@link jakarta.persistence.Tuple}.
+	 * </ul>
+	 * <p>
+	 * If a query has no explicit {@code select} list, the select list
+	 * is inferred from the given query result type:
+	 * <ul>
+	 * <li>if the result type is an entity type, the query must have
+	 *     exactly one root entity in the {@code from} clause, it must
+	 *     be assignable to the result type, and the inferred select
+	 *     list will contain just that entity, or
+	 * <li>otherwise, the select list contains every root entity and
+	 *     every non-{@code fetch} joined entity, and each query result
+	 *     will be packaged into an instance of the result type, just
+	 *     as specified above.
+	 * </ul>
+	 * <p>
+	 * The returned {@code Query} may be executed by calling
+	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
+
+	 * @param hqlString The HQL query as a string
+	 * @param resultType The {@link Class} object representing the
+	 *                   query result type
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 *
@@ -191,14 +292,15 @@ public interface QueryProducer {
 	<R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType);
 
 	/**
-	 * Create a {@link SelectionQuery} reference for the given Criteria.
+	 * Create a {@link SelectionQuery} reference for the given
+	 * {@link CriteriaQuery}.
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaQuery)
 	 */
 	<R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria);
 
 	/**
-	 * Create a MutationQuery reference for the given HQL insert,
+	 * Create a {@link MutationQuery} reference for the given HQL insert,
 	 * update, or delete statement.
 	 *
 	 * @throws IllegalMutationQueryException if the given HQL query
@@ -234,7 +336,7 @@ public interface QueryProducer {
 	 * Create a typed {@link Query} instance for the given named query.
 	 * The named query might be defined in HQL or in native SQL.
 	 *
-	 * @param name the name of a pre-defined, named query
+	 * @param name the name of a predefined named query
 	 *
 	 * @return The {@link Query} instance for manipulation and execution
 	 *
@@ -244,8 +346,7 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createNamedQuery(String)
 	 * 
-	 * @deprecated use {@link #createNamedQuery(String, Class)} or
-	 *                 {@link #createNamedMutationQuery(String)}
+	 * @deprecated use {@link #createNamedQuery(String, Class)}
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createNamedQuery(String name);
@@ -269,20 +370,29 @@ public interface QueryProducer {
 	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
 
 	/**
-	 * Create a {@link SelectionQuery} instance for the
-	 * named {@link jakarta.persistence.NamedQuery}
+	 * Create a {@link SelectionQuery} instance for the named
+	 * {@link jakarta.persistence.NamedQuery}.
 	 *
-	 * @throws IllegalSelectQueryException if the given HQL query is a select query
+	 * @implNote This method interprets some queries with an implicit
+	 * {@code select} list in a quite unintuitive way. In some future
+	 * release, this method will be modified to throw an exception
+	 * when passed a query with a missing {@code select}. For now, use
+	 * {@link #createNamedSelectionQuery(String, Class)} to avoid
+	 * ambiguity.
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query is not a select query
 	 * @throws UnknownNamedQueryException if no query has been defined with the given name
+	 *
+	 * @deprecated use {@link #createNamedSelectionQuery(String, Class)}
 	 */
+	@Deprecated(since = "6.3")
 	SelectionQuery<?> createNamedSelectionQuery(String name);
 
 	/**
-	 * Create a {@link SelectionQuery} instance for the
-	 * named {@link jakarta.persistence.NamedQuery} with the expected
-	 * result-type
+	 * Create a {@link SelectionQuery} instance for the named
+	 * {@link jakarta.persistence.NamedQuery} with the given result type.
 	 *
-	 * @throws IllegalSelectQueryException if the given HQL query is a select query
+	 * @throws IllegalSelectQueryException if the given HQL query is not a select query
 	 * @throws UnknownNamedQueryException if no query has been defined with the given name
 	 */
 	<R> SelectionQuery<R> createNamedSelectionQuery(String name, Class<R> resultType);
@@ -301,7 +411,7 @@ public interface QueryProducer {
 	/**
 	 * Create a {@link Query} instance for the named query.
 	 *
-	 * @param queryName the name of a pre-defined, named query
+	 * @param queryName the name of a predefined named query
 	 *
 	 * @return The {@link Query} instance for manipulation and execution
 	 *
@@ -317,7 +427,7 @@ public interface QueryProducer {
 	/**
 	 * Get a {@link NativeQuery} instance for a named native SQL query
 	 *
-	 * @param name The name of the pre-defined query
+	 * @param name The name of the predefined query
 	 *
 	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
@@ -329,7 +439,7 @@ public interface QueryProducer {
 	/**
 	 * Get a {@link NativeQuery} instance for a named native SQL query
 	 *
-	 * @param name The name of the pre-defined query
+	 * @param name The name of the predefined query
 	 *
 	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *

@@ -63,7 +63,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	public HqlInterpretation resolveHqlInterpretation(String queryString, Class<?> expectedResultType, Function<String, SqmStatement<?>> creator) {
 		final StatisticsImplementor statistics = statisticsSupplier.get();
 		final boolean stats = statistics.isStatisticsEnabled();
-		final long startTime = ( stats ) ? System.nanoTime() : 0L;
+		final long startTime = stats ? System.nanoTime() : 0L;
 		final SqmStatement<?> sqmStatement = creator.apply( queryString );
 
 		final DomainParameterXref domainParameterXref;

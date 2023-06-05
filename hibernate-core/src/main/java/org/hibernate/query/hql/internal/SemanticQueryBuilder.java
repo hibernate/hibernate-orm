@@ -31,6 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.QueryException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -1157,31 +1158,56 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	protected SqmSelectClause buildInferredSelectClause(SqmFromClause fromClause) {
-		// for now, this is slightly different to the legacy behavior where
-		// the root and each non-fetched-join was selected.  For now, here, we simply
-		// select the root
-		final SqmSelectClause selectClause;
+		if ( fromClause.getNumberOfRoots() == 0 ) {
+			// should be impossible to get here
+			throw new AssertionFailure( "query has no 'select' clause, and no root entities");
+		}
 
-		final boolean expectingArray = expectedResultType != null && expectedResultType.isArray();
-		if ( expectingArray ) {
-			// triggers legacy interpretation of returning all roots
-			// and non-fetched joins
-			selectClause = new SqmSelectClause(
-					false,
-					creationContext.getNodeBuilder()
-			);
+		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
+
+		final SqmSelectClause selectClause;
+		final boolean singleEntityResult;
+		if ( expectedResultType == null ) {
+			// no result type was specified
+			// - if there is a single root entity return the entity,
+			//   even if it has non-fetch joins (ugh!)
+			// - otherwise, return all entities in an Object[] array,
+			//   including non-fetch joins
+			selectClause = new SqmSelectClause( false, nodeBuilder );
+			singleEntityResult = fromClause.getNumberOfRoots() == 1;
 		}
 		else {
-			selectClause = new SqmSelectClause(
-					false,
-					fromClause.getNumberOfRoots(),
-					creationContext.getNodeBuilder()
-			);
+			singleEntityResult = creationContext.getJpaMetamodel().findEntityType( expectedResultType ) != null;
+			if ( singleEntityResult ) {
+				// the result type is an entity class
+				if ( fromClause.getNumberOfRoots() > 1 ) {
+					// multiple root entities
+					throw new SemanticException( "query has no 'select' clause, and multiple root entities, but query result type is an entity class"
+							+ " (specify an explicit 'select' list, or a different result type, for example, 'Object[].class')");
+				}
+				else {
+					final SqmRoot<?> sqmRoot = fromClause.getRoots().get(0);
+					if ( sqmRoot instanceof SqmCteRoot ) {
+						throw new SemanticException( "query has no 'select' clause, and the 'from' clause refers to a CTE, but query result type is an entity class"
+								+ " (specify an explicit 'select' list)");
+					}
+					else {
+						// exactly one root entity, return it
+						// (joined entities are not returned)
+						selectClause = new SqmSelectClause( false, 1, nodeBuilder );
+					}
+				}
+			}
+			else {
+				// the result type is not an entity class
+				// return all root entities and non-fetch joins
+				selectClause = new SqmSelectClause( false, nodeBuilder );
+			}
 		}
 
 		fromClause.visitRoots( (sqmRoot) -> {
-			selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), creationContext.getNodeBuilder() ) );
-			if ( expectingArray ) {
+			selectClause.addSelection( new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), nodeBuilder) );
+			if ( !singleEntityResult ) {
 				applyJoinsToInferredSelectClause( sqmRoot, selectClause );
 			}
 		} );

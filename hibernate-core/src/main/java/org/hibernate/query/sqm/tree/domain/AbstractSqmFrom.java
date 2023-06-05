@@ -238,7 +238,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public boolean hasJoins() {
-		return !( joins == null || joins.isEmpty() );
+		return joins != null && !joins.isEmpty();
 	}
 
 	@Override
@@ -330,7 +330,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <A> SqmSingularJoin<T, A> join(SingularAttribute<? super T, A> attribute, JoinType jt) {
 		final SqmSingularJoin<T, A> join = buildSingularJoin( (SingularPersistentAttribute<? super T, A>) attribute, SqmJoinType.from( jt ), false );
 		addSqmJoin( join );
@@ -646,7 +645,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <A> SqmSingularJoin<T, A> fetch(SingularAttribute<? super T, A> attribute, JoinType jt) {
 		final SqmSingularJoin<T, A> join = buildSingularJoin(
 				(SingularPersistentAttribute<? super T, A>) attribute,
@@ -663,7 +661,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <A> SqmAttributeJoin<T, A> fetch(PluralAttribute<? super T, ?, A> attribute, JoinType jt) {
 		return buildJoin(
 				(PluralPersistentAttribute<? super T, ?, A>) attribute,

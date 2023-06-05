@@ -34,12 +34,13 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final SqmEntityValuedSimplePath<T> path = context.registerCopy(
 				this,
 				new SqmEntityValuedSimplePath<>(
-						getNavigablePath(),
+						getNavigablePathCopy( lhsCopy ),
 						getReferencedPathSource(),
-						getLhs().copy( context ),
+						lhsCopy,
 						nodeBuilder()
 				)
 		);

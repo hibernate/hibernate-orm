@@ -59,12 +59,13 @@ public class SqmEmbeddedValuedSimplePath<T>
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final SqmEmbeddedValuedSimplePath<T> path = context.registerCopy(
 				this,
 				new SqmEmbeddedValuedSimplePath<>(
-						getNavigablePath(),
+						getNavigablePathCopy( lhsCopy ),
 						getReferencedPathSource(),
-						getLhs().copy( context ),
+						lhsCopy,
 						getExplicitAlias(),
 						nodeBuilder()
 				)

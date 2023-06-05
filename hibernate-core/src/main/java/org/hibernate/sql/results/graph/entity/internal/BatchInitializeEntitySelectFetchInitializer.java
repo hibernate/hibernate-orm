@@ -100,7 +100,6 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 			loadInstance( key, referencedModelPart, session );
 		}
 		toBatchLoad.clear();
-		parentAccess = null;
 	}
 
 	@Override

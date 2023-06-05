@@ -341,7 +341,9 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 										setTypeName( element, inferredData.getProperty().getElementClass().getName() );
 										if ( initializedCollection instanceof IndexedCollection ) {
 											final Value index = ( (IndexedCollection) initializedCollection ).getIndex().copy();
-											setTypeName( index, inferredData.getProperty().getMapKey().getName() );
+											if ( inferredData.getProperty().getMapKey() != null ) {
+												setTypeName( index, inferredData.getProperty().getMapKey().getName() );
+											}
 											( (IndexedCollection) collection ).setIndex( index );
 										}
 										collection.setElement( element );

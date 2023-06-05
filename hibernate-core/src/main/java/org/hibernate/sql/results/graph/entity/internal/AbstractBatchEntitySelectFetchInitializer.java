@@ -24,7 +24,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public abstract class AbstractBatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 		implements EntityInitializer {
 
-	protected FetchParentAccess parentAccess;
+	protected final FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
 
 	protected final EntityPersister concreteDescriptor;
@@ -47,6 +47,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
 		this.firstEntityInitializer = parentAccess.findFirstEntityInitializer();
+		assert firstEntityInitializer != null : "This initializer requires parentAccess.findFirstEntityInitializer() to not be null";
 	}
 
 	public ModelPart getInitializedPart() {

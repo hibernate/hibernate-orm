@@ -133,7 +133,6 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			);
 			toBatchLoad.clear();
 		}
-		parentAccess = null;
 	}
 
 	protected static void setInstance(

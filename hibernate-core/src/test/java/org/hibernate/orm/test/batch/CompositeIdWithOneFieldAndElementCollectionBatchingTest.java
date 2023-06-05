@@ -1,7 +1,5 @@
 package org.hibernate.orm.test.batch;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
@@ -23,32 +21,28 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(
 		annotatedClasses = {
-				CompositeIdAndElementCollectionBatchingTest.EntityA.class,
-				CompositeIdAndElementCollectionBatchingTest.EntityB.class,
-				CompositeIdAndElementCollectionBatchingTest.EmbeddableA.class,
-				CompositeIdAndElementCollectionBatchingTest.EntityId.class
+				CompositeIdWithOneFieldAndElementCollectionBatchingTest.EntityA.class,
 		}
 )
 @SessionFactory
 @ServiceRegistry(
 		settings = @Setting(name = Environment.DEFAULT_BATCH_FETCH_SIZE, value = "2")
 )
-@JiraKey("HHH-16740")
-class CompositeIdAndElementCollectionBatchingTest {
+@JiraKey("HHH-16750")
+class CompositeIdWithOneFieldAndElementCollectionBatchingTest {
 
-	private static final EntityB ENTITY_B = new EntityB( 1L );
 	private static final EntityA ENTITY_A = new EntityA(
-			new EntityId( "EntityA", ENTITY_B ),
+			new EntityId( "EntityA" ),
 			Collections.singleton( new EmbeddableA( "EmbeddableA" ) )
 	);
+
 	private static final EntityA ENTITY_A2 = new EntityA(
-			new EntityId( "EntityA2", ENTITY_B ),
+			new EntityId( "EntityB" ),
 			Collections.singleton( new EmbeddableA( "EmbeddableB" ) )
 	);
 
@@ -56,7 +50,6 @@ class CompositeIdAndElementCollectionBatchingTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.persist( ENTITY_B );
 					session.persist( ENTITY_A );
 					session.persist( ENTITY_A2 );
 				}
@@ -64,12 +57,10 @@ class CompositeIdAndElementCollectionBatchingTest {
 	}
 
 	@AfterEach
-	public void tearDown(SessionFactoryScope scope){
+	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EntityA" ).executeUpdate();
-					session.createQuery( "delete from EntityB" ).executeUpdate();
-				}
+				session ->
+						session.createQuery( "delete from EntityA" ).executeUpdate()
 		);
 	}
 
@@ -111,32 +102,15 @@ class CompositeIdAndElementCollectionBatchingTest {
 		}
 	}
 
-	@Entity(name = "EntityB")
-	public static class EntityB {
-		@Id
-		private Long id;
-
-		public EntityB() {
-		}
-
-		public EntityB(Long id) {
-			this.id = id;
-		}
-	}
-
 	@Embeddable
 	public static class EntityId implements Serializable {
 		private String id1;
-		@ManyToOne
-		@MapsId
-		private EntityB id2;
 
 		public EntityId() {
 		}
 
-		public EntityId(String id1, EntityB id2) {
+		public EntityId(String id1) {
 			this.id1 = id1;
-			this.id2 = id2;
 		}
 	}
 

@@ -56,12 +56,13 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final SqmPluralValuedSimplePath<E> path = context.registerCopy(
 				this,
 				new SqmPluralValuedSimplePath<>(
-						getNavigablePath(),
+						getNavigablePathCopy( lhsCopy ),
 						getReferencedPathSource(),
-						getLhs().copy( context ),
+						lhsCopy,
 						getExplicitAlias(),
 						nodeBuilder()
 				)

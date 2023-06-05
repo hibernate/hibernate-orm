@@ -42,6 +42,16 @@ public class EntitySelectFetchInitializerBuilder {
 					keyResult.createResultAssembler( parentAccess, creationState )
 			);
 		}
+		if ( parentAccess.findFirstEntityInitializer() == null ) {
+			// Batch initializers require parentAccess.findFirstEntityInitializer() != null
+			return new EntitySelectFetchInitializer(
+					parentAccess,
+					fetchedAttribute,
+					navigablePath,
+					entityPersister,
+					keyResult.createResultAssembler( parentAccess, creationState )
+			);
+		}
 		final BatchMode batchMode = determineBatchMode( entityPersister, parentAccess, creationState );
 		switch ( batchMode ) {
 			case NONE:

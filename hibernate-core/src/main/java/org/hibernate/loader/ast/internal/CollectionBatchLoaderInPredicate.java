@@ -152,4 +152,8 @@ public class CollectionBatchLoaderInPredicate
 		);
 	}
 
+	@Override
+	void finishInitializingKeys(Object[] key, SharedSessionContractImplementor session) {
+		// do nothing
+	}
 }

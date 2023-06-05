@@ -35,7 +35,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	private final int keyJdbcCount;
 
-	private final CollectionLoaderSingleKey singleKeyLoader;
+	final CollectionLoaderSingleKey singleKeyLoader;
 
 	public AbstractCollectionBatchLoader(
 			int domainBatchSize,
@@ -91,9 +91,13 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 		initializeKeys( key, keys, session );
 
+		finishInitializingKeys( keys, session );
+
 		final CollectionKey collectionKey = new CollectionKey( getLoadable().getCollectionDescriptor(), key );
 		return session.getPersistenceContext().getCollection( collectionKey );
 	}
+
+	abstract void finishInitializingKeys(Object[] key, SharedSessionContractImplementor session);
 
 	protected void finishInitializingKey(Object key, SharedSessionContractImplementor session) {
 		if ( key == null ) {

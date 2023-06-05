@@ -18,7 +18,6 @@ import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -67,15 +66,12 @@ public class CollectionBatchLoaderArrayParam
 		final Class<?> keyType = keyDescriptor.getJavaType().getJavaTypeClass();
 		final Class<?> arrayClass = Array.newInstance( keyType, 0 ).getClass();
 
-		// this typecast is always safe because we don't instantiate this class unless the FK is "simple"
-		final SimpleForeignKeyDescriptor simpleKeyDescriptor = (SimpleForeignKeyDescriptor) keyDescriptor;
-
 		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
 				.getBasicTypeRegistry()
 				.getRegisteredType( arrayClass );
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				arrayBasicType,
-				simpleKeyDescriptor.getJdbcMapping(),
+				keyDescriptor.getSingleJdbcMapping(),
 				arrayClass,
 				getSessionFactory()
 		);
@@ -83,7 +79,7 @@ public class CollectionBatchLoaderArrayParam
 		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
 		sqlSelect = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
-				simpleKeyDescriptor.getKeyPart(),
+				keyDescriptor.getKeyPart(),
 				getInfluencers(),
 				LockOptions.NONE,
 				jdbcParameter,

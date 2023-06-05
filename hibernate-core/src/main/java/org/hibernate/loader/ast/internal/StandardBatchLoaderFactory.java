@@ -14,6 +14,7 @@ import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.BasicType;
@@ -55,7 +56,9 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 			LoadQueryInfluencers influencers,
 			PluralAttributeMapping attributeMapping,
 			SessionFactoryImplementor factory) {
-		if ( attributeMapping.getKeyDescriptor().getJdbcTypeCount() == 1
+		final ForeignKeyDescriptor keyDescriptor = attributeMapping.getKeyDescriptor();
+		if ( keyDescriptor.getJdbcTypeCount() == 1
+				&& !keyDescriptor.isEmbedded()
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {
 			// we can use a single ARRAY parameter to send all the ids
 			return new CollectionBatchLoaderArrayParam( domainBatchSize, influencers, attributeMapping, factory );

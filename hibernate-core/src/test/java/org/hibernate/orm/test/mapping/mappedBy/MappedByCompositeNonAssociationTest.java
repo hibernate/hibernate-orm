@@ -1,6 +1,8 @@
 package org.hibernate.orm.test.mapping.mappedBy;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -18,14 +20,14 @@ import static jakarta.persistence.CascadeType.PERSIST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
-@DomainModel(annotatedClasses = {MappedByNonAssociationTest.Loan.class, MappedByNonAssociationTest.Extensions.class})
-public class MappedByNonAssociationTest {
+@DomainModel(annotatedClasses = {MappedByCompositeNonAssociationTest.Loan.class, MappedByCompositeNonAssociationTest.Extensions.class})
+public class MappedByCompositeNonAssociationTest {
 
 	@Test void test(SessionFactoryScope scope) {
 		Extensions ex = new Extensions();
 		ex.exExtensionDays = 3L;
-		ex.exNo = 2L;
-		ex.exLoanId = 4L;
+		ex.extensionId.exNo = 2L;
+		ex.extensionId.exLoanId = 4L;
 
 		Loan loan = new Loan();
 		loan.id = 4L;
@@ -39,11 +41,11 @@ public class MappedByNonAssociationTest {
 		});
 		assertEquals( 1, l1.extensions.size() );
 		assertEquals( loan.id, l1.id );
-		assertEquals( ex.exLoanId, l1.extensions.get(0).exLoanId );
+		assertEquals( ex.extensionId.exLoanId, l1.extensions.get(0).extensionId.exLoanId );
 		Loan l2 = scope.fromSession(s -> s.createQuery("from Loan join fetch extensions", Loan.class).getSingleResult());
 		assertEquals( 1, l2.extensions.size() );
 		assertEquals( loan.id, l2.id );
-		assertEquals( ex.exLoanId, l2.extensions.get(0).exLoanId );
+		assertEquals( ex.extensionId.exLoanId, l2.extensions.get(0).extensionId.exLoanId );
 	}
 
 	@Entity(name="Loan")
@@ -52,19 +54,25 @@ public class MappedByNonAssociationTest {
 		@Column(name = "LOAN_ID")
 		private Long id;
 
-		@OneToMany(cascade = PERSIST, mappedBy = "exLoanId")
+		@OneToMany(cascade = PERSIST, mappedBy = "extensionId.exLoanId")
 		@OrderColumn(name = "EX_NO")
 		private List<Extensions> extensions = new ArrayList<>();
 	}
 
-	@Entity(name="Extensions")
-	static class Extensions  {
-		@Id
+	@Embeddable
+	static class ExtensionId {
 		@Column(name = "EX_LOAN_ID")
 		private Long exLoanId;
-		@Id
+
 		@Column(name = "EX_NO")
 		private Long exNo;
+	}
+
+	@Entity(name="Extensions")
+	static class Extensions  {
+		@EmbeddedId
+		private ExtensionId extensionId = new ExtensionId();
+
 		@Column(name = "EX_EXTENSION_DAYS")
 		private Long exExtensionDays;
 	}

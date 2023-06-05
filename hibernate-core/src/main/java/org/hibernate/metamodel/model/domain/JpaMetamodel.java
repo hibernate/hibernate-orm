@@ -80,8 +80,8 @@ public interface JpaMetamodel extends Metamodel {
 
 	/**
 	 * Returns a map that gives access to the enum literal expressions that can be used in queries.
-	 * The key is the short-hand enum literal. The value is a map, from enum class to the actual enum value.
-	 * This is needed for parsing short-hand enum literals that don't use FQNs.
+	 * The key is the shorthand enum literal. The value is a map, from enum class to the actual enum value.
+	 * This is needed for parsing shorthand enum literals that don't use FQNs.
 	 */
 	Map<String, Map<Class<?>, Enum<?>>> getAllowedEnumLiteralTexts();
 

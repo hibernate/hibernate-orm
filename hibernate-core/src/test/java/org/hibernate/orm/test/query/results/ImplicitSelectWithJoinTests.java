@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
  * @author Steve Ebersole
@@ -34,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ImplicitSelectWithJoinTests {
 	private static final String HQL = "from Product p join p.vendor v where v.name like '%Steve%'";
 	private static final String HQL2 = "select p " + HQL;
+	private static final String HQL3 = "from Product q join q.vendor w, Product p join p.vendor v where v.name like '%Steve%' and w.name like '%Gavin%'";
 
 	@Test
 	public void testNoExpectedType(SessionFactoryScope scope) {
@@ -80,7 +82,92 @@ public class ImplicitSelectWithJoinTests {
 	}
 
 	@Test
+	public void testArrayResultNoResultType(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final SelectionQuery<?> query = session.createSelectionQuery( HQL3 );
+
+			{
+				final List<?> results = query.list();
+				assertThat( results ).hasSize( 1 );
+				final Object result = results.get( 0 );
+				assertThat( result ).isNotNull();
+				assertInstanceOf( Object[].class, result );
+				assertThat( (Object[]) result ).hasSize(4);
+				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
+			}
+
+			{
+				final ScrollableResults<?> results = query.scroll();
+				assertThat( results.next() ).isTrue();
+				final Object result = results.get();
+				assertThat( result ).isNotNull();
+				assertInstanceOf( Object[].class, result );
+				assertThat( (Object[]) result ).hasSize(4);
+				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
+				assertThat( results.next() ).isFalse();
+			}
+		} );
+
+		// frankly, this would be more consistent and more backward-compatible
+//		scope.inTransaction( (session) -> {
+//			final SelectionQuery<?> query = session.createSelectionQuery( HQL );
+//
+//			{
+//				final List<?> results = query.list();
+//				assertThat( results ).hasSize( 1 );
+//				final Object result = results.get( 0 );
+//				assertThat( result ).isNotNull();
+//				assertInstanceOf( Object[].class, result );
+//				assertThat( (Object[]) result ).hasSize(2);
+//				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class);
+//			}
+//
+//			{
+//				final ScrollableResults<?> results = query.scroll();
+//				assertThat( results.next() ).isTrue();
+//				final Object result = results.get();
+//				assertThat( result ).isNotNull();
+//				assertInstanceOf( Object[].class, result );
+//				assertThat( (Object[]) result ).hasSize(2);
+//				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class);
+//				assertThat( results.next() ).isFalse();
+//			}
+//		} );
+	}
+
+	@Test
 	public void testArrayResult(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final SelectionQuery<Object[]> query = session.createSelectionQuery( HQL3, Object[].class );
+
+			{
+				final List<Object[]> results = query.list();
+				assertThat( results ).hasSize( 1 );
+				final Object[] result = results.get( 0 );
+				assertThat( result ).isNotNull();
+				assertThat( result ).hasSize( 4 );
+				assertThat( result[ 0 ] ).isNotNull();
+				assertThat( result[ 1 ] ).isNotNull();
+				assertThat( result[ 2 ] ).isNotNull();
+				assertThat( result[ 3 ] ).isNotNull();
+				assertThat( result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
+			}
+
+			{
+				final ScrollableResults<Object[]> results = query.scroll();
+				assertThat( results.next() ).isTrue();
+				final Object[] result = results.get();
+				assertThat( results.next() ).isFalse();
+				assertThat( result ).isNotNull();
+				assertThat( result ).hasSize( 4 );
+				assertThat( result[ 0 ] ).isNotNull();
+				assertThat( result[ 1 ] ).isNotNull();
+				assertThat( result[ 2 ] ).isNotNull();
+				assertThat( result[ 3 ] ).isNotNull();
+				assertThat( result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
+			}
+		} );
+
 		scope.inTransaction( (session) -> {
 			final SelectionQuery<Object[]> query = session.createSelectionQuery( HQL, Object[].class );
 
@@ -92,6 +179,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).hasSize( 2 );
 				assertThat( result[ 0 ] ).isNotNull();
 				assertThat( result[ 1 ] ).isNotNull();
+				assertThat( result ).hasExactlyElementsOfTypes(Product.class, Vendor.class);
 			}
 
 			{
@@ -103,6 +191,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).hasSize( 2 );
 				assertThat( result[ 0 ] ).isNotNull();
 				assertThat( result[ 1 ] ).isNotNull();
+				assertThat( result ).hasExactlyElementsOfTypes(Product.class, Vendor.class);
 			}
 		} );
 	}
@@ -161,10 +250,14 @@ public class ImplicitSelectWithJoinTests {
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final Vendor vendor = new Vendor( 1, "Steve's Curios", "Acme Corp." );
-			final Product product = new Product( 10, UUID.fromString( "53886a8a-7082-4879-b430-25cb94415be8" ), vendor );
-			session.persist( vendor );
-			session.persist( product );
+			final Vendor steve = new Vendor( 1, "Steve's Curios", "Acme Corp." );
+			final Product product1 = new Product( 10, UUID.fromString( "53886a8a-7082-4879-b430-25cb94415be8" ), steve );
+			final Vendor gavin = new Vendor( 2, "Gavin & Associates", "Acme Corp." );
+			final Product product2 = new Product( 11, UUID.fromString( "53886a8b-3083-4879-b431-25cb95515be9" ), gavin );
+			session.persist( steve );
+			session.persist( product1 );
+			session.persist( gavin );
+			session.persist( product2 );
 		} );
 	}
 

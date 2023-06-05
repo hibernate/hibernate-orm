@@ -112,6 +112,8 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> addEntity(@SuppressWarnings("rawtypes") Class entityType);
 
+	NativeQueryImplementor<R> addEntity(Class<R> entityType, LockMode lockMode);
+
 	@Override
 	NativeQueryImplementor<R> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
 

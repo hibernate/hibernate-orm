@@ -199,4 +199,8 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 		ValuedModelPart getModelPart();
 
 	}
+
+	default boolean isEmbedded(){
+		return false;
+	}
 }

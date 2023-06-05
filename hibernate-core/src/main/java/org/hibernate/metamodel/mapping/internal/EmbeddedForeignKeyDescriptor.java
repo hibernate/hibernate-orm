@@ -665,4 +665,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	public boolean hasPartitionedSelectionMapping() {
 		return keySide.getModelPart().hasPartitionedSelectionMapping();
 	}
+
+	@Override
+	public boolean isEmbedded() {
+		return true;
+	}
 }

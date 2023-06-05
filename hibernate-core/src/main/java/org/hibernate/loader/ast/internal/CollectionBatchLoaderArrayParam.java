@@ -17,9 +17,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -65,7 +65,7 @@ public class CollectionBatchLoaderArrayParam
 			);
 		}
 
-		final SimpleForeignKeyDescriptor keyDescriptor = (SimpleForeignKeyDescriptor) getLoadable().getKeyDescriptor();
+		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
 
 		arrayElementType = keyDescriptor.getJavaType().getJavaTypeClass();
 		Class<?> arrayClass = Array.newInstance( arrayElementType, 0 ).getClass();
@@ -75,7 +75,7 @@ public class CollectionBatchLoaderArrayParam
 				.getRegisteredType( arrayClass );
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				arrayBasicType,
-				keyDescriptor.getJdbcMapping(),
+				keyDescriptor.getSingleJdbcMapping(),
 				arrayClass,
 				getSessionFactory()
 		);

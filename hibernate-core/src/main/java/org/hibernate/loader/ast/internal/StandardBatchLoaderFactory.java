@@ -15,6 +15,7 @@ import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.BasicType;
@@ -61,8 +62,10 @@ public class StandardBatchLoaderFactory implements BatchLoaderFactory {
 			PluralAttributeMapping attributeMapping,
 			SessionFactoryImplementor factory) {
 		final Dialect dialect = factory.getJdbcServices().getDialect();
-		final int columnCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
+		final ForeignKeyDescriptor keyDescriptor = attributeMapping.getKeyDescriptor();
+		final int columnCount = keyDescriptor.getJdbcTypeCount();
 		if ( columnCount == 1
+				&& !keyDescriptor.isEmbedded()
 				&& dialect.supportsStandardArrays()
 				&& dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY ) {
 			// we can use a single ARRAY parameter to send all the ids

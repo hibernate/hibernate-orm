@@ -53,7 +53,7 @@ Then Hibernate will query every entity which inherits the named type.
 [[root-reference-jpql-fqn-example]]
 [source, hql]
 ----
-select doc from org.hibernate.example.AbstractDocument where text like :pattern
+select doc from org.hibernate.example.AbstractDocument as doc where doc.text like :pattern
 ----
 
 Of course, there may be multiple root entities.
@@ -349,6 +349,7 @@ An explicit join may narrow the type of the joined entity using `treat()`.
 from Order as ord
     join treat(ord.payments as CreditCardPayment) as creditCardPayment
 where length(creditCardPayment.cardNumber) between 16 and 20
+select ord.id, creditCardPayment.cardNumber, creditCardPayment.amount
 ----
 
 Here, the identification variable `ccp` declared to the right of `treat()` has the narrowed type `CreditCardPayment`, instead of the declared type `Payment`.

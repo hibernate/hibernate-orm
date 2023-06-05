@@ -942,6 +942,7 @@ with Tree as (
         join Node child on child.parent.id = parent.id
 ) search depth first by id set level  /* depth-first search */
 from Tree
+select text
 order by level
 ----
 
@@ -962,6 +963,7 @@ with Tree as (
         join Node child on child.parent.id = parent.id
 ) search breadth first by id set level  /* breadth-first search */
 from Tree
+select text
 order by level desc
 ----
 

@@ -92,7 +92,6 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			);
 			toBatchLoad.clear();
 		}
-		parentAccess = null;
 	}
 
 	protected static void setInstance(

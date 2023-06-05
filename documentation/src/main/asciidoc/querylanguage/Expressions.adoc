@@ -1170,6 +1170,7 @@ from Author where books is empty
 [[member-of-collection-predicate-example]]
 [source, hql]
 ----
+select author, book
 from Author as author, Book as book
 where author member of book.authors
 ----

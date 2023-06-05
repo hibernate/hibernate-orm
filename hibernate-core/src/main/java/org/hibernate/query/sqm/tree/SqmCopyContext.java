@@ -6,10 +6,8 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import java.util.IdentityHashMap;
-
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.internal.NoParamSqmCopyContext;
+import org.hibernate.query.sqm.internal.SimpleSqmCopyContext;
 
 /**
  *
@@ -21,109 +19,10 @@ public interface SqmCopyContext {
 	<T> T registerCopy(T original, T copy);
 
 	static SqmCopyContext simpleContext() {
-		final IdentityHashMap<Object, Object> map = new IdentityHashMap<>();
-		return new SqmCopyContext() {
-			@Override
-			@SuppressWarnings("unchecked")
-			public <T> T getCopy(T original) {
-				if (original instanceof SqmPath) {
-					return (T) getPathCopy( (SqmPath<?>) original );
-				}
-				else {
-					return (T) map.get( original );
-				}
-			}
-
-			@Override
-			public <T> T registerCopy(T original, T copy) {
-				final Object old = map.put( original, copy );
-				if ( old != null ) {
-					throw new IllegalArgumentException( "Already registered a copy: " + old );
-				}
-				return copy;
-			}
-
-			@SuppressWarnings("unchecked")
-			private <T extends SqmPath<?>> T getPathCopy(T original) {
-				T existing = (T) map.get( original );
-				if ( existing != null ) {
-					return existing;
-				}
-
-				SqmPath<?> root = getRoot( original );
-				if ( root != original ) {
-					root.copy( this );
-					// root path might have already copied original
-					return (T) map.get( original );
-				}
-				else {
-					return null;
-				}
-			}
-
-			private SqmPath<?> getRoot(SqmPath<?> path) {
-				if ( path.getLhs() != null ) {
-					return getRoot( path.getLhs() );
-				}
-				else {
-					return path;
-				}
-			}
-		};
+		return new SimpleSqmCopyContext();
 	}
 
 	static SqmCopyContext noParamCopyContext() {
-		final IdentityHashMap<Object, Object> map = new IdentityHashMap<>();
-		return new SqmCopyContext() {
-			@Override
-			@SuppressWarnings("unchecked")
-			public <T> T getCopy(T original) {
-				if ( original instanceof SqmParameter ) {
-					return original;
-				}
-				if (original instanceof SqmPath) {
-					return (T) getPathCopy( (SqmPath<?>) original );
-				}
-				else {
-					return (T) map.get( original );
-				}
-			}
-
-			@Override
-			public <T> T registerCopy(T original, T copy) {
-				final Object old = map.put( original, copy );
-				if ( old != null ) {
-					throw new IllegalArgumentException( "Already registered a copy: " + old );
-				}
-				return copy;
-			}
-
-			@SuppressWarnings("unchecked")
-			private <T extends SqmPath<?>> T getPathCopy(T original) {
-				T existing = (T) map.get( original );
-				if ( existing != null ) {
-					return existing;
-				}
-
-				SqmPath<?> root = getRoot( original );
-				if ( root != original ) {
-					root.copy( this );
-					// root path might have already copied original
-					return (T) map.get( original );
-				}
-				else {
-					return null;
-				}
-			}
-
-			private SqmPath<?> getRoot(SqmPath<?> path) {
-				if ( path.getLhs() != null ) {
-					return getRoot( path.getLhs() );
-				}
-				else {
-					return path;
-				}
-			}
-		};
+		return new NoParamSqmCopyContext();
 	}
 }

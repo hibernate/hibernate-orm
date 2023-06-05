@@ -64,11 +64,12 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> implements SqmQ
 		if ( existing != null ) {
 			return existing;
 		}
+		final SqmFrom<?, O> lhsCopy = (SqmFrom<?, O>) getLhs().copy( context );
 		final SqmPluralPartJoin<O, T> path = context.registerCopy(
 				this,
 				new SqmPluralPartJoin<>(
-						(SqmFrom<?, O>) getLhs().copy( context ),
-						getNavigablePath(),
+						lhsCopy,
+						getNavigablePathCopy( lhsCopy ),
 						getReferencedPathSource(),
 						getExplicitAlias(),
 						getSqmJoinType(),

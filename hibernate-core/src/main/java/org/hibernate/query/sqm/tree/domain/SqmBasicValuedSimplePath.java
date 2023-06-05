@@ -50,12 +50,13 @@ public class SqmBasicValuedSimplePath<T>
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final SqmBasicValuedSimplePath<T> path = context.registerCopy(
 				this,
 				new SqmBasicValuedSimplePath<>(
-						getNavigablePath(),
+						getNavigablePathCopy( lhsCopy ),
 						getReferencedPathSource(),
-						getLhs().copy( context ),
+						lhsCopy,
 						getExplicitAlias(),
 						nodeBuilder()
 				)

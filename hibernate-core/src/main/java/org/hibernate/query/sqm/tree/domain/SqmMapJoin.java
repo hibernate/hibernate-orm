@@ -58,11 +58,12 @@ public class SqmMapJoin<O, K, V>
 		if ( existing != null ) {
 			return existing;
 		}
+		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
 		final SqmMapJoin<O, K, V> path = context.registerCopy(
 				this,
 				new SqmMapJoin<>(
-						getLhs().copy( context ),
-						getNavigablePath(),
+						lhsCopy,
+						getNavigablePathCopy( lhsCopy ),
 						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),

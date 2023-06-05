@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.internal.util.NullnessUtil;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -56,6 +58,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
+		assert lhs == null || lhs.getNavigablePath() == target.getLhs().getNavigablePath()
+				|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
 		super.copyTo( target, context );
 		if ( reusablePaths != null ) {
 			target.reusablePaths = new HashMap<>( reusablePaths.size() );
@@ -63,6 +67,10 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 				target.reusablePaths.put( entry.getKey(), entry.getValue().copy( context ) );
 			}
 		}
+	}
+
+	private SqmPath<?> getRoot(SqmPath<?> lhs) {
+		return lhs.getLhs() == null ? lhs : getRoot( lhs.getLhs() );
 	}
 
 	@Override
@@ -210,6 +218,28 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			getLhs().registerReusablePath( path );
 		}
 		return path;
+	}
+
+	/**
+	 * Utility that checks if this path's parent navigable path is compatible with the specified SQM parent,
+	 * and if not creates a copy of the navigable path with the correct parent.
+	 */
+	protected NavigablePath getNavigablePathCopy(SqmPath<?> parent) {
+		final NavigablePath parentNavigablePath = NullnessUtil.castNonNull( navigablePath.getRealParent() );
+		if ( parent.getNavigablePath() == parentNavigablePath ) {
+			return navigablePath;
+		}
+		else if ( CollectionPart.Nature.fromNameExact( parentNavigablePath.getLocalName() ) != null ) {
+			if ( parent.getNavigablePath() == parentNavigablePath.getRealParent() ) {
+				return navigablePath;
+			}
+			else {
+				return parent.getNavigablePath()
+						.append( parentNavigablePath.getLocalName() )
+						.append( navigablePath.getLocalName(), navigablePath.getAlias() );
+			}
+		}
+		return parent.getNavigablePath().append( navigablePath.getLocalName(), navigablePath.getAlias() );
 	}
 
 	@Override

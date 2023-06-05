@@ -180,7 +180,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			return RowTransformerStandardImpl.instance();
 		}
 
-		if ( resultType.isArray() ) {
+		if ( resultType == Object[].class ) {
 			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
 		}
 

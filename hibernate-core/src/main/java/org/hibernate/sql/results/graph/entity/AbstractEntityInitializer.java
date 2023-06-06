@@ -988,7 +988,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			cacheAccess.update(
 					session,
 					cacheKey,
-					rootEntityDescriptor.getCacheEntryStructure().structure( cacheEntry ),
+					concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
 					version,
 					version
 			);
@@ -1000,7 +1000,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				final boolean put = cacheAccess.putFromLoad(
 						session,
 						cacheKey,
-						rootEntityDescriptor.getCacheEntryStructure().structure( cacheEntry ),
+						concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
 						version,
 						//useMinimalPuts( session, entityEntry )
 						false

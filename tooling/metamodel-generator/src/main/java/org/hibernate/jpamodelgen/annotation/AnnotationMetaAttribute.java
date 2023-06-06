@@ -7,8 +7,6 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import java.beans.Introspector;
-import java.util.ArrayList;
-import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.util.Elements;
@@ -34,6 +32,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		this.element = element;
 		this.parent = parent;
 		this.type = type;
+	}
+
+	@Override
+	public boolean hasTypedAttribute() {
+		return true;
 	}
 
 	@Override

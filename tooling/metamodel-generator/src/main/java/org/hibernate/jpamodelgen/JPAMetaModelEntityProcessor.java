@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpamodelgen;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -132,6 +131,10 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class " + element.toString() );
 				handleRootElementAnnotationMirrors( element );
 			}
+			else if ( hasAuxiliaryAnnotations( element ) ) {
+				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class " + element.toString() );
+				handleRootElementAuxiliaryAnnotationMirrors( element );
+			}
 		}
 
 		createMetaModelClasses();
@@ -139,6 +142,16 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	private void createMetaModelClasses() {
+
+		for ( MetaEntity aux : context.getMetaAuxiliaries() ) {
+			if ( context.isAlreadyGenerated( aux.getQualifiedName() ) ) {
+				continue;
+			}
+			context.logMessage( Diagnostic.Kind.OTHER, "Writing meta model for auxiliary " + aux );
+			ClassWriter.writeFile( aux, context );
+			context.markGenerated( aux.getQualifiedName() );
+		}
+
 		for ( MetaEntity entity : context.getMetaEntities() ) {
 			if ( context.isAlreadyGenerated( entity.getQualifiedName() ) ) {
 				continue;
@@ -220,6 +233,26 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		);
 	}
 
+	private boolean hasAuxiliaryAnnotations(Element element) {
+		return TypeUtils.containsAnnotation(
+				element,
+				Constants.NAMED_QUERY,
+				Constants.NAMED_QUERIES,
+				Constants.NAMED_NATIVE_QUERY,
+				Constants.NAMED_NATIVE_QUERIES,
+				Constants.SQL_RESULT_SET_MAPPING,
+				Constants.SQL_RESULT_SET_MAPPINGS,
+				Constants.NAMED_ENTITY_GRAPH,
+				Constants.NAMED_ENTITY_GRAPHS,
+				Constants.HIB_NAMED_QUERY,
+				Constants.HIB_NAMED_QUERIES,
+				Constants.HIB_NAMED_NATIVE_QUERY,
+				Constants.HIB_NAMED_NATIVE_QUERIES,
+				Constants.HIB_FETCH_PROFILE,
+				Constants.HIB_FETCH_PROFILES
+		);
+	}
+
 	private void handleRootElementAnnotationMirrors(final Element element) {
 		List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
 		for ( AnnotationMirror mirror : annotationMirrors ) {
@@ -249,6 +282,15 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			}
 			addMetaEntityToContext( mirror, metaEntity );
 		}
+	}
+
+	private void handleRootElementAuxiliaryAnnotationMirrors(final Element element) {
+		if ( element instanceof TypeElement ) {
+			AnnotationMetaEntity metaEntity =
+					AnnotationMetaEntity.create( (TypeElement) element, context, false );
+			context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+		}
+		//TODO: handle PackageElement
 	}
 
 	private @Nullable MetaEntity tryGettingExistingEntityFromContext(AnnotationMirror mirror, String fqn) {

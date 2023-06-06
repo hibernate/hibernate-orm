@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
@@ -115,7 +116,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 			}
 		}
 
-		return new ArrayList<MetaAttribute>( members.values() );
+		return new ArrayList<>( members.values() );
 	}
 
 	@Override
@@ -178,7 +179,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 
 		TypeUtils.determineAccessTypeForHierarchy( element, context );
 		AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
-		entityAccessTypeInfo = NullnessUtil.castNonNull(accessTypeInfo);
+		entityAccessTypeInfo = NullnessUtil.castNonNull( accessTypeInfo );
 
 		List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
 		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
@@ -186,14 +187,65 @@ public class AnnotationMetaEntity implements MetaEntity {
 		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
 		List<Element> gettersAndSettersOfClass = new ArrayList<>();
 
-		for (Element rawMethodOfClass: methodsOfClass) {
-			if ( isGetterOrSetter( rawMethodOfClass)) {
-				gettersAndSettersOfClass.add(rawMethodOfClass);
+		for ( Element rawMethodOfClass: methodsOfClass ) {
+			if ( isGetterOrSetter( rawMethodOfClass ) ) {
+				gettersAndSettersOfClass.add( rawMethodOfClass );
 			}
 		}
 		addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 
+		addAuxiliaryMembers();
+
 		initialized = true;
+	}
+
+	private void addAuxiliaryMembers() {
+		addAuxiliaryMembersForAnnotation( Constants.NAMED_QUERY, "QUERY_" );
+		addAuxiliaryMembersForRepeatableAnnotation( Constants.NAMED_QUERIES, "QUERY_" );
+		addAuxiliaryMembersForAnnotation( Constants.NAMED_NATIVE_QUERY, "QUERY_" );
+		addAuxiliaryMembersForRepeatableAnnotation( Constants.NAMED_NATIVE_QUERIES, "QUERY_" );
+		addAuxiliaryMembersForAnnotation( Constants.SQL_RESULT_SET_MAPPING, "MAPPING_" );
+		addAuxiliaryMembersForRepeatableAnnotation( Constants.SQL_RESULT_SET_MAPPINGS, "MAPPING_" );
+		addAuxiliaryMembersForAnnotation( Constants.NAMED_ENTITY_GRAPH, "GRAPH_" );
+		addAuxiliaryMembersForRepeatableAnnotation( Constants.NAMED_ENTITY_GRAPHS, "GRAPH_" );
+
+		addAuxiliaryMembersForAnnotation( Constants.HIB_NAMED_QUERY, "QUERY_" );
+		addAuxiliaryMembersForRepeatableAnnotation( Constants.HIB_NAMED_QUERIES, "QUERY_" );
+		addAuxiliaryMembersForAnnotation( Constants.HIB_NAMED_NATIVE_QUERY, "QUERY_" );
+		addAuxiliaryMembersForRepeatableAnnotation( Constants.HIB_NAMED_NATIVE_QUERIES, "QUERY_" );
+		addAuxiliaryMembersForAnnotation( Constants.HIB_FETCH_PROFILE, "PROFILE_" );
+		addAuxiliaryMembersForRepeatableAnnotation( Constants.HIB_FETCH_PROFILES, "PROFILE_" );
+	}
+
+	private void addAuxiliaryMembersForRepeatableAnnotation(String annotationName, String prefix) {
+		AnnotationMirror mirror = TypeUtils.getAnnotationMirror( element, annotationName );
+		if ( mirror != null ) {
+			mirror.getElementValues().forEach((key, value) -> {
+				if ( key.getSimpleName().contentEquals("value") ) {
+					List<? extends AnnotationMirror> values =
+							(List<? extends AnnotationMirror>) value.getValue();
+					for ( AnnotationMirror annotationMirror : values ) {
+						addAuxiliaryMembersForMirror( annotationMirror, prefix );
+					}
+				}
+			});
+		}
+	}
+
+	private void addAuxiliaryMembersForAnnotation(String annotationName, String prefix) {
+		AnnotationMirror mirror = TypeUtils.getAnnotationMirror( element, annotationName);
+		if ( mirror != null ) {
+			addAuxiliaryMembersForMirror( mirror, prefix );
+		}
+	}
+
+	private void addAuxiliaryMembersForMirror(AnnotationMirror mirror, String prefix) {
+		mirror.getElementValues().forEach((key, value) -> {
+			if ( key.getSimpleName().contentEquals("name") ) {
+				String name = value.getValue().toString();
+				members.put( prefix + name, new NameMetaAttribute( this, name, prefix ) );
+			}
+		});
 	}
 
 	/**
@@ -246,4 +298,5 @@ public class AnnotationMetaEntity implements MetaEntity {
 			}
 		}
 	}
+
 }

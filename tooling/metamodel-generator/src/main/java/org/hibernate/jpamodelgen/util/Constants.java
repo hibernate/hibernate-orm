@@ -32,6 +32,22 @@ public final class Constants {
 	public static final String CONVERT = "jakarta.persistence.Convert";
 	public static final String HIBERNATE_TYPE = "org.hibernate.annotations.Type";
 
+	public static final String NAMED_QUERY = "jakarta.persistence.NamedQuery";
+	public static final String NAMED_QUERIES = "jakarta.persistence.NamedQueries";
+	public static final String NAMED_NATIVE_QUERY = "jakarta.persistence.NamedNativeQuery";
+	public static final String NAMED_NATIVE_QUERIES = "jakarta.persistence.NamedNativeQueries";
+	public static final String SQL_RESULT_SET_MAPPING = "jakarta.persistence.SqlResultSetMapping";
+	public static final String SQL_RESULT_SET_MAPPINGS = "jakarta.persistence.SqlResultSetMappings";
+	public static final String NAMED_ENTITY_GRAPH = "jakarta.persistence.NamedEntityGraph";
+	public static final String NAMED_ENTITY_GRAPHS = "jakarta.persistence.NamedEntityGraphs";
+
+	public static final String HIB_NAMED_QUERY = "org.hibernate.annotations.NamedQuery";
+	public static final String HIB_NAMED_QUERIES = "org.hibernate.annotations.NamedQueries";
+	public static final String HIB_NAMED_NATIVE_QUERY = "org.hibernate.annotations.NamedNativeQuery";
+	public static final String HIB_NAMED_NATIVE_QUERIES = "org.hibernate.annotations.NamedNativeQueries";
+	public static final String HIB_FETCH_PROFILE = "org.hibernate.annotations.FetchProfile";
+	public static final String HIB_FETCH_PROFILES = "org.hibernate.annotations.FetchProfiles";
+
 	public static final Map<String, String> COLLECTIONS = allCollectionTypes();
 
 	private static Map<String, String> allCollectionTypes() {

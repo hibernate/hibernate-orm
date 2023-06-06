@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -44,9 +43,7 @@ public class OracleTruncFunction extends TruncFunction {
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
-		final NodeBuilder nodeBuilder = queryEngine.getCriteriaBuilder();
+			QueryEngine queryEngine) {
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
 		final FunctionRenderingSupport renderingSupport;
 		final ArgumentsValidator argumentsValidator;
@@ -81,8 +78,7 @@ public class OracleTruncFunction extends TruncFunction {
 					return dateTruncEmulation.generateSqmFunctionExpression(
 							arguments,
 							impliedResultType,
-							queryEngine,
-							typeConfiguration
+							queryEngine
 					);
 				default:
 					throw new UnsupportedOperationException( "Temporal unit not supported [" + temporalUnit + "]" );
@@ -90,8 +86,8 @@ public class OracleTruncFunction extends TruncFunction {
 			// replace temporal_unit parameter with translated string format literal
 			args.set( 1, new SqmLiteral<>(
 					pattern,
-					typeConfiguration.getBasicTypeForJavaType( String.class ),
-					nodeBuilder
+					queryEngine.getTypeConfiguration().getBasicTypeForJavaType( String.class ),
+					queryEngine.getCriteriaBuilder()
 			) );
 		}
 		else {

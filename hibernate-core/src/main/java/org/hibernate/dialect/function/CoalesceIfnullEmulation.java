@@ -13,7 +13,6 @@ import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -35,14 +34,12 @@ public class CoalesceIfnullEmulation
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" )
 				.generateSqmExpression(
 						arguments,
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 	}
 }

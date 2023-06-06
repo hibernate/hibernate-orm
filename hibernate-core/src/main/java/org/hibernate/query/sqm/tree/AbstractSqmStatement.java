@@ -16,6 +16,8 @@ import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
+import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
+
 /**
  * @author Steve Ebersole
  */
@@ -70,12 +72,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 	public Set<SqmParameter<?>> getSqmParameters() {
 		if ( querySource == SqmQuerySource.CRITERIA ) {
 			assert parameters == null : "SqmSelectStatement (as Criteria) should not have collected parameters";
-
-			return org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters(
-					this,
-					sqmParameter -> {},
-					nodeBuilder().getServiceRegistry()
-			);
+			return collectParameters( this );
 		}
 
 		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );

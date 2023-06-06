@@ -47,10 +47,9 @@ public class SqmMapEntryReference<K,V>
 		this.mapPath = mapPath;
 		this.nodeBuilder = nodeBuilder;
 
-		this.mapEntryTypeDescriptor = nodeBuilder.getDomainModel()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( Map.Entry.class );
+		this.mapEntryTypeDescriptor =
+				nodeBuilder.getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( Map.Entry.class );
 	}
 
 	@Override

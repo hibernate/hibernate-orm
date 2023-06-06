@@ -39,7 +39,6 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	private final SqlAstCreationState creationState;
 
 	public FakeSqmToSqlAstConverter(SqlAstCreationState creationState) {
-		super( creationState.getCreationContext().getServiceRegistry() );
 		this.creationState = creationState;
 	}
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

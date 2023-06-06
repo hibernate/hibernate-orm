@@ -148,8 +148,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return new FormatSqmFunction<>(
 				this,
 				this,

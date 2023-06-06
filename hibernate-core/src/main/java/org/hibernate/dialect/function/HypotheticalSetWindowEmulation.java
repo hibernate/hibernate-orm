@@ -49,8 +49,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return new SelfRenderingSqmOrderedSetAggregateFunction<>(
 				this,
 				this,

@@ -2919,8 +2919,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						(SqmExpression<?>) ctx.getChild( 2 ).accept( this )
 				),
 				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -2991,8 +2990,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return getFunctionDescriptor("mod").generateSqmExpression(
 					asList( left, right ),
 					null,
-					creationContext.getQueryEngine(),
-					creationContext.getJpaMetamodel().getTypeConfiguration()
+					creationContext.getQueryEngine()
 			);
 		}
 		else {
@@ -3061,8 +3059,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("collate").generateSqmExpression(
 				asList( expressionToCollate, castTargetExpression ),
 				null, //why not string?
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -3169,8 +3166,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("current_date")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Date.class ),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 	}
 
@@ -3179,8 +3175,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("current_time")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Time.class ),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 	}
 
@@ -3189,8 +3184,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("current_timestamp")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Timestamp.class ),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 	}
 
@@ -3199,8 +3193,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("instant")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Instant.class ),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 	}
 
@@ -3209,8 +3202,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("local_date")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( LocalDate.class ),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 	}
 
@@ -3219,8 +3211,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("local_time")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( LocalTime.class ),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 	}
 
@@ -3229,8 +3220,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("local_datetime")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( LocalDateTime.class ),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 	}
 
@@ -3239,8 +3229,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("offset_datetime")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( OffsetDateTime.class ),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 	}
 
@@ -3336,7 +3325,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.TRUE:
 				return booleanLiteral( true );
 			case HqlParser.NULL:
-				return new SqmLiteralNull<>( creationContext.getQueryEngine().getCriteriaBuilder() );
+				return new SqmLiteralNull<>( creationContext.getNodeBuilder() );
 			case HqlParser.BINARY_LITERAL:
 				return binaryLiteral( node.getText() );
 			default:
@@ -3827,7 +3816,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private <J> BasicType<J> resolveExpressibleTypeBasic(Class<J> javaType) {
-		return creationContext.getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+		return creationContext.getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 	}
 
 	@Override
@@ -3907,8 +3896,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return functionTemplate.generateSqmExpression(
 				functionArguments,
 				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -3953,8 +3941,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 								? null // this is allowed for e.g. rank(), but not for all
 								: visitOrderByClause( ctx.withinGroupClause().orderByClause(), false ),
 						null,
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 				break;
 			case AGGREGATE:
@@ -3962,8 +3949,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						functionArguments,
 						filterExpression,
 						null,
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 				break;
 			case WINDOW:
@@ -3973,16 +3959,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						null,
 						null,
 						null,
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 				break;
 			default:
 				function = functionTemplate.generateSqmExpression(
 						functionArguments,
 						null,
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 				break;
 		}
@@ -4102,8 +4086,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 								? null // this is allowed
 								: visitOrderByClause( ctx.withinGroupClause().orderByClause(), false ),
 						null,
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				)
 		);
 	}
@@ -4372,7 +4355,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 //						expressionToExtract,
 //						null,
 //						creationContext.getQueryEngine(),
-//						creationContext.getJpaMetamodel().getTypeConfiguration()
+//						creationContext.getTypeConfiguration()
 //				);
 //			}
 		}
@@ -4380,8 +4363,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("extract").generateSqmExpression(
 				asList( extractFieldExpression, expressionToExtract ),
 				extractFieldExpression.getType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -4399,8 +4381,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor( "trunc" ).generateSqmExpression(
 				secondArg == null ? singletonList( expression ) : asList( expression, secondArg ),
 				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -4422,8 +4403,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("format").generateSqmExpression(
 				asList( expressionToCast, format ),
 				null, //why not string?
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -4435,8 +4415,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("cast").generateSqmExpression(
 				asList( expressionToCast, castTargetExpression ),
 				castTargetExpression.getType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -4459,7 +4438,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		return new SqmCastTarget<>(
 				(ReturnableType<?>)
-						creationContext.getJpaMetamodel().getTypeConfiguration()
+						creationContext.getTypeConfiguration()
 								.resolveCastTargetType( targetName ),
 				//TODO: is there some way to interpret as length vs precision/scale here at this point?
 				length,
@@ -4477,8 +4456,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("position").generateSqmExpression(
 				asList( pattern, string ),
 				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -4500,8 +4478,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						? asList( string, replacement, start )
 						: asList( string, replacement, start, length ),
 				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -4522,8 +4499,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							singletonList( argument ),
 							getFilterExpression( ctx ),
 							resolveExpressibleTypeBasic( Boolean.class ),
-							creationContext.getQueryEngine(),
-							creationContext.getJpaMetamodel().getTypeConfiguration()
+							creationContext.getQueryEngine()
 					)
 			);
 		}
@@ -4558,8 +4534,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							singletonList( argument ),
 							getFilterExpression( ctx ),
 							resolveExpressibleTypeBasic( Boolean.class ),
-							creationContext.getQueryEngine(),
-							creationContext.getJpaMetamodel().getTypeConfiguration()
+							creationContext.getQueryEngine()
 					)
 			);
 		}
@@ -4809,8 +4784,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("substring").generateSqmExpression(
 				length == null ? asList( source, start ) : asList( source, start, length ),
 				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -4831,8 +4805,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						? asList( source, length, padSpec, padChar )
 						: asList( source, length, padSpec ),
 				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 
@@ -4891,8 +4864,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						source
 				),
 				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+				creationContext.getQueryEngine()
 		);
 	}
 

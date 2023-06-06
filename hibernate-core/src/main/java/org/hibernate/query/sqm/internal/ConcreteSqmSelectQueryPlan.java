@@ -15,8 +15,6 @@ import jakarta.persistence.Tuple;
 import org.hibernate.AssertionFailure;
 import org.hibernate.InstantiationException;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,21 +25,17 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.Query;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
-import org.hibernate.query.sqm.sql.SqmTranslator;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
@@ -336,33 +330,32 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			DomainQueryExecutionContext executionContext) {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
-		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 
-		final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
+		final SqmTranslation<SelectStatement> sqmInterpretation =
+				sessionFactory.getQueryEngine().getSqmTranslatorFactory()
+						.createSelectTranslator(
+								sqm,
+								executionContext.getQueryOptions(),
+								domainParameterXref,
+								executionContext.getQueryParameterBindings(),
+								executionContext.getSession().getLoadQueryInfluencers(),
+								sessionFactory,
+								true
+						)
+						.translate();
 
-		final SqmTranslator<SelectStatement> sqmConverter = sqmTranslatorFactory.createSelectTranslator(
-				sqm,
-				executionContext.getQueryOptions(),
-				domainParameterXref,
-				executionContext.getQueryParameterBindings(),
-				executionContext.getSession().getLoadQueryInfluencers(),
-				sessionFactory,
-				true
-		);
+		final FromClauseAccess tableGroupAccess = sqmInterpretation.getFromClauseAccess();
 
-		final SqmTranslation<SelectStatement> sqmInterpretation = sqmConverter.translate();
-		final FromClauseAccess tableGroupAccess = sqmConverter.getFromClauseAccess();
-
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		final SqlAstTranslator<JdbcOperationQuerySelect> selectTranslator = sqlAstTranslatorFactory.buildSelectTranslator(
-				sessionFactory,
-				sqmInterpretation.getSqlAst()
-		);
+		final SqlAstTranslator<JdbcOperationQuerySelect> selectTranslator =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator(
+								sessionFactory,
+								sqmInterpretation.getSqlAst()
+						);
 
 		final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref
 				= SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmInterpretation::getJdbcParamsBySqmParam );
+
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
@@ -377,11 +370,10 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				},
 				session
 		);
-		final JdbcOperationQuerySelect jdbcSelect = selectTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		return new CacheableSqmInterpretation(
 				sqmInterpretation.getSqlAst(),
-				jdbcSelect,
+				selectTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
 				tableGroupAccess,
 				jdbcParamsXref,
 				sqmInterpretation.getSqmParameterMappingModelTypeResolutions(),

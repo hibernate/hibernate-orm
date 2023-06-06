@@ -81,8 +81,7 @@ public class ExtractFunction
 	protected <T> SelfRenderingSqmFunction generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get( 0 );
 		final SqmExpression<?> originalExpression = (SqmExpression<?>) arguments.get( 1 );
 		final boolean compositeTemporal = SqmExpressionHelper.isCompositeTemporal( originalExpression );
@@ -91,7 +90,7 @@ public class ExtractFunction
 		TemporalUnit unit = field.getUnit();
 		switch ( unit ) {
 			case NANOSECOND:
-				return extractNanoseconds( expression, queryEngine, typeConfiguration );
+				return extractNanoseconds( expression, queryEngine );
 			case NATIVE:
 				throw new SemanticException("can't extract() the field TemporalUnit.NATIVE");
 			case OFFSET:
@@ -101,9 +100,7 @@ public class ExtractFunction
 					);
 					return new SelfRenderingSqmFunction<>(
 							this,
-							(sqlAppender, sqlAstArguments, walker) -> {
-								sqlAstArguments.get( 0 ).accept( walker );
-							},
+							(sqlAppender, sqlAstArguments, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
 							Collections.singletonList( offsetPath ),
 							null,
 							null,
@@ -114,7 +111,7 @@ public class ExtractFunction
 				}
 				else {
 					// use format(arg, 'xxx') to get the offset
-					return extractOffsetUsingFormat( expression, queryEngine, typeConfiguration );
+					return extractOffsetUsingFormat( expression, queryEngine );
 				}
 			case DATE:
 			case TIME:
@@ -122,18 +119,18 @@ public class ExtractFunction
 				// which might be javax.sql.Date / javax.sql.Time or
 				// java.time.LocalDate / java.time.LocalTime depending
 				// on the type of the expression we're extracting from
-				return extractDateOrTimeUsingCast( expression, field.getType(), queryEngine, typeConfiguration );
+				return extractDateOrTimeUsingCast( expression, field.getType(), queryEngine );
 			case WEEK_OF_MONTH:
 				// use ceiling(extract(day of month, arg)/7.0)
-				return extractWeek( expression, field, DAY_OF_MONTH, queryEngine, typeConfiguration);
+				return extractWeek( expression, field, DAY_OF_MONTH, queryEngine );
 			case WEEK_OF_YEAR:
 				// use ceiling(extract(day of year, arg)/7.0)
-				return extractWeek( expression, field, DAY_OF_YEAR, queryEngine, typeConfiguration);
+				return extractWeek( expression, field, DAY_OF_YEAR, queryEngine );
 			default:
 				// otherwise it's something we expect the SQL dialect
 				// itself to understand, either natively, or via the
 				// method Dialect.extract()
-				return new SelfRenderingSqmFunction(
+				return new SelfRenderingSqmFunction<>(
 						this,
 						this,
 						expression == originalExpression ? arguments : List.of( arguments.get( 0 ), expression ),
@@ -150,10 +147,10 @@ public class ExtractFunction
 			SqmExpression<?> expressionToExtract,
 			SqmExtractUnit<?> field,
 			TemporalUnit dayOf,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final NodeBuilder builder = field.nodeBuilder();
 
+		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 		final BasicType<Integer> intType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
 		final BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType( Float.class );
 
@@ -164,8 +161,7 @@ public class ExtractFunction
 						.generateSqmExpression(
 								asList( dayOfUnit, expressionToExtract ),
 								intType,
-								queryEngine,
-								typeConfiguration
+								queryEngine
 						);
 
 		final SqmExtractUnit<Integer> dayOfWeekUnit = new SqmExtractUnit<>( DAY_OF_WEEK, intType, builder );
@@ -175,8 +171,7 @@ public class ExtractFunction
 						.generateSqmExpression(
 								asList( dayOfWeekUnit, expressionToExtract ),
 								intType,
-								queryEngine,
-								typeConfiguration
+								queryEngine
 						);
 
 		final SqmLiteral<Float> seven = new SqmLiteral<>( 7.0f, floatType, builder );
@@ -195,8 +190,7 @@ public class ExtractFunction
 					.generateSqmExpression(
 							asList( daySubtractionInt, new SqmCastTarget<>( floatType, builder ) ),
 							floatType,
-							queryEngine,
-							typeConfiguration
+							queryEngine
 					);
 		}
 		else {
@@ -219,15 +213,13 @@ public class ExtractFunction
 								builder
 						),
 						intType, // Implicit cast to int
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 	}
 
 	private SelfRenderingSqmFunction<Long> toLong(
 			SqmExpression<?> arg,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		//Not every database supports round() (looking at you Derby)
 		//so use floor() instead, which is perfectly fine for this
 //		return getFunctionTemplate("round").makeSqmFunctionExpression(
@@ -236,23 +228,22 @@ public class ExtractFunction
 //				creationContext.getQueryEngine(),
 //				creationContext.getDomainModel().getTypeConfiguration()
 //		);
-		BasicType<Long> longType = typeConfiguration.getBasicTypeForJavaType(Long.class);
+		BasicType<Long> longType = queryEngine.getTypeConfiguration().getBasicTypeForJavaType(Long.class);
 		return queryEngine.getSqmFunctionRegistry()
 				.findFunctionDescriptor("floor")
 				.generateSqmExpression(
 						arg,
 						longType, // Implicit cast to long
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 	}
 
 	private SelfRenderingSqmFunction<Long> extractNanoseconds(
 			SqmExpression<?> expressionToExtract,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final NodeBuilder builder = expressionToExtract.nodeBuilder();
 
+		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 		final BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType(Float.class);
 
 		final SqmExtractUnit<Float> extractSeconds = new SqmExtractUnit<>( SECOND, floatType, builder );
@@ -263,24 +254,22 @@ public class ExtractFunction
 						generateSqmExpression(
 								asList( extractSeconds, expressionToExtract ),
 								floatType,
-								queryEngine,
-								typeConfiguration
+								queryEngine
 						),
 						billion,
 						floatType,
 						builder
 				),
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
 	private SelfRenderingSqmFunction<ZoneOffset> extractOffsetUsingFormat(
 			SqmExpression<?> expressionToExtract,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final NodeBuilder builder = expressionToExtract.nodeBuilder();
 
+		final TypeConfiguration typeConfiguration = queryEngine.getTypeConfiguration();
 		final BasicType<ZoneOffset> offsetType = typeConfiguration.getBasicTypeForJavaType(ZoneOffset.class);
 		final BasicType<String> stringType = typeConfiguration.getBasicTypeForJavaType(String.class);
 
@@ -294,16 +283,14 @@ public class ExtractFunction
 				.generateSqmExpression(
 						asList( expressionToExtract, offsetFormat ),
 						offsetType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 	}
 
 	private SelfRenderingSqmFunction<?> extractDateOrTimeUsingCast(
 			SqmExpression<?> expressionToExtract,
 			ReturnableType<?> type,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final NodeBuilder builder = expressionToExtract.nodeBuilder();
 
 		final SqmCastTarget<?> target = new SqmCastTarget<>( type, builder );
@@ -312,8 +299,7 @@ public class ExtractFunction
 				.generateSqmExpression(
 						asList( expressionToExtract, target ),
 						type,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 	}
 

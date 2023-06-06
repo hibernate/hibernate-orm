@@ -11,6 +11,7 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * The context in which all SQM creations occur (think SessionFactory).
@@ -29,6 +30,10 @@ public interface SqmCreationContext {
 	 */
 	default ServiceRegistry getServiceRegistry() {
 		return getJpaMetamodel().getServiceRegistry();
+	}
+
+	default TypeConfiguration getTypeConfiguration() {
+		return getJpaMetamodel().getTypeConfiguration();
 	}
 
 	QueryEngine getQueryEngine();

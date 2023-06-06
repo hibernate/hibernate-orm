@@ -159,7 +159,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			SqmCreationState creationState) {
 		// Try to resolve an existing attribute join without ON clause
 		SqmPath<?> resolvedPath = null;
-		ModelPartContainer modelPartContainer = null;
 		for ( SqmJoin<?, ?> sqmJoin : getSqmJoins() ) {
 			// We can only match singular joins here, as plural path parts are interpreted like sub-queries
 			if ( sqmJoin instanceof SqmSingularJoin<?, ?>
@@ -355,7 +354,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <E> SqmSetJoin<T, E> join(SetAttribute<? super T, E> attribute, JoinType jt) {
 		final SqmSetJoin<T, E> join = buildSetJoin(
 				(SetPersistentAttribute<? super T, E>) attribute,
@@ -372,7 +370,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <E> SqmListJoin<T, E> join(ListAttribute<? super T, E> attribute, JoinType jt) {
 		final SqmListJoin<T, E> join = buildListJoin(
 				(ListPersistentAttribute<? super T, E>) attribute,
@@ -611,7 +608,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	private void validateComplianceFromSubQuery() {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries in the from clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );

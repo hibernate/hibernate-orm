@@ -39,16 +39,14 @@ public class PostgreSQLTruncFunction extends TruncFunction {
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
 		if ( arguments.size() != 2 || !( arguments.get( 1 ) instanceof SqmExtractUnit ) ) {
 			// numeric truncation
 			return postgreSQLTruncRoundFunction.generateSqmFunctionExpression(
 					arguments,
 					impliedResultType,
-					queryEngine,
-					typeConfiguration
+					queryEngine
 			);
 		}
 		// datetime truncation

@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -54,8 +53,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		switch ( functionKind ) {
 			case ORDERED_SET_AGGREGATE:
 				return generateOrderedSetAggregateSqmExpression(
@@ -63,16 +61,14 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 						null,
 						null,
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 			case AGGREGATE:
 				return generateAggregateSqmExpression(
 						arguments,
 						null,
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 			case WINDOW:
 				return generateWindowSqmExpression(
@@ -81,8 +77,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 						null,
 						null,
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 			default:
 				return new SelfRenderingSqmFunction<>(
@@ -103,8 +98,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		if ( functionKind != FunctionKind.AGGREGATE ) {
 			throw new UnsupportedOperationException( "The function " + getName() + " is not an aggregate function" );
 		}
@@ -127,8 +121,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		if ( functionKind != FunctionKind.ORDERED_SET_AGGREGATE ) {
 			throw new UnsupportedOperationException( "The function " + getName() + " is not an ordered set-aggregate function" );
 		}
@@ -153,8 +146,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			Boolean respectNulls,
 			Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		if ( functionKind != FunctionKind.WINDOW ) {
 			throw new UnsupportedOperationException( "The function " + getName() + " is not a window function" );
 		}

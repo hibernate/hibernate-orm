@@ -30,11 +30,4 @@ public interface HqlTranslator {
 	 * @return The semantic representation of the incoming query.
 	 */
 	<R> SqmStatement<R> translate(String hql, Class<R> expectedResultType);
-
-	/**
-	 * Give the translator a chance to "shut down" if it needs to
-	 */
-	default void close() {
-		// nothing to do generally speaking
-	}
 }

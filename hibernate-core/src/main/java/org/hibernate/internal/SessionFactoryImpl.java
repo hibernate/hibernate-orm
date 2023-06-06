@@ -88,6 +88,7 @@ import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
+import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
@@ -260,7 +261,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			// created, then we can split creation of QueryEngine
 			// and SqmFunctionRegistry, instantiating just the
 			// registry here, and doing the engine later
-			queryEngine = QueryEngine.from( this, bootMetamodel );
+			queryEngine = QueryEngineImpl.from( this, bootMetamodel );
 
 			// create runtime metamodels (mapping and JPA)
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();

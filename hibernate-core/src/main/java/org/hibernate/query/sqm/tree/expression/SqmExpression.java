@@ -114,8 +114,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 					.generateSqmExpression(
 							asList( this, target ),
 							(ReturnableType<X>) type,
-							queryEngine,
-							nodeBuilder().getTypeConfiguration()
+							queryEngine
 					);
 	}
 

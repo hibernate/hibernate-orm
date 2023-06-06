@@ -34,7 +34,8 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
+
+import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
 /**
  * @author Steve Ebersole
@@ -201,12 +202,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	public Set<SqmParameter<?>> getSqmParameters() {
 		if ( querySource == SqmQuerySource.CRITERIA ) {
 			assert parameters == null : "SqmSelectStatement (as Criteria) should not have collected parameters";
-
-			return ParameterCollector.collectParameters(
-					this,
-					sqmParameter -> {},
-					nodeBuilder().getServiceRegistry()
-			);
+			return collectParameters( this );
 		}
 
 		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
@@ -258,7 +254,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmSelectStatement<T> select(Selection<? extends T> selection) {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			checkSelectionIsJpaCompliant( selection );
 		}
 		getQuerySpec().setSelection( (JpaSelection<T>) selection );
@@ -269,9 +265,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmSelectStatement<T> multiselect(Selection<?>... selections) {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			for ( Selection<?> selection : selections ) {
 				checkSelectionIsJpaCompliant( selection );
 			}
@@ -285,7 +280,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmSelectStatement<T> multiselect(List<Selection<?>> selectionList) {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			for ( Selection<?> selection : selectionList ) {
 				checkSelectionIsJpaCompliant( selection );
 			}
@@ -449,7 +444,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	private void validateComplianceFetchOffset() {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support the fetch or offset clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );

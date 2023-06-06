@@ -148,7 +148,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -189,7 +188,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final String name;
 	private final transient boolean jpaComplianceEnabled;
 	private final transient QueryEngine queryEngine;
-	private final transient ServiceRegistry serviceRegistry;
 	private final transient Supplier<SessionFactoryImplementor> sessionFactory;
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
 	private transient BasicType<Boolean> booleanType;
@@ -202,9 +200,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			QueryEngine queryEngine,
 			boolean jpaComplianceEnabled,
 			ValueHandlingMode criteriaValueHandlingMode,
-			ServiceRegistry serviceRegistry,
 			Supplier<SessionFactoryImplementor> sessionFactory) {
-		this.serviceRegistry = serviceRegistry;
 		this.sessionFactory = sessionFactory;
 		this.queryEngine = queryEngine;
 		this.uuid = uuid;
@@ -226,7 +222,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return queryEngine.getTypeConfiguration();
+		return getQueryEngine().getTypeConfiguration();
 	}
 
 	@Override
@@ -327,11 +323,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return serviceRegistry;
-	}
-
-	@Override
 	public QueryEngine getQueryEngine() {
 		return queryEngine;
 	}
@@ -341,18 +332,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getSessionFactory().getJpaMetamodel();
 	}
 
-	public void close() {
-		// for potential future use
-	}
-
-	@SuppressWarnings("unchecked,rawtypes")
 	@Override
 	public SqmSelectStatement<Object> createQuery() {
 		// IMPORTANT: we want to pass null here for the result-type
 		// to indicate that we do not know.  this will allow later
 		// calls to `SqmSelectStatement#select`, `SqmSelectStatement#multiSelect`,
 		// etc. to influence the result type
-		return new SqmSelectStatement( Object.class, this );
+		return new SqmSelectStatement<>( Object.class, this );
 	}
 
 	@Override
@@ -485,8 +471,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "cast" ).generateSqmExpression(
 				asList( (SqmTypedNode<?>) expression, new SqmCastTarget<>( type, this ) ),
 				type,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -812,8 +797,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "avg" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -824,8 +808,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "sum" ).generateSqmExpression(
 				typedNode,
 				(ReturnableType<N>) typedNode.getNodeType(),
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -834,8 +817,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "sum" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -844,8 +826,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "sum" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -854,8 +835,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "max" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -864,21 +844,20 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "min" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
 	@Override
 	public <X extends Comparable<? super X>> SqmExpression<X> greatest(Expression<X> argument) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "max" )
-				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine, getTypeConfiguration() );
+				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine);
 	}
 
 	@Override
 	public <X extends Comparable<? super X>> SqmExpression<X> least(Expression<X> argument) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "min" )
-				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine, getTypeConfiguration() );
+				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine);
 	}
 
 	@Override
@@ -886,18 +865,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "count" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
 	@Override
 	public SqmExpression<Long> countDistinct(Expression<?> argument) {
 		return getFunctionDescriptor( "count" ).generateSqmExpression(
-				new SqmDistinct<>( (SqmExpression<?>) argument, getQueryEngine().getCriteriaBuilder() ),
+				new SqmDistinct<>( (SqmExpression<?>) argument, this ),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -906,8 +883,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "sign" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -916,8 +892,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "ceiling" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -926,8 +901,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "floor" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -936,8 +910,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "exp" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -946,8 +919,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "ln" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -956,8 +928,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "power" ).generateSqmExpression(
 				Arrays.asList( (SqmExpression<?>) x, (SqmExpression<?>) y),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -966,8 +937,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "power" ).generateSqmExpression(
 				Arrays.asList( (SqmExpression<?>) x, value( y ) ),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -976,8 +946,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "round" ).generateSqmExpression(
 				Arrays.asList( (SqmExpression<?>) x, value( n ) ),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -986,8 +955,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "truncate" ).generateSqmExpression(
 				Arrays.asList( (SqmExpression<?>) x, value( n ) ),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -1005,8 +973,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "abs" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -1024,7 +991,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				operator,
 				leftHandExpression,
 				rightHandExpression,
-				(SqmExpressible<N>) getDomainModel().getTypeConfiguration().resolveArithmeticType(
+				(SqmExpressible<N>) getTypeConfiguration().resolveArithmeticType(
 						leftHandExpression.getNodeType(),
 						rightHandExpression.getNodeType(),
 						operator
@@ -1164,8 +1131,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "sqrt" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -1364,8 +1330,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1377,8 +1342,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1390,8 +1354,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1403,8 +1366,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1424,8 +1386,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "substring" ).generateSqmExpression(
 				len == null ? asList( source, from ) : asList( source, from, len ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1483,8 +1444,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "trim" ).generateSqmExpression(
 				arguments,
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1538,8 +1498,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "lower" ).generateSqmExpression(
 				(SqmExpression<String>) x,
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1548,8 +1507,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "upper" ).generateSqmExpression(
 				(SqmExpression<String>) x,
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1558,8 +1516,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "length" ).generateSqmExpression(
 				(SqmExpression<String>) argument,
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1594,8 +1551,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor("locate").generateSqmExpression(
 				arguments,
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1631,8 +1587,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor("current_date")
 				.generateSqmExpression(
 						null,
-						queryEngine,
-						getJpaMetamodel().getTypeConfiguration()
+						queryEngine
 				);
 	}
 
@@ -1641,8 +1596,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor("current_timestamp")
 				.generateSqmExpression(
 						null,
-						queryEngine,
-						getJpaMetamodel().getTypeConfiguration()
+						queryEngine
 				);
 	}
 
@@ -1651,8 +1605,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor("current_time")
 				.generateSqmExpression(
 						null,
-						queryEngine,
-						getJpaMetamodel().getTypeConfiguration()
+						queryEngine
 				);
 	}
 
@@ -1660,11 +1613,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmFunction<Instant> currentInstant() {
 		return getFunctionDescriptor("current_timestamp")
 				.generateSqmExpression(
-						getJpaMetamodel().getTypeConfiguration()
+						getTypeConfiguration()
 								.getBasicTypeRegistry()
 								.resolve( StandardBasicTypes.INSTANT ),
-						queryEngine,
-						getJpaMetamodel().getTypeConfiguration()
+						queryEngine
 				);
 	}
 
@@ -1673,8 +1625,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor("local_date")
 				.generateSqmExpression(
 						null,
-						queryEngine,
-						getJpaMetamodel().getTypeConfiguration()
+						queryEngine
 				);
 	}
 
@@ -1683,8 +1634,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor("local_datetime")
 				.generateSqmExpression(
 						null,
-						queryEngine,
-						getJpaMetamodel().getTypeConfiguration()
+						queryEngine
 				);
 	}
 
@@ -1693,8 +1643,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor("local_time")
 				.generateSqmExpression(
 						null,
-						queryEngine,
-						getJpaMetamodel().getTypeConfiguration()
+						queryEngine
 				);
 	}
 
@@ -1715,8 +1664,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return functionTemplate.generateSqmExpression(
 				expressionList( args ),
 				resultType,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -1941,8 +1889,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor("nullif").generateSqmExpression(
 				asList( first, second ),
 				type,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -2712,8 +2659,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "sql" ).generateSqmExpression(
 				sqmArguments,
 				getTypeConfiguration().getBasicTypeForJavaType( type ),
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -2723,8 +2669,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "format" ).generateSqmExpression(
 				asList( (SqmExpression<?>) datetime, sqmFormat ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -2742,8 +2687,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 						(SqmTypedNode<?>) datetime
 				),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -2785,8 +2729,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 						new SqmExtractUnit<>( temporalUnit, getIntegerType(), this )
 				),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -2886,8 +2829,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 						? asList( sqmString, sqmReplacement, sqmStart )
 						: asList( sqmString, sqmReplacement, sqmStart, (SqmExpression<Integer>) length ) ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -2963,8 +2905,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 						? asList( source, sqmLength, padSpec, (SqmExpression<Character>) padChar )
 						: asList( source, sqmLength, padSpec ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -2973,8 +2914,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "repeat" ).generateSqmExpression(
 				asList( (SqmExpression<String>) x, (SqmExpression<Integer>) times ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -2998,8 +2938,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "left" ).generateSqmExpression(
 				asList( (SqmExpression<String>) x, (SqmExpression<Integer>) length ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -3013,8 +2952,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "right" ).generateSqmExpression(
 				asList( (SqmExpression<String>) x, (SqmExpression<Integer>) length ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -3046,8 +2984,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 						(SqmExpression<String>) replacement
 				),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -3057,8 +2994,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "collate" ).generateSqmExpression(
 				asList( (SqmExpression<String>) x, sqmCollation ),
 				null,
-				getQueryEngine(),
-				getJpaMetamodel().getTypeConfiguration()
+				getQueryEngine()
 		);
 	}
 
@@ -3068,8 +3004,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "log10" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3083,8 +3018,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "log" ).generateSqmExpression(
 				asList( (SqmTypedNode<?>) b, (SqmTypedNode<?>) x ),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3092,8 +3026,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmFunction<Double> pi() {
 		return getFunctionDescriptor( "pi" ).generateSqmExpression(
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3102,8 +3035,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "sin" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3112,8 +3044,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "cos" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3122,8 +3053,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "tan" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3132,8 +3062,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "asin" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3142,8 +3071,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "acos" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3152,8 +3080,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "atan" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3172,8 +3099,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "atan2" ).generateSqmExpression(
 				asList( (SqmTypedNode<?>) y, (SqmTypedNode<?>) x ),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3182,8 +3108,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "sinh" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3192,8 +3117,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "cosh" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3202,8 +3126,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "tanh" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3212,8 +3135,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "degrees" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3222,8 +3144,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return getFunctionDescriptor( "radians" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 	}
 
@@ -3275,8 +3196,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		SqmExpression<T> function = getFunctionDescriptor( name ).generateSqmExpression(
 				expressionList( args ),
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 		return new SqmOver<>( function, (SqmWindow) window );
 	}
@@ -3363,8 +3283,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				expressionList( args ),
 				sqmFilter,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 		if ( window == null ) {
 			return function;
@@ -3466,8 +3385,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				sqmFilter,
 				withinGroupClause,
 				null,
-				queryEngine,
-				getJpaMetamodel().getTypeConfiguration()
+				queryEngine
 		);
 		if ( window == null ) {
 			return function;

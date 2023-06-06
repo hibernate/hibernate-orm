@@ -432,10 +432,6 @@ public class NativeQueryImpl<R>
 		return callback;
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return getSession().getFactory();
-	}
-
 	@Override
 	public QueryParameterBindings getQueryParameterBindings() {
 		return parameterBindings;
@@ -661,8 +657,7 @@ public class NativeQueryImpl<R>
 			}
 		};
 
-		return getSessionFactory().getQueryEngine()
-				.getNativeQueryInterpreter()
+		return getSessionFactory().getQueryEngine().getNativeQueryInterpreter()
 				.createQueryPlan( queryDefinition, getSessionFactory() );
 	}
 

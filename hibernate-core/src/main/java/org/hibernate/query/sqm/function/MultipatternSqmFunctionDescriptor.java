@@ -115,14 +115,12 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return functions[ arguments.size() ]
 				.generateSqmExpression(
 						arguments,
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 	}
 

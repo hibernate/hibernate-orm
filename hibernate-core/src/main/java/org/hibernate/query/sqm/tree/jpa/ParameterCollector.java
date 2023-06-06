@@ -35,7 +35,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * todo (6.0) : how is this different from {@link org.hibernate.query.sqm.internal.ParameterCollector}?
@@ -44,21 +43,21 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class ParameterCollector extends BaseSemanticQueryWalker {
 
+	public static Set<SqmParameter<?>> collectParameters(SqmStatement<?> statement) {
+		return collectParameters( statement, parameter -> {} );
+	}
+
 	public static Set<SqmParameter<?>> collectParameters(
 			SqmStatement<?> statement,
-			Consumer<SqmParameter<?>> consumer,
-			ServiceRegistry serviceRegistry) {
-		final ParameterCollector collector = new ParameterCollector( serviceRegistry, consumer );
+			Consumer<SqmParameter<?>> consumer) {
+		final ParameterCollector collector = new ParameterCollector( consumer );
 		statement.accept( collector );
 		return collector.parameterExpressions == null
 				? Collections.emptySet()
 				: collector.parameterExpressions;
 	}
 
-	private ParameterCollector(
-			ServiceRegistry serviceRegistry,
-			Consumer<SqmParameter<?>> consumer) {
-		super( serviceRegistry );
+	private ParameterCollector(Consumer<SqmParameter<?>> consumer) {
 		this.consumer = consumer;
 	}
 

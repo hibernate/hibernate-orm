@@ -191,8 +191,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			if ( functionDescriptor != null ) {
 				return functionDescriptor.generateSqmExpression(
 						null,
-						creationContext.getQueryEngine(),
-						creationContext.getNodeBuilder().getTypeConfiguration()
+						creationContext.getQueryEngine()
 				);
 			}
 

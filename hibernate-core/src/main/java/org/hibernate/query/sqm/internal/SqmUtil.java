@@ -44,7 +44,6 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationException;
@@ -57,6 +56,8 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
 /**
  * Helper utilities for dealing with SQM
@@ -450,13 +451,7 @@ public class SqmUtil {
 	public static SqmStatement.ParameterResolutions resolveParameters(SqmStatement<?> statement) {
 		if ( statement.getQuerySource() == SqmQuerySource.CRITERIA ) {
 			final CriteriaParameterCollector parameterCollector = new CriteriaParameterCollector();
-
-			ParameterCollector.collectParameters(
-					statement,
-					parameterCollector::process,
-					statement.nodeBuilder().getServiceRegistry()
-			);
-
+			collectParameters( statement, parameterCollector::process );
 			return parameterCollector.makeResolution();
 		}
 		else {

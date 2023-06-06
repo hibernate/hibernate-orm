@@ -16,17 +16,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
-import org.hibernate.query.sqm.sql.SqmTranslator;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -53,19 +49,18 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 
 	private SqlAstTranslator<JdbcOperationQueryInsert> createInsertTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-		final QueryEngine queryEngine = factory.getQueryEngine();
 
-		final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
-		final SqmTranslator<InsertStatement> translator = translatorFactory.createInsertTranslator(
-				sqmInsert,
-				executionContext.getQueryOptions(),
-				domainParameterXref,
-				executionContext.getQueryParameterBindings(),
-				executionContext.getSession().getLoadQueryInfluencers(),
-				factory
-		);
-
-		final SqmTranslation<InsertStatement> sqmInterpretation = translator.translate();
+		final SqmTranslation<InsertStatement> sqmInterpretation =
+				factory.getQueryEngine().getSqmTranslatorFactory()
+						.createInsertTranslator(
+								sqmInsert,
+								executionContext.getQueryOptions(),
+								domainParameterXref,
+								executionContext.getQueryParameterBindings(),
+								executionContext.getSession().getLoadQueryInfluencers(),
+								factory
+						)
+						.translate();
 
 		tableGroupAccess = sqmInterpretation.getFromClauseAccess();
 

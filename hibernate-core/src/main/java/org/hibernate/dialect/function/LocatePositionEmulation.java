@@ -44,10 +44,9 @@ public class LocatePositionEmulation extends AbstractSqmFunctionDescriptor {
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "locate" )
-				.generateSqmExpression( arguments, impliedResultType, queryEngine, typeConfiguration );
+				.generateSqmExpression( arguments, impliedResultType, queryEngine);
 	}
 
 	@Override

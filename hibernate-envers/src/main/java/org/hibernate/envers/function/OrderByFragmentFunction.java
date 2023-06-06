@@ -39,7 +39,6 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Envers specific FunctionContributor
@@ -63,8 +62,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return new OrderByFragmentSelfRenderingSqmFunction<>( this, arguments, impliedResultType, queryEngine );
 	}
 

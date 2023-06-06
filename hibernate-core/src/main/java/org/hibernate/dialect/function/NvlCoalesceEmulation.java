@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeReso
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -45,8 +44,7 @@ public class NvlCoalesceEmulation
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 
 		SqmFunctionDescriptor nvl =
 				queryEngine.getSqmFunctionRegistry()
@@ -64,8 +62,7 @@ public class NvlCoalesceEmulation
 			result = nvl.generateSqmExpression(
 					asList( next, result ),
 					type,
-					queryEngine,
-					typeConfiguration
+					queryEngine
 			);
 		}
 

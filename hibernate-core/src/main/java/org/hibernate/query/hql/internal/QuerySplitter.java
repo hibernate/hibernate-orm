@@ -40,8 +40,6 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
 import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -217,7 +215,6 @@ public class QuerySplitter {
 				SqmRoot unmappedPolymorphicFromElement,
 				EntityDomainType mappedDescriptor,
 				SessionFactoryImplementor sessionFactory) {
-			super( sessionFactory.getServiceRegistry() );
 			this.unmappedPolymorphicFromElement = unmappedPolymorphicFromElement;
 			this.mappedDescriptor = mappedDescriptor;
 			this.creationContext = sessionFactory;
@@ -1291,7 +1288,7 @@ public class QuerySplitter {
 		public Object visitAny(SqmAny<?> sqmAny) {
 			return new SqmAny<>(
 					(SqmSubQuery<?>) sqmAny.getSubquery().accept( this ),
-					this.creationContext.getNodeBuilder()
+					creationContext.getNodeBuilder()
 			);
 		}
 
@@ -1305,7 +1302,7 @@ public class QuerySplitter {
 			sqmEvery.getSubquery().accept( this );
 			return new SqmEvery<>(
 					(SqmSubQuery<?>) sqmEvery.getSubquery().accept( this ),
-					this.creationContext.getNodeBuilder()
+					creationContext.getNodeBuilder()
 			);
 		}
 

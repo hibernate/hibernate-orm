@@ -67,8 +67,7 @@ public interface OrderingExpression extends Node {
 					.generateSqmExpression(
 							new SqmSelfRenderingExpression<>( walker -> expression, null, null ),
 							null,
-							queryEngine,
-							queryEngine.getTypeConfiguration()
+							queryEngine
 					)
 					.convertToSqlAst( converter );
 		}

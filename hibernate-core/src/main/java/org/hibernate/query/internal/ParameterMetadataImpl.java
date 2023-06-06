@@ -216,7 +216,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 			return (QueryParameterImplementor<P>) param;
 		}
 
-		final String errorMessage = "Could not resolve jakarta.persistence.Parameter `" + param + "` to org.hibernate.query.QueryParameter";
+		final String errorMessage = "Could not resolve jakarta.persistence.Parameter '" + param + "' to org.hibernate.query.QueryParameter";
 		throw new IllegalArgumentException(
 				errorMessage,
 				new UnknownParameterException( errorMessage )

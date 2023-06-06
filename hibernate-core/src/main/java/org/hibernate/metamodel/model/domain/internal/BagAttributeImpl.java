@@ -46,7 +46,7 @@ public class BagAttributeImpl<X, E>
 				alias,
 				joinType,
 				fetched,
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 }

@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.function;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -34,15 +33,13 @@ public class JdbcEscapeFunctionDescriptor
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 
 		final SelfRenderingSqmFunction<T> delegate =
 				wrapped.generateSqmExpression(
 						arguments,
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 
 		return new SelfRenderingSqmFunction<>(

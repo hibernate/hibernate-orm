@@ -667,8 +667,7 @@ public class CteInsertHandler implements InsertHandler {
 		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
 				arg,
 				null,
-				factory.getQueryEngine(),
-				typeConfiguration
+				factory.getQueryEngine()
 		).convertToSqlAst( sqmConverter );
 	}
 

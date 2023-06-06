@@ -12,7 +12,6 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
@@ -55,11 +54,10 @@ public interface SqmFunctionDescriptor {
 	<T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration);
+			QueryEngine queryEngine);
 
 	/**
-	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine, TypeConfiguration)},
+	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine)},
 	 * but also accepts a {@code filter} predicate.
 	 * <p>
 	 * This method is intended for aggregate functions.
@@ -68,13 +66,12 @@ public interface SqmFunctionDescriptor {
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		throw new UnsupportedOperationException( "Not an aggregate function" );
 	}
 
 	/**
-	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine, TypeConfiguration)},
+	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine)},
 	 * but also accepts a {@code filter} predicate and an {@code order by} clause.
 	 * <p>
 	 * This method is intended for ordered set aggregate functions.
@@ -84,13 +81,12 @@ public interface SqmFunctionDescriptor {
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		throw new UnsupportedOperationException( "Not an ordered set aggregate function" );
 	}
 
 	/**
-	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine, TypeConfiguration)}
+	 * Like {@link #generateSqmExpression(List, ReturnableType, QueryEngine)}
 	 * but also accepts a {@code filter} predicate.
 	 * <p>
 	 * This method is intended for window functions.
@@ -101,8 +97,7 @@ public interface SqmFunctionDescriptor {
 			Boolean respectNulls,
 			Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		throw new UnsupportedOperationException( "Not a window function" );
 	}
 
@@ -112,13 +107,11 @@ public interface SqmFunctionDescriptor {
 	default <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			SqmTypedNode<?> argument,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return generateSqmExpression(
 				singletonList(argument),
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 
@@ -127,13 +120,11 @@ public interface SqmFunctionDescriptor {
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return generateSqmExpression(
 				emptyList(),
 				impliedResultType,
-				queryEngine,
-				typeConfiguration
+				queryEngine
 		);
 	}
 

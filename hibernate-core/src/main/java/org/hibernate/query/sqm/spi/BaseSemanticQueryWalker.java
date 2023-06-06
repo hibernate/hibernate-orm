@@ -110,7 +110,6 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * Base support for an SQM walker
@@ -118,15 +117,6 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
-	private final ServiceRegistry serviceRegistry;
-
-	public BaseSemanticQueryWalker(ServiceRegistry serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-	}
-
-	public ServiceRegistry getServiceRegistry() {
-		return serviceRegistry;
-	}
 
 	@Override
 	public Object visitSelectStatement(SqmSelectStatement<?> statement) {

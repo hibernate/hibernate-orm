@@ -249,7 +249,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	private void validateComplianceFromSubQuery() {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries in the from clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );

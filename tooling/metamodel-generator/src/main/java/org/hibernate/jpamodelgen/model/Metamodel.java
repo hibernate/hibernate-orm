@@ -7,12 +7,12 @@
 package org.hibernate.jpamodelgen.model;
 
 import java.util.List;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.Element;
 
 /**
  * @author Hardy Ferentschik
  */
-public interface MetaEntity extends ImportContext {
+public interface Metamodel extends ImportContext {
 	String getSimpleName();
 
 	String getQualifiedName();
@@ -27,7 +27,7 @@ public interface MetaEntity extends ImportContext {
 
 	String staticImport(String fqcn, String member);
 
-	TypeElement getTypeElement();
+	Element getElement();
 
 	boolean isMetaComplete();
 }

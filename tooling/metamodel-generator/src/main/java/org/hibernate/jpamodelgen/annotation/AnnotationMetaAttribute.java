@@ -7,14 +7,12 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import java.beans.Introspector;
-import java.util.ArrayList;
-import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.util.Elements;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
-import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.StringUtil;
 
 /**
@@ -34,6 +32,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		this.element = element;
 		this.parent = parent;
 		this.type = type;
+	}
+
+	@Override
+	public boolean hasTypedAttribute() {
+		return true;
 	}
 
 	@Override
@@ -64,6 +67,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 				.toString();
 	}
 
+	@Override
 	public String getPropertyName() {
 		Elements elementsUtil = parent.getContext().getElementUtils();
 		if ( element.getKind() == ElementKind.FIELD ) {
@@ -84,12 +88,15 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		}
 	}
 
-	public MetaEntity getHostingEntity() {
+	@Override
+	public Metamodel getHostingEntity() {
 		return parent;
 	}
 
+	@Override
 	public abstract String getMetaType();
 
+	@Override
 	public String getTypeDeclaration() {
 		return type;
 	}

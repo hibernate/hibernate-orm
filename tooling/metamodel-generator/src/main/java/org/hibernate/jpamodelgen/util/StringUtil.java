@@ -93,6 +93,14 @@ public final class StringUtil {
 		}
 	}
 
+	public static String nameToFieldName(String name){
+		return getUpperUnderscoreCaseFromLowerCamelCase(nameToMethodName(name));
+	}
+
+	public static String nameToMethodName(String name) {
+		return name.replaceAll("[\\s.\\-!@#%=+/*^&|(){}\\[\\]]", "_");
+	}
+
 	public static String getUpperUnderscoreCaseFromLowerCamelCase(String lowerCamelCaseString){
 		return lowerCamelCaseString.replaceAll("(.)(\\p{Upper})", "$1_$2").toUpperCase();
 	}

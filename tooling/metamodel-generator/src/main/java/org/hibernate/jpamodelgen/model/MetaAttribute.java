@@ -11,6 +11,8 @@ package org.hibernate.jpamodelgen.model;
  */
 public interface MetaAttribute {
 
+	boolean hasTypedAttribute();
+
 	String getAttributeDeclarationString();
 
 	String getAttributeNameDeclarationString();
@@ -21,6 +23,6 @@ public interface MetaAttribute {
 
 	String getTypeDeclaration();
 
-	MetaEntity getHostingEntity();
+	Metamodel getHostingEntity();
 
 }

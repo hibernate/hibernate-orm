@@ -24,7 +24,7 @@ import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
-import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
@@ -38,7 +38,7 @@ import org.hibernate.jpamodelgen.util.TypeUtils;
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-public class AnnotationMetaEntity implements MetaEntity {
+public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private final ImportContext importContext;
 	private final TypeElement element;
@@ -50,12 +50,12 @@ public class AnnotationMetaEntity implements MetaEntity {
 	/**
 	 * Whether the members of this type have already been initialized or not.
 	 * <p>
-	 * Embeddables and mapped super-classes need to be lazily initialized since the access type may be determined by
-	 * the class which is embedding or sub-classing the entity or super-class. This might not be known until
+	 * Embeddables and mapped superclasses need to be lazily initialized since the access type may be determined by
+	 * the class which is embedding or subclassing the entity or superclass. This might not be known until
 	 * annotations are processed.
 	 * <p>
 	 * Also note, that if two different classes with different access types embed this entity or extend this mapped
-	 * super-class, the access type of the embeddable/super-class will be the one of the last embedding/sub-classing
+	 * super-class, the access type of the embeddable/superclass will be the one of the last embedding/subclassing
 	 * entity processed. The result is not determined (that's ok according to the spec).
 	 */
 	private boolean initialized;
@@ -65,7 +65,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 	 * lazily is required for embeddedables and mapped supertypes to only pull in those members matching the access
 	 * type as configured via the embedding entity or subclass (also see METAGEN-85).
 	 */
-	private MetaEntity entityToMerge;
+	private Metamodel entityToMerge;
 
 	public AnnotationMetaEntity(TypeElement element, Context context) {
 		this.element = element;
@@ -90,14 +90,17 @@ public class AnnotationMetaEntity implements MetaEntity {
 		return context;
 	}
 
+	@Override
 	public final String getSimpleName() {
 		return element.getSimpleName().toString();
 	}
 
+	@Override
 	public final String getQualifiedName() {
 		return element.getQualifiedName().toString();
 	}
 
+	@Override
 	public final String getPackageName() {
 		return getPackageName( context, element );
 	}
@@ -107,6 +110,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 		return context.getElementUtils().getName( packageOf.getQualifiedName() ).toString();
 	}
 
+	@Override
 	public List<MetaAttribute> getMembers() {
 		if ( !initialized ) {
 			init();
@@ -115,7 +119,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 			}
 		}
 
-		return new ArrayList<MetaAttribute>( members.values() );
+		return new ArrayList<>( members.values() );
 	}
 
 	@Override
@@ -133,7 +137,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 		}
 	}
 
-	public void mergeInMembers(MetaEntity other) {
+	public void mergeInMembers(Metamodel other) {
 		// store the entity in order do the merge lazily in case of a non-initialized embeddedable or mapped superclass
 		if ( !initialized ) {
 			this.entityToMerge = other;
@@ -143,20 +147,29 @@ public class AnnotationMetaEntity implements MetaEntity {
 		}
 	}
 
+	@Override
 	public final String generateImports() {
 		return importContext.generateImports();
 	}
 
+	@Override
 	public final String importType(String fqcn) {
 		return importContext.importType( fqcn );
 	}
 
+	@Override
 	public final String staticImport(String fqcn, String member) {
 		return importContext.staticImport( fqcn, member );
 	}
 
-	public final TypeElement getTypeElement() {
+	@Override
+	public final TypeElement getElement() {
 		return element;
+	}
+
+	@Override
+	void putMember(String name, NameMetaAttribute nameMetaAttribute) {
+		members.put( name, nameMetaAttribute );
 	}
 
 	@Override
@@ -169,16 +182,12 @@ public class AnnotationMetaEntity implements MetaEntity {
 		return sb.toString();
 	}
 
-	protected TypeElement getElement() {
-		return element;
-	}
-
 	protected final void init() {
 		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + "." );
 
 		TypeUtils.determineAccessTypeForHierarchy( element, context );
 		AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
-		entityAccessTypeInfo = NullnessUtil.castNonNull(accessTypeInfo);
+		entityAccessTypeInfo = NullnessUtil.castNonNull( accessTypeInfo );
 
 		List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
 		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
@@ -186,15 +195,18 @@ public class AnnotationMetaEntity implements MetaEntity {
 		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
 		List<Element> gettersAndSettersOfClass = new ArrayList<>();
 
-		for (Element rawMethodOfClass: methodsOfClass) {
-			if ( isGetterOrSetter( rawMethodOfClass)) {
-				gettersAndSettersOfClass.add(rawMethodOfClass);
+		for ( Element rawMethodOfClass: methodsOfClass ) {
+			if ( isGetterOrSetter( rawMethodOfClass ) ) {
+				gettersAndSettersOfClass.add( rawMethodOfClass );
 			}
 		}
 		addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 
+		addAuxiliaryMembers();
+
 		initialized = true;
 	}
+
 
 	/**
 	 * Check if method respects Java Bean conventions for getter and setters.
@@ -246,4 +258,5 @@ public class AnnotationMetaEntity implements MetaEntity {
 			}
 		}
 	}
+
 }

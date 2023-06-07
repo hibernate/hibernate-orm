@@ -261,6 +261,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -3922,8 +3923,20 @@ public abstract class AbstractEntityPersister
 		if ( isVersioned() ) {
 			// let this take precedence if defined, since it works for
 			// assigned identifiers
-			final Boolean result = versionMapping.getUnsavedStrategy().isUnsaved( getVersion( entity ) );
+			final Object version = getVersion( entity );
+			final Boolean result = versionMapping.getUnsavedStrategy().isUnsaved( version );
 			if ( result != null ) {
+				if ( result && version == null && session.getPersistenceContext().hasLoadContext() ) {
+					// check if we're currently loading this entity instance, the version
+					// will be null but the entity cannot be considered transient
+					final EntityKey entityKey = new EntityKey( id, this );
+					final LoadingEntityEntry loadingEntityEntry = session.getPersistenceContext()
+							.getLoadContexts()
+							.findLoadingEntityEntry( entityKey );
+					if ( loadingEntityEntry != null && loadingEntityEntry.getEntityInstance() == entity ) {
+						return false;
+					}
+				}
 				return result;
 			}
 		}

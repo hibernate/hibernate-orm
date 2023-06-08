@@ -185,4 +185,5 @@ public interface PluralAttributeMapping
 	default boolean isPluralAttributeMapping() {
 		return true;
 	}
+
 }

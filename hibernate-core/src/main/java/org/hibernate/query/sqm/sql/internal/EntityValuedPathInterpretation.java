@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -28,7 +27,6 @@ import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -37,16 +35,12 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
@@ -163,14 +157,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		// we try to make use of it and the FK model part if possible based on the inferred mapping
 		if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ModelPart associationKeyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
-			final ModelPart keyTargetMatchPart;
-			if ( associationKeyTargetMatchPart instanceof ToOneAttributeMapping ) {
-				keyTargetMatchPart = ( (ToOneAttributeMapping) associationKeyTargetMatchPart ).getKeyTargetMatchPart();
-			}
-			else {
-				keyTargetMatchPart = associationKeyTargetMatchPart;
-			}
+			final ModelPart keyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
 
 			if ( associationMapping.isFkOptimizationAllowed() ) {
 				final boolean forceUsingForeignKeyAssociationSidePart;
@@ -197,24 +184,14 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					forceUsingForeignKeyAssociationSidePart = false;
 				}
 				if ( forceUsingForeignKeyAssociationSidePart ) {
-					if ( associationKeyTargetMatchPart instanceof ToOneAttributeMapping ) {
-						resultModelPart = keyTargetMatchPart;
-					}
-					else {
-						resultModelPart = associationMapping.getForeignKeyDescriptor()
-								.getPart( associationMapping.getSideNature() );
-					}
+					resultModelPart = associationMapping.getForeignKeyDescriptor()
+							.getPart( associationMapping.getSideNature() );
 					resultTableGroup = sqlAstCreationState.getFromClauseAccess()
 							.findTableGroup( tableGroup.getNavigablePath().getParent() );
 				}
 				else {
-					if ( isCorrelated( tableGroup, sqlAstCreationState )
-							|| !tableGroup.getNavigablePath().isParentOrEqual( navigablePath ) ) {
-						// Access to the parent table group is forbidden for correlated table groups. For more details,
-						// see: `ToOneAttributeMapping.createRootTableGroupJoin`
-						// Due to that, we forcefully use the model part to which this association points to i.e. the target
-
-						// Also force the use of the FK target key if the navigable path for this entity valued path is
+					if ( !tableGroup.getNavigablePath().isParentOrEqual( navigablePath ) ) {
+						// Force the use of the FK target key if the navigable path for this entity valued path is
 						// not equal to or a child of the table group navigable path.
 						// This can happen when using an implicit join path e.g. `where root.association.id is null`,
 						// yet also an explicit join was made which is compatible e.g. `join fetch root.association`.
@@ -261,21 +238,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		);
 	}
 
-	private static boolean isCorrelated(TableGroup tableGroup, SqmToSqlAstConverter sqlAstCreationState) {
-		final SqlAstProcessingState processingState = sqlAstCreationState.getCurrentProcessingState();
-		if ( !( processingState instanceof SqlAstQueryPartProcessingState )
-				|| ( (SqlAstQueryPartProcessingState) processingState ).getInflightQueryPart().isRoot() ) {
-			return false;
-		}
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-
-		TableGroup realParentTableGroup = fromClauseAccess.findTableGroup( tableGroup.getNavigablePath().getParent() );
-		while ( realParentTableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
-			realParentTableGroup = fromClauseAccess.findTableGroup( realParentTableGroup.getNavigablePath().getParent() );
-		}
-		return realParentTableGroup instanceof CorrelatedTableGroup;
-	}
-
 	private static boolean hasNotFound(EntityValuedModelPart mapping) {
 		return mapping instanceof ToOneAttributeMapping && ( (ToOneAttributeMapping) mapping ).hasNotFoundAction();
 	}
@@ -296,7 +258,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
 		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
 			final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) sqlAstCreationState.getCurrentSqmQueryPart();
-			if ( currentClause == Clause.ORDER && !groupByClauseContains( navigablePath, querySpec ) ) {
+			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath ) ) {
 				// We must ensure that the order by expression be expanded but only if the group by
 				// contained the same expression, and that was expanded as well
 				expandToAllColumns = false;
@@ -405,15 +367,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				if ( selectableNodeContains( argument.getSelectableNode(), path ) ) {
 					return true;
 				}
-			}
-		}
-		return false;
-	}
-
-	private static boolean groupByClauseContains(NavigablePath path, SqmQuerySpec<?> sqmQuerySpec) {
-		for ( SqmExpression<?> expression : sqmQuerySpec.getGroupByClauseExpressions() ) {
-			if ( expression instanceof SqmPath && ( (SqmPath<?>) expression ).getNavigablePath() == path ) {
-				return true;
 			}
 		}
 		return false;

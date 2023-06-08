@@ -76,6 +76,7 @@ import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -132,13 +133,25 @@ public class MySQLDialect extends Dialect {
 				Integer scale,
 				Long length) {
 			switch ( jdbcType.getDdlTypeCode() ) {
-				case Types.BIT:
+				case BIT:
 					// MySQL allows BIT with a length up to 64 (less the default length 255)
 					if ( length != null ) {
 						return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
 					}
+				case FLOAT:
+				case DOUBLE:
+				case REAL:
+					//MySQL doesn't let you cast to DOUBLE/FLOAT
+					//but don't just return 'decimal' because
+					//the default scale is 0 (no decimal places)
+					Size size = super.resolveSize( jdbcType, javaType, precision, scale, length );
+					//cast() on MySQL does not behave sensibly if
+					//we set scale > 20
+					size.setScale( Math.min( size.getPrecision(), 20 ) );
+					return size;
+				default:
+					return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
-			return super.resolveSize( jdbcType, javaType, precision, scale, length );
 		}
 	};
 
@@ -378,6 +391,8 @@ public class MySQLDialect extends Dialect {
 						.withTypeCapacity( maxLobLen, "text" )
 						.build()
 		);
+
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl(this) );
 	}
 
 	@Deprecated
@@ -641,6 +656,8 @@ public class MySQLDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
 	}
 
 	@Override
@@ -870,7 +887,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getEnumTypeDeclaration(String[] values) {
+	public String getEnumTypeDeclaration(String name, String[] values) {
 		StringBuilder type = new StringBuilder();
 		type.append( "enum (" );
 		String separator = "";
@@ -879,12 +896,6 @@ public class MySQLDialect extends Dialect {
 			separator = ",";
 		}
 		return type.append( ')' ).toString();
-	}
-
-	@Override
-	public String getCheckCondition(String columnName, String[] values) {
-		//not needed, because we use an 'enum' type
-		return null;
 	}
 
 	@Override
@@ -952,7 +963,7 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
 		// no way to change just the column type, leaving other attributes intact
-		return "modify column " + columnName + " " + columnDefinition;
+		return "modify column " + columnName + " " + columnDefinition.trim();
 	}
 
 	@Override

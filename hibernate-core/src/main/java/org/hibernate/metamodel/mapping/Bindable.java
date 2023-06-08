@@ -6,9 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -32,16 +29,6 @@ public interface Bindable extends JdbcMappingContainer {
 	}
 
 	/**
-	 * The list of JDBC mappings
-	 */
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
-		return results;
-	}
-
-	/**
 	 * Visit each of JdbcMapping
 	 *
 	 * @apiNote Same as {@link #forEachJdbcType(int, IndexedConsumer)} starting from `0`
@@ -52,43 +39,45 @@ public interface Bindable extends JdbcMappingContainer {
 	}
 
 	/**
-	 * @asciidoc Breaks down a value of `J` into its simple pieces.  E.g., an embedded
+	 * Breaks down a value of {@code J} into its simple pieces.  E.g., an embedded
 	 * value gets broken down into an array of its attribute state; a basic
 	 * value converts to itself; etc.
 	 * <p>
 	 * Generally speaking, this is the form in which entity state is kept relative to a
-	 * Session via `EntityEntry`.
-	 * @Entity class Person {
-	 * @Id Integer id;
-	 * @Embedded Name name;
-	 * int age;
-	 * }
-	 * @Embeddable class Name {
-	 * String familiarName;
-	 * String familyName;
-	 * }
-	 * ````
+	 * Session via {@code EntityEntry}.
 	 * <p>
-	 * At the top-level, we would want to disassemble a `Person` value so we'd ask the
-	 * `Bindable` for the `Person` entity to disassemble.  Given a Person value:
+	 * <pre>
+	 * &#64;Entity class Person {
+	 *     &#64;Id Integer id;
+	 *     &#64;Embedded Name name;
+	 *     int age;
+	 * }
+	 *
+	 * &#64;Embeddable class Name {
+	 *     String familiarName;
+	 *     String familyName;
+	 * }
+	 * </pre>
 	 * <p>
-	 * ````
+	 * At the top level, we would want to disassemble a {@code Person} value, so we'd
+	 * ask the {@code Bindable} for the {@code Person} entity to disassemble.  Given a
+	 * {@code Person} value:
+	 * <p>
+	 * <pre>
 	 * Person( id=1, name=Name( 'Steve', 'Ebersole' ), 28 )
-	 * ````
+	 * </pre>
 	 * <p>
-	 * this disassemble would result in a multi-dimensional array:
+	 * this disassemble would result in a multidimensional array:
 	 * <p>
-	 * ````
+	 * <pre>
 	 * [ ["Steve", "Ebersole"], 28 ]
-	 * ````
+	 * </pre>
 	 * <p>
 	 * Note that the identifier is not part of this disassembled state.  Note also
 	 * how the embedded value results in a sub-array.
+	 *
 	 * @see org.hibernate.engine.spi.EntityEntry
 	 * <p>
-	 * As an example, consider the following domain model:
-	 * <p>
-	 * ````
 	 */
 	Object disassemble(Object value, SharedSessionContractImplementor session);
 
@@ -103,20 +92,18 @@ public interface Bindable extends JdbcMappingContainer {
 	void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session);
 
 	/**
-	 * @asciidoc
-	 *
 	 * Visit each constituent JDBC value over the result from {@link #disassemble}.
-	 *
+	 * <p>
 	 * Given the example in {@link #disassemble}, this results in the consumer being
 	 * called for each simple value.  E.g.:
-	 *
-	 * ````
+	 * <p>
+	 * <pre>
 	 * consumer.consume( "Steve" );
 	 * consumer.consume( "Ebersole" );
 	 * consumer.consume( 28 );
-	 * ````
-	 *
-	 * Think of it as breaking the multi-dimensional array into a visitable flat array.
+	 * </pre>
+	 * <p>
+	 * Think of it as breaking the multidimensional array into a visitable flat array.
 	 * Additionally, it passes through the values {@code X} and {@code Y} to the consumer.
 	 */
 	default <X, Y> int forEachDisassembledJdbcValue(

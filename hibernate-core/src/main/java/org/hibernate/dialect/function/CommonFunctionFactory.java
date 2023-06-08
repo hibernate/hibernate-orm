@@ -710,6 +710,15 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void repeat_rpad() {
+		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*length(?1),?1)" )
+				.setInvariantType(stringType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER times)" )
+				.register();
+	}
+
 	public void leftRight() {
 		functionRegistry.namedDescriptorBuilder( "left" )
 				.setInvariantType(stringType)

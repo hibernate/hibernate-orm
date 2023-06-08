@@ -2,6 +2,7 @@ package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.List;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -42,7 +43,7 @@ public class PowerFunctionTest {
 	public void testIt(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
+					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 					CriteriaQuery<Double> query = cb.createQuery( Double.class );
 					Root<Person> root = query.from( Person.class );
 

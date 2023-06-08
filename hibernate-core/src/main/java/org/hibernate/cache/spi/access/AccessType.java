@@ -25,13 +25,13 @@ public enum AccessType {
 	/**
 	 * Read-only access. Data may be added and removed, but not mutated.
 	 */
-	READ_ONLY( "read-only" ),
+	READ_ONLY,
 	/**
 	 * Read and write access. Data may be added, removed and mutated.
 	 * A "soft" lock on the cached item is used to manage concurrent
 	 * access during mutation.
 	 */
-	READ_WRITE( "read-write" ),
+	READ_WRITE,
 	/**
 	 * Read and write access. Data may be added, removed and mutated.
 	 * The cached item is invalidated before and after transaction
@@ -39,19 +39,13 @@ public enum AccessType {
 	 * strategy is more vulnerable to inconsistencies than
 	 * {@link #READ_WRITE}, but may allow higher throughput.
 	 */
-	NONSTRICT_READ_WRITE( "nonstrict-read-write" ),
+	NONSTRICT_READ_WRITE,
 	/**
 	 * Read and write access. Data may be added, removed and mutated.
 	 * Some sort of hard lock is maintained in conjunction with a
 	 * JTA transaction.
 	 */
-	TRANSACTIONAL( "transactional" );
-
-	private final String externalName;
-
-	AccessType(String externalName) {
-		this.externalName = externalName;
-	}
+	TRANSACTIONAL;
 
 	/**
 	 * Get the external name of this value.
@@ -59,12 +53,12 @@ public enum AccessType {
 	 * @return The corresponding externalized name.
 	 */
 	public String getExternalName() {
-		return externalName;
+		return super.toString().toLowerCase(Locale.ROOT).replace('_','-');
 	}
 
 	@Override
 	public String toString() {
-		return "AccessType[" + externalName + "]";
+		return "AccessType[" + getExternalName() + "]";
 	}
 
 	/**

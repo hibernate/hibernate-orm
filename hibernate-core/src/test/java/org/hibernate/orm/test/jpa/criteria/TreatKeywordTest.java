@@ -15,19 +15,27 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.metamodel.Thing;
 import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
 import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity_;
+import org.hibernate.orm.test.jpa.ql.TreatKeywordTest.JoinedEntity;
+import org.hibernate.orm.test.jpa.ql.TreatKeywordTest.JoinedEntitySubSubclass;
+import org.hibernate.orm.test.jpa.ql.TreatKeywordTest.JoinedEntitySubSubclass2;
+import org.hibernate.orm.test.jpa.ql.TreatKeywordTest.JoinedEntitySubclass;
+import org.hibernate.orm.test.jpa.ql.TreatKeywordTest.JoinedEntitySubclass2;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Steve Ebersole
@@ -37,6 +45,8 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
+				JoinedEntity.class, JoinedEntitySubclass.class, JoinedEntitySubSubclass.class,
+				JoinedEntitySubclass2.class, JoinedEntitySubSubclass2.class,
 				Animal.class, Elephant.class, Human.class, Thing.class, ThingWithQuantity.class,
 				TreatAnimal.class, Dog.class, Dachshund.class, Greyhound.class
 		};
@@ -249,6 +259,46 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 
 		// we should only have a single Greyhound here, not slow long dogs!
 		assertEquals( Arrays.asList( greyhound ), results );
+
+		entityTransaction.commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-16657")
+	public void testTypeFilterInSubquery() {
+		EntityManager em = getOrCreateEntityManager();
+		EntityTransaction entityTransaction = em.getTransaction();
+		entityTransaction.begin();
+
+		JoinedEntitySubclass2 child1 = new JoinedEntitySubclass2( 3, "child1");
+		JoinedEntitySubSubclass2 child2 = new JoinedEntitySubSubclass2( 4, "child2");
+		JoinedEntitySubclass root1 = new JoinedEntitySubclass( 1, "root1", child1);
+		JoinedEntitySubSubclass root2 = new JoinedEntitySubSubclass( 2, "root2", child2);
+		em.persist( child1 );
+		em.persist( child2 );
+		em.persist( root1 );
+		em.persist( root2 );
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<String> query = cb.createQuery( String.class );
+		Root<JoinedEntitySubclass> root = query.from( JoinedEntitySubclass.class );
+		query.orderBy( cb.asc( root.get( "id" ) ) );
+		Subquery<String> subquery = query.subquery( String.class );
+		Root<JoinedEntitySubclass> subqueryRoot = subquery.correlate( root );
+		Join<Object, Object> other = subqueryRoot.join( "other" );
+		subquery.select( other.get( "name" ) );
+		subquery.where( cb.equal( root.type(), cb.literal( JoinedEntitySubclass.class ) ) );
+		query.select( subquery );
+
+		List<String> results = em.createQuery(
+				"select (select o.name from j.other o where type(j) = JoinedEntitySubSubclass) from JoinedEntitySubclass j order by j.id",
+				String.class
+		).getResultList();
+
+		assertEquals( 2, results.size() );
+		assertNull( results.get( 0 ) );
+		assertEquals( "child2", results.get( 1 ) );
 
 		entityTransaction.commit();
 		em.close();

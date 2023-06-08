@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.sqm.CastType;
@@ -19,9 +20,11 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -90,7 +93,7 @@ public interface JdbcType extends Serializable {
 	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type to
 	 * be used for schema generation.
 	 * <p>
-	 * This value is passed to {@link DdlTypeRegistry#getTypeName(int, Size)}
+	 * This value is passed to {@link DdlTypeRegistry#getTypeName(int, Size, Type)}
 	 * to obtain the SQL column type.
 	 *
 	 * @return a JDBC type code
@@ -155,12 +158,13 @@ public interface JdbcType extends Serializable {
 	 * definition in generated DDL.
 	 *
 	 * @param columnName the name of the column
-	 * @param javaType the {@link JavaType} of the mapped column
-	 * @param dialect the SQL {@link Dialect}
+	 * @param javaType   the {@link JavaType} of the mapped column
+	 * @param converter  the converter, if any, or null
+	 * @param dialect    the SQL {@link Dialect}
 	 * @return a check constraint condition or null
 	 * @since 6.2
 	 */
-	default String getCheckCondition(String columnName, JavaType<?> javaType, Dialect dialect) {
+	default String getCheckCondition(String columnName, JavaType<?> javaType, BasicValueConverter<?, ?> converter, Dialect dialect) {
 		return null;
 	}
 
@@ -321,5 +325,18 @@ public interface JdbcType extends Serializable {
 	 */
 	default void registerOutParameter(CallableStatement callableStatement, int index) throws SQLException {
 		callableStatement.registerOutParameter( index, getJdbcTypeCode() );
+	}
+
+	@Incubating
+	default void addAuxiliaryDatabaseObjects(
+			JavaType<?> javaType,
+			Size columnSize,
+			Database database,
+			TypeConfiguration typeConfiguration) {
+	}
+
+	@Incubating
+	default String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
+		return "";
 	}
 }

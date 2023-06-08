@@ -60,6 +60,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -70,9 +71,10 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
@@ -87,6 +89,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
+import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
@@ -284,21 +287,21 @@ public class CockroachLegacyDialect extends Dialect {
 				}
 				break;
 			case ARRAY:
-				final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
 				// PostgreSQL names array types by prepending an underscore to the base name
-				if ( jdbcType instanceof ArrayJdbcType && columnTypeName.charAt( 0 ) == '_' ) {
+				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
 					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
-						return ( (ArrayJdbcType) jdbcType ).resolveType(
+						return jdbcTypeConstructor.resolveType(
 								jdbcTypeRegistry.getTypeConfiguration(),
 								this,
 								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-								null
+								ColumnTypeInformation.EMPTY
 						);
 					}
 				}
-				return jdbcType;
+				break;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
@@ -787,23 +790,53 @@ public class CockroachLegacyDialect extends Dialect {
 			}
 		}
 		else {
-			switch (unit) {
-				case YEAR:
-					return "extract(year from ?3-?2)";
-				case QUARTER:
-					return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
-				case MONTH:
-					return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
-				// Prior to v20, Cockroach didn't support extracting from an interval/duration,
-				// so we use the extract_duration function
-				case WEEK:
-					return "extract_duration(hour from ?3-?2)/168";
-				case DAY:
-					return "extract_duration(hour from ?3-?2)/24";
-				case NANOSECOND:
-					return "extract_duration(microsecond from ?3-?2)*1e3";
-				default:
-					return "extract_duration(?1 from ?3-?2)";
+			if (getVersion().isSameOrAfter( 20, 1 )) {
+				switch (unit) {
+					case YEAR:
+						return "extract(year from ?3-?2)";
+					case QUARTER:
+						return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
+					case MONTH:
+						return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+					case WEEK: //week is not supported by extract() when the argument is a duration
+						return "(extract(day from ?3-?2)/7)";
+					case DAY:
+						return "extract(day from ?3-?2)";
+					//in order to avoid multiple calls to extract(),
+					//we use extract(epoch from x - y) * factor for
+					//all the following units:
+
+					// Note that CockroachDB also has an extract_duration function which returns an int,
+					// but we don't use that here because it is deprecated since v20
+					case HOUR:
+					case MINUTE:
+					case SECOND:
+					case NANOSECOND:
+					case NATIVE:
+						return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
+					default:
+						throw new SemanticException( "unrecognized field: " + unit );
+				}
+			}
+			else {
+				switch (unit) {
+					case YEAR:
+						return "extract(year from ?3-?2)";
+					case QUARTER:
+						return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
+					case MONTH:
+						return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+					// Prior to v20, Cockroach didn't support extracting from an interval/duration,
+					// so we use the extract_duration function
+					case WEEK:
+						return "extract_duration(hour from ?3-?2)/168";
+					case DAY:
+						return "extract_duration(hour from ?3-?2)/24";
+					case NANOSECOND:
+						return "extract_duration(microsecond from ?3-?2)*1e3";
+					default:
+						return "extract_duration(?1 from ?3-?2)";
+				}
 			}
 		}
 	}

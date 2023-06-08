@@ -25,7 +25,6 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -47,6 +46,7 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
@@ -976,15 +976,15 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
 		return session.getSessionFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class )
+				.getFastSessionServices()
+				.getMutationExecutorService()
 				.createExecutor( resolveBatchKeyAccess( dynamicUpdate, session ), group, session );
 	}
 
 	private MutationExecutor updateVersionExecutor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
 		return session.getSessionFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class )
+				.getFastSessionServices()
+				.getMutationExecutorService()
 				.createExecutor( resolveUpdateVersionBatchKeyAccess( dynamicUpdate, session ), group, session );
 	}
 
@@ -1036,7 +1036,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup() );
 	}
 
-	private <O extends MutationOperation> TableUpdateBuilderStandard<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
+	<O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
 		return new TableUpdateBuilderStandard<>( entityPersister(), tableMapping, factory() );
 	}
 
@@ -1110,7 +1110,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private void applyPartictionKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder) {
 		final AbstractEntityPersister persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
-			for ( AttributeMapping attributeMapping : persister.getAttributeMappings() ) {
+			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
+			for ( int m = 0; m < attributeMappings.size(); m++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( m );
 				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
 				for ( int i = 0; i < jdbcTypeCount; i++ ) {
 					final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );
@@ -1597,7 +1599,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return null;
 		}
 		else {
-			final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder =
+			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder =
 					newTableUpdateBuilder( entityPersister().getIdentifierTableMapping() );
 
 			updateBuilder.setSqlComment( "forced version increment for " + entityPersister().getRolePath() );
@@ -1621,10 +1623,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private void addPartitionRestriction(TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder) {
+	private void addPartitionRestriction(AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder) {
 		final AbstractEntityPersister persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
-			for ( AttributeMapping attributeMapping : persister.getAttributeMappings() ) {
+			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
+			for ( int m = 0; m < attributeMappings.size(); m++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( m );
 				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
 				for ( int i = 0; i < jdbcTypeCount; i++ ) {
 					final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );

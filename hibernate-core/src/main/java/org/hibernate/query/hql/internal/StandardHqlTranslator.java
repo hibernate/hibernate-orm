@@ -8,6 +8,9 @@ package org.hibernate.query.hql.internal;
 
 import java.util.BitSet;
 
+import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.InputMismatchException;
+import org.antlr.v4.runtime.NoViableAltException;
 import org.hibernate.QueryException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
@@ -32,32 +35,14 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * Standard implementation of {@link HqlTranslator}.
  *
  * @author Steve Ebersole
  */
 public class StandardHqlTranslator implements HqlTranslator {
-
-	protected static final ANTLRErrorListener ERR_LISTENER = new ANTLRErrorListener() {
-
-		@Override
-		public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-			throw new ParsingException( "line " + line + ":" + charPositionInLine + " " + msg);
-		}
-
-		@Override
-		public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
-		}
-
-		@Override
-		public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
-		}
-
-		@Override
-		public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
-		}
-	};
 
 	private final SqmCreationContext sqmCreationContext;
 	private final SqmCreationOptions sqmCreationOptions;
@@ -105,11 +90,50 @@ public class StandardHqlTranslator implements HqlTranslator {
 		// Build the parse tree
 		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
 
+		ANTLRErrorListener errorListener = new ANTLRErrorListener() {
+			@Override
+			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+				String errorText = "At " + line + ":" + charPositionInLine;
+				if ( offendingSymbol instanceof CommonToken ) {
+					String token = ( (CommonToken) offendingSymbol ).getText();
+					if ( token != null && !token.isEmpty() ) {
+						errorText += " and token '" + token + "'";
+					}
+				}
+				errorText += ", ";
+				if ( e instanceof NoViableAltException ) {
+					errorText +=  msg.substring( 0, msg.indexOf("'") );
+					String lineText = hql.lines().collect( toList() ).get( line-1 );
+					String text = lineText.substring( 0, charPositionInLine ) + "*" + lineText.substring( charPositionInLine );
+					errorText += "'" + text + "'";
+				}
+				else if ( e instanceof InputMismatchException ) {
+					errorText += msg.substring( 0,msg.length()-1 ).replace(" expecting {", ", expecting one of the following tokens: ");
+				}
+				else  {
+					errorText += msg;
+				}
+				throw new ParsingException( errorText );
+			}
+
+			@Override
+			public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
+			}
+
+			@Override
+			public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
+			}
+
+			@Override
+			public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
+			}
+		};
+
 		// try to use SLL(k)-based parsing first - its faster
-		hqlLexer.addErrorListener( ERR_LISTENER );
+		hqlLexer.addErrorListener( errorListener );
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		hqlParser.removeErrorListeners();
-		hqlParser.addErrorListener( ERR_LISTENER );
+		hqlParser.addErrorListener( errorListener );
 		hqlParser.setErrorHandler( new BailErrorStrategy() );
 
 		try {
@@ -127,7 +151,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 			return hqlParser.statement();
 		}
 		catch ( ParsingException ex ) {
-			throw new SemanticException( "A query exception occurred", hql, ex );
+			throw new SemanticException( "Illegal HQL syntax [" + ex.getMessage() + "]", hql, ex );
 		}
 	}
 }

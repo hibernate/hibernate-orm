@@ -15,13 +15,17 @@ import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 public class JavaTypeHelper {
 	protected static <T extends JavaType<?>> HibernateException unknownUnwrap(Class<?> sourceType, Class<?> targetType, T jtd) {
 		throw new HibernateException(
-				"Unknown unwrap conversion requested: " + sourceType.getName() + " to " + targetType.getName() + " : `" + jtd.getClass().getName() + "` (" + jtd.getJavaTypeClass().getName() + ")"
+				"Could not convert '" + sourceType.getName()
+						+ "' to '" + targetType.getName()
+						+ "' using '" + jtd.getClass().getName() + "' to unwrap"
 		);
 	}
 
 	protected static <T extends JavaType<?>> HibernateException unknownWrap(Class<?> valueType, Class<?> sourceType, T jtd) {
 		throw new HibernateException(
-				"Unknown wrap conversion requested: " + valueType.getName() + " to " + sourceType.getName() + " : `" + jtd.getClass().getName() + "` (" + jtd.getJavaTypeClass().getName() + ")"
+				"Could not convert '" + valueType.getName()
+						+ "' to '" + sourceType.getName()
+						+ "' using '" + jtd.getClass().getName() + "' to wrap"
 		);
 	}
 

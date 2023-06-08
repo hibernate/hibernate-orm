@@ -128,6 +128,7 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 
@@ -271,7 +272,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 			// this needs to happen after the mapping metamodel is
 			// completely built, since we need to use the persisters
-			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodels.getMappingMetamodel() );
+			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodels );
 
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
@@ -447,11 +448,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	class IntegratorObserver implements SessionFactoryObserver {
 		private final ArrayList<Integrator> integrators = new ArrayList<>();
-
-		@Override
-		public void sessionFactoryCreated(SessionFactory factory) {
-		}
-
 		@Override
 		public void sessionFactoryClosed(SessionFactory factory) {
 			for ( Integrator integrator : integrators ) {
@@ -706,12 +702,23 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		SessionBuilderImplementor builder = withOptions();
 		builder.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
 
+		if ( map != null ) {
+			//noinspection SuspiciousMethodCalls
+			final String tenantIdHint = (String) map.get( HINT_TENANT_ID );
+			if ( tenantIdHint != null ) {
+				builder = (SessionBuilderImplementor) builder.tenantIdentifier( tenantIdHint );
+			}
+		}
+
 		final Session session = builder.openSession();
 		if ( map != null ) {
 			for ( Map.Entry<K, V> o : map.entrySet() ) {
 				final K key = o.getKey();
 				if ( key instanceof String ) {
 					final String sKey = (String) key;
+					if ( HINT_TENANT_ID.equals( sKey ) ) {
+						continue;
+					}
 					session.setProperty( sKey, o.getValue() );
 				}
 			}
@@ -943,8 +950,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 				}
 				else {
-					final NamedQueryMemento namedQueryMemento = ( (SqmQueryImplementor<?>) hibernateQuery ).toMemento(
-							name );
+					final NamedQueryMemento namedQueryMemento =
+							( (SqmQueryImplementor<?>) hibernateQuery ).toMemento( name );
 					namedObjectRepository.registerSqmQueryMemento(
 							name,
 							(NamedSqmQueryMemento) namedQueryMemento
@@ -1188,6 +1195,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		private String tenantIdentifier;
 		private TimeZone jdbcTimeZone;
 		private boolean explicitNoInterceptor;
+		private int defaultBatchFetchSize;
+		private boolean subselectFetchEnabled;
 
 		// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
 		// (Need a fresh build for each Session as the listener instances can't be reused across sessions)
@@ -1205,6 +1214,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			this.statementInspector = sessionFactoryOptions.getStatementInspector();
 			this.connectionHandlingMode = sessionFactoryOptions.getPhysicalConnectionHandlingMode();
 			this.autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
+			this.defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
+			this.subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
 
 			final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( currentTenantIdentifierResolver != null ) {
@@ -1232,6 +1243,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		@Override
 		public FlushMode getInitialSessionFlushMode() {
 			return flushMode;
+		}
+
+		@Override
+		public boolean isSubselectFetchEnabled() {
+			return subselectFetchEnabled;
+		}
+
+		@Override
+		public int getDefaultBatchFetchSize() {
+			return defaultBatchFetchSize;
 		}
 
 		@Override
@@ -1422,6 +1443,16 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		@Override
+		public boolean isSubselectFetchEnabled() {
+			return false;
+		}
+
+		@Override
+		public int getDefaultBatchFetchSize() {
+			return -1;
+		}
+
+		@Override
 		public boolean shouldAutoClose() {
 			return false;
 		}
@@ -1598,8 +1629,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	private void logIfEmptyCompositesEnabled(Map<String, Object> props ) {
-		final boolean isEmptyCompositesEnabled =
-				getBoolean( CREATE_EMPTY_COMPOSITES_ENABLED, props, false );
+		final boolean isEmptyCompositesEnabled = getBoolean( CREATE_EMPTY_COMPOSITES_ENABLED, props );
 		if ( isEmptyCompositesEnabled ) {
 			LOG.emptyCompositesEnabled();
 		}

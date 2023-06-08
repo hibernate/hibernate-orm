@@ -166,8 +166,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
 				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
-				creationContext.getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
-				false
+				creationContext.getServiceRegistry().getService( ConfigurationService.class ).getSettings()
 		);
 		final AggregateColumn aggregateColumn = bootDescriptor.getAggregateColumn();
 		if ( aggregateColumn != null ) {
@@ -183,7 +182,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				updatable = componentProperty.isUpdateable();
 			}
 			this.aggregateMapping = SelectableMappingImpl.from(
-					bootDescriptor.getOwner().getTable().getName(),
+					bootDescriptor.getOwner().getTable().getQualifiedName( creationContext.getSqlStringGenerationContext() ),
 					aggregateColumn,
 					bootDescriptor.getParentAggregateColumn() != null
 							? bootDescriptor.getParentAggregateColumn().getSelectablePath()

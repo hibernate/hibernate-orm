@@ -9,6 +9,10 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -29,6 +33,7 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.internal.JTDSCallableStatementSupport;
+import org.hibernate.procedure.internal.SybaseCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -52,6 +57,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -61,6 +67,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+
 
 /**
  * Superclass for all Sybase dialects.
@@ -68,8 +79,6 @@ import jakarta.persistence.TemporalType;
  * @author Brett Meyer
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
-
-	protected final boolean jtdsDriver;
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
 
@@ -79,6 +88,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_COUNT_LIMIT = 2000;
 
 	private final UniqueDelegate uniqueDelegate = new SkipNullableUniqueDelegate(this);
+	private final SybaseDriverKind driverKind;
+
+	@Deprecated(forRemoval = true)
+	protected final boolean jtdsDriver;
 
 	public SybaseDialect() {
 		this( MINIMUM_VERSION );
@@ -86,18 +99,23 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	public SybaseDialect(DatabaseVersion version) {
 		super(version);
-		jtdsDriver = true;
+		this.driverKind = SybaseDriverKind.OTHER;
+		this.jtdsDriver = true;
 	}
 
 	public SybaseDialect(DialectResolutionInfo info) {
 		super(info);
-		jtdsDriver = info.getDriverName() != null
-				&& info.getDriverName().contains( "jTDS" );
+		this.driverKind = SybaseDriverKind.determineKind( info );
+		this.jtdsDriver = driverKind == SybaseDriverKind.JTDS;
 	}
 
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
+	}
+
+	public SybaseDriverKind getDriverKind() {
+		return driverKind;
 	}
 
 	@Override
@@ -179,7 +197,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		super.contributeTypes(typeContributions, serviceRegistry);
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-		if ( jtdsDriver ) {
+		if ( driverKind == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
@@ -212,12 +230,20 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 								.getDescriptor( Object.class )
 				)
 		);
+		typeContributions.contributeType(
+				new NullType(
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
 	}
 
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
-		return jtdsDriver ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
+		return driverKind == SybaseDriverKind.JTDS ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
 	}
 
 	@Override
@@ -296,14 +322,93 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		if ( to == CastType.STRING ) {
 			switch ( from ) {
 				case DATE:
-					return "str_replace(convert(varchar,?1,102),'.','-')";
+					return "substring(convert(varchar,?1,23),1,10)";
 				case TIME:
-					return "convert(varchar,?1,108)";
+					return "convert(varchar,?1,8)";
 				case TIMESTAMP:
-					return "str_replace(convert(varchar,?1,23),'T',' ')";
+					return "convert(varchar,?1,140)";
 			}
 		}
 		return super.castPattern( from, to );
+	}
+
+	/* Something odd is going on with the jConnect driver when using JDBC escape syntax, so let's use native functions */
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "convert(date,'" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( "',140)" );
+				break;
+			case TIME:
+				appender.appendSql( "convert(time,'" );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( "',8)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "convert(datetime,'" );
+				appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( "',140)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "convert(date,'" );
+				appendAsDate( appender, date );
+				appender.appendSql( "',140)" );
+				break;
+			case TIME:
+				appender.appendSql( "convert(time,'" );
+				appendAsLocalTime( appender, date );
+				appender.appendSql( "',8)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "convert(datetime,'" );
+				appendAsTimestampWithMillis( appender, date, jdbcTimeZone );
+				appender.appendSql( "',140)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	@Override
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "convert(date,'" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( "',140)" );
+				break;
+			case TIME:
+				appender.appendSql( "convert(time,'" );
+				appendAsLocalTime( appender, calendar );
+				appender.appendSql( "',8)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "convert(datetime,'" );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+				appender.appendSql( "',140)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
@@ -361,8 +466,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
+		// Default to MIXED because the jconn driver doesn't seem to report anything useful
+		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		if ( dbMetaData == null ) {
-			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
@@ -371,12 +477,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( jtdsDriver ) {
-			return NameQualifierSupport.CATALOG;
-		}
-		else {
-			return NameQualifierSupport.BOTH;
-		}
+		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
+		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
+		return NameQualifierSupport.CATALOG;
 	}
 
 	@Override
@@ -386,7 +489,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return jtdsDriver ? JTDSCallableStatementSupport.INSTANCE : super.getCallableStatementSupport();
+		return driverKind == SybaseDriverKind.JTDS ?
+				JTDSCallableStatementSupport.INSTANCE :
+				SybaseCallableStatementSupport.INSTANCE;
+	}
+
+	@Override
+	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
+		// Only the jTDS driver supports named parameters properly
+		return driverKind == SybaseDriverKind.JTDS && super.supportsNamedParameters( databaseMetaData );
 	}
 
 	@Override
@@ -401,7 +512,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return jtdsDriver
+		return driverKind == SybaseDriverKind.JTDS
 				? AbstractTransactSQLIdentityColumnSupport.INSTANCE
 				: SybaseJconnIdentityColumnSupport.INSTANCE;
 	}

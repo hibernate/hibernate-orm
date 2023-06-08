@@ -32,7 +32,10 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+
+import static java.util.Collections.singletonList;
 
 /**
  * @author Steve Ebersole
@@ -67,21 +70,22 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
 		// todo (6.0) : cache the SQL AST and JdbcParameters
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+		JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
 				Collections.emptyList(),
 				uniqueKeyAttribute,
 				null,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				LockOptions.NONE,
-				jdbcParameters::add,
+				builder::add,
 				sessionFactory
 		);
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		JdbcParametersList jdbcParameters = builder.build();
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
@@ -122,22 +126,22 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
 		// todo (6.0) : cache the SQL AST and JdbcParameters
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
-				Collections.singletonList( entityDescriptor.getIdentifierMapping() ),
+				singletonList( entityDescriptor.getIdentifierMapping() ),
 				uniqueKeyAttribute,
 				null,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				LockOptions.NONE,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
 
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
+		final JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				ukValue,

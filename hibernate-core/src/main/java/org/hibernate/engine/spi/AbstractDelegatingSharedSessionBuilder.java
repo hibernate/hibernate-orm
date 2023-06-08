@@ -32,7 +32,6 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		this.delegate = delegate;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected SharedSessionBuilder getThis() {
 		return this;
 	}

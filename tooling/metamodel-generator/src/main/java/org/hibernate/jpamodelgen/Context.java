@@ -52,7 +52,6 @@ public final class Context {
 	private final boolean lazyXmlParsing;
 	private final String persistenceXmlLocation;
 	private final List<String> ormXmlFiles;
-	private final String generatedAnnotation;
 
 	/**
 	 * Whether all mapping files are xml-mapping-metadata-complete. In this case no annotation processing will take
@@ -97,18 +96,6 @@ public final class Context {
 
 		lazyXmlParsing = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
 		logDebug = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
-
-		// Workaround that Eclipse transformer tries to replace this constant which we don't want
-		String j = "j";
-		TypeElement java8AndBelowGeneratedAnnotation =
-				pe.getElementUtils().getTypeElement( j + "avax.annotation.Generated" );
-		if ( java8AndBelowGeneratedAnnotation != null ) {
-			generatedAnnotation = java8AndBelowGeneratedAnnotation.getQualifiedName().toString();
-		}
-		else {
-			// Using the new name for this annotation in Java 9 and above
-			generatedAnnotation = "javax.annotation.processing.Generated";
-		}
 	}
 
 	public ProcessingEnvironment getProcessingEnvironment() {
@@ -117,10 +104,6 @@ public final class Context {
 
 	public boolean addGeneratedAnnotation() {
 		return addGeneratedAnnotation;
-	}
-
-	public String getGeneratedAnnotationFqcn() {
-		return generatedAnnotation;
 	}
 
 	public void setAddGeneratedAnnotation(boolean addGeneratedAnnotation) {

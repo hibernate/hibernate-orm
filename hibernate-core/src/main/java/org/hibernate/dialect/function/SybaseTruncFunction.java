@@ -95,7 +95,7 @@ public class SybaseTruncFunction extends TruncFunction {
 			sqlAppender.append( '(' );
 			sqlAppender.append( "datetime,substring(convert(varchar," );
 			sqlAstArguments.get( 0 ).accept( walker );
-			sqlAppender.append( ",21),1,17" );
+			sqlAppender.append( ",140),1,26" );
 			if ( sqlAstArguments.size() > 1 ) {
 				sqlAppender.append( "-len(" );
 				sqlAstArguments.get( 1 ).accept( walker );
@@ -105,7 +105,7 @@ public class SybaseTruncFunction extends TruncFunction {
 			else {
 				sqlAppender.append( ')' );
 			}
-			sqlAppender.append( ",21)" );
+			sqlAppender.append( ",140)" );
 		}
 
 		@Override
@@ -119,22 +119,22 @@ public class SybaseTruncFunction extends TruncFunction {
 			final String literal;
 			switch ( temporalUnit ) {
 				case YEAR:
-					literal = "/01/01 00:00:00";
+					literal = "-01-01T00:00:00.000000";
 					break;
 				case MONTH:
-					literal = "/01 00:00:00";
+					literal = "-01T00:00:00.000000";
 					break;
 				case DAY:
-					literal = " 00:00:00";
+					literal = "T00:00:00.000000";
 					break;
 				case HOUR:
-					literal = ":00:00";
+					literal = ":00:00.000000";
 					break;
 				case MINUTE:
-					literal = ":00";
+					literal = ":00.000000";
 					break;
 				case SECOND:
-					literal = null;
+					literal = ".000000";
 					break;
 				default:
 					throw new UnsupportedOperationException( "Temporal unit not supported [" + temporalUnit + "]" );

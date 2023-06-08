@@ -61,6 +61,36 @@ public class CastNullSelectExpressionTest {
 		);
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-16564")
+	public void testSelectNewNull(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					Person result = (Person) session.createQuery(
+							"select new Person( id, firstName, null, lastName ) from Person where lastName='Munster'"
+					).uniqueResult();
+					assertEquals( "Herman", result.firstName );
+					assertNull( result.middleName );
+					assertEquals( "Munster", result.lastName );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-16564")
+	public void testSelectNull(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					Object[] result = (Object[]) session.createQuery(
+							"select id, firstName, null, lastName from Person where lastName='Munster'"
+					).uniqueResult();
+					assertEquals( "Herman", result[1] );
+					assertNull( result[2] );
+					assertEquals( "Munster", result[3] );
+				}
+		);
+	}
+
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction(

@@ -71,6 +71,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private boolean isAbstract;
 	private boolean hasDenormalizedTables;
 	private String comment;
+	private String viewQuery;
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 
@@ -665,6 +666,10 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return !isSubselect() && !isAbstractUnionTable();
 	}
 
+	public boolean isView() {
+		return viewQuery != null;
+	}
+
 	public String getComment() {
 		return comment;
 	}
@@ -703,6 +708,14 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		for ( Column column : columns ) {
 			this.columns.put( column.getCanonicalName(), column );
 		}
+	}
+
+	public String getViewQuery() {
+		return viewQuery;
+	}
+
+	public void setViewQuery(String viewQuery) {
+		this.viewQuery = viewQuery;
 	}
 
 	public static class ForeignKeyKey implements Serializable {

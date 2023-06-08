@@ -280,6 +280,7 @@ tasks.withType( Test.class ).each { test ->
 	test.maxHeapSize = '3G'
 
 	test.systemProperties['hibernate.test.validatefailureexpected'] = true
+	test.systemProperties['hibernate.highlight_sql'] = false
 	test.systemProperties += System.properties.findAll { it.key.startsWith( "hibernate." ) }
 
 	test.enableAssertions = true
@@ -524,7 +525,7 @@ checkerFramework {
 	extraJavacArgs = [
 	        '-AsuppressWarnings=initialization',
 			"-Astubs=${project.rootDir}/checkerstubs",
-			'-AonlyDefs=^org\\.hibernate\\.(jpamodelgen|spi)\\.'
+			'-AonlyDefs=^org\\.hibernate\\.(jpamodelgen|spi|pretty|stat|(action|context|bytecode)\\.spi)\\.'
 	]
 }
 

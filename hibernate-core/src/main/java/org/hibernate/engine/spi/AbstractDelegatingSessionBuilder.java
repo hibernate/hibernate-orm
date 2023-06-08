@@ -32,7 +32,6 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		this.delegate = delegate;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected SessionBuilder getThis() {
 		return this;
 	}

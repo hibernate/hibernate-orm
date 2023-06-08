@@ -2,9 +2,13 @@ plugins {
     id 'java-platform'
 }
 
+description = 'Gradle platform for Hibernate ORM'
+
 apply from: rootProject.file( 'gradle/releasable.gradle' )
 apply from: rootProject.file( "gradle/base-information.gradle" )
 apply from: rootProject.file( "gradle/publishing-pom.gradle" )
+
+apply plugin: 'signing'
 
 dependencies {
     constraints {
@@ -70,3 +74,9 @@ publishing {
         }
     }
 }
+
+project( ":release" ).getTasks().named( "publishReleaseArtifacts" ).configure {
+    dependsOn tasks.release
+}
+
+tasks.release.dependsOn tasks.publishToSonatype

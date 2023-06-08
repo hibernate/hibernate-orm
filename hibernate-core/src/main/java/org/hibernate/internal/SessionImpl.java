@@ -152,6 +152,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_COPY_TREE;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
@@ -160,10 +161,16 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.USE_SUBSELECT_FETCH;
 import static org.hibernate.event.spi.LoadEventListener.IMMEDIATE_LOAD;
 import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_EAGER;
 import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_LAZY;
 import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_NULLABLE;
+import static org.hibernate.jpa.HibernateHints.HINT_BATCH_FETCH_SIZE;
+import static org.hibernate.jpa.HibernateHints.HINT_ENABLE_SUBSELECT_FETCH;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_PROFILE;
+import static org.hibernate.jpa.HibernateHints.HINT_JDBC_BATCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
@@ -239,7 +246,7 @@ public class SessionImpl
 			}
 		}
 
-		loadQueryInfluencers = new LoadQueryInfluencers( factory );
+		loadQueryInfluencers = new LoadQueryInfluencers( factory, options );
 
 		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
@@ -1420,18 +1427,23 @@ public class SessionImpl
 
 	@Override
 	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
+		forceFlush( entityEntry.getEntityKey() );
+	}
+
+	@Override
+	public void forceFlush(EntityKey key) throws HibernateException {
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
 					"Flushing to force deletion of re-saved object: %s",
-					MessageHelper.infoString( entityEntry.getPersister(), entityEntry.getId(), getFactory() )
+					MessageHelper.infoString( key.getPersister(), key.getIdentifier(), getFactory() )
 			);
 		}
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
 			throw new ObjectDeletedException(
 					"deleted object would be re-saved by cascade (remove deleted object from associations)",
-					entityEntry.getId(),
-					entityEntry.getPersister().getEntityName()
+					key.getIdentifier(),
+					key.getPersister().getEntityName()
 			);
 		}
 		checkOpenOrWaitingForAutoClose();
@@ -1933,6 +1945,26 @@ public class SessionImpl
 	}
 
 	@Override
+	public void setSubselectFetchingEnabled(boolean enabled) {
+		loadQueryInfluencers.setSubselectFetchEnabled( enabled );
+	}
+
+	@Override
+	public boolean isSubselectFetchingEnabled() {
+		return loadQueryInfluencers.getSubselectFetchEnabled();
+	}
+
+	@Override
+	public void setFetchBatchSize(int batchSize) {
+		loadQueryInfluencers.setBatchSize( batchSize );
+	}
+
+	@Override
+	public int getFetchBatchSize() {
+		return loadQueryInfluencers.getBatchSize();
+	}
+
+	@Override
 	public LobHelper getLobHelper() {
 		if ( lobHelper == null ) {
 			lobHelper = new LobHelperImpl();
@@ -2040,7 +2072,9 @@ public class SessionImpl
 		}
 	}
 
-	private static class SharedSessionBuilderImpl extends SessionFactoryImpl.SessionBuilderImpl implements SharedSessionBuilder, SharedSessionCreationOptions {
+	private static class SharedSessionBuilderImpl
+			extends SessionFactoryImpl.SessionBuilderImpl
+			implements SharedSessionBuilder, SharedSessionCreationOptions {
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
 
@@ -2657,7 +2691,7 @@ public class SessionImpl
 	private void interpretProperty(String propertyName, Object value) {
 		switch ( propertyName ) {
 			case HINT_FLUSH_MODE:
-				setHibernateFlushMode( ConfigurationHelper.getFlushMode(value, FlushMode.AUTO) );
+				setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
 				break;
 			case JPA_LOCK_SCOPE:
 			case JAKARTA_LOCK_SCOPE:
@@ -2695,6 +2729,21 @@ public class SessionImpl
 				break;
 			case CRITERIA_COPY_TREE:
 				setCriteriaCopyTreeEnabled( parseBoolean( value.toString() ) );
+				break;
+			case HINT_FETCH_PROFILE:
+				enableFetchProfile( (String) value );
+				break;
+			case USE_SUBSELECT_FETCH:
+			case HINT_ENABLE_SUBSELECT_FETCH:
+				setSubselectFetchingEnabled( Boolean.parseBoolean( value.toString() ) );
+				break;
+			case DEFAULT_BATCH_FETCH_SIZE:
+			case HINT_BATCH_FETCH_SIZE:
+				setFetchBatchSize( Integer.parseInt( value.toString() ) );
+				break;
+			case STATEMENT_BATCH_SIZE:
+			case HINT_JDBC_BATCH_SIZE:
+				setJdbcBatchSize( Integer.parseInt( value.toString() ) );
 				break;
 		}
 	}
@@ -2895,11 +2944,7 @@ public class SessionImpl
 	}
 
 	private Boolean getReadOnlyFromLoadQueryInfluencers() {
-		Boolean readOnly = null;
-		if ( loadQueryInfluencers != null ) {
-			readOnly = loadQueryInfluencers.getReadOnly();
-		}
-		return readOnly;
+		return loadQueryInfluencers != null ? loadQueryInfluencers.getReadOnly() : null;
 	}
 
 	@Override @Deprecated(forRemoval = true)

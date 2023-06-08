@@ -19,7 +19,6 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterCharacterData;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -53,37 +52,32 @@ public class VarcharJdbcType implements AdjustableJdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		if ( length != null && length == 1 ) {
-			return typeConfiguration.getJavaTypeRegistry().getDescriptor( Character.class );
-		}
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class );
+		return typeConfiguration.getJavaTypeRegistry()
+				.getDescriptor( length != null && length == 1 ? Character.class : String.class );
 	}
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		//noinspection unchecked
-		return new JdbcLiteralFormatterCharacterData( javaType );
+		return new JdbcLiteralFormatterCharacterData<>( javaType );
 	}
 
 	@Override
 	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
 		assert domainJtd != null;
+		return indicators.getTypeConfiguration().getJdbcTypeRegistry()
+				.getDescriptor( indicators.resolveJdbcTypeCode( resolveIndicatedJdbcTypeCode( indicators ) ) );
+	}
 
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-
-		final int jdbcTypeCode;
+	protected int resolveIndicatedJdbcTypeCode(JdbcTypeIndicators indicators) {
 		if ( indicators.isLob() ) {
-			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+			return indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
 		}
 		else if ( shouldUseMaterializedLob( indicators ) ) {
-			jdbcTypeCode = indicators.isNationalized() ? SqlTypes.MATERIALIZED_NCLOB : SqlTypes.MATERIALIZED_CLOB;
+			return indicators.isNationalized() ? SqlTypes.MATERIALIZED_NCLOB : SqlTypes.MATERIALIZED_CLOB;
 		}
 		else {
-			jdbcTypeCode = indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
+			return indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
 		}
-
-		return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );
 	}
 
 	protected boolean shouldUseMaterializedLob(JdbcTypeIndicators indicators) {

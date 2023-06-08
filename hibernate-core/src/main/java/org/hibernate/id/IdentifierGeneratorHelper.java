@@ -7,6 +7,7 @@
 package org.hibernate.id;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -32,15 +33,19 @@ import java.util.Objects;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@Internal
 public final class IdentifierGeneratorHelper {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IdentifierGeneratorHelper.class );
 
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should
-	 * short-circuit any continued generated id checking.  Currently, this is only used in the case of the
+	 * short-circuit any continued generated id checking. Currently, this is only used in the case of the
 	 * {@linkplain ForeignGenerator foreign} generator as a way to signal that we should use the associated
 	 * entity's id value.
+	 *
+	 * @deprecated This is not an elegant way to do anything
 	 */
+	@Deprecated(forRemoval = true)
 	public static final Serializable SHORT_CIRCUIT_INDICATOR = new Serializable() {
 		@Override
 		public String toString() {
@@ -51,7 +56,10 @@ public final class IdentifierGeneratorHelper {
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that the entity's
 	 * identifier will be generated as part of the database insertion.
+	 *
+	 * @deprecated Use a {@link org.hibernate.generator.OnExecutionGenerator}
 	 */
+	@Deprecated(forRemoval = true)
 	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
 		@Override
 		public String toString() {
@@ -176,6 +184,7 @@ public final class IdentifierGeneratorHelper {
 		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
 	}
 
+	@Internal
 	public static class BasicHolder implements IntegralDataTypeHolder {
 		private final Class<?> exactType;
 		private long value = Long.MIN_VALUE;

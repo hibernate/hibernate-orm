@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -147,7 +148,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<?> getPrimitiveClass() {
 		return boolean.class;
 	}
 
@@ -180,4 +181,45 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		return 0;
 	}
+
+	@Override
+	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+		if ( converter != null ) {
+			if ( jdbcType.isString() ) {
+				@SuppressWarnings("unchecked")
+				BasicValueConverter<Boolean, ?> stringConverter =
+						(BasicValueConverter<Boolean, ?>) converter;
+				String[] values = new String[] {
+						stringConverter.toRelationalValue(false).toString(),
+						stringConverter.toRelationalValue(true).toString()
+				};
+				return dialect.getCheckCondition( columnName, values );
+			}
+			else if ( jdbcType.isInteger() ) {
+				@SuppressWarnings("unchecked")
+				BasicValueConverter<Boolean, ? extends Number> numericConverter =
+						(BasicValueConverter<Boolean, ? extends Number>) converter;
+				long[] values = new long[] {
+						numericConverter.toRelationalValue(false).longValue(),
+						numericConverter.toRelationalValue(true).longValue()
+				};
+				return dialect.getCheckCondition( columnName, values );
+			}
+		}
+		return null;
+	}
+
+//	@Override @Deprecated
+//	public String getSpecializedTypeDeclaration(JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+//		if ( converter != null && jdbcType.isString() ) {
+//			@SuppressWarnings("unchecked")
+//			BasicValueConverter<Boolean, ?> stringConverter = (BasicValueConverter<Boolean, ?>) converter;
+//			String[] values = new String[] {
+//					stringConverter.toRelationalValue(false).toString(),
+//					stringConverter.toRelationalValue(true).toString()
+//			};
+//			return dialect.getEnumTypeDeclaration( null, values );
+//		}
+//		return null;
+//	}
 }

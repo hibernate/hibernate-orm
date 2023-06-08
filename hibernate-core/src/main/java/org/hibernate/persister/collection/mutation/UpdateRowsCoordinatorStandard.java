@@ -19,7 +19,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.internal.AbstractMutationOperationGroup;
+import org.hibernate.sql.model.internal.MutationOperationGroupNone;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 /**
  * UpdateRowsCoordinator implementation for cases with a separate collection table
@@ -31,7 +34,7 @@ import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
 	private final RowMutationOperations rowMutationOperations;
 
-	private MutationOperationGroupSingle operationGroup;
+	private AbstractMutationOperationGroup operationGroup;
 
 	public UpdateRowsCoordinatorStandard(
 			CollectionMutationTarget mutationTarget,
@@ -43,12 +46,12 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 
 	@Override
 	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
-		final MutationOperationGroupSingle operationGroup = getOperationGroup();
+		final AbstractMutationOperationGroup operationGroup = getOperationGroup();
 
 		final MutationExecutorService mutationExecutorService = session
 				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
+				.getFastSessionServices()
+				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE" ),
 				operationGroup,
@@ -115,42 +118,55 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 			int entryPosition,
 			MutationExecutor mutationExecutor,
 			SharedSessionContractImplementor session) {
-		final PluralAttributeMapping attribute = getMutationTarget().getTargetPart();
-		if ( !collection.needsUpdating( entry, entryPosition, attribute ) ) {
+		if ( rowMutationOperations.getUpdateRowOperation() != null ) {
+			final PluralAttributeMapping attribute = getMutationTarget().getTargetPart();
+			if ( !collection.needsUpdating( entry, entryPosition, attribute ) ) {
+				return false;
+			}
+
+			rowMutationOperations.getUpdateRowValues().applyValues(
+					collection,
+					key,
+					entry,
+					entryPosition,
+					session,
+					mutationExecutor.getJdbcValueBindings()
+			);
+
+			rowMutationOperations.getUpdateRowRestrictions().applyRestrictions(
+					collection,
+					key,
+					entry,
+					entryPosition,
+					session,
+					mutationExecutor.getJdbcValueBindings()
+			);
+
+			mutationExecutor.execute( collection, null, null, null, session );
+			return true;
+		}
+		else {
 			return false;
 		}
-
-		rowMutationOperations.getUpdateRowValues().applyValues(
-				collection,
-				key,
-				entry,
-				entryPosition,
-				session,
-				mutationExecutor.getJdbcValueBindings()
-		);
-
-		rowMutationOperations.getUpdateRowRestrictions().applyRestrictions(
-				collection,
-				key,
-				entry,
-				entryPosition,
-				session,
-				mutationExecutor.getJdbcValueBindings()
-		);
-
-		mutationExecutor.execute( collection, null, null, null, session );
-		return true;
 	}
 
-	protected MutationOperationGroupSingle getOperationGroup() {
+	protected AbstractMutationOperationGroup getOperationGroup() {
 		if ( operationGroup == null ) {
-			operationGroup = new MutationOperationGroupSingle(
-					MutationType.UPDATE,
-					getMutationTarget(),
-					rowMutationOperations.getUpdateRowOperation()
-			);
+			final JdbcMutationOperation updateRowOperation = rowMutationOperations.getUpdateRowOperation();
+			if ( updateRowOperation == null ) {
+				operationGroup = new MutationOperationGroupNone(
+						MutationType.UPDATE,
+						getMutationTarget()
+				);
+			}
+			else {
+				operationGroup = new MutationOperationGroupSingle(
+						MutationType.UPDATE,
+						getMutationTarget(),
+						updateRowOperation
+				);
+			}
 		}
-
 		return operationGroup;
 	}
 

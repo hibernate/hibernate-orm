@@ -188,7 +188,7 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public String getArrayTypeName(String elementTypeName) {
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
 		return "ARRAY<" + elementTypeName + ">";
 	}
 

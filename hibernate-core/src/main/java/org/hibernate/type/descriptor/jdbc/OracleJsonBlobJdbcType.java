@@ -20,6 +20,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -61,7 +62,7 @@ public class OracleJsonBlobJdbcType implements AggregateJdbcType {
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JavaType<?> javaType, Dialect dialect) {
+	public String getCheckCondition(String columnName, JavaType<?> javaType, BasicValueConverter<?, ?> converter, Dialect dialect) {
 		return columnName + " is json";
 	}
 

@@ -15,6 +15,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeFamilyInformation;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcTypeBaseline;
@@ -36,6 +37,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer, JdbcTypeConstructor> descriptorConstructorMap = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, AggregateJdbcType> aggregateDescriptorMap = new ConcurrentHashMap<>();
 
 	public JdbcTypeRegistry(TypeConfiguration typeConfiguration) {
@@ -91,7 +93,8 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		}
 
 		// see if the typecode is part of a known type family...
-		JdbcTypeFamilyInformation.Family family = JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode );
+		JdbcTypeFamilyInformation.Family family =
+				JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode );
 		if ( family != null ) {
 			for ( int potentialAlternateTypeCode : family.getTypeCodes() ) {
 				if ( potentialAlternateTypeCode != jdbcTypeCode ) {
@@ -175,5 +178,17 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		return descriptorMap.containsKey( jdbcTypeCode )
 			|| JdbcTypeNameMapper.isStandardTypeCode( jdbcTypeCode )
 			|| JdbcTypeFamilyInformation.INSTANCE.locateJdbcTypeFamilyByTypeCode( jdbcTypeCode ) != null;
+	}
+
+	public JdbcTypeConstructor getConstructor(int jdbcTypeCode) {
+		return descriptorConstructorMap.get( jdbcTypeCode );
+	}
+
+	public void addTypeConstructor(int jdbcTypeCode, JdbcTypeConstructor jdbcTypeConstructor) {
+		descriptorConstructorMap.put( jdbcTypeCode, jdbcTypeConstructor );
+	}
+
+	public void addTypeConstructor(JdbcTypeConstructor jdbcTypeConstructor) {
+		addTypeConstructor( jdbcTypeConstructor.getDefaultSqlTypeCode(), jdbcTypeConstructor );
 	}
 }

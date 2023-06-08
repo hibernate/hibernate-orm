@@ -9,8 +9,6 @@ package org.hibernate.sql.ast.tree.expression;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -90,11 +88,6 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	@Override
 	public int getJdbcTypeCount() {
 		return 1;
-	}
-
-	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( jdbcMapping );
 	}
 
 	@Override

@@ -9,6 +9,7 @@ package org.hibernate.bytecode.spi;
 import java.security.ProtectionDomain;
 
 import jakarta.persistence.spi.TransformerException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A persistence provider provides an instance of this interface to the
@@ -36,9 +37,9 @@ public interface ClassTransformer extends jakarta.persistence.spi.ClassTransform
 	 */
 	@Override
 	byte[] transform(
-			ClassLoader loader,
+			@Nullable ClassLoader loader,
 			String className,
-			Class<?> classBeingRedefined,
+			@Nullable Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain,
 			byte[] classfileBuffer)  throws TransformerException;
 }

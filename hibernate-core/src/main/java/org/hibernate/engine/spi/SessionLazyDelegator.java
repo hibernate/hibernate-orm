@@ -660,6 +660,26 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public int getFetchBatchSize() {
+		return this.lazySession.get().getFetchBatchSize();
+	}
+
+	@Override
+	public void setFetchBatchSize(int batchSize) {
+		this.lazySession.get().setFetchBatchSize( batchSize );
+	}
+
+	@Override
+	public boolean isSubselectFetchingEnabled() {
+		return this.lazySession.get().isSubselectFetchingEnabled();
+	}
+
+	@Override
+	public void setSubselectFetchingEnabled(boolean enabled) {
+		this.lazySession.get().setSubselectFetchingEnabled( enabled );
+	}
+
+	@Override
 	public HibernateCriteriaBuilder getCriteriaBuilder() {
 		return this.lazySession.get().getCriteriaBuilder();
 	}

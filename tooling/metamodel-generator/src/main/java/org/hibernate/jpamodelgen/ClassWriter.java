@@ -203,7 +203,7 @@ public final class ClassWriter {
 	private static String writeGeneratedAnnotation(MetaEntity entity, Context context) {
 		StringBuilder generatedAnnotation = new StringBuilder();
 		generatedAnnotation.append( "@" )
-				.append( entity.importType( context.getGeneratedAnnotationFqcn() ) )
+				.append( entity.importType( "jakarta.annotation.Generated" ) )
 				.append( "(value = \"" )
 				.append( JPAMetaModelEntityProcessor.class.getName() );
 		if ( context.addGeneratedDate() ) {

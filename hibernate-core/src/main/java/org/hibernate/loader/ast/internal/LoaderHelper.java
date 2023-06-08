@@ -24,6 +24,7 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -32,6 +33,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -190,6 +192,7 @@ public class LoaderHelper {
 			JdbcMapping arrayJdbcMapping,
 			Object entityId,
 			Object entityInstance,
+			EntityMappingType rootEntityDescriptor,
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
@@ -205,7 +208,7 @@ public class LoaderHelper {
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 				session.getPersistenceContext().getBatchFetchQueue(),
 				sqlAst,
-				Collections.singletonList( jdbcParameter ),
+				JdbcParametersList.singleton( jdbcParameter ),
 				jdbcParameterBindings
 		);
 
@@ -215,6 +218,7 @@ public class LoaderHelper {
 				new SingleIdExecutionContext(
 						entityId,
 						entityInstance,
+						rootEntityDescriptor,
 						readOnly,
 						lockOptions,
 						subSelectFetchableKeysHandler,

@@ -512,7 +512,7 @@ HQL defines two ways to concatenate strings:
 * the SQL-style concatenation operator, `||`, and
 * the JPQL-standard `concat()` function.
 
-See <<hql-functions-string,below>> for details of the `concat()` function.
+See <<hql-string-functions, below>> for details of the `concat()` function.
 
 [[hql-concatenation-example]]
 //.Concatenation operation example
@@ -892,6 +892,7 @@ Naturally, there are a good number of functions for working with strings.
 | `left()` | The leftmost characters of a string | `left(string, length)` | &cross; / &cross;
 | `right()` | The rightmost characters of a string | `right(string, length)`  | &cross; / &cross;
 | `replace()` | Replace every occurrence of a pattern in a string | `replace(string, pattern, replacement)` | &cross; / &cross;
+| `repeat()` | Concatenate a string with itself multiple times | `replace(string, times)` | &cross; / &cross;
 | `collate()` | Select a collation | `collate(p.name as collation)` | &cross; / &cross;
 |===
 
@@ -1938,7 +1939,7 @@ There's no need to bother with trying to represent a "tuple of length 1".
 But if there are multiple expressions in the select list then:
 
 - by default, each query result is packaged as an array of type `Object[]`, or
-- if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `javax.persistence.Tuple`.
+- if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `jakarta.persistence.Tuple`.
 
 [[hql-select-clause-projection-example]]
 //.Query results as lists

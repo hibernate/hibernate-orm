@@ -6,14 +6,12 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -28,7 +26,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -42,6 +39,7 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.RowReader;
@@ -77,10 +75,21 @@ public class ResultsHelper {
 
 		final List<DomainResultAssembler<?>> assemblers = jdbcValuesMapping.resolveAssemblers(
 				new AssemblerCreationState() {
+					Boolean dynamicInstantiation;
 
 					@Override
 					public boolean isScrollResult() {
 						return executionContext.isScrollResult();
+					}
+
+					@Override
+					public boolean isDynamicInstantiation() {
+						if ( dynamicInstantiation == null ) {
+							dynamicInstantiation = jdbcValuesMapping.getDomainResults()
+									.stream()
+									.anyMatch( domainResult -> domainResult instanceof DynamicInstantiationResult );
+						}
+						return dynamicInstantiation;
 					}
 
 					@Override
@@ -120,6 +129,11 @@ public class ResultsHelper {
 					@Override
 					public SqlAstCreationContext getSqlAstCreationContext() {
 						return sessionFactory;
+					}
+
+					@Override
+					public ExecutionContext getExecutionContext() {
+						return executionContext;
 					}
 				}
 		);

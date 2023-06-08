@@ -123,6 +123,10 @@ public class JsonHelper {
 						appender.append( (Boolean) value ? '1' : '0' );
 						break;
 					}
+					if ( value instanceof Enum ) {
+						appender.appendSql( ((Enum<?>) value).ordinal() );
+						break;
+					}
 				case SqlTypes.BOOLEAN:
 				case SqlTypes.BIT:
 				case SqlTypes.BIGINT:
@@ -147,6 +151,8 @@ public class JsonHelper {
 				case SqlTypes.LONGNVARCHAR:
 				case SqlTypes.LONG32VARCHAR:
 				case SqlTypes.LONG32NVARCHAR:
+				case SqlTypes.ENUM:
+				case SqlTypes.NAMED_ENUM:
 					// These literals can contain the '"' character, so we need to escape it
 					appender.append( '"' );
 					appender.startEscaping();
@@ -830,9 +836,13 @@ public class JsonHelper {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
 			case SqlTypes.INTEGER:
-				if ( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass() == Boolean.class ) {
+				Class<?> javaTypeClass = jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass();
+				if ( javaTypeClass == Boolean.class ) {
 					// BooleanJavaType has this as an implicit conversion
 					return Integer.parseInt( string, start , end, 10 ) == 1;
+				}
+				if ( javaTypeClass.isEnum() ) {
+					return javaTypeClass.getEnumConstants()[Integer.parseInt( string, start , end, 10 )];
 				}
 			case SqlTypes.CHAR:
 			case SqlTypes.NCHAR:

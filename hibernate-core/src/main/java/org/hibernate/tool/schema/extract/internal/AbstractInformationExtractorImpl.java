@@ -104,7 +104,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		final List<String> tableTypesList = new ArrayList<>();
 		tableTypesList.add( "TABLE" );
 		tableTypesList.add( "VIEW" );
-		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
+		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings() ) ) {
 			if ( dialect instanceof DB2Dialect ) {
 				tableTypesList.add( "ALIAS" );
 			}
@@ -675,7 +675,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 				tableInformation,
 				DatabaseIdentifier.toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) ),
 				resultSet.getInt( getResultSetSqlTypeCodeLabel() ),
-				new StringTokenizer( resultSet.getString( getResultSetTypeNameLabel() ), "() " ).nextToken(),
+				new StringTokenizer( resultSet.getString( getResultSetTypeNameLabel() ), "()" ).nextToken(),
 				resultSet.getInt( getResultSetColumnSizeLabel() ),
 				resultSet.getInt( getResultSetDecimalDigitsLabel() ),
 				interpretTruthValue( resultSet.getString( getResultSetIsNullableLabel() ) )

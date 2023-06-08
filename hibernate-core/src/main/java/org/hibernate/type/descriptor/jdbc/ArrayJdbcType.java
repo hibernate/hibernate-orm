@@ -7,7 +7,6 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,11 +14,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -28,6 +24,8 @@ import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.ByteJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterArray;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -38,28 +36,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class ArrayJdbcType implements JdbcType {
 
-	public static final ArrayJdbcType INSTANCE = new ArrayJdbcType( ObjectJdbcType.INSTANCE );
-
 	private final JdbcType elementJdbcType;
 
 	public ArrayJdbcType(JdbcType elementJdbcType) {
 		this.elementJdbcType = elementJdbcType;
-	}
-
-	public JdbcType resolveType(
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			BasicType<?> elementType,
-			ColumnTypeInformation columnTypeInformation) {
-		return resolveType( typeConfiguration, dialect, elementType.getJdbcType(), columnTypeInformation );
-	}
-
-	public JdbcType resolveType(
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			JdbcType elementType,
-			ColumnTypeInformation columnTypeInformation) {
-		return new ArrayJdbcType( elementType );
 	}
 
 	@Override
@@ -94,12 +74,17 @@ public class ArrayJdbcType implements JdbcType {
 			//noinspection unchecked
 			elementJavaType = (JavaType<T>) ByteJavaType.INSTANCE;
 		}
-		else {
+		else if (javaTypeDescriptor instanceof BasicPluralJavaType) {
 			//noinspection unchecked
-			elementJavaType = ( (BasicPluralJavaType<T>) javaTypeDescriptor ).getElementJavaType();
+			elementJavaType = ((BasicPluralJavaType<T>) javaTypeDescriptor).getElementJavaType();
 		}
-		final JdbcLiteralFormatter<T> elementFormatter = elementJdbcType.getJdbcLiteralFormatter( elementJavaType );
-		return new JdbcLiteralFormatterArray<>( javaTypeDescriptor, elementFormatter );
+		else {
+			throw new IllegalArgumentException("not a BasicPluralJavaType");
+		}
+		return new JdbcLiteralFormatterArray<>(
+				javaTypeDescriptor,
+				elementJdbcType.getJdbcLiteralFormatter( elementJavaType )
+		);
 	}
 
 	@Override
@@ -109,12 +94,11 @@ public class ArrayJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		return new BasicBinder<>( javaTypeDescriptor, this ) {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				final java.sql.Array arr = getArray( value, options );
-				st.setArray( index, arr );
+				st.setArray( index, getArray( value, options ) );
 			}
 
 			@Override
@@ -129,9 +113,7 @@ public class ArrayJdbcType implements JdbcType {
 				}
 			}
 
-			private java.sql.Array getArray(
-					X value,
-					WrapperOptions options) throws SQLException {
+			private java.sql.Array getArray(X value, WrapperOptions options) throws SQLException {
 				final TypeConfiguration typeConfiguration = options.getSessionFactory().getTypeConfiguration();
 				final JdbcType elementJdbcType = ( (ArrayJdbcType) getJdbcType() ).getElementJdbcType();
 				final JdbcType underlyingJdbcType = typeConfiguration.getJdbcTypeRegistry()
@@ -149,15 +131,19 @@ public class ArrayJdbcType implements JdbcType {
 					elementJdbcJavaTypeClass = preferredJavaTypeClass;
 				}
 				//noinspection unchecked
-				final Class<Object[]> arrayClass = (Class<Object[]>) Array.newInstance(
-						elementJdbcJavaTypeClass,
-						0
-				).getClass();
+				final Class<Object[]> arrayClass = (Class<Object[]>)
+						Array.newInstance( elementJdbcJavaTypeClass, 0 ).getClass();
 				final Object[] objects = getJavaType().unwrap( value, arrayClass, options );
 
 				final SharedSessionContractImplementor session = options.getSession();
+				final String typeName = getElementTypeName( elementJdbcType, session );
+				return session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+						.createArrayOf( typeName, objects );
+			}
+
+			private String getElementTypeName(JdbcType elementJdbcType, SharedSessionContractImplementor session) {
 				// TODO: ideally, we would have the actual size or the actual type/column accessible
-				//  this is something that we would need for supporting composite types anyway
+				//       this is something that we would need for supporting composite types anyway
 				final JavaType<X> elementJavaType;
 				if ( getJavaType() instanceof ByteArrayJavaType ) {
 					// Special handling needed for Byte[], because that would conflict with the VARBINARY mapping
@@ -171,31 +157,26 @@ public class ArrayJdbcType implements JdbcType {
 				final Size size = session.getJdbcServices()
 						.getDialect()
 						.getSizeStrategy()
-						.resolveSize(
-								elementJdbcType,
-								elementJavaType,
-								null,
-								null,
-								null
-						);
-				String typeName = session.getTypeConfiguration()
-						.getDdlTypeRegistry()
-						.getDescriptor( elementJdbcType.getDdlTypeCode() )
-						.getTypeName( size );
+						.resolveSize( elementJdbcType, elementJavaType, null, null, null );
+				final DdlTypeRegistry ddlTypeRegistry = session.getTypeConfiguration().getDdlTypeRegistry();
+				final String typeName = ddlTypeRegistry.getDescriptor( elementJdbcType.getDdlTypeCode() )
+						.getTypeName( size, new BasicTypeImpl<>( elementJavaType, elementJdbcType), ddlTypeRegistry );
 				int cutIndex = typeName.indexOf( '(' );
 				if ( cutIndex > 0 ) {
 					// getTypeName for this case required length, etc, parameters.
 					// Cut them out and use database defaults.
-					typeName = typeName.substring( 0, cutIndex );
+					return typeName.substring( 0, cutIndex );
 				}
-				return session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection().createArrayOf( typeName, objects );
+				else {
+					return typeName;
+				}
 			}
 		};
 	}
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+		return new BasicExtractor<>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return javaTypeDescriptor.wrap( rs.getArray( paramIndex ), options );
@@ -220,25 +201,6 @@ public class ArrayJdbcType implements JdbcType {
 
 	@Override
 	public String toString() {
-		return "ArrayTypeDescriptor(" + getFriendlyName() + ")";
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-
-		ArrayJdbcType that = (ArrayJdbcType) o;
-
-		return elementJdbcType.equals( that.elementJdbcType );
-	}
-
-	@Override
-	public int hashCode() {
-		return elementJdbcType.hashCode();
+		return "ArrayTypeDescriptor";
 	}
 }

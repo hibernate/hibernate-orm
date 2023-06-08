@@ -6,21 +6,17 @@
  */
 package org.hibernate.orm.test.envers.integration.collection;
 
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
 import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
@@ -28,12 +24,9 @@ import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity;
 import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E1;
 import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E2;
 import org.hibernate.orm.test.envers.tools.TestTools;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.ConvertedBasicType;
-import org.hibernate.type.descriptor.converter.internal.NamedEnumValueConverter;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
+import org.hibernate.type.SqlTypes;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -155,8 +148,6 @@ public class EnumSet extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	private void verifyMapping(JdbcMapping jdbcMapping) {
-		final ConvertedBasicType<?> convertedBasicType = (ConvertedBasicType<?>) jdbcMapping;
-		assertThat( convertedBasicType.getValueConverter() ).isInstanceOf( NamedEnumValueConverter.class );
-		assertThat( convertedBasicType.getValueConverter().getRelationalJavaType().getJavaTypeClass() ).isEqualTo( String.class );
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode() ).isIn( Types.VARCHAR, Types.NVARCHAR, SqlTypes.ENUM );
 	}
 }

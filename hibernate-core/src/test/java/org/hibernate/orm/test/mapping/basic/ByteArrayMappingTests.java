@@ -77,11 +77,8 @@ public class ByteArrayMappingTests {
 			}
 			else {
 				assertThat(
-						jdbcMapping.getJdbcType(),
-						isOneOf(
-								jdbcTypeRegistry.getDescriptor( SqlTypes.ARRAY ),
-								jdbcTypeRegistry.getDescriptor( SqlTypes.SQLXML )
-						)
+						jdbcMapping.getJdbcType().getJdbcTypeCode(),
+						isOneOf( SqlTypes.ARRAY, SqlTypes.SQLXML, SqlTypes.VARBINARY )
 				);
 			}
 		}

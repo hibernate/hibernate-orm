@@ -42,8 +42,8 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TupleType;
+import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -57,6 +57,7 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSearchOrder;
@@ -150,6 +151,7 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -1122,7 +1124,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmExpression<Number> quot(Number x, Expression<? extends Number> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
@@ -1209,7 +1210,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		final SqmExpressible<T> expressible = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
+		SqmExpressible<T> expressible = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
 		if ( expressible.getExpressibleJavaType().isInstance( value ) ) {
 			return new SqmLiteral<>( value, expressible, this );
 		}
@@ -1228,21 +1229,27 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 	}
 
+	@SuppressWarnings({"rawtypes","unchecked"})
 	private static <T> SqmExpressible<T> resolveInferredType(
 			T value,
 			SqmExpression<? extends T> typeInferenceSource,
 			TypeConfiguration typeConfiguration) {
 		if ( typeInferenceSource != null ) {
-			//noinspection unchecked
 			return (SqmExpressible<T>) typeInferenceSource.getNodeType();
 		}
-
-		if ( value == null ) {
+		else if ( value == null ) {
 			return null;
 		}
-
-		//noinspection unchecked
-		return (BasicType<T>) typeConfiguration.getBasicTypeForJavaType( value.getClass() );
+		else {
+			Class type = value.getClass();
+			BasicType<T> result = typeConfiguration.getBasicTypeForJavaType( type );
+			if ( result == null && value instanceof Enum ) {
+				return new BasicTypeImpl<>( new EnumJavaType<>( type ) );
+			}
+			else {
+				return result;
+			}
+		}
 	}
 
 	@Override
@@ -1770,7 +1777,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		if ( value instanceof SqmExpression ) {
 			return (SqmExpression<T>) value;
 		}
-		if ( criteriaValueHandlingMode == ValueHandlingMode.INLINE ) {
+		if ( inlineValue( value ) ) {
 			return literal( value, typeInferenceSource );
 		}
 
@@ -1846,7 +1853,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		if ( value instanceof SqmExpression ) {
 			return (SqmExpression<T>) value;
 		}
-		if ( criteriaValueHandlingMode == ValueHandlingMode.INLINE ) {
+		if ( inlineValue( value ) ) {
 			return literal( value );
 		}
 		else {
@@ -1856,6 +1863,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 					this
 			);
 		}
+	}
+
+	private <T> boolean inlineValue(T value) {
+		return criteriaValueHandlingMode == ValueHandlingMode.INLINE;
+//			|| is a literal enum mapped to a PostgreSQL named 'enum' type
 	}
 
 	@Override
@@ -1905,7 +1917,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Y y) {
-		//noinspection unchecked
 		return coalesce( x, value( y, (SqmExpression<? extends Y>) x ) );
 	}
 
@@ -2063,7 +2074,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Expression<? extends Y> lower, Expression<? extends Y> upper) {
 		assertComparable( value, lower );
 		assertComparable( value, upper );
-		//noinspection unchecked
 		return new SqmBetweenPredicate(
 				(SqmExpression<? extends Y>) value,
 				(SqmExpression<? extends Y>) lower,
@@ -2074,7 +2084,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Y lower, Y upper) {
 		final SqmExpression<? extends Y> valueExpression = (SqmExpression<? extends Y>) value;
 		final SqmExpression<?> lowerExpr = value( lower, valueExpression );
@@ -2208,7 +2217,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
 		assertComparable( x, yExpr );
@@ -2232,7 +2240,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
 		assertComparable( x, yExpr );
@@ -2959,6 +2966,26 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
+	}
+
+	@Override
+	public JpaFunction<String> repeat(Expression<String> x, Expression<Integer> times) {
+		return getFunctionDescriptor( "repeat" ).generateSqmExpression(
+				asList( (SqmExpression<String>) x, (SqmExpression<Integer>) times ),
+				null,
+				getQueryEngine(),
+				getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public JpaFunction<String> repeat(Expression<String> x, int times) {
+		return repeat( x, value( times ) );
+	}
+
+	@Override
+	public JpaFunction<String> repeat(String x, Expression<Integer> times) {
+		return repeat( value( x), times );
 	}
 
 	@Override

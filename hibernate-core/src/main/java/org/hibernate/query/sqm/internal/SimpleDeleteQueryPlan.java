@@ -39,6 +39,7 @@ import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 /**
@@ -51,7 +52,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 	private JdbcOperationQueryDelete jdbcDelete;
 	private SqmTranslation<DeleteStatement> sqmInterpretation;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 
 	public SimpleDeleteQueryPlan(
 			EntityMappingType entityDescriptor,
@@ -124,8 +125,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 			jdbcDelete = deleteTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		}
 
-		final boolean missingRestriction = sqmDelete.getWhereClause() == null
-				|| sqmDelete.getWhereClause().getPredicate() == null;
+		final boolean missingRestriction = sqmInterpretation.getSqlAst().getRestriction() == null;
 		if ( missingRestriction ) {
 			assert domainParameterXref.getSqmParameterCount() == 0;
 			assert jdbcParamsXref.isEmpty();
@@ -165,13 +165,18 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 							sqmInterpretation.getSqlExpressionResolver(),
 							factory
 					);
-					matchingIdSubQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, fkTargetColumnExpression ) );
+					matchingIdSubQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, fkTargetColumnExpression ) );
 
 					matchingIdSubQuery.getFromClause().addRoot(
 							tableGroup
 					);
 
-					matchingIdSubQuery.applyPredicate( sqmInterpretation.getSqlAst().getRestriction() );
+					matchingIdSubQuery.applyPredicate( SqmMutationStrategyHelper.getIdSubqueryPredicate(
+							sqmInterpretation.getSqlAst().getRestriction(),
+							entityDescriptor,
+							tableGroup,
+							session
+					) );
 
 					return new InSubQueryPredicate( fkColumnExpression, matchingIdSubQuery, false );
 				},

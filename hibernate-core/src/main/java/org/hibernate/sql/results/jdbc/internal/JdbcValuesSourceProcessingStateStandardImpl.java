@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
@@ -21,6 +20,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -37,12 +38,13 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
  */
 public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSourceProcessingState {
 
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcValuesSourceProcessingStateStandardImpl.class );
+
 	private final ExecutionContext executionContext;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
 
-	private final BiConsumer<EntityKey,LoadingEntityEntry> loadingEntityEntryConsumer;
-
 	private Map<EntityKey, LoadingEntityEntry> loadingEntityMap;
+	private Map<EntityKey, LoadingEntityEntry> reloadedEntityMap;
 	private Map<EntityUniqueKey, Initializer> initializerByUniquKeyMap;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private List<CollectionInitializer> arrayInitializers;
@@ -52,11 +54,9 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	public JdbcValuesSourceProcessingStateStandardImpl(
 			ExecutionContext executionContext,
-			JdbcValuesSourceProcessingOptions processingOptions,
-			BiConsumer<EntityKey,LoadingEntityEntry> loadingEntityEntryListener) {
+			JdbcValuesSourceProcessingOptions processingOptions) {
 		this.executionContext = executionContext;
 		this.processingOptions = processingOptions;
-		this.loadingEntityEntryConsumer = loadingEntityEntryListener;
 
 		if ( executionContext.getSession().isEventSource() ) {
 			final EventSource eventSource = executionContext.getSession().asEventSource();
@@ -101,12 +101,16 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		if ( loadingEntityMap == null ) {
 			loadingEntityMap = new HashMap<>();
 		}
+		loadingEntityMap.put( entityKey, loadingEntry );
+	}
 
-		if ( loadingEntityEntryConsumer != null ) {
-			loadingEntityEntryConsumer.accept( entityKey, loadingEntry );
+	@Override
+	public void registerReloadedEntity(EntityKey entityKey, LoadingEntityEntry loadingEntry) {
+		if ( reloadedEntityMap == null ) {
+			reloadedEntityMap = new HashMap<>();
 		}
 
-		loadingEntityMap.put( entityKey, loadingEntry );
+		reloadedEntityMap.put( entityKey, loadingEntry );
 	}
 
 	@Override
@@ -134,6 +138,22 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 
 		return loadingCollectionMap.get( key );
+	}
+
+	@Override
+	public void registerSubselect() {
+		if ( loadingEntityMap != null && loadingEntityMap.size() > 1 ) {
+			loadingEntityMap.forEach(
+					(entityKey, loadingEntityEntry) ->
+							executionContext.registerSubselect( entityKey, loadingEntityEntry )
+			);
+		}
+		else {
+			LOG.tracef(
+					"Skipping create subselects because there are fewer than 2 results, so query by key is more efficient.",
+					getClass().getName()
+			);
+		}
 	}
 
 	@Override
@@ -165,34 +185,53 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	private void postLoad() {
-		if ( loadingEntityMap == null ) {
-			return;
+		final Callback callback = executionContext.getCallback();
+		if ( loadingEntityMap != null ) {
+			final EventListenerGroup<PostLoadEventListener> listenerGroup = executionContext.getSession().getFactory()
+					.getFastSessionServices()
+					.eventListenerGroup_POST_LOAD;
+
+			loadingEntityMap.forEach(
+					(entityKey, loadingEntityEntry) -> {
+						if ( loadingEntityEntry.getEntityInstance() != null ) {
+							if ( postLoadEvent != null ) {
+								postLoadEvent.reset();
+								postLoadEvent.setEntity( loadingEntityEntry.getEntityInstance() )
+										.setId( entityKey.getIdentifier() )
+										.setPersister( loadingEntityEntry.getDescriptor() );
+								listenerGroup.fireEventOnEachListener(
+										postLoadEvent,
+										PostLoadEventListener::onPostLoad
+								);
+							}
+
+							if ( callback != null ) {
+								callback.invokeAfterLoadActions(
+										loadingEntityEntry.getEntityInstance(),
+										loadingEntityEntry.getDescriptor(),
+										getSession()
+								);
+							}
+						}
+					}
+			);
 		}
-		final EventListenerGroup<PostLoadEventListener> listenerGroup = executionContext.getSession().getFactory()
-				.getFastSessionServices()
-				.eventListenerGroup_POST_LOAD;
-
-		loadingEntityMap.forEach(
-				(entityKey, loadingEntityEntry) -> {
-					if ( postLoadEvent != null ) {
-						postLoadEvent.reset();
-						postLoadEvent.setEntity( loadingEntityEntry.getEntityInstance() )
-								.setId( entityKey.getIdentifier() )
-								.setPersister( loadingEntityEntry.getDescriptor() );
-						listenerGroup.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
-					}
-
-					final Callback callback = executionContext.getCallback();
-					if ( callback != null ) {
-						callback.invokeAfterLoadActions(
-								loadingEntityEntry.getEntityInstance(),
-								loadingEntityEntry.getDescriptor(),
-								getSession()
-						);
-					}
-				}
-		);
 		loadingEntityMap = null;
+
+		if ( reloadedEntityMap != null ) {
+			if ( callback != null ) {
+				reloadedEntityMap.forEach(
+						(entityKey, loadingEntityEntry) -> {
+							callback.invokeAfterLoadActions(
+									loadingEntityEntry.getEntityInstance(),
+									loadingEntityEntry.getDescriptor(),
+									getSession()
+							);
+						}
+				);
+			}
+			reloadedEntityMap = null;
+		}
 	}
 
 	@SuppressWarnings("SimplifiableIfStatement")

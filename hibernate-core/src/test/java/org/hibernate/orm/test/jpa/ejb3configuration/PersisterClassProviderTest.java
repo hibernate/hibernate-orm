@@ -209,6 +209,11 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public JdbcMapping getJdbcMapping(int index) {
+			throw new IndexOutOfBoundsException( index );
+		}
+
+		@Override
 		public int forEachJdbcType(
 				int offset, IndexedConsumer<JdbcMapping> action) {
 			return 0;
@@ -543,11 +548,6 @@ public class PersisterClassProviderTest {
 		@Override
 		public ClassMetadata getClassMetadata() {
 			return null;
-		}
-
-		@Override
-		public boolean isBatchLoadable() {
-			return false;
 		}
 
 		@Override

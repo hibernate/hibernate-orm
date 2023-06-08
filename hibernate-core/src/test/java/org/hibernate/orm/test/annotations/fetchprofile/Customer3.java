@@ -23,7 +23,7 @@ import org.hibernate.annotations.FetchProfile;
  */
 @Entity
 @FetchProfile(name = "wrong-class-name", fetchOverrides = {
-		@FetchProfile.FetchOverride(entity = Order.class, association = "orders", mode = FetchMode.JOIN)
+		@FetchProfile.FetchOverride(entity = Order.class, association = "orders")
 })
 public class Customer3 {
 	@Id

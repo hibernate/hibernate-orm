@@ -149,7 +149,7 @@ public interface SqmQuery extends CommonQueryContract {
 	SqmQuery setProperties(Object bean);
 
 	@Override
-	SqmQuery setProperties(Map bean);
+	SqmQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	@Override
 	SqmQuery setHibernateFlushMode(FlushMode flushMode);

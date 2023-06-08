@@ -80,8 +80,8 @@ public class DefaultNamingCollectionElementTest {
 						favNbrs[index] = index * 3;
 					}
 					boy.setFavoriteNumbers( favNbrs );
-					boy.getCharacters().add( Character.GENTLE );
-					boy.getCharacters().add( Character.CRAFTY );
+					boy.getCharacters().add( CharacterTrait.GENTLE );
+					boy.getCharacters().add( CharacterTrait.CRAFTY );
 
 					HashMap<String, FavoriteFood> foods = new HashMap<>();
 					foods.put( "breakfast", FavoriteFood.PIZZA );
@@ -103,7 +103,7 @@ public class DefaultNamingCollectionElementTest {
 					assertEquals( Integer.valueOf( 5 ), boy.getScorePerNickName().get( "Thing" ) );
 					assertNotNull( boy.getFavoriteNumbers() );
 					assertEquals( 3, boy.getFavoriteNumbers()[1] );
-					assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
+					assertTrue( boy.getCharacters().contains( CharacterTrait.CRAFTY ) );
 					assertTrue( boy.getFavoriteFood().get( "dinner" ).equals( FavoriteFood.SUSHI ) );
 					assertTrue( boy.getFavoriteFood().get( "lunch" ).equals( FavoriteFood.KUNGPAOCHICKEN ) );
 					assertTrue( boy.getFavoriteFood().get( "breakfast" ).equals( FavoriteFood.PIZZA ) );
@@ -199,8 +199,8 @@ public class DefaultNamingCollectionElementTest {
 						favNbrs[index] = index * 3;
 					}
 					boy.setFavoriteNumbers( favNbrs );
-					boy.getCharacters().add( Character.GENTLE );
-					boy.getCharacters().add( Character.CRAFTY );
+					boy.getCharacters().add( CharacterTrait.GENTLE );
+					boy.getCharacters().add( CharacterTrait.CRAFTY );
 					session.persist( boy );
 					session.getTransaction().commit();
 
@@ -215,7 +215,7 @@ public class DefaultNamingCollectionElementTest {
 					assertEquals( new Integer( 5 ), boy.getScorePerNickName().get( "Thing" ) );
 					assertNotNull( boy.getFavoriteNumbers() );
 					assertEquals( 3, boy.getFavoriteNumbers()[1] );
-					assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
+					assertTrue( boy.getCharacters().contains( CharacterTrait.CRAFTY ) );
 					List result = session.createQuery(
 							"select boy from Boy boy join boy.nickNames names where names = :name" )
 							.setParameter( "name", "Thing" ).list();

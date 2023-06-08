@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine;
 
+import jakarta.persistence.FetchType;
+
 /**
  * Enumeration of values describing <em>when</em> fetching should occur.
  * 
@@ -20,5 +22,16 @@ public enum FetchTiming {
 	/**
 	 * Performing fetching later, when needed.  Also called lazy fetching.
 	 */
-	DELAYED
+	DELAYED;
+
+	public static FetchTiming forType(FetchType type) {
+		switch ( type ) {
+			case EAGER:
+				return IMMEDIATE;
+			case LAZY:
+				return DELAYED;
+			default:
+				throw new IllegalArgumentException( "Unknown FetchType" );
+		}
+	}
 }

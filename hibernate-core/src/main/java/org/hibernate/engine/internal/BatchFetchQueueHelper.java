@@ -7,7 +7,6 @@
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +20,8 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Arrays.asList;
+
 /**
  * @author Gail Badner
  */
@@ -30,7 +31,7 @@ public class BatchFetchQueueHelper {
 			BatchFetchQueueHelper.class.getName()
 	);
 
-	private BatchFetchQueueHelper(){
+	private BatchFetchQueueHelper() {
 	}
 
 	/**
@@ -47,23 +48,20 @@ public class BatchFetchQueueHelper {
 			List<?> results,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
-		if ( !persister.isBatchLoadable() ) {
-			return;
-		}
-		if ( ids.length == results.size() ) {
-			return;
-		}
-		LOG.debug( "Not all entities were loaded." );
-		Set<Serializable> idSet = new HashSet<>( Arrays.asList( ids ) );
-		for ( Object result : results ) {
-			// All results should be in the PersistenceContext
-			idSet.remove( session.getContextEntityIdentifier( result ) );
-		}
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Entities of type [" + persister.getEntityName() + "] not found; IDs: " + idSet );
-		}
-		for ( Object id : idSet ) {
-			removeBatchLoadableEntityKey( id, persister, session );
+		if (  ids.length != results.size()
+				&& session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
+			LOG.debug( "Not all entities were loaded." );
+			final Set<Serializable> idSet = new HashSet<>( asList( ids ) );
+			for ( Object result : results ) {
+				// All results should be in the PersistenceContext
+				idSet.remove( session.getContextEntityIdentifier( result ) );
+			}
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "Entities of type [" + persister.getEntityName() + "] not found; IDs: " + idSet );
+			}
+			for ( Object id : idSet ) {
+				removeBatchLoadableEntityKey( id, persister, session );
+			}
 		}
 	}
 
@@ -75,9 +73,8 @@ public class BatchFetchQueueHelper {
 			Object id,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
-		final EntityKey entityKey = session.generateEntityKey( id, persister );
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
-		batchFetchQueue.removeBatchLoadableEntityKey( entityKey );
+		session.getPersistenceContextInternal().getBatchFetchQueue()
+				.removeBatchLoadableEntityKey( session.generateEntityKey( id, persister ) );
 	}
 
 	/**
@@ -87,8 +84,7 @@ public class BatchFetchQueueHelper {
 	public static void removeBatchLoadableEntityKey(
 			EntityKey entityKey,
 			SharedSessionContractImplementor session) {
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
-		batchFetchQueue.removeBatchLoadableEntityKey( entityKey );
+		session.getPersistenceContextInternal().getBatchFetchQueue().removeBatchLoadableEntityKey( entityKey );
 	}
 
 	public static void removeBatchLoadableEntityKey(

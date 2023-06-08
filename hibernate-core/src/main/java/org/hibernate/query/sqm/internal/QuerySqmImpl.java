@@ -218,7 +218,7 @@ public class QuerySqmImpl<R>
 	 */
 	public QuerySqmImpl(
 			SqmStatement<R> criteria,
-			Class<R> resultType,
+			Class<R> expectedResultType,
 			SharedSessionContractImplementor producer) {
 		super( producer );
 		this.hql = CRITERIA_HQL_STRING;
@@ -262,12 +262,12 @@ public class QuerySqmImpl<R>
 			queryPart.validateQueryStructureAndFetchOwners();
 			visitQueryReturnType(
 					queryPart,
-					resultType,
+					expectedResultType,
 					producer.getFactory()
 			);
 		}
 		else {
-			if ( resultType != null ) {
+			if ( expectedResultType != null ) {
 				throw new IllegalQueryOperationException(
 						"Result type given for a non-SELECT Query",
 						hql,
@@ -288,8 +288,8 @@ public class QuerySqmImpl<R>
 			}
 		}
 
-		this.resultType = resultType;
-		this.tupleMetadata = buildTupleMetadata( criteria, resultType );
+		this.resultType = expectedResultType;
+		this.tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
 	}
 
 	private void validateStatement(SqmStatement<R> sqmStatement, Class<R> resultType) {

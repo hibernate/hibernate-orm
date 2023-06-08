@@ -61,6 +61,7 @@ import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
 import org.hibernate.annotations.TypeBinderType;
+import org.hibernate.annotations.View;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
@@ -404,7 +405,8 @@ public class EntityBinder {
 						classWithIdClass,
 						compositeClass,
 						baseInferredData,
-						propertyAccessor
+						propertyAccessor,
+						true
 				);
 				setIgnoreIdAnnotations( ignoreIdAnnotations );
 				for ( Property property : mapper.getProperties() ) {
@@ -426,7 +428,8 @@ public class EntityBinder {
 			XClass classWithIdClass,
 			XClass compositeClass,
 			PropertyData baseInferredData,
-			AccessType propertyAccessor) {
+			AccessType propertyAccessor,
+			boolean isIdClass) {
 		final Component mapper = createMapper(
 				inheritanceStates,
 				persistentClass,
@@ -435,7 +438,8 @@ public class EntityBinder {
 				classWithIdClass,
 				compositeClass,
 				baseInferredData,
-				propertyAccessor
+				propertyAccessor,
+				isIdClass
 		);
 		final Property mapperProperty = new Property();
 		mapperProperty.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
@@ -455,7 +459,8 @@ public class EntityBinder {
 			XClass classWithIdClass,
 			XClass compositeClass,
 			PropertyData baseInferredData,
-			AccessType propertyAccessor) {
+			AccessType propertyAccessor,
+			boolean isIdClass) {
 		final Component mapper = fillEmbeddable(
 				propertyHolder,
 				new PropertyPreloadedData(
@@ -474,7 +479,8 @@ public class EntityBinder {
 				null,
 				null,
 				context,
-				inheritanceStates
+				inheritanceStates,
+				isIdClass
 		);
 		persistentClass.setIdentifierMapper( mapper );
 
@@ -574,7 +580,8 @@ public class EntityBinder {
 				null,
 				null,
 				buildingContext,
-				inheritanceStates
+				inheritanceStates,
+				true
 		);
 		id.setKey( true );
 		if ( rootClass.getIdentifier() != null ) {
@@ -679,12 +686,14 @@ public class EntityBinder {
 			List<UniqueConstraintHolder> uniqueConstraints,
 			InFlightMetadataCollector collector) {
 		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
+		final View view = annotatedClass.getAnnotation( View.class );
 		bindTable(
 				schema,
 				catalog,
 				table,
 				uniqueConstraints,
 				rowId == null ? null : rowId.value(),
+				view == null ? null : view.query(),
 				inheritanceState.hasDenormalizedTable()
 						? collector.getEntityTableXref( superEntity.getEntityName() )
 						: null
@@ -1252,8 +1261,6 @@ public class EntityBinder {
 
 	private void bindCustomSql() {
 		//TODO: tolerate non-empty table() member here if it explicitly names the main table
-		//TODO: would be nice to add these guys to @DialectOverride, but getOverridableAnnotation()
-		//      does not yet handle repeatable annotations
 
 		final SQLInsert sqlInsert = findMatchingSqlAnnotation( "", SQLInsert.class, SQLInserts.class );
 		if ( sqlInsert != null ) {
@@ -1524,22 +1531,22 @@ public class EntityBinder {
 	}
 
 	private void bindSubclassCache(SharedCacheMode sharedCacheMode) {
-		final Cache cache = annotatedClass.getAnnotation( Cache.class );
+		if ( annotatedClass.isAnnotationPresent( Cache.class ) ) {
+			final String className = persistentClass.getClassName() == null
+					? annotatedClass.getName()
+					: persistentClass.getClassName();
+			throw new AnnotationException("Entity class '" + className
+					+  "' is annotated '@Cache' but it is a subclass in an entity inheritance hierarchy"
+					+" (only root classes may define second-level caching semantics)");
+		}
+
 		final Cacheable cacheable = annotatedClass.getAnnotation( Cacheable.class );
-		if ( cache != null ) {
-			LOG.cacheOrCacheableAnnotationOnNonRoot(
-					persistentClass.getClassName() == null
-							? annotatedClass.getName()
-							: persistentClass.getClassName()
-			);
-		}
-		else if ( cacheable == null && persistentClass.getSuperclass() != null ) {
-			// we should inherit our super's caching config
-			isCached = persistentClass.getSuperclass().isCached();
-		}
-		else {
-			isCached = isCacheable( sharedCacheMode, cacheable );
-		}
+		isCached = cacheable == null && persistentClass.getSuperclass() != null
+				// we should inherit the root class caching config
+				? persistentClass.getSuperclass().isCached()
+				//TODO: is this even correct?
+				//      Do we even correctly support selectively enabling caching on subclasses like this?
+				: isCacheable( sharedCacheMode, cacheable );
 	}
 
 	private void bindRootClassCache(SharedCacheMode sharedCacheMode, MetadataBuildingContext context) {
@@ -1581,6 +1588,7 @@ public class EntityBinder {
 				// all entities should be cached
 				return true;
 			case ENABLE_SELECTIVE:
+			case UNSPECIFIED: // Hibernate defaults to ENABLE_SELECTIVE, the only sensible setting
 				// only entities with @Cacheable(true) should be cached
 				return explicitCacheableAnn != null && explicitCacheableAnn.value();
 			case DISABLE_SELECTIVE:
@@ -1729,6 +1737,7 @@ public class EntityBinder {
 			String tableName,
 			List<UniqueConstraintHolder> uniqueConstraints,
 			String rowId,
+			String viewQuery,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
 
 		final EntityTableNamingStrategyHelper namingStrategyHelper = new EntityTableNamingStrategyHelper(
@@ -1752,6 +1761,7 @@ public class EntityBinder {
 		);
 
 		table.setRowId( rowId );
+		table.setViewQuery( viewQuery );
 
 //		final Comment comment = annotatedClass.getAnnotation( Comment.class );
 //		if ( comment != null ) {
@@ -1949,12 +1959,13 @@ public class EntityBinder {
 			String tableName,
 			Class<T> annotationType,
 			Class<R> repeatableType) {
-		final T sqlAnnotation = annotatedClass.getAnnotation( annotationType );
+		final T sqlAnnotation = getOverridableAnnotation( annotatedClass, annotationType, context );
 		if ( sqlAnnotation != null ) {
 			if ( tableName.equals( tableMember( annotationType, sqlAnnotation ) ) ) {
 				return sqlAnnotation;
 			}
 		}
+		//TODO: getOverridableAnnotation() does not yet handle @Repeatable annotations
 		final R repeatable = annotatedClass.getAnnotation(repeatableType);
 		if ( repeatable != null ) {
 			for ( Annotation current : valueMember( repeatableType, repeatable ) ) {

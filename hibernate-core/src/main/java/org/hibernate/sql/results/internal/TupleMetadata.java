@@ -7,51 +7,58 @@
 
 package org.hibernate.sql.results.internal;
 
-import java.util.Arrays;
-import java.util.Collections;
+import jakarta.persistence.TupleElement;
+
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import jakarta.persistence.TupleElement;
+
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * Metadata about the tuple structure.
  *
  * @author Christian Beikov
+ * @author Gavin King
  */
 public final class TupleMetadata {
-	private final Map<TupleElement<?>, Integer> index;
+	private final TupleElement<?>[] elements;
+	private final String[] aliases;
 	private Map<String, Integer> nameIndex;
+	private Map<TupleElement<?>, Integer> elementIndex;
 	private List<TupleElement<?>> list;
 
-	public TupleMetadata(Map<TupleElement<?>, Integer> index) {
-		this.index = index;
+	public TupleMetadata(TupleElement<?>[] elements, String[] aliases) {
+		this.elements = elements;
+		this.aliases = aliases;
 	}
 
-	public Integer get(TupleElement<?> tupleElement) {
-		return index.get( tupleElement );
+	public Integer get(TupleElement<?> element) {
+		if ( elementIndex == null ) {
+			final Map<TupleElement<?>, Integer> map = new IdentityHashMap<>( elements.length );
+			for (int i = 0; i < elements.length; i++ ) {
+				map.put( elements[i], i );
+			}
+			elementIndex = unmodifiableMap( map );
+		}
+		return elementIndex.get( element );
 	}
 
 	public Integer get(String name) {
-		Map<String, Integer> nameIndex = this.nameIndex;
 		if ( nameIndex == null ) {
-			nameIndex = new HashMap<>( index.size() );
-			for ( Map.Entry<TupleElement<?>, Integer> entry : index.entrySet() ) {
-				nameIndex.put( entry.getKey().getAlias(), entry.getValue() );
+			final Map<String, Integer> map = new HashMap<>( aliases.length );
+			for ( int i = 0; i < aliases.length; i++ ) {
+				map.put( aliases[i], i );
 			}
-			this.nameIndex = nameIndex = Collections.unmodifiableMap( nameIndex );
+			nameIndex = unmodifiableMap( map );
 		}
 		return nameIndex.get( name );
 	}
 
 	public List<TupleElement<?>> getList() {
-		List<TupleElement<?>> list = this.list;
 		if ( list == null ) {
-			final TupleElement<?>[] array = new TupleElement[index.size()];
-			for ( Map.Entry<TupleElement<?>, Integer> entry : index.entrySet() ) {
-				array[entry.getValue()] = entry.getKey();
-			}
-			this.list = list = Collections.unmodifiableList( Arrays.asList( array ) );
+			list = List.of( elements );
 		}
 		return list;
 	}

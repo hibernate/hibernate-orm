@@ -6,13 +6,15 @@
  */
 package org.hibernate.annotations;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 /**
- * Specifies the default fetching strategy for the annotated association.
+ * Specifies the default fetching method for the annotated association.
  * <p>
  * When this annotation is <em>not</em> explicitly specified, then:
  * <ul>
@@ -23,16 +25,19 @@ import java.lang.annotation.Target;
  *     {@linkplain jakarta.persistence.FetchType#EAGER eager} fetching.
  * </ul>
  * <p>
- * The default fetching strategy specified by this annotation may be
+ * The default fetching method specified by this annotation may be
  * overridden in a given {@linkplain FetchProfile fetch profile}.
+ * <p>
+ * Note that join fetching is incompatible with lazy fetching, and so
+ * {@code @Fetch(JOIN)} implies {@code fetch=EAGER}.
  *
  * @author Emmanuel Bernard
  *
  * @see FetchMode
  * @see FetchProfile
  */
-@Target({ElementType.METHOD, ElementType.FIELD})
-@Retention(RetentionPolicy.RUNTIME)
+@Target({METHOD, FIELD})
+@Retention(RUNTIME)
 public @interface Fetch {
 	/**
 	 * The method that should be used to fetch the association.

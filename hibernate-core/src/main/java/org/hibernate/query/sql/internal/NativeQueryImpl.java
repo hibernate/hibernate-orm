@@ -1015,6 +1015,11 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public NativeQueryImplementor<R> addEntity(Class<R> entityType, LockMode lockMode) {
+		return addEntity( StringHelper.unqualify( entityType.getName() ), entityType.getName(), lockMode);
+	}
+
+	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass) {
 		return addEntity( tableAlias, entityClass.getName() );
 	}

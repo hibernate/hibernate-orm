@@ -282,7 +282,6 @@ public class CteInsertHandler implements InsertHandler {
 						if ( !assignsId && entityDescriptor.getGenerator().generatedOnExecution() ) {
 							querySpec.getSelectClause().addSqlSelection(
 									new SqlSelectionImpl(
-											1,
 											0,
 											SqmInsertStrategyHelper.createRowNumberingExpression(
 													querySpec,
@@ -312,7 +311,6 @@ public class CteInsertHandler implements InsertHandler {
 					columnNames.add( columnReference.getColumnExpression() );
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									1,
 									0,
 									columnReference.getQualifier().equals( valuesAlias )
 											? columnReference
@@ -420,7 +418,6 @@ public class CteInsertHandler implements InsertHandler {
 				);
 				rowsWithSequenceQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								1,
 								0,
 								rowNumberColumnReference
 						)
@@ -431,7 +428,6 @@ public class CteInsertHandler implements InsertHandler {
 						);
 				rowsWithSequenceQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								2,
 								1,
 								new SelfRenderingSqlFragmentExpression( fragment )
 						)
@@ -502,7 +498,6 @@ public class CteInsertHandler implements InsertHandler {
 				entityQuery.getFromClause().addRoot( baseTableGroup );
 				entityQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								1,
 								0,
 								new BinaryArithmeticExpression(
 										new ColumnReference(
@@ -546,7 +541,6 @@ public class CteInsertHandler implements InsertHandler {
 					final CteColumn cteColumn = cteColumns.get( i );
 					entityQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									i + 1,
 									i,
 									new ColumnReference(
 											"e",
@@ -622,7 +616,7 @@ public class CteInsertHandler implements InsertHandler {
 						( (SqlExpressible) count).getJdbcMapping()
 				)
 		);
-		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );
+		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, count ) );
 		querySpec.getFromClause().addRoot(
 				new CteTableGroup(
 						new NamedTableReference(
@@ -877,7 +871,6 @@ public class CteInsertHandler implements InsertHandler {
 				final CteColumn idCteColumn = cteColumns.get( 0 );
 				querySpec.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								1,
 								0,
 								new ColumnReference(
 										"t",
@@ -893,7 +886,6 @@ public class CteInsertHandler implements InsertHandler {
 					final CteColumn cteColumn = cteColumns.get( j );
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									1,
 									0,
 									new ColumnReference(
 											"e",
@@ -933,14 +925,12 @@ public class CteInsertHandler implements InsertHandler {
 				);
 				finalResultQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								1,
 								0,
 								idColumnReference
 						)
 				);
 				finalResultQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								1,
 								0,
 								SqmInsertStrategyHelper.createRowNumberingExpression(
 										querySpec,
@@ -987,7 +977,6 @@ public class CteInsertHandler implements InsertHandler {
 					);
 					insertSelectSpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									1,
 									0,
 									new ColumnReference(
 											"e",
@@ -1021,7 +1010,6 @@ public class CteInsertHandler implements InsertHandler {
 						final ColumnReference columnReference = assignmentReferences.get( j );
 						insertSelectSpec.getSelectClause().addSqlSelection(
 								new SqlSelectionImpl(
-										1,
 										0,
 										new ColumnReference(
 												"e",

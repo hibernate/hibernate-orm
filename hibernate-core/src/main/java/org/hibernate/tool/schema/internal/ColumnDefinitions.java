@@ -21,6 +21,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.util.List;
 
+import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
+import static org.hibernate.type.SqlTypes.isStringType;
+
 class ColumnDefinitions {
 
 	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
@@ -44,17 +47,30 @@ class ColumnDefinitions {
 	}
 
 	static boolean hasMatchingLength(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
-		final int actualSize = columnInformation.getColumnSize();
-		if ( actualSize == 0 ) {
-			return true;
-		}
-		else {
+		int sqlType = columnInformation.getTypeCode();
+		if ( isStringType( sqlType ) ) {
+			final int actualLength = columnInformation.getColumnSize();
 			final Size size = column.getColumnSize( dialect, metadata );
 			final Long requiredLength = size.getLength();
+			return requiredLength == null
+				|| requiredLength == actualLength;
+		}
+		else if ( isNumericOrDecimal( sqlType ) ) {
+			// Postgres, H2, SQL Server, and MySQL agree on the following:
+			final int actualPrecision = columnInformation.getColumnSize();
+			final int actualScale = columnInformation.getDecimalDigits();
+			final Size size = column.getColumnSize( dialect, metadata );
 			final Integer requiredPrecision = size.getPrecision();
-			return requiredLength != null && requiredLength == actualSize
-				|| requiredPrecision != null && requiredPrecision == actualSize
-				|| requiredPrecision == null && requiredLength == null;
+			final Integer requiredScale = size.getScale();
+			return requiredPrecision == null
+				|| requiredScale == null
+				|| requiredScale == actualScale && requiredPrecision == actualPrecision;
+		}
+		// I would really love this to be able to change the binary
+		// precision of a float/double type, but there simply doesn't
+		// seem to be any good way to implement it
+		else {
+			return true;
 		}
 	}
 
@@ -151,23 +167,27 @@ class ColumnDefinitions {
 			Table table,
 			Metadata metadata,
 			Dialect dialect) {
-		final String columnType = column.getSqlType(metadata);
-		if ( isIdentityColumn(column, table, metadata, dialect) ) {
+		if ( isIdentityColumn( column, table, metadata, dialect) ) {
 			// to support dialects that have their own identity data type
 			if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-				definition.append( ' ' ).append( columnType );
+				definition.append( ' ' ).append( column.getSqlType( metadata ) );
 			}
 			final String identityColumnString = dialect.getIdentityColumnSupport()
-					.getIdentityColumnString( column.getSqlTypeCode(metadata) );
+					.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
 			definition.append( ' ' ).append( identityColumnString );
 		}
 		else {
-			if ( column.hasSpecializedTypeDeclaration() ) {
-				definition.append( ' ' ).append( column.getSpecializedTypeDeclaration() );
-			}
-			else if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
-				definition.append( ' ' ).append( columnType );
-			}
+			final String columnType;
+//			if ( column.hasSpecializedTypeDeclaration() ) {
+//				columnType = column.getSpecializedTypeDeclaration();
+//				definition.append( ' ' ).append( columnType );
+//			}
+//			else {
+				columnType = column.getSqlType( metadata );
+				if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
+					definition.append( ' ' ).append( columnType );
+				}
+//			}
 
 			final String defaultValue = column.getDefaultValue();
 			if ( defaultValue != null ) {
@@ -218,6 +238,6 @@ class ColumnDefinitions {
 
 	private static String stripArgs(String string) {
 		int i = string.indexOf('(');
-		return i>0 ? string.substring(0,i) : string;
+		return i>0 ? string.substring(0,i).trim() : string;
 	}
 }

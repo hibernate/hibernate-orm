@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
@@ -1401,5 +1402,46 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			final Join secondaryTable = getSecondaryTable( property.getValue().getTable().getName() );
 			secondaryTable.addProperty( property );
 		}
+	}
+
+	private boolean containsColumn(Column column) {
+		for ( Property declaredProperty : declaredProperties ) {
+			if ( declaredProperty.getSelectables().contains( column ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Internal
+	public boolean isDefinedOnMultipleSubclasses(Column column) {
+		PersistentClass declaringType = null;
+		for ( PersistentClass persistentClass : getSubclassClosure() ) {
+			if ( persistentClass.containsColumn( column ) ) {
+				if ( declaringType != null && declaringType != persistentClass ) {
+					return true;
+				}
+				else {
+					declaringType = persistentClass;
+				}
+			}
+		}
+		return false;
+	}
+
+	@Internal
+	public PersistentClass getSuperPersistentClass() {
+		return getSuperclass() != null ? getSuperclass() : getSuperPersistentClass( getSuperMappedSuperclass() );
+	}
+
+	private static PersistentClass getSuperPersistentClass(MappedSuperclass mappedSuperclass) {
+		if ( mappedSuperclass != null ) {
+			final PersistentClass superClass = mappedSuperclass.getSuperPersistentClass();
+			if ( superClass != null ) {
+				return superClass;
+			}
+			return getSuperPersistentClass( mappedSuperclass.getSuperMappedSuperclass() );
+		}
+		return null;
 	}
 }

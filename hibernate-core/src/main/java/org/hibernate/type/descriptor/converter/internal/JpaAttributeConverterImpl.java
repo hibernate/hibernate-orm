@@ -111,28 +111,6 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcType sqlType, Dialect dialect) {
-		if ( BasicValueConverter.class.isAssignableFrom( attributeConverterBean.getBeanClass() ) ) {
-			return ((BasicValueConverter<?, ?>) attributeConverterBean.getBeanInstance())
-					.getCheckCondition( columnName, sqlType, dialect );
-		}
-		else {
-			return null;
-		}
-	}
-
-	@Override
-	public String getSpecializedTypeDeclaration(JdbcType jdbcType, Dialect dialect) {
-		if ( BasicValueConverter.class.isAssignableFrom( attributeConverterBean.getBeanClass() ) ) {
-			return ((BasicValueConverter<?, ?>) attributeConverterBean.getBeanInstance())
-					.getSpecializedTypeDeclaration( jdbcType, dialect );
-		}
-		else {
-			return null;
-		}
-	}
-
-	@Override
 	public JavaType<? extends AttributeConverter<O, R>> getConverterJavaType() {
 		return converterJtd;
 	}

@@ -367,6 +367,11 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}

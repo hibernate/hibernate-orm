@@ -28,6 +28,10 @@ public interface SessionCreationOptions {
 
 	FlushMode getInitialSessionFlushMode();
 
+	boolean isSubselectFetchEnabled();
+
+	int getDefaultBatchFetchSize();
+
 	boolean shouldAutoClose();
 
 	boolean shouldAutoClear();

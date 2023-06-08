@@ -7,6 +7,7 @@
 package org.hibernate.jpa.spi;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,12 +18,16 @@ import org.hibernate.HibernateException;
 import org.hibernate.query.TypedTupleTransformer;
 import org.hibernate.transform.ResultTransformer;
 
+import static java.util.Locale.ROOT;
+
 /**
  * A {@link ResultTransformer} for handling JPA {@link Tuple} results from native queries.
  *
  * @author Arnold Galovics
  */
 public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, TypedTupleTransformer<Tuple> {
+
+	public static final NativeQueryTupleTransformer INSTANCE = new NativeQueryTupleTransformer();
 
 	@Override
 	public Tuple transformTuple(Object[] tuple, String[] aliases) {
@@ -80,7 +85,7 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 				final String alias = aliases[i];
 				if ( alias != null ) {
 					aliasToValue.put( alias, tuple[i] );
-					aliasReferences.put( alias.toLowerCase(), alias );
+					aliasReferences.put( alias.toLowerCase(ROOT), alias );
 				}
 			}
 			size = tuple.length;
@@ -95,7 +100,7 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 
 		@Override
 		public Object get(String alias) {
-			final String aliasReference = aliasReferences.get( alias.toLowerCase() );
+			final String aliasReference = aliasReferences.get( alias.toLowerCase(ROOT) );
 			if ( aliasReference != null && aliasToValue.containsKey( aliasReference ) ) {
 				return aliasToValue.get( aliasReference );
 			}
@@ -124,6 +129,11 @@ public class NativeQueryTupleTransformer implements ResultTransformer<Tuple>, Ty
 		public Object[] toArray() {
 			// todo : make a copy?
 			return tuple;
+		}
+
+		@Override
+		public String toString() {
+			return Arrays.toString( tuple );
 		}
 
 		@Override

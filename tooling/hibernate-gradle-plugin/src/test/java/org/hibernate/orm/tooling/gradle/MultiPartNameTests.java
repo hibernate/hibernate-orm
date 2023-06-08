@@ -40,14 +40,4 @@ public class MultiPartNameTests extends TestsBase {
 	public void testEnhancementUpToDate(@TempDir Path projectDir) throws Exception {
 		super.testEnhancementUpToDate( projectDir );
 	}
-
-	@Test
-	public void testJpaMetamodelGen(@TempDir Path projectDir) {
-		super.testJpaMetamodelGen( projectDir );
-	}
-
-	@Test
-	public void testJpaMetamodelGenUpToDate(@TempDir Path projectDir) {
-		super.testJpaMetamodelGenUpToDate( projectDir );
-	}
 }

@@ -279,7 +279,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 		else if ( options.isAllowProxyCreation() ) {
 			// return a new proxy
-			return proxyOrCached( event, persister, keyToLoad, options );
+			return createProxyIfNecessary( event, persister, keyToLoad, options );
 		}
 		else {
 			// return a newly loaded object
@@ -325,7 +325,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			EntityPersister persister,
 			EntityKey keyToLoad,
 			EventSource session) {
-		if ( keyToLoad.isBatchLoadable() ) {
+		if ( keyToLoad.isBatchLoadable( session.getLoadQueryInfluencers() ) ) {
 			// Add a batch-fetch entry into the queue for this entity
 			session.getPersistenceContextInternal().getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
 		}
@@ -347,27 +347,6 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		}
 		// entities with subclasses that define a ProxyFactory can create a HibernateProxy
 		return createProxy( event, persister, keyToLoad );
-	}
-
-	private static Object proxyOrCached(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
-		final PersistenceContext persistenceContext = event.getSession().getPersistenceContext();
-		final Object existing = persistenceContext.getEntity( keyToLoad );
-		if ( existing != null ) {
-			return options.isCheckDeleted() && wasDeleted( persistenceContext, existing ) ? null : existing;
-		}
-		if ( persister.hasSubclasses() ) {
-			final Object cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-					event.getSession(),
-					null,
-					LockMode.NONE,
-					persister,
-					keyToLoad
-			);
-			if ( cachedEntity != null ) {
-				return cachedEntity;
-			}
-		}
-		return createProxyIfNecessary( event, persister, keyToLoad, options );
 	}
 
 	/**
@@ -565,10 +544,9 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private Object load(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
-		final EventSource session = event.getSession();
 		final Object entity = loadFromCacheOrDatasource( event, persister, keyToLoad );
 		if ( entity != null && persister.hasNaturalIdentifier() ) {
-			session.getPersistenceContextInternal().getNaturalIdResolutions()
+			event.getSession().getPersistenceContextInternal().getNaturalIdResolutions()
 					.cacheResolutionFromLoad(
 							event.getEntityId(),
 							persister.getNaturalIdMapping().extractNaturalIdFromEntity( entity ),
@@ -579,13 +557,12 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private Object loadFromCacheOrDatasource(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
-		final EventSource session = event.getSession();
 		final Object entity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( event, persister, keyToLoad );
 		if ( entity != null ) {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Resolved object in second-level cache: {0}",
-						infoString( persister, event.getEntityId(), session.getFactory() )
+						infoString( persister, event.getEntityId(), event.getSession().getFactory() )
 				);
 			}
 			return entity;
@@ -594,7 +571,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Object not resolved in any cache: {0}",
-						infoString( persister, event.getEntityId(), session.getFactory() )
+						infoString( persister, event.getEntityId(), event.getSession().getFactory() )
 				);
 			}
 			return loadFromDatasource( event, persister );

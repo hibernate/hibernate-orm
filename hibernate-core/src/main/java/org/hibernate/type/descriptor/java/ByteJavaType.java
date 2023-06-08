@@ -169,7 +169,7 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce value `%s` [%s] as Byte",
+						"Cannot coerce value '%s' [%s] to Byte",
 						value,
 						value.getClass().getName()
 				)

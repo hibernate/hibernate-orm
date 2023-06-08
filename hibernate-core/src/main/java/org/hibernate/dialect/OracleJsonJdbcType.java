@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
@@ -41,7 +42,7 @@ public class OracleJsonJdbcType extends OracleJsonBlobJdbcType {
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JavaType<?> javaType, Dialect dialect) {
+	public String getCheckCondition(String columnName, JavaType<?> javaType, BasicValueConverter<?, ?> converter, Dialect dialect) {
 		// No check constraint necessary, because the JSON DDL type is already OSON encoded
 		return null;
 	}

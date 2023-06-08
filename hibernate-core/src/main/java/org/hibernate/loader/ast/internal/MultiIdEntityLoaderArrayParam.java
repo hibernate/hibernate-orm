@@ -38,10 +38,9 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -50,12 +49,20 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 /**
  * @author Steve Ebersole
  */
-public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E> implements SqlArrayMultiKeyLoader, Preparable {
-	private JdbcMapping arrayJdbcMapping;
-	private JdbcParameter jdbcParameter;
+public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E> implements SqlArrayMultiKeyLoader {
+	private final JdbcMapping arrayJdbcMapping;
+	private final JdbcParameter jdbcParameter;
 
 	public MultiIdEntityLoaderArrayParam(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
+		final Class<?> arrayClass = createTypedArray( 0 ).getClass();
+		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
+				getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
+				getIdentifierMapping().getJdbcMapping(),
+				arrayClass,
+				getSessionFactory()
+		);
+		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
 	}
 
 	@Override
@@ -180,7 +187,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 				batchFetchQueue,
 				sqlAst,
-				Collections.singletonList( jdbcParameter ),
+				JdbcParametersList.singleton( jdbcParameter ),
 				jdbcParameterBindings
 		);
 
@@ -267,6 +274,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				jdbcSelectOperation,
 				jdbcParameter,
 				arrayJdbcMapping,
+				null,
 				null,
 				null,
 				lockOptions,
@@ -384,26 +392,8 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		return ids;
 	}
 
-	private  <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
+	private <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
 		return (X[]) Array.newInstance( getIdentifierMapping().getJavaType().getJavaTypeClass(), length );
-	}
-
-	@Override
-	public void prepare() {
-		super.prepare();
-
-		final Class<?> arrayClass = createTypedArray( 0 ).getClass();
-
-		final BasicTypeRegistry basicTypeRegistry = getSessionFactory().getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<?> arrayBasicType = basicTypeRegistry.getRegisteredType( arrayClass );
-
-		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				arrayBasicType,
-				getIdentifierMapping().getJdbcMapping(),
-				arrayClass,
-				getSessionFactory()
-		);
-		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
 	}
 }

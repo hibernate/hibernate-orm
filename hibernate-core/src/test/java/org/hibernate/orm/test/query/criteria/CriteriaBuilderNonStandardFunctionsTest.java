@@ -310,6 +310,16 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRepeat.class)
+	public void testRepeat(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<String> query = cb.createQuery( String.class ).select( cb.repeat("hello", cb.literal(3)) );
+			assertEquals( "hellohellohello", session.createQuery( query ).getSingleResult() );
+		} );
+	}
+
+	@Test
 	@RequiresDialect(PostgreSQLDialect.class)
 	public void testCollatePostgreSQL(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

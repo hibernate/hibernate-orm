@@ -300,9 +300,11 @@ public class AttributeFactory {
 					@SuppressWarnings("unchecked")
 					final Class<Y> embeddableClass = (Class<Y>) component.getComponentClass();
 
-					final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
-					if ( cached != null ) {
-						return cached;
+					if ( !component.isGeneric() ) {
+						final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
+						if ( cached != null ) {
+							return cached;
+						}
 					}
 
 					final JavaTypeRegistry registry = context.getTypeConfiguration()

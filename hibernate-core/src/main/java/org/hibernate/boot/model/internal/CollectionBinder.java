@@ -33,6 +33,8 @@ import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.FetchProfileOverrides;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.FilterJoinTables;
@@ -64,11 +66,11 @@ import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLSelect;
-import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLOrder;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Synchronize;
@@ -1451,20 +1453,35 @@ public abstract class CollectionBinder {
 	private void defineFetchingStrategy() {
 		handleLazy();
 		handleFetch();
+		handleFetchProfileOverrides();
+	}
+
+	private void handleFetchProfileOverrides() {
+		if ( property.isAnnotationPresent( FetchProfileOverride.class ) ) {
+			final FetchProfileOverride fetch = property.getAnnotation( FetchProfileOverride.class );
+			buildingContext.getMetadataCollector()
+					.addSecondPass( new FetchSecondPass( fetch, propertyHolder, propertyName, buildingContext ) );
+		}
+		else if ( property.isAnnotationPresent( FetchProfileOverrides.class ) ) {
+			for ( FetchProfileOverride fetch: property.getAnnotation( FetchProfileOverrides.class ).value() ) {
+				buildingContext.getMetadataCollector()
+						.addSecondPass( new FetchSecondPass( fetch, propertyHolder, propertyName, buildingContext ) );
+			}
+		}
 	}
 
 	private void handleFetch() {
 		if ( property.isAnnotationPresent( Fetch.class ) ) {
 			// Hibernate @Fetch annotation takes precedence
-			handleHibernateFetchMode();
+			setHibernateFetchMode( property.getAnnotation( Fetch.class ).value() );
 		}
 		else {
 			collection.setFetchMode( getFetchMode( getJpaFetchType() ) );
 		}
 	}
 
-	private void handleHibernateFetchMode() {
-		switch ( property.getAnnotation( Fetch.class ).value() ) {
+	private void setHibernateFetchMode(org.hibernate.annotations.FetchMode fetchMode) {
+		switch ( fetchMode ) {
 			case JOIN:
 				collection.setFetchMode( FetchMode.JOIN );
 				collection.setLazy( false );

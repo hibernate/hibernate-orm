@@ -1,0 +1,28 @@
+[[preface]]
+== Preface
+
+:user-guide: {userGuideBase}
+
+Hibernate 6 is a major redesign of the world's most popular and feature-rich ORM solution.
+The redesign has touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and the query language.
+This new Hibernate is more powerful, more robust, and more typesafe.
+
+With so many improvements, it's very difficult to summarize the significance of this work.
+But the following general themes stand out.
+Hibernate 6:
+
+- finally takes advantage of the advances in relational databases over the past decade, updating the query language to support a raft of new constructs in modern dialects of SQL,
+- exhibits much more consistent behavior across different databases, greatly improving portability, and generates much higher-quality DDL from dialect-independent code,
+- improves error reporting by more scrupulous validation of queries _before_ access to the database,
+- improves the type-safety of O/R mapping annotations, clarifies the separation of API, SPI, and internal implementation, and fixes some long-standing architectural flaws,
+- removes or deprecates legacy APIs, laying the foundation for future evolution, and
+- makes far better use of Javadoc, putting much more information at the fingertips of developers.
+
+Hibernate 6 and Hibernate Reactive are now core components of Quarkus 3, the most exciting new environment for cloud-native development in Java, and Hibernate remains the persistence solution of choice for almost every major Java framework or server.
+
+Unfortunately, the changes in Hibernate 6 have obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
+
+On the other hand, the Hibernate {user-guide}[User Guide] provides a great deal of detail about many aspects of Hibernate, but with so much information to cover, readability is difficult to achieve.
+
+This is therefore the new canonical guide to Hibernate.
+We do not attempt to cover every detail of Hibernate here, and so this guide should be used in conjunction with the extensive Javadoc available for Hibernate 6.

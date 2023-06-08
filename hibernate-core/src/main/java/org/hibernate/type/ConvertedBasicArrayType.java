@@ -12,34 +12,70 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * A converted basic array type.
+ * Given a {@link BasicValueConverter} for an array type,
+ *
+ * @param <E> the unconverted element type
+ * @param <T> the unconverted array type
+ * @param <S> the converted array type
  *
  * @author Christian Beikov
  */
-public class ConvertedBasicArrayType<T> extends BasicArrayType<T> {
+public class ConvertedBasicArrayType<T,S,E>
+		extends AbstractSingleColumnStandardBasicType<T>
+		implements AdjustableBasicType<T>, BasicPluralType<T, E> {
 
-	private final BasicValueConverter<T[], ?> converter;
-	private final ValueExtractor<T[]> jdbcValueExtractor;
-	private final ValueBinder<T[]> jdbcValueBinder;
-	private final JdbcLiteralFormatter<T[]> jdbcLiteralFormatter;
+	private final BasicType<E> baseDescriptor;
+	private final String name;
+
+	private final BasicValueConverter<T, S> converter;
+	private final ValueExtractor<T> jdbcValueExtractor;
+	private final ValueBinder<T> jdbcValueBinder;
+	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
 
 	@SuppressWarnings("unchecked")
 	public ConvertedBasicArrayType(
-			BasicType<T> baseDescriptor,
+			BasicType<E> baseDescriptor,
 			JdbcType arrayJdbcType,
-			JavaType<T[]> arrayTypeDescriptor,
-			BasicValueConverter<T[], ?> converter) {
-		super( baseDescriptor, arrayJdbcType, arrayTypeDescriptor );
+			JavaType<T> arrayTypeDescriptor,
+			BasicValueConverter<T, S> converter) {
+		super( arrayJdbcType, arrayTypeDescriptor );
 		this.converter = converter;
-		this.jdbcValueBinder = (ValueBinder<T[]>) arrayJdbcType.getBinder( converter.getRelationalJavaType() );
-		this.jdbcValueExtractor = (ValueExtractor<T[]>) arrayJdbcType.getExtractor( converter.getRelationalJavaType() );
-		this.jdbcLiteralFormatter = (JdbcLiteralFormatter<T[]>) arrayJdbcType.getJdbcLiteralFormatter( converter.getRelationalJavaType() );
+		//TODO: these type casts look completely bogus (T==E[] and S are distinct array types)
+		this.jdbcValueBinder = (ValueBinder<T>) arrayJdbcType.getBinder( converter.getRelationalJavaType() );
+		this.jdbcValueExtractor = (ValueExtractor<T>) arrayJdbcType.getExtractor( converter.getRelationalJavaType() );
+		this.jdbcLiteralFormatter = (JdbcLiteralFormatter<T>) arrayJdbcType.getJdbcLiteralFormatter( converter.getRelationalJavaType() );
+		this.baseDescriptor = baseDescriptor;
+		this.name = baseDescriptor.getName() + "[]";
 	}
 
 	@Override
-	public BasicValueConverter<T[], ?> getValueConverter() {
+	public BasicType<E> getElementType() {
+		return baseDescriptor;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	protected boolean registerUnderJavaType() {
+		return true;
+	}
+
+	@Override
+	public <X> BasicType<X> resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<X> domainJtd) {
+		// TODO: maybe fallback to some encoding by default if the DB doesn't support arrays natively?
+		//  also, maybe move that logic into the ArrayJdbcType
+		//noinspection unchecked
+		return (BasicType<X>) this;
+	}
+
+	@Override
+	public BasicValueConverter<T, ?> getValueConverter() {
 		return converter;
 	}
 
@@ -49,17 +85,17 @@ public class ConvertedBasicArrayType<T> extends BasicArrayType<T> {
 	}
 
 	@Override
-	public ValueExtractor<T[]> getJdbcValueExtractor() {
+	public ValueExtractor<T> getJdbcValueExtractor() {
 		return jdbcValueExtractor;
 	}
 
 	@Override
-	public ValueBinder<T[]> getJdbcValueBinder() {
+	public ValueBinder<T> getJdbcValueBinder() {
 		return jdbcValueBinder;
 	}
 
 	@Override
-	public JdbcLiteralFormatter<T[]> getJdbcLiteralFormatter() {
+	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
 	}
 }

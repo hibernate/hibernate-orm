@@ -280,6 +280,7 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
     // The source set gets a custom configuration which extends the normal test implementation config
     configurations {
         testJava17Implementation.extendsFrom(testImplementation, testRuntimeOnly)
+        testJava17CompileOnly.extendsFrom(testCompileOnly)
     }
 
     // Add the output from src/main/java as dependency

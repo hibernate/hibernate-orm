@@ -8,6 +8,8 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -116,6 +118,11 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	@Override
 	public Object getEntityId() {
 		return processingState.getEntityId();
+	}
+
+	@Override
+	public EntityMappingType getRootEntityDescriptor() {
+		return processingState.getRootEntityDescriptor();
 	}
 
 	@Override

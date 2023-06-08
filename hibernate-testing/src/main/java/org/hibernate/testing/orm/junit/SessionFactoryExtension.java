@@ -157,7 +157,7 @@ public class SessionFactoryExtension
 						return sessionFactory;
 					}
 					catch (Exception e) {
-						throw new RuntimeException( "Could not build SessionFactory", e );
+						throw new RuntimeException( "Could not build SessionFactory: " + e.getMessage(), e );
 					}
 				};
 			}

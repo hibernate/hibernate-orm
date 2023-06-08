@@ -62,7 +62,7 @@ public class ConfigurationTest {
 		MetadataImplementor metadata = buildMetadata( SharedCacheMode.UNSPECIFIED );
 
 		PersistentClass pc = metadata.getEntityBinding( ExplicitlyCacheableEntity.class.getName() );
-		assertFalse( pc.isCached() );
+		assertTrue( pc.isCached() );
 
 		pc = metadata.getEntityBinding( ExplicitlyNonCacheableEntity.class.getName() );
 		assertFalse( pc.isCached() );

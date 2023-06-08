@@ -12,13 +12,17 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * @author Steve Ebersole
  */
 public interface AssemblerCreationState {
-
 	default boolean isScrollResult() {
+		return false;
+	}
+
+	default boolean isDynamicInstantiation() {
 		return false;
 	}
 
@@ -30,4 +34,6 @@ public interface AssemblerCreationState {
 			Supplier<Initializer> producer);
 
 	SqlAstCreationContext getSqlAstCreationContext();
+
+	ExecutionContext getExecutionContext();
 }

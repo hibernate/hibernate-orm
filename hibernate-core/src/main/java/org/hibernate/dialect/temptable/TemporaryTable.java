@@ -33,6 +33,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -139,7 +140,8 @@ public class TemporaryTable implements Exportable, Contributable {
 					uuidType,
 					typeConfiguration.getDdlTypeRegistry().getTypeName(
 							uuidType.getJdbcType().getDdlTypeCode(),
-							size
+							size,
+							uuidType
 					),
 					size
 			);
@@ -179,11 +181,10 @@ public class TemporaryTable implements Exportable, Contributable {
 					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()
 							.getEntityBinding( entityDescriptor.getEntityName() );
 
-					final Iterator<JdbcMapping> jdbcMappings = entityDescriptor.getIdentifierMapping()
-							.getJdbcMappings()
-							.iterator();
+					final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+					int idIdx = 0;
 					for ( Column column : entityBinding.getKey().getColumns() ) {
-						final JdbcMapping jdbcMapping = jdbcMappings.next();
+						final JdbcMapping jdbcMapping = identifierMapping.getJdbcMapping( idIdx++ );
 						columns.add(
 								new TemporaryTableColumn(
 										temporaryTable,
@@ -314,11 +315,10 @@ public class TemporaryTable implements Exportable, Contributable {
 					final boolean hasOptimizer;
 					if ( identityColumn ) {
 						hasOptimizer = false;
-						final Iterator<JdbcMapping> jdbcMappings = entityDescriptor.getIdentifierMapping()
-								.getJdbcMappings()
-								.iterator();
+						final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+						int idIdx = 0;
 						for ( Column column : entityBinding.getKey().getColumns() ) {
-							final JdbcMapping jdbcMapping = jdbcMappings.next();
+							final JdbcMapping jdbcMapping = identifierMapping.getJdbcMapping( idIdx++ );
 							columns.add(
 									new TemporaryTableColumn(
 											temporaryTable,
@@ -348,11 +348,10 @@ public class TemporaryTable implements Exportable, Contributable {
 							hasOptimizer = false;
 						}
 					}
-					final Iterator<JdbcMapping> jdbcMappings = entityDescriptor.getIdentifierMapping()
-							.getJdbcMappings()
-							.iterator();
+					final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+					int idIdx = 0;
 					for ( Column column : entityBinding.getKey().getColumns() ) {
-						final JdbcMapping jdbcMapping = jdbcMappings.next();
+						final JdbcMapping jdbcMapping = identifierMapping.getJdbcMapping( idIdx++ );
 						columns.add(
 								new TemporaryTableColumn(
 										temporaryTable,
@@ -442,7 +441,8 @@ public class TemporaryTable implements Exportable, Contributable {
 											null,
 											null,
 											null
-									)
+									),
+									integerBasicType
 							);
 						}
 						else if ( dialect.getIdentityColumnSupport().supportsIdentityColumns() ) {
@@ -454,7 +454,8 @@ public class TemporaryTable implements Exportable, Contributable {
 											null,
 											null,
 											null
-									)
+									),
+									integerBasicType
 							) + " " + dialect.getIdentityColumnSupport()
 									.getIdentityColumnString( integerBasicType.getJdbcType().getDdlTypeCode() );
 						}
@@ -468,7 +469,8 @@ public class TemporaryTable implements Exportable, Contributable {
 											null,
 											null,
 											null
-									)
+									),
+									integerBasicType
 							);
 						}
 						columns.add(

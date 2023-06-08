@@ -12,6 +12,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
@@ -224,8 +226,56 @@ public class FromClause implements SqlAstNode {
 		return null;
 	}
 
+	public TableGroup findTableGroup(NavigablePath navigablePath) {
+		return queryTableGroups(
+				tg -> {
+					if ( navigablePath.equals( tg.getNavigablePath() ) ) {
+						return tg;
+					}
+					if ( tg instanceof OneToManyTableGroup && navigablePath.getParent().equals( tg.getNavigablePath() ) ) {
+						return ( (OneToManyTableGroup) tg ).getTableGroup( CollectionPart.Nature.fromName( navigablePath.getLocalName() ) );
+					}
+					return null;
+				}
+		);
+	}
+
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitFromClause( this );
+	}
+
+	public boolean hasJoins() {
+		for ( int i = 0; i < roots.size(); i++ ) {
+			final TableGroup tableGroup = roots.get( i );
+			if ( !tableGroup.getTableReferenceJoins().isEmpty() ) {
+				return true;
+			}
+			if ( hasJoins( tableGroup.getTableGroupJoins() ) ) {
+				return true;
+			}
+			if ( hasJoins( tableGroup.getNestedTableGroupJoins() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasJoins(List<TableGroupJoin> tableGroupJoins) {
+		for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
+			final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
+			if ( joinedGroup instanceof VirtualTableGroup ) {
+				if ( hasJoins( joinedGroup.getTableGroupJoins() ) ) {
+					return true;
+				}
+				if ( hasJoins( joinedGroup.getNestedTableGroupJoins() ) ) {
+					return true;
+				}
+			}
+			else if ( joinedGroup.isInitialized() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

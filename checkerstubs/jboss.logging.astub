@@ -1,0 +1,9 @@
+// Checkerframework stubs for the jboss.logging module
+
+package org.jboss.logging;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+public interface BasicLogger {
+    void tracef(String format, @Nullable Object param1, @Nullable Object param2);
+}

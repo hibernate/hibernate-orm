@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -127,7 +128,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 		// According to Wikipedia bigdatetime and bigtime were added in 15.5
 		// But with jTDS we can't use them as the driver can't handle the types
-		if ( !jtdsDriver ) {
+		if ( getDriverKind() != SybaseDriverKind.JTDS ) {
 			ddlTypeRegistry.addDescriptor(
 					CapacityDependentDdlType.builder( DATE, "bigdatetime", "bigdatetime", this )
 							.withTypeCapacity( 3, "datetime" )
@@ -234,7 +235,7 @@ public class SybaseASEDialect extends SybaseDialect {
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
 		// At least the jTDS driver does not support this type code
-		if ( jtdsDriver ) {
+		if ( getDriverKind() == SybaseDriverKind.JTDS ) {
 			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 		}
 	}
@@ -592,30 +593,17 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
-	}
-
-	@Override
-	public String getForUpdateString() {
-		return " for update";
-	}
-
-	@Override
-	public String getForUpdateString(String aliases) {
-		return getForUpdateString() + " of " + aliases;
+	public boolean supportsSkipLocked() {
+		// It does support skipping locked rows only for READ locking
+		return false;
 	}
 
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
-		//TODO: is this really necessary??!
-		return tableName;
-	}
-
-	@Override
-	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
-		//TODO: is this really correct?
-		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
+		final String lockHint = super.appendLockHint( mode, tableName );
+		return !mode.getLockMode().greaterThan( LockMode.READ ) && mode.getTimeOut() == LockOptions.SKIP_LOCKED
+				? lockHint + " readpast"
+				: lockHint;
 	}
 
 	@Override

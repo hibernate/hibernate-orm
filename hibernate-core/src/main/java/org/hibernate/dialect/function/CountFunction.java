@@ -182,7 +182,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 							sqlAppender.appendSql( concatOperator );
 							sqlAppender.appendSql( "''" );
 						}
-						sqlAppender.appendSql( SqlAppender.COMA_SEPARATOR_CHAR );
+						sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
 						chr.render( sqlAppender, chrArguments, translator );
 						sqlAppender.appendSql( "),'')," );
 						chr.render( sqlAppender, chrArguments, translator );
@@ -201,7 +201,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 						sqlAppender.appendSql( concatOperator );
 						sqlAppender.appendSql( "''" );
 					}
-					sqlAppender.appendSql( SqlAppender.COMA_SEPARATOR_CHAR );
+					sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
 					chr.render( sqlAppender, chrArguments, translator );
 					sqlAppender.appendSql( "),'')," );
 					chr.render( sqlAppender, chrArguments, translator );

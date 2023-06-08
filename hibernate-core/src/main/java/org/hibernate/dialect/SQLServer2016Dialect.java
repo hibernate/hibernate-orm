@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 /**
  * Microsoft SQL Server 2016 Dialect
- * @deprecated use {@code SQLServerDialect(11)}
+ * @deprecated use {@code SQLServerDialect(13)}
  */
 @Deprecated
 public class SQLServer2016Dialect extends SQLServerDialect {

@@ -15,23 +15,23 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
-import org.hibernate.testing.TestForIssue;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10635")
+@JiraKey("HHH-10635")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCommentOn.class)
 public class CommentGenerationTest {
 
 	@Test
@@ -39,7 +39,6 @@ public class CommentGenerationTest {
 		final String resource = "org/hibernate/orm/test/schemaupdate/CommentGeneration.hbm.xml";
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
-				.applySetting( Environment.DIALECT, SupportCommentDialect.class.getName() )
 				.build();
 		try {
 			File output = File.createTempFile( "update_script", ".sql" );
@@ -63,18 +62,6 @@ public class CommentGenerationTest {
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
-		}
-	}
-
-	public static class SupportCommentDialect extends Dialect{
-		@Override
-		public boolean supportsCommentOn() {
-			return true;
-		}
-
-		@Override
-		public DatabaseVersion getVersion() {
-			return ZERO_VERSION;
 		}
 	}
 }

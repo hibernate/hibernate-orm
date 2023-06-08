@@ -14,7 +14,8 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.ForeignKey foreign key} constraint.
@@ -34,8 +35,8 @@ public class ForeignKey extends Constraint {
 
 	@Override
 	public String getExportIdentifier() {
-		// NOt sure name is always set.  Might need some implicit naming
-		return StringHelper.qualify( getTable().getExportIdentifier(), "FK-" + getName() );
+		// Not sure name is always set.  Might need some implicit naming
+		return qualify( getTable().getExportIdentifier(), "FK-" + getName() );
 	}
 
 	public void disableCreation() {
@@ -116,32 +117,33 @@ public class ForeignKey extends Constraint {
 	 */
 	public void alignColumns() {
 		if ( isReferenceToPrimaryKey() ) {
-			alignColumns( referencedTable );
-		}
-	}
+			final int columnSpan = getColumnSpan();
+			final PrimaryKey primaryKey = referencedTable.getPrimaryKey();
+			if ( primaryKey.getColumnSpan() != columnSpan ) {
+				StringBuilder sb = new StringBuilder();
+				sb.append( "Foreign key (" ).append( getName() ).append( ":" )
+						.append( getTable().getName() )
+						.append( " [" );
+				appendColumns( sb, getColumns().iterator() );
+				sb.append( "])" )
+						.append( ") must have same number of columns as the referenced primary key (" )
+						.append( referencedTable.getName() )
+						.append( " [" );
+				appendColumns( sb, primaryKey.getColumns().iterator() );
+				sb.append( "])" );
+				throw new MappingException( sb.toString() );
+			}
 
-	private void alignColumns(Table referencedTable) {
-		final int columnSpan = getColumnSpan();
-		final PrimaryKey primaryKey = referencedTable.getPrimaryKey();
-		if ( primaryKey.getColumnSpan() != columnSpan ) {
-			StringBuilder sb = new StringBuilder();
-			sb.append( "Foreign key (" ).append( getName() ).append( ":" )
-					.append( getTable().getName() )
-					.append( " [" );
-			appendColumns( sb, getColumns().iterator() );
-			sb.append( "])" )
-					.append( ") must have same number of columns as the referenced primary key (" )
-					.append( referencedTable.getName() )
-					.append( " [" );
-			appendColumns( sb, primaryKey.getColumns().iterator() );
-			sb.append( "])" );
-			throw new MappingException( sb.toString() );
+			//TODO: shouldn't this happen even for non-PK references?
+			for ( int i = 0; i<columnSpan; i++ ) {
+				Column referencedColumn = primaryKey.getColumn(i);
+				Column referencingColumn = getColumn(i);
+				referencingColumn.setLength( referencedColumn.getLength() );
+				referencingColumn.setScale( referencedColumn.getScale() );
+				referencingColumn.setPrecision( referencedColumn.getPrecision() );
+				referencingColumn.setArrayLength( referencedColumn.getArrayLength() );
+			}
 		}
-
-		for (int i = 0; i<columnSpan; i++ ) {
-			getColumn(i).setLength( primaryKey.getColumn(i).getLength() );
-		}
-
 	}
 
 	public String getReferencedEntityName() {
@@ -186,8 +188,8 @@ public class ForeignKey extends Constraint {
 
 	public boolean isPhysicalConstraint() {
 		return referencedTable.isPhysicalTable()
-				&& getTable().isPhysicalTable()
-				&& !referencedTable.hasDenormalizedTables();
+			&& getTable().isPhysicalTable()
+			&& !referencedTable.hasDenormalizedTables();
 	}
 
 	/**

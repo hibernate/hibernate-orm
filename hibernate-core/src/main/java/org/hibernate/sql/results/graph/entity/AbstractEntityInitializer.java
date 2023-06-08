@@ -45,6 +45,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -350,9 +351,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				// 2) build the EntityKey
 				entityKey = new EntityKey( id, concreteDescriptor );
 				// 3) schedule the EntityKey for batch loading, if possible
-				if ( concreteDescriptor.isBatchLoadable() ) {
+
+				final SharedSessionContractImplementor session = rowProcessingState.getSession();
+				if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( concreteDescriptor ) ) {
 					final PersistenceContext persistenceContext =
-							rowProcessingState.getSession().getPersistenceContextInternal();
+							session.getPersistenceContextInternal();
 					if ( !persistenceContext.containsEntity( entityKey ) ) {
 						persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 					}
@@ -502,7 +505,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( isProxyInstance( proxy ) ) {
 			if ( entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
-				registerLoadingEntity( rowProcessingState, entityInstance );
+				registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
 			}
 			else {
 				entityInstance = proxy;
@@ -513,13 +516,14 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( existingEntity != null ) {
 				entityInstance = existingEntity;
 				if ( existingLoadingEntry == null && isExistingEntityInitialized( existingEntity ) ) {
-					notifyResolutionListeners( entityInstance );
 					this.isInitialized = true;
+					registerReloadedEntity( rowProcessingState, existingEntity );
+					notifyResolutionListeners( entityInstance );
 				}
 			}
 			else if ( entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
-				registerLoadingEntity( rowProcessingState, entityInstance );
+				registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
 			}
 			else {
 				// look to see if another initializer from a parent load context or an earlier
@@ -538,7 +542,17 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
+	protected abstract void registerLoadingEntityInstanceFromExecutionContext(
+			RowProcessingState rowProcessingState,
+			Object instance);
+
 	protected Object getEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState) {
+		final ExecutionContext executionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getExecutionContext();
+		if ( rootEntityDescriptor == executionContext.getRootEntityDescriptor()
+				&& getEntityKey().getIdentifier().equals( executionContext.getEntityId() ) ) {
+			return executionContext.getEntityInstance();
+		}
 		return null;
 	}
 
@@ -650,6 +664,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					// EARLY EXIT!!!
 					// because the second level cache has reference cache entries, the entity is initialized
 					isInitialized = true;
+					registerReloadedEntity( rowProcessingState, cached );
 					return cached;
 				}
 			}
@@ -702,12 +717,23 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		);
 	}
 
-	private void registerLoadingEntity(RowProcessingState rowProcessingState, Object instance) {
+	protected void registerLoadingEntity(RowProcessingState rowProcessingState, Object instance) {
 		rowProcessingState.getJdbcValuesSourceProcessingState()
 				.registerLoadingEntity(
 						entityKey,
 						new LoadingEntityEntry( this, entityKey, concreteDescriptor, instance )
 				);
+	}
+
+	protected void registerReloadedEntity(RowProcessingState rowProcessingState, Object instance) {
+		if ( rowProcessingState.getCallback() != null ) {
+			// This is only needed for follow-on locking, so skip registering the entity if there is no callback
+			rowProcessingState.getJdbcValuesSourceProcessingState()
+					.registerReloadedEntity(
+							entityKey,
+							new LoadingEntityEntry( this, entityKey, concreteDescriptor, instance )
+					);
+		}
 	}
 
 	@Override

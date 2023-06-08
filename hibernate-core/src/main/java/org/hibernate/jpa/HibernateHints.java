@@ -156,4 +156,49 @@ public interface HibernateHints {
 	 * to a function rather than a call to a procedure.
 	 */
 	String HINT_CALLABLE_FUNCTION = "org.hibernate.callableFunction";
+
+	/**
+	 * Hint for specifying the tenant id to use when creating an
+	 * {@link jakarta.persistence.EntityManagerFactory#createEntityManager(java.util.Map) EntityManager}.
+	 *
+	 * @see org.hibernate.SessionBuilder#tenantIdentifier
+	 * @see jakarta.persistence.EntityManagerFactory#createEntityManager(java.util.Map)
+	 */
+	String HINT_TENANT_ID = "org.hibernate.tenantId";
+
+	/**
+	 * Hint to enable a fetch profile for a given
+	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}.
+	 *
+	 * @see org.hibernate.Session#enableFetchProfile(String)
+	 * @see jakarta.persistence.EntityManager#setProperty(String, Object)
+	 */
+	String HINT_FETCH_PROFILE = "org.hibernate.fetchProfile";
+
+	/**
+	 * Hint to enable subselect fetching for a given
+	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_SUBSELECT_FETCH
+	 * @see jakarta.persistence.EntityManager#setProperty(String, Object)
+	 */
+	String HINT_ENABLE_SUBSELECT_FETCH = "org.hibernate.enableSubselectFetch";
+
+	/**
+	 * Hint to set the batch size for batch fetching for a given
+	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_BATCH_FETCH_SIZE
+	 * @see jakarta.persistence.EntityManager#setProperty(String, Object)
+	 */
+	String HINT_BATCH_FETCH_SIZE = "org.hibernate.batchFetchSize";
+
+	/**
+	 * Hint to set the batch size for JDBC batching for a given
+	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE
+	 * @see jakarta.persistence.EntityManager#setProperty(String, Object)
+	 */
+	String HINT_JDBC_BATCH_SIZE = "org.hibernate.jdbcBatchSize";
 }

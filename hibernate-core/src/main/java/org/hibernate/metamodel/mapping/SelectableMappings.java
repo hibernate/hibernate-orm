@@ -6,9 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * A container for multiple selectable (column, formula) mappings.
  *
@@ -45,14 +42,4 @@ public interface SelectableMappings {
 		return forEachSelectable( 0, consumer );
 	}
 
-	/**
-	 * Obtain the JdbcMappings for the underlying selectable mappings
-	 *
-	 * @see SelectableMapping#getJdbcMapping()
-	 */
-	default List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
-		return results;
-	}
 }

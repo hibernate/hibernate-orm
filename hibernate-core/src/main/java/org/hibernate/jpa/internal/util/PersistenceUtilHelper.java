@@ -6,22 +6,23 @@
  */
 package org.hibernate.jpa.internal.util;
 
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
+
 import jakarta.persistence.spi.LoadState;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.collection.spi.LazyInitializable;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.internal.util.ReflectHelper;
@@ -29,8 +30,13 @@ import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
+import static jakarta.persistence.spi.LoadState.LOADED;
+import static jakarta.persistence.spi.LoadState.NOT_LOADED;
+import static jakarta.persistence.spi.LoadState.UNKNOWN;
+import static java.security.AccessController.doPrivileged;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Central delegate for handling calls from:<ul>
@@ -79,28 +85,25 @@ public final class PersistenceUtilHelper {
 	 *
 	 * @return The appropriate LoadState (see above)
 	 */
-	public static LoadState isLoaded(Object reference) {
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( reference );
+	public static LoadState getLoadState(Object reference) {
+		final LazyInitializer lazyInitializer = extractLazyInitializer( reference );
 		if ( lazyInitializer != null ) {
-			final boolean isInitialized = !lazyInitializer.isUninitialized();
-			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
+			return !lazyInitializer.isUninitialized() ? LOADED : NOT_LOADED;
 		}
 		else if ( isPersistentAttributeInterceptable( reference ) ) {
-			boolean isInitialized = isInitialized( asPersistentAttributeInterceptable( reference ) );
-			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
+			return isInitialized( asPersistentAttributeInterceptable( reference ) ) ? LOADED : NOT_LOADED;
 		}
-		else if ( reference instanceof PersistentCollection ) {
-			final boolean isInitialized = ( (PersistentCollection<?>) reference ).wasInitialized();
-			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
+		else if ( reference instanceof LazyInitializable) {
+			return ( (LazyInitializable) reference ).wasInitialized() ? LOADED : NOT_LOADED;
 		}
 		else {
-			return LoadState.UNKNOWN;
+			return UNKNOWN;
 		}
 	}
 
 	private static boolean isInitialized(PersistentAttributeInterceptable interceptable) {
 		final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( interceptable );
-		return interceptable == null || interceptor == null || !interceptor.hasAnyUninitializedAttributes();
+		return interceptor == null || !interceptor.hasAnyUninitializedAttributes();
 	}
 
 	private static BytecodeLazyAttributeInterceptor extractInterceptor(PersistentAttributeInterceptable interceptable) {
@@ -119,11 +122,11 @@ public final class PersistenceUtilHelper {
 	 */
 	public static LoadState isLoadedWithoutReference(Object entity, String attributeName, MetadataCache cache) {
 		boolean sureFromUs = false;
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
 				// we have an uninitialized proxy, the attribute cannot be loaded
-				return LoadState.NOT_LOADED;
+				return NOT_LOADED;
 			}
 			else {
 				// swap the proxy with target (for proper class name resolution)
@@ -132,7 +135,7 @@ public final class PersistenceUtilHelper {
 			sureFromUs = true;
 		}
 
-		// we are instrumenting but we can't assume we are the only ones
+		// we are instrumenting, but we can't assume we are the only ones
 		if ( isPersistentAttributeInterceptable( entity ) ) {
 			final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( asPersistentAttributeInterceptable( entity ) );
 			final boolean isInitialized = interceptor == null || interceptor.isAttributeLoaded( attributeName );
@@ -141,54 +144,43 @@ public final class PersistenceUtilHelper {
 				// attributeName is loaded according to bytecode enhancement, but is it loaded as far as association?
 				// it's ours, we can read
 				try {
-					final Class entityClass = entity.getClass();
-					final Object attributeValue = cache.getClassMetadata( entityClass )
-							.getAttributeAccess( attributeName )
-							.extractValue( entity );
-					state = isLoaded( attributeValue );
-
+					state = getLoadState( getAttributeValue( entity, attributeName, cache ) );
 					// it's ours so we know it's loaded
-					if ( state == LoadState.UNKNOWN ) {
-						state = LoadState.LOADED;
+					if ( state == UNKNOWN ) {
+						state = LOADED;
 					}
 				}
 				catch (AttributeExtractionException ignore) {
-					state = LoadState.UNKNOWN;
+					state = UNKNOWN;
 				}
 			}
 			else if ( interceptor != null ) {
-				state = LoadState.NOT_LOADED;
+				state = NOT_LOADED;
 			}
 			else if ( sureFromUs ) {
 				// property is loaded according to bytecode enhancement, but is it loaded as far as association?
 				// it's ours, we can read
 				try {
-					final Class entityClass = entity.getClass();
-					final Object attributeValue = cache.getClassMetadata( entityClass )
-							.getAttributeAccess( attributeName )
-							.extractValue( entity );
-					state = isLoaded( attributeValue );
-
+					state = getLoadState( getAttributeValue( entity, attributeName, cache ) );
 					// it's ours so we know it's loaded
-					if ( state == LoadState.UNKNOWN ) {
-						state = LoadState.LOADED;
+					if ( state == UNKNOWN ) {
+						state = LOADED;
 					}
 				}
 				catch (AttributeExtractionException ignore) {
-					state = LoadState.UNKNOWN;
+					state = UNKNOWN;
 				}
 			}
 			else {
-				state = LoadState.UNKNOWN;
+				state = UNKNOWN;
 			}
 
 			return state;
 		}
 		else {
-			return LoadState.UNKNOWN;
+			return UNKNOWN;
 		}
 	}
-
 
 	/**
 	 * Is the given attribute (by name) loaded?  This form must take care to not access the attribute (trigger
@@ -201,11 +193,11 @@ public final class PersistenceUtilHelper {
 	 * @return The LoadState
 	 */
 	public static LoadState isLoadedWithReference(Object entity, String attributeName, MetadataCache cache) {
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
 				// we have an uninitialized proxy, the attribute cannot be loaded
-				return LoadState.NOT_LOADED;
+				return NOT_LOADED;
 			}
 			else {
 				// swap the proxy with target (for proper class name resolution)
@@ -214,17 +206,18 @@ public final class PersistenceUtilHelper {
 		}
 
 		try {
-			final Class entityClass = entity.getClass();
-			final Object attributeValue = cache.getClassMetadata( entityClass )
-					.getAttributeAccess( attributeName )
-					.extractValue( entity );
-			return isLoaded( attributeValue );
+			return getLoadState( getAttributeValue( entity, attributeName, cache ) );
 		}
 		catch (AttributeExtractionException ignore) {
-			return LoadState.UNKNOWN;
+			return UNKNOWN;
 		}
 	}
 
+	private static Object getAttributeValue(Object entity, String attributeName, MetadataCache cache) {
+		return cache.getClassMetadata( entity.getClass() )
+				.getAttributeAccess( attributeName )
+				.extractValue( entity );
+	}
 
 	public static class AttributeExtractionException extends HibernateException {
 		public AttributeExtractionException(String message) {
@@ -315,10 +308,10 @@ public final class PersistenceUtilHelper {
 	}
 
 	private static class NoSuchAttributeAccess implements AttributeAccess {
-		private final Class clazz;
+		private final Class<?> clazz;
 		private final String attributeName;
 
-		public NoSuchAttributeAccess(Class clazz, String attributeName) {
+		public NoSuchAttributeAccess(Class<?> clazz, String attributeName) {
 			this.clazz = clazz;
 			this.attributeName = attributeName;
 		}
@@ -330,9 +323,9 @@ public final class PersistenceUtilHelper {
 	}
 
 	public static class ClassMetadataCache {
-		private final Class specifiedClass;
-		private List<Class<?>> classHierarchy;
-		private Map<String, AttributeAccess> attributeAccessMap = new HashMap<>();
+		private final Class<?> specifiedClass;
+		private final List<Class<?>> classHierarchy;
+		private final Map<String, AttributeAccess> attributeAccessMap = new HashMap<>();
 
 		public ClassMetadataCache(Class<?> clazz) {
 			this.specifiedClass = clazz;
@@ -360,28 +353,22 @@ public final class PersistenceUtilHelper {
 		}
 
 		private AttributeAccess buildAttributeAccess(final String attributeName) {
-			final PrivilegedAction<AttributeAccess> action = new PrivilegedAction<AttributeAccess>() {
-				@Override
-				public AttributeAccess run() {
-					for ( Class clazz : classHierarchy ) {
-						try {
-							final Field field = clazz.getDeclaredField( attributeName );
-							if ( field != null ) {
-								return new FieldAttributeAccess( field );
-							}
-						}
-						catch ( NoSuchFieldException e ) {
-							final Method method = getMethod( clazz, attributeName );
-							if ( method != null ) {
-								return new MethodAttributeAccess( attributeName, method );
-							}
+			final PrivilegedAction<AttributeAccess> action = () -> {
+				for ( Class<?> clazz : classHierarchy ) {
+					try {
+						return new FieldAttributeAccess( clazz.getDeclaredField( attributeName ) );
+					}
+					catch ( NoSuchFieldException e ) {
+						final Method method = getMethod( clazz, attributeName );
+						if ( method != null ) {
+							return new MethodAttributeAccess( attributeName, method );
 						}
 					}
-					//we could not find any match
-					return new NoSuchAttributeAccess( specifiedClass, attributeName );
 				}
+				//we could not find any match
+				return new NoSuchAttributeAccess( specifiedClass, attributeName );
 			};
-			return SystemSecurityManager.isSecurityManagerEnabled() ? AccessController.doPrivileged( action ) : action.run();
+			return SystemSecurityManager.isSecurityManagerEnabled() ? doPrivileged( action ) : action.run();
 		}
 	}
 
@@ -411,24 +398,42 @@ public final class PersistenceUtilHelper {
 	}
 
 	/**
-	 * Cache hierarchy and member resolution in a weak hash map
+	 * Cache hierarchy and member resolution, taking care to not leak
+	 * references to Class instances.
 	 */
-	//TODO not really thread-safe
-	public static class MetadataCache implements Serializable {
-		private transient Map<Class<?>, ClassMetadataCache> classCache = new WeakHashMap<>();
+	public static final class MetadataCache implements Serializable {
 
+		private final ClassValue<ClassMetadataCache> metadataCacheClassValue;
 
-		private void readObject(java.io.ObjectInputStream stream) {
-			classCache = new WeakHashMap<>();
+		public MetadataCache() {
+			this( new MetadataClassValue() );
 		}
 
-		ClassMetadataCache getClassMetadata(Class<?> clazz) {
-			ClassMetadataCache classMetadataCache = classCache.get( clazz );
-			if ( classMetadataCache == null ) {
-				classMetadataCache = new ClassMetadataCache( clazz );
-				classCache.put( clazz, classMetadataCache );
-			}
-			return classMetadataCache;
+		//To help with serialization: no need to serialize the actual metadataCacheClassValue field
+		private MetadataCache(ClassValue<ClassMetadataCache> metadataCacheClassValue) {
+			this.metadataCacheClassValue = metadataCacheClassValue;
+		}
+
+		Object writeReplace() throws ObjectStreamException {
+			//Writing a different instance which doesn't include the cache
+			return new MetadataCache(null);
+		}
+
+		private Object readResolve() throws ObjectStreamException {
+			//Ensure we do instantiate a new cache instance on deserialization
+			return new MetadataCache();
+		}
+
+		ClassMetadataCache getClassMetadata(final Class<?> clazz) {
+			return metadataCacheClassValue.get( clazz );
+		}
+
+	}
+
+	private static final class MetadataClassValue extends ClassValue<ClassMetadataCache> {
+		@Override
+		protected ClassMetadataCache computeValue(final Class type) {
+			return new ClassMetadataCache( type );
 		}
 	}
 

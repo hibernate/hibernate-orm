@@ -11,6 +11,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.Tuple;
+import org.hibernate.AssertionFailure;
+import org.hibernate.InstantiationException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -21,7 +24,6 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.Query;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -41,14 +43,17 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
+import org.hibernate.sql.results.internal.RowTransformerConstructorImpl;
 import org.hibernate.sql.results.internal.RowTransformerJpaTupleImpl;
+import org.hibernate.sql.results.internal.RowTransformerListImpl;
+import org.hibernate.sql.results.internal.RowTransformerMapImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
@@ -56,6 +61,7 @@ import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
+import static org.hibernate.internal.util.ReflectHelper.isClass;
 import static org.hibernate.query.sqm.internal.QuerySqmImpl.CRITERIA_HQL_STRING;
 
 /**
@@ -100,7 +106,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
 						sqmInterpretation.selectStatement,
-						Collections.emptyList(),
+						JdbcParametersList.empty(),
 						jdbcParameterBindings
 				);
 
@@ -174,39 +180,42 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( queryOptions.getTupleTransformer() != null ) {
 			return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 		}
-
-		if ( resultType == null ) {
+		else if ( resultType == null ) {
 			return RowTransformerStandardImpl.instance();
 		}
-
-		if ( resultType.isArray() ) {
+		else if ( resultType == Object[].class ) {
 			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
 		}
-
-		// NOTE : if we get here :
-		// 		1) there is no TupleTransformer specified
-		// 		2) an explicit result-type, other than an array, was specified
-
-		final List<SqmSelection<?>> selections = sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
-		if ( tupleMetadata != null ) {
-			// resultType is Tuple..
-			if ( queryOptions.getTupleTransformer() == null ) {
-				return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
-			}
-
-			throw new IllegalArgumentException(
-					"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer : " +
-							queryOptions.getTupleTransformer()
-			);
-		}
-
-		// NOTE : if we get here we have a resultType of some kind
-
-		if ( selections.size() > 1 ) {
-			throw new IllegalQueryOperationException( "Query defined multiple selections, return cannot be typed (other that Object[] or Tuple)" );
+		else if ( resultType == List.class ) {
+			return (RowTransformer<T>) RowTransformerListImpl.instance();
 		}
 		else {
-			return RowTransformerSingularReturnImpl.instance();
+			// NOTE : if we get here :
+			// 		1) there is no TupleTransformer specified
+			// 		2) an explicit result-type, other than an array, was specified
+
+			if ( tupleMetadata == null ) {
+				if ( sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections().size() == 1 ) {
+					return RowTransformerSingularReturnImpl.instance();
+				}
+				else {
+					throw new AssertionFailure( "Query defined multiple selections, should have had TupleMetadata" );
+				}
+			}
+			else {
+				if ( Tuple.class.equals( resultType ) ) {
+					return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
+				}
+				else if ( Map.class.equals( resultType ) ) {
+					return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+				}
+				else if ( isClass( resultType ) ) {
+					return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
+				}
+				else {
+					throw new InstantiationException( "Query result type is not instantiable", resultType );
+				}
+			}
 		}
 	}
 
@@ -352,7 +361,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				sqmInterpretation.getSqlAst()
 		);
 
-		final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref
 				= SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmInterpretation::getJdbcParamsBySqmParam );
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
@@ -392,7 +401,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		private final SelectStatement selectStatement;
 		private final JdbcOperationQuerySelect jdbcSelect;
 		private final FromClauseAccess tableGroupAccess;
-		private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
+		private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 		private final Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes;
 		private transient JdbcParameterBindings firstParameterBindings;
 
@@ -400,7 +409,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				SelectStatement selectStatement,
 				JdbcOperationQuerySelect jdbcSelect,
 				FromClauseAccess tableGroupAccess,
-				Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref,
+				Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref,
 				Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes,
 				JdbcParameterBindings firstParameterBindings) {
 			this.selectStatement = selectStatement;
@@ -423,7 +432,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			return tableGroupAccess;
 		}
 
-		Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> getJdbcParamsXref() {
+		Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> getJdbcParamsXref() {
 			return jdbcParamsXref;
 		}
 

@@ -26,6 +26,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
@@ -142,6 +143,11 @@ public class XmlHelper {
 			case SqlTypes.DOUBLE:
 			case SqlTypes.DECIMAL:
 			case SqlTypes.NUMERIC:
+				Class<?> javaTypeClass = jdbcMapping.getMappedJavaType().getJavaTypeClass();
+				if ( javaTypeClass.isEnum() ) {
+					return javaTypeClass.getEnumConstants()
+							[IntegerJavaType.INSTANCE.fromEncodedString( string, start, end )];
+				}
 				return fromString(
 						jdbcMapping,
 						string,

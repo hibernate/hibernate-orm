@@ -43,7 +43,7 @@ import static org.junit.Assert.assertThat;
 @SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase or the driver are trimming trailing zeros in byte arrays")
 public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	private BindableType<Set<MyEnum>> enumSetType;
+	private BindableType<Set<MySpecialEnum>> enumSetType;
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -54,25 +54,25 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 		super.startUp();
 		inTransaction( em -> {
 			//noinspection unchecked
-			enumSetType = (BindableType<Set<MyEnum>>) em.unwrap( SessionImplementor.class )
+			enumSetType = (BindableType<Set<MySpecialEnum>>) em.unwrap( SessionImplementor.class )
 					.getFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( TableWithEnumSetConverter.class )
 					.getPropertyType( "theSet" );
 			em.persist( new TableWithEnumSetConverter( 1L, new HashSet<>() ) );
-			em.persist( new TableWithEnumSetConverter( 2L, EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) ) );
+			em.persist( new TableWithEnumSetConverter( 2L, EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
 			em.persist( new TableWithEnumSetConverter( 3L, null ) );
 
 			QueryImplementor q;
 			q = em.createNamedQuery( "TableWithEnumSetConverter.Native.insert" );
 			q.setParameter( "id", 4L );
-			q.setParameter( "data", EnumSet.of( MyEnum.VALUE2, MyEnum.VALUE1, MyEnum.VALUE3 ), enumSetType );
+			q.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE2, MySpecialEnum.VALUE1, MySpecialEnum.VALUE3 ), enumSetType );
 			q.executeUpdate();
 
 			q = em.createNativeQuery( "INSERT INTO table_with_enum_set_convert(id, the_set) VALUES ( :id , :data )" );
 			q.setParameter( "id", 5L );
-			q.setParameter( "data", EnumSet.of( MyEnum.VALUE2, MyEnum.VALUE1, MyEnum.VALUE3 ), enumSetType );
+			q.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE2, MySpecialEnum.VALUE1, MySpecialEnum.VALUE3 ), enumSetType );
 			q.executeUpdate();
 		} );
 	}
@@ -85,7 +85,7 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertThat( tableRecord.getTheSet(), is( new HashSet<>() ) );
 
 			tableRecord = em.find( TableWithEnumSetConverter.class, 2L );
-			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) ) );
+			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
 
 			tableRecord = em.find( TableWithEnumSetConverter.class, 3L );
 			assertThat( tableRecord.getTheSet(), is( (Object) null ) );
@@ -98,7 +98,7 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 			TypedQuery<TableWithEnumSetConverter> tq = em.createNamedQuery( "TableWithEnumSetConverter.JPQL.getById", TableWithEnumSetConverter.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) ) );
+			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
 		} );
 	}
 
@@ -119,7 +119,7 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 			TypedQuery<TableWithEnumSetConverter> tq = em.createNamedQuery( "TableWithEnumSetConverter.Native.getById", TableWithEnumSetConverter.class );
 			tq.setParameter( "id", 2L );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
-			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) ) );
+			assertThat( tableRecord.getTheSet(), is( EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
 		} );
 	}
 
@@ -133,7 +133,7 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 					"SELECT * FROM table_with_enum_set_convert t WHERE the_set " + op + " :data",
 					TableWithEnumSetConverter.class
 			);
-			tq.setParameter( "data", EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ), enumSetType );
+			tq.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ), enumSetType );
 			TableWithEnumSetConverter tableRecord = tq.getSingleResult();
 			assertThat( tableRecord.getId(), is( 2L ) );
 		} );
@@ -160,12 +160,12 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		@Convert(converter = MyEnumConverter.class)
 		@Column( name = "the_set" )
-		private Set<MyEnum> theSet;
+		private Set<MySpecialEnum> theSet;
 
 		public TableWithEnumSetConverter() {
 		}
 
-		public TableWithEnumSetConverter(Long id, Set<MyEnum> theSet) {
+		public TableWithEnumSetConverter(Long id, Set<MySpecialEnum> theSet) {
 			this.id = id;
 			this.theSet = theSet;
 		}
@@ -178,28 +178,28 @@ public class EnumSetConverterTest extends BaseNonConfigCoreFunctionalTestCase {
 			this.id = id;
 		}
 
-		public Set<MyEnum> getTheSet() {
+		public Set<MySpecialEnum> getTheSet() {
 			return theSet;
 		}
 
-		public void setTheSet(Set<MyEnum> theSet) {
+		public void setTheSet(Set<MySpecialEnum> theSet) {
 			this.theSet = theSet;
 		}
 	}
 
-	public enum MyEnum {
+	public enum MySpecialEnum {
 		VALUE1, VALUE2, VALUE3
 	}
 	
-	public static class MyEnumConverter implements AttributeConverter<MyEnum, String> {
+	public static class MyEnumConverter implements AttributeConverter<MySpecialEnum, String> {
 		@Override
-		public String convertToDatabaseColumn(MyEnum attribute) {
+		public String convertToDatabaseColumn(MySpecialEnum attribute) {
 			return attribute == null ? null : attribute.name();
 		}
 
 		@Override
-		public MyEnum convertToEntityAttribute(String dbData) {
-			return dbData == null ? null : MyEnum.valueOf( dbData );
+		public MySpecialEnum convertToEntityAttribute(String dbData) {
+			return dbData == null ? null : MySpecialEnum.valueOf( dbData );
 		}
 	}
 }

@@ -38,7 +38,6 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -64,7 +63,7 @@ import jakarta.persistence.AttributeConverter;
  *
  * @since 5.0
  */
-public interface InFlightMetadataCollector extends Mapping, MetadataImplementor {
+public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
 
 	/**
@@ -83,6 +82,8 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	Map<String, PersistentClass> getEntityBindingMap();
 
 	void registerComponent(Component component);
+
+	void registerGenericComponent(Component component);
 
 	/**
 	 * Adds an import (for use in HQL).
@@ -306,8 +307,8 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	AnnotatedClassType addClassType(XClass clazz);
 	AnnotatedClassType getClassType(XClass clazz);
 
-	void addMappedSuperclass(Class type, MappedSuperclass mappedSuperclass);
-	MappedSuperclass getMappedSuperclass(Class type);
+	void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass);
+	MappedSuperclass getMappedSuperclass(Class<?> type);
 
 	PropertyData getPropertyAnnotatedWithMapsId(XClass persistentXClass, String propertyName);
 	void addPropertyAnnotatedWithMapsId(XClass entity, PropertyData propertyAnnotatedElement);
@@ -352,7 +353,11 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addMappedBy(String name, String mappedBy, String propertyName);
 	String getFromMappedBy(String ownerEntityName, String propertyName);
 
-	void addUniqueConstraints(Table table, List uniqueConstraints);
+	/**
+	 * @deprecated no longer used
+	 */
+	@Deprecated(forRemoval = true)
+	void addUniqueConstraints(Table table, List<String[]> uniqueConstraints);
 	void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraints);
 	void addJpaIndexHolders(Table table, List<JPAIndexHolder> jpaIndexHolders);
 

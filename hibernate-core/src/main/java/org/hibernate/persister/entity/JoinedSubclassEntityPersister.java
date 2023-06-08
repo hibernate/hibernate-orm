@@ -44,6 +44,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
@@ -162,6 +163,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	// Span of the tables directly mapped by this entity and super-classes, if any
 	private final int coreTableSpan;
+	private final int subclassCoreTableSpan;
 	// only contains values for SecondaryTables, ie. not tables part of the "coreTableSpan"
 	private final boolean[] isNullableTable;
 	private final boolean[] isInverseTable;
@@ -274,6 +276,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		//Span of the tableNames directly mapped by this entity and super-classes, if any
 		coreTableSpan = tableNames.size();
+		subclassCoreTableSpan = persistentClass.getSubclassTableClosure().size();
 		tableSpan = persistentClass.getJoinClosureSpan() + coreTableSpan;
 
 		isNullableTable = new boolean[tableSpan];
@@ -1302,56 +1305,103 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
-		final Set<TableReference> retainedTableReferences = new HashSet<>( treatedEntityNames.size() );
-		final Set<String> sharedSuperclassTables = new HashSet<>();
+	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
+		final Set<TableReference> retainedTableReferences = new HashSet<>( entityNameUses.size() );
 		final MappingMetamodelImplementor metamodel = getFactory().getRuntimeMetamodels().getMappingMetamodel();
-
-		for ( String treatedEntityName : treatedEntityNames ) {
-			final JoinedSubclassEntityPersister persister =
-					(JoinedSubclassEntityPersister) metamodel.findEntityDescriptor( treatedEntityName );
-			final String[] subclassTableNames = persister.getSubclassTableNames();
-			// For every treated entity name, we collect table names that are needed by all treated entity names
-			// In mathematical terms, sharedSuperclassTables will be the "intersection" of the table names of all treated entities
-			if ( sharedSuperclassTables.isEmpty() ) {
-				for ( int i = 0; i < subclassTableNames.length; i++ ) {
-					if ( persister.isClassOrSuperclassTable[i] ) {
-						sharedSuperclassTables.add( subclassTableNames[i] );
-					}
-				}
-			}
-			else {
-				sharedSuperclassTables.retainAll( Arrays.asList( subclassTableNames ) );
-			}
-			// Add the table references for all table names of the treated entities as we have to retain these table references.
-			// Table references not appearing in this set can later be pruned away
-			for ( String subclassTableName : subclassTableNames ) {
-				final TableReference tableReference =
-						tableGroup.getTableReference( null, subclassTableName, false );
-				if ( tableReference == null ) {
-					throw new UnknownTableReferenceException( getRootTableName(), "Couldn't find table reference" );
-				}
-				retainedTableReferences.add( tableReference );
-			}
-		}
-		final List<TableReferenceJoin> tableReferenceJoins = tableGroup.getTableReferenceJoins();
-		// The optimization is to remove all table reference joins that are not contained in the retainedTableReferences
-		// In addition, we switch from a possible LEFT join, to an inner join for all sharedSuperclassTables
-		// For now, we can only do this if the table group reports canUseInnerJoins or isRealTableGroup,
+		// We can only do this optimization if the table group reports canUseInnerJoins or isRealTableGroup,
 		// because the switch for table reference joins to INNER must be cardinality preserving.
 		// If canUseInnerJoins is true, this is trivially given, but also if the table group is real
 		// i.e. with parenthesis around, as that means the table reference joins will be isolated
-		if ( tableGroup.canUseInnerJoins() || tableGroup.isRealTableGroup() ) {
+		final boolean innerJoinOptimization = tableGroup.canUseInnerJoins() || tableGroup.isRealTableGroup();
+		final Set<String> tablesToInnerJoin = innerJoinOptimization ? new HashSet<>() : null;
+		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
+			final EntityNameUse.UseKind useKind = entry.getValue().getKind();
+			final JoinedSubclassEntityPersister persister =
+					(JoinedSubclassEntityPersister) metamodel.findEntityDescriptor( entry.getKey() );
+			// The following block tries to figure out what can be inner joined and which super class table joins can be omitted
+			if ( innerJoinOptimization && ( useKind == EntityNameUse.UseKind.TREAT || useKind == EntityNameUse.UseKind.FILTER ) ) {
+				final String[] subclassTableNames = persister.getSubclassTableNames();
+				// Build the intersection of all tables names that are of the class or super class
+				// These are the tables that can be safely inner joined
+				if ( tablesToInnerJoin.isEmpty() ) {
+					for ( int i = 0; i < subclassTableNames.length; i++ ) {
+						if ( persister.isClassOrSuperclassTable[i] ) {
+							tablesToInnerJoin.add( subclassTableNames[i] );
+						}
+					}
+				}
+				else {
+					tablesToInnerJoin.retainAll( Arrays.asList( subclassTableNames ) );
+				}
+				if ( useKind == EntityNameUse.UseKind.FILTER && explicitDiscriminatorColumnName == null ) {
+					// If there is no discriminator column,
+					// we must retain all joins to subclass tables to be able to discriminate the rows
+					for ( int i = 0; i < subclassTableNames.length; i++ ) {
+						if ( !persister.isClassOrSuperclassTable[i] ) {
+							final String subclassTableName = subclassTableNames[i];
+							final TableReference mainTableReference = tableGroup.getTableReference(
+									null,
+									subclassTableName,
+									false
+							);
+							if ( mainTableReference == null ) {
+								throw new UnknownTableReferenceException(
+										subclassTableName,
+										"Couldn't find table reference"
+								);
+							}
+							retainedTableReferences.add( mainTableReference );
+						}
+					}
+				}
+			}
+			final TableReference mainTableReference = tableGroup.getTableReference(
+					null,
+					persister.getTableName(),
+					false
+			);
+			if ( mainTableReference == null ) {
+				throw new UnknownTableReferenceException( persister.getTableName(), "Couldn't find table reference" );
+			}
+			retainedTableReferences.add( mainTableReference );
+		}
+		// If no tables to inner join have been found, we add at least the super class tables of this persister
+		if ( innerJoinOptimization && tablesToInnerJoin.isEmpty() ) {
+			final String[] subclassTableNames = getSubclassTableNames();
+			for ( int i = 0; i < subclassTableNames.length; i++ ) {
+				if ( isClassOrSuperclassTable[i] ) {
+					tablesToInnerJoin.add( subclassTableNames[i] );
+				}
+			}
+		}
+
+		final List<TableReferenceJoin> tableReferenceJoins = tableGroup.getTableReferenceJoins();
+		if ( tableReferenceJoins.isEmpty() ) {
+			return;
+		}
+		// The optimization is to remove all table reference joins that are not contained in the retainedTableReferences
+		// In addition, we switch from a possible LEFT join, to an INNER join for all tablesToInnerJoin
+		if ( innerJoinOptimization ) {
 			final TableReferenceJoin[] oldJoins = tableReferenceJoins.toArray( new TableReferenceJoin[0] );
 			tableReferenceJoins.clear();
 			for ( TableReferenceJoin oldJoin : oldJoins ) {
 				final NamedTableReference joinedTableReference = oldJoin.getJoinedTableReference();
 				if ( retainedTableReferences.contains( joinedTableReference ) ) {
 					final TableReferenceJoin join = oldJoin.getJoinType() != SqlAstJoinType.INNER
-								&& sharedSuperclassTables.contains( joinedTableReference.getTableExpression() )
-							? new TableReferenceJoin(true, joinedTableReference, oldJoin.getPredicate())
+								&& tablesToInnerJoin.contains( joinedTableReference.getTableExpression() )
+							? new TableReferenceJoin( true, joinedTableReference, oldJoin.getPredicate() )
 							: oldJoin;
 					tableReferenceJoins.add( join );
+				}
+				else {
+					final String tableExpression = oldJoin.getJoinedTableReference().getTableExpression();
+					for ( int i = subclassCoreTableSpan; i < subclassTableNameClosure.length; i++ ) {
+						if ( tableExpression.equals( subclassTableNameClosure[i] ) ) {
+							// Retain joins to secondary tables
+							tableReferenceJoins.add( oldJoin );
+							break;
+						}
+					}
 				}
 			}
 		}
@@ -1367,7 +1417,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final int tablePosition = i;
 			consumer.consume(
 					tableName,
-					() -> columnConsumer -> columnConsumer.accept( tableName, constraintOrderedKeyColumnNames[tablePosition] )
+					() -> columnConsumer -> columnConsumer.accept(
+							tableName,
+							constraintOrderedKeyColumnNames[tablePosition],
+							getIdentifierMapping()::getJdbcMapping
+					)
 			);
 		}
 	}

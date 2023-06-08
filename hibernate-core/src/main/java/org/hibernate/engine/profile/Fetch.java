@@ -6,60 +6,132 @@
  */
 package org.hibernate.engine.profile;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+
+import java.util.Locale;
+
+import static org.hibernate.engine.FetchTiming.IMMEDIATE;
+
 /**
- * Models an individual fetch override within a profile.
+ * Models an individual fetch override within a {@link FetchProfile}.
  *
  * @author Steve Ebersole
  */
 public class Fetch {
 	private final Association association;
-	private final Style style;
+	private final FetchStyle method;
+	private final FetchTiming timing;
 
 	/**
-	 * Constructs a Fetch
+	 * Constructs a {@link Fetch}.
 	 *
 	 * @param association The association to be fetched
 	 * @param style How to fetch it
+	 *
+	 * @deprecated use {@link #Fetch(Association,FetchStyle,FetchTiming)}
 	 */
+	@Deprecated(forRemoval = true)
 	public Fetch(Association association, Style style) {
 		this.association = association;
-		this.style = style;
+		this.method = style.toFetchStyle();
+		this.timing = IMMEDIATE;
 	}
 
+	/**
+	 * Constructs a {@link Fetch}.
+	 *
+	 * @param association The association to be fetched
+	 * @param method How to fetch it
+	 */
+	public Fetch(Association association, FetchStyle method, FetchTiming timing) {
+		this.association = association;
+		this.method = method;
+		this.timing = timing;
+	}
+
+	/**
+	 * The association to which the fetch style applies.
+	 */
 	public Association getAssociation() {
 		return association;
 	}
 
+	/**
+	 * The fetch style applied to the association.
+	 *
+	 * @deprecated use {@link #getMethod()}
+	 */
+	@Deprecated(forRemoval = true)
 	public Style getStyle() {
-		return style;
+		return Style.fromFetchStyle( method );
 	}
 
 	/**
-	 * The type or style of fetch.  For the moment we limit this to
-	 * join and select, though technically subselect would be valid
-	 * here as well; however, to support subselect here would
-	 * require major changes to the subselect loading code (which is
-	 * needed for other things as well anyway).
+	 * The fetch method to be applied to the association.
 	 */
+	public FetchStyle getMethod() {
+		return method;
+	}
+
+	/**
+	 * The fetch timing to be applied to the association.
+	 */
+	public FetchTiming getTiming() {
+		return timing;
+	}
+
+	/**
+	 * The type or style of fetch.
+	 *
+	 * @deprecated Use {@link FetchStyle}
+	 */
+	@Deprecated(forRemoval = true)
 	public enum Style {
 		/**
 		 * Fetch via a join
 		 */
-		JOIN( "join" ),
+		JOIN,
 		/**
 		 * Fetch via a subsequent select
 		 */
-		SELECT( "select" );
+		SELECT,
+		/**
+		 * Fetch via a subsequent subselect
+		 */
+		SUBSELECT;
 
-		private final String name;
+		public FetchStyle toFetchStyle() {
+			switch (this) {
+				case SELECT:
+					return FetchStyle.SELECT;
+				case SUBSELECT:
+					return FetchStyle.SUBSELECT;
+				case JOIN:
+					return FetchStyle.JOIN;
+				default:
+					throw new AssertionFailure("Unknown Fetch.Style");
+			}
+		}
 
-		Style(String name) {
-			this.name = name;
+		static Style fromFetchStyle(FetchStyle fetchStyle) {
+			switch (fetchStyle) {
+				case SELECT:
+					return SELECT;
+				case SUBSELECT:
+					return SUBSELECT;
+				case JOIN:
+					return JOIN;
+				default:
+					throw new IllegalArgumentException("Unhandled FetchStyle");
+			}
 		}
 
 		@Override
 		public String toString() {
-			return name;
+			return name().toLowerCase(Locale.ROOT);
 		}
 
 		/**
@@ -70,18 +142,30 @@ public class Fetch {
 		 * @return The style; {@link #JOIN} is returned if not recognized
 		 */
 		public static Style parse(String name) {
-			if ( SELECT.name.equals( name ) ) {
-				return SELECT;
+			for ( Style style: values() ) {
+				if ( style.name().equalsIgnoreCase( name ) ) {
+					return style;
+				}
 			}
-			else {
-				// the default...
-				return JOIN;
+			return JOIN;
+		}
+
+		public static Style forMethod(FetchMode fetchMode) {
+			switch ( fetchMode ) {
+				case JOIN:
+					return JOIN;
+				case SELECT:
+					return SELECT;
+				case SUBSELECT:
+					return SUBSELECT;
+				default:
+					throw new IllegalArgumentException( "Unknown FetchMode" );
 			}
 		}
 	}
 
 	@Override
 	public String toString() {
-		return "Fetch[" + style + "{" + association.getRole() + "}]";
+		return "Fetch[" + method + "{" + association.getRole() + "}]";
 	}
 }

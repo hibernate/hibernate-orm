@@ -6,16 +6,20 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.Objects;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.collection.spi.MapSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -52,6 +56,9 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 	public JavaType<C> createJavaType(
 			ParameterizedType parameterizedType,
 			TypeConfiguration typeConfiguration) {
+		final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final JavaType<Object> valueDescriptor = javaTypeRegistry.resolveDescriptor( actualTypeArguments[actualTypeArguments.length - 1] );
 		switch ( semantics.getCollectionClassification() ) {
 			case ARRAY:
 			case BAG:
@@ -63,14 +70,21 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 				//noinspection unchecked,rawtypes
 				return new BasicCollectionJavaType(
 						parameterizedType,
-						typeConfiguration.getJavaTypeRegistry()
-								.resolveDescriptor( parameterizedType.getActualTypeArguments()[0] ),
+						valueDescriptor,
 						semantics
 				);
+
 		}
 		// Construct a basic java type that knows its parametrization
-		//noinspection unchecked
-		return new UnknownBasicJavaType<>( parameterizedType, (MutabilityPlan<C>) MutableMutabilityPlan.INSTANCE );
+		//noinspection unchecked,rawtypes
+		return new UnknownBasicJavaType(
+				parameterizedType,
+				new MapMutabilityPlan<>(
+						(MapSemantics<Map<Object, Object>, Object, Object>) semantics,
+						javaTypeRegistry.resolveDescriptor( actualTypeArguments[0] ),
+						valueDescriptor
+				)
+		);
 	}
 
 	@Override
@@ -90,30 +104,17 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 
 	@Override
 	public boolean areEqual(C one, C another) {
-//		return one == another ||
-//				(
-//						one instanceof PersistentCollection &&
-//								( (PersistentCollection<?>) one ).wasInitialized() &&
-//								( (PersistentCollection<?>) one ).isWrapper( another )
-//				) ||
-//				(
-//						another instanceof PersistentCollection &&
-//								( (PersistentCollection<?>) another ).wasInitialized() &&
-//								( (PersistentCollection<?>) another ).isWrapper( one )
-//				);
-
-
 		if ( one == another ) {
 			return true;
 		}
 
-		if ( one instanceof PersistentCollection ) {
-			final PersistentCollection pc = (PersistentCollection) one;
+		if ( one instanceof PersistentCollection<?> ) {
+			final PersistentCollection<?> pc = (PersistentCollection<?>) one;
 			return pc.wasInitialized() && ( pc.isWrapper( another ) || pc.isDirectlyProvidedCollection( another ) );
 		}
 
-		if ( another instanceof PersistentCollection ) {
-			final PersistentCollection pc = (PersistentCollection) another;
+		if ( another instanceof PersistentCollection<?> ) {
+			final PersistentCollection<?> pc = (PersistentCollection<?>) another;
 			return pc.wasInitialized() && ( pc.isWrapper( one ) || pc.isDirectlyProvidedCollection( one ) );
 		}
 
@@ -123,5 +124,51 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 	@Override
 	public int extractHashCode(C x) {
 		throw new UnsupportedOperationException();
+	}
+
+	private static class MapMutabilityPlan<C extends Map<K, V>, K, V> implements MutabilityPlan<C> {
+
+		private final MapSemantics<C, K, V> semantics;
+		private final MutabilityPlan<K> keyPlan;
+		private final MutabilityPlan<V> valuePlan;
+
+		public MapMutabilityPlan(
+				MapSemantics<C, K, V> semantics,
+				JavaType<K> keyType,
+				JavaType<V> valueType) {
+			this.semantics = semantics;
+			this.keyPlan = keyType.getMutabilityPlan();
+			this.valuePlan = valueType.getMutabilityPlan();
+		}
+
+		@Override
+		public boolean isMutable() {
+			return true;
+		}
+
+		@Override
+		public C deepCopy(C value) {
+			if ( value == null ) {
+				return null;
+			}
+			final C copy = semantics.instantiateRaw( value.size(), null );
+
+			for ( Map.Entry<K, V> entry : value.entrySet() ) {
+				copy.put( keyPlan.deepCopy( entry.getKey() ), valuePlan.deepCopy( entry.getValue() ) );
+			}
+			return copy;
+		}
+
+		@Override
+		public Serializable disassemble(C value, SharedSessionContract session) {
+			return (Serializable) deepCopy( value );
+		}
+
+		@Override
+		public C assemble(Serializable cached, SharedSessionContract session) {
+			//noinspection unchecked
+			return deepCopy( (C) cached );
+		}
+
 	}
 }

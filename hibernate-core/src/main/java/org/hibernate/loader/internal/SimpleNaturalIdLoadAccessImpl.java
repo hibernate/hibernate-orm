@@ -14,7 +14,6 @@ import java.util.Optional;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;

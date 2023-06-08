@@ -1,0 +1,480 @@
+[[introduction]]
+== Introduction
+
+Hibernate is usually described as a library that makes it easy to map Java classes to relational database tables.
+But this formulation does no justice to the central role played by the relational data itself.
+So a better description might be:
+
+****
+Hibernate makes *relational data* visible to a program written in Java, in a *natural* and *typesafe* form,
+
+1. making it easy to write complex queries and work with their results,
+2. letting the program easily synchronize changes made in memory with the database, respecting the ACID properties of transactions, and
+3. allowing performance optimizations to be made after the basic persistence logic has already been written.
+****
+
+Here the relational data is the focus, along with the importance of typesafety.
+The goal of _Object/relational mapping_ (ORM) is to eliminate fragile and untypesafe code, and make large programs easier to maintain in the long run.
+
+ORM takes the pain out of persistence by relieving the developer of the need to hand-write tedious, repetitive, and fragile code for flattening graphs of objects to database tables and rebuilding graphs of objects from flat SQL query result sets.
+Even better, ORM makes it much easier to tune performance later, after the basic persistence logic has already been written.
+
+[TIP]
+// .ORM or SQL?
+====
+A perennial question is: should I use ORM, or plain SQL?
+The answer is usually: _use both_.
+JPA and Hibernate were designed to work _in conjunction with_ handwritten SQL.
+You see, most programs with nontrivial data access logic will benefit from the use of ORM at least _somewhere_.
+But if Hibernate is making things more difficult, for some particularly tricky piece of data access logic, the only sensible thing to do is to use something better suited to the problem!
+Just because you're using Hibernate for persistence doesn't mean you have to use it for _everything_.
+====
+
+Developers often ask about the relationship between Hibernate and JPA, so let's take a short detour into some history.
+
+[[hibernate-and-jpa]]
+=== Hibernate and JPA
+
+Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of this specification.
+
+.The early history of Hibernate and JPA
+****
+The Hibernate project began in 2001, when Gavin King's frustration with Entity Beans in EJB 2 boiled over.
+It quickly overtook other open source and commercial contenders to become the most popular persistence solution for Java, and the book _Hibernate in Action_, written with Christian Bauer, was an influential bestseller.
+
+In 2004, Gavin and Christian joined a tiny startup called JBoss, and other early Hibernate contributors soon followed: Max Rydahl Andersen, Emmanuel Bernard, Steve Ebersole, and Sanne Grinovero.
+
+Soon after, Gavin joined the EJB 3 expert group and convinced the group to deprecate Entity Beans in favor of a brand-new persistence API modelled after Hibernate.
+Later, members of the TopLink team got involved, and the Java Persistence API evolved as a collaboration between—primarily—Sun, JBoss, Oracle, and Sybase, under the leadership of Linda Demichiel.
+
+Over the intervening two decades, _many_ talented people have contributed to the development of Hibernate.
+We're all especially grateful to Steve, who has led the project for many years, since Gavin stepped back to focus in other work.
+****
+
+We can think of the API of Hibernate in terms of three basic elements:
+
+- an implementation of the JPA-defined APIs, most importantly, of the interfaces `EntityManagerFactory` and `EntityManager`, and of the JPA-defined O/R mapping annotations,
+- a _native API_ exposing the full set of available functionality, centered around the interfaces `SessionFactory`, which extends `EntityManagerFactory`, and `Session`, which extends `EntityManager`, and
+- a set of _mapping annotations_ which augment the O/R mapping annotations defined by JPA, and which may be used with the JPA-defined interfaces, or with the native API.
+
+image::images/api-overview.png[API overview,width=700,align="center"]
+
+As an application developer, you must decide whether to:
+
+- write your program in terms of `Session` and `SessionFactory`, or
+- maximize portability to other implementations of JPA by, wherever reasonable, writing code in terms of  `EntityManager` and `EntityManagerFactory`, falling back to the native APIs only where necessary.
+
+Whichever path you take, you will use the JPA-defined mapping annotations most of the time, and the Hibernate-defined annotations for more advanced mapping problems.
+
+[TIP]
+// .Developing with "pure" JPA
+====
+You might wonder if it's possible to develop an application using _only_ JPA-defined APIs, and, indeed, that's possible in principle.
+JPA is a great baseline that really nails the basics of the object/relational mapping problem.
+But without the native APIs, and extended mapping annotations, you miss out on much of the power of Hibernate.
+====
+
+Since Hibernate existed before JPA, and since JPA was modelled on Hibernate, we unfortunately have some competition and duplication in naming between the standard and native APIs.
+For example:
+
+.Examples of competing APIs with similar naming
+|===
+| Hibernate | JPA
+
+| `org.hibernate.annotations.CascadeType` | `javax.persistence.CascadeType`
+| `org.hibernate.FlushMode` | `javax.persistence.FlushModeType`
+| `org.hibernate.annotations.FetchMode` | `javax.persistence.FetchType`
+| `org.hibernate.query.Query` | `javax.persistence.Query`
+| `org.hibernate.Cache` | `javax.persistence.Cache`
+| `@org.hibernate.annotations.NamedQuery` | `@javax.persistence.NamedQuery`
+| `@org.hibernate.annotations.Cache` | `@javax.persistence.Cacheable`
+|===
+
+Typically, the Hibernate-native APIs offer something a little extra that's missing in JPA, so this isn't exactly a _flaw_.
+But it's something to watch out for.
+
+[[java-code]]
+=== Writing Java code with Hibernate
+
+If you're completely new to Hibernate and JPA, you might already be wondering how the persistence-related code is structured, and how it fits into the rest of your program.
+
+Well, typically, your persistence-related code comes in two layers:
+
+. a representation of your data model in Java, which takes the form of a set of annotated entity classes, and
+. a larger number of functions which interact with Hibernate's APIs to perform the persistence operations associated with your various transactions.
+
+The first part, the data or "domain" model, is usually easier to write, but doing a great and very clean job of it will strongly affect your success in the second part.
+
+Most people implement the domain model as a set of what we used to call "Plain Old Java Objects", that is, as simple Java classes with no direct dependencies on technical infrastructure, nor on application logic which deals with request processing, transaction management, communications, or interaction with the database.
+
+[TIP]
+====
+Take your time with this code, and try to produce a Java model that's as close as reasonable to the relational data model. Avoid using exotic or advanced mapping features when they're not really needed.
+When in the slightest doubt, map a foreign key relationship using `@ManyToOne` with `@OneToMany(mappedBy=...)` in preference to more complicated association mappings.
+====
+
+The second part of the code is much trickier to get right. This code must:
+
+- manage transactions and sessions,
+- interact with the database via the Hibernate session,
+- fetch and prepare data needed by the UI, and
+- handle failures.
+
+[TIP]
+====
+Some responsibility for transaction and session management, and for
+recovery from certain kinds of failure, can be best handled in some sort
+of framework code.
+====
+
+A question that's older than Hibernate is: should this code exist in a separate _persistence layer_.
+To give our answer to this question, and at the risk of this Introduction devolving into a rant at such an early stage, we're going to need to talk a little more about ancient history.
+
+.An epic tale of DAOs and Repositories
+****
+Back in the dark days of Java EE 4, before the standardization of Hibernate, and subsequent ascendance of JPA in Java enterprise development, it was common to hand-code the messy JDBC interactions that Hibernate takes care of today.
+In those terrible times, a pattern arose that we used to call _Data Access Objects_ (DAOs).
+A DAO gave you a place to put all that nasty JDBC code, leaving the important program logic cleaner.
+
+When Hibernate arrived suddenly on the scene in 2001, developers loved it.
+But Hibernate implemented no specification, and many wished to reduce or at least _localize_ the dependence of their project logic on Hibernate.
+An obvious solution was to keep the DAOs around, but to replace the JDBC code inside them with calls to the Hibernate `Session`.
+
+We partly blame ourselves for what happened next.
+
+Back in 2002 and 2003 this really seemed like a pretty reasonable thing to do.
+In fact, we contributed to the popularity of this approach by recommending—or at least not discouraging—the use of DAOs in _Hibernate in Action_.
+We hereby apologize for this mistake, and for taking much too long to recognize it.
+
+Eventually, some folks came to believe that their DAOs shielded their program from depending in a hard way on ORM, allowing them to "swap out" Hibernate, and replace it with JDBC, or with something else.
+In fact, this was never really true—there's quite a deep difference between the programming model of JDBC, where every interaction with the database is explicit and synchronous, and the programming model of stateful sessions in Hibernate, where updates are implicit, and SQL statements are executed asynchronously.
+
+But then the whole landscape for persistence in Java changed in April 2006, when the final draft of JPA 1.0 was approved.
+Java now had a standard way to do ORM, with multiple high-quality implementations of the standard API.
+This was the end of the line for the DAOs, right?
+
+Well, no.
+It wasn't.
+DAOs were rebranded "repositories", and continue to enjoy a sort-of zombie afterlife as a front-end to JPA.
+But are they really pulling their weight, or are they just unnecessary extra complexity and bloat? An extra layer of indirection that makes stack traces harder to read and code harder to debug?
+
+Our considered view is that they're mostly just bloat.
+The JPA `EntityManager` is a "repository", and it's a standard repository with a well-defined specification written by people who spend all day thinking about persistence.
+If these repository frameworks offered anything actually _useful_—and not obviously foot-shooty—over and above what `EntityManager` provides, we would have already added it to `EntityManager` decades ago.
+
+Indeed, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
+We might analogize it to `ArrayList`.
+Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
+They're a parallel class hierarchy that makes the data model harder to evolve over time.
+
+[TIP]
+====
+On the other hand, we admit that repositories do provide a convenient place to stick your `@NamedQuery` annotations.
+So there's that.
+====
+
+One thing that some repository frameworks offer is the ability to declare an abstract method that queries the database, and have the framework fill in an implementation of the method.
+But the way this works is that you must encode your query into the name of the method itself.
+
+Which, at least in principle, for a not-very-complicated query, leads to a method name like this:
+
+[.text-center]
+`findFirst10ByOrderDistinctPeopleByLastnameOrFirstnameAsc`
+
+This is a much worse query language than HQL.
+I think you can see why we didn't implement this idea in Hibernate.
+****
+
+Ultimately, we're not sure you do need a separate persistence layer.
+And even if you do, DAO-style repositories aren't the obviously-correct way to factorize the equation:
+
+- every nontrivial query touches multiple entities, and so it's often quite ambiguous which DAO such a query belongs to, and
+- most queries are extremely specific to a particular fragment of program logic, and aren't reused in many different places.
+
+So at least _consider_ the possibility that it might be OK to call the `EntityManager` direct from your business logic.
+
+OK, _phew_, let's move on.
+
+[[hello-hibernate]]
+=== Hello, Hibernate
+
+Before we get into the weeds, we'll quickly present a basic example program that will help you get started if you don't already have Hibernate integrated into your project.
+
+We begin with a simple gradle build file:
+
+[source,groovy]
+.`build.gradle`
+----
+plugins {
+    id 'java'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // the GOAT ORM
+    implementation 'org.hibernate.orm:hibernate-core:6.2.2.Final'
+
+    // Hibernate Validator
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.0.Final'
+    implementation 'org.glassfish:jakarta.el:4.0.2'
+
+    // Agroal connection pool
+    implementation 'org.hibernate.orm:hibernate-agroal:6.2.2.Final'
+    implementation 'io.agroal:agroal-pool:2.1'
+
+    // logging via Log4j
+    implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+
+    // JPA metamodel generator (for criteria queries)
+    annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.2.2.Final'
+
+    // H2 database
+    runtimeOnly 'com.h2database:h2:2.1.214'
+}
+----
+
+Only the first of these dependencies is absolutely _required_ to run Hibernate.
+
+Next, we'll add a logging configuration file for log4j:
+
+[source,properties]
+.`log4j2.properties`
+----
+rootLogger.level = info
+rootLogger.appenderRefs = console
+rootLogger.appenderRef.console.ref = console
+
+logger.hibernate.name = org.hibernate.SQL
+logger.hibernate.level = info
+
+appender.console.name = console
+appender.console.type = Console
+appender.console.layout.type = PatternLayout
+appender.console.layout.pattern = %highlight{[%p]} %m%n
+----
+
+Now we need some Java code.
+We begin with our _entity class_:
+
+[source,java]
+.`Book.java`
+----
+package org.hibernate.example;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotNull;
+
+@Entity
+class Book {
+    @Id
+    String isbn;
+
+    @NotNull
+    String title;
+
+    Book() {}
+
+    Book(String isbn, String title) {
+        this.isbn = isbn;
+        this.title = title;
+    }
+}
+----
+
+Finally, let's see code which configures and instantiates Hibernate and asks it to persist and query the entity.
+Don't worry if this makes no sense at all right now.
+It's the job of this Introduction to make all this crystal clear.
+
+[source,java]
+.`Main.java`
+----
+package org.hibernate.example;
+
+import org.hibernate.cfg.Configuration;
+
+import static java.lang.Boolean.TRUE;
+import static java.lang.System.out;
+import static org.hibernate.cfg.AvailableSettings.*;
+
+public class Main {
+    public static void main(String[] args) {
+        var sessionFactory = new Configuration()
+                .addAnnotatedClass(Book.class)
+                // use H2 in-memory database
+                .setProperty(URL, "jdbc:h2:mem:db1")
+                .setProperty(USER, "sa")
+                .setProperty(PASS, "")
+                // use Agroal connection pool
+                .setProperty("hibernate.agroal.maxSize", "20")
+                // display SQL in console
+                .setProperty(SHOW_SQL, TRUE.toString())
+                .setProperty(FORMAT_SQL, TRUE.toString())
+                .setProperty(HIGHLIGHT_SQL, TRUE.toString())
+                .buildSessionFactory();
+
+        // export the inferred database schema
+        sessionFactory.getSchemaManager().exportMappedObjects(true);
+
+        // persist an entity
+        sessionFactory.inTransaction(session -> {
+            session.persist(new Book("9781932394153", "Hibernate in Action"));
+        });
+
+        // query data using HQL
+        sessionFactory.inSession(session -> {
+            out.println(session.createSelectionQuery("select isbn||': '||title from Book").getSingleResult());
+        });
+
+        // query data using criteria API
+        sessionFactory.inSession(session -> {
+            var builder = sessionFactory.getCriteriaBuilder();
+            var query = builder.createQuery(String.class);
+            var book = query.from(Book.class);
+            query.select(builder.concat(builder.concat(book.get(Book_.isbn), builder.literal(": ")),
+                    book.get(Book_.title)));
+            out.println(session.createSelectionQuery(query).getSingleResult());
+        });
+    }
+}
+----
+
+Here we've used Hibernate's native APIs.
+We could have used JPA-standard APIs to achieve the same thing.
+
+[[hello-jpa]]
+=== Hello, JPA
+
+If we limit ourselves to the use of JPA-standard APIs, we need to use XML to configure Hibernate.
+
+[source,xml]
+.`META-INF/persistence.xml`
+----
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="example">
+
+        <class>org.hibernate.example.Book</class>
+
+        <properties>
+
+            <!-- H2 in-memory database -->
+            <property name="jakarta.persistence.jdbc.url"
+                      value="jdbc:h2:mem:db1"/>
+
+            <!-- Credentials -->
+            <property name="jakarta.persistence.jdbc.user"
+                      value="sa"/>
+            <property name="jakarta.persistence.jdbc.password"
+                      value=""/>
+
+            <!-- Agroal connection pool -->
+            <property name="hibernate.agroal.maxSize"
+                      value="20"/>
+
+            <!-- display SQL in console -->
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.highlight_sql" value="true"/>
+
+        </properties>
+
+    </persistence-unit>
+</persistence>
+----
+
+Note that our `build.gradle` and `log4j2.properties` files are unchanged.
+
+Our entity class is also unchanged from what we had before.
+
+Unfortunately, JPA doesn't offer an `inSession()` method, so we'll have to implement session and transaction management ourselves.
+We can put that logic in our own `inSession()` function, so that we don't have to repeat it for every transaction.
+Again, you don't need to understand any of this code right now.
+
+[source,java]
+.`Main.java` (JPA version)
+----
+package org.hibernate.example;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+
+import java.util.Map;
+import java.util.function.Consumer;
+
+import static jakarta.persistence.Persistence.createEntityManagerFactory;
+import static java.lang.System.out;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.hibernate.tool.schema.Action.CREATE;
+
+public class Main {
+    public static void main(String[] args) {
+        var factory = createEntityManagerFactory("example",
+                // export the inferred database schema
+                Map.of(JAKARTA_HBM2DDL_DATABASE_ACTION, CREATE));
+
+        // persist an entity
+        inSession(factory, entityManager -> {
+            entityManager.persist(new Book("9781932394153", "Hibernate in Action"));
+        });
+
+        // query data using HQL
+        inSession(factory, entityManager -> {
+            out.println(entityManager.createQuery("select isbn||': '||title from Book").getSingleResult());
+        });
+
+        // query data using criteria API
+        inSession(factory, entityManager -> {
+            var builder = factory.getCriteriaBuilder();
+            var query = builder.createQuery(String.class);
+            var book = query.from(Book.class);
+            query.select(builder.concat(builder.concat(book.get(Book_.isbn), builder.literal(": ")),
+                    book.get(Book_.title)));
+            out.println(entityManager.createQuery(query).getSingleResult());
+        });
+    }
+
+    // do some work in a session, performing correct transaction management
+    static void inSession(EntityManagerFactory factory, Consumer<EntityManager> work) {
+        var entityManager = factory.createEntityManager();
+        var transaction = entityManager.getTransaction();
+        try {
+            transaction.begin();
+            work.accept(entityManager);
+            transaction.commit();
+        }
+        catch (Exception e) {
+            if (transaction.isActive()) transaction.rollback();
+            throw e;
+        }
+        finally {
+            entityManager.close();
+        }
+    }
+}
+----
+
+It's now time to begin our journey toward actually _understanding_ the code we've just seen.
+
+[[overview]]
+=== Overview
+
+This introduction will guide you through the basic tasks involved in developing a program that uses Hibernate for persistence:
+
+1. configuring and bootstrapping Hibernate, and obtaining an instance of `SessionFactory` or `EntityManagerFactory`,
+2. writing a _domain model_, that is, a set of _entity classes_ which represent the persistent types in your program, and which map to tables of your database,
+3. customizing these mappings when the model maps to a pre-existing relational schema,
+4. using the `Session` or `EntityManager` to perform operations which query the database and return entity instances, or which update the data held in the database,
+5. writing complex queries using the Hibernate Query Language (HQL) or native SQL, and, finally
+6. tuning performance of the data access logic.
+
+Naturally, we'll start at the top of this list, with the least-interesting topic: _configuration_.

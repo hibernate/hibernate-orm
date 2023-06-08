@@ -203,8 +203,6 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				final QuerySpec existsQuerySpec = new QuerySpec( false );
 				existsQuerySpec.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								-1,
-								0,
 								new QueryLiteral<>(
 										1,
 										factory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
@@ -243,8 +241,6 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					targetColumnReferences.addAll( assignment.getAssignable().getColumnReferences() );
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									0,
-									-1,
 									assignment.getAssignedValue()
 							)
 					);

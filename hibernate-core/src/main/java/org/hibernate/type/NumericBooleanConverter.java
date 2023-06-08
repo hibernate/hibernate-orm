@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
@@ -14,7 +13,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Handles conversion to/from {@code Boolean} as {@code 0} (false) or {@code 1} (true)
@@ -73,10 +71,5 @@ public class NumericBooleanConverter implements AttributeConverter<Boolean, Inte
 	@Override
 	public JavaType<Integer> getRelationalJavaType() {
 		return IntegerJavaType.INSTANCE;
-	}
-
-	@Override
-	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
-		return columnName + " in (0,1)";
 	}
 }

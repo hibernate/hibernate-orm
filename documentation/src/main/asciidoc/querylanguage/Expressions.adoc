@@ -1,0 +1,1346 @@
+[[expressions]]
+== Expressions
+
+We now switch gears, and begin describing the language from the bottom up.
+The very bottom of a programming language is its syntax for literal values.
+
+// Essentially, expressions are references that resolve to basic or tuple values.
+
+[[literals]]
+=== Literals
+
+The most important literal value in this language is `null`. It's assignable to any other type.
+
+[[boolean-literals]]
+==== Boolean literals
+
+The boolean literal values are the (case-insensitive) keywords `true` and `false`.
+
+[[string-literals]]
+==== String literals
+
+String literals are enclosed in single quotes.
+
+[source,hql]
+----
+select 'hello world'
+----
+
+To escape a single quote within a string literal, use a doubled single quote: `''`.
+
+[[string-literals-example]]
+//.String literals examples
+[source, hql]
+----
+from Book where title like 'Ender''s'
+----
+
+Alternatively, Java-style double-quoted strings are also allowed, with the usual Java character escape syntax.
+
+[source,hql]
+----
+select "hello\tworld"
+----
+
+This option is not much used.
+
+[[numeric-literals]]
+==== Numeric literals
+
+Numeric literals come in several different forms:
+
+|===
+| Kind | Type | Example
+
+| Integer literals | `Long`, `Integer`, `BigInteger` | `1`, `3_000_000L`, `2BI`
+| Decimal literals | `Double`, `Float`, `BigDecimal` | `1.0`, `123.456F`, `3.14159265BD`
+| Hexadecimal literals | `Long`, `Integer` | `0X1A2B`, `0x1a2b`
+| Scientific notation | `Double`, `Float`, `BigDecimal` | `1e-6`, `6.674E-11F`
+|===
+
+For example:
+
+[[numeric-literals-example]]
+[source, hql]
+----
+from Book where price < 100.0
+----
+[source, hql]
+----
+select author, count(book)
+from Author as author
+    join author.books as book
+group by author
+having count(book) > 10
+----
+
+The type of a numeric literal may be specified using a Java-style postfix:
+|===
+| Postfix | Type | Java type
+
+| `L` or `l` | long integer | `long`
+| `D` or `d` | double precision | `double`
+| `F` or `f` | single precision | `float`
+| `BI` or `bi` | large integer | `BigInteger`
+| `BD` or `bd` | exact decimal | `BigDecimal`
+|===
+
+It's not usually necessary to specify the precision explicitly.
+
+[NOTE]
+====
+In a literal with an exponent, the `E` is case-insensitive.
+Similarly, the Java-style postfix is case-insensitive.
+====
+
+[[datetime-literals]]
+==== Date and time literals
+
+According to the JPQL specification, date and time literals may be specified using the JDBC escape syntax.
+Since this syntax is rather unpleasant to look at, HQL provides not one, but two alternatives.
+
+|===
+| Date/time type | Recommended Java type | JDBC escape syntax 💀| Braced literal syntax | Explicitly typed literal syntax
+
+| Date | `LocalDate` | `{d 'yyyy-mm-dd'}` | `{yyyy-mm-dd}` | `date yyyy-mm-dd`
+| Time | `LocalTime` | `{t 'hh:mm'}` | `{hh:mm}` | `time hh:mm`
+| Time with seconds | `LocalTime` | `{t 'hh:mm:ss'}` | `{hh:mm:ss}` | `time hh:mm:ss`
+| Datetime | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss'}` | `{yyyy-mm-dd hh:mm:ss}` | `datetime yyyy-mm-dd hh:mm:ss`
+| Datetime with milliseconds | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss.millis'}` | `{yyyy-mm-dd hh:mm:ss.millis}` | `datetime yyyy-mm-dd hh:mm:ss.millis`
+| Datetime with an offset | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss+hh:mm'}` | `{yyyy-mm-dd hh:mm:ss +hh:mm}` | `datetime yyyy-mm-dd hh:mm:ss +hh:mm`
+| Datetime with a time zone | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss GMT'}` | `{yyyy-mm-dd hh:mm:ss GMT}` | `datetime yyyy-mm-dd hh:mm:ss GMT`
+|===
+
+Literals referring to the current date and time are also provided.
+Again there is some flexibility.
+
+|===
+| Date/time type | Java type | Underscored syntax | Spaced syntax
+
+| Date | `java.time.LocalDate` | `local_date` | `local date`
+| Time | `java.time.LocalTime` | `local_time` | `local time`
+| Datetime | `java.time.LocalDateTime` | `local_datetime` | `local datetime`
+| Offset datetime | `java.time.OffsetDateTime`| `offset_datetime` | `offset datetime`
+| Instant | `java.time.Instant` | `instant` | `instant`
+| Date | `java.sql.Date` 💀| `current_date` | `current date`
+| Time | `java.sql.Time` 💀| `current_time` | `current time`
+| Datetime | `java.sql.Timestamp` 💀| `current_timestamp` | `current timestamp`
+|===
+
+Of these, only `local date`, `local time`, `local datetime`, `current_date`, `current_time`, and `current_timestamp` are defined by the JPQL specification.
+
+[IMPORTANT]
+====
+The use of date and time types from the `java.sql` package is strongly discouraged!
+Always use `java.time` types in new code.
+====
+
+[[duration-literals]]
+==== Duration literals
+
+There are two sorts of duration in HQL:
+
+* _year-day durations_, that is, the length of an interval between two dates, and
+* _week-nanosecond durations_, that is, the length of an interval between two datetimes.
+
+For conceptual reasons, the two kinds of duration cannot be cleanly composed.
+
+Literal duration expressions are of form `n unit`, for example `1 day` or `10 year` or `100 nanosecond`.
+
+The unit may be: `day`, `month`, `quarter`, `year`, `second`, `minute`, `hour`, or `nanosecond`.
+
+[NOTE]
+====
+A HQL duration is considered to map to a Java `java.time.Duration`, but semantically they're perhaps more similar to an ANSI SQL `INTERVAL` type.
+====
+
+[[binary-literals]]
+==== Binary string literals
+
+HQL also provides a choice of formats for binary strings:
+
+* the braced syntax `{0xDE, 0xAD, 0xBE, 0xEF}`, a list of Java-style hexadecimal byte literals, or
+* the quoted syntax `X'DEADBEEF'` or `x'deadbeef'`, similar to SQL.
+
+[[enum-literals]]
+==== Enum literals
+
+Literal values of a Java enumerated type may be written without needing to specify the enum class name:
+
+[[enum-example]]
+[source, hql]
+----
+from Book where status <> OUT_OF_PRINT
+----
+
+Here, the enum class is inferred from the type of the expression on the left of the comparison operator.
+
+[[java-constants]]
+==== Java constants
+
+HQL allows any Java `static` constant to be used in HQL, but it must be referenced by its fully-qualified name:
+
+[[java-constant-example]]
+[source, hql]
+----
+select java.lang.Math.PI
+----
+
+[[entity-name-literals]]
+==== Literal entity names
+
+Entity names may also occur as a literal value. They do not need to be qualified.
+
+[source,hql]
+----
+from Payment as payment
+where type(payment) = CreditCardPayment
+----
+
+See <<functions-typecasts>>.
+
+[[path-expressions]]
+=== Identification variables and path expressions
+
+A path expression is either:
+
+- a reference to an <<identification-variables,identification variable>>, or
+- a _compound path_, beginning with a reference to an identification variable, and followed by a period-separated list of references to entity attributes.
+
+As an extension to the JPA spec, HQL, just like SQL, allows a compound path expression where the identification variable at the beginning of the path is missing.
+That is, instead of `var.foo.bar`, it's legal to write just `foo.bar`.
+But this is only allowed when the identification variable may be unambiguously inferred from the first element, `foo` of the compound path.
+The query must have exactly one identification variable `var` for which the path `var.foo` refers to an entity attribute.
+Note that we will continue to call these paths "compound", even if they only have one element.
+
+[TIP]
+====
+This streamlines the query rather nicely when there's just one root entity and no joins.
+But when the query has multiple identification variables it makes the query much harder to understand.
+====
+
+If an element of a compound path refers to an association, the path expression produces an <<implicit-join,implicit join>>.
+
+[source,hql]
+----
+select book.publisher.name from Book book
+----
+
+An element of a compound path referring to a many-to-one or on-to-one association may have the <<function-treat,treat>> function applied to it.
+
+[source,hql]
+----
+select treat(order.payment as CreditCardPayment).creditCardNumber from Order order
+----
+
+If an element of a compound path refers to a collection or many-valued association, it must have one of <<collection-functions,these special functions>> applied to it.
+
+[source,hql]
+----
+select element(book.authors).name from Book book
+----
+
+No other function may be applied to a non-terminal element of a path expression.
+
+Alternatively, if the element of the compound path refers to a list or map, it may have the indexing operator applied to it:
+
+[source,hql]
+----
+select book.editions[0].date from Book book
+----
+
+No other operator may be applied to a non-terminal element of a path expression.
+
+=== Operator expressions
+
+HQL has operators for working with strings, numeric values, and date/time types.
+
+The operator precedence is given by this table, from highest to lowest precedence:
+
+[cols="40,^20,~"]
+|===
+| Precedence class | Type | Operators
+
+| Grouping and tuple instantiation | | `( ... )` and `(x, y, z)`
+| Case lists |  | `case ... end`
+| Member reference | Binary infix | `a.b`
+| Function application | Postfix | `f(x,y)`
+| Indexing | Postfix | `a[i]`
+| Unary numeric | Unary prefix | `+`, `-`
+| Duration conversions | Unary postfix | `by day` and friends
+| Binary multiplicative | Binary infix | `*`, `/`, `%`
+| Binary additive | Binary infix | `+`, `-`
+| Concatenation | Binary infix | `\|\|`
+| Nullness | Unary postfix | `is null`, `is empty`
+| Containment | Binary infix | `in`, `not in`
+| Between | Ternary infix | `between`, `not between`
+| Pattern matching | Binary infix | `like`, `ilike`, `not like`, `not ilike`
+| Existence | Unary prefix | `exists`
+| Membership | Binary infix | `member of`, `not member of`
+| Unary logical | Unary prefix | `not`
+| Binary logical | Binary infix | `and`, `or`
+|===
+
+[[concatenation]]
+==== String concatenation
+
+HQL defines two ways to concatenate strings:
+
+* the SQL-style concatenation operator, `||`, and
+* the JPQL-standard `concat()` function.
+
+See <<string-functions, below>> for details of the `concat()` function.
+
+[[concatenation-example]]
+[source, hql]
+----
+select book.title || ' by ' || listagg(author.name, ' & ')
+from Book as book
+    join book.authors as author
+group by book
+----
+
+Many more operations on strings are defined below, in <<exp-functions>>.
+
+[[numeric-arithmetic]]
+==== Numeric arithmetic
+
+The basic SQL arithmetic operators, `+`,`-`,`*`, and `/` are joined by the remainder operator `%`.
+
+[[numeric-arithmetic-example]]
+[source, hql]
+----
+select (1.0 + :taxRate) * sum(item.book.price * item.quantity)
+from Order as ord
+    join ord.items as item
+where ord.id = :oid
+----
+
+When both operands of a binary numeric operator have the same type, the result type of the whole expression is the same as the operands.
+
+[WARNING]
+====
+Thus, `3/2` performs integer division and evaluates to `1`.
+====
+
+When the operands are of different type, one of the operands is implicitly converted to _wider_ type, with wideness given, in decreasing order, by the list below:
+
+- `Double` (widest)
+- `Float`
+- `BigDecimal`
+- `BigInteger`
+- `Long`
+- `Integer`
+- `Short`
+- `Byte`
+
+Many more numeric operations are defined below, in <<exp-functions>>.
+
+[[Datetime-arithmetic]]
+==== Datetime arithmetic
+
+Arithmetic involving dates, datetimes, and durations is quite subtle.
+Among the issues to consider are:
+
+- There's two kinds of duration: year-day, and week-nanosecond durations.
+The first is a difference between dates; the second is a difference between datetimes.
+- We can subtract dates and datetimes, but we can't add them.
+- A Java-style duration has much too much precision, and so in order to use it for anything useful, we must somehow truncate it to something coarser-grained.
+
+Here we list the basic operations.
+
+[cols="10,38,~,18"]
+|===
+| Operator | Expression type | Example | Resulting type
+
+| `-` | Difference between two dates | `your.birthday - local date` | year-day duration
+| `-` | Difference between two datetimes | `local datetime - record.lastUpdated` | week-nanosecond duration
+| `+` | Sum of a date and a year-day duration | `local date + 1 week` | date
+| `+` | Sum of a datetime and a week-nanosecond duration | `record.lastUpdated + 1 second` | datetime
+| `*` | Product of an integer and a duration | `billing.cycles * 30 day` | duration
+| `by unit` | Convert a duration to an integer | `(1 year) by day` | integer
+|===
+
+The `by unit` operator converts a duration to an integer, for example: `(local date - your.birthday) by day` evaluates to the number of days you still have to wait.
+
+The function `extract(unit from ...)` extracts a field from a date, time, or datetime type, for example, `extract(year from your.birthday)` produces the year in which you were born, and throws away important information about your birthday.
+
+[IMPORTANT]
+====
+Please carefully note the difference between these two operations: `by` and `extract()` both evaluate to an integer, but they have very different uses.
+====
+
+Additional datetime operations, including the useful `format()` function, are defined below, in <<exp-functions>>.
+
+[[case-expressions]]
+=== Case expressions
+
+Just like in standard SQL, there are two forms of case expression:
+
+* the _simple_ case expression, and
+* the so-called _searched_ case expression.
+
+[TIP]
+====
+Case expressions are verbose.
+It's often simpler to use the `coalesce()`, `nullif()`, or `ifnull()` functions,
+as described below in <<functions-null>>.
+====
+
+[[simple-case-expressions]]
+[discrete]
+===== Simple case expressions
+
+The syntax of the simple form is defined by:
+
+[[simple-case-expressions-bnf]]
+[source, antlrv4]
+----
+include::{extrasdir}/simple_case_bnf.txt[]
+----
+
+For example:
+
+[[simple-case-expressions-example]]
+[source, hql]
+----
+select
+    case author.nomDePlume
+        when '' then person.name
+        else author.nomDePlume end
+from Author as author
+    join author.person as person
+----
+
+[[searched-case-expressions]]
+[discrete]
+===== Searched case expressions
+
+The searched form has the following syntax:
+
+[[searched-case-expressions-bnf]]
+[source, antlrv4]
+----
+include::{extrasdir}/searched_case_bnf.txt[]
+----
+
+For example:
+
+[[searched-case-expressions-example]]
+[source, hql]
+----
+select
+    case
+        when author.nomDePlume is null then person.name
+        else author.nomDePlume end
+from Author as author
+    join author.person as person
+----
+
+A `case` expression may contain complex expression, including operator expressions.
+
+[[exp-functions]]
+=== Functions
+
+Both HQL and JPQL define some standard functions and make them portable between databases.
+
+[%unbreakable]
+[TIP]
+====
+A program that wishes to remain portable between Jakarta Persistence providers should in principle limit itself to the use of the functions which are blessed by the specification.
+Unfortunately, there's not so many of them.
+====
+
+In some cases, the syntax of these functions looks a bit funny at first, for example, `cast(number as String)`, or `extract(year from date)`, or even `trim(leading '.' from string)`.
+This syntax is inspired by standard ANSI SQL, and we promise you'll get used to it.
+
+[%unbreakable]
+[IMPORTANT]
+====
+HQL abstracts away from the actual database-native SQL functions, letting you write queries which are portable between databases.
+
+For some functions, and always depending on the database, a HQL function invocation translates to a quite complicated SQL expression!
+====
+
+In addition, there are several ways to use a database function that's not known to Hibernate.
+
+[[functions-typecasts]]
+==== Types and typecasts
+
+The following special functions make it possible to discover or narrow expression types:
+
+[cols="15,~,~,^15"]
+|===
+| Special function | Purpose | Signature | JPA standard
+
+| `type()` | The (concrete) entity name | `type(e)` | ✔
+| `treat()` | Narrow an entity type | `treat(e as Entity)` | ✔
+| `cast()` | Narrow a basic type | `cast(x as Type)` | ✖
+| `str()` | Cast to a string | `str(x)` | ✖
+|===
+
+Let's see what these functions do.
+
+[[function-type]]
+[discrete]
+===== Evaluating an entity type
+
+The function `type()`, applied to an identification variable, evaluates to the entity name of the referenced entity.
+This is mainly useful when dealing with entity inheritance hierarchies.
+
+[[entity-type-exp-example]]
+[source, hql]
+----
+select payment
+from Payment as payment
+where type(payment) = CreditCardPayment
+----
+
+[[function-treat]]
+[discrete]
+===== Narrowing an entity type
+
+The function `treat()` may be used to narrow the type of an identification variable.
+This is useful when dealing with entity inheritance hierarchies.
+
+[[treat-example]]
+[source, hql]
+----
+select payment
+from Payment as payment
+where length(treat(payment as CreditCardPayment).cardNumber)
+        between 16 and 20
+----
+
+The type of the expression `treat(p as CreditCardPayment)` is the narrowed type, `CreditCardPayment`, instead of the declared type `Payment` of `p`.
+This allows the attribute `cardNumber` declared by the subtype `CreditCardPayment` to be referenced.
+
+- The first argument is usually an identification variable.
+- The second argument is the target type given as an unqualified entity name.
+
+The `treat()` function may even occur in a <<join-treat,join>>.
+
+[[function-cast]]
+[discrete]
+===== General typecasts
+
+The function `cast()` has a similar syntax, but is used to narrow basic types.
+
+- Its first argument is usually an attribute of an entity, or a more complex expression involving entity attributes.
+- Its second argument is the target type given as an unqualified Java class name:
+`String`, `Long`, `Integer`, `Double`, `Float`, `Character`, `Byte`, `BigInteger`, `BigDecimal`, `LocalDate`, `LocalTime`, `LocalDateTime`, etc.
+
+[source, hql]
+----
+select cast(id as String) from Order
+----
+
+[[function-str]]
+[discrete]
+===== Casting to string
+
+The function `str(x)` is a synonym for `cast(x as String)`.
+
+[source, hql]
+----
+select str(id) from Order
+----
+
+[[functions-null]]
+==== Functions for working with null values
+
+The following functions make it easy to deal with null values:
+
+[cols="15,~,~,^15"]
+|===
+| Function | Purpose | Signature | JPA standard
+
+| `coalesce()` | First non-null argument | `coalesce(x, y, z)` | ✔
+| `ifnull()` | Second argument if first is null | `ifnull(x,y)` | ✖
+| `nullif()` | `null` if arguments are equal | `nullif(x,y)` | ✔
+|===
+
+[discrete]
+===== Handling null values
+
+The `coalesce()` function is a sort of abbreviated `case` expression that returns the first non-null operand.
+
+[[coalesce-example]]
+[source, hql]
+----
+select coalesce(author.nomDePlume, person.name)
+from Author as author
+    join author.person as person
+----
+
+[discrete]
+===== Handling null values
+
+HQL allows `ifnull()` as a synonym for `coalesce()` in the case of exactly two arguments.
+
+[[ifnull-example]]
+[source, hql]
+----
+select ifnull(author.nomDePlume, person.name)
+from Author as author
+    join author.person as person
+----
+
+[discrete]
+===== Producing null values
+
+On the other hand, `nullif()` evaluates to null if its operands are equal, or to its first argument otherwise.
+
+[[nullif-example]]
+[source, hql]
+----
+select ifnull(nullif(author.nomDePlume, person.name), 'Real name')
+from Author as author
+    join author.person as person
+----
+
+[[functions-datetime]]
+==== Functions for working with dates and times
+
+There are some very important functions for working with dates and times.
+
+[cols="15,~,~,^15"]
+|===
+| Special function | Purpose | Signature | JPA standard
+
+| `extract()` | Extract a datetime field | `extract(field from x)` | ✔
+| `format()` | Format a datetime as a string | `format(datetime as pattern)` | ✖
+| `trunc()` or `truncate()` | Datetime truncation | `truncate(datetime, field)` | ✖
+|===
+
+[[function-extract]]
+[discrete]
+===== Extracting date and time fields
+
+The special function `extract()` obtains a single field of a date, time, or datetime.
+
+- Its first argument is an expression that evaluates to a date, time, or datetime.
+- Its second argument is a date/time _field type_.
+
+Field types include: `day`, `month`, `year`, `second`, `minute`, `hour`, `day of week`, `day of month`, `week of year`, `date`, `time`, `epoch` and more.
+For a full list of field types, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TemporalUnit.html[`TemporalUnit`].
+
+[source, hql]
+----
+from Order where extract(date from created) = local date
+----
+[source, hql]
+----
+select extract(year from created), extract(month from created) from Order
+----
+
+The following functions are abbreviations for `extract()`:
+
+[cols="15,~,^15"]
+|===
+| Function | Long form using `extract()` | JPA standard
+
+| `year(x)` | `extract(year from x)` | ✖
+| `month(x)` | `extract(month from x)` | ✖
+| `day(x)` | `extract(day from x)` | ✖
+| `hour(x)` | `extract(year from x)` | ✖
+| `minute(x)` | `extract(year from x)` | ✖
+| `second(x)` | `extract(year from x)` | ✖
+|===
+
+TIP: These abbreviations aren't part of the JPQL standard, but on the other hand they're a lot less verbose.
+
+[source, hql]
+----
+select year(created), month(created) from Order
+----
+
+[[function-format]]
+[discrete]
+===== Formatting dates and times
+
+The `format()` function formats a date, time, or datetime according to a pattern.
+
+- Its first argument is an expression that evaluates to a date, time, or datetime.
+- Its second argument is a formatting pattern, given as a string.
+
+The pattern must be written in a subset of the pattern language defined by Java's `java.time.format.DateTimeFormatter`.
+
+For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect.appendDatetimeFormat`].
+
+[[function-trunc-datetime]]
+[discrete]
+===== Truncating a date or time type
+
+The `truncate()` function truncates the precision of a date, time, or datetime to the temporal unit specified by field type.
+
+- Its first argument is an expression that evaluates to a date, time, or datetime.
+- Its second argument is a date/time field type, specifying the precision of the truncated value.
+
+Supported temporal units are: `year`, `month`, `day`, `hour`, `minute` or `second`.
+
+Truncating a date, time or datetime value means obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
+For hours, minutes and second this means setting them to `00`. For months and days, this means setting them to `01`.
+
+[[string-functions]]
+==== Functions for working with strings
+
+Naturally, there are a good number of functions for working with strings.
+
+[cols="15,30,~,^15"]
+|===
+| Function | Purpose | Syntax | JPA standard / ANSI SQL Standard
+
+| `upper()` | The string, with lowercase characters converted to uppercase | `upper(str)` | ✔ / ✔
+| `lower()` | The string, with uppercase characters converted to lowercase | `lower(str)` | ✔ / ✔
+| `length()` | The length of the string | `length(str)` | ✔ / ✖
+| `concat()` | Concatenate strings | `concat(x, y, z)` | ✔ / ✖
+| `locate()` | Location of string within a string | `locate(patt, str)`, +
+`locate(patt, str, start)` | ✔ / ✖
+| `position()` | Similar to `locate()` | `position(patt in str)` | ✖ / ✔
+| `substring()` | Substring of a string (JPQL-style) | `substring(str, start)`, +
+`substring(str, start, len)` | ✔ / ✖
+| `substring()` | Substring of a string (ANSI SQL-style)
+| `substring(str from start)`, +
+`substring(str from start for len)` | ✖ / ✔
+| `trim()` | Trim characters from string | See below | ✔ / ✔
+| `overlay()` | For replacing a substring
+| `overlay(str placing rep from start)`, +
+`overlay(str placing rep from start for len)` | ✖ / ✔
+| `pad()` | Pads a string with whitespace, or with a specified character
+| `pad(str with len)`, +
+`pad(str with len leading)`, +
+`pad(str with len trailing)`, or +
+`pad(str with len leading char)` | ✖ / ✖
+| `left()` | The leftmost characters of a string | `left(str, len)` | ✖ / ✖
+| `right()` | The rightmost characters of a string | `right(str, len)`  | ✖ / ✖
+| `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✖ / ✖
+| `repeat()` | Concatenate a string with itself multiple times | `replace(str, times)` | ✖ / ✖
+| `collate()` | Select a collation | `collate(p.name as collation)` | ✖ / ✖
+|===
+
+Let's take a closer look at just some of these.
+
+[IMPORTANT]
+====
+Contrary to Java, positions of characters within strings are indexed from 1 instead of 0!
+====
+
+[discrete]
+===== Concatenating strings
+
+The JPQL-standard and ANSI SQL-standard `concat()` function accepts a variable number of arguments, and produces a string by concatenating them.
+
+[%unbreakable]
+[source, hql]
+----
+select concat(book.title, ' by ', listagg(author.name, ' & '))
+from Book as book
+    join book.authors as author
+group by book
+----
+
+[discrete]
+===== Finding substrings
+
+The JPQL function `locate()` determines the position of a substring within another string.
+
+- The first argument is the pattern to search for within the second string.
+- The second argument is the string to search in.
+- The optional third argument is used to specify a position at which to start the search.
+
+[source, hql]
+----
+select locate('Hibernate', title) from Book
+----
+
+The `position()` function has a similar purpose, but follows the ANSI SQL syntax.
+
+[source, hql]
+----
+select position('Hibernate' in title) from Book
+----
+
+[discrete]
+===== Slicing strings
+
+Unsurprisingly, `substring()` returns a substring of the given string.
+
+- The second argument specifies the position of the first character of the substring.
+- The optional third argument specifies the maximum length of the substring.
+
+[source, hql]
+----
+select substring(title, 0, position(' for Dummies')) from Book
+----
+
+[discrete]
+===== Trimming strings
+The `trim()` function follows the syntax and semantics of ANSI SQL.
+It may be used to trim `leading` characters, `trailing` characters, or both.
+
+[source, hql]
+----
+select trim(title) from Book
+----
+[source, hql]
+----
+select trim(trailing ' ' from text) from Book
+----
+
+Its BNF is funky:
+
+[source, antlrv4]
+----
+trimFunction
+    : "TRIM" "(" trimSpecification? trimCharacter? "FROM"? expression ")" ;
+trimSpecification
+    : "LEADING" | "TRAILING" | "BOTH" ;
+----
+
+[discrete]
+===== Collations
+
+Selects a collation to be used for its string-valued argument.
+Collations are useful for <<relational-comparisons,binary comparisons>> with `<` or `>`, and in the <<order-by,order by clause>>.
+
+For example, `collate(p.name as ucs_basic)` specifies the SQL standard collation `ucs_basic`.
+
+IMPORTANT: Collations aren't very portable between databases.
+
+[[functions-numeric]]
+==== Numeric functions
+
+Of course, we also have a number of functions for working with numeric values.
+
+[cols="15,~,~,^15"]
+|===
+| Function | Purpose | Signature | JPA standard
+
+| `abs()` | The magnitude of a number | `abs(x)` | ✔
+| `sign()` | The sign of a number | `sign(x)` | ✔
+| `mod()` | Remainder of integer division | `mod(n,d)` | ✔
+| `sqrt()` | Square root of a number | `sqrt(x)` | ✔
+| `exp()` | Exponential function | `exp(x)` | ✔
+| `power()` | Exponentiation | `power(x,y)` | ✔
+| `ln()` | Natural logarithm | `ln(x)` | ✔
+| `round()` | Numeric rounding | `round(number)`, +
+`round(number, places)` | ✔
+| `trunc()` or `truncate()` | Numeric truncation | `truncate(number)`, +
+`truncate(number, places)` | ✖
+| `floor()` | Floor function | `floor(x)` | ✔
+| `ceiling()` | Ceiling function | `ceiling(x)` | ✔
+
+| `log10()` | Base-10 logarithm | `log10(x)` | ✖
+| `log()` | Arbitrary-base logarithm | `log(b,x)` | ✖
+| `pi` | &#960; | `pi` | ✖
+| `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`
+| Basic trigonometric functions | `sin(theta)`, `cos(theta)` | ✖
+| `atan2()` | Two-argument arctangent (range `(-&#960;,&#960;]`) | `atan2(y, x)` | ✖
+| `sinh()`, `cosh()`, `tanh()` | Hyperbolic functions | `sinh(x)`, `cosh(x)`, `tanh(x)` | ✖
+| `degrees()` | Convert radians to degrees | `degrees(x)` | ✖
+| `radians()` | Convert degrees to radians | `radians(x)` | ✖
+| `least()` | Return the smallest of the given arguments | `least(x, y, z)` |✖
+| `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | ✖
+|===
+
+We haven't included <<aggregate-functions,aggregate functions>>, <<aggregate-functions-orderedset,ordered set aggregate functions>>, or <<aggregate-functions-window,window functions>> in this list, because their purpose is more specialized, and because they come with extra special syntax.
+
+[[functions-collections]]
+==== Functions for dealing with collections
+
+The functions described in this section are especially useful when dealing with `@ElementCollection` mappings, or with collection mappings involving an `@OrderColumn` or `@MapKeyColumn`.
+
+The following functions accept either:
+
+1. an identification variable that refers to a <<collection-valued-associations,joined collection or many-valued association>>, or
+2. a <<path-expressions,compound path>> that refers to a collection or many-valued association of an entity.
+
+In case 2, application of the function produces an <<implicit-collection-join,implicit join>>.
+
+[[collection-functions]]
+[cols="15,20,~,^15"]
+|===
+| Function | Applies to | Purpose | JPA standard
+
+| `size()` | Any collection | The size of a collection | ✔
+| `element()` | Any collection | The element of a set or list | ✖
+| `index()` | Lists | The index of a list element | ✔
+| `key()` | Maps | The key of a map entry | ✔
+| `value()` | Maps | The value of a map entry | ✔
+| `entry()` 💀 | Maps | The whole entry in a map | ✔
+|===
+
+The next group of functions always accept a compound path referring to a collection or many-valued association of an entity.
+They're interpreted as referring to the collection as a whole.
+
+Application of one of these function produces implicit subquery.
+
+[[collective-collection-functions]]
+[cols="15,20,~,^15"]
+|===
+| Function | Applies to | Purpose | JPA standard
+
+| `elements()` | Any collection | The elements of a set or list, collectively | ✖
+| `indices()` | Lists | The indexes of a list, collectively | ✖
+| `keys()` | Maps | The keys of a map, collectively | ✖
+| `values()` | Maps | The values of a map, collectively | ✖
+|===
+
+This query has an implicit join:
+
+[[elements-join-example]]
+[source, hql]
+----
+select title, element(tags) from Book
+----
+
+This query has an implicit subquery:
+
+[[elements-subquery-example]]
+[source, hql]
+----
+select title from Book where 'hibernate' in elements(tags)
+----
+
+[discrete]
+===== Collection sizes
+
+The `size()` function returns the number of elements of a collection or to-many association.
+
+[[size-example]]
+[source, hql]
+----
+select name, size(books) from Author
+----
+
+[[set-functions]]
+[discrete]
+===== Set or list elements
+
+The `element()` function returns a reference to an element of a joined set or list.
+For an identification variable (case 1 above), this function is optional.
+For a compound path (case 2), it's required.
+
+[[list-functions]]
+[discrete]
+===== List indexes
+
+The `index()` function returns a reference to the index of a joined list.
+
+In this example, `element()` is optional, but `index()` is required:
+
+[[index-example]]
+[source, hql]
+----
+select id(book), index(ed), element(ed)
+from Book book as book
+    join book.editions as ed
+----
+
+[[map-functions]]
+[discrete]
+===== Map keys and values
+
+The `key()` function returns a reference to a key of a joined map.
+The `value()` function returns a reference to its value.
+
+[[key-value-example]]
+[source, hql]
+----
+select key(entry), value(entry)
+from Thing as thing
+    join thing.entries as entry
+----
+
+[[elements-indices]]
+===== Quantification over collections
+
+The functions `elements()`, `indices()`, `keys()`, and `values()` are used to quantify over collections.
+We may use them with:
+
+- an <<in-predicate,`in`>> or <<exists-predicate,`exists`>> predicate,
+- a <<relational-comparisons-subqueries,relational comparison>>, or
+- an <<aggregate-functions-collections,aggregate function>>.
+
+[cols="35,~"]
+|===
+| Shortcut | Equivalent subquery
+
+| `exists elements(book.editions)` | `exists (select ed from book.editions as ed)`
+| `2 in indices(book.editions)` | `2 in (select index(ed) from book.editions as ed)`
+| `10 > all(elements(book.printings))` | `10 > all(select pr from book.printings as pr)`
+| `max(elements(book.printings))` | `(select max(pr) from book.printings as pr)`
+|===
+
+For example:
+
+[source, hql]
+----
+select title from Book where 'hibernate' in elements(tags)
+----
+
+Don't confuse the `elements()` function with `element()`, the `indices()` function with `index()`, the `keys()` function with `key()`, or the `values()` function with `value()`.
+The functions named in singular deal with elements of "flattened" collections.
+If not already joined, they add an implicit join to the query.
+The functions with plural naming do _not_ flatten a collection by joining it.
+
+[%unbreakable]
+[IMPORTANT]
+====
+The following queries are different:
+[source, hql]
+----
+select title, max(index(revisions)) from Book  /* implicit join */
+----
+[source, hql]
+----
+select title, max(indices(revisions)) from Book  /* implicit subquery */
+----
+The first query produces a single row, with `max()` taken over all books.
+The second query produces a row per book, with `max()` taken over the collection elements belonging to the given book.
+====
+
+[[functions-model]]
+==== Functions for working with ids and versions
+
+Finally, the following functions evaluate the id, version, or natural id of an entity, or the foreign key of a to-one association:
+
+[[model-functions]]
+[cols="12,~,^15"]
+|===
+| Function | Purpose | JPA standard
+
+| `id()` | The value of the entity `@Id` attribute. | ✖
+| `version()` | The value of the entity `@Version` attribute. | ✖
+| `naturalid()` | The value of the entity `@NaturalId` attribute. | ✖
+| `fk()` | The value of the foreign key column mapped by a `@ManyToOne` (or logical `@OneToOne`) association.
+Useful with associations annotated `@NotFound`. | ✖
+|===
+
+[[user-defined-functions]]
+==== Native and user-defined functions
+
+The functions we've described above are the functions abstracted by HQL and made portable across databases.
+But, of course, HQL can't abstract every function in your database.
+
+There are several ways to call native or user-defined SQL functions.
+
+- A native or user-defined function may be called using JPQL's `function` syntax, for example, ``function('sinh', phi)``.
+(This is the easiest way, but not the best way.)
+- A user-written `FunctionContributor` may register user-defined functions.
+- A custom `Dialect` may register additional native functions by overriding `initializeFunctionRegistry()`.
+
+[TIP]
+====
+Registering a function isn't hard, but is beyond the scope of this guide.
+
+(It's even possible to use the APIs Hibernate provides to make your own _portable_ functions!)
+====
+
+Fortunately, every built-in `Dialect` already registers many native functions for the database it supports.
+
+[TIP]
+====
+Try setting the log category `org.hibernate.HQL_FUNCTIONS` to debug.
+Then at startup Hibernate will log a list of type signatures of all registered functions.
+====
+
+
+[[function-sql]]
+==== Embedding native SQL in HQL
+
+The special function `sql()` allows the use of native SQL fragments inside an HQL query.
+
+The signature of this function is `sql(pattern[, argN]*)`, where `pattern` must be a string literal but the remaining arguments may be of any type.
+The pattern literal is unquoted and embedded in the generated SQL.
+Occurrences of `?` in the pattern are replaced with the remaining arguments of the function.
+
+We may use this, for example, to perform a native PostgreSQL typecast:
+[source, hql]
+----
+from Computer c where c.ipAddress = sql('?::inet', '127.0.0.1')
+----
+This results in SQL logically equivalent to:
+[source, sql]
+----
+select * from Computer c where c.ipAddress = '127.0.0.1'::inet
+----
+Or we can use a native SQL operator:
+[source, hql]
+----
+from Human h order by sql('(? <-> ?)', h.workLocation, h.homeLocation)
+----
+And this time the SQL is logically equivalent to:
+[source, sql]
+----
+select * from Human h where (h.workLocation <-> h.homeLocation)
+----
+
+[[conditional-expressions]]
+=== Predicates
+
+A predicate is an operator which, when applied to some argument, evaluates to `true` or `false`.
+In the world of SQL-style ternary logic, we must expand this definition to encompass the possibility that the predicate evaluates to `null`.
+Typically, a predicate evaluates to `null` when one of its arguments is `null`.
+
+Predicates occur in the `where` clause, the `having` clause and in searched case expressions.
+
+[[relational-comparisons]]
+==== Comparison operators
+
+The binary comparison operators are borrowed from SQL: `=`, `>`, `>=`, `<`, `\<=`, `<>`.
+
+TIP: If you prefer, HQL treats `!=` as a synonym for `<>`.
+
+The operands should be of the same type.
+
+[[relational-comparisons-example]]
+[source, hql]
+----
+from Book where price < 1.0
+----
+[source, hql]
+----
+from Author as author where author.nomDePlume <> author.person.name
+----
+[source, hql]
+----
+select id, total
+from (
+    select ord.id as id, sum(item.book.price * item.quantity) as total
+    from Order as ord
+        join Item as item
+    group by ord
+)
+where total > 100.0
+----
+
+[[between-predicate]]
+==== The `between` predicate
+
+The ternary `between` operator, and its negation, `not between`, determine if a value falls within a range.
+
+Of course, all three operands must be of compatible type.
+
+[[between-predicate-example]]
+[source, hql]
+----
+from Book where price between 1.0 and 100.0
+----
+
+[[null-predicate]]
+==== Operators for dealing with null
+
+The following operators make it easier to deal with null values.
+
+[cols="20,20,15,~"]
+|===
+| Operator | Negation | Type | Semantics
+
+| `is null` | `is not null` | Unary postfix | `true` if the value to the left is null
+| `is distinct from` | `is not distinct from` | Binary | `true` if the value on the left is equal to the value on the right, or if both are null
+|===
+
+[[null-predicate-example]]
+[source, hql]
+----
+from Author where nomDePlume is not null
+----
+
+[[collection-operators]]
+==== Collection predicates
+
+The following operators apply to collection-valued attributes and to-many associations.
+
+[cols="15,15,20,~"]
+|===
+| Operator | Negation | Type | Semantics
+
+| `is empty` | `is not empty` | Unary postfix | `true` if the collection or association on the left has no elements
+| `member of` | `not member of` | Binary | `true` if the value on the left is a member of the collection or association on the right
+|===
+
+[[empty-collection-predicate-example]]
+[source, hql]
+----
+from Author where books is empty
+----
+
+[[member-of-collection-predicate-example]]
+[source, hql]
+----
+select author, book
+from Author as author, Book as book
+where author member of book.authors
+----
+
+[[like-predicate]]
+==== String pattern matching
+
+The `like` operator performs pattern matching on strings.
+Its friend `ilike` performs case-insensitive matching.
+
+Their syntax is defined by:
+
+[[like-predicate-bnf]]
+[source, antlrv4]
+----
+include::{extrasdir}/predicate_like_bnf.txt[]
+----
+
+The expression on the right is a pattern, where:
+
+* `_` matches any single character,
+* `%` matches any number of characters, and
+* if an escape character is specified, it may be used to escape either of these wildcards.
+
+[[like-predicate-example]]
+[source, hql]
+----
+from Book where title not like '% for Dummies'
+----
+
+The optional `escape` character allows a pattern to include a literal `_` or `%` character.
+
+As you can guess, `not like` and `not ilike` are the enemies of `like` and `ilike`, and evaluate to the exact opposite boolean values.
+
+[[in-predicate]]
+==== The `in` predicate
+
+The `in` predicates evaluates to true if the value to its left is in ... well, whatever it finds to its right.
+
+Its syntax is unexpectedly complicated:
+
+[[in-predicate-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/predicate_in_bnf.txt[]
+----
+
+This less-than-lovely fragment of the HQL ANTLR grammar tells us that the thing to the right might be:
+
+- a list of values enclosed in parentheses,
+- a subquery,
+- one of the collection-handling functions defined <<elements-indices,above>>, or
+- a query parameter,
+
+The type of the expression on the left, and the types of all the values on the right must be compatible.
+
+[%unbreakable]
+[NOTE]
+====
+JPQL limits the legal types to string, numeric, date/time, and enum types, and in JPQL the left expression must be either:
+
+- a _state field_, which means a basic attribute, excluding associations and embedded attributes, or
+- an <<functions-typecasts,_entity type expression_>>.
+
+HQL is far more permissive. HQL itself does not restrict the type in any way, though the database itself might.
+Even embedded attributes are allowed, although that feature depends on the level of support for tuple or "row value" constructors in the underlying database.
+====
+
+[[in-predicate-example]]
+[source, hql]
+----
+from Payment as payment
+where type(payment) in (CreditCardPayment, WireTransferPayment)
+----
+[source, hql]
+----
+from Author as author
+where author.person.name in (select name from OldAuthorData)
+----
+[source, hql]
+----
+from Book as book
+where :edition in elements(book.editions)
+----
+
+The next example doesn't work on every database:
+
+[%unbreakable]
+[source, hql]
+----
+from Author as author
+where (author.person.name, author.person.birthdate)
+    in (select name, birthdate from OldAuthorData)
+----
+
+Here we used a "row value" constructor, a seemingly pretty basic feature which is surprisingly-poorly supported.
+
+[%unbreakable]
+[TIP]
+====
+Here's a very useful idiom:
+[source,java]
+----
+List<Book> books =
+        session.createSelectionQuery("from Book where isbn in :isbns", Book.class)
+            .setParameterList("isbns", listOfIsbns)
+            .getResultList();
+----
+====
+
+[[relational-comparisons-subqueries]]
+==== Comparison operators and subqueries
+
+The binary comparisons we met <<relational-comparisons,above>> may involve a quantifier, either:
+
+- a quantified subquery, or
+- a quantifier applied to one of the functions defined <<elements-indices,above>>.
+
+The quantifiers are unary prefix operators: `all`, `every`, `any`, and `some`.
+
+[cols="10,10,~"]
+|===
+| Subquery operator | Synonym | Semantics
+
+| `every` | `all` | Evaluates to true of the comparison is true for _every_ value in the result set of the subquery
+| `any` | `some` | Evaluates to true of the comparison is true for _at least one_ value in the result set of the subquery
+|===
+
+[[all-subquery-comparison-qualifier-example]]
+[source, hql]
+----
+from Publisher pub where 100.0 < all(select price from pub.books)
+----
+
+[[collection-expressions-all-some-example]]
+[source, hql]
+----
+from Publisher pub where :title = some(select title from pub.books)
+----
+
+[[exists-predicate]]
+==== The `exists` predicate
+
+The unary prefix `exists` operator evaluates to true if the thing to its right is nonempty.
+
+The thing to its right might be:
+
+- a subquery, or
+- one of the functions defined <<elements-indices,above>>.
+
+As you can surely guess, `not exists` evaluates to true if the thing to the right _is_ empty.
+
+[[collection-expressions-exists-example]]
+[source, hql]
+----
+from Author where exists element(books)
+----
+[source, hql]
+----
+from Author as author
+where exists (
+    from Order join items
+    where book in elements(author.books)
+)
+----
+
+[[logical-operators]]
+==== Logical operators
+
+The logical operators are binary infix `and` and `or`, and unary prefix `not`.
+
+Just like SQL, logical expressions are based on ternary logic.
+A logical operator evaluates to null if it has a null operand.

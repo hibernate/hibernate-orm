@@ -30,6 +30,41 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 	private final String[] createStrings;
 	private final String[] dropStrings;
 
+	private static String extractName(Identifier identifier) {
+		return identifier == null ? null : identifier.getText();
+	}
+
+	public SimpleAuxiliaryDatabaseObject(
+			Namespace namespace,
+			String createString,
+			String dropString,
+			Set<String> dialectScopes,
+			boolean beforeTables) {
+		this(
+				namespace,
+				new String[] { createString },
+				new String[] { dropString },
+				dialectScopes,
+				beforeTables
+		);
+	}
+
+	public SimpleAuxiliaryDatabaseObject(
+			Namespace namespace,
+			String[] createStrings,
+			String[] dropStrings,
+			Set<String> dialectScopes,
+			boolean beforeTables) {
+		this(
+				dialectScopes,
+				extractName( namespace.getPhysicalName().getCatalog() ),
+				extractName( namespace.getPhysicalName().getSchema() ),
+				createStrings,
+				dropStrings,
+				beforeTables
+		);
+	}
+
 	public SimpleAuxiliaryDatabaseObject(
 			Namespace namespace,
 			String createString,
@@ -57,8 +92,18 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 		);
 	}
 
-	private static String extractName(Identifier identifier) {
-		return identifier == null ? null : identifier.getText();
+	public SimpleAuxiliaryDatabaseObject(
+			Set<String> dialectScopes,
+			String catalogName,
+			String schemaName,
+			String[] createStrings,
+			String[] dropStrings,
+			boolean beforeTables) {
+		super( beforeTables, dialectScopes );
+		this.catalogName = catalogName;
+		this.schemaName = schemaName;
+		this.createStrings = createStrings;
+		this.dropStrings = dropStrings;
 	}
 
 	public SimpleAuxiliaryDatabaseObject(

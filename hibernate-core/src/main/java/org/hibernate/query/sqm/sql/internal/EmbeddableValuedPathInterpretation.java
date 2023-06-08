@@ -16,9 +16,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -41,15 +42,13 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 	 */
 	public static <T> Expression from(
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
-			SqmToSqlAstConverter converter,
-			SemanticQueryWalker<?> sqmWalker,
-			boolean jpaQueryComplianceEnabled,
-			Clause currentClause) {
-		TableGroup tableGroup = converter.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
+			SqmToSqlAstConverter sqlAstCreationState,
+			boolean jpaQueryComplianceEnabled) {
+		TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
 
 		EntityMappingType treatTarget = null;
 		if ( jpaQueryComplianceEnabled ) {
-			final MappingMetamodel mappingMetamodel = converter.getCreationContext()
+			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
 					.getSessionFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel();
@@ -69,10 +68,15 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		final ModelPartContainer modelPart = tableGroup.getModelPart();
 		final EmbeddableValuedModelPart mapping;
 		// In the select, group by, order by and having clause we have to make sure we render the column of the target table,
-		// never the FK column, if the lhs is a SqmFrom i.e. something explicitly queried/joined.
+		// never the FK column, if the lhs is a SqmFrom i.e. something explicitly queried/joined
+		// and if this basic path is part of the group by clause
+		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
+		final SqmStatement<?> sqmStatement = sqlAstCreationState.getCurrentSqmStatement();
 		if ( ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
 				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
-				&& modelPart.getPartMappingType() instanceof ManagedMappingType ) {
+				&& modelPart.getPartMappingType() instanceof ManagedMappingType
+				&& sqmStatement instanceof SqmSelectStatement<?>
+				&& ( (SqmSelectStatement<?>) sqmStatement ).getQuerySpec().groupByClauseContains( sqmPath.getNavigablePath() ) ) {
 			mapping = (EmbeddableValuedModelPart) ( (ManagedMappingType) modelPart.getPartMappingType() ).findSubPart(
 					sqmPath.getReferencedPathSource().getPathName(),
 					treatTarget
@@ -88,9 +92,9 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		return new EmbeddableValuedPathInterpretation<>(
 				mapping.toSqlExpression(
 						tableGroup,
-						converter.getCurrentClauseStack().getCurrent(),
-						converter,
-						converter
+						currentClause,
+						sqlAstCreationState,
+						sqlAstCreationState
 				),
 				sqmPath.getNavigablePath(),
 				mapping,

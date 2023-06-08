@@ -9,7 +9,6 @@ package org.hibernate.query.results.dynamic;
 import java.util.function.BiFunction;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
@@ -35,18 +34,14 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 	private final String tableAlias;
 	private final LockMode explicitLockMode;
 
-	private final SessionFactoryImplementor sessionFactory;
-
 	public DynamicResultBuilderEntityCalculated(
 			EntityMappingType entityMapping,
 			String tableAlias,
-			LockMode explicitLockMode,
-			SessionFactoryImplementor sessionFactory) {
+			LockMode explicitLockMode) {
 		this.entityMapping = entityMapping;
 		this.navigablePath = new NavigablePath( entityMapping.getEntityName() );
 		this.tableAlias = tableAlias;
 		this.explicitLockMode = explicitLockMode;
-		this.sessionFactory = sessionFactory;
 	}
 
 	@Override

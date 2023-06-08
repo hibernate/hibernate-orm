@@ -21,10 +21,42 @@ public class NamedAuxiliaryDatabaseObject
 	public NamedAuxiliaryDatabaseObject(
 			String name,
 			Namespace namespace,
+			String[] createStrings,
+			String[] dropStrings,
+			Set<String> dialectScopes) {
+		super( namespace, createStrings, dropStrings, dialectScopes );
+		this.name = name;
+	}
+
+	public NamedAuxiliaryDatabaseObject(
+			String name,
+			Namespace namespace,
+			String[] createStrings,
+			String[] dropStrings,
+			Set<String> dialectScopes,
+			boolean beforeTables) {
+		super( namespace, createStrings, dropStrings, dialectScopes, beforeTables );
+		this.name = name;
+	}
+
+	public NamedAuxiliaryDatabaseObject(
+			String name,
+			Namespace namespace,
 			String createString,
 			String dropString,
 			Set<String> dialectScopes) {
 		super( namespace, createString, dropString, dialectScopes );
+		this.name = name;
+	}
+
+	public NamedAuxiliaryDatabaseObject(
+			String name,
+			Namespace namespace,
+			String createString,
+			String dropString,
+			Set<String> dialectScopes,
+			boolean beforeTables) {
+		super( namespace, createString, dropString, dialectScopes, beforeTables );
 		this.name = name;
 	}
 

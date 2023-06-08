@@ -9,18 +9,17 @@ package org.hibernate.query.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import jakarta.persistence.Parameter;
 
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.LinkedIdentityHashMap;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
@@ -28,6 +27,8 @@ import org.hibernate.query.UnknownParameterException;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+
+import jakarta.persistence.Parameter;
 
 /**
  * Encapsulates metadata about parameters encountered within a query.
@@ -98,7 +99,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 			this.labels = Collections.emptySet();
 		}
 		else {
-			this.queryParameters = new IdentityHashMap<>();
+			this.queryParameters = new LinkedIdentityHashMap<>();
 			if ( positionalQueryParameters != null ) {
 				for ( QueryParameterImplementor<?> value : positionalQueryParameters.values() ) {
 					this.queryParameters.put( value, Collections.emptyList() );

@@ -256,7 +256,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			SqmToSqlAstConverter sqlAstCreationState) {
 		final boolean expandToAllColumns;
 		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
-		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
+		if ( sqlAstCreationState.getCurrentProcessingState().isTopLevel() &&
+				( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) ) {
 			final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) sqlAstCreationState.getCurrentSqmQueryPart();
 			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath ) ) {
 				// We must ensure that the order by expression be expanded but only if the group by

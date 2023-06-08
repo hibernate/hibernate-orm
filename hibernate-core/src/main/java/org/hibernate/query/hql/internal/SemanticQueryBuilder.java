@@ -2381,7 +2381,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmNullnessPredicate visitIsNullPredicate(HqlParser.IsNullPredicateContext ctx) {
 		final boolean negated = ctx.getChildCount() == 4;
 		return new SqmNullnessPredicate(
-				(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
+				(SqmExpression<?>) ctx.expression().accept( this ),
 				negated,
 				creationContext.getNodeBuilder()
 		);
@@ -2390,11 +2390,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmEmptinessPredicate visitIsEmptyPredicate(HqlParser.IsEmptyPredicateContext ctx) {
 		final boolean negated = ctx.getChildCount() == 4;
-		return new SqmEmptinessPredicate(
-				(SqmPluralValuedSimplePath<?>) ctx.getChild( 0 ).accept( this ),
-				negated,
-				creationContext.getNodeBuilder()
-		);
+		SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept(this);
+		if ( expression instanceof SqmPluralValuedSimplePath ) {
+			return new SqmEmptinessPredicate(
+					(SqmPluralValuedSimplePath<?>) expression,
+					negated,
+					creationContext.getNodeBuilder()
+			);
+		}
+		else {
+			throw new SemanticException( "Path argument to 'is empty' operator must be a plural attribute" );
+		}
 	}
 
 	@Override
@@ -2624,7 +2630,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 		else {
-			throw new SemanticException( "Path argument to MEMBER OF must be a plural attribute" );
+			throw new SemanticException( "Path argument to 'member of' operator must be a plural attribute" );
 		}
 	}
 

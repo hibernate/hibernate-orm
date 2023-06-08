@@ -26,22 +26,42 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> implements MappedSuperclassDomainType<J> {
+
+	public MappedSuperclassTypeImpl(
+			String name,
+			boolean hasIdClass,
+			boolean hasIdProperty,
+			boolean hasVersion,
+			JavaType<J> javaType,
+			IdentifiableDomainType<? super J> superType,
+			JpaMetamodelImplementor jpaMetamodel) {
+		super(
+				name,
+				javaType,
+				superType,
+				hasIdClass,
+				hasIdProperty,
+				hasVersion,
+				jpaMetamodel
+		);
+	}
+
 	public MappedSuperclassTypeImpl(
 			JavaType<J> javaType,
 			MappedSuperclass mappedSuperclass,
 			IdentifiableDomainType<? super J> superType,
 			JpaMetamodelImplementor jpaMetamodel) {
-		super(
+		this(
 				javaType.getJavaType().getTypeName(),
-				javaType,
-				superType,
-				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
+				mappedSuperclass.getDeclaredIdentifierMapper() != null
+						|| superType != null && superType.hasIdClass(),
 				mappedSuperclass.hasIdentifierProperty(),
 				mappedSuperclass.isVersioned(),
+				javaType,
+				superType,
 				jpaMetamodel
 		);
 	}
-
 
 	@Override
 	public String getPathName() {

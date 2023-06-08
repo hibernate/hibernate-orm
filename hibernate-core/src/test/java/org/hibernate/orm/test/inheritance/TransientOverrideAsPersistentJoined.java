@@ -128,7 +128,7 @@ public class TransientOverrideAsPersistentJoined {
 			catch (IllegalArgumentException e) {
 				assertThat(
 						ExceptionHelper.getRootCause( e ).getMessage(),
-						containsString( "due to the attribute being declared in multiple sub types" )
+						containsString( "due to the attribute being declared in multiple subtypes" )
 				);
 			}
 		} );

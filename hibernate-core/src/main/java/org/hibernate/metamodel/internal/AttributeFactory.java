@@ -677,7 +677,8 @@ public class AttributeFactory {
 		final AttributeMapping attributeMapping = embeddable.findAttributeMapping( attributeName );
 		if ( attributeMapping == null ) {
 			throw new PropertyNotFoundException(
-					"Unable to locate property named " + attributeName + " on " + embeddable.getJavaType().getJavaTypeClass().getName()
+					"Unable to locate property named '" + attributeName
+							+ "' of '" + embeddable.getJavaType().getJavaTypeClass().getName() + "'"
 			);
 		}
 

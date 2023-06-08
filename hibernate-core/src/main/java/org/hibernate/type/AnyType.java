@@ -345,7 +345,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			return 1;
 		}
 
-		throw new PropertyNotFoundException( "Unable to locate property named " + name + " on AnyType" );
+		throw new PropertyNotFoundException( "Unable to locate property named '" + name + "'" );
 	}
 
 	@Override

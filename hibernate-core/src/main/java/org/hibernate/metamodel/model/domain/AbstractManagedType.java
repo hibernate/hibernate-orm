@@ -185,7 +185,7 @@ public abstract class AbstractManagedType<J>
 							new SemanticException(
 									String.format(
 											Locale.ROOT,
-											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple sub types: ['%s', '%s']",
+											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes: ['%s', '%s']",
 											name,
 											getTypeName(),
 											attribute.getDeclaringType().getTypeName(),

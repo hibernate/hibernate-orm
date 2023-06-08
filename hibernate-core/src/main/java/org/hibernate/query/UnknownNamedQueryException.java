@@ -16,6 +16,6 @@ import org.hibernate.QueryException;
  */
 public class UnknownNamedQueryException extends QueryException {
 	public UnknownNamedQueryException(String queryName) {
-		super( "No query is registered under the name `" + queryName + "`" );
+		super( "No query is registered under the name '" + queryName + "'" );
 	}
 }

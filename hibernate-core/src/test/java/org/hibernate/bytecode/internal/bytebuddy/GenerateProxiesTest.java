@@ -6,12 +6,16 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.ByteCodeHelper;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.property.access.internal.PropertyAccessStrategyFieldImpl;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 import org.junit.Test;
 
@@ -40,6 +44,28 @@ public class GenerateProxiesTest {
 				new String[]{ "getId", "getName" }, new String[]{ "setId", "setName" },
 				new Class<?>[]{ Long.class, String.class } );
 		assertEquals( 2, reflectionOptimizer.getAccessOptimizer().getPropertyNames().length );
+		assertNotNull( reflectionOptimizer.getInstantiationOptimizer().newInstance() );
+	}
+
+	@Test
+	public void generateFastMappedSuperclassAndReflectionOptimizer() {
+		BytecodeProviderImpl bytecodeProvider  = new BytecodeProviderImpl();
+		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
+
+		final PropertyAccessStrategyFieldImpl propertyAccessStrategy = new PropertyAccessStrategyFieldImpl();
+
+		propertyAccessMap.put(
+				"timestamp",
+				propertyAccessStrategy.buildPropertyAccess(MappedSuperclassEntity.class, "value", true )
+		);
+
+		ReflectionOptimizer reflectionOptimizer = bytecodeProvider.getReflectionOptimizer(
+				MappedSuperclassEntity.class,
+				propertyAccessMap
+		);
+
+		assertNotNull(reflectionOptimizer);
+		assertEquals( 1, reflectionOptimizer.getAccessOptimizer().getPropertyNames().length );
 		assertNotNull( reflectionOptimizer.getInstantiationOptimizer().newInstance() );
 	}
 

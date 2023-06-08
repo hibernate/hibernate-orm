@@ -76,6 +76,64 @@ public class Identifier implements Comparable<Identifier> {
 	}
 
 	/**
+	 * Means to generate an {@link Identifier} instance from its simple text form.
+	 * <p>
+	 * If passed text is {@code null}, {@code null} is returned.
+	 * <p>
+	 * If passed text is surrounded in quote markers, the generated Identifier
+	 * is considered quoted.  Quote markers include back-ticks (`),
+	 * double-quotes (") and brackets ([ and ]).
+	 *
+	 * @param text The text form
+	 * @param quote Whether to quote unquoted text forms
+	 * @param quoteOnNonIdentifierChar Controls whether to treat the result as quoted if text contains characters that are invalid for identifiers
+	 *
+	 * @return The identifier form, or {@code null} if text was {@code null}
+	 */
+	public static Identifier toIdentifier(String text, boolean quote, boolean quoteOnNonIdentifierChar) {
+		if ( StringHelper.isEmpty( text ) ) {
+			return null;
+		}
+		int start = 0;
+		int end = text.length();
+		while ( start < end ) {
+			if ( !Character.isWhitespace( text.charAt( start ) ) ) {
+				break;
+			}
+			start++;
+		}
+		while ( start < end ) {
+			if ( !Character.isWhitespace( text.charAt( end - 1 ) ) ) {
+				break;
+			}
+			end--;
+		}
+		if ( isQuoted( text, start, end ) ) {
+			start++;
+			end--;
+			quote = true;
+		}
+		else if ( quoteOnNonIdentifierChar && !quote ) {
+			// Check the letters to determine if we must quote the text
+			char c = text.charAt( start );
+			if ( !Character.isLetter( c ) && c != '_' ) {
+				// SQL identifiers must begin with a letter or underscore
+				quote = true;
+			}
+			else {
+				for ( int i = start + 1; i < end; i++ ) {
+					c = text.charAt( i );
+					if ( !Character.isLetterOrDigit( c ) && c != '_' ) {
+						quote = true;
+						break;
+					}
+				}
+			}
+		}
+		return new Identifier( text.substring( start, end ), quote );
+	}
+
+	/**
 	 * Is the given identifier text considered quoted.  The following patterns are
 	 * recognized as quoted:<ul>
 	 *     <li>{@code `name`}</li>
@@ -94,6 +152,20 @@ public class Identifier implements Comparable<Identifier> {
 		return ( name.startsWith( "`" ) && name.endsWith( "`" ) )
 				|| ( name.startsWith( "[" ) && name.endsWith( "]" ) )
 				|| ( name.startsWith( "\"" ) && name.endsWith( "\"" ) );
+	}
+
+	public static boolean isQuoted(String name, int start, int end) {
+		if ( start + 2 < end ) {
+			switch ( name.charAt( start ) ) {
+				case '`':
+					return name.charAt( end - 1 ) == '`';
+				case '[':
+					return name.charAt( end - 1 ) == ']';
+				case '"':
+					return name.charAt( end - 1 ) == '"';
+			}
+		}
+		return false;
 	}
 
 	/**

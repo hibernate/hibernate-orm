@@ -1171,6 +1171,16 @@ public interface Session extends SharedSessionContract, EntityManager, Hibernate
 
 	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 
+	/**
+	 * Create a {@link NativeQuery} instance for the given SQL query string.
+	 *
+	 * @param queryString The SQL query
+	 *
+	 * @return The query instance for manipulation and execution
+	 *
+	 * @deprecated (since 5.2) use {@link #createNativeQuery(String)} instead
+	 */
+	@Deprecated
 	@Override
 	NativeQuery createSQLQuery(String queryString);
 }

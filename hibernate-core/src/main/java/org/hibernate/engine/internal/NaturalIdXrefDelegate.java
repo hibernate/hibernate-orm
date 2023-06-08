@@ -87,13 +87,14 @@ public class NaturalIdXrefDelegate {
 	/**
 	 * Handle removing cross reference entries for the given natural-id/pk combo
 	 *
-	 * @param persister The persister representing the entity type.
-	 * @param pk The primary key value
+	 * @param persister       The persister representing the entity type.
+	 * @param pk              The primary key value
 	 * @param naturalIdValues The natural id value(s)
-	 * 
+	 * @param removeOnNaturalIdCache  remove the entry on shared cache too
+	 *
 	 * @return The cached values, if any.  May be different from incoming values.
 	 */
-	public Object[] removeNaturalIdCrossReference(EntityPersister persister, Serializable pk, Object[] naturalIdValues) {
+	public Object[] removeNaturalIdCrossReference(EntityPersister persister, Serializable pk, Object[] naturalIdValues, boolean removeOnNaturalIdCache) {
 		persister = locatePersisterForKey( persister );
 		validateNaturalId( persister, naturalIdValues );
 
@@ -108,7 +109,7 @@ public class NaturalIdXrefDelegate {
 			}
 		}
 
-		if ( persister.hasNaturalIdCache() ) {
+		if ( removeOnNaturalIdCache && persister.hasNaturalIdCache() ) {
 			final NaturalIdDataAccess naturalIdCacheAccessStrategy = persister
 					.getNaturalIdCacheAccessStrategy();
 			final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalIdValues, persister, session() );

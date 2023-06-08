@@ -275,29 +275,34 @@ public class SchemaDropperImpl implements SchemaDropper {
 			);
 		}
 
-		if ( tryToDropCatalogs || tryToDropSchemas ) {
-			Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
+		if ( tryToDropCatalogs || tryToDropSchemas) {
+			final Set<Identifier> exportedCatalogs = new HashSet<Identifier>();
 
-			for ( Namespace namespace : database.getNamespaces() ) {
-
+			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
 				if ( !schemaFilter.includeNamespace( namespace ) ) {
 					continue;
 				}
 
-				if ( tryToDropSchemas && namespace.getPhysicalName().getSchema() != null ) {
-					applySqlStrings(
-							dialect.getDropSchemaCommand(
-									namespace.getPhysicalName().getSchema().render( dialect )
-							),
-							formatter,
-							options,
-							targets
-					);
-				}
-				if ( tryToDropCatalogs ) {
-					final Identifier catalogLogicalName = namespace.getName().getCatalog();
-					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+				Namespace.Name logicalName = namespace.getName();
+				Namespace.Name physicalName = namespace.getPhysicalName();
 
+				if ( tryToDropSchemas ) {
+					final Identifier schemaPhysicalName = sqlStringGenerationContext.schemaWithDefault( physicalName.getSchema() );
+					if ( schemaPhysicalName != null ) {
+						applySqlStrings(
+								dialect.getDropSchemaCommand(
+										schemaPhysicalName.render( dialect )
+								),
+								formatter,
+								options,
+								targets
+						);
+					}
+				}
+
+				if (tryToDropCatalogs) {
+					final Identifier catalogLogicalName = logicalName.getCatalog();
+					final Identifier catalogPhysicalName = sqlStringGenerationContext.catalogWithDefault( physicalName.getCatalog() );
 					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 						applySqlStrings(
 								dialect.getDropCatalogCommand(

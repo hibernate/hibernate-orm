@@ -7,6 +7,11 @@ pipeline {
     tools {
         jdk 'OpenJDK 8 Latest'
     }
+    options {
+  		rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true])
+        buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
+        disableConcurrentBuilds(abortPrevious: true)
+    }
     parameters {
         choice(name: 'IMAGE_JDK', choices: ['jdk8', 'jdk11'], description: 'The JDK base image version to use for the TCK image.')
         string(name: 'TCK_VERSION', defaultValue: '3.0.0', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')

@@ -36,7 +36,7 @@ stage('Configure') {
 // 		buildEnv(defaultJdk, 'db2'),
 // 		buildEnv(defaultJdk, 'mssql'),
 // 		buildEnv(defaultJdk, 'sybase'),
-		buildEnv(defaultJdk, 'hana', 'HANA'),
+// 		buildEnv(defaultJdk, 'hana', 'HANA'),
 // 		buildEnv(defaultJdk, 's390x', 's390x'),
 // 		buildEnv(defaultJdk, 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
 		// Disable EDB for now as the image is not available anymore

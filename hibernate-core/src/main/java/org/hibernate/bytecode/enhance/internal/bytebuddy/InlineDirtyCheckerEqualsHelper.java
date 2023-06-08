@@ -20,7 +20,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			Object b) {
 		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.getInitializedLazyAttributeNames().contains( fieldName ) ) {
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
 			return false;
 		}
 		return Objects.deepEquals( a, b );
@@ -33,7 +33,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			boolean b) {
 		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.getInitializedLazyAttributeNames().contains( fieldName ) ) {
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
 			return false;
 		}
 		return a == b;
@@ -46,7 +46,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			byte b) {
 		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.getInitializedLazyAttributeNames().contains( fieldName ) ) {
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
 			return false;
 		}
 		return a == b;
@@ -59,7 +59,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			short b) {
 		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.getInitializedLazyAttributeNames().contains( fieldName ) ) {
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
 			return false;
 		}
 		return a == b;
@@ -72,7 +72,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			char b) {
 		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.getInitializedLazyAttributeNames().contains( fieldName ) ) {
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
 			return false;
 		}
 		return a == b;
@@ -85,7 +85,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			int b) {
 		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.getInitializedLazyAttributeNames().contains( fieldName ) ) {
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
 			return false;
 		}
 		return a == b;
@@ -98,7 +98,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			long b) {
 		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.getInitializedLazyAttributeNames().contains( fieldName ) ) {
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
 			return false;
 		}
 		return a == b;
@@ -111,7 +111,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			float b) {
 		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.getInitializedLazyAttributeNames().contains( fieldName ) ) {
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
 			return false;
 		}
 		return a == b;
@@ -124,7 +124,7 @@ public final class InlineDirtyCheckerEqualsHelper {
 			double b) {
 		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 		if ( persistentAttributeInterceptor != null
-				&& !persistentAttributeInterceptor.getInitializedLazyAttributeNames().contains( fieldName ) ) {
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
 			return false;
 		}
 		return a == b;

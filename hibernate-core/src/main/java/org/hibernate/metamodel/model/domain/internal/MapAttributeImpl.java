@@ -23,10 +23,10 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 /**
  * @author Steve Ebersole
  */
-class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V> implements MapPersistentAttribute<X, K, V> {
+public class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V> implements MapPersistentAttribute<X, K, V> {
 	private final SqmPathSource<K> keyPathSource;
 
-	MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder, MetadataContext metadataContext) {
+	public MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder, MetadataContext metadataContext) {
 		super( xceBuilder, metadataContext );
 
 		this.keyPathSource = SqmMappingModelHelper.resolveSqmKeyPathSource(

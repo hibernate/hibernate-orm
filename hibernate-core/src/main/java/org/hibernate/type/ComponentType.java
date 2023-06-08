@@ -26,6 +26,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.Generator;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
@@ -49,6 +50,7 @@ import org.hibernate.usertype.CompositeUserType;
  */
 public class ComponentType extends AbstractType implements CompositeTypeImplementor, ProcedureParameterExtractionAware {
 	private final Class<?> componentClass;
+	private final boolean mutable;
 
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
@@ -112,6 +114,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		else {
 			this.compositeUserType = null;
 		}
+		this.mutable = !ReflectHelper.isRecord( componentClass ) && ( compositeUserType == null || compositeUserType.isMutable() );
 	}
 
 	private boolean isAggregate() {
@@ -527,6 +530,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Object owner,
 			Map<Object, Object> copyCache) {
 
+		if ( !isMutable() ) {
+			return original;
+		}
 		if ( original == null ) {
 			return null;
 		}
@@ -575,6 +581,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 
+		if ( !isMutable() ) {
+			return original;
+		}
 		if ( original == null ) {
 			return null;
 		}
@@ -623,7 +632,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public boolean isMutable() {
-		return compositeUserType == null || compositeUserType.isMutable();
+		return mutable;
 	}
 
 	@Override

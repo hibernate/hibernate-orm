@@ -62,7 +62,7 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 									Locale.ROOT,
 									"Could not resolve attribute '%s' of '%s'",
 									name,
-									getExpressible().getExpressibleJavaType().getJavaType().getTypeName()
+									getExpressible().getTypeName()
 							)
 					)
 			);

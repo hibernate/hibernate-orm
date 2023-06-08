@@ -187,9 +187,9 @@ public abstract class AbstractManagedType<J>
 											Locale.ROOT,
 											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple sub types: ['%s', '%s']",
 											name,
-											getExpressibleJavaType().getJavaType().getTypeName(),
-											attribute.getDeclaringType().getExpressibleJavaType().getJavaType().getTypeName(),
-											subTypeAttribute.getDeclaringType().getExpressibleJavaType().getJavaType().getTypeName()
+											getTypeName(),
+											attribute.getDeclaringType().getTypeName(),
+											subTypeAttribute.getDeclaringType().getTypeName()
 									)
 							)
 					);

@@ -410,7 +410,7 @@ public abstract class AbstractSelectionQuery<R>
 		final String errorMessage = String.format(
 				"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
 				resultClass.getName(),
-				sqmExpressible.getExpressibleJavaType().getJavaType().getTypeName()
+				sqmExpressible.getTypeName()
 		);
 		throw new QueryTypeMismatchException( errorMessage );
 	}

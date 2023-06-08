@@ -38,4 +38,17 @@ public interface SqmExpressible<J> extends BindableType<J> {
 	default SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory) {
 		return this;
 	}
+
+	/**
+	 * The name of the type.
+	 *
+	 * @apiNote This is the Hibernate notion of the type name.  For most types
+	 * this will simply be the Java type (i.e. {@link Class}) name.  However
+	 * using the String allows for Hibernate's dynamic model feature.
+	 */
+	default String getTypeName() {
+		// default impl to handle the general case returning the Java type name
+		JavaType<J> expressibleJavaType = getExpressibleJavaType();
+		return expressibleJavaType == null ? "unknown" : expressibleJavaType.getJavaType().getTypeName();
+	}
 }

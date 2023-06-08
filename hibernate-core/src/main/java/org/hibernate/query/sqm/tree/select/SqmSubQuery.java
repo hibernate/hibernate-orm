@@ -52,7 +52,6 @@ import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.Tuple;
@@ -579,8 +578,10 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	@Override
 	public void applyInferableType(SqmExpressible<?> type) {
 		//noinspection unchecked
-		this.expressibleType = (SqmExpressible<T>) type;
-		setResultType( type == null ? null : expressibleType.getExpressibleJavaType().getJavaTypeClass() );
+		expressibleType = (SqmExpressible<T>) type;
+		if ( expressibleType != null && expressibleType.getExpressibleJavaType() != null ) {
+			setResultType( expressibleType.getExpressibleJavaType().getJavaTypeClass() );
+		}
 	}
 
 	private void applyInferableType(Class<T> type) {

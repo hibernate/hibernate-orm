@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.spi.CollectionKey;
 
@@ -13,6 +14,7 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +32,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 //@Disabled("Manual performance test")
@@ -38,7 +41,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				CriteriaPerformanceTest.Author.class,
 				CriteriaPerformanceTest.Book.class,
 				CriteriaPerformanceTest.Other.class
-		}
+		},
+		integrationSettings = { @Setting(name = Environment.DEFAULT_BATCH_FETCH_SIZE, value = "10") }
 )
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class CriteriaPerformanceTest {
@@ -77,20 +81,24 @@ public class CriteriaPerformanceTest {
 	 * 2. Missing query plan cache for criteria queries (possibly)
 	 */
 	@Test
-	public void testFetchEntityWithAssociationsPerformance(EntityManagerFactoryScope scope) {
+	public void testFetchEntityWithAssociationsPerformance2(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			for ( int i = 0; i < 1000; i++ ) {
 				populateData( entityManager );
 			}
-
+		} );
+		scope.inTransaction( entityManager -> {
 			final Instant startTime = Instant.now();
 
-			for ( int i = 0; i < 100_000; i++ ) {
+			for ( int i = 0; i < 10_000; i++ ) {
+				entityManager.clear();
+
 				final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 				final CriteriaQuery<Author> query = builder.createQuery( Author.class );
 				query.from( Author.class );
 				final List<Author> authors = entityManager.createQuery( query ).getResultList();
 				assertNotNull( authors );
+				authors.forEach( author -> assertFalse( author.books.isEmpty() ) );
 			}
 
 			System.out.println( MessageFormat.format(
@@ -215,6 +223,7 @@ public class CriteriaPerformanceTest {
 		book.author = author;
 
 		entityManager.persist( author );
+		entityManager.persist( book );
 	}
 
 	public void populateSimpleData(EntityManager entityManager) {

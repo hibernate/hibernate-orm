@@ -86,6 +86,8 @@ Where `{version}` is the latest version of the JDBC driver for your databse.
 :infinispan: https://infinispan.org
 :generator: https://hibernate.org/orm/tooling/
 :caffeine: https://github.com/ben-manes/caffeine/
+:bean-validation: https://beanvalidation.org
+:query-validator: https://github.com/hibernate/query-validator/
 
 Optionally, you might also add any of the following additional features:
 
@@ -101,7 +103,8 @@ or `org.slf4j:slf4j-jdk14`
 `org.hibernate.orm:hibernate-agroal` +
 and `io.agroal:agroal-pool`
 | The {generator}[Hibernate Metamodel Generator], especially if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
-| {validator}[Hibernate Validator] |
+| The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
+| {validator}[Hibernate Validator], an implementation of {bean-validation}[Bean Validation] |
 `org.hibernate.validator:hibernate-validator` +
 and `org.glassfish:jakarta.el`
 | Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` +
@@ -443,7 +446,9 @@ We'll have more to say about them in <<naming-strategies>>.
 [[nationalized-chars]]
 === Nationalized character data in SQL Server
 
-_By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode data. But a Java string may contain any Unicode character. So, if you're working with SQL Server, you might need to force Hibernate to use the `nchar` and `nvarchar` column types.
+_By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode data.
+But a Java string may contain any Unicode character.
+So, if you're working with SQL Server, you might need to force Hibernate to use the `nchar` and `nvarchar` column types.
 
 .Setting the use of nationalized character data
 [%breakable,cols="40,~"]
@@ -453,11 +458,11 @@ _By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode 
 | `hibernate.use_nationalized_character_data` | Use `nchar` and `nvarchar` instead of `char` and `varchar`
 |===
 
+On the other hand, if only _some_ columns store nationalized data, use the `@Nationalized` annotation to indicate fields of your entities which map these columns.
+
 [TIP]
 // .Configuring SQL Server to use UTF-8 by default
 ====
 Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `_UTF8`.
 ====
-
-On the other hand, if only _some_ columns store nationalized data, use the `@Nationalized` annotation to indicate fields of your entities which map these columns.
 

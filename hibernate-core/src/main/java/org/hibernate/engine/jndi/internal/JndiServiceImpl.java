@@ -24,6 +24,7 @@ import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.NullnessUtil;
 
 import org.jboss.logging.Logger;
 
@@ -80,7 +81,7 @@ final class JndiServiceImpl implements JndiService {
 				}
 				else {
 					final String passThruPropertyName = propertyName.substring( Environment.JNDI_PREFIX.length() + 1 );
-					jndiProperties.put( passThruPropertyName, propertyValue );
+					jndiProperties.put( passThruPropertyName, NullnessUtil.castNonNull( propertyValue ) );
 				}
 			}
 		}

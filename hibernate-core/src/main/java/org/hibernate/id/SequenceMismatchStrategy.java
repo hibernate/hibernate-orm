@@ -8,6 +8,8 @@ package org.hibernate.id;
 
 import org.hibernate.HibernateException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Describes the strategy for handling the mismatch between a database sequence configuration and
  * the one defined by the entity mapping.
@@ -53,7 +55,7 @@ public enum SequenceMismatchStrategy {
 	 *
 	 * @return associated {@link SequenceMismatchStrategy} object
 	 */
-	public static SequenceMismatchStrategy interpret(Object sequenceMismatchStrategy) {
+	public static SequenceMismatchStrategy interpret(@Nullable Object sequenceMismatchStrategy) {
 		if ( sequenceMismatchStrategy == null ) {
 			return EXCEPTION;
 		}

@@ -150,7 +150,7 @@ public abstract class MockSessionFactory
 
 	public MockSessionFactory() {
 
-		serviceRegistry = new StandardServiceRegistryImpl(
+		serviceRegistry = StandardServiceRegistryImpl.create(
 				new BootstrapServiceRegistryBuilder().applyClassLoaderService(new ClassLoaderServiceImpl() {
 					@Override
 					@SuppressWarnings("unchecked")

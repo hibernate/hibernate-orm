@@ -6,6 +6,8 @@
  */
 package org.hibernate.service;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A registry of {@linkplain Service services}. This interface abstracts
  * the operations of:
@@ -27,7 +29,7 @@ public interface ServiceRegistry extends AutoCloseable {
 	 * 
 	 * @return The parent registry.  May be null.
 	 */
-	ServiceRegistry getParentServiceRegistry();
+	@Nullable ServiceRegistry getParentServiceRegistry();
 
 	/**
 	 * Retrieve a service by role.  If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator} is
@@ -42,7 +44,7 @@ public interface ServiceRegistry extends AutoCloseable {
 	 *
 	 * @throws UnknownServiceException Indicates the service was not known.
 	 */
-	<R extends Service> R getService(Class<R> serviceRole);
+	<R extends Service> @Nullable R getService(Class<R> serviceRole);
 
 	/**
 	 * Retrieve a service by role.  If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator} is

@@ -726,4 +726,9 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				targetSide.getModelPart().getSelectionExpression()
 		);
 	}
+
+	@Override
+	public boolean isEmbedded() {
+		return false;
+	}
 }

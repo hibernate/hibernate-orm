@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
@@ -65,7 +66,7 @@ public class CollectionBatchLoaderArrayParam
 			);
 		}
 
-		final SimpleForeignKeyDescriptor keyDescriptor = (SimpleForeignKeyDescriptor) getLoadable().getKeyDescriptor();
+		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
 
 		arrayElementType = keyDescriptor.getJavaType().getJavaTypeClass();
 		Class<?> arrayClass = Array.newInstance( arrayElementType, 0 ).getClass();
@@ -75,7 +76,7 @@ public class CollectionBatchLoaderArrayParam
 				.getRegisteredType( arrayClass );
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				arrayBasicType,
-				keyDescriptor.getJdbcMapping(),
+				keyDescriptor.getSingleJdbcMapping(),
 				arrayClass,
 				getSessionFactory()
 		);
@@ -102,15 +103,62 @@ public class CollectionBatchLoaderArrayParam
 		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch loading entity `%s#%s`", getLoadable().getNavigableRole().getFullPath(), key );
 		}
+		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
+		if ( keyDescriptor.isEmbedded() ) {
+			assert keyDescriptor.getJdbcTypeCount() == 1;
+			return loadEmbeddable( key, session, keyDescriptor );
+		}
+		else {
 
-		final Object[] keysToInitialize = resolveKeysToInitialize( key, session );
+			final Object[] keysToInitialize = resolveKeysToInitialize( key, session );
+			initializeKeys( keysToInitialize, session );
+
+			for ( int i = 0; i < keysToInitialize.length; i++ ) {
+				finishInitializingKey( keysToInitialize[i], session );
+			}
+
+			final CollectionKey collectionKey = new CollectionKey( getLoadable().getCollectionDescriptor(), key );
+			return session.getPersistenceContext().getCollection( collectionKey );
+		}
+	}
+
+	private PersistentCollection<?> loadEmbeddable(
+			Object keyBeingLoaded,
+			SharedSessionContractImplementor session,
+			ForeignKeyDescriptor keyDescriptor) {
+
+		final int length = getDomainBatchSize();
+		final Object[] keysToInitialize = (Object[]) Array.newInstance(
+				keyDescriptor.getSingleJdbcMapping().getJdbcJavaType().getJavaTypeClass(),
+				length
+		);
+		final Object[] embeddedKeys = (Object[]) Array.newInstance(
+				arrayElementType,
+				length
+		);
+		session.getPersistenceContextInternal().getBatchFetchQueue()
+				.collectBatchLoadableCollectionKeys(
+						length,
+						(index, key) ->
+								keyDescriptor.forEachJdbcValue( key, (i, value, jdbcMapping) -> {
+									keysToInitialize[index] = value;
+									embeddedKeys[index] = key;
+								}, session )
+						,
+						keyBeingLoaded,
+						getLoadable()
+				);
+
 		initializeKeys( keysToInitialize, session );
 
-		for ( int i = 0; i < keysToInitialize.length; i++ ) {
-			finishInitializingKey( keysToInitialize[i], session );
+		for ( Object initializedKey : embeddedKeys ) {
+				finishInitializingKey( initializedKey, session );
 		}
 
-		final CollectionKey collectionKey = new CollectionKey( getLoadable().getCollectionDescriptor(), key );
+		final CollectionKey collectionKey = new CollectionKey(
+				getLoadable().getCollectionDescriptor(),
+				keysToInitialize
+		);
 		return session.getPersistenceContext().getCollection( collectionKey );
 	}
 

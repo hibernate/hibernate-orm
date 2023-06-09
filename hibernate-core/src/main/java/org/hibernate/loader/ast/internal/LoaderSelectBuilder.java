@@ -40,6 +40,7 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -142,7 +143,7 @@ public class LoaderSelectBuilder {
 	 */
 	public static SelectStatement createSelectBySingleArrayParameter(
 			Loadable loadable,
-			BasicValuedModelPart restrictedPart,
+			ValuedModelPart restrictedPart,
 			LoadQueryInfluencers influencers,
 			LockOptions lockOptions,
 			JdbcParameter jdbcArrayParameter,
@@ -202,7 +203,7 @@ public class LoaderSelectBuilder {
 			QuerySpec rootQuerySpec,
 			NavigablePath rootNavigablePath,
 			TableGroup rootTableGroup,
-			BasicValuedModelPart restrictedPart,
+			ValuedModelPart restrictedPart,
 			JdbcParameter jdbcArrayParameter,
 			LoaderSqlAstCreationState sqlAstCreationState) {
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();

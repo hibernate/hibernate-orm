@@ -28,6 +28,8 @@ import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.AbstractSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ConversionContext;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A {@link org.hibernate.exception.spi.SQLExceptionConverter} implementation
  * that does conversion based on the {@link SQLException} subtype hierarchy
@@ -41,7 +43,7 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 	}
 
 	@Override
-	public JDBCException convert(SQLException sqlException, String message, String sql) {
+	public @Nullable JDBCException convert(SQLException sqlException, String message, String sql) {
 		if ( sqlException instanceof SQLClientInfoException
 				|| sqlException instanceof SQLInvalidAuthorizationSpecException
 				|| sqlException instanceof SQLNonTransientConnectionException

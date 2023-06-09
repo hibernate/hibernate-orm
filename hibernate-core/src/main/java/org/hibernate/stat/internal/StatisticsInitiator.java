@@ -11,6 +11,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
@@ -42,8 +43,8 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 
 	@Override
 	public StatisticsImplementor initiateService(SessionFactoryServiceInitiatorContext context) {
-		final Object configValue = context.getServiceRegistry()
-				.getService( ConfigurationService.class )
+		final Object configValue = NullnessUtil.castNonNull( context.getServiceRegistry()
+				.getService( ConfigurationService.class ) )
 				.getSettings()
 				.get( STATS_BUILDER );
 		return initiateServiceInternal( context.getSessionFactory(), configValue, context.getServiceRegistry() );
@@ -63,7 +64,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		}
 		else {
 			// assume it names the factory class
-			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+			final ClassLoaderService classLoaderService = NullnessUtil.castNonNull( registry.getService( ClassLoaderService.class ) );
 			try {
 				statisticsFactory = (StatisticsFactory) classLoaderService.classForName( configValue.toString() ).newInstance();
 			}

@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 
+import jakarta.persistence.Embedded;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -65,6 +66,10 @@ class ByteBuddyEnhancementContext {
 
 	public boolean isPersistentField(AnnotatedFieldDescription field) {
 		return enhancementContext.isPersistentField( field );
+	}
+
+	public boolean isCompositeField(AnnotatedFieldDescription field) {
+		return isCompositeClass( field.getType().asErasure() ) || field.hasAnnotation( Embedded.class );
 	}
 
 	public AnnotatedFieldDescription[] order(AnnotatedFieldDescription[] persistentFields) {

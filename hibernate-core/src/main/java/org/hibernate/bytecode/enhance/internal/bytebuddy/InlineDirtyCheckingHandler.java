@@ -77,8 +77,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				);
 			}
 
-			if ( enhancementContext.isCompositeClass( persistentField.getType().asErasure() )
-					&& persistentField.hasAnnotation( Embedded.class )
+			if ( enhancementContext.isCompositeField( persistentField )
 					// Don't do composite owner tracking for records
 					&& !persistentField.getType().isRecord() ) {
 

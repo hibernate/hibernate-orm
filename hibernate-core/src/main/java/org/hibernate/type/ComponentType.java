@@ -726,7 +726,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			}
 		}
 		throw new PropertyNotFoundException(
-				"Unable to locate property named '" + name + "' of '" + getReturnedClass().getName() + "'"
+				"Could not resolve attribute '" + name + "' of '" + getReturnedClass().getName() + "'"
+					+ " (must be one of '" + StringHelper.join("', '", names) + "')"
 		);
 	}
 

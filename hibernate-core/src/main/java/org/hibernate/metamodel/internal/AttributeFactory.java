@@ -677,7 +677,7 @@ public class AttributeFactory {
 		final AttributeMapping attributeMapping = embeddable.findAttributeMapping( attributeName );
 		if ( attributeMapping == null ) {
 			throw new PropertyNotFoundException(
-					"Unable to locate property named '" + attributeName
+					"Could not resolve attribute '" + attributeName
 							+ "' of '" + embeddable.getJavaType().getJavaTypeClass().getName() + "'"
 			);
 		}

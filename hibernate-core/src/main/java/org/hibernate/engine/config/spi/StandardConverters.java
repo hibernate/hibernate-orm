@@ -7,6 +7,8 @@
 package org.hibernate.engine.config.spi;
 
 
+import org.checkerframework.checker.nullness.qual.PolyNull;
+
 import static org.hibernate.engine.config.spi.ConfigurationService.Converter;
 
 /**
@@ -18,10 +20,6 @@ public class StandardConverters {
 	public static final Converter<Boolean> BOOLEAN = StandardConverters::asBoolean;
 
 	public static Boolean asBoolean(Object value) {
-		if ( value == null ) {
-			throw new IllegalArgumentException( "Null value passed to convert" );
-		}
-
 		return value instanceof Boolean
 				? (Boolean) value
 				: Boolean.parseBoolean( value.toString() );
@@ -30,20 +28,12 @@ public class StandardConverters {
 	public static final Converter<String> STRING = StandardConverters::asString;
 
 	public static String asString(Object value) {
-		if ( value == null ) {
-			throw new IllegalArgumentException( "Null value passed to convert" );
-		}
-
 		return value.toString();
 	}
 
 	public static final Converter<Integer> INTEGER = StandardConverters::asInteger;
 
 	public static Integer asInteger(Object value) {
-		if ( value == null ) {
-			throw new IllegalArgumentException( "Null value passed to convert" );
-		}
-
 		if ( value instanceof Number ) {
 			return ( (Number) value ).intValue();
 		}

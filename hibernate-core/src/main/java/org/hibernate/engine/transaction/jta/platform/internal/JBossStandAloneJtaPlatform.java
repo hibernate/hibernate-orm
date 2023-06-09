@@ -11,6 +11,7 @@ import jakarta.transaction.UserTransaction;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
+import org.hibernate.internal.util.NullnessUtil;
 
 /**
  * Return a standalone JTA transaction manager for JBoss (Arjuna) Transactions or WildFly transaction client
@@ -37,8 +38,8 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 		}
 
 		try {
-			final Class jbossTmClass = serviceRegistry()
-					.getService( ClassLoaderService.class )
+			final Class jbossTmClass = NullnessUtil.castNonNull( serviceRegistry()
+					.getService( ClassLoaderService.class ) )
 					.classForName( JBOSS_TM_CLASS_NAME );
 			return (TransactionManager) jbossTmClass.getMethod( "transactionManager" ).invoke( null );
 		}
@@ -58,8 +59,8 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 		}
 
 		try {
-			final Class jbossUtClass = serviceRegistry()
-					.getService( ClassLoaderService.class )
+			final Class jbossUtClass = NullnessUtil.castNonNull( serviceRegistry()
+					.getService( ClassLoaderService.class ) )
 					.classForName( JBOSS_UT_CLASS_NAME );
 			return (UserTransaction) jbossUtClass.getMethod( "userTransaction" ).invoke( null );
 		}

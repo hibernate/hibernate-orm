@@ -9,6 +9,7 @@ package org.hibernate.service.internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceContributor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -31,7 +32,7 @@ public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryS
 	public SessionFactoryServiceRegistry buildServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions options) {
-		final ClassLoaderService cls = options.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService cls = NullnessUtil.castNonNull( options.getServiceRegistry().getService( ClassLoaderService.class ) );
 		final SessionFactoryServiceRegistryBuilderImpl builder = new SessionFactoryServiceRegistryBuilderImpl( theBasicServiceRegistry );
 
 		for ( SessionFactoryServiceContributor contributor : cls.loadJavaServices( SessionFactoryServiceContributor.class ) ) {

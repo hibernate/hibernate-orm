@@ -897,7 +897,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 						.getDescriptor( javaClassAnn.value() );
 			}
 
-			return null;
+			throw new MappingException("Could not determine key type for '@Any' mapping (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')");
 		};
 
 		explicitJdbcTypeAccess = (typeConfiguration) -> {

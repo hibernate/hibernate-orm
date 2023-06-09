@@ -129,7 +129,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	@Override
 	public <X> EntityDomainType<X> entity(String entityName) {
 		//noinspection unchecked
-		return (EntityDomainType<X>) jpaEntityTypeMap.get( entityName );
+		return entityName==null ? null : (EntityDomainType<X>) jpaEntityTypeMap.get( entityName );
 	}
 
 	@Override

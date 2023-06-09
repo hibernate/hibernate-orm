@@ -1588,14 +1588,14 @@ public class SessionImpl
 					try {
 						final String entityName = getEntityNameResolver().resolveEntityName( object );
 						if ( entityName == null ) {
-							throw new IllegalArgumentException( "Could not resolve entity-name [" + object + "]" );
+							throw new IllegalArgumentException( "Could not resolve entity name for class '" + object.getClass() + "'" );
 						}
 						getFactory().getRuntimeMetamodels()
 								.getMappingMetamodel()
 								.getEntityDescriptor( entityName );
 					}
 					catch ( HibernateException e ) {
-						throw new IllegalArgumentException( "Not an entity [" + object.getClass() + "]", e );
+						throw new IllegalArgumentException( "Class '" + object.getClass() + "' is not an entity class", e );
 					}
 				}
 				return false;

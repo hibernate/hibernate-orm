@@ -52,8 +52,8 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		this.escapeCharacter = escapeCharacter;
 		this.isCaseSensitive = isCaseSensitive;
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
-				matchExpression.getNodeType(),
-				pattern.getNodeType()
+				matchExpression.getExpressible(),
+				pattern.getExpressible()
 		);
 		matchExpression.applyInferableType( expressibleType );
 		pattern.applyInferableType( expressibleType );

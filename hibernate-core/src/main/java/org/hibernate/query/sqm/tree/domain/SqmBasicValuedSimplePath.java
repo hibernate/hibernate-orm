@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.spi.NavigablePath;
@@ -61,6 +62,11 @@ public class SqmBasicValuedSimplePath<T>
 		);
 		copyTo( path, context );
 		return path;
+	}
+
+	@Override
+	public SqmExpressible<T> getExpressible() {
+		return this;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -121,6 +127,11 @@ public class SqmBasicValuedSimplePath<T>
 	@Override
 	public Class<T> getBindableJavaType() {
 		return getJavaType();
+	}
+
+	@Override
+	public DomainType<T> getSqmType() {
+		return getNodeType().getSqmType();
 	}
 
 

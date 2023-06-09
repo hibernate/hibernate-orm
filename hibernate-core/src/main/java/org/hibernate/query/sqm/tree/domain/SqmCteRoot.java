@@ -91,6 +91,11 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 	}
 
 	@Override
+	public String getEntityName() {
+		return null;
+	}
+
+	@Override
 	public SqmPathSource<?> getResolvedModel() {
 		return getReferencedPathSource();
 	}

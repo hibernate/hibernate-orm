@@ -24,6 +24,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import jakarta.persistence.criteria.Expression;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
+import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 
 /**
  * @author Steve Ebersole
@@ -57,11 +58,11 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 		SqmTreeCreationLogger.LOGGER.debugf(
 				"Applying inferable type to SqmExpression [%s] : %s -> %s",
 				this,
-				getNodeType(),
+				getExpressible(),
 				newType
 		);
 
-		setExpressibleType( highestPrecedenceType( newType, getNodeType() ) );
+		setExpressibleType( highestPrecedenceType2( newType, getExpressible() ) );
 	}
 
 	@Override

@@ -137,7 +137,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	private void implyListElementType(SqmExpression<?> expression) {
 		nodeBuilder().assertComparable( getTestExpression(), expression );
 		expression.applyInferableType(
-				QueryHelper.highestPrecedenceType2( getTestExpression().getNodeType(), expression.getNodeType() )
+				QueryHelper.highestPrecedenceType2( getTestExpression().getExpressible(), expression.getExpressible() )
 		);
 	}
 

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
@@ -66,6 +67,16 @@ public class SqmEmbeddedValuedSimplePath<T>
 		);
 		copyTo( path, context );
 		return path;
+	}
+
+	@Override
+	public SqmExpressible<T> getExpressible() {
+		return this;
+	}
+
+	@Override
+	public DomainType<T> getSqmType() {
+		return getReferencedPathSource().getSqmType();
 	}
 
 	@Override

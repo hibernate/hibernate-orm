@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -25,6 +26,11 @@ public class NullSqmExpressible implements SqmExpressible<Object> {
 
 	@Override
 	public JavaType<Object> getExpressibleJavaType() {
+		return null;
+	}
+
+	@Override
+	public DomainType<Object> getSqmType() {
 		return null;
 	}
 }

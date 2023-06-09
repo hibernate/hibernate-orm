@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -51,4 +52,6 @@ public interface SqmExpressible<J> extends BindableType<J> {
 		JavaType<J> expressibleJavaType = getExpressibleJavaType();
 		return expressibleJavaType == null ? "unknown" : expressibleJavaType.getJavaType().getTypeName();
 	}
+
+	DomainType<J> getSqmType();
 }

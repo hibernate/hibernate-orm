@@ -971,6 +971,10 @@ public class QuerySplitter {
 
 		@Override
 		public SqmBasicValuedSimplePath<?> visitBasicValuedPath(SqmBasicValuedSimplePath<?> path) {
+			final SqmPath<?> existing = sqmPathCopyMap.get( path.getNavigablePath() );
+			if ( existing != null ) {
+				return (SqmBasicValuedSimplePath<?>) existing;
+			}
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
 
 			final SqmPath<?> lhs = findLhs( path );
@@ -989,6 +993,10 @@ public class QuerySplitter {
 
 		@Override
 		public SqmEmbeddedValuedSimplePath<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> path) {
+			final SqmPath<?> existing = sqmPathCopyMap.get( path.getNavigablePath() );
+			if ( existing != null ) {
+				return (SqmEmbeddedValuedSimplePath<?>) existing;
+			}
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
 			final SqmPath<?> lhs = findLhs( path );
 			final SqmEmbeddedValuedSimplePath<?> copy = new SqmEmbeddedValuedSimplePath<>(
@@ -1004,6 +1012,10 @@ public class QuerySplitter {
 
 		@Override
 		public SqmEntityValuedSimplePath<?> visitEntityValuedPath(SqmEntityValuedSimplePath<?> path) {
+			final SqmPath<?> existing = sqmPathCopyMap.get( path.getNavigablePath() );
+			if ( existing != null ) {
+				return (SqmEntityValuedSimplePath<?>) existing;
+			}
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
 			final SqmPath<?> lhs = findLhs( path );
 			final SqmEntityValuedSimplePath<?> copy = new SqmEntityValuedSimplePath<>(
@@ -1019,6 +1031,10 @@ public class QuerySplitter {
 
 		@Override
 		public SqmPluralValuedSimplePath<?> visitPluralValuedPath(SqmPluralValuedSimplePath<?> path) {
+			final SqmPath<?> existing = sqmPathCopyMap.get( path.getNavigablePath() );
+			if ( existing != null ) {
+				return (SqmPluralValuedSimplePath<?>) existing;
+			}
 			final SqmPathRegistry pathRegistry = getProcessingStateStack().getCurrent().getPathRegistry();
 			SqmPath<?> lhs = findLhs( path );
 

@@ -33,9 +33,9 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		this.upperBound = upperBound;
 
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
-				expression.getNodeType(),
-				lowerBound.getNodeType(),
-				upperBound.getNodeType()
+				expression.getExpressible(),
+				lowerBound.getExpressible(),
+				upperBound.getExpressible()
 		);
 
 		expression.applyInferableType( expressibleType );

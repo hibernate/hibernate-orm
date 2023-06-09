@@ -158,7 +158,8 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			return (ReturnableType<?>)
 					getWithinGroup().getSortSpecifications().get( 0 )
 							.getSortExpression()
-							.getExpressible();
+							.getExpressible()
+							.getSqmType();
 		}
 
 		@Override

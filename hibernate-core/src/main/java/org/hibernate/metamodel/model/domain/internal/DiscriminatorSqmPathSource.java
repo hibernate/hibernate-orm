@@ -60,4 +60,9 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 	public Class<D> getJavaType() {
 		return getExpressibleJavaType().getJavaTypeClass();
 	}
+
+	@Override
+	public DomainType<D> getSqmType() {
+		return this;
+	}
 }

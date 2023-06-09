@@ -42,8 +42,8 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.operator = operator;
 
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
-				leftHandExpression.getNodeType(),
-				rightHandExpression.getNodeType()
+				leftHandExpression.getExpressible(),
+				rightHandExpression.getExpressible()
 		);
 
 		leftHandExpression.applyInferableType( expressibleType );

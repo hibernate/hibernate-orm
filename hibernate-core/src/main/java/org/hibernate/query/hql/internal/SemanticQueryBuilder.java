@@ -5238,6 +5238,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final String treatTargetName = ctx.simplePath().getText();
 		final String treatTargetEntityName = getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
+		if ( treatTargetEntityName == null ) {
+			throw new SemanticException( "Could not resolve treat target type '" + treatTargetName + "'" );
+		}
 
 		final boolean hasContinuation = ctx.getChildCount() == 7;
 		consumer.consumeTreat( treatTargetEntityName, !hasContinuation );

@@ -60,7 +60,7 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 	public SessionFactoryServiceRegistry buildSessionFactoryServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions options) {
-		return new SessionFactoryServiceRegistryImpl(
+		return SessionFactoryServiceRegistryImpl.create(
 				parent,
 				initiators,
 				providedServices,

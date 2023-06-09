@@ -24,20 +24,26 @@ public class IntegratorServiceImpl implements IntegratorService {
 
 	private final LinkedHashSet<Integrator> integrators = new LinkedHashSet<>();
 
-	public IntegratorServiceImpl(LinkedHashSet<Integrator> providedIntegrators, ClassLoaderService classLoaderService) {
+	private IntegratorServiceImpl() {
+	}
+
+	public static IntegratorServiceImpl create(LinkedHashSet<Integrator> providedIntegrators, ClassLoaderService classLoaderService) {
+		IntegratorServiceImpl instance = new IntegratorServiceImpl();
+
 		// register standard integrators.  Envers and JPA, for example, need to be handled by discovery because in
 		// separate project/jars.
-		addIntegrator( new BeanValidationIntegrator() );
-		addIntegrator( new CollectionCacheInvalidator() );
+		instance.addIntegrator( new BeanValidationIntegrator() );
+		instance.addIntegrator( new CollectionCacheInvalidator() );
 
 		// register provided integrators
 		for ( Integrator integrator : providedIntegrators ) {
-			addIntegrator( integrator );
+			instance.addIntegrator( integrator );
+		}
+		for ( Integrator integrator : classLoaderService.loadJavaServices( Integrator.class ) ) {
+			instance.addIntegrator( integrator );
 		}
 
-		for ( Integrator integrator : classLoaderService.loadJavaServices( Integrator.class ) ) {
-			addIntegrator( integrator );
-		}
+		return instance;
 	}
 
 	private void addIntegrator(Integrator integrator) {

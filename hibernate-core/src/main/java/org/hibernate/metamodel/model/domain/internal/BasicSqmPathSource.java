@@ -44,8 +44,9 @@ public class BasicSqmPathSource<J>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		throw new TerminalPathException( "Path '" + pathModel.getPathName()
-				+ "' has no attribute '" + name + "'" );
+		String path = pathModel.getPathName();
+		String pathDesc = path==null || path.startsWith("{") ? " " : " '" + pathModel.getPathName() + "' ";
+		throw new TerminalPathException( "Terminal path" + pathDesc + "has no attribute '" + name + "'" );
 	}
 
 	@Override

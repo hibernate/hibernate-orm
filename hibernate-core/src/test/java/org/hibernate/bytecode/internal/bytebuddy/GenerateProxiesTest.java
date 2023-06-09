@@ -17,6 +17,7 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.property.access.internal.PropertyAccessStrategyFieldImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 public class GenerateProxiesTest {
@@ -48,6 +49,7 @@ public class GenerateProxiesTest {
 	}
 
 	@Test
+	@JiraKey("HHH-16772")
 	public void generateFastMappedSuperclassAndReflectionOptimizer() {
 		BytecodeProviderImpl bytecodeProvider  = new BytecodeProviderImpl();
 		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();

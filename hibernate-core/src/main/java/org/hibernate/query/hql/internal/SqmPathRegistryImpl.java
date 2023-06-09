@@ -293,8 +293,9 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	@Override
 	public SqmAliasedNode<?> findAliasedNodeByPosition(int position) {
 		// NOTE : 1-based
-
-		return simpleSelectionNodes.get( position - 1 );
+		return position > simpleSelectionNodes.size()
+				? null
+				: simpleSelectionNodes.get(position - 1);
 	}
 
 	@Override

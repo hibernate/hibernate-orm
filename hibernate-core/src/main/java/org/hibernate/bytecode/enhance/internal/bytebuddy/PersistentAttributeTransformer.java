@@ -276,8 +276,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 			if ( !compositeOwner
 					&& !enhancementContext.isMappedSuperclassClass( managedCtClass )
-					&& enhancedField.hasAnnotation( Embedded.class )
-					&& enhancementContext.isCompositeClass( enhancedField.getType().asErasure() )
+					&& enhancementContext.isCompositeField( enhancedField )
 					&& enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
 				compositeOwner = true;
 			}

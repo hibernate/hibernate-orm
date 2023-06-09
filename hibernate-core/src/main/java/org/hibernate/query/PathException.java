@@ -12,6 +12,9 @@ import org.hibernate.HibernateException;
  * Indicates an attempt to use a path in an unsupported way
  *
  * @author Steve Ebersole
+ *
+ * @see PathElementException
+ * @see TerminalPathException
  */
 public class PathException extends HibernateException {
 	public PathException(String message) {

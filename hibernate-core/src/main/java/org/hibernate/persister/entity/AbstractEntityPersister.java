@@ -209,7 +209,7 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.query.SemanticException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
@@ -235,7 +235,6 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
@@ -5718,22 +5717,20 @@ public abstract class AbstractEntityPersister
 					final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
 					if ( subDefinedAttribute != null ) {
 						if ( attribute != null && !MappingModelHelper.isCompatibleModelPart( attribute, subDefinedAttribute ) ) {
-							throw new IllegalArgumentException(
-									new SemanticException(
-											String.format(
-													Locale.ROOT,
-													"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes: ['%s', '%s']",
-													name,
-													getJavaType().getJavaType().getTypeName(),
-													attribute.asAttributeMapping().getDeclaringType()
-															.getJavaType()
-															.getJavaType()
-															.getTypeName(),
-													subDefinedAttribute.asAttributeMapping().getDeclaringType()
-															.getJavaType()
-															.getJavaType()
-															.getTypeName()
-											)
+							throw new PathException(
+									String.format(
+											Locale.ROOT,
+											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes: '%s', '%s'",
+											name,
+											getJavaType().getJavaType().getTypeName(),
+											attribute.asAttributeMapping().getDeclaringType()
+													.getJavaType()
+													.getJavaType()
+													.getTypeName(),
+											subDefinedAttribute.asAttributeMapping().getDeclaringType()
+													.getJavaType()
+													.getJavaType()
+													.getTypeName()
 									)
 							);
 						}

@@ -93,27 +93,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		ANTLRErrorListener errorListener = new ANTLRErrorListener() {
 			@Override
 			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-				String errorText = "At " + line + ":" + charPositionInLine;
-				if ( offendingSymbol instanceof CommonToken ) {
-					String token = ( (CommonToken) offendingSymbol ).getText();
-					if ( token != null && !token.isEmpty() ) {
-						errorText += " and token '" + token + "'";
-					}
-				}
-				errorText += ", ";
-				if ( e instanceof NoViableAltException ) {
-					errorText +=  msg.substring( 0, msg.indexOf("'") );
-					String lineText = hql.lines().collect( toList() ).get( line-1 );
-					String text = lineText.substring( 0, charPositionInLine ) + "*" + lineText.substring( charPositionInLine );
-					errorText += "'" + text + "'";
-				}
-				else if ( e instanceof InputMismatchException ) {
-					errorText += msg.substring( 0,msg.length()-1 ).replace(" expecting {", ", expecting one of the following tokens: ");
-				}
-				else  {
-					errorText += msg;
-				}
-				throw new ParsingException( errorText );
+				throw new ParsingException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e, hql, true ) );
 			}
 
 			@Override
@@ -153,5 +133,43 @@ public class StandardHqlTranslator implements HqlTranslator {
 		catch ( ParsingException ex ) {
 			throw new SemanticException( "Illegal HQL syntax [" + ex.getMessage() + "]", hql, ex );
 		}
+	}
+
+	/**
+	 * ANTLR's error messages are surprisingly bad,
+	 * so try to make them a bit better.
+	 */
+	public static String prettifyAntlrError(
+			Object offendingSymbol,
+			int line, int charPositionInLine,
+			String message,
+			RecognitionException e,
+			String hql,
+			boolean includeLocation) {
+		String errorText = "";
+		if ( includeLocation ) {
+			errorText += "At " + line + ":" + charPositionInLine;
+			if ( offendingSymbol instanceof CommonToken ) {
+				String token = ( (CommonToken) offendingSymbol).getText();
+				if ( token != null && !token.isEmpty() ) {
+					errorText += " and token '" + token + "'";
+				}
+			}
+			errorText += ", ";
+		}
+		if ( e instanceof NoViableAltException ) {
+			errorText +=  message.substring( 0, message.indexOf("'") );
+			String lineText = hql.lines().collect( toList() ).get( line -1 );
+			String text = lineText.substring( 0, charPositionInLine) + "*" + lineText.substring(charPositionInLine);
+			errorText += "'" + text + "'";
+		}
+		else if ( e instanceof InputMismatchException ) {
+			errorText += message.substring( 0, message.length()-1 )
+					.replace(" expecting {", ", expecting one of the following tokens: ");
+		}
+		else  {
+			errorText += message;
+		}
+		return errorText;
 	}
 }

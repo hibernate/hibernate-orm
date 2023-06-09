@@ -152,7 +152,7 @@ public class SingularAttributeImpl<D,J>
 		}
 
 		//noinspection unchecked
-		return new SqmSingularJoin(
+		return new SqmSingularJoin<D,J>(
 				lhs,
 				this,
 				alias,
@@ -166,7 +166,7 @@ public class SingularAttributeImpl<D,J>
 	public NavigablePath createNavigablePath(SqmPath parent, String alias) {
 		if ( parent == null ) {
 			throw new IllegalArgumentException(
-					"`lhs` cannot be null for a sub-navigable reference - " + getName()
+					"LHS cannot be null for a sub-navigable reference - " + getName()
 			);
 		}
 		final SqmPathSource<?> parentPathSource = parent.getReferencedPathSource();
@@ -216,7 +216,7 @@ public class SingularAttributeImpl<D,J>
 		public NavigablePath createNavigablePath(SqmPath parent, String alias) {
 			if ( parent == null ) {
 				throw new IllegalArgumentException(
-						"`lhs` cannot be null for a sub-navigable reference - " + getName()
+						"LHS cannot be null for a sub-navigable reference - " + getName()
 				);
 			}
 			NavigablePath navigablePath = parent.getNavigablePath();
@@ -280,7 +280,7 @@ public class SingularAttributeImpl<D,J>
 	@Override
 	public boolean isAssociation() {
 		return getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE
-				|| getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
+			|| getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
 	}
 
 	@Override

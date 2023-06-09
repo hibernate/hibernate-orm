@@ -235,6 +235,7 @@ public class QueryEngineImpl implements QueryEngine {
 		return criteriaBuilder;
 	}
 
+	@Override
 	public HqlTranslator getHqlTranslator() {
 		return hqlTranslator;
 	}

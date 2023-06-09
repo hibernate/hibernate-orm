@@ -234,6 +234,10 @@ dependencies {
     // JPA metamodel generator (for criteria queries)
     annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.2.2.Final'
 
+    // Compile-time checking for HQL
+    //implementation 'org.hibernate:query-validator:2.0-SNAPSHOT'
+    //annotationProcessor 'org.hibernate:query-validator:2.0-SNAPSHOT'
+
     // H2 database
     runtimeOnly 'com.h2database:h2:2.1.214'
 }

@@ -159,9 +159,14 @@ public class StandardHqlTranslator implements HqlTranslator {
 		}
 		if ( e instanceof NoViableAltException ) {
 			errorText +=  message.substring( 0, message.indexOf("'") );
-			String lineText = hql.lines().collect( toList() ).get( line -1 );
-			String text = lineText.substring( 0, charPositionInLine) + "*" + lineText.substring(charPositionInLine);
-			errorText += "'" + text + "'";
+			if ( hql.isEmpty() ) {
+				errorText += "'*' (empty query string)";
+			}
+			else {
+				String lineText = hql.lines().collect( toList() ).get( line -1 );
+				String text = lineText.substring( 0, charPositionInLine) + "*" + lineText.substring(charPositionInLine);
+				errorText += "'" + text + "'";
+			}
 		}
 		else if ( e instanceof InputMismatchException ) {
 			errorText += message.substring( 0, message.length()-1 )

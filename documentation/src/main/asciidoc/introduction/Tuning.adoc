@@ -93,9 +93,9 @@ All we need to do is set a single property:
 .Enabling JDBC batching
 [%autowidth.stretch]
 |===
-| Configuration property name | Purpose
+| Configuration property name | Purpose | Alternative
 
-| `hibernate.jdbc.batch_size` | Maximum batch size for SQL statement batching
+| `hibernate.jdbc.batch_size` | Maximum batch size for SQL statement batching | `setJdbcBatchSize()`
 |===
 
 [TIP]
@@ -217,12 +217,12 @@ The execution of the subselect is likely to be relatively inexpensive, since the
 Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
 
 .Configuration settings to enable batch and subselect fetching
-[%breakable,cols="35,~"]
+[%breakable,cols="35,~, 20"]
 |===
-| Configuration property name | Property value
+| Configuration property name | Property value | Alternative
 
-| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching
-| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching
+| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching | `@BatchSize`, `setFetchBatchSize()`
+| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching | `@Fetch(SUBSELECT)`
 |===
 
 Alternatively, we can enable one or the other in a given session:
@@ -242,8 +242,8 @@ We may request subselect fetching more selectively by annotating a collection or
 @ManyToMany @Fetch(SUBSELECT)
 Set<Author> authors;
 ----
-Note that `@Fetch(SUBSELECT)` is equivalent to `@Fetch(SELECT)`, except after execution of a
-HQL or criteria query.
+Note that `@Fetch(SUBSELECT)` has the same effect as `@Fetch(SELECT)`, except after execution of a HQL or criteria query.
+But after query execution, `@Fetch(SUBSELECT)` is able to much more efficiently fetch associations.
 
 Later, we'll see how we can use <<fetch-profiles,fetch profiles>> to do this even more selectively.
 ====

@@ -116,7 +116,7 @@ Achieving high performance in ORM means minimizing the number of round trips to 
 image::images/fetching.png[Fetching process,width=700,align="center"]
 
 Without question, the most common cause of poorly-performing data access code in Java programs is the problem of _N+1 selects_.
-Here, a list of N rows is retrieved from the database in an initial query, and then associated instances of a related entity are fetched using N subsequent queries.
+Here, a list of _N_ rows is retrieved from the database in an initial query, and then associated instances of a related entity are fetched using _N_ subsequent queries.
 
 [IMPORTANT]
 // .This problem is your responsibility
@@ -127,7 +127,9 @@ But that's OK.
 Hibernate gives you all the tools you need.
 ====
 
-Hibernate provides several strategies for efficiently fetching associations and avoiding N+1 selects:
+In this section we're going to discuss different ways to avoid such "chatty" interaction with the database.
+
+Hibernate provides several strategies for efficiently fetching associations and avoiding _N+1_ selects:
 
 - _outer join fetching_—where an association is fetched using a `left outer join`,
 - _batch fetching_—where an association is fetched using a subsequent `select` with a batch of primary keys, and
@@ -137,6 +139,80 @@ Of these, you should almost always use outer join fetching.
 
 [[batch-subselect-fetch]]
 === Batch fetching and subselect fetching
+
+Consider the following code:
+
+[source,java]
+----
+List<Book> books =
+        session.createSelectionQuery("from Book order by isbn", Book.class)
+            .getResultList();
+books.forEach(book -> book.getAuthors().forEach(author -> out.println(book.title + " by " + author.name)));
+----
+
+This code is _very_ inefficient, resulting, by default, in the execution of _N+1_ `select` statements, where _n_ is the number of ``Book``s.
+Let's see how we can improve on that.
+
+[discrete]
+===== SQL for batch fetching
+
+With batch fetching enabled, Hibernate might execute the following SQL on PostgreSQL:
+
+[source,sql]
+----
+/* initial query for Books */
+select b1_0.isbn,b1_0.price,b1_0.published,b1_0.publisher_id,b1_0.title
+from Book b1_0
+order by b1_0.isbn
+
+/* first batch of associated Authors */
+select a1_0.books_isbn,a1_1.id,a1_1.bio,a1_1.name
+from Book_Author a1_0
+    join Author a1_1 on a1_1.id=a1_0.authors_id
+where a1_0.books_isbn = any (?)
+
+/* second batch of associated Authors */
+select a1_0.books_isbn,a1_1.id,a1_1.bio,a1_1.name
+from Book_Author a1_0
+    join Author a1_1 on a1_1.id=a1_0.authors_id
+where a1_0.books_isbn = any (?)
+----
+
+The first `select` statement queries and retrieves ``Book``s.
+The second and third queries fetch the associated ``Author``s in batches.
+The number of batches required depends on the configured _batch size_.
+Here, two batches were required, so two SQL statements were executed.
+
+[NOTE]
+====
+The SQL for batch fetching looks slightly different depending on the database.
+Here, on PostgreSQL, Hibernate passes a batch of primary key values as a SQL `ARRAY`.
+====
+
+[discrete]
+===== SQL for subselect fetching
+
+On the other hand, with subselect fetching, Hibernate would execute this SQL:
+
+[source,sql]
+----
+/* initial query for Books */
+select b1_0.isbn,b1_0.price,b1_0.published,b1_0.publisher_id,b1_0.title
+from Book b1_0
+order by b1_0.isbn
+
+/* fetch all associated Authors */
+select a1_0.books_isbn,a1_1.id,a1_1.bio,a1_1.name
+from Book_Author a1_0
+    join Author a1_1 on a1_1.id=a1_0.authors_id
+where a1_0.books_isbn in (select b1_0.isbn from Book b1_0)
+----
+
+Notice that the first query is re-executed in a subselect in the second query.
+The execution of the subselect is likely to be relatively inexpensive, since the data should already be cached by the database.
+
+[discrete]
+===== Enabling the use of batch or subselect fetching
 
 Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
 
@@ -157,6 +233,7 @@ session.setFetchBatchSize(5);
 session.setSubselectFetchingEnabled(true);
 ----
 
+[%unbreakable]
 [TIP]
 ====
 We may request subselect fetching more selectively by annotating a collection or many-valued association with the `@Fetch` annotation.
@@ -228,6 +305,19 @@ query.orderBy(builder.asc(book.get(Book_.isbn)));
 List<Book> booksWithJoinFetchedAuthors =
         session.createSelectionQuery(query).getResultList();
 ----
+
+Either way, a single SQL `select` statement is executed:
+
+[source,sql]
+----
+select b1_0.isbn,a1_0.books_isbn,a1_1.id,a1_1.bio,a1_1.name,b1_0.price,b1_0.published,b1_0.publisher_id,b1_0.title
+from Book b1_0
+    join (Book_Author a1_0 join Author a1_1 on a1_1.id=a1_0.authors_id)
+        on b1_0.isbn=a1_0.books_isbn
+order by b1_0.isbn
+----
+
+Much better!
 
 You can find much more information about association fetching in the {association-fetching}[User Guide].
 

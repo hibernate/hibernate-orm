@@ -507,7 +507,6 @@ Hibernate Spatial lets us work with spatial types just as we would with any of t
 [source,java]
 ----
 var geometryFactory = new GeometryFactory();
-
 ...
 
 Point point = geometryFactory.createPoint(new Coordinate(10, 5));
@@ -760,6 +759,8 @@ Interception-based change detection is a nice performance optimization with a sl
 When the session flushes, the snapshot state is compared to the current state of the entity to determine if the entity has been modified.
 Maintaining these snapshots does have an impact on performance.
 - _With_ bytecode enhancement, we may avoid this cost by intercepting writes to the field and recording these modifications as they happen.
+
+This optimization isn't _completely_ transparent, however.
 
 [CAUTION]
 ====

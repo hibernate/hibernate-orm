@@ -321,6 +321,15 @@ Much better!
 
 You can find much more information about association fetching in the {association-fetching}[User Guide].
 
+Of course, an alternative way to avoid many round trips to the database is to cache the data we need in the Java client.
+If we're expecting to find the data in a local cache, we probably don't need join fetching at all.
+
+[TIP]
+====
+What if we can't be _certain_ all the data will be in the cache?
+In that case, we might want to enable batch fetching, just to reduce the cost when some data is missing.
+====
+
 [[second-level-cache]]
 === The second-level cache
 
@@ -428,6 +437,7 @@ This strategy uses "soft" locks to prevent concurrent transactions from retrievi
 
 Which policies make sense may also depend on the underlying second-level cache implementation.
 
+[%unbreakable]
 [NOTE]
 // .The JPA-defined `@Cacheable` annotation
 ====
@@ -595,6 +605,7 @@ Finally, there's a way to globally disable the second-level cache:
 
 When `hibernate.cache.region.factory_class` is set, this property defaults to `true`.
 
+[%unbreakable]
 [TIP]
 ====
 This setting lets us easily disable the second-level cache completely when troubleshooting or profiling performance.
@@ -747,6 +758,7 @@ A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
 There's no particular reason to prefer Hibernate's `CacheMode` over the JPA equivalents.
 This enumeration only exists because Hibernate had cache modes long before they were added to JPA.
 
+[%unbreakable]
 [TIP]
 ====
 For "reference" data, that is, for data which is expected to always be found in the second-level cache, it's a good idea to _prime_ the cache at startup.

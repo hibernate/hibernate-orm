@@ -81,6 +81,15 @@ class Region {
 
 Note that the restriction specified by the `condition` or `defaultCondition` is a native SQL expression.
 
+.Annotations for defining filters
+[%breakable,cols="25,~"]
+|===
+| Annotation | Purpose
+
+| `@FilterDef` | Defines a filter and declares its name (exactly one per filter)
+| `@Filter` | Specifies how a filter applies to a given entity or collection (many per filter)
+|===
+
 By default, a new session comes with every filter disabled.
 A filter may be explicitly enabled in a given session by calling `enableFilter()` and assigning arguments to the parameters of the filter.
 You should do this right at the _start_ of the session.
@@ -604,10 +613,13 @@ There are a number of annotations which are useful to express this sort of compl
 |===
 | Annotations | Purpose
 
-| `@AnyDiscriminator`, `@JdbcType`, or `@JdbcTypeCode` | Specify the type of the discriminator
+| `@Any` | Declares that an attribute is a discriminated polymorphic association mapping
+| `@AnyDiscriminator` | Specify the Java type of the discriminator
+| `@JdbcType` or `@JdbcTypeCode` | Specify the JDBC type of the discriminator
 | `@AnyDiscriminatorValue` | Specifies how discriminator values map to entity types
 | `@Column` or `@Formula` | Specify the column or formula in which the discriminator value is stored
-| `@AnyKeyJavaType`, `@AnyKeyJavaClass`, `@AnyKeyJdbcType`, or `@AnyKeyJdbcTypeCode` | Specify the type of the foreign key (that is, of the ids of the target entities)
+| `@AnyKeyJavaType` or `@AnyKeyJavaClass` | Specify the Java type of the foreign key (that is, of the ids of the target entities)
+| `@AnyKeyJdbcType` or `@AnyKeyJdbcTypeCode` | Specify the JDBC type of the foreign key
 | `@JoinColumn` | Specifies the foreign key column
 |===
 
@@ -727,6 +739,12 @@ Note that even though we've placed this annotation on the `Book` entity, a fetch
 
 We may specify association fetching strategies using the `fetchOverrides` member of the `@FetchProfile` annotation, but frankly it looks so messy that we're embarrassed to show it to you here.
 
+[NOTE]
+====
+Similarly, a JPA <<entity-graph,entity graph>> may be defined using `@NamedEntityGraph`.
+But the format of this annotation is _even worse_ than `@FetchProfile(fetchOverrides=...)`, so we can't recommend it. 💀
+====
+
 A better way is to annotate an association with the fetch profiles it should be fetched in:
 
 [source,java]
@@ -786,14 +804,8 @@ class Book {
 
 We may define as many different fetch profiles as we like.
 
-[NOTE]
-====
-JPA entity graphs may also be defined in annotations, using `@NamedEntityGraph`.
-But the format of this annotation is _even worse_ than the format of the `@FetchProfile` annotation, so we can't recommend it. 💀
-====
-
 .Annotations for defining fetch profiles
-[%autowidth.stretch]
+[%breakable,cols="25,~"]
 |===
 | Annotation | Purpose
 

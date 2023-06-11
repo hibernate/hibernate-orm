@@ -640,6 +640,62 @@ from Order ord
 Polymorphic association joins for `@Any` mappings are not currently implemented.
 ====
 
+[[dynamic-insert-update]]
+=== Selective columns inserts and updates
+
+By default, Hibernate generates `insert` and `update` statements for each entity during boostrap, and reuses the same `insert` statement every time an instance of the entity is made persistent, and the same `update` statement every time an instance of the entity is modified.
+
+This means that:
+
+- if an attribute is `null` when the entity is made persistent, its mapped column is redundantly included in the SQL `insert`, and
+- worse, if a certain attribute is unmodified when other attributes are changed, the column mapped by that attribute is redundantly included in the SQL `update`.
+
+Most of the time this just isn't an issue worth worrying about.
+The cost of interacting with the database is _usually_ dominated by the cost of a round trip, not by the number of columns in the `insert` or `update`.
+But in cases where it does become important, there are two ways to be more selective about which columns are included in the SQL.
+
+The JPA-standard way is to indicate statically which columns are eligible for inclusion via the `@Column` annotation.
+For example, if an entity is always created with an immutable `creationDate`, and with no `completionDate`, then we would write:
+
+[source,java]
+----
+@Column(updatable=false) LocalDate creationDate;
+@Column(insertable=false) LocalDate completionDate;
+----
+
+This approach works quite well in many cases, but often breaks down for entities with more than a handful of updatable columns.
+
+An alternative solution is to ask Hibernate to generate SQL dynamically each time an `insert` or `update` is executed.
+We do this by annotating the entity class.
+
+.Annotations for dynamic SQL generation
+[%breakable,cols="25,~"]
+|===
+| Annotation | Purpose
+
+| `@DynamicInsert` | Specifies that an `insert` statement should be generated each time an entity is made persistent
+| `@DynamicUpdate` | Specifies that an `update` statement should be generated each time an entity is modified
+|===
+
+It's important to realize that, while `@DynamicInsert` has no impact on semantics, the more useful `@DynamicUpdate` annotation _does_ have a subtle side effect.
+
+[CAUTION]
+====
+The wrinkle is that if an entity has no version property, `@DynamicUpdate` opens the possibility of two optimistic transactions concurrently reading and selectively updating a given instance of the entity.
+In principle, this might lead to a row with inconsistent column values after both optimistic transactions commit successfully.
+====
+
+Of course, this consideration doesn't arise for entities with a `@Version` attribute.
+
+[TIP]
+====
+But there's a solution!
+Well-designed relational schemas should have _constraints_ to ensure data integrity.
+That's true no matter what measures we take to preserve integrity in our program logic.
+We may ask Hibernate to add a `check` constraint to our table using the `@Check` annotation.
+Check constraints and foreign key constraints can help ensure that a row never contains inconsistent column values.
+====
+
 [[bytecode-enhancer]]
 === Using the bytecode enhancer
 

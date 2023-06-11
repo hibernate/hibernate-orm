@@ -15,7 +15,6 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -58,26 +57,30 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 		this.entityKey = entityKey;
 
-		final EntityPersister entityPersister = session.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityPersister =
+				session.getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 		if ( entityPersister.hasCollections() ) {
 			Type[] propertyTypes = entityPersister.getPropertyTypes();
+			String[] propertyNames = entityPersister.getPropertyNames();
 			collectionAttributeNames = new HashSet<>();
 			for ( int i = 0; i < propertyTypes.length; i++ ) {
 				Type propertyType = propertyTypes[i];
 				if ( propertyType.isCollectionType() ) {
-					collectionAttributeNames.add( entityPersister.getPropertyNames()[i] );
+					collectionAttributeNames.add( propertyNames[i] );
 				}
 			}
 		}
 
 		this.inLineDirtyChecking = isSelfDirtinessTrackerType( entityPersister.getMappedClass() );
-		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to initialise the entity
-		// because the pre-computed update statement contains even not dirty properties and so we need all the values
-		// we have to initialise it even if it's versioned to fetch the current version
-		initializeBeforeWrite = !( inLineDirtyChecking && entityPersister.getEntityMetamodel().isDynamicUpdate() ) || entityPersister.isVersioned();
+		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to
+		// initialize the entity because the precomputed update statement contains even not
+		// dirty properties. And so we need all the values we have to initialize. Or, if it's
+		// versioned, we need to fetch the current version.
+		initializeBeforeWrite =
+				!inLineDirtyChecking
+						|| !entityPersister.getEntityMetamodel().isDynamicUpdate()
+						|| entityPersister.isVersioned();
 		status = Status.UNINITIALIZED;
 	}
 
@@ -87,7 +90,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 	@Override
 	protected Object handleRead(Object target, String attributeName, Object value) {
-		// it is illegal for this interceptor to still be attached to the entity after initialization
+		// it's illegal for this interceptor to still be attached to the entity after initialization
 		if ( isInitialized() ) {
 			throw new IllegalStateException( "EnhancementAsProxyLazinessInterceptor interception on an initialized instance" );
 		}
@@ -104,21 +107,21 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 				(session, isTempSession) -> {
 					final Object[] writtenValues;
 
-					final EntityPersister entityPersister = session.getFactory()
-							.getRuntimeMetamodels()
-							.getMappingMetamodel()
-							.getEntityDescriptor( getEntityName() );
+					final EntityPersister entityPersister =
+							session.getFactory().getMappingMetamodel()
+									.getEntityDescriptor( getEntityName() );
 
 					if ( writtenFieldNames != null && !writtenFieldNames.isEmpty() ) {
 
 						// enhancement has dirty-tracking available and at least one attribute was explicitly set
 
 						if ( writtenFieldNames.contains( attributeName ) ) {
-							// the requested attribute was one of the attributes explicitly set, we can just return the explicitly set value
+							// the requested attribute was one of the attributes explicitly set,
+							// we can just return the explicitly-set value
 							return entityPersister.getPropertyValue( target, attributeName );
 						}
 
-						// otherwise we want to save all of the explicitly set values in anticipation of
+						// otherwise we want to save all the explicitly-set values in anticipation of
 						// 		the force initialization below so that we can "replay" them after the
 						// 		initialization
 
@@ -148,7 +151,8 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 						for ( String writtenFieldName : writtenFieldNames ) {
 							final int size = entityPersister.getNumberOfAttributeMappings();
 							for ( int index = 0; index < size; index++ ) {
-								if ( writtenFieldName.contains( entityPersister.getAttributeMapping( index ).getAttributeName() ) ) {
+								final String name = entityPersister.getAttributeMapping( index ).getAttributeName();
+								if ( writtenFieldName.contains( name ) ) {
 									entityPersister.setValue(
 											target,
 											index,
@@ -246,7 +250,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 
 		if ( identifierAttributeNames.contains( attributeName ) ) {
 			// it is illegal for the identifier value to be changed.  Normally Hibernate
-			// validates this during flush.  However, here it is dangerous to just allow the
+			// validates this during flush.  However, here it's dangerous to just allow the
 			// new value to be set and continue on waiting for the flush for validation
 			// because this interceptor manages the entity's entry in the PC itself.  So
 			// just do the check here up-front

@@ -715,7 +715,7 @@ public class OracleLegacyDialect extends Dialect {
 				}
 				//intentional fall-through:
 			case Types.DECIMAL:
-				if ( scale == 0 ) {
+				if ( scale == 0 && precision != 0 ) {
 					// Don't infer TINYINT or SMALLINT on Oracle, since the
 					// range of values of a NUMBER(3,0) or NUMBER(5,0) just
 					// doesn't really match naturally.

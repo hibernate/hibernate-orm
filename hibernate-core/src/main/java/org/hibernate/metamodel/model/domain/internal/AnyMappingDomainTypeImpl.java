@@ -6,26 +6,22 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.List;
-
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Column;
-import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.DiscriminatorConverter;
-import org.hibernate.metamodel.mapping.internal.AnyDiscriminatorPart;
+import org.hibernate.metamodel.mapping.DefaultDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.MappedDiscriminatorConverter;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.MetaType;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
-import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -40,9 +36,7 @@ public class AnyMappingDomainTypeImpl implements AnyMappingDomainType<Class> {
 			Any bootAnyMapping,
 			AnyType anyType,
 			JavaType<Class> baseJtd,
-			TypeConfiguration typeConfiguration,
-			MappingMetamodel mappingMetamodel,
-			SessionFactoryImplementor sessionFactory) {
+			MappingMetamodelImplementor mappingMetamodel) {
 		this.anyType = anyType;
 		this.baseJtd = baseJtd;
 
@@ -53,12 +47,19 @@ public class AnyMappingDomainTypeImpl implements AnyMappingDomainType<Class> {
 		anyDiscriminatorType = new ConvertedBasicTypeImpl<>(
 				navigableRole.getFullPath(),
 				discriminatorBaseType.getJdbcType(),
-				DiscriminatorConverter.fromValueMappings(
+				bootAnyMapping.getMetaValues().isEmpty()
+				? DefaultDiscriminatorConverter.fromMappingMetamodel(
 						navigableRole,
-						(JavaType) ClassJavaType.INSTANCE,
+						ClassJavaType.INSTANCE,
+						discriminatorBaseType,
+						mappingMetamodel
+				)
+				: MappedDiscriminatorConverter.fromValueMappings(
+						navigableRole,
+						ClassJavaType.INSTANCE,
 						discriminatorBaseType,
 						bootAnyMapping.getMetaValues(),
-						sessionFactory
+						mappingMetamodel
 				)
 		);
 	}

@@ -167,6 +167,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappedDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -2274,12 +2275,12 @@ public abstract class AbstractEntityPersister
 		}
 
 		//noinspection rawtypes
-		final DiscriminatorConverter converter = DiscriminatorConverter.fromValueMappings(
+		final DiscriminatorConverter converter = MappedDiscriminatorConverter.fromValueMappings(
 				getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME ),
 				domainJavaType,
 				underlingJdbcMapping,
 				getSubclassByDiscriminatorValue(),
-				factory
+				factory.getMappingMetamodel()
 		);
 
 		//noinspection unchecked,rawtypes

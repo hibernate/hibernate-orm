@@ -95,7 +95,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				bootValueMapping.isPartitionKey(),
 				(BasicType<?>) metaType.getBaseType(),
 				metaType.getDiscriminatorValuesToEntityNameMap(),
-				creationProcess.getCreationContext().getSessionFactory()
+				creationProcess.getCreationContext().getSessionFactory().getMappingMetamodel()
 		);
 
 
@@ -163,14 +163,18 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	public Object resolveDiscriminatorValueToEntityMapping(EntityMappingType entityMappingType) {
-		final DiscriminatorValueDetails details = discriminatorPart.getValueConverter().getDetailsForEntityName( entityMappingType.getEntityName() );
+		final DiscriminatorValueDetails details =
+				discriminatorPart.getValueConverter()
+						.getDetailsForEntityName( entityMappingType.getEntityName() );
 		return details != null
 				? details.getValue()
 				: null;
 	}
 
 	public EntityMappingType resolveDiscriminatorValueToEntityMapping(Object discriminatorValue) {
-		final DiscriminatorValueDetails details = discriminatorPart.getValueConverter().getDetailsForDiscriminatorValue( discriminatorValue );
+		final DiscriminatorValueDetails details =
+				discriminatorPart.getValueConverter().
+						getDetailsForDiscriminatorValue( discriminatorValue );
 		return details != null
 				? details.getIndicatedEntity()
 				: null;

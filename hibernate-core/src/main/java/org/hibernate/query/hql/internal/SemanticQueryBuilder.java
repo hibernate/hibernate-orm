@@ -44,6 +44,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.internal.AnyKeyPart;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -2793,7 +2794,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath.get( identifierDescriptor.getPathName() );
 		}
 		else if ( sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
-			return sqmPath.resolvePathPart("id", true, getCurrentProcessingState().getCreationState() );
+			return sqmPath.resolvePathPart( AnyKeyPart.KEY_NAME, true, getCurrentProcessingState().getCreationState() );
 		}
 		else {
 			throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );

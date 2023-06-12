@@ -101,7 +101,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		final BasicType<?> keyType = (BasicType<?>) anyType.getIdentifierType();
 		final BasicValuedModelPart keyPart = new AnyKeyPart(
-				containerRole.append( AnyKeyPart.ROLE_NAME),
+				containerRole.append( AnyKeyPart.KEY_NAME ),
 				declaringModelPart,
 				tableName,
 				keyColumn.getText( dialect ),
@@ -245,7 +245,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			return getDiscriminatorPart();
 		}
 
-		if ( AnyKeyPart.ROLE_NAME.equals( name ) ) {
+		if ( AnyKeyPart.KEY_NAME.equals( name ) ) {
 			return getKeyPart();
 		}
 
@@ -278,7 +278,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			final String idAttrName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
+			final String idAttrName = identifierMapping.getAttributeName();
 			if ( idAttrName.equals( name ) ) {
 				return getKeyPart();
 			}

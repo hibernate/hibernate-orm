@@ -1471,6 +1471,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP;
+	}
+
+	@Override
 	public boolean canDisableConstraints() {
 		return true;
 	}

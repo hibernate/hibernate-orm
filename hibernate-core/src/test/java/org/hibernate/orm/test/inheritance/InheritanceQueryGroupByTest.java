@@ -6,6 +6,11 @@
  */
 package org.hibernate.orm.test.inheritance;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -22,8 +27,11 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,19 +41,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory( useCollectingStatementInspector = true )
 @DomainModel( annotatedClasses = {
 		InheritanceQueryGroupByTest.Parent.class,
-		InheritanceQueryGroupByTest.ChildOne.class,
-		InheritanceQueryGroupByTest.ChildTwo.class,
-		InheritanceQueryGroupByTest.MyEntity.class
+		InheritanceQueryGroupByTest.SingleTableParent.class,
+		InheritanceQueryGroupByTest.SingleTableChildOne.class,
+		InheritanceQueryGroupByTest.SingleTableChildTwo.class,
+		InheritanceQueryGroupByTest.JoinedParent.class,
+		InheritanceQueryGroupByTest.JoinedChildOne.class,
+		InheritanceQueryGroupByTest.JoinedChildTwo.class,
+		InheritanceQueryGroupByTest.TPCParent.class,
+		InheritanceQueryGroupByTest.TPCChildOne.class,
+		InheritanceQueryGroupByTest.TPCChildTwo.class,
+		InheritanceQueryGroupByTest.MyEntity.class,
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16349" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-16773" )
 public class InheritanceQueryGroupByTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final ChildOne childOne = new ChildOne( "child_one", 1 );
-			session.persist( childOne );
-			session.persist( new MyEntity( 1, childOne ) );
-			session.persist( new MyEntity( 2, childOne ) );
+			final SingleTableChildOne st1 = new SingleTableChildOne();
+			st1.setName( "single_table_child_one" );
+			session.persist( st1 );
+			final JoinedChildOne j1 = new JoinedChildOne();
+			j1.setName( "joined_child_one" );
+			session.persist( j1 );
+			final TPCChildOne tpc1 = new TPCChildOne();
+			tpc1.setName( "tpc_child_one" );
+			session.persist( tpc1 );
+			session.persist( new MyEntity( 1, st1, j1, tpc1 ) );
+			session.persist( new MyEntity( 2, st1, j1, tpc1 ) );
 		} );
 	}
 
@@ -53,95 +76,205 @@ public class InheritanceQueryGroupByTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.createMutationQuery( "delete from MyEntity" ).executeUpdate();
-			session.createMutationQuery( "delete from Parent" ).executeUpdate();
+			session.createMutationQuery( "delete from " + Parent.class.getName() ).executeUpdate();
 		} );
 	}
 
 	@Test
-	public void testGroupBy(SessionFactoryScope scope) {
+	public void testGroupBySingleTable(SessionFactoryScope scope) {
+		testGroupBy( scope, "singleTableParent", SingleTableParent.class, "single_table_child_one", 1 );
+	}
+
+	@Test
+	public void testGroupByJoined(SessionFactoryScope scope) {
+		testGroupBy( scope, "joinedParent", JoinedParent.class, "joined_child_one", 1 );
+	}
+
+	@Test
+	public void testGroupByTPC(SessionFactoryScope scope) {
+		testGroupBy( scope, "tpcParent", TPCParent.class, "tpc_child_one", 4 );
+	}
+
+	private void testGroupBy(
+			SessionFactoryScope scope,
+			String parentProp,
+			Class<?> parentEntityClass,
+			String parentName,
+			int childPropCount) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final MyPojo myPojo = session.createQuery(
-					"select new "
-							+ MyPojo.class.getName()
-							+ "(sum(e.amount), re) from MyEntity e join e.parent re group by re",
+					String.format(
+							"select new %s(sum(e.amount), re) from MyEntity e join e.%s re group by re",
+							MyPojo.class.getName(),
+							parentProp
+					),
 					MyPojo.class
 			).getSingleResult();
 			assertThat( myPojo.getAmount() ).isEqualTo( 3L );
-			assertThat( myPojo.getParent().getName() ).isEqualTo( "child_one" );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", 2 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", 2 );
+			assertThat( myPojo.getParent().getName() ).isEqualTo( parentName );
+			final EntityMappingType entityMappingType = scope.getSessionFactory()
+					.getMappingMetamodel()
+					.findEntityDescriptor( parentEntityClass );
+			final int expectedCount = supportsFunctionalDependency( scope, entityMappingType ) ?
+					childPropCount :
+					childPropCount + 1;
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", expectedCount );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", expectedCount );
 		} );
 	}
 
 	@Test
-	public void testGroupByNotSelected(SessionFactoryScope scope) {
+	public void testGroupByNotSelectedSingleTable(SessionFactoryScope scope) {
+		testGroupByNotSelected( scope, "singleTableParent", "single_table_parent_id", 0 );
+	}
+
+	@Test
+	public void testGroupByNotSelectedJoined(SessionFactoryScope scope) {
+		testGroupByNotSelected( scope, "joinedParent", "joined_parent_id", 0 );
+	}
+
+	@Test
+	public void testGroupByNotSelectedTPC(SessionFactoryScope scope) {
+		testGroupByNotSelected( scope, "tpcParent", "tpc_parent_id", 3 );
+	}
+
+	private void testGroupByNotSelected(
+			SessionFactoryScope scope,
+			String parentProp,
+			String parentFkName,
+			int childPropCount) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Long sum = session.createQuery(
-					"select sum(e.amount) from MyEntity e join e.parent re group by re",
+					String.format( "select sum(e.amount) from MyEntity e join e.%s re group by re", parentProp ),
 					Long.class
 			).getSingleResult();
 			assertThat( sum ).isEqualTo( 3L );
 			// When not selected, group by should only use the foreign key (parent_id)
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "parent_id", 2 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", 0 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", 0 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, parentFkName, 2 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", childPropCount );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", childPropCount );
 		} );
 	}
 
 	@Test
-	public void testGroupByAndOrderBy(SessionFactoryScope scope) {
+	public void testGroupByAndOrderBySingleTable(SessionFactoryScope scope) {
+		testGroupByAndOrderBy( scope, "singleTableParent", SingleTableParent.class, "single_table_child_one", 1 );
+	}
+
+	@Test
+	public void testGroupByAndOrderByJoined(SessionFactoryScope scope) {
+		testGroupByAndOrderBy( scope, "joinedParent", JoinedParent.class, "joined_child_one", 1 );
+	}
+
+	@Test
+	public void testGroupByAndOrderByTPC(SessionFactoryScope scope) {
+		testGroupByAndOrderBy( scope, "tpcParent", TPCParent.class, "tpc_child_one", 4 );
+	}
+
+	private void testGroupByAndOrderBy(
+			SessionFactoryScope scope,
+			String parentProp,
+			Class<?> parentEntityClass,
+			String parentName,
+			int childPropCount) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final MyPojo myPojo = session.createQuery(
-					"select new "
-							+ MyPojo.class.getName()
-							+ "(sum(e.amount), re) from MyEntity e join e.parent re group by re order by re",
+					String.format(
+							"select new %s(sum(e.amount), re) from MyEntity e join e.%s re group by re order by re",
+							MyPojo.class.getName(),
+							parentProp
+					),
 					MyPojo.class
 			).getSingleResult();
 			assertThat( myPojo.getAmount() ).isEqualTo( 3L );
-			assertThat( myPojo.getParent().getName() ).isEqualTo( "child_one" );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", 3 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", 3 );
+			assertThat( myPojo.getParent().getName() ).isEqualTo( parentName );
+			final EntityMappingType entityMappingType = scope.getSessionFactory()
+					.getMappingMetamodel()
+					.findEntityDescriptor( parentEntityClass );
+			final int expectedCount = supportsFunctionalDependency( scope, entityMappingType ) ?
+					childPropCount :
+					childPropCount + 2;
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", expectedCount );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", expectedCount );
 		} );
 	}
 
 	@Test
-	public void testGroupByAndOrderByNotSelected(SessionFactoryScope scope) {
+	public void testGroupByAndOrderByNotSelectedSingleTable(SessionFactoryScope scope) {
+		testGroupByAndOrderByNotSelected( scope, "singleTableParent", "single_table_parent_id", 0 );
+	}
+
+	@Test
+	public void testGroupByAndOrderByNotSelectedJoined(SessionFactoryScope scope) {
+		testGroupByAndOrderByNotSelected( scope, "joinedParent", "joined_parent_id", 0 );
+	}
+
+	@Test
+	public void testGroupByAndOrderByNotSelectedTPC(SessionFactoryScope scope) {
+		testGroupByAndOrderByNotSelected( scope, "tpcParent", "tpc_parent_id", 3 );
+	}
+
+	private void testGroupByAndOrderByNotSelected(
+			SessionFactoryScope scope,
+			String parentProp,
+			String parentFkName,
+			int childPropCount) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final Long sum = session.createQuery(
-					"select sum(e.amount) from MyEntity e join e.parent re group by re order by re",
+					String.format(
+							"select sum(e.amount) from MyEntity e join e.%s re group by re order by re",
+							parentProp
+					),
 					Long.class
 			).getSingleResult();
 			assertThat( sum ).isEqualTo( 3L );
-			// When not selected, group by and order by should only use the foreign key (parent_id)
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "parent_id", 3 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", 0 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", 0 );
+			// When not selected, group by should only use the foreign key (parent_id)
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, parentFkName, 3 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", childPropCount );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", childPropCount );
 		} );
 	}
 
-	@Entity( name = "Parent" )
-	@DiscriminatorColumn( name = "disc_col", discriminatorType = DiscriminatorType.INTEGER )
+	private static Dialect getDialect(SessionFactoryScope scope) {
+		return scope.getSessionFactory().getJdbcServices().getDialect();
+	}
+
+	private static boolean supportsFunctionalDependency(
+			SessionFactoryScope scope,
+			EntityMappingType entityMappingType) {
+		final FunctionalDependencyAnalysisSupport analysisSupport = scope.getSessionFactory()
+				.getJdbcServices()
+				.getDialect()
+				.getFunctionalDependencyAnalysisSupport();
+		if ( analysisSupport.supportsAnalysis() ) {
+			if ( entityMappingType.getSqmMultiTableMutationStrategy() == null ) {
+				return true;
+			}
+			else {
+				return analysisSupport.supportsTableGroups() && ( analysisSupport.supportsConstants() ||
+						// Union entity persisters use a literal 'clazz_' column as a discriminator
+						// that breaks functional dependency for dialects that don't support constants
+						!( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister ) );
+			}
+		}
+		return false;
+	}
+
+	@MappedSuperclass
 	public abstract static class Parent {
 		@Id
 		@GeneratedValue
 		private Long id;
 
 		private String name;
-
-		public Parent() {
-		}
-
-		public Parent(String name) {
-			this.name = name;
-		}
 
 		public Long getId() {
 			return id;
@@ -150,36 +283,64 @@ public class InheritanceQueryGroupByTest {
 		public String getName() {
 			return name;
 		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
-	@Entity( name = "ChildOne" )
+	@Entity( name = "SingleTableParent" )
+	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
+	@DiscriminatorColumn( name = "disc_col", discriminatorType = DiscriminatorType.INTEGER )
+	public static class SingleTableParent extends Parent {
+	}
+
+	@Entity( name = "SingleTableChildOne" )
 	@DiscriminatorValue( "1" )
-	public static class ChildOne extends Parent {
+	public static class SingleTableChildOne extends SingleTableParent {
 		@Column( name = "child_one_col" )
 		private Integer childOneProp;
-
-		public ChildOne() {
-		}
-
-		public ChildOne(String name, Integer childOneProp) {
-			super( name );
-			this.childOneProp = childOneProp;
-		}
 	}
 
-	@Entity( name = "ChildTwo" )
+	@Entity( name = "SingleTableChildTwo" )
 	@DiscriminatorValue( "2" )
-	public static class ChildTwo extends Parent {
+	public static class SingleTableChildTwo extends SingleTableParent {
 		@Column( name = "child_two_col" )
 		private Integer childTwoProp;
+	}
 
-		public ChildTwo() {
-		}
+	@Entity( name = "JoinedParent" )
+	@Inheritance( strategy = InheritanceType.JOINED )
+	public static class JoinedParent extends Parent {
+	}
 
-		public ChildTwo(String name, Integer childTwoProp) {
-			super( name );
-			this.childTwoProp = childTwoProp;
-		}
+	@Entity( name = "JoinedChildOne" )
+	public static class JoinedChildOne extends JoinedParent {
+		@Column( name = "child_one_col" )
+		private Integer childOneProp;
+	}
+
+	@Entity( name = "JoinedChildTwo" )
+	public static class JoinedChildTwo extends JoinedParent {
+		@Column( name = "child_two_col" )
+		private Integer childTwoProp;
+	}
+
+	@Entity( name = "TPCParent" )
+	@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
+	public static class TPCParent extends Parent {
+	}
+
+	@Entity( name = "TPCChildOne" )
+	public static class TPCChildOne extends TPCParent {
+		@Column( name = "child_one_col" )
+		private Integer childOneProp;
+	}
+
+	@Entity( name = "TPCChildTwo" )
+	public static class TPCChildTwo extends TPCParent {
+		@Column( name = "child_two_col" )
+		private Integer childTwoProp;
 	}
 
 	@Entity( name = "MyEntity" )
@@ -191,15 +352,29 @@ public class InheritanceQueryGroupByTest {
 		private Integer amount;
 
 		@ManyToOne
-		@JoinColumn( name = "parent_id" )
-		private Parent parent;
+		@JoinColumn( name = "single_table_parent_id" )
+		private SingleTableParent singleTableParent;
+
+		@ManyToOne
+		@JoinColumn( name = "joined_parent_id" )
+		private JoinedParent joinedParent;
+
+		@ManyToOne
+		@JoinColumn( name = "tpc_parent_id" )
+		private TPCParent tpcParent;
 
 		public MyEntity() {
 		}
 
-		public MyEntity(Integer amount, Parent parent) {
+		public MyEntity(
+				Integer amount,
+				SingleTableParent singleTableParent,
+				JoinedParent joinedParent,
+				TPCParent tpcParent) {
 			this.amount = amount;
-			this.parent = parent;
+			this.singleTableParent = singleTableParent;
+			this.joinedParent = joinedParent;
+			this.tpcParent = tpcParent;
 		}
 	}
 

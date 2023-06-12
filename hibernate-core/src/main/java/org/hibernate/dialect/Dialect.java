@@ -5299,4 +5299,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.NONE;
 	}
+
+	/**
+	 * Get this dialect's level of support for primary key functional dependency analysis
+	 * within {@code GROUP BY} and {@code ORDER BY} clauses.
+	 */
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.NONE;
+	}
 }

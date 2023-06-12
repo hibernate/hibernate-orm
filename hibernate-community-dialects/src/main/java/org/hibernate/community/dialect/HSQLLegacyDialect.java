@@ -14,11 +14,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.dialect.BooleanDecoder;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.SimpleDatabaseVersion;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -784,6 +780,11 @@ public class HSQLLegacyDialect extends Dialect {
 	@Override
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
 		return false;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
 
 	// Do not drop constraints explicitly, just do this by cascading instead.

@@ -28,7 +28,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
 
 	private final Set<EntityKey> toBatchLoad = new HashSet<>();
-	private State state = State.UNINITIALIZED;
+
 
 	public BatchInitializeEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
@@ -45,17 +45,10 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 	}
 
 	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
-		if ( state != State.UNINITIALIZED ) {
-			return;
-		}
-		super.resolveKey( rowProcessingState );
-		state = entityKey == null ? State.MISSING : State.KEY_RESOLVED;
-	}
-
-	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state != State.KEY_RESOLVED ) {
+		resolveKey( rowProcessingState,  referencedModelPart, parentAccess );
+
+		if ( entityKey == null ) {
 			return;
 		}
 
@@ -88,12 +81,6 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 	}
 
 	@Override
-	public void finishUpRow(RowProcessingState rowProcessingState) {
-		super.finishUpRow( rowProcessingState );
-		state = State.UNINITIALIZED;
-	}
-
-	@Override
 	public void endLoading(ExecutionContext context) {
 		final SharedSessionContractImplementor session = context.getSession();
 		for ( EntityKey key : toBatchLoad ) {
@@ -105,13 +92,6 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 	@Override
 	public String toString() {
 		return "BatchInitializeEntitySelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
-	}
-
-	enum State {
-		UNINITIALIZED,
-		MISSING,
-		KEY_RESOLVED,
-		INITIALIZED
 	}
 
 }

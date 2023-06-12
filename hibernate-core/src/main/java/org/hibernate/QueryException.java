@@ -17,7 +17,11 @@ public class QueryException extends HibernateException {
 	 * Constructs a {@code QueryException} using the specified exception message.
 	 *
 	 * @param message A message explaining the exception condition
+	 *
+	 * @deprecated this constructor does not carry information
+	 *             about the query which caused the failure
 	 */
+	@Deprecated(since = "6.3")
 	public QueryException(String message) {
 		this( message, null, null );
 	}
@@ -27,7 +31,11 @@ public class QueryException extends HibernateException {
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param cause The underlying cause
+	 *
+	 * @deprecated this constructor does not carry information
+	 *             about the query which caused the failure
 	 */
+	@Deprecated(since = "6.3")
 	public QueryException(String message, Exception cause) {
 		this( message, null, cause );
 	}
@@ -58,7 +66,11 @@ public class QueryException extends HibernateException {
 	 * Constructs a {@code QueryException} using the specified cause.
 	 *
 	 * @param cause The underlying cause
+	 *
+	 * @deprecated this constructor does not carry information
+	 *             about the query which caused the failure
 	 */
+	@Deprecated(since = "6.3")
 	public QueryException(Exception cause) {
 		this( "A query exception occurred", null, cause );
 	}

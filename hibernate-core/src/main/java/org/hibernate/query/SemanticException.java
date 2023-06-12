@@ -13,12 +13,27 @@ package org.hibernate.query;
  * @author Steve Ebersole
  */
 public class SemanticException extends org.hibernate.QueryException {
+
+	/**
+	 * @deprecated this constructor does not carry information
+	 *             about the query which caused the failure
+	 */
+	@Deprecated(since = "6.3")
 	public SemanticException(String message) {
 		super( message );
 	}
 
+	/**
+	 * @deprecated this constructor does not carry information
+	 *             about the query which caused the failure
+	 */
+	@Deprecated(since = "6.3")
 	public SemanticException(String message, Exception cause) {
 		super( message, cause );
+	}
+
+	public SemanticException(String message, String queryString) {
+		super( message, queryString );
 	}
 
 	public SemanticException(String message, String queryString, Exception cause) {

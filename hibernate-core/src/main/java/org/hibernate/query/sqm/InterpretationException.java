@@ -10,7 +10,7 @@ import org.hibernate.QueryException;
 
 /**
  * Represents a general uncaught problem performing the interpretation.
- * This usually indicate a semantic error in the query.
+ * This usually indicates a semantic error in the query.
  *
  * @author Steve Ebersole
  */

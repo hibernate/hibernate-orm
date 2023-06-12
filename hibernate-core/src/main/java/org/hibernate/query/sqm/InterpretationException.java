@@ -9,21 +9,33 @@ package org.hibernate.query.sqm;
 import org.hibernate.QueryException;
 
 /**
- * Represents a general uncaught problem performing the interpretation.  This might indicate
- * a semantic (user sqm) problem or a bug in the parser.
+ * Represents a general uncaught problem performing the interpretation.
+ * This usually indicate a semantic error in the query.
  *
  * @author Steve Ebersole
  */
 public class InterpretationException extends QueryException {
-	public InterpretationException(String query) {
-		this( query, null );
-	}
 
+	public InterpretationException(String query, String message) {
+		super(
+				"Error interpreting query [" + message + "] [" + query + "]",
+				query
+		);
+	}
 	public InterpretationException(String query, Exception cause) {
 		super(
-				"Error interpreting query [" + query + "]; this may indicate a semantic (user query) problem or a bug in the parser",
+				"Error interpreting query [" + cause.getMessage() + "] [" + query + "]",
 				query,
 				cause
 		);
+	}
+
+	/**
+	 * @deprecated this constructor does not carry information
+	 *             about the query which caused the failure
+	 */
+	@Deprecated(since = "6.3", forRemoval = true)
+	public InterpretationException(String message) {
+		super( "Error interpreting query [" + message + "]" );
 	}
 }

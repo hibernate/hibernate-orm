@@ -40,6 +40,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private Boolean resultCachingEnabled;
 	private String resultCacheRegionName;
 	private Boolean readOnlyEnabled;
+	private Boolean queryPlanCachingEnabled;
 
 	private TupleTransformer tupleTransformer;
 	private ResultListTransformer resultListTransformer;
@@ -61,6 +62,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return flushMode;
 	}
 
+	@Override
 	public void setFlushMode(FlushMode flushMode) {
 		this.flushMode = flushMode;
 	}
@@ -70,6 +72,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return comment;
 	}
 
+	@Override
 	public void setComment(String comment) {
 		this.comment = comment;
 	}
@@ -141,6 +144,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return resultCachingEnabled;
 	}
 
+	@Override
 	public void setResultCachingEnabled(boolean resultCachingEnabled) {
 		this.resultCachingEnabled = resultCachingEnabled;
 	}
@@ -148,6 +152,16 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public String getResultCacheRegionName() {
 		return resultCacheRegionName;
+	}
+
+	@Override
+	public Boolean getQueryPlanCachingEnabled() {
+		return queryPlanCachingEnabled;
+	}
+
+	@Override
+	public void setQueryPlanCachingEnabled(Boolean queryPlanCachingEnabled) {
+		this.queryPlanCachingEnabled = queryPlanCachingEnabled;
 	}
 
 	@Override
@@ -160,6 +174,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return resultListTransformer;
 	}
 
+	@Override
 	public void setResultCacheRegionName(String resultCacheRegionName) {
 		this.resultCacheRegionName = resultCacheRegionName;
 	}

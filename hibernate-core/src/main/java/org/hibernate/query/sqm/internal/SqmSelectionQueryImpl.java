@@ -54,6 +54,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
+import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -195,7 +196,14 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = CRITERIA_HQL_STRING;
-		this.sqm = session.isCriteriaCopyTreeEnabled() ? criteria.copy( simpleContext() ) : criteria;
+		if ( session.isCriteriaCopyTreeEnabled() ) {
+			this.sqm = criteria.copy( SqmCopyContext.simpleContext() );
+		}
+		else {
+			this.sqm = criteria;
+			// Cache immutable query plans by default
+			setQueryPlanCacheable( true );
+		}
 
 		this.domainParameterXref = DomainParameterXref.from( sqm );
 		this.parameterMetadata = domainParameterXref.hasParameters()
@@ -233,8 +241,8 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 		return tupleMetadata;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public SqmSelectStatement getSqmStatement() {
+	@Override
+	public SqmSelectStatement<R> getSqmStatement() {
 		return sqm;
 	}
 
@@ -522,6 +530,20 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 	public SqmSelectionQuery<R> setCacheRegion(String regionName) {
 		super.setCacheRegion( regionName );
 		return this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
+		return this;
+	}
+
+	@Override
+	public boolean isQueryPlanCacheable() {
+		return CRITERIA_HQL_STRING.equals( hql )
+				// For criteria queries, query plan caching requires an explicit opt-in
+				? getQueryOptions().getQueryPlanCachingEnabled() == Boolean.TRUE
+				: super.isQueryPlanCacheable();
 	}
 
 

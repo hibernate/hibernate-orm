@@ -201,4 +201,26 @@ public interface HibernateHints {
 	 * @see jakarta.persistence.EntityManager#setProperty(String, Object)
 	 */
 	String HINT_JDBC_BATCH_SIZE = "org.hibernate.jdbcBatchSize";
+
+	/**
+	 * Hint to enable or disable the query plan caching.
+	 * <p>
+	 * By default, query plan caching is enabled for HQL queries
+	 * and immutable criteria queries i.e. created with {@link org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE}.
+	 * Query plan caching can be disabled for any query by setting this property to {@code false}.
+	 * Query plan caching can be enabled for mutable criteria queries by setting this property to {@code true}.
+	 * <p>
+	 * Setting this property to {@code true} for mutable criteria queries can lead to cache trashing,
+	 * because the query plan is cached based on a copy of the criteria query.
+	 * This is mostly useful when the same {@link org.hibernate.query.Query} should be executed multiple times,
+	 * but with different parameter values to avoid re-translation of the criteria query.
+	 * <p>
+	 * Note that setting this property to {@code true} does not override the basic safety measures of Hibernate.
+	 * Hibernate will never cache query plans that are not safe to cache, regardless of the value of this property.
+	 *
+	 * @see org.hibernate.query.SelectionQuery#setQueryPlanCacheable
+	 *
+	 * @since 6.3
+	 */
+	String HINT_QUERY_PLAN_CACHEABLE = "hibernate.query.plan.cacheable";
 }

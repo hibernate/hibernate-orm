@@ -744,6 +744,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 
 		@Override
+		public Boolean getQueryPlanCachingEnabled() {
+			return null;
+		}
+
+		@Override
 		public CacheRetrieveMode getCacheRetrieveMode() {
 			return cacheRetrieveMode;
 		}

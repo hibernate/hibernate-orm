@@ -805,6 +805,18 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
+	public boolean isQueryPlanCacheable() {
+		// By default, we assume query plan caching is enabled unless explicitly disabled
+		return getQueryOptions().getQueryPlanCachingEnabled() != Boolean.FALSE;
+	}
+
+	@Override
+	public SelectionQuery<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		getQueryOptions().setQueryPlanCachingEnabled( queryPlanCacheable );
+		return this;
+	}
+
+	@Override
 	public String getCacheRegion() {
 		return getQueryOptions().getResultCacheRegionName();
 	}

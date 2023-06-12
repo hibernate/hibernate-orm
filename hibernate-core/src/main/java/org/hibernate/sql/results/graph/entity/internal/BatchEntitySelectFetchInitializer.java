@@ -23,6 +23,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
 	private Map<EntityKey, List<ParentInfo>> toBatchLoad;
@@ -34,6 +35,11 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			EntityPersister concreteDescriptor,
 			DomainResultAssembler<?> identifierAssembler) {
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
+	}
+
+	@Override
+	public void resolveInstance(RowProcessingState rowProcessingState) {
+		resolveKey( rowProcessingState, referencedModelPart, parentAccess );
 	}
 
 	@Override

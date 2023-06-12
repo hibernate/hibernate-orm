@@ -35,6 +35,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	protected Object entityInstance;
 	protected EntityKey entityKey;
 
+	protected State state = State.UNINITIALIZED;
+
 	public AbstractBatchEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
 			ToOneAttributeMapping referencedModelPart,
@@ -61,20 +63,6 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
-		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
-		if ( entityIdentifier == null ) {
-			return;
-		}
-		entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
-
-		rowProcessingState.getSession().getPersistenceContext()
-				.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
-
-		registerResolutionListener();
-	}
-
-	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
 	}
 
 	@Override
@@ -83,10 +71,38 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 
 	protected abstract void registerResolutionListener();
 
+	protected void resolveKey(
+			RowProcessingState rowProcessingState,
+			ToOneAttributeMapping referencedModelPart,
+			FetchParentAccess parentAccess) {
+		if ( state != State.UNINITIALIZED ) {
+			return;
+		}
+		if ( !isAttributeAssignableToConcreteDescriptor( parentAccess, referencedModelPart ) ) {
+			state = State.MISSING;
+			return;
+		}
+
+		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
+		if ( entityIdentifier == null ) {
+			state = State.MISSING;
+		}
+		else {
+			entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
+
+			state = State.KEY_RESOLVED;
+
+			rowProcessingState.getSession().getPersistenceContext()
+					.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+			registerResolutionListener();
+		}
+	}
+
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
 		entityKey = null;
+		state = State.UNINITIALIZED;
 		clearResolutionListeners();
 	}
 
@@ -152,6 +168,13 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	@Override
 	public EntityPersister getConcreteDescriptor() {
 		return concreteDescriptor;
+	}
+
+	enum State {
+		UNINITIALIZED,
+		MISSING,
+		KEY_RESOLVED,
+		INITIALIZED
 	}
 
 }

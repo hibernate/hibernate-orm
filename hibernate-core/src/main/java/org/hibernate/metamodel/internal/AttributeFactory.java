@@ -252,7 +252,8 @@ public class AttributeFactory {
 				final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();
 				if ( type instanceof EntityType ) {
 					final EntityType entityType = (EntityType) type;
-					final IdentifiableDomainType<Y> domainType = context.locateIdentifiableType( entityType.getAssociatedEntityName() );
+					final IdentifiableDomainType<Y> domainType =
+							context.locateIdentifiableType( entityType.getAssociatedEntityName() );
 					if ( domainType == null ) {
 						// Due to the use of generics, it can happen that a mapped super class uses a type
 						// for an attribute that is not a managed type. Since this case is not specifically mentioned
@@ -274,9 +275,7 @@ public class AttributeFactory {
 						(Any) typeContext.getHibernateValue(),
 						anyType,
 						(JavaType<Class>) baseJtd,
-						context.getTypeConfiguration(),
-						context.getMetamodel(),
-						context.getRuntimeModelCreationContext().getSessionFactory()
+						context.getRuntimeModelCreationContext().getSessionFactory().getMappingMetamodel()
 				);
 			}
 			case EMBEDDABLE: {
@@ -344,7 +343,8 @@ public class AttributeFactory {
 			DomainType<?> metaModelType,
 			MetadataContext context) {
 		if ( typeContext.getValueClassification() == ValueClassification.BASIC ) {
-			final ConverterDescriptor descriptor = ( (SimpleValue) typeContext.getHibernateValue() ).getJpaAttributeConverterDescriptor();
+			final ConverterDescriptor descriptor =
+					( (SimpleValue) typeContext.getHibernateValue() ).getJpaAttributeConverterDescriptor();
 			if ( descriptor != null ) {
 				return context.getJavaTypeRegistry().resolveDescriptor(
 						descriptor.getRelationalValueResolvedType().getErasedType()

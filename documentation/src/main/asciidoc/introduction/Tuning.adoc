@@ -275,15 +275,18 @@ TIP: Most associations should be mapped for lazy fetching by default.
 It sounds as if this tip is in contradiction to the previous one, but it's not.
 It's saying that you must explicitly specify eager fetching for associations precisely when and where they are needed.
 
-If you need eager fetching in some particular transaction, use:
+If we need eager join fetching in some particular transaction, we have four different ways to specify that.
 
-- `left join fetch` in HQL,
-- `From.fetch()` in a criteria query,
-- a JPA `EntityGraph`, or
-- a <<fetch-profiles,fetch profile>>.
+[cols="40,~"]
+|===
+| Passing a JPA `EntityGraph` | We've already seen this in <<entity-graph>>
+| Specifying a named _fetch profile_ | We'll discuss this approach later in <<fetch-profiles>>
+| Using `left join fetch` in HQL/JPQL | See _A guide to Hibernate Query Language 6_ for details
+| Using `From.fetch()` in a criteria query | Same semantics as `join fetch` in HQL
+|===
 
-We've already seen how to do join fetching with an <<entity-graph,entity graph>>.
-This is how we can do it in HQL:
+Typically, a query is the most convenient option.
+Here's how we can ask for join fetching in HQL:
 
 [source,java]
 ----
@@ -319,15 +322,23 @@ order by b1_0.isbn
 
 Much better!
 
-You can find much more information about association fetching in the {association-fetching}[User Guide].
-
-Of course, an alternative way to avoid many round trips to the database is to cache the data we need in the Java client.
-If we're expecting to find the data in a local cache, we probably don't need join fetching at all.
+Join fetching, despite its non-lazy nature, is clearly more efficient than either batch or subselect fetching, and this is the source of our recommendation to avoid the use of lazy fetching.
 
 [TIP]
 ====
-What if we can't be _certain_ all the data will be in the cache?
-In that case, we might want to enable batch fetching, just to reduce the cost when some data is missing.
+There's one interesting case where join fetching becomes inefficient: when we fetch two many-values associations _in parallel_.
+Imagine we wanted to fetch both `Author.books` and `Author.royaltyStatements` in some unit of work.
+Joining both collections in a single query would result in a cartesian product of tables, and a large SQL result set.
+Subselect fetching comes to the rescue here, allowing us to fetch `books` using a join, and `royaltyStatements` using a single subsequent `select`.
+====
+
+Of course, an alternative way to avoid many round trips to the database is to cache the data we need in the Java client.
+If we're expecting to find the associated data in a local cache, we probably don't need join fetching at all.
+
+[TIP]
+====
+But what if we can't be _certain_ that all associated data will be in the cache?
+In that case, we might be able to reduce the cost of cache misses by enabling batch fetching.
 ====
 
 [[second-level-cache]]
@@ -713,11 +724,13 @@ We might select `CacheRetrieveMode.BYPASS` if we're concerned about the possibil
 
 We should select `CacheStoreMode.BYPASS` if we're querying data that doesn't need to be cached.
 
+[%unbreakable]
 [TIP]
 // .A good time to `BYPASS` the cache
 ====
 It's a good idea to set the `CacheStoreMode` to `BYPASS` just before running a query which returns a large result set full of data that we don't expect to need again soon.
 This saves work, and prevents the newly-read data from pushing out the previously cached data.
+====
 
 In JPA we would use this idiom:
 
@@ -739,7 +752,6 @@ List<Publisher> allpubs =
             .setCacheStoreMode(CacheStoreMode.BYPASS)
             .getResultList();
 ----
-====
 
 A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
 
@@ -791,6 +803,7 @@ The `Cache` interface allows programmatic eviction of cached items.
 sessionFactory.getCache().evictEntityData(Book.class, bookId);
 ----
 
+[%unbreakable]
 [CAUTION]
 // .Second-level cache management is not transaction-aware
 ====
@@ -849,6 +862,7 @@ NOTE: There's no `flush()` operation, and so `update()` is always explicit.
 
 In certain circumstances, this makes stateless sessions easier to work with, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
 
+[%unbreakable]
 [CAUTION]
 ====
 If you use `fetch()` in a stateless session, you can very easily obtain two objects representing the same database row!
@@ -860,6 +874,7 @@ Use of a `StatelessSession` alleviates the need to call:
 - `clear()` or `detach()` to perform first-level cache management, and
 - `setCacheMode()` to bypass interaction with the second-level cache.
 
+[%unbreakable]
 [TIP]
 ====
 Stateless sessions can be useful, but for bulk operations on huge datasets,
@@ -888,9 +903,12 @@ There's two basic approaches to data concurrency in Hibernate:
 In the Hibernate community it's _much_ more common to use optimistic locking, and
 Hibernate makes that incredibly easy.
 
-TIP: Where possible, in a multiuser system, avoid holding a pessimistic lock across
-a user interaction. Indeed, the usual practice is to avoid having transactions that
-span user interactions. For multiuser systems, optimistic locking is king.
+[%unbreakable]
+[TIP]
+====
+Where possible, in a multiuser system, avoid holding a pessimistic lock across a user interaction.
+Indeed, the usual practice is to avoid having transactions that span user interactions. For multiuser systems, optimistic locking is king.
+====
 
 That said, there _is_ also a place for pessimistic locks, which can sometimes reduce
 the probability of transaction rollbacks.

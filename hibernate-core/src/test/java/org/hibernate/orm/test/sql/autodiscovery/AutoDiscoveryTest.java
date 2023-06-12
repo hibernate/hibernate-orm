@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.sql.autodiscovery;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,6 +21,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -134,6 +136,25 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 					}
 				}
 		);
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	@JiraKey( "HHH-16697" )
+	public void testAggregateQueryAutoDiscovery() {
+		Session session = openSession();
+		session.beginTransaction();
+		User u = new User( "steve" );
+		session.persist( u );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		List<Object> result = session.createNativeQuery( "select sum(39.74) from t_user u" ).list();
+		Assert.assertEquals( new BigDecimal( "39.74" ), result.get( 0 ) );
+		session.remove( u );
 		session.getTransaction().commit();
 		session.close();
 	}

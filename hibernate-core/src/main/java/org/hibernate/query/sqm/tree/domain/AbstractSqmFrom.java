@@ -320,7 +320,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	public Set<Join<T, ?>> getJoins() {
 		//noinspection unchecked
 		return (Set<Join<T, ?>>) (Set<?>) getSqmJoins().stream()
-				.filter( sqmJoin -> ! ( sqmJoin instanceof SqmAttributeJoin && ( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() ) )
+				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin && !( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() )
 				.collect( Collectors.toSet() );
 	}
 

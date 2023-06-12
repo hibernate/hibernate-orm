@@ -227,6 +227,8 @@ public class QuerySqmImpl<R>
 		}
 		else {
 			this.sqm = criteria;
+			// Cache immutable query plans by default
+			setQueryPlanCacheable( true );
 		}
 
 		setComment( hql );
@@ -436,7 +438,8 @@ public class QuerySqmImpl<R>
 		return hql;
 	}
 
-	public SqmStatement getSqmStatement() {
+	@Override
+	public SqmStatement<R> getSqmStatement() {
 		return sqm;
 	}
 
@@ -632,6 +635,14 @@ public class QuerySqmImpl<R>
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Select query plan
+
+	@Override
+	public boolean isQueryPlanCacheable() {
+		return CRITERIA_HQL_STRING.equals( hql )
+				// For criteria queries, query plan caching requires an explicit opt-in
+				? getQueryOptions().getQueryPlanCachingEnabled() == Boolean.TRUE
+				: super.isQueryPlanCacheable();
+	}
 
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.createInterpretationsKey( this );
@@ -1199,6 +1210,12 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
 		return this;
 	}
 

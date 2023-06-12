@@ -75,6 +75,11 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
+	public Boolean getQueryPlanCachingEnabled() {
+		return queryOptions.getQueryPlanCachingEnabled();
+	}
+
+	@Override
 	public CacheMode getCacheMode() {
 		return queryOptions.getCacheMode();
 	}

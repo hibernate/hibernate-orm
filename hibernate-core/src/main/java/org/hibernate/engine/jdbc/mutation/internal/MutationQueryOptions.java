@@ -62,6 +62,11 @@ public class MutationQueryOptions implements QueryOptions {
 	}
 
 	@Override
+	public Boolean getQueryPlanCachingEnabled() {
+		return null;
+	}
+
+	@Override
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return null;
 	}

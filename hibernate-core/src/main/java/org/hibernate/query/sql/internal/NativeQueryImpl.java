@@ -1150,6 +1150,12 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public NativeQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
+		return this;
+	}
+
+	@Override
 	public NativeQueryImplementor<R> setTimeout(int timeout) {
 		super.setTimeout( timeout );
 		return this;

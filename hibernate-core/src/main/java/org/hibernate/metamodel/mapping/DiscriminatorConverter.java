@@ -11,12 +11,15 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorValueDetailsImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -61,7 +64,8 @@ public class DiscriminatorConverter<O,R> implements BasicValueConverter<O,R> {
 				role,
 				domainJavaType,
 				underlyingJdbcMapping.getJavaTypeDescriptor(),
-				valueDetailsList
+				valueDetailsList,
+				mappingMetamodel
 		);
 	}
 
@@ -71,15 +75,18 @@ public class DiscriminatorConverter<O,R> implements BasicValueConverter<O,R> {
 
 	private final Map<Object, DiscriminatorValueDetails> discriminatorValueToEntityNameMap;
 	private final Map<String,DiscriminatorValueDetails> entityNameToDiscriminatorValueMap;
+	private final MappingMetamodelImplementor mappingMetamodel;
 
 	public DiscriminatorConverter(
 			NavigableRole discriminatorRole,
 			JavaType<O> domainJavaType,
 			JavaType<R> relationalJavaType,
-			List<DiscriminatorValueDetails> valueMappings) {
+			List<DiscriminatorValueDetails> valueMappings,
+			MappingMetamodelImplementor mappingMetamodel) {
 		this.discriminatorRole = discriminatorRole;
 		this.domainJavaType = domainJavaType;
 		this.relationalJavaType = relationalJavaType;
+		this.mappingMetamodel = mappingMetamodel;
 
 		this.discriminatorValueToEntityNameMap = CollectionHelper.concurrentMap( valueMappings.size() );
 		this.entityNameToDiscriminatorValueMap = CollectionHelper.concurrentMap( valueMappings.size() );
@@ -125,7 +132,17 @@ public class DiscriminatorConverter<O,R> implements BasicValueConverter<O,R> {
 	}
 
 	public DiscriminatorValueDetails getDetailsForEntityName(String entityName) {
-		return entityNameToDiscriminatorValueMap.get( entityName );
+		DiscriminatorValueDetails valueDetails = entityNameToDiscriminatorValueMap.get( entityName );
+		if ( valueDetails!= null) {
+			return valueDetails;
+		}
+
+		EntityPersister persister = mappingMetamodel.findEntityDescriptor( entityName );
+		if ( persister!= null ) {
+			return new DiscriminatorValueDetailsImpl( entityName, persister );
+		}
+
+		throw new AssertionFailure( "Unrecognized entity name: " + entityName );
 	}
 
 	public DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object value) {
@@ -138,7 +155,20 @@ public class DiscriminatorConverter<O,R> implements BasicValueConverter<O,R> {
 			return valueMatch;
 		}
 
-		return discriminatorValueToEntityNameMap.get( NOT_NULL_DISCRIMINATOR );
+		final DiscriminatorValueDetails notNullMatch = discriminatorValueToEntityNameMap.get( NOT_NULL_DISCRIMINATOR );
+		if ( notNullMatch != null ) {
+			return notNullMatch;
+		}
+
+		if ( value instanceof String ) {
+			String entityName = mappingMetamodel.getImportedName( (String) value );
+			EntityPersister persister = mappingMetamodel.findEntityDescriptor( entityName );
+			if ( persister!= null ) {
+				return new DiscriminatorValueDetailsImpl( entityName, persister );
+			}
+		}
+
+		throw new HibernateException( "Unrecognized discriminator value: " + value );
 	}
 
 	@Override

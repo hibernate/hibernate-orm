@@ -41,7 +41,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
-	public static final String ROLE_NAME = "{key}";
+	public static final String KEY_NAME = "{key}";
 
 	private final NavigableRole navigableRole;
 	private final String table;
@@ -163,7 +163,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public String getPartName() {
-		return ROLE_NAME;
+		return KEY_NAME;
 	}
 
 	@Override

@@ -40,7 +40,7 @@ That is to say, we simply adopted Java's excellent conventions and applied them 
 
 Now, there's no way we can force you to follow this convention, even if we wished to.
 Hell, you can easily write a `PhysicalNamingStrategy` which makes table and column names ALL UGLY AND SHOUTY LIKE THIS IF YOU PREFER.
-But, _by default_, that's what Hibernate does, and it's frankly a pretty sane thing to do.
+But, _by default_, it's the convention Hibernate follows, and it's frankly a pretty reasonable one.
 ****
 
 [[mapping-inheritance]]

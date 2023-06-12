@@ -989,6 +989,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP_AND_CONSTANTS;
+	}
+
+	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
 		return RowLockStrategy.TABLE;
 	}

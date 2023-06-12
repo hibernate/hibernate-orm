@@ -605,6 +605,11 @@ public class HSQLDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
+	}
+
 	// Do not drop constraints explicitly, just do this by cascading instead.
 	@Override
 	public boolean dropConstraints() {

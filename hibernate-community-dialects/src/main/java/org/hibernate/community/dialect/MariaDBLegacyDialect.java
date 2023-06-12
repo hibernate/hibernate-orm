@@ -11,13 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.InnoDBStorageEngine;
-import org.hibernate.dialect.MySQLServerConfiguration;
-import org.hibernate.dialect.MySQLStorageEngine;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.VarcharUUIDJdbcType;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -247,6 +241,11 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	boolean supportsAliasLocks() {
 		//only supported on MySQL
 		return false;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP_AND_CONSTANTS;
 	}
 
 	@Override

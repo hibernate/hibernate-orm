@@ -5608,6 +5608,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				else if ( valueConverter.getRelationalJavaType().isInstance( value ) ) {
 					sqlLiteralValue = value;
 				}
+				else if ( Character.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )
+						&& value instanceof CharSequence && ( (CharSequence) value ).length() == 1 ) {
+					sqlLiteralValue = ( (CharSequence) value ).charAt( 0 );
+				}
 				// In HQL, number literals might not match the relational java type exactly,
 				// so we allow coercion between the number types
 				else if ( Number.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() )

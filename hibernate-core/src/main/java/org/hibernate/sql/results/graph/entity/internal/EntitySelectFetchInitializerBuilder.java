@@ -105,7 +105,10 @@ public class EntitySelectFetchInitializerBuilder {
 			return NONE;
 		}
 		else if ( creationState.isDynamicInstantiation() ) {
-			return BatchMode.BATCH_INITIALIZE;
+			if ( canBatchInitializeBeUsed( entityPersister ) ) {
+				return BatchMode.BATCH_INITIALIZE;
+			}
+			return NONE;
 		}
 		while ( parentAccess.isEmbeddableInitializer() ) {
 			final EmbeddableInitializer embeddableInitializer = parentAccess.asEmbeddableInitializer();
@@ -134,10 +137,22 @@ public class EntitySelectFetchInitializerBuilder {
 			if ( cacheAccess != null ) {
 				// Do batch initialization instead of batch loading if the parent entity is cacheable
 				// to avoid putting entity state into the cache at a point when the association is not yet set
-				return BATCH_INITIALIZE;
+				if ( canBatchInitializeBeUsed( entityPersister ) ) {
+					return BATCH_INITIALIZE;
+				}
+				return NONE;
 			}
 		}
 		return BATCH_LOAD;
+	}
+
+	private static boolean canBatchInitializeBeUsed(EntityPersister entityPersister) {
+		if ( entityPersister.getRepresentationStrategy().getProxyFactory() == null
+				&& entityPersister.hasSubclasses() ) {
+			// We cannot neither create a proxy nor instantiate the entity because we don't know the concrete type
+			return false;
+		}
+		return true;
 	}
 
 	enum BatchMode {

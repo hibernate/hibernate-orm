@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
@@ -444,6 +445,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	// for tests, for now
 	public String getSql() {
 		return sqlBuffer.toString();
+	}
+
+	// For Blaze-Persistence until its function rendering code doesn't depend on SQL fragments anymore
+	@Internal
+	public StringBuilder getSqlBuffer() {
+		return sqlBuffer;
 	}
 
 	protected void cleanup() {

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,8 +38,8 @@ public class InsertSelectTests {
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.persist( new EntitySource( "A" ) );
-					session.persist( new EntitySource( "A" ) );
+					session.persist( new EntitySource( 1, "A" ) );
+					session.persist( new EntitySource( 2, "A" ) );
 				}
 		);
 	}
@@ -100,25 +101,47 @@ public class InsertSelectTests {
 		);
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-16786")
+	public void testInsertSelectParameterInference(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		scope.inTransaction(
+				session -> {
+					statementInspector.clear();
+					session.createMutationQuery(
+							"insert into EntityEntry (id, name, source) " +
+									"select 1, 'abc', :source from EntityEntry e"
+					).setParameter( "source", null ).executeUpdate();
+					statementInspector.assertExecutedCount( 1 );
+				}
+		);
+	}
+
 	@Entity(name = "EntityEntry")
 	public static class EntityEntry {
 		@Id
 		@GeneratedValue
 		Integer id;
 		String name;
+		@ManyToOne
+		EntitySource source;
 	}
 
 	@Entity(name = "EntitySource")
 	public static class EntitySource {
 		@Id
-		@GeneratedValue
 		Integer id;
 		String name;
 
 		public EntitySource() {
 		}
 
-		public EntitySource(String name) {
+		public EntitySource(Integer id) {
+			this.id = id;
+		}
+
+		public EntitySource(Integer id, String name) {
+			this.id = id;
 			this.name = name;
 		}
 	}

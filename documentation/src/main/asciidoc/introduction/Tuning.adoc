@@ -136,6 +136,7 @@ Hibernate provides several strategies for efficiently fetching associations and 
 - _subselect fetching_—where an association is fetched using a subsequent `select` with keys re-queried in a subselect.
 
 Of these, you should almost always use outer join fetching.
+But let's consider the alternatives first.
 
 [[batch-subselect-fetch]]
 === Batch fetching and subselect fetching
@@ -151,6 +152,7 @@ books.forEach(book -> book.getAuthors().forEach(author -> out.println(book.title
 ----
 
 This code is _very_ inefficient, resulting, by default, in the execution of _N+1_ `select` statements, where _n_ is the number of ``Book``s.
+
 Let's see how we can improve on that.
 
 [discrete]
@@ -210,6 +212,7 @@ where a1_0.books_isbn in (select b1_0.isbn from Book b1_0)
 
 Notice that the first query is re-executed in a subselect in the second query.
 The execution of the subselect is likely to be relatively inexpensive, since the data should already be cached by the database.
+Clever, huh?
 
 [discrete]
 ===== Enabling the use of batch or subselect fetching
@@ -256,13 +259,18 @@ While batch fetching might _mitigate_ problems involving N+1 selects, it won't s
 The truly correct solution is to fetch associations using joins.
 Batch fetching (or subselect fetching) can only be the _best_ solution in rare cases where outer join fetching would result in a cartesian product and a huge result set.
 
-Batch fetching and subselect fetching have one important characteristic in common: they can be performed _lazily_.
+But batch fetching and subselect fetching have one important characteristic in common: they can be performed _lazily_.
+This is, in principle, pretty convenient.
+When we query data, and then navigate an object graph, lazy fetching saves us the effort of planning ahead.
+It turns out that this is a convenience we're going to have to surrender.
 
 [[join-fetch]]
 === Join fetching
 
-Unfortunately, outer join fetching, by nature, simply can't be lazy.
-So:
+Outer join fetching is usually the best way to fetch associations, and it's what we use most of the time.
+Unfortunately, by its very nature, join fetching simply can't be lazy.
+So to make use of join fetching, we must plan ahead.
+Our general advice is:
 
 TIP: Avoid the use of lazy fetching, which is often the source of N+1 selects.
 
@@ -370,6 +378,8 @@ Hibernate segments the second-level cache into named _regions_, one for each:
 
 - mapped entity hierarchy or
 - collection role.
+
+For example, there might be separate cache regions for `Author`, `Book`, `Author.books`, and `Book.authors`.
 
 Each region is permitted its own policies for expiry, persistence, and replication. These policies must be configured externally to Hibernate.
 
@@ -535,7 +545,7 @@ Therefore, we arrive at this rule of thumb:
 ====
 Many-to-one associations to "reference data", or to any other data that will almost always be available in the cache, should be mapped `EAGER`,`SELECT`.
 
-Other associations, as we've <<bidirectional-problem,already made clear>>, should be `LAZY`.
+Other associations, as we've <<lazy-problem,already made clear>>, should be `LAZY`.
 ====
 
 Once we've marked an entity or collection as eligible for storage in the second-level cache, we still need to set up an actual cache.

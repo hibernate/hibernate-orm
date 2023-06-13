@@ -637,7 +637,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		try {
 			//noinspection rawtypes
 			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( name );
-			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
 								"] associated with the parameter corresponding to name [" + name +
@@ -668,7 +668,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 		try {
 			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( position );
-			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
 								"] associated with the parameter corresponding to position [" + position +

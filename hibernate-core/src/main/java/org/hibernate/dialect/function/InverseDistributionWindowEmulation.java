@@ -103,7 +103,7 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 						getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
 						withinGroup,
 						resultType,
-						getMappingModelExpressible( walker, resultType )
+						getMappingModelExpressible( walker, resultType, arguments )
 				);
 				final Over<Object> windowFunction = new Over<>( function, new ArrayList<>(), Collections.emptyList() );
 				walker.registerQueryTransformer(

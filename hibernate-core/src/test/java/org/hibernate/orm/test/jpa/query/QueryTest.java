@@ -1037,7 +1037,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			Query query = em.createQuery( "select w from " + Wallet.class.getName() + " w where w.marketEntrance = :me" );
 			Parameter parameter = query.getParameter( "me", Date.class );
-			assertEquals( parameter.getParameterType(), Date.class );
+			assertEquals( parameter.getParameterType(), java.sql.Timestamp.class );
 
 			query.setParameter( "me", new Date() );
 			query.setParameter( "me", new Date(), TemporalType.DATE );

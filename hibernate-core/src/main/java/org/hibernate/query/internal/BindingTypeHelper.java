@@ -51,8 +51,24 @@ public class BindingTypeHelper {
 			final TemporalJavaType<T> temporalJtd = (TemporalJavaType<T>) sqmExpressible.getExpressibleJavaType();
 			if ( temporalJtd.getPrecision() != precision ) {
 				final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
+				final TemporalJavaType<T> temporalTypeForPrecision;
+				// Special case java.util.Date, because TemporalJavaType#resolveTypeForPrecision doesn't support widening,
+				// since the main purpose of that method is to determine the final java type based on the reflective type
+				// + the explicit @Temporal(TemporalType...) configuration
+				if ( java.util.Date.class.isAssignableFrom( temporalJtd.getJavaTypeClass() ) ) {
+					//noinspection unchecked
+					temporalTypeForPrecision = (TemporalJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor(
+							TemporalJavaType.resolveJavaTypeClass( precision )
+					);
+				}
+				else {
+					temporalTypeForPrecision = temporalJtd.resolveTypeForPrecision(
+							precision,
+							typeConfiguration
+					);
+				}
 				return typeConfiguration.getBasicTypeRegistry().resolve(
-						temporalJtd.resolveTypeForPrecision( precision, typeConfiguration ),
+						temporalTypeForPrecision,
 						TemporalJavaType.resolveJdbcTypeCode( precision )
 				);
 			}

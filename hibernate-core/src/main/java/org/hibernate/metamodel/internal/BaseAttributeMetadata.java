@@ -54,8 +54,7 @@ public abstract class BaseAttributeMetadata<X, Y> implements AttributeMetadata<X
 		else {
 			throw new IllegalArgumentException( "Cannot determine java-type from given member [" + member + "]" );
 		}
-		//noinspection unchecked
-		this.javaType = AttributeFactory.accountForPrimitiveTypes( declaredType, metadataContext );
+		this.javaType = declaredType;
 	}
 
 	public String getName() {

@@ -9,14 +9,18 @@ package org.hibernate.query.sqm;
 import org.hibernate.query.SemanticException;
 
 /**
- * Indicates we were not able to resolve a given "path structure" as an entity name.
+ * Indicates a failure to resolve an entity name in HQL to a known mapped
+ * entity type.
  *
- * @apiNote JPA generally requires this to be reported as the much less useful
- *          {@link IllegalArgumentException}.
- *
- * todo (6.0) : account for this in the "exception conversion" handling
+ * @apiNote The JPA criteria API requires that this problem be reported
+ *          as an {@link IllegalArgumentException}, and so we usually
+ *          throw {@link EntityTypeException} from the SQM objects, and
+ *          then wrap as an instance of this exception type in the
+ *          {@link org.hibernate.query.hql.HqlTranslator}.
  *
  * @author Steve Ebersole
+ *
+ * @see EntityTypeException
  */
 public class UnknownEntityException extends SemanticException {
 	private final String entityName;
@@ -27,6 +31,11 @@ public class UnknownEntityException extends SemanticException {
 
 	public UnknownEntityException(String message, String entityName) {
 		super( message );
+		this.entityName = entityName;
+	}
+
+	public UnknownEntityException(String message, String entityName, Exception cause) {
+		super( message, cause );
 		this.entityName = entityName;
 	}
 

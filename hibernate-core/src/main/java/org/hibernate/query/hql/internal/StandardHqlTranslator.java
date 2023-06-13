@@ -14,15 +14,17 @@ import org.antlr.v4.runtime.NoViableAltException;
 import org.hibernate.QueryException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
-import org.hibernate.query.EntityReferenceException;
-import org.hibernate.query.PathElementException;
+import org.hibernate.query.sqm.EntityTypeException;
+import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.SyntaxException;
-import org.hibernate.query.TerminalPathException;
+import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.sqm.UnknownEntityException;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.internal.SqmTreePrinter;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -78,8 +80,14 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 			return sqmStatement;
 		}
-		catch (QueryException | PathElementException | TerminalPathException | EntityReferenceException e) {
+		catch (QueryException e) {
 			throw e;
+		}
+		catch (PathElementException | TerminalPathException e) {
+			throw new UnknownPathException( e.getMessage(), query, e );
+		}
+		catch (EntityTypeException e) {
+			throw new UnknownEntityException( e.getMessage(), e.getReference(), e );
 		}
 		catch (Exception e) {
 			// this is some sort of "unexpected" exception, i.e. something buglike

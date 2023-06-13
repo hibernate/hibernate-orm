@@ -47,7 +47,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.EntityReferenceException;
+import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -164,7 +164,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
 		final EntityDomainType<X> hqlEntityReference = getHqlEntityReference( entityName );
 		if ( hqlEntityReference == null ) {
-			throw new EntityReferenceException( "Could not resolve entity reference: " + entityName );
+			throw new EntityTypeException( "Could not resolve entity name '" + entityName + "'", entityName );
 		}
 		return hqlEntityReference;
 	}
@@ -444,7 +444,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 		// otherwise, try to handle it as a polymorphic reference
 		{
-			final EntityDomainType<T> polymorphicDomainType = (EntityDomainType<T>) polymorphicEntityReferenceMap.get( javaType );
+			final EntityDomainType<T> polymorphicDomainType =
+					(EntityDomainType<T>) polymorphicEntityReferenceMap.get( javaType );
 			if ( polymorphicDomainType != null ) {
 				return polymorphicDomainType;
 			}
@@ -495,7 +496,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			}
 		}
 
-		throw new EntityReferenceException( "Could not resolve entity reference : " + javaType.getName() );
+		throw new EntityTypeException( "Could not resolve entity class '" + javaType.getName() + "'", javaType.getName() );
 	}
 
 	@Override

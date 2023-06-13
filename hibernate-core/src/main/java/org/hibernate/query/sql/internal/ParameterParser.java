@@ -9,7 +9,9 @@ package org.hibernate.query.sql.internal;
 import java.util.BitSet;
 
 import org.hibernate.QueryException;
+import org.hibernate.QueryParameterException;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 /**
@@ -136,8 +138,9 @@ public class ParameterParser {
 					final int chopLocation = right < 0 ? sqlString.length() : right;
 					final String param = sqlString.substring( indx + 1, chopLocation );
 					if ( param.isEmpty() ) {
-						throw new QueryException(
-								"Space is not allowed after parameter prefix ':' [" + sqlString + "]"
+						throw new QueryParameterException(
+								"Space is not allowed after parameter prefix ':'",
+								sqlString
 						);
 					}
 					recognizer.namedParameter( param, indx );
@@ -156,7 +159,7 @@ public class ParameterParser {
 							indx = chopLocation - 1;
 						}
 						catch( NumberFormatException e ) {
-							throw new QueryException( "Ordinal parameter label was not an integer" );
+							throw new ParameterLabelException( "Ordinal parameter label was not an integer" );
 						}
 					}
 					else {

@@ -14,7 +14,10 @@ import org.antlr.v4.runtime.NoViableAltException;
 import org.hibernate.QueryException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
-import org.hibernate.query.SemanticException;
+import org.hibernate.query.EntityReferenceException;
+import org.hibernate.query.PathElementException;
+import org.hibernate.query.SyntaxException;
+import org.hibernate.query.TerminalPathException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -75,10 +78,11 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 			return sqmStatement;
 		}
-		catch (QueryException e) {
+		catch (QueryException | PathElementException | TerminalPathException | EntityReferenceException e) {
 			throw e;
 		}
 		catch (Exception e) {
+			// this is some sort of "unexpected" exception, i.e. something buglike
 			throw new InterpretationException( query, e );
 		}
 	}
@@ -93,7 +97,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		ANTLRErrorListener errorListener = new ANTLRErrorListener() {
 			@Override
 			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-				throw new ParsingException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e, hql, true ) );
+				throw new SyntaxException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e, hql, true ), hql );
 			}
 
 			@Override
@@ -131,7 +135,9 @@ public class StandardHqlTranslator implements HqlTranslator {
 			return hqlParser.statement();
 		}
 		catch ( ParsingException ex ) {
-			throw new SemanticException( "Illegal HQL syntax [" + ex.getMessage() + "]", hql, ex );
+			// Note that this is supposed to represent a bug in the parser
+			// Ee wrap and rethrow in order to attach the HQL query to the error
+			throw new QueryException( "Failed to interpret HQL syntax [" + ex.getMessage() + "]", hql, ex );
 		}
 	}
 

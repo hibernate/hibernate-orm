@@ -1117,7 +1117,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			catch ( IllegalArgumentException e ) {
 				assertNotNull( e.getCause() );
 				assertTyping( QueryException.class, e.getCause() );
-				assertTrue( e.getCause().getMessage().contains( "gap" ) );
+				assertTrue( e.getCause().getMessage().contains( "Gap" ) );
 			}
 
 			// using jpa-style, position index should match syntax '?<position>'.

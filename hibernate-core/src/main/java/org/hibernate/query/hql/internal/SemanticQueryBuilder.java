@@ -31,8 +31,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.QueryException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.grammars.hql.HqlLexer;
@@ -55,9 +53,11 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
+import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.TerminalPathException;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
@@ -98,6 +98,7 @@ import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
 import org.hibernate.query.sqm.internal.SqmQueryPartCreationProcessingStateStandardImpl;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
@@ -466,7 +467,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
 					String.format(
-							"Target type '%s' in insert statement is not an entity",
+							"Target type '%s' in 'insert' statement is not an entity",
 							root.getModel().getHibernateEntityName()
 					)
 			);
@@ -554,7 +555,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
 					String.format(
-							"Target type '%s' in update statement is not an entity",
+							"Target type '%s' in 'update' statement is not an entity",
 							root.getModel().getHibernateEntityName()
 					)
 			);
@@ -1063,8 +1064,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return all ? SetOperator.INTERSECT_ALL : SetOperator.INTERSECT;
 			case EXCEPT:
 				return all ? SetOperator.EXCEPT_ALL : SetOperator.EXCEPT;
+			default:
+				throw new ParsingException( "Unrecognized set operator: " + token.getText() );
 		}
-		throw new SemanticException( "Illegal set operator token: " + token.getText() );
 	}
 
 	protected void visitQueryOrder(SqmQueryPart<?> sqmQueryPart, HqlParser.QueryOrderContext ctx) {
@@ -1099,7 +1101,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			if ( processingStateStack.depth() > 1 && orderByClause == null ) {
 				throw new SemanticException(
-						"limit, offset and fetch clause require an order-by clause when used in sub-query"
+						"A 'limit', 'offset', or 'fetch' clause requires an 'order by' clause when used in a subquery"
 				);
 			}
 
@@ -1114,7 +1116,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				sqmQueryPart.setFetchExpression( visitLimitClause( limitClauseContext ) );
 			}
 			else {
-				throw new SemanticException("Can't use both limit and fetch clause" );
+				throw new SemanticException("The 'limit' and 'fetch' clauses may not be used together" );
 			}
 		}
 	}
@@ -1161,7 +1163,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	protected SqmSelectClause buildInferredSelectClause(SqmFromClause fromClause) {
 		if ( fromClause.getNumberOfRoots() == 0 ) {
 			// should be impossible to get here
-			throw new AssertionFailure( "query has no 'select' clause, and no root entities");
+			throw new ParsingException( "query has no 'select' clause, and no root entities");
 		}
 
 		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
@@ -1183,13 +1185,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				// the result type is an entity class
 				if ( fromClause.getNumberOfRoots() > 1 ) {
 					// multiple root entities
-					throw new SemanticException( "query has no 'select' clause, and multiple root entities, but query result type is an entity class"
+					throw new SemanticException( "Query has no 'select' clause, and multiple root entities, but query result type is an entity class"
 							+ " (specify an explicit 'select' list, or a different result type, for example, 'Object[].class')");
 				}
 				else {
 					final SqmRoot<?> sqmRoot = fromClause.getRoots().get(0);
 					if ( sqmRoot instanceof SqmCteRoot ) {
-						throw new SemanticException( "query has no 'select' clause, and the 'from' clause refers to a CTE, but query result type is an entity class"
+						throw new SemanticException( "Query has no 'select' clause, and the 'from' clause refers to a CTE, but query result type is an entity class"
 								+ " (specify an explicit 'select' list)");
 					}
 					else {
@@ -1399,7 +1401,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				true
 		);
 		if ( sqmFromByAlias == null ) {
-			throw new SemanticException( "Unable to resolve alias [" +  alias + "] in selection [" + ctx.getText() + "]" );
+			throw new SemanticException( "Could not resolve alias '" +  alias + "' in selection [" + ctx.getText() + "]" );
 		}
 		return sqmFromByAlias;
 	}
@@ -1622,7 +1624,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						sortOrder = SortOrder.DESCENDING;
 						break;
 					default:
-						throw new SemanticException( "Unrecognized sort ordering: " + parseTree.getText() );
+						throw new ParsingException( "Unrecognized sort ordering: " + parseTree.getText() );
 				}
 				nextIndex++;
 			}
@@ -1639,7 +1641,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						nullPrecedence = NullPrecedence.LAST;
 						break;
 					default:
-						throw new SemanticException( "Unrecognized null precedence: " + parseTree.getText() );
+						throw new ParsingException( "Unrecognized null precedence: " + parseTree.getText() );
 				}
 			}
 			else {
@@ -1977,7 +1979,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			if ( processingStateStack.depth() > 1 ) {
 				throw new SemanticException(
-						"Illegal implicit-polymorphic domain path in subquery '" + entityDescriptor.getName() +"'"
+						"Implicitly-polymorphic domain path in subquery '" + entityDescriptor.getName() +"'"
 				);
 			}
 		}
@@ -2113,7 +2115,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				.resolveHqlEntityReference( name );
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
-			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a CROSS JOIN target" );
+			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a target of 'cross join'" );
 		}
 		final HqlParser.VariableContext identificationVariableDefContext;
 		if ( parserJoin.getChildCount() > 3 ) {
@@ -2179,7 +2181,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final boolean fetch = parserJoin.getChild( 2 ) instanceof TerminalNode;
 
 		if ( fetch && processingStateStack.depth() > 1 ) {
-			throw new SemanticException( "fetch not allowed in subquery from-elements" );
+			throw new SemanticException( "The 'from' clause of a subquery has a 'fetch'" );
 		}
 
 		dotIdentifierConsumerStack.push(
@@ -2199,7 +2201,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			else {
 				if ( fetch ) {
-					throw new SemanticException( "fetch not allowed for subquery join" );
+					throw new SemanticException( "The 'from' clause of a subquery has a 'fetch' join" );
 				}
 				if ( getCreationOptions().useStrictJpaCompliance() ) {
 					throw new StrictJpaComplianceViolation(
@@ -2236,7 +2238,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					}
 				}
 				if ( qualifiedJoinRestrictionContext != null && attributeJoin.isFetched() ) {
-					throw new SemanticException( "with-clause not allowed on fetched associations; use filters" );
+					throw new SemanticException( "Fetch join has a 'with' clause (use a filter instead)" );
 				}
 			}
 
@@ -2400,7 +2402,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 		else {
-			throw new SemanticException( "Path argument to 'is empty' operator must be a plural attribute" );
+			throw new SemanticException( "Operand of 'is empty' operator must be a plural path" );
 		}
 	}
 
@@ -2426,8 +2428,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						? ComparisonOperator.NOT_DISTINCT_FROM
 						: ComparisonOperator.DISTINCT_FROM;
 			}
+			default:
+				throw new ParsingException("Unrecognized comparison operator");
 		}
-		throw new QueryException("missing operator");
 	}
 
 	@Override
@@ -2631,7 +2634,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 		else {
-			throw new SemanticException( "Path argument to 'member of' operator must be a plural attribute" );
+			throw new SemanticException( "Operand of 'member of' operator must be a plural path" );
 		}
 	}
 
@@ -2797,7 +2800,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath.resolvePathPart( AnyKeyPart.KEY_NAME, true, getCurrentProcessingState().getCreationState() );
 		}
 		else {
-			throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );
+			throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
+					+ "' of 'id()' function does not resolve to an entity type" );
 		}
 	}
 
@@ -2816,9 +2820,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final IdentifiableDomainType<Object> identifiableType = (IdentifiableDomainType<Object>) sqmPathType;
 			final SingularPersistentAttribute<Object, ?> versionAttribute = identifiableType.findVersionAttribute();
 			if ( versionAttribute == null ) {
-				throw new SemanticException(
+				throw new FunctionArgumentException(
 						String.format(
-								"Path '%s' resolved to entity type '%s' which does not define a version",
+								"Argument '%s' of 'version()' function resolved to entity type '%s' which does not have a '@Version' attribute",
 								sqmPath.getNavigablePath(),
 								identifiableType.getTypeName()
 						)
@@ -2828,7 +2832,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath.get( versionAttribute );
 		}
 
-		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );
+		throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
+				+ "' of 'version()' function does not resolve to an entity type" );
 	}
 
 	@Override
@@ -2846,18 +2851,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final IdentifiableDomainType<Object> identifiableType = (IdentifiableDomainType<? super Object>) sqmPathType;
 			final List<? extends PersistentAttribute<Object, ?>> attributes = identifiableType.findNaturalIdAttributes();
 			if ( attributes == null ) {
-				throw new SemanticException(
+				throw new FunctionArgumentException(
 						String.format(
-								"Path '%s' resolved to entity type '%s' which does not define a natural id",
+								"Argument '%s' of 'naturalid()' function resolved to entity type '%s' which does not have a natural id",
 								sqmPath.getNavigablePath(),
 								identifiableType.getTypeName()
 						)
 				);
 			}
 			else if ( attributes.size() >1 ) {
-				throw new SemanticException(
+				throw new FunctionArgumentException(
 						String.format(
-								"Path '%s' resolved to entity type '%s' which defines multiple natural ids",
+								"Argument '%s' of 'naturalid()' function resolved to entity type '%s' which has a composite natural id",
 								sqmPath.getNavigablePath(),
 								identifiableType.getTypeName()
 						)
@@ -2870,7 +2875,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath.get( naturalIdAttribute );
 		}
 
-		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath() + "'" );
+		throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
+				+ "' of 'naturalid()' function does not resolve to an entity type" );
 	}
 
 	@Override
@@ -2887,12 +2893,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				&& toOneReference instanceof EntitySqmPathSource;
 
 		if ( !validToOneRef ) {
-			throw new SemanticException(
+			throw new FunctionArgumentException(
 					String.format(
 							Locale.ROOT,
-							"`%s` used in `fk()` only supported for to-one mappings, but found `%s`",
-							sqmPath.getNavigablePath(),
-							toOneReference
+							"Argument '%s' of 'fk()' function is not a single-valued association",
+							sqmPath.getNavigablePath()
 					)
 			);
 
@@ -2912,7 +2917,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmExpression<?> visitConcatenationExpression(HqlParser.ConcatenationExpressionContext ctx) {
 		if ( ctx.getChildCount() != 3 ) {
-			throw new ParsingException( "Expecting 2 operands to the concat operator" );
+			throw new ParsingException( "Expecting two operands to the concat operator" );
 		}
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList(
@@ -2932,7 +2937,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.MINUS:
 				return UnaryArithmeticOperator.UNARY_MINUS;
 			default:
-				throw new QueryException( "missing operator" );
+				throw new ParsingException("Unrecognized sign operator");
 		}
 	}
 
@@ -2944,7 +2949,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.MINUS:
 				return BinaryArithmeticOperator.SUBTRACT;
 			default:
-				throw new QueryException( "missing operator" );
+				throw new ParsingException("Unrecognized additive operator");
 		}
 	}
 
@@ -2958,14 +2963,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.PERCENT_OP:
 				return BinaryArithmeticOperator.MODULO;
 			default:
-				throw new QueryException( "missing operator" );
+				throw new ParsingException("Unrecognized multiplicative operator");
 		}
 	}
 
 	@Override
 	public Object visitAdditionExpression(HqlParser.AdditionExpressionContext ctx) {
 		if ( ctx.getChildCount() != 3 ) {
-			throw new ParsingException( "Expecting 2 operands to the additive operator" );
+			throw new ParsingException( "Expecting two operands to the additive operator" );
 		}
 
 		return new SqmBinaryArithmetic<>(
@@ -2980,7 +2985,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public Object visitMultiplicationExpression(HqlParser.MultiplicationExpressionContext ctx) {
 		if ( ctx.getChildCount() != 3 ) {
-			throw new ParsingException( "Expecting 2 operands to the multiplicative operator" );
+			throw new ParsingException( "Expecting two operands to the multiplicative operator" );
 		}
 
 		final SqmExpression<?> left = (SqmExpression<?>) ctx.getChild( 0 ).accept( this );
@@ -3853,7 +3858,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			HqlParser.PositionalParameterContext ctx,
 			SqmExpressible<T> expressibleType) {
 		if ( ctx.getChildCount() == 1 ) {
-			throw new SemanticException( "Unlabeled ordinal parameter ('?' rather than ?1)" );
+			throw new ParameterLabelException( "Unlabeled ordinal parameter ('?' rather than ?1)" );
 		}
 		parameterStyle = parameterStyle.withPositional();
 		final SqmPositionalParameter<T> param = new SqmPositionalParameter<>(
@@ -3997,20 +4002,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			final FunctionKind functionKind = functionTemplate.getFunctionKind();
 			if ( ctx.filterClause() != null && functionKind == FunctionKind.NORMAL ) {
-				throw new ParsingException( "FILTER clause is illegal for non-aggregate function: " + functionName );
+				throw new SemanticException( "'FILTER' clause is illegal for non-aggregate function: " + functionName );
 			}
 			if ( ctx.overClause() != null && functionKind == FunctionKind.NORMAL ) {
-				throw new SemanticException( "OVER clause is illegal for non-aggregate function: " + functionName);
+				throw new SemanticException( "'OVER' clause is illegal for non-aggregate function: " + functionName);
 			}
 			if ( ctx.withinGroupClause() != null && functionKind == FunctionKind.NORMAL ) {
-				throw new SemanticException( "WITHIN GROUP clause is illegal for non-aggregate function: " + functionName);
+				throw new SemanticException( "'WITHIN' GROUP clause is illegal for non-aggregate function: " + functionName);
 			}
 			if ( ctx.overClause() == null && functionKind == FunctionKind.WINDOW ) {
-				throw new SemanticException( "OVER clause is mandatory for window-only function: " + functionName );
+				throw new SemanticException( "'OVER' clause is mandatory for window-only function: " + functionName );
 			}
 			if ( ctx.withinGroupClause() == null && ctx.overClause() == null
 					&& functionKind == FunctionKind.ORDERED_SET_AGGREGATE ) {
-				throw new SemanticException( "WITHIN GROUP or OVER clause is mandatory for ordered set aggregate function: " + functionName );
+				throw new SemanticException( "'WITHIN GROUP' or 'OVER' clause is mandatory for ordered set aggregate function: " + functionName );
 			}
 
 			if ( ctx.nullsClause() != null ) {
@@ -4022,11 +4027,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					case "nth_value":
 						break;
 					default:
-						throw new SemanticException( "RESPECT/IGNORE NULLS is illegal for function: " + functionName );
+						throw new SemanticException( "'RESPECT NULLS' or 'IGNORE NULLS' are illegal for function: " + functionName );
 				}
 			}
 			if ( ctx.nthSideClause() != null && !"nth_value".equals( functionName ) ) {
-				throw new SemanticException( "FROM FIRST/LAST is illegal for function: " + functionName );
+				throw new SemanticException( "'FROM FIRST' or 'FROM LAST' are illegal for function: " + functionName );
 			}
 			return functionTemplate;
 		}
@@ -4075,7 +4080,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( "listagg" );
 		if ( functionTemplate == null ) {
-			throw new SemanticException( "The listagg function was not registered for the dialect" );
+			throw new SemanticException( "The listagg() function was not registered for the dialect" );
 		}
 
 		return applyOverClause(
@@ -4560,9 +4565,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
 
 		if ( !(referencedPathSource instanceof PluralPersistentAttribute ) ) {
-			throw new PathException(
-					"Path is not a plural path '" + pluralAttributePath.getNavigablePath() + "'"
-			);
+			//TODO: improve this message
+			throw new SemanticException( "Path is not a plural path '"
+					+ pluralAttributePath.getNavigablePath() + "'" );
 		}
 		final SqmSubQuery<?> subQuery = new SqmSubQuery<>(
 				processingStateStack.getCurrent().getProcessingQuery(),
@@ -4935,11 +4940,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 ).getChild( 0 );
 
 		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
-			throw new PathException(
+			throw new FunctionArgumentException(
 					String.format(
-							"Argument of '%s' is not a plural path '%s'",
-							firstNode.getSymbol().getText(),
-							pluralAttributePath.getNavigablePath()
+							"Argument '%s' of '%s()' function is not a plural path ",
+							pluralAttributePath.getNavigablePath(),
+							firstNode.getSymbol().getText()
 					)
 			);
 		}
@@ -4975,15 +4980,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			// elements() and values() and only apply to compound paths
 			if ( pluralPath instanceof SqmMapJoin ) {
-				throw new SemanticException( "Path '" + ctx.path().getText()
+				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' resolved to a joined map instead of a compound path" );
 			}
 			else if ( pluralPath instanceof SqmListJoin ) {
-				throw new SemanticException( "Path '" + ctx.path().getText()
+				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' resolved to a joined list instead of a compound path" );
 			}
 			else {
-				throw new SemanticException( "Path '" + ctx.path().getText()
+				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' did not resolve to a many-valued attribute" );
 			}
 		}
@@ -5004,7 +5009,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return new SqmIndexAggregateFunction<>(pluralPath, functionName);
 			}
 			else {
-				throw new SemanticException( "Path '" + ctx.path()
+				throw new FunctionArgumentException( "Path '" + ctx.path()
 						+  "' resolved to '"
 						+ pluralPath.getReferencedPathSource()
 						+ "' which is not an indexed collection" );
@@ -5013,15 +5018,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			// indices() and keys() only apply to compound paths
 			if ( pluralPath instanceof SqmMapJoin ) {
-				throw new SemanticException( "Path '" + ctx.path().getText()
+				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' resolved to a joined map instead of a compound path" );
 			}
 			else if ( pluralPath instanceof SqmListJoin ) {
-				throw new SemanticException( "Path '" + ctx.path().getText()
+				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' resolved to a joined list instead of a compound path" );
 			}
 			else {
-				throw new SemanticException( "Path '" + ctx.path().getText()
+				throw new FunctionArgumentException( "Path '" + ctx.path().getText()
 						+ "' did not resolve to a many-valued attribute" );
 			}
 		}
@@ -5365,7 +5370,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else if ( sqmPath instanceof SqmListJoin ) {
 			if ( hasContinuation ) {
-				throw new SemanticException("list index may not be dereferenced");
+				throw new TerminalPathException("List index has no attributes");
 			}
 			SqmListJoin<?,?> listJoin = (SqmListJoin<?,?>) sqmPath;
 			result = listJoin.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
@@ -5407,7 +5412,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private void checkPluralPath(SqmPath<?> pluralAttributePath, SqmPathSource<?> referencedPathSource, TerminalNode firstNode) {
 		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
-			throw new PathException(
+			throw new FunctionArgumentException(
 					String.format(
 							"Argument of '%s' is not a plural path '%s'",
 							firstNode.getSymbol().getText(),
@@ -5424,7 +5429,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return (SqmPath<X>) consumedPart;
 		}
 
-		throw new SemanticException( "Expecting domain-model path, but found : " + consumedPart );
+		throw new PathException( "Expecting domain-model path, but found: " + consumedPart );
 	}
 
 
@@ -5434,7 +5439,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return (SqmPath<?>) consumedPart;
 		}
 
-		throw new SemanticException( "Expecting domain-model path, but found : " + consumedPart );
+		throw new PathException( "Expecting domain-model path, but found: " + consumedPart );
 	}
 
 	private SqmPath<?> consumeManagedTypeReference(HqlParser.PathContext parserPath) {
@@ -5444,7 +5449,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( pathSource.getSqmPathType() instanceof ManagedDomainType<?> ) {
 			return sqmPath;
 		}
-		throw new SemanticException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath() + "], but found : " + pathSource.getSqmPathType() );
+		throw new PathException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath() + "], but found: " + pathSource.getSqmPathType() );
 	}
 
 	private SqmPath<?> consumePluralAttributeReference(HqlParser.PathContext parserPath) {
@@ -5454,7 +5459,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath;
 		}
 
-		throw new SemanticException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath() + "], but found : "
+		throw new PathException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath() + "], but found: "
 				+ sqmPath.getReferencedPathSource().getSqmPathType() );
 	}
 

@@ -80,13 +80,13 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	}
 
 	protected final QueryException propertyException(String propertyName) throws QueryException {
-		return new QueryException( "could not resolve property: " + propertyName + " of: " + getEntityName() );
+		return new QueryException( "Could not resolve property: " + propertyName + " of: " + getEntityName() );
 	}
 
 	public String[] getColumnNames(String propertyName) {
 		String[] cols = columnsByPropertyPath.get( propertyName );
 		if ( cols == null ) {
-			throw new MappingException( "unknown property: " + propertyName );
+			throw new MappingException( "Unknown property: " + propertyName );
 		}
 		return cols;
 	}

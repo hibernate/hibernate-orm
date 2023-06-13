@@ -149,7 +149,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			);
 			if ( withinGroupClause == null ) {
 				throw new SemanticException("Inverse distribution function '" + getFunctionName()
-						+ "' must specify WITHIN GROUP");
+						+ "' must specify 'WITHIN GROUP'");
 			}
 		}
 

@@ -24,6 +24,7 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
@@ -754,7 +755,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			);
 		}
 
-		throw new SemanticException( "Attribute [" + attribute + "] is not joinable" );
+		throw new SemanticException( "Attribute '" + attribute + "' is not joinable" );
 	}
 
 	@SuppressWarnings("unchecked")

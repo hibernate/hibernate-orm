@@ -38,7 +38,7 @@ public class QueryPredicateAndParameterComparableTest {
 	@Test
 	public void testWrongInPredicateType(EntityManagerFactoryScope scope) {
 		Assertions.assertThrows(
-				IllegalArgumentException.class, () -> scope.inTransaction(
+				SemanticException.class, () -> scope.inTransaction(
 						entityManager -> {
 							CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 							CriteriaQuery<Participation> criteria = builder.createQuery( Participation.class );
@@ -78,7 +78,7 @@ public class QueryPredicateAndParameterComparableTest {
 	@Test
 	public void testWrongInPredicateType2(EntityManagerFactoryScope scope) {
 		Assertions.assertThrows(
-				IllegalArgumentException.class, () -> scope.inTransaction(
+				SemanticException.class, () -> scope.inTransaction(
 						entityManager -> {
 							CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 							CriteriaQuery<Participation> criteria = builder.createQuery( Participation.class );
@@ -120,7 +120,7 @@ public class QueryPredicateAndParameterComparableTest {
 	@Test
 	public void testWrongTypeEqualPredicate2(EntityManagerFactoryScope scope) {
 		Assertions.assertThrows(
-				IllegalArgumentException.class, () -> scope.inTransaction(
+				SemanticException.class, () -> scope.inTransaction(
 						entityManager -> {
 							CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 							CriteriaQuery<Participation> criteria = builder.createQuery( Participation.class );

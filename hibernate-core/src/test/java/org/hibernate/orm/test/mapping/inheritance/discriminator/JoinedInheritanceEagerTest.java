@@ -115,7 +115,7 @@ public class JoinedInheritanceEagerTest {
 						fail( "Expected a resolution exception for property 'attributes'!" );
 					}
 					catch (IllegalArgumentException ex) {
-						Assert.assertTrue( ex.getCause().getCause().getMessage().contains( "Could not resolve attribute 'attributes' "));
+						Assert.assertTrue( ex.getCause().getMessage().contains( "Could not resolve attribute 'attributes' "));
 					}
 					finally {
 						session.getTransaction().commit();

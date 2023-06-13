@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.QueryException;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -20,12 +20,12 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 
 /**
- * Models a tuple of values, generally defined as a series of values
- * wrapped in parentheses, e.g. `(value1, value2, ..., valueN)`.
- *
- * Differs from {@link SqmJpaCompoundSelection} in that this node can be used
- * anywhere in the SQM tree, whereas SqmJpaCompoundSelection is only valid
- * in the SELECT clause per JPA
+ * A tuple constructor, that is, a list of expressions wrapped in parentheses,
+ * for example, {@code (x, y, z)}.
+ * <p>
+ * Differs from {@link SqmJpaCompoundSelection} in that this node may occur
+ * anywhere in the SQM tree, whereas {@code SqmJpaCompoundSelection} is only
+ * legal in the {@code SELECT} clause.
  *
  * @author Steve Ebersole
  */
@@ -49,7 +49,7 @@ public class SqmTuple<T>
 	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmExpressible<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
-			throw new QueryException( "tuple grouping cannot be constructed over zero expressions" );
+			throw new SemanticException( "Tuple constructor must have at least one element" );
 		}
 		this.groupedExpressions = groupedExpressions;
 		if ( type == null ) {

@@ -92,7 +92,7 @@ public class ExtractFunction
 			case NANOSECOND:
 				return extractNanoseconds( expression, queryEngine );
 			case NATIVE:
-				throw new SemanticException("can't extract() the field TemporalUnit.NATIVE");
+				throw new SemanticException("NATIVE is not a legal field for extract()");
 			case OFFSET:
 				if ( compositeTemporal ) {
 					final SqmPath<Object> offsetPath = ( (SqmPath<?>) originalExpression ).get(

@@ -542,7 +542,7 @@ public class SpannerDialect extends Dialect {
 				case YEAR:
 				case QUARTER:
 				case MONTH:
-					throw new SemanticException("illegal unit for timestamp_add(): " + unit);
+					throw new SemanticException("Illegal unit for timestamp_add(): " + unit);
 				default:
 					return "timestamp_add(?3,interval ?2 ?1)";
 			}
@@ -554,7 +554,7 @@ public class SpannerDialect extends Dialect {
 				case MINUTE:
 				case HOUR:
 				case NATIVE:
-					throw new SemanticException("illegal unit for date_add(): " + unit);
+					throw new SemanticException("Illegal unit for date_add(): " + unit);
 				default:
 					return "date_add(?3,interval ?2 ?1)";
 			}
@@ -568,7 +568,7 @@ public class SpannerDialect extends Dialect {
 				case YEAR:
 				case QUARTER:
 				case MONTH:
-					throw new SemanticException("illegal unit for timestamp_diff(): " + unit);
+					throw new SemanticException("Illegal unit for timestamp_diff(): " + unit);
 				default:
 					return "timestamp_diff(?3,?2,?1)";
 			}
@@ -580,7 +580,7 @@ public class SpannerDialect extends Dialect {
 				case MINUTE:
 				case HOUR:
 				case NATIVE:
-					throw new SemanticException("illegal unit for date_diff(): " + unit);
+					throw new SemanticException("Illegal unit for date_diff(): " + unit);
 				default:
 					return "date_diff(?3,?2,?1)";
 			}

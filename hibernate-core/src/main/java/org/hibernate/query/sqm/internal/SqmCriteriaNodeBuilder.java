@@ -31,7 +31,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.hibernate.QueryException;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -81,6 +80,7 @@ import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
@@ -173,6 +173,7 @@ import jakarta.persistence.metamodel.EntityType;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
+import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
 
 /**
  * Acts as a JPA {@link jakarta.persistence.criteria.CriteriaBuilder} by
@@ -505,12 +506,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <P, F> SqmExpression<F> fk(Path<P> path) {
-		if ( path.getModel().getBindableType() != Bindable.BindableType.SINGULAR_ATTRIBUTE ) {
-			throw new SemanticException( "Path should refer to a to-one attribute : " + path );
-		}
-
-		if ( ! ( path instanceof SqmEntityValuedSimplePath ) ) {
-			throw new SemanticException( "Path should refer to a to-one attribute : " + path );
+		if ( path.getModel().getBindableType() != Bindable.BindableType.SINGULAR_ATTRIBUTE
+				|| ! ( path instanceof SqmEntityValuedSimplePath ) ) {
+			throw new FunctionArgumentException( "Path '" + path + "' does not refer to a single-valued association" );
 		}
 
 		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) path, this );
@@ -1450,27 +1448,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<String> trim(Trimspec ts, Expression<String> source) {
-		return createTrimNode( convertTrimSpec( ts ), null, (SqmExpression<String>) source );
-	}
-
-	private static TrimSpec convertTrimSpec(Trimspec jpaTs) {
-		if ( jpaTs == null ) {
-			return null;
-		}
-
-		switch ( jpaTs ) {
-			case BOTH: {
-				return TrimSpec.BOTH;
-			}
-			case LEADING: {
-				return TrimSpec.LEADING;
-			}
-			case TRAILING: {
-				return TrimSpec.TRAILING;
-			}
-		}
-
-		throw new QueryException( "Could not resolve JPA TrimSpec : " + jpaTs );
+		return createTrimNode( fromCriteriaTrimSpec( ts ), null, (SqmExpression<String>) source );
 	}
 
 	@Override
@@ -1480,7 +1458,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<String> trim(Trimspec ts, Expression<Character> trimChar, Expression<String> source) {
-		return createTrimNode( convertTrimSpec( ts ), (SqmExpression<Character>) trimChar, (SqmExpression<String>) source );
+		return createTrimNode( fromCriteriaTrimSpec( ts ), (SqmExpression<Character>) trimChar, (SqmExpression<String>) source );
 	}
 
 	@Override
@@ -1490,7 +1468,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<String> trim(Trimspec ts, char trimChar, Expression<String> source) {
-		return createTrimNode( convertTrimSpec( ts ), literal( trimChar ), (SqmExpression<String>) source );
+		return createTrimNode( fromCriteriaTrimSpec( ts ), literal( trimChar ), (SqmExpression<String>) source );
 	}
 
 	@Override
@@ -2050,7 +2028,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final SqmExpressible<?> lhsType = ( (SqmExpression<?>) x ).getNodeType();
 		final SqmExpressible<?> rhsType = ( (SqmExpression<?>) y ).getNodeType();
 		if ( !areTypesComparable( lhsType, rhsType ) ) {
-			throw new IllegalArgumentException(
+			throw new SemanticException(
 					String.format(
 							"Can't compare test expression of type [%s] with element of type [%s]",
 							lhsType,
@@ -2897,7 +2875,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		SqmExpression<String> source = (SqmExpression<String>) x;
 		SqmExpression<Integer> sqmLength = (SqmExpression<Integer>) length;
 		SqmTrimSpecification padSpec = new SqmTrimSpecification(
-				ts == null ? TrimSpec.TRAILING : convertTrimSpec( ts ),
+				ts == null ? TrimSpec.TRAILING : fromCriteriaTrimSpec( ts ),
 				this
 		);
 		return getFunctionDescriptor( "pad" ).generateSqmExpression(

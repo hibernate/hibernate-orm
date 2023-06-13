@@ -11,9 +11,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Describes any type that occurs in the application's domain model.
- *
+ * <p>
  * The base for Hibernate's extension of the JPA type system.
- *
+ * <p>
  * Encapsulates a {@link JavaType} describing the more rudimentary
  * aspects of the Java type.  The DomainType is a higher-level construct
  * incorporating information such as bean properties, constructors, etc

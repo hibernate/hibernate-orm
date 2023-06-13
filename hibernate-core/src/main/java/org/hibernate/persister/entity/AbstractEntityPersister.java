@@ -5734,7 +5734,7 @@ public abstract class AbstractEntityPersister
 							throw new PathException(
 									String.format(
 											Locale.ROOT,
-											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes: '%s', '%s'",
+											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes '%s' and '%s'",
 											name,
 											getJavaType().getJavaType().getTypeName(),
 											attribute.asAttributeMapping().getDeclaringType()

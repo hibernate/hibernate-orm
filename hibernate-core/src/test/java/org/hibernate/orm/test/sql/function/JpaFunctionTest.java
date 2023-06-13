@@ -13,8 +13,8 @@ import jakarta.persistence.Id;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.SemanticException;
 
+import org.hibernate.query.SyntaxException;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -76,7 +76,7 @@ public class JpaFunctionTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		catch ( Exception e ) {
-			assertEquals( SemanticException.class, e.getCause().getClass() );
+			assertEquals( SyntaxException.class, e.getCause().getClass() );
 		}
 	}
 

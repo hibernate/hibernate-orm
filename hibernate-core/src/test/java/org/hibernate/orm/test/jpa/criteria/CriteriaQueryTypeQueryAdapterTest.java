@@ -30,6 +30,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -148,7 +149,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = SemanticException.class)
 	public void testSetParameterOfTypeInstantToAFloatParameterType() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
@@ -167,7 +168,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 	}
 
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = SemanticException.class)
 	public void testSetParameterOfTypeDateToAFloatParameterType() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();

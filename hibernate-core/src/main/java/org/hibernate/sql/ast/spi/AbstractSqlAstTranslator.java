@@ -7720,7 +7720,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		public void setLockMode(LockMode lockMode) {
 			if ( this.lockMode != LockMode.NONE && lockMode != this.lockMode ) {
-				throw new QueryException( "mixed LockModes" );
+				throw new QueryException( "Mixed LockModes" );
 			}
 			this.lockMode = lockMode;
 		}
@@ -7833,7 +7833,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						if ( LockMode.READ.lessThan( lockMode ) ) {
 							addAlias( entry.getKey(), null );
 							if ( upgradeType != LockMode.NONE && lockMode != upgradeType ) {
-								throw new QueryException( "mixed LockModes" );
+								throw new QueryException( "Mixed LockModes" );
 							}
 							upgradeType = lockMode;
 						}

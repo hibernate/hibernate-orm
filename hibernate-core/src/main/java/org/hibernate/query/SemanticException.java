@@ -6,13 +6,16 @@
  */
 package org.hibernate.query;
 
+import org.hibernate.QueryException;
+
 /**
- * Represents an error in the semantics (meaning) of the passed query.  Generally
- * speaking, this is a user error of some sort.
+ * Represents an error in the semantics (meaning) of a HQL/JPQL query.
  *
  * @author Steve Ebersole
+ *
+ * @see SyntaxException
  */
-public class SemanticException extends org.hibernate.QueryException {
+public class SemanticException extends QueryException {
 
 	/**
 	 * @deprecated this constructor does not carry information

@@ -45,7 +45,7 @@ public final class StandardArgumentsValidators {
 				String functionName,
 				TypeConfiguration typeConfiguration) {
 			if ( !arguments.isEmpty() ) {
-				throw new QueryException(
+				throw new FunctionArgumentException(
 						String.format(
 								Locale.ROOT,
 								"Function %s has no parameters, but %d arguments given",
@@ -73,7 +73,7 @@ public final class StandardArgumentsValidators {
 					String functionName,
 					TypeConfiguration typeConfiguration) {
 				if ( arguments.size() < minNumOfArgs ) {
-					throw new QueryException(
+					throw new FunctionArgumentException(
 							String.format(
 									Locale.ROOT,
 									"Function %s() requires at least %d arguments, but only %d arguments given",
@@ -110,7 +110,7 @@ public final class StandardArgumentsValidators {
 					String functionName,
 					TypeConfiguration typeConfiguration) {
 				if ( arguments.size() != number ) {
-					throw new QueryException(
+					throw new FunctionArgumentException(
 							String.format(
 									Locale.ROOT,
 									"Function %s() has %d parameters, but %d arguments given",
@@ -149,7 +149,7 @@ public final class StandardArgumentsValidators {
 					String functionName,
 					TypeConfiguration typeConfiguration) {
 				if ( arguments.size() > maxNumOfArgs ) {
-					throw new QueryException(
+					throw new FunctionArgumentException(
 							String.format(
 									Locale.ROOT,
 									"Function %s() allows at most %d arguments, but %d arguments given",
@@ -184,7 +184,7 @@ public final class StandardArgumentsValidators {
 					String functionName,
 					TypeConfiguration typeConfiguration) {
 				if (arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs) {
-					throw new QueryException(
+					throw new FunctionArgumentException(
 							String.format(
 									Locale.ROOT,
 									"Function %s() requires between %d and %d arguments, but %d arguments given",
@@ -225,7 +225,7 @@ public final class StandardArgumentsValidators {
 				for ( SqmTypedNode<?> argument : arguments ) {
 					Class<?> argType = argument.getNodeJavaType().getJavaTypeClass();
 					if ( !javaType.isAssignableFrom( argType ) ) {
-						throw new QueryException(
+						throw new FunctionArgumentException(
 								String.format(
 										Locale.ROOT,
 										"Function %s() has parameters of type %s, but argument of type %s given",

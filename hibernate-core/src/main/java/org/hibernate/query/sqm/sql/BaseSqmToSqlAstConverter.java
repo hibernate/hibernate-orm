@@ -32,7 +32,6 @@ import java.util.function.Supplier;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.QueryException;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Dialect;
@@ -872,7 +871,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			// otherwise...
-			throw new QueryException( "Manipulation query may only contain embeddable joins" );
+			throw new SemanticException( "Mutation query may only contain embeddable joins" );
 		}
 	}
 
@@ -885,12 +884,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.getMappingMetamodel()
 				.findEntityDescriptor( sqmStatement.getTarget().getEntityName() );
 		if ( !persister.isVersioned() ) {
-			throw new SemanticException( "increment option specified for update of non-versioned entity" );
+			throw new SemanticException( "Increment option specified for update of non-versioned entity" );
 		}
 
 		final BasicType<?> versionType = persister.getVersionType();
 		if ( versionType instanceof UserVersionType ) {
-			throw new SemanticException( "user-defined version types not supported for increment option" );
+			throw new SemanticException( "User-defined version types not supported for increment option" );
 		}
 
 		currentClauseStack.push( Clause.SET );
@@ -3407,10 +3406,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			currentlyProcessingJoin = oldJoin;
 		}
 		else if ( correspondingSqlJoinType != SqlAstJoinType.CROSS ) {
-			throw new SemanticException(
-					"Entity join did not specify a predicate, " +
-					"please define an on clause or use an explicit cross join: " + sqmJoin
-			);
+			// TODO: should probably be a SyntaxException
+			throw new SemanticException( "Entity join did not specify a join condition [" + sqmJoin + "]"
+					+ " (specify a join condition with 'on' or use 'cross join')" );
 		}
 
 		// Note that we add the entity join after processing the predicate because implicit joins needed in there
@@ -6162,7 +6160,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( temporalTypeToLeft != null && durationToRight ) {
 			if ( adjustmentScale != null || negativeAdjustment ) {
 				//we can't distribute a scale over a date/timestamp
-				throw new SemanticException( "scalar multiplication of temporal value" );
+				throw new SemanticException( "Scalar multiplication of temporal value" );
 			}
 		}
 
@@ -6336,7 +6334,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					negativeAdjustment = negate;
 				}
 			default:
-				throw new SemanticException( "illegal operator for a duration " + operator );
+				throw new SemanticException( "Illegal operator for a duration " + operator );
 		}
 	}
 
@@ -6349,7 +6347,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// operator expressions with two dates or
 		// timestamps are ill-formed
 		if ( operator != SUBTRACT ) {
-			throw new SemanticException( "illegal operator for temporal type: " + operator );
+			throw new SemanticException( "Illegal operator for temporal type: " + operator );
 		}
 
 		// a difference between two dates or two

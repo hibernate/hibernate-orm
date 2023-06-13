@@ -642,7 +642,7 @@ Polymorphic association joins for `@Any` mappings are not currently implemented.
 ====
 
 [[dynamic-insert-update]]
-=== Selective columns inserts and updates
+=== Selective column lists in inserts and updates
 
 By default, Hibernate generates `insert` and `update` statements for each entity during boostrap, and reuses the same `insert` statement every time an instance of the entity is made persistent, and the same `update` statement every time an instance of the entity is modified.
 

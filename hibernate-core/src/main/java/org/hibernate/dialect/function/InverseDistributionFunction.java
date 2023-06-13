@@ -164,7 +164,8 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 		@Override
 		protected MappingModelExpressible<?> getMappingModelExpressible(
 				SqmToSqlAstConverter walker,
-				ReturnableType<?> resultType) {
+				ReturnableType<?> resultType,
+				List<SqlAstNode> arguments) {
 			MappingModelExpressible<?> mapping;
 			if ( resultType instanceof MappingModelExpressible) {
 				// here we have a BasicType, which can be cast

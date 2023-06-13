@@ -197,15 +197,15 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 
 		@Override
 		public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+			final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 			final ReturnableType<?> resultType = resolveResultType(
 					walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
 			);
 			final MappingModelExpressible<?> mappingModelExpressible = resultType == null ? null : getMappingModelExpressible(
 					walker,
-					resultType
+					resultType,
+					arguments
 			);
-
-			final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 			final SqlAstNode expression = arguments.get( 0 );
 			if ( expression instanceof SqlTupleContainer ) {
 				// SqlTupleContainer means this is a composite temporal type i.e. uses `@TimeZoneStorage(COLUMN)`

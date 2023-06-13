@@ -5499,11 +5499,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 		return new SqmParameterInterpretation(
-				sqmParameter,
-				queryParameter,
 				jdbcParametersForSqm,
-				valueMapping,
-				qp -> binding
+				valueMapping
 		);
 	}
 

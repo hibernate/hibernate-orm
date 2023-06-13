@@ -159,4 +159,13 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	public Consumer<Predicate> getJoinPredicateConsumer() {
 		return joinPredicateConsumer;
 	}
+
+	@Override
+	public TableGroup findCompatibleJoinedGroup(TableGroupJoinProducer joinProducer, SqlAstJoinType requestedJoinType) {
+		final TableGroup compatibleJoinedGroup = super.findCompatibleJoinedGroup( joinProducer, requestedJoinType );
+		return compatibleJoinedGroup == null ? correlatedTableGroup.findCompatibleJoinedGroup(
+				joinProducer,
+				requestedJoinType
+		) : compatibleJoinedGroup;
+	}
 }

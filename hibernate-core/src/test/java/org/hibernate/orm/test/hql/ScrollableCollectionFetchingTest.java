@@ -6,13 +6,16 @@
  */
 package org.hibernate.orm.test.hql;
 
-import org.hibernate.HibernateException;
+import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
-import org.hibernate.query.PathElementException;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -43,22 +46,51 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ScrollableCollectionFetchingTest {
 
 	@Test
-	public void testTupleReturnFails(SessionFactoryScope scope) {
+	@SkipForDialect(dialectClass=DB2Dialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass= DerbyDialect.class)
+	public void testTupleReturnWithFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery("insert Mammal (description, bodyWeight, pregnant) values ('Human', 80.0, false)").executeUpdate();
+					assertEquals( 1L, session.createSelectionQuery("select count(*) from Mammal").getSingleResult() );
+					ScrollableResults results = session.createQuery("select a, a.bodyWeight from Animal a left join fetch a.offspring").scroll();
+					assertTrue( results.next() );
+					Object[] result = (Object[]) results.get();
+					assertTrue(Hibernate.isInitialized(((Animal) result[0]).getOffspring()));
+					session.createMutationQuery("delete Mammal").executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	public void testTupleReturnWithFetchFailure(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					try {
+						session.createQuery( "select a.description, a.bodyWeight from Animal a inner join fetch a.offspring" ).scroll();
+						fail( "scroll allowed with fetch and projection result" );
+					}
+					catch (IllegalArgumentException e) {
+						assertTyping( SemanticException.class, e.getCause() );
+					}
+				}
+		);
+	}
+
+
+	@Test
+	public void testUknownPathFailure(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					try {
 						session.createQuery( "select a, a.weight from Animal a inner join fetch a.offspring" ).scroll();
-						fail( "scroll allowed with collection fetch and reurning tuples" );
+						fail( "scroll allowed with unknown path" );
 					}
 					catch (IllegalArgumentException e) {
-						assertTyping( PathElementException.class, e );
-					}
-					catch (HibernateException e) {
-						// expected result...
+						assertTyping( UnknownPathException.class, e.getCause() );
 					}
 				}
 		);
-
 	}
 
 	@Test

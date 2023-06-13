@@ -9,10 +9,12 @@ package org.hibernate.query;
 import org.hibernate.QueryException;
 
 /**
- * Indicates a request for a named-query when no query is
- * registered under that name
+ * Occurs when a named query is requested, and there is no known
+ * HQL or native SQL query registered under the given name.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.query.named.NamedObjectRepository
  */
 public class UnknownNamedQueryException extends QueryException {
 	public UnknownNamedQueryException(String queryName) {

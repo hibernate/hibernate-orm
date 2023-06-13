@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -70,7 +71,7 @@ public class SqmBasicValuedSimplePath<T>
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new PathException(
+		throw new UnknownPathException(
 				String.format(
 						"Could not interpret attribute '%s' of basic-valued path '%s'",
 						name, getNavigablePath()

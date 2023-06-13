@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -121,7 +122,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 				}
 			}
 
-			throw new PathException( "Path '" + sqmPath.getNavigablePath() + "' did not reference a known model part" );
+			throw new UnknownPathException( "Path '" + sqmPath.getNavigablePath() + "' did not reference a known model part" );
 		}
 
 		final TableReference tableReference = tableGroup.resolveTableReference(

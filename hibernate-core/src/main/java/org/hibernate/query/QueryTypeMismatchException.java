@@ -9,7 +9,7 @@ package org.hibernate.query;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates a mismatch between a Query's expected and actual result types
+ * Indicates a mismatch between the expected and actual result types of a query.
  *
  * @author Steve Ebersole
  */

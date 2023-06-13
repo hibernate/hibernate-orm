@@ -90,7 +90,7 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		// this is a reference to a collection outside the from-clause...
+		// this is a reference to a collection outside the from clause
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature == null ) {
 			throw new PathException( "Plural path '" + getNavigablePath()

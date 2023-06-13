@@ -49,7 +49,8 @@ stage('Configure') {
 		// and it's useful to test that.
 		new BuildEnvironment( testJdkVersion: '19', testJdkLauncherArgs: '--enable-preview' ),
 		new BuildEnvironment( testJdkVersion: '20', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '21', testJdkLauncherArgs: '--enable-preview' )
+		new BuildEnvironment( testJdkVersion: '21', testJdkLauncherArgs: '--enable-preview' ),
+		new BuildEnvironment( testJdkVersion: '22', testJdkLauncherArgs: '--enable-preview' )
 	];
 
 	if ( env.CHANGE_ID ) {

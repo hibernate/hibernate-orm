@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.lock;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +37,12 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.CustomParameterized;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import org.jboss.logging.Logger;
 
@@ -61,15 +65,32 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
+@RunWith(CustomParameterized.class)
 public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final Logger log = Logger.getLogger( LockTest.class );
+
+	@Parameterized.Parameters(name = "Batching enabled: {0}")
+	public static List<Object[]> params() {
+		return Arrays.asList( new Object[] { Boolean.FALSE }, new Object[] { Boolean.TRUE } );
+	}
+
+	private boolean batchFetchingEnabled;
+
+	public LockTest(boolean batchFetchingEnabled) {
+		this.batchFetchingEnabled = batchFetchingEnabled;
+	}
 
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
 		options.remove( AvailableSettings.CONNECTION_PROVIDER );
+		if ( Boolean.TRUE.equals( batchFetchingEnabled ) ) {
+			// Batch fetching may result in using different EntityLoaders which could lead to a different results.
+			// Hence, we want to test when batch fetching is enabled/disabled:
+			options.put( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, 2 );
+		}
 	}
 
 	@Test

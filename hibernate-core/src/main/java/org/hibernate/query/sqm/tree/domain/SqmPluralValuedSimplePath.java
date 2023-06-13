@@ -11,9 +11,9 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.NotIndexedCollectionException;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -90,10 +90,12 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		// this is a reference to a collection outside of the from-clause...
+		// this is a reference to a collection outside the from-clause...
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature == null ) {
-			throw new SemanticException( "illegal attempt to dereference collection [" + getNavigablePath() + "] with element property reference [" + name + "]" );
+			throw new PathException( "Plural path '" + getNavigablePath()
+					+ "' refers to a collection and so element attribute '" + name
+					+ "' may not be referenced directly (use element() function)" );
 		}
 		final SqmPath<?> sqmPath = get( name );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
@@ -146,7 +148,8 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 				index = ( (SqmMapJoin<?, ?, ?>) join ).key();
 			}
 			else {
-				throw new SemanticException( "Index access is only supported on list or map attributes: " + getNavigablePath() );
+				throw new NotIndexedCollectionException( "Index operator applied to path '" + getNavigablePath()
+						+ "' which is not a list or map" );
 			}
 			join.setJoinPredicate( creationState.getCreationContext().getNodeBuilder().equal( index, selector ) );
 			parent.addSqmJoin( join );

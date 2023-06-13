@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.QueryKey;
@@ -140,10 +139,10 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				queryParameter -> {
 					if ( ! parameterBindingMap.containsKey( queryParameter ) ) {
 						if ( queryParameter.getName() != null ) {
-							throw new QueryException( "Named parameter not bound : " + queryParameter.getName() );
+							throw new QueryParameterException( "No argument for named parameter ':" + queryParameter.getName() + "'" );
 						}
 						else {
-							throw new QueryException( "Ordinal parameter not bound : " + queryParameter.getPosition() );
+							throw new QueryParameterException( "No argument for ordinal parameter '?" + queryParameter.getPosition() + "'" );
 						}
 					}
 				}
@@ -251,10 +250,10 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		if ( bindType == null ) {
 			if ( queryParameter.getName() != null ) {
-				throw new QueryException( "Cannot determine mapping type for parameter : " + queryParameter.getName() );
+				throw new QueryParameterException( "Could not determine mapping type for named parameter ':" + queryParameter.getName() + "'" );
 			}
 			else {
-				throw new QueryException( "Cannot determine mapping type for parameter : " + queryParameter.getPosition() );
+				throw new QueryParameterException( "Could not determine mapping type for ordinal parameter '?" + queryParameter.getPosition() + "'" );
 			}
 		}
 		return typeConfiguration.getBasicTypeForJavaType( bindType.getBindableJavaType() );

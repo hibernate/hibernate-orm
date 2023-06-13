@@ -7,12 +7,12 @@
 package org.hibernate.orm.test.hql;
 
 import org.hibernate.HibernateException;
-import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
+import org.hibernate.query.PathElementException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -51,7 +51,7 @@ public class ScrollableCollectionFetchingTest {
 						fail( "scroll allowed with collection fetch and reurning tuples" );
 					}
 					catch (IllegalArgumentException e) {
-						assertTyping( QueryException.class, e.getCause() );
+						assertTyping( PathElementException.class, e );
 					}
 					catch (HibernateException e) {
 						// expected result...

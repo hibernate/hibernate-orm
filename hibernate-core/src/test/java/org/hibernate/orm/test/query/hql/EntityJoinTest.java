@@ -260,7 +260,7 @@ public class EntityJoinTest {
             }
             catch (Exception expected) {
                 assertThat( expected.getCause(), instanceOf( SemanticException.class ) );
-                assertThat( expected.getMessage(), CoreMatchers.containsString( "Entity join did not specify a predicate" ) );
+                assertThat( expected.getMessage(), CoreMatchers.containsString( "Entity join did not specify a join condition" ) );
             }
         } );
     }

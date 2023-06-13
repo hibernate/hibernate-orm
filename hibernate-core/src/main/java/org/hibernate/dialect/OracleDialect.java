@@ -603,7 +603,7 @@ public class OracleDialect extends Dialect {
 				pattern.append( ")" );
 				break;
 			default:
-				throw new SemanticException( "unrecognized field: " + unit );
+				throw new SemanticException( "Unrecognized field: " + unit );
 		}
 		return pattern.toString();
 	}

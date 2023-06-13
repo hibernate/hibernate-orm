@@ -7,6 +7,7 @@
 package org.hibernate.query.hql.internal;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -18,7 +19,6 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -119,7 +119,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			// identifier is an alias (identification variable)
 
 			if ( isTerminal ) {
-				throw new SemanticException( "Cannot join to root '" + identifier + "'" );
+				throw new SemanticException( "Cannot join to root entity '" + identifier + "'" );
 			}
 
 			return new AttributeJoinDelegate(
@@ -318,7 +318,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 						creationState.getCurrentProcessingState().getPathRegistry().register( join );
 						return;
 					}
-					throw new SemanticException( "Could not resolve join path - " + fullPath );
+					throw new PathException( "Could not resolve join path '" + fullPath + "'" );
 				}
 
 				assert ! ( joinedEntityType instanceof SqmPolymorphicRootDescriptor );

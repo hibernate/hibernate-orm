@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
-import org.hibernate.query.SemanticException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -85,7 +85,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new SemanticException(
+		throw new PathException(
 				String.format(
 						Locale.ROOT,
 						"Static enum reference [%s#%s] cannot be de-referenced",
@@ -100,7 +100,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new SemanticException(
+		throw new PathException(
 				String.format(
 						Locale.ROOT,
 						"Static enum reference [%s#%s] cannot be de-referenced",

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -59,7 +60,7 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new PathException( "Non-aggregate composite paths cannot be TREAT-ed" );
+		throw new FunctionArgumentException( "Non-aggregate composite paths cannot be TREAT-ed" );
 	}
 	
 }

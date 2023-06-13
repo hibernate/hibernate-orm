@@ -18,7 +18,10 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.query.EntityReferenceException;
 import org.hibernate.query.NamedQueryValidationException;
+import org.hibernate.query.PathElementException;
+import org.hibernate.query.TerminalPathException;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -247,6 +250,10 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 			}
 			catch ( HibernateException e ) {
 				errors.put( hqlMemento.getRegistrationName(), e );
+			}
+			catch ( PathElementException | TerminalPathException | EntityReferenceException e ) {
+				// JPA does not let these be HibernateExceptions in general
+				errors.put( hqlMemento.getRegistrationName(), new HibernateException(e) );
 			}
 		}
 

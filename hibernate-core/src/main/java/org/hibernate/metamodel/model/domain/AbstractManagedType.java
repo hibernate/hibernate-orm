@@ -180,7 +180,7 @@ public abstract class AbstractManagedType<J>
 					throw new PathException(
 							String.format(
 									Locale.ROOT,
-									"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes: '%s', '%s'",
+									"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes '%s' and '%s'",
 									name,
 									getTypeName(),
 									attribute.getDeclaringType().getTypeName(),

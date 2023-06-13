@@ -16,12 +16,12 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.LinkedIdentityHashMap;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.UnknownParameterException;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -134,10 +134,10 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		for ( Integer sortedPosition : sortedLabels ) {
 			if ( lastPosition == -1 ) {
 				if ( sortedPosition != 1 ) {
-					throw new QueryException(
+					throw new ParameterLabelException(
 							String.format(
 									Locale.ROOT,
-									"Expected ordinal parameter labels to start with 1, but found - %s",
+									"Ordinal parameter labels start from '?%s' (ordinal parameters must be labelled from '?1')",
 									sortedPosition
 							)
 					);
@@ -148,10 +148,10 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 			}
 
 			if ( sortedPosition != lastPosition + 1 ) {
-				throw new QueryException(
+				throw new ParameterLabelException(
 						String.format(
 								Locale.ROOT,
-								"Unexpected gap in ordinal parameter labels [%s -> %s] : [%s]",
+								"Gap between '?%s' and '?%s' in ordinal parameter labels [%s] (ordinal parameters must be labelled sequentially)",
 								lastPosition,
 								sortedPosition,
 								StringHelper.join( ",", sortedLabels.iterator() )

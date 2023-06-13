@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -71,7 +70,7 @@ public class SqmBasicValuedSimplePath<T>
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new SemanticException(
+		throw new PathException(
 				String.format(
 						"Could not interpret attribute '%s' of basic-valued path '%s'",
 						name, getNavigablePath()

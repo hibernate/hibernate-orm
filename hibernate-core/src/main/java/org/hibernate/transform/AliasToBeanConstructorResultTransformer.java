@@ -8,6 +8,7 @@ package org.hibernate.transform;
 
 import java.lang.reflect.Constructor;
 
+import org.hibernate.InstantiationException;
 import org.hibernate.QueryException;
 import org.hibernate.query.TypedTupleTransformer;
 
@@ -44,10 +45,7 @@ public class AliasToBeanConstructorResultTransformer<T> implements ResultTransfo
 			return constructor.newInstance( tuple );
 		}
 		catch ( Exception e ) {
-			throw new QueryException(
-					"could not instantiate class [" + constructor.getDeclaringClass().getName() + "] from tuple",
-					e
-			);
+			throw new InstantiationException( "Could not instantiate class", constructor.getDeclaringClass(), e );
 		}
 	}
 

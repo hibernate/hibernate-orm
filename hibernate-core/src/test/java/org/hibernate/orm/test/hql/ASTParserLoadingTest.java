@@ -47,6 +47,7 @@ import org.hibernate.orm.test.any.hbm.PropertySet;
 import org.hibernate.orm.test.any.hbm.PropertyValue;
 import org.hibernate.orm.test.any.hbm.StringPropertyValue;
 import org.hibernate.query.Query;
+import org.hibernate.query.SyntaxException;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -3744,7 +3745,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (IllegalArgumentException e) {
 			final Throwable cause = e.getCause();
-			assertThat( cause, instanceOf( ParsingException.class ) );
+			assertThat( cause, instanceOf( SyntaxException.class ) );
 			assertTrue( cause.getMessage().contains( "mismatched input ')'" ) );
 		}
 	}

@@ -6,8 +6,6 @@
  */
 package org.hibernate.query;
 
-import org.hibernate.HibernateException;
-
 /**
  * Indicates an attempt to use a path in an unsupported way
  *
@@ -16,12 +14,16 @@ import org.hibernate.HibernateException;
  * @see PathElementException
  * @see TerminalPathException
  */
-public class PathException extends HibernateException {
+public class PathException extends SemanticException {
 	public PathException(String message) {
 		super( message );
 	}
 
-	public PathException(String message, Throwable cause) {
+	/**
+	 * @deprecated This is currently unused
+	 */
+	@Deprecated(forRemoval = true, since = "6.3")
+	public PathException(String message, Exception cause) {
 		super( message, cause );
 	}
 }

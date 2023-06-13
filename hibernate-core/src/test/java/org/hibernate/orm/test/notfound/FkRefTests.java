@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.SyntaxException;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -197,7 +197,7 @@ public class FkRefTests {
 				final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			}
 			catch (IllegalArgumentException expected) {
-				assertThat( expected.getCause() ).isInstanceOf( ParsingException.class );
+				assertThat( expected.getCause() ).isInstanceOf( SyntaxException.class );
 			}
 		} );
 
@@ -207,7 +207,7 @@ public class FkRefTests {
 				final List<Coin> coins = session.createQuery( hql, Coin.class ).getResultList();
 			}
 			catch (IllegalArgumentException expected) {
-				assertThat( expected.getCause() ).isInstanceOf( ParsingException.class );
+				assertThat( expected.getCause() ).isInstanceOf( SyntaxException.class );
 			}
 		} );
 	}

@@ -26,7 +26,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
@@ -45,6 +44,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.PathException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
@@ -1040,7 +1040,7 @@ public class NativeQueryImpl<R>
 	private FetchReturn createFetchJoin(String tableAlias, String path) {
 		int loc = path.indexOf( '.' );
 		if ( loc < 0 ) {
-			throw new QueryException( "not a property path: " + path );
+			throw new PathException( "Not a property path '" + path + "'" );
 		}
 		final String ownerTableAlias = path.substring( 0, loc );
 		final String joinedPropertyName = path.substring( loc + 1 );

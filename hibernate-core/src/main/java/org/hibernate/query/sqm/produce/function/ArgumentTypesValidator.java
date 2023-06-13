@@ -23,7 +23,6 @@ import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -251,7 +250,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	}
 
 	private void throwError(FunctionParameterType type, Type javaType, String functionName, int count) {
-		throw new QueryException(
+		throw new FunctionArgumentException(
 				String.format(
 						"Parameter %d of function %s() has type %s, but argument is of type %s",
 						count,

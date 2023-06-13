@@ -815,7 +815,7 @@ public class CockroachDialect extends Dialect {
 				case NATIVE:
 					return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
 				default:
-					throw new SemanticException( "unrecognized field: " + unit );
+					throw new SemanticException( "Unrecognized field: " + unit );
 			}
 		}
 	}

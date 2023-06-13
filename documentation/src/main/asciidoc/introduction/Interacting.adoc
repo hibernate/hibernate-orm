@@ -1069,7 +1069,7 @@ In this section we'll quickly sketch some general strategies for avoiding "quagm
   In principle, you should update _both ends_ of the association.
   But Hibernate doesn't strictly enforce that, since there are some situations where such a rule would be too heavy-handed.
   Whatever the case, it's up to you to maintain consistency across your model.
-- Never <<persistence-contexts,leak persistence context>> across threads or concurrent transactions.
+- Never <<persistence-contexts,leak a persistence context>> across threads or concurrent transactions.
   Have a strategy or framework to guarantee this never happens.
 - When running queries that return large result sets, take care to consider the size of the <<session-cache-management,session cache>>.
   Consider using a <<stateless-sessions,stateless session>>.

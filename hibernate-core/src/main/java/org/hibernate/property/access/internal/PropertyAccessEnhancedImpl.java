@@ -15,7 +15,6 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessBuildingException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.property.access.spi.SetterMethodImpl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -86,10 +85,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 			// this should indicate FIELD access
 			return getterAccessType;
 		}
-
-		// prefer using the field for getting if we can
-		final Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
-		return field != null ? AccessType.FIELD : AccessType.PROPERTY;
+		return AccessStrategyHelper.getAccessType( containerJavaType, propertyName );
 	}
 
 	@Override

@@ -57,7 +57,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		assert !getTableGroupJoins().contains( join );
 		assert join.getJoinType() == SqlAstJoinType.INNER;
 		querySpec.getFromClause().addRoot( join.getJoinedGroup() );
-		joinPredicateConsumer.accept( join.getPredicate() );
+		registerPredicate( join );
 		super.addTableGroupJoin( join );
 	}
 
@@ -71,8 +71,20 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		assert !getTableGroupJoins().contains( join );
 		assert join.getJoinType() == SqlAstJoinType.INNER;
 		querySpec.getFromClause().addRoot( join.getJoinedGroup() );
-		joinPredicateConsumer.accept( join.getPredicate() );
+		registerPredicate( join );
 		super.addNestedTableGroupJoin( join );
+	}
+
+	private void registerPredicate(TableGroupJoin join) {
+		if ( join.getPredicate() != null ) {
+			joinPredicateConsumer.accept( join.getPredicate() );
+		}
+		else if ( join.getJoinedGroup() instanceof LazyTableGroup ) {
+			// Wait for the table group to get initialized before consuming the predicate
+			( (LazyTableGroup) join.getJoinedGroup() ).setTableGroupInitializerCallback(
+					tableGroup -> joinPredicateConsumer.accept( join.getPredicate() )
+			);
+		}
 	}
 
 	@Override

@@ -6,7 +6,6 @@
  */
 package org.hibernate.property.access.internal;
 
-import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 

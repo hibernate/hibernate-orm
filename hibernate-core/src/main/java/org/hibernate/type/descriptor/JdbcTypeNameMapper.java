@@ -89,7 +89,7 @@ public final class JdbcTypeNameMapper {
 	 * If a type code is not recognized, it is reported as {@code UNKNOWN(?)} where '?'
 	 * is replaced with the given type code.
 	 *
-	 * Intended as useful for logging purposes...
+	 * @apiNote Useful for logging.
 	 *
 	 * @param typeCode The type code to find the name for.
 	 *

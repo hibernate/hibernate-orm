@@ -913,7 +913,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			value = new BinaryArithmeticExpression(
 					versionColumn,
 					ADD,
-					new QueryLiteral<>( 1, versionType ),
+					new QueryLiteral<>(
+							persister.getVersionJavaType().next(
+									persister.getVersionJavaType().seed(
+											versionMapping.getLength(),
+											versionMapping.getPrecision(),
+											versionMapping.getScale(),
+											null
+									),
+									versionMapping.getLength(),
+									versionMapping.getPrecision(),
+									versionMapping.getScale(),
+									null
+							),
+							versionType
+					),
 					versionType
 			);
 		}

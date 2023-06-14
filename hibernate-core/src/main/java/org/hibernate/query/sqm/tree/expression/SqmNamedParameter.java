@@ -88,4 +88,9 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 				? getName().compareTo( ( (SqmNamedParameter<?>) anotherParameter ).getName() )
 				: -1;
 	}
+
+	@Override
+	public Integer getTupleLength() {
+		return null;
+	}
 }

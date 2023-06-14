@@ -2645,8 +2645,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SqmPredicate visitInPredicate(HqlParser.InPredicateContext ctx) {
 		final boolean negated = ctx.getChildCount() == 4;
-		final SqmExpression<?> testExpression = (SqmExpression<?>) ctx.getChild( 0 ).accept( this );
-		final HqlParser.InListContext inListContext = (HqlParser.InListContext) ctx.getChild( ctx.getChildCount() - 1 );
+		final SqmExpression<?> testExpression = (SqmExpression<?>) ctx.expression().accept( this );
+		final HqlParser.InListContext inListContext = ctx.inList();
 		if ( inListContext instanceof HqlParser.ExplicitTupleInListContext ) {
 			final HqlParser.ExplicitTupleInListContext tupleExpressionListContext = (HqlParser.ExplicitTupleInListContext) inListContext;
 			final int size = tupleExpressionListContext.getChildCount();
@@ -2707,9 +2707,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else if ( inListContext instanceof HqlParser.SubqueryInListContext ) {
 			final HqlParser.SubqueryInListContext subQueryOrParamInListContext = (HqlParser.SubqueryInListContext) inListContext;
+			final SqmSubQuery<?> subquery = visitSubquery(subQueryOrParamInListContext.subquery());
+			( (SqmCriteriaNodeBuilder) creationContext.getNodeBuilder() ).assertComparable( testExpression, subquery );
 			return new SqmInSubQueryPredicate(
 					testExpression,
-					visitSubquery( subQueryOrParamInListContext.subquery() ),
+					subquery,
 					negated,
 					creationContext.getNodeBuilder()
 			);
@@ -2718,7 +2720,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( getCreationOptions().useStrictJpaCompliance() ) {
 				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 			}
-			final HqlParser.PersistentCollectionReferenceInListContext collectionReferenceInListContext = (HqlParser.PersistentCollectionReferenceInListContext) inListContext;
+			final HqlParser.PersistentCollectionReferenceInListContext collectionReferenceInListContext =
+					(HqlParser.PersistentCollectionReferenceInListContext) inListContext;
 			return new SqmInSubQueryPredicate<>(
 					testExpression,
 					createCollectionReferenceSubQuery(

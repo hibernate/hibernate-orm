@@ -2030,14 +2030,20 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	public void assertComparable(Expression<?> x, Expression<?> y) {
-		final SqmExpressible<?> lhsType = ( (SqmExpression<?>) x ).getNodeType();
-		final SqmExpressible<?> rhsType = ( (SqmExpression<?>) y ).getNodeType();
-		if ( !areTypesComparable( lhsType, rhsType ) ) {
+		SqmExpression<?> left = (SqmExpression<?>) x;
+		SqmExpression<?> right = (SqmExpression<?>) y;
+		if (  left.getTupleLength() != null && right.getTupleLength() != null
+				&& left.getTupleLength().intValue() != right.getTupleLength().intValue() ) {
+			throw new SemanticException( "Cannot compare tuples of different lengths" );
+		}
+		final SqmExpressible<?> leftType = left.getNodeType();
+		final SqmExpressible<?> rightType = right.getNodeType();
+		if ( !areTypesComparable( leftType, rightType ) ) {
 			throw new SemanticException(
 					String.format(
-							"Can't compare test expression of type [%s] with element of type [%s]",
-							lhsType,
-							rhsType
+							"Cannot compare left expression of type [%s] with right expression of type [%s]",
+							leftType,
+							rightType
 					)
 			);
 		}

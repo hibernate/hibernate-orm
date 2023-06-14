@@ -150,6 +150,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
+	public Integer getTupleLength() {
+		final SqmSelectClause selectClause = getQuerySpec().getSelectClause();
+		return selectClause == null ? null : selectClause.getSelectionItems().size();
+	}
+
+	@Override
 	public SqmCteStatement<?> getCteStatement(String cteLabel) {
 		final SqmCteStatement<?> cteCriteria = super.getCteStatement( cteLabel );
 		if ( cteCriteria != null || !( parent instanceof SqmCteContainer ) ) {

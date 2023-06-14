@@ -61,7 +61,7 @@ public class LikeEscapeParameterTest {
 				session -> {
 					session.createQuery(
 									"select s from TestEntity s where s.name like ?1 escape '\\'" +
-											" or s in (" +
+											" or s.id in (" +
 											" select distinct t.id from TestEntity t where t.name like ?2 escape '\\'" +
 											" )",
 									TestEntity.class

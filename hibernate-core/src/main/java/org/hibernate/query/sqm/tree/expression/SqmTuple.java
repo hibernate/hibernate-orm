@@ -110,4 +110,8 @@ public class SqmTuple<T>
 		return getGroupedExpressions();
 	}
 
+	@Override
+	public Integer getTupleLength() {
+		return groupedExpressions.size();
+	}
 }

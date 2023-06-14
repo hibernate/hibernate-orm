@@ -25,3 +25,4 @@
 package org.hibernate.metamodel;
 
 import org.hibernate.Incubating;
+

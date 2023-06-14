@@ -104,7 +104,16 @@ public class LazyTableGroup extends DelegatingTableGroup {
 			tableGroupConsumer.accept( tableGroup );
 		}
 		else {
-			this.tableGroupConsumer = tableGroupConsumer;
+			final Consumer<TableGroup> previousConsumer = this.tableGroupConsumer;
+			if (previousConsumer != null ) {
+				this.tableGroupConsumer = tg -> {
+					previousConsumer.accept( tg );
+					tableGroupConsumer.accept( tg );
+				};
+			}
+			else {
+				this.tableGroupConsumer = tableGroupConsumer;
+			}
 		}
 	}
 

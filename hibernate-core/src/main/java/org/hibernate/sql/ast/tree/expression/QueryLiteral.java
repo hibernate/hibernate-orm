@@ -34,6 +34,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	private final SqlExpressible expressible;
 
 	public QueryLiteral(T value, SqlExpressible expressible) {
+		assert value == null || expressible.getJdbcMapping().getJdbcJavaType().isInstance( value );
 		this.value = value;
 		this.expressible = expressible;
 	}

@@ -401,9 +401,9 @@ public class EntityMetamodel implements Serializable {
 
 		lazy = persistentClass.isLazy() && (
 				// TODO: this disables laziness even in non-pojo entity modes:
-				!persistentClass.hasPojoRepresentation() ||
-				!isFinalClass( persistentClass.getProxyInterface() )
-		);
+				!persistentClass.hasPojoRepresentation() || !isFinalClass( persistentClass.getProxyInterface() ) )
+				|| bytecodeEnhancementMetadata.isEnhancedForLazyLoading();
+
 		mutable = persistentClass.isMutable();
 		if ( persistentClass.isAbstract() == null ) {
 			// legacy behavior (with no abstract attribute specified)

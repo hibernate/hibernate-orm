@@ -1271,6 +1271,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @return the {@link Filter} instance representing the enabled filter.
 	 *
+	 * @throws UnknownFilterException if there is no such filter
+	 *
 	 * @see org.hibernate.annotations.FilterDef
 	 */
 	Filter enableFilter(String filterName);

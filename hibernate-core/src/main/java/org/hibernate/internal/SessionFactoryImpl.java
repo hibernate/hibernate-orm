@@ -36,6 +36,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.UnknownFilterException;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -1033,7 +1034,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
 		FilterDefinition def = filters.get( filterName );
 		if ( def == null ) {
-			throw new HibernateException( "No such filter configured [" + filterName + "]" );
+			throw new UnknownFilterException( filterName );
 		}
 		return def;
 	}

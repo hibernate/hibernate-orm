@@ -997,6 +997,7 @@ class Book {
 
     @ManyToOne(fetch=LAZY)
     Publisher publisher;
+
     ...
 }
 ----
@@ -1018,6 +1019,13 @@ Most of the time, we would like to be able to easily navigate our associations i
 We do need a way to get the `Publisher` of a given `Book`, but we would also like to be able to obtain all the ``Book``s belonging to a given publisher.
 
 To make this association bidirectional, we need to add a collection-valued attribute to the `Publisher` class, and annotate it `@OneToMany`.
+
+[NOTE]
+====
+Hibernate needs to <<proxies-and-lazy-fetching,proxy>> unfetched associations at runtime.
+Therefore, the many-valued side must be declared using an interface type like `Set` or `List`, and never using a concrete type like `HashSet` or `ArrayList`.
+====
+
 To indicate clearly that this is a bidirectional association, and to reuse any mapping information already specified in the `Book` entity, we must use the `mappedBy` annotation member to refer back to `Book.publisher`.
 
 [source,java]
@@ -1029,6 +1037,7 @@ class Publisher {
 
     @OneToMany(mappedBy="publisher")
     Set<Book> books;
+
     ...
 }
 ----
@@ -1045,21 +1054,21 @@ Set<Book> books;
 ----
 We're going to use this approach for the rest of the Introduction.
 
+To modify a bidirectional association, we must change the _owning side_.
+
 [[bidirectional-problem]]
 [WARNING]
 // .To modify a bidirectional association, you must change the _owning side_!
 ====
-To modify a bidirectional association, you must change the _owning side_!
-
 Changes made to the unowned side of an association are never synchronized to the database.
 If we desire to change an association in the database, we must change it from the owning side.
 Here, we must set `Book.publisher`.
 
 In fact, it's often necessary to change _both sides_ of a bidirectional association.
 For example, if the collection `Publisher.books` was stored in the second-level cache, we must also modify the collection, to ensure that the second-level cache remains synchronized with the database.
-
-That said, it's not a hard requirement to update the unowned side, at least if you're sure you know what you're doing.
 ====
+
+That said, it's _not_ a hard requirement to update the unowned side, at least if you're sure you know what you're doing.
 
 [TIP]
 // .Unidirectional `@OneToMany`?

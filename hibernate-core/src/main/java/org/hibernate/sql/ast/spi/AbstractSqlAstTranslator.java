@@ -6839,13 +6839,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 
-		inListPredicate.getTestExpression().accept( this );
-		if ( inListPredicate.isNegated() ) {
-			appendSql( " not" );
-		}
-		appendSql( " in (" );
-		String separator = NO_SEPARATOR;
-
 		int bindValueCount = listExpressions.size();
 		int bindValueMaxCount = bindValueCount;
 
@@ -6881,6 +6874,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 
+		final boolean parenthesis = !inListPredicate.isNegated()
+				&& inExprLimit != 0 && listExpressions.size() > inExprLimit;
+		if ( parenthesis ) {
+			appendSql( OPEN_PARENTHESIS );
+		}
+
+		inListPredicate.getTestExpression().accept( this );
+		if ( inListPredicate.isNegated() ) {
+			appendSql( " not" );
+		}
+		appendSql( " in (" );
+		String separator = NO_SEPARATOR;
+
 		final Iterator<Expression> iterator = listExpressions.iterator();
 		int itemNumber = 0;
 		while ( iterator.hasNext() && ( inExprLimit == 0 || itemNumber < inExprLimit ) ) {
@@ -6904,10 +6910,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
 			do {
-				append( ") or " );
-				inListPredicate.getTestExpression().accept( this );
 				if ( inListPredicate.isNegated() ) {
+					append( ") and " );
+					inListPredicate.getTestExpression().accept( this );
 					appendSql( " not" );
+				}
+				else {
+					append( ") or " );
+					inListPredicate.getTestExpression().accept( this );
 				}
 				appendSql( " in (" );
 				separator = NO_SEPARATOR;
@@ -6924,13 +6934,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( inClauseParameterPaddingEnabled ) {
 			final Expression lastExpression = itemAccessor.apply( listExpressions.get( listExpressions.size() - 1 ) );
-			for ( ; itemNumber < bindValueMaxCount; itemNumber++ ) {
+			final int end;
+			if ( inExprLimit > 0 ) {
+				end = Math.min( bindValueMaxCount, inExprLimit );
+			}
+			else {
+				end = bindValueMaxCount;
+			}
+			for ( ; itemNumber < end; itemNumber++ ) {
 				appendSql( separator );
 				lastExpression.accept( this );
 				separator = COMMA_SEPARATOR;
 			}
 		}
 		appendSql( CLOSE_PARENTHESIS );
+		if ( parenthesis ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
 	}
 
 	@Override

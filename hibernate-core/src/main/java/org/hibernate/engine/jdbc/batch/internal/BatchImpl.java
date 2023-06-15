@@ -303,12 +303,11 @@ public class BatchImpl implements Batch {
 	private void checkRowCounts(int[] rowCounts, PreparedStatementDetails statementDetails) throws SQLException, HibernateException {
 		final int numberOfRowCounts = rowCounts.length;
 		if ( batchPosition != 0 ) {
-			final int expectedNumberOfCounts = batchPosition / getStatementGroup().getNumberOfStatements();
-			if ( numberOfRowCounts != expectedNumberOfCounts ) {
+			if ( numberOfRowCounts != batchPosition ) {
 				JDBC_MESSAGE_LOGGER.unexpectedRowCounts(
 						statementDetails.getMutatingTableDetails().getTableName(),
 						numberOfRowCounts,
-						expectedNumberOfCounts
+						batchPosition
 				);
 			}
 		}

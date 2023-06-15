@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
@@ -60,6 +61,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private final LobCreatorBuilderImpl lobCreatorBuilder;
 
 	private final NameQualifierSupport nameQualifierSupport;
+
+	private int transactionIsolation = Connection.TRANSACTION_SERIALIZABLE;
 
 	/**
 	 * Constructor form used when the JDBC {@link DatabaseMetaData} is not available.
@@ -207,6 +210,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		);
 
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder();
+
+		this.transactionIsolation = databaseMetaData.getConnection().getTransactionIsolation();
 	}
 
 	private NameQualifierSupport determineNameQualifierSupport(DatabaseMetaData databaseMetaData) throws SQLException {
@@ -308,6 +313,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				cfgService.getSettings(),
 				databaseMetaData.getConnection()
 		);
+
+		this.transactionIsolation = databaseMetaData.getConnection().getTransactionIsolation();
 	}
 
 	public static final String SCHEMA_NAME_RESOLVER = "hibernate.schema_name_resolver";
@@ -396,6 +403,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	@Override
 	public LobCreatorBuilder getLobCreatorBuilder() {
 		return lobCreatorBuilder;
+	}
+
+	@Override
+	public int getTransactionIsolation() {
+		return transactionIsolation;
 	}
 
 }

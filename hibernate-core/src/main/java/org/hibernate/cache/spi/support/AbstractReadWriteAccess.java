@@ -7,6 +7,7 @@
 package org.hibernate.cache.spi.support;
 
 import java.io.Serializable;
+import java.sql.Connection;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.UUID;
@@ -18,6 +19,7 @@ import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
 
 import org.jboss.logging.Logger;
 
@@ -34,6 +36,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	private final ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
 	private final Lock readLock = reentrantReadWriteLock.readLock();
 	private final Lock writeLock = reentrantReadWriteLock.writeLock();
+
 
 	protected AbstractReadWriteAccess(
 			DomainDataRegion domainDataRegion,
@@ -80,7 +83,8 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 				return null;
 			}
 
-			final boolean readable = item.isReadable( session.getCacheTransactionSynchronization().getCachingTimestamp() );
+			boolean phantomReadsAllowed = session.getJdbcServices().getJdbcEnvironment().getTransactionIsolation() < Connection.TRANSACTION_SERIALIZABLE;
+			boolean readable = phantomReadsAllowed || item.isReadable( session.getCacheTransactionSynchronization().getCachingTimestamp() );
 			if ( readable ) {
 				if ( debugEnabled ) {
 					log.debugf( "Cache hit : region = `%s`, key = `%s`", getRegion().getName(), key );

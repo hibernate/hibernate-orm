@@ -6,11 +6,15 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.util.Arrays;
+
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
@@ -92,11 +96,32 @@ public abstract class AbstractEntityBatchLoader<T>
 		if ( hasSingleId ) {
 			return singleIdLoader.load( id, entityInstance, lockOptions, readOnly, session );
 		}
+		if ( lockOptions.getLockMode().greaterThan( LockMode.OPTIMISTIC_FORCE_INCREMENT ) ) {
+			// we want to apply the lock only to the first entity, we need to generate 2 different queries
+			ids = trimIds( 1, ids  );
+			initializeEntities( ids, ids[0], entityInstance, new LockOptions( LockMode.NONE ), readOnly, session );
+			return singleIdLoader.load( id, entityInstance, lockOptions, readOnly, session );
+		}
+		else {
+			// if LockMode is different from NONE but less than OPTIMISTIC_FORCE_INCREMENT we still want to apply it only to the first entity but we can generate 1 query and then
+			// do an upgrade lock
+			ids = trimIds( 0, ids );
+			initializeEntities( ids, id, entityInstance, new LockOptions( LockMode.NONE ), readOnly, session );
 
-		initializeEntities( ids, id, entityInstance, lockOptions, readOnly, session );
+			final EntityKey entityKey = session.generateEntityKey( id, getLoadable().getEntityPersister() );
+			final Object entity =  session.getPersistenceContext().getEntity( entityKey );
+			if ( lockOptions.getLockMode() != LockMode.NONE ) {
+				LoaderHelper.upgradeLock(
+						entity,
+						session.getPersistenceContext().getEntry( entity ),
+						lockOptions,
+						session.asEventSource()
+				);
+			}
 
-		final EntityKey entityKey = session.generateEntityKey( id, getLoadable().getEntityPersister() );
-		//noinspection unchecked
-		return (T) session.getPersistenceContext().getEntity( entityKey );
+			return (T) entity;
+		}
 	}
+
+	protected abstract Object[] trimIds(int startPosition, Object[] keysToInitialize);
 }

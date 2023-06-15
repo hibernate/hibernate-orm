@@ -312,4 +312,12 @@ public class EntityBatchLoaderInPredicate<T>
 				sqlBatchSize
 		);
 	}
+
+	@Override
+	protected Object[] trimIds(int startPosition, Object[] keysToInitialize) {
+		if ( startPosition == 0 ) {
+			return keysToInitialize;
+		}
+		return Arrays.copyOfRange( keysToInitialize, startPosition, keysToInitialize.length );
+	}
 }

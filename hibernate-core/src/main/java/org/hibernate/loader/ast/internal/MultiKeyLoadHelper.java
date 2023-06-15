@@ -79,10 +79,15 @@ public class MultiKeyLoadHelper {
 	}
 
 	static Object[] trimIdBatch(int length, Object[] keysToInitialize) {
+		int newLength = getTrimmedIdBatchLength( length, keysToInitialize );
+		return newLength < length ? Arrays.copyOf(keysToInitialize, newLength) : keysToInitialize;
+	}
+
+	static int getTrimmedIdBatchLength(int length, Object[] keysToInitialize) {
 		int newLength = length;
 		while ( newLength>1 && keysToInitialize[newLength-1] == null ) {
 			newLength--;
 		}
-		return newLength < length ? Arrays.copyOf(keysToInitialize, newLength) : keysToInitialize;
+		return newLength;
 	}
 }

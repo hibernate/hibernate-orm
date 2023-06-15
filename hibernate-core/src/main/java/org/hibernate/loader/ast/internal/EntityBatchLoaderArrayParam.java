@@ -27,6 +27,7 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 import static org.hibernate.engine.internal.BatchFetchQueueHelper.removeBatchLoadableEntityKey;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.getTrimmedIdBatchLength;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
@@ -119,7 +120,21 @@ public class EntityBatchLoaderArrayParam<T>
 						pkValue,
 						getLoadable()
 				);
-		return trimIdBatch( domainBatchSize, idsToLoad );
+		return idsToLoad;
+	}
+
+	@Override
+	protected Object[] trimIds(int startPosition, Object[] keysToInitialize) {
+		if ( startPosition == 0 ) {
+			return trimIdBatch( domainBatchSize, keysToInitialize );
+		}
+		else {
+			return Arrays.copyOfRange(
+					keysToInitialize,
+					startPosition,
+					getTrimmedIdBatchLength( domainBatchSize , keysToInitialize )
+			);
+		}
 	}
 
 	@Override

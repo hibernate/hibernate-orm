@@ -25,6 +25,11 @@ import org.hibernate.type.spi.TypeConfiguration;
 @Incubating
 public interface QueryEngine {
 
+	/**
+	 * The default soft reference count.
+	 */
+	int DEFAULT_QUERY_PLAN_MAX_COUNT = 2048;
+
 	NativeQueryInterpreter getNativeQueryInterpreter();
 
 	QueryInterpretationCache getInterpretationCache();

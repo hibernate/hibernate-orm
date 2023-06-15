@@ -124,6 +124,23 @@ tasks.register('renderGettingStartedGuides', AsciidoctorTask) { task ->
 		include 'index.adoc'
 	}
 	outputDir = new File("$buildDir/asciidoc/quickstart/html_single")
+
+	attributes linkcss: true,
+			stylesheet: "css/hibernate.css",
+			docinfo: 'private',
+			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+	resources {
+		from('src/main/style/asciidoctor') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'css/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'js/**'
+		}
+	}
 }
 
 

@@ -1,4 +1,6 @@
-= Hibernate Getting Started Guide
+
+= Getting Started with Hibernate
+:icons: font
 :toc:
 :docinfo:
 
@@ -6,8 +8,6 @@ include::preface.adoc[]
 
 :numbered:
 include::obtaining.adoc[]
-
-include::tutorial_native.adoc[]
 
 include::tutorial_annotations.adoc[]
 

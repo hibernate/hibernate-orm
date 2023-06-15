@@ -1,54 +1,52 @@
 [[obtaining]]
 == Obtaining Hibernate
 
-=== The Hibernate Modules/Artifacts
+We may obtain any Hibernate module we need just by declaring a dependency on the module in our Maven or Gradle build.
+For example, if we need `hibernate-core` we would simply declare a dependency on `org.hibernate.orm:hibernate-core`.
 
-Hibernate's functionality is split into a number of modules/artifacts meant to isolate dependencies (modularity).
+In Gradle we would have:
 
-hibernate-core:: The main (core) Hibernate module.  Defines its ORM features and APIs as well as the various integration SPIs.
-hibernate-envers:: Hibernate's historical entity versioning feature
-hibernate-spatial:: Hibernate's Spatial/GIS data-type support
-hibernate-agroal:: Integrates the https://agroal.github.io/[Agroal] connection pooling library into Hibernate
-hibernate-c3p0:: Integrates the https://www.mchange.com/projects/c3p0/[C3P0] connection pooling library into Hibernate
-hibernate-hikaricp:: Integrates the https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pooling library into Hibernate
-hibernate-vibur:: Integrates the https://www.vibur.org/[Vibur DBCP] connection pooling library into Hibernate
-hibernate-proxool:: Integrates the https://proxool.sourceforge.net/[Proxool] connection pooling library into Hibernate
-hibernate-jcache:: Integrates the https://jcp.org/en/jsr/detail?id=107$$[JCache] caching specification into Hibernate,
-enabling any compliant implementation to become a second-level cache provider.
-hibernate-community-dialects:: Hibernate's community supported dialects
-hibernate-graalvm:: Experimental extension to make it easier to compile applications into a https://www.graalvm.org/[GraalVM] native image
-hibernate-micrometer:: Integration for Micrometer metrics into Hibernate as a metrics collection package
-hibernate-testing:: Support for testing Hibernate ORM functionality
-hibernate-integrationtest-java-modules:: Integration tests for running Hibernate ORM in the Java module path
+[source,groovy]
+----
+implementation 'org.hibernate.orm:hibernate-core:6.3.0.Final'
+----
 
-=== Release Bundle Downloads
+Or in Maven:
 
-The Hibernate team provides release bundles hosted on the SourceForge File Release System, in both
-`TGZ` and `ZIP` formats.  Each release bundle contains `JAR` files, documentation, source code, and other goodness.
+[source,xml]
+----
+<dependency>
+    <groupId>org.hibernate.org</groupId>
+    <artifactId>hibernate-core</artifactId>
+    <version>6.3.0.Final</version>
+</dependency>
+----
 
-You can download releases of Hibernate, in your chosen format, from the list at
-https://sourceforge.net/projects/hibernate/files/hibernate-orm/.  The release bundle is structured as follows:
+=== Modules belonging to Hibernate ORM
 
-* The `lib/required/` directory contains the `hibernate-core` jar and all of its dependencies.  All of these jars are
-required to be available on your classpath no matter which features of Hibernate are being used.
-* The `lib/envers` directory contains the `hibernate-envers` jar and all of its dependencies (beyond those in
-`lib/required/` and `lib/jpa/`).
-* The `lib/spatial/` directory contains the `hibernate-spatial` jar and all of its dependencies (beyond those in `lib/required/`)
-* The `lib/jpa-metamodel-generator/` directory contains the jar needed for generating the Criteria API type-safe Metamodel.
-* The `lib/optional/` directory contains the jars needed for the various connection pooling and second-level cache integrations
-provided by Hibernate, along with their dependencies.
+Hibernate ORM is an umbrella project containing the following modules:
 
-=== Maven Repository Artifacts
+[cols="40m,~"]
+|===
+|hibernate-core| The core object/relational mapping engine
+|hibernate-envers| Entity versioning and auditing
+|hibernate-spatial| Support for spatial/GIS data types
+|hibernate-jpamodelgen| An annotation processor that generates a JPA-compliant metamodel
+|hibernate-agroal| Support for https://agroal.github.io/[Agroal] connection pooling
+|hibernate-c3p0| Support for https://www.mchange.com/projects/c3p0/[C3P0] connection pooling
+|hibernate-hikaricp| Support for https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pooling
+|hibernate-vibur| Support for https://www.vibur.org/[Vibur DBCP] connection pooling
+|hibernate-proxool| Support for https://proxool.sourceforge.net/[Proxool] connection pooling
+|hibernate-jcache| Integration with https://jcp.org/en/jsr/detail?id=107$$[JCache], allowing any compliant implementation as a second-level cache provider
+|hibernate-community-dialects| Community-supported dialects
+|hibernate-graalvm| Experimental extension to make it easier to compile applications as a https://www.graalvm.org/[GraalVM] native image
+|hibernate-micrometer| Integration for with Micrometer metrics
+|hibernate-testing| A framework for testing Hibernate ORM functionality
+|hibernate-integrationtest-java-modules| Integration tests for running Hibernate ORM in the Java module path
+|===
 
-The authoritative repository for Hibernate artifacts is the JBoss Maven repository.  The Hibernate artifacts are
-synced to Maven Central as part of an automated job (some small delay may occur).
+These artifacts are published under the Maven group id `org.hibernate.orm`.
 
-The team responsible for the JBoss Maven repository maintains a number of Wiki pages that contain important information:
+[NOTE]
+There's more to Hibernate than the modules belonging to the ORM project: Hibernate Search, Hibernate Reactive, Hibernate Validator, and more.
 
-* https://community.jboss.org/docs/DOC-14900 - General information about the repository.
-* https://community.jboss.org/docs/DOC-15170 - Information about setting up the JBoss repositories in order to do
-development work on JBoss projects themselves.
-* https://community.jboss.org/docs/DOC-15169 - Information about setting up access to the repository to use JBoss
-projects as part of your own software.
-
-The Hibernate ORM artifacts are published under the `org.hibernate` groupId.

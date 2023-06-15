@@ -1,27 +1,25 @@
 [[tutorial_envers]]
 == Tutorial Using Envers
 
-NOTE: This tutorial is located within the download bundle under `envers/`.
-
 .Objectives
 - [*] Annotate an entity as historical
 - [*] Configure Envers
 - [*] Use the Envers APIs to view and analyze historical data
 
+****
+This tutorial is located within the download bundle under `envers/`.
+****
 
 [[hibernate-gsg-tutorial-envers-config]]
 === persistence.xml
 
-This file was discussed in the Jakarta Persistence tutorial in <<hibernate-gsg-tutorial-jpa-config>>, and is essentially the same here.
-
+This file is unchanged from <<hibernate-gsg-tutorial-jpa-config,what we had before>>.
 
 [[hibernate-gsg-tutorial-envers-entity]]
 === The annotated entity Java class
 
-Again, the entity is largely the same as in <<hibernate-gsg-tutorial-jpa-entity>>.  The major difference is the
-addition of the `@org.hibernate.envers.Audited` annotation, which tells Envers to automatically track changes to this
-entity.
-
+The entity class is also almost identical to what we had <<hibernate-gsg-tutorial-annotations-entity,previously>>.
+The major difference is the addition of the annotation `@org.hibernate.envers.Audited`, which tells Envers to automatically track changes to this entity.
 
 [[hibernate-gsg-tutorial-envers-test]]
 === Example code
@@ -32,25 +30,20 @@ initial revision as well as the updated revision.  A revision refers to a histor
 
 [[hibernate-gsg-tutorial-envers-test-api]]
 .Using the `org.hibernate.envers.AuditReader`
-====
-[source, JAVA]
+[source, java]
 ----
 public void testBasicUsage() {
     ...
-    AuditReader reader = AuditReaderFactory.get( entityManager );
-    Event firstRevision = reader.find( Event.class, 2L, 1 );
+    AuditReader reader = AuditReaderFactory.get( entityManager );   <1>
+    Event firstRevision = reader.find( Event.class, 2L, 1 );        <2>
     ...
-    Event secondRevision = reader.find( Event.class, 2L, 2 );
+    Event secondRevision = reader.find( Event.class, 2L, 2 );       <3>
     ...
 }
 ----
-====
-
-We see that an `org.hibernate.envers.AuditReader` is obtained from the `org.hibernate.envers.AuditReaderFactory`
-which wraps the `jakarta.persistence.EntityManager`.
-
-Next, the `find` method retrieves specific revisions of the entity.  The first call says to find revision number
-1 of Event with id 2.  The second call says to find revision number 2 of Event with id 2.
+<1> An `org.hibernate.envers.AuditReader` is obtained from the `org.hibernate.envers.AuditReaderFactory` which wraps the JPA `EntityManager`.
+<2> The `find` method retrieves specific revisions of the entity. The first call retrieves revision number 1 of the `Event` with id 2.
+<3> Later, the second call asks for revision number 2 of the `Event` with id 2.
 
 
 [[hibernate-gsg-tutorial-annotations-further]]

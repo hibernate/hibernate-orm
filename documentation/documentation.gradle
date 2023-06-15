@@ -114,7 +114,7 @@ tasks.register('renderTopicalGuides', AsciidoctorTask) { task ->
 
 tasks.register('renderGettingStartedGuides', AsciidoctorTask) { task ->
 	group = "Documentation"
-	description = 'Renders the Getting Started Guides (quick starts) in HTML format using Asciidoctor.'
+	description = 'Renders the Getting Started Guides (quickstarts) in HTML format using Asciidoctor.'
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task
 	inputs.property "hibernate-version", project.ormVersion
@@ -124,8 +124,41 @@ tasks.register('renderGettingStartedGuides', AsciidoctorTask) { task ->
 		include 'index.adoc'
 	}
 	outputDir = new File("$buildDir/asciidoc/quickstart/html_single")
+
+	attributes linkcss: true,
+			stylesheet: "css/hibernate.css",
+			docinfo: 'private',
+			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+	resources {
+		from('src/main/style/asciidoctor') {
+			include 'images/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'css/**'
+		}
+		from('src/main/style/asciidoctor') {
+			include 'js/**'
+		}
+	}
 }
 
+tasks.register('renderGettingStartedGuidesPdf', AsciidoctorPdfTask) {task->
+	group = "Documentation"
+	description = 'Renders the Getting Started Guides in PDF format using Asciidoctor.'
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
+	inputs.property "hibernate-version", project.ormVersion
+
+	sourceDir = file( 'src/main/asciidoc/quickstart/guides' )
+	baseDir = file( 'src/main/asciidoc/quickstart/guides' )
+	sources {
+		include 'index.adoc'
+	}
+	outputDir = "$buildDir/asciidoc/quickstart/pdf"
+
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+}
 
 tasks.register('buildTutorialZip', Zip) { task ->
 	from 'src/main/asciidoc/quickstart/tutorials'
@@ -133,7 +166,7 @@ tasks.register('buildTutorialZip', Zip) { task ->
 	archiveFileName = 'hibernate-tutorials.zip'
 	expand(
 			version: project.version,
-			slf4j: "1.7.5",
+			slf4j: "2.0.7",
 			junit: testLibs.versions.junit4.get(),
 			h2: dbLibs.versions.h2.get()
 	)

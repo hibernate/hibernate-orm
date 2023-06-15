@@ -52,11 +52,6 @@ import static java.util.Comparator.comparingInt;
  */
 public class QueryEngineImpl implements QueryEngine {
 
-	/**
-	 * The default soft reference count.
-	 */
-	public static final int DEFAULT_QUERY_PLAN_MAX_COUNT = 2048;
-
 	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger("org.hibernate.HQL_FUNCTIONS");
 
 	public static QueryEngine from(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata) {
@@ -205,7 +200,7 @@ public class QueryEngineImpl implements QueryEngine {
 		if ( explicitUseCache || explicitMaxPlanSize != null && explicitMaxPlanSize > 0 ) {
 			final int size = explicitMaxPlanSize != null
 					? explicitMaxPlanSize
-					: DEFAULT_QUERY_PLAN_MAX_COUNT;
+					: QueryEngine.DEFAULT_QUERY_PLAN_MAX_COUNT;
 
 			return new QueryInterpretationCacheStandardImpl( size, statisticsSupplier );
 		}

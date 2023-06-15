@@ -23,51 +23,73 @@
  */
 package org.hibernate.tutorial.em;
 
-import java.util.Date;
-import java.util.List;
+import java.util.function.Consumer;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
+import jakarta.persistence.EntityTransaction;
 
 import junit.framework.TestCase;
 
+import static java.lang.System.out;
+import static java.time.LocalDateTime.now;
+
+import static jakarta.persistence.Persistence.createEntityManagerFactory;
+
+
 /**
  * Illustrates basic use of Hibernate as a Jakarta Persistence provider.
+ * Configuration properties are sourced from persistence.xml.
  *
  * @author Steve Ebersole
  */
-public class EntityManagerIllustrationTest extends TestCase {
+public class JPAIllustrationTest extends TestCase {
 	private EntityManagerFactory entityManagerFactory;
 
 	@Override
-	protected void setUp() throws Exception {
-		// like discussed with regards to SessionFactory, an EntityManagerFactory is set up once for an application
-		// 		IMPORTANT: notice how the name here matches the name we gave the persistence-unit in persistence.xml!
-		entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.jpa" );
+	protected void setUp() {
+		// an EntityManagerFactory is set up once for an application
+		// IMPORTANT: notice how the name here matches the name we
+		// gave the persistence-unit in persistence.xml
+		entityManagerFactory = createEntityManagerFactory("org.hibernate.tutorial.jpa");
 	}
 
 	@Override
-	protected void tearDown() throws Exception {
+	protected void tearDown() {
 		entityManagerFactory.close();
 	}
 
 	public void testBasicUsage() {
 		// create a couple of events...
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		entityManager.getTransaction().begin();
-		entityManager.persist( new Event( "Our very first event!", new Date() ) );
-		entityManager.persist( new Event( "A follow up event", new Date() ) );
-		entityManager.getTransaction().commit();
-		entityManager.close();
+		inTransaction(entityManager -> {
+			entityManager.persist(new Event("Our very first event!", now()));
+			entityManager.persist(new Event("A follow up event", now()));
+		});
 
 		// now lets pull events from the database and list them
-		entityManager = entityManagerFactory.createEntityManager();
-		entityManager.getTransaction().begin();
-        List<Event> result = entityManager.createQuery( "from Event", Event.class ).getResultList();
-		for ( Event event : result ) {
-			System.out.println( "Event (" + event.getDate() + ") : " + event.getTitle() );
-		}
-        entityManager.getTransaction().commit();
-        entityManager.close();
+		inTransaction(entityManager -> {
+			entityManager.createQuery("select e from Event e", Event.class).getResultList()
+					.forEach(event -> out.println("Event (" + event.getDate() + ") : " + event.getTitle()));
+		});
 	}
+
+	void inTransaction(Consumer<EntityManager> work) {
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		EntityTransaction transaction = entityManager.getTransaction();
+		try {
+			transaction.begin();
+			work.accept(entityManager);
+			transaction.commit();
+		}
+		catch (Exception e) {
+			if (transaction.isActive()) {
+				transaction.rollback();
+			}
+			throw e;
+		}
+		finally {
+			entityManager.close();
+		}
+	}
+
 }

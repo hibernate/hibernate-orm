@@ -21,10 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tutorial.hbm;
+package org.hibernate.tutorial.annotations;
 
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDateTime;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -34,55 +33,57 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import junit.framework.TestCase;
 
+import static java.lang.System.out;
+import static java.time.LocalDateTime.now;
+
 /**
- * Illustrates use of Hibernate native APIs.
+ * Illustrates the use of Hibernate native APIs, including the use
+ * of org.hibernate.boot for configuration and bootstrap.
+ * Configuration properties are sourced from hibernate.properties.
  *
  * @author Steve Ebersole
  */
-public class NativeApiIllustrationTest extends TestCase {
+public class HibernateIllustrationTest extends TestCase {
 	private SessionFactory sessionFactory;
 
 	@Override
-	protected void setUp() throws Exception {
+	protected void setUp() {
 		// A SessionFactory is set up once for an application!
-		final StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
-				.configure() // configures settings from hibernate.cfg.xml
-				.build();
+		final StandardServiceRegistry registry =
+				new StandardServiceRegistryBuilder()
+						.build();
 		try {
-			sessionFactory = new MetadataSources( registry ).buildMetadata().buildSessionFactory();
+			sessionFactory =
+					new MetadataSources(registry)
+							.addAnnotatedClass(Event.class)
+							.buildMetadata()
+							.buildSessionFactory();
 		}
 		catch (Exception e) {
-			// The registry would be destroyed by the SessionFactory, but we had trouble building the SessionFactory
-			// so destroy it manually.
-			StandardServiceRegistryBuilder.destroy( registry );
+			// The registry would be destroyed by the SessionFactory, but we
+			// had trouble building the SessionFactory so destroy it manually.
+			StandardServiceRegistryBuilder.destroy(registry);
 		}
 	}
 
 	@Override
-	protected void tearDown() throws Exception {
+	protected void tearDown() {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public void testBasicUsage() {
 		// create a couple of events...
-		Session session = sessionFactory.openSession();
-		session.beginTransaction();
-		session.save( new Event( "Our very first event!", new Date() ) );
-		session.save( new Event( "A follow up event", new Date() ) );
-		session.getTransaction().commit();
-		session.close();
+		sessionFactory.inTransaction(session -> {
+			session.persist(new Event("Our very first event!", now()));
+			session.persist(new Event("A follow up event", now()));
+		});
 
 		// now lets pull events from the database and list them
-		session = sessionFactory.openSession();
-		session.beginTransaction();
-		List result = session.createQuery( "from Event" ).list();
-		for ( Event event : (List<Event>) result ) {
-			System.out.println( "Event (" + event.getDate() + ") : " + event.getTitle() );
-		}
-		session.getTransaction().commit();
-		session.close();
+		sessionFactory.inTransaction(session -> {
+			session.createSelectionQuery("from Event", Event.class).getResultList()
+					.forEach(event -> out.println("Event (" + event.getDate() + ") : " + event.getTitle()));
+		});
 	}
 }

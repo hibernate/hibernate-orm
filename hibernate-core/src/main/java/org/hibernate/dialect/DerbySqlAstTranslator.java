@@ -70,8 +70,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 			CaseSearchedExpression caseSearchedExpression,
 			Consumer<Expression> resultRenderer) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
-			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			final Expression firstResult = caseSearchedExpression.getWhenFragment( 0 ).getResult();
 			super.visitAnsiCaseSearchedExpression(
 					caseSearchedExpression,
 					e -> {

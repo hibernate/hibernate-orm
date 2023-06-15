@@ -9,7 +9,9 @@ package org.hibernate.sql.ast.tree.expression;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -36,13 +38,23 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 	}
 
 	public CaseSearchedExpression(MappingModelExpressible type, List<WhenFragment> whenFragments, Expression otherwise) {
+		var containsNullWhenFragment = whenFragments.stream()
+				.anyMatch(Objects::isNull);
+		if (containsNullWhenFragment) {
+			throw new IllegalArgumentException("whenFragments cannot contain null values");
+		}
+
 		this.type = (BasicValuedMapping) type;
 		this.whenFragments = whenFragments;
 		this.otherwise = otherwise;
 	}
 
 	public List<WhenFragment> getWhenFragments() {
-		return whenFragments;
+		return Collections.unmodifiableList(whenFragments);
+	}
+
+	public WhenFragment getWhenFragment(int index) {
+		return whenFragments.get(index);
 	}
 
 	public Expression getOtherwise() {
@@ -51,6 +63,13 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 
 	public void when(Predicate predicate, Expression result) {
 		whenFragments.add( new WhenFragment( predicate, result ) );
+	}
+
+	public void when(WhenFragment whenFragment) {
+		if ( whenFragment == null ) {
+			throw new IllegalArgumentException( "whenFragment cannot be null" );
+		}
+		whenFragments.add( whenFragment );
 	}
 
 	public void otherwise(Expression otherwiseExpression) {

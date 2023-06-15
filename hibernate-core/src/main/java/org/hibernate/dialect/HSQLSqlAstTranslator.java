@@ -110,8 +110,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			Consumer<Expression> resultRenderer) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( expression )
 				|| areAllResultsPlainParametersOrLiterals( expression ) ) {
-			final List<CaseSearchedExpression.WhenFragment> whenFragments = expression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			final Expression firstResult = expression.getWhenFragment( 0 ).getResult();
 			super.visitAnsiCaseSearchedExpression(
 					expression,
 					e -> {

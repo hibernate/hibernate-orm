@@ -503,7 +503,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			else {
 				// ZoneOffset as seconds
 				final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( stringType );
-				caseSearchedExpression.getWhenFragments().add(
+				caseSearchedExpression.when(
 						new CaseSearchedExpression.WhenFragment(
 								new ComparisonPredicate(
 										offsetExpression,
@@ -516,7 +516,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								new QueryLiteral<>( "-", stringType )
 						)
 				);
-				caseSearchedExpression.getWhenFragments().add(
+				caseSearchedExpression.when(
 						new CaseSearchedExpression.WhenFragment(
 								new ComparisonPredicate(
 										offsetExpression,
@@ -529,7 +529,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								new QueryLiteral<>( "-0", stringType )
 						)
 				);
-				caseSearchedExpression.getWhenFragments().add(
+				caseSearchedExpression.when(
 						new CaseSearchedExpression.WhenFragment(
 								new ComparisonPredicate(
 										offsetExpression,
@@ -547,7 +547,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				final Expression minutes = getMinutes( floorFunction, castFunction, integerType, offsetExpression );
 
 				final CaseSearchedExpression minuteStart = new CaseSearchedExpression( stringType );
-				minuteStart.getWhenFragments().add(
+				minuteStart.when(
 						new CaseSearchedExpression.WhenFragment(
 								new BetweenPredicate(
 										minutes,
@@ -617,7 +617,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			else {
 				// ZoneOffset as seconds
 				final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( stringType );
-				caseSearchedExpression.getWhenFragments().add(
+				caseSearchedExpression.when(
 						new CaseSearchedExpression.WhenFragment(
 								new ComparisonPredicate(
 										offsetExpression,
@@ -630,7 +630,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								new QueryLiteral<>( "-", stringType )
 						)
 				);
-				caseSearchedExpression.getWhenFragments().add(
+				caseSearchedExpression.when(
 						new CaseSearchedExpression.WhenFragment(
 								new ComparisonPredicate(
 										offsetExpression,
@@ -643,7 +643,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								new QueryLiteral<>( "-0", stringType )
 						)
 				);
-				caseSearchedExpression.getWhenFragments().add(
+				caseSearchedExpression.when(
 						new CaseSearchedExpression.WhenFragment(
 								new ComparisonPredicate(
 										offsetExpression,
@@ -662,7 +662,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 				final Expression minutes = getMinutes( floorFunction, castFunction, integerType, offsetExpression );
 
 				final CaseSearchedExpression minuteStart = new CaseSearchedExpression( stringType );
-				minuteStart.getWhenFragments().add(
+				minuteStart.when(
 						new CaseSearchedExpression.WhenFragment(
 								new BetweenPredicate(
 										minutes,
@@ -719,7 +719,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 			else {
 				// ZoneOffset as seconds
 				final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( stringType );
-				caseSearchedExpression.getWhenFragments().add(
+				caseSearchedExpression.when(
 						new CaseSearchedExpression.WhenFragment(
 								new ComparisonPredicate(
 										offsetExpression,
@@ -732,7 +732,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								new QueryLiteral<>( "-", stringType )
 						)
 				);
-				caseSearchedExpression.getWhenFragments().add(
+				caseSearchedExpression.when(
 						new CaseSearchedExpression.WhenFragment(
 								new ComparisonPredicate(
 										offsetExpression,
@@ -745,7 +745,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 								new QueryLiteral<>( "-0", stringType )
 						)
 				);
-				caseSearchedExpression.getWhenFragments().add(
+				caseSearchedExpression.when(
 						new CaseSearchedExpression.WhenFragment(
 								new ComparisonPredicate(
 										offsetExpression,

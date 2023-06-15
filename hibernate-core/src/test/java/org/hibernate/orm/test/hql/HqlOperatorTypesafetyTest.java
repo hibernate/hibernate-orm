@@ -11,9 +11,34 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @SessionFactory
-@DomainModel(annotatedClasses = SubqueryPredicateTypingTest.Book.class)
-public class SubqueryPredicateTypingTest {
-    @Test void test(SessionFactoryScope scope) {
+@DomainModel(annotatedClasses = HqlOperatorTypesafetyTest.Book.class)
+public class HqlOperatorTypesafetyTest {
+    @Test void testOperatorTyping(SessionFactoryScope scope) {
+        scope.inSession( s -> {
+            // these should succeed
+            s.createSelectionQuery("from Book where title = 'Hibernate'").getResultList();
+            s.createSelectionQuery("from Book where title > ''").getResultList();
+            s.createSelectionQuery("select edition + 1 from Book").getResultList();
+            s.createSelectionQuery("select title || '!' from Book").getResultList();
+            try {
+                s.createSelectionQuery("from Book where title = 1").getResultList();
+                fail();
+            }
+            catch (SemanticException se) {}
+            try {
+                s.createSelectionQuery("from Book where title > 1").getResultList();
+                fail();
+            }
+            catch (SemanticException se) {}
+            try {
+                s.createSelectionQuery("select title + 1 from Book").getResultList();
+                fail();
+            }
+            catch (SemanticException se) {}
+        });
+    }
+
+    @Test void testSubselectTyping(SessionFactoryScope scope) {
         scope.inSession( s -> {
             // these should succeed
             s.createSelectionQuery("from Book where title in (select title from Book)").getResultList();
@@ -59,5 +84,6 @@ public class SubqueryPredicateTypingTest {
     static class Book {
         @Id String isbn;
         String title;
+        int edition;
     }
 }

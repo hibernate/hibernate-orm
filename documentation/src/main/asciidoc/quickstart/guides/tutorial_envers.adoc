@@ -46,7 +46,7 @@ public void testBasicUsage() {
 <3> Later, the second call asks for revision number 2 of the `Event` with id 2.
 
 
-[[hibernate-gsg-tutorial-annotations-further]]
+[[hibernate-gsg-tutorial-envers-further]]
 === Take it further!
 
 .Practice Exercises

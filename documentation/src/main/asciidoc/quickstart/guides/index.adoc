@@ -1,10 +1,13 @@
+:pdf-theme: ../../pdf/theme.yml
+:source-highlighter: rouge
+:icons: font
+:doctype: book
+:pdf-fontsdir: ../../pdf/fonts
 
 = Getting Started with Hibernate
-:icons: font
+:title-logo-image: image:../../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :docinfo:
-
-include::preface.adoc[]
 
 :numbered:
 include::obtaining.adoc[]

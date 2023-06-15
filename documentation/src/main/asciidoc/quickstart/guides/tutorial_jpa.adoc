@@ -116,7 +116,7 @@ void inTransaction(Consumer<EntityManager> work) {
 [TIP]
 If you use JPA in Java SE, you'll need to copy/paste this function into your project.
 
-[[hibernate-gsg-tutorial-annotations-further]]
+[[hibernate-gsg-tutorial-jpa-further]]
 === Take it further!
 
 .Practice Exercises

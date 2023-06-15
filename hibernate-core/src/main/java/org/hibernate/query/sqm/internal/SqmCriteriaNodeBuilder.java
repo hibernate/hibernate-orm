@@ -17,7 +17,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -242,7 +244,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				// Allow comparing an embeddable against a tuple literal
 				|| lhsType instanceof EmbeddedSqmPathSource<?> && rhsType instanceof TupleType
 				|| rhsType instanceof EmbeddedSqmPathSource<?> && lhsType instanceof TupleType
-				// Since we don't know any better, we just allow any comparison with multi-valued parameters
+				// Since we don't know any better, we just allow any comparison with multivalued parameters
 				|| lhsType instanceof MultiValueParameterType<?>
 				|| rhsType instanceof MultiValueParameterType<?>) {
 			return true;
@@ -2029,7 +2031,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		);
 	}
 
-	public void assertComparable(Expression<?> x, Expression<?> y) {
+	public static void assertComparable(Expression<?> x, Expression<?> y) {
 		SqmExpression<?> left = (SqmExpression<?>) x;
 		SqmExpression<?> right = (SqmExpression<?>) y;
 		if (  left.getTupleLength() != null && right.getTupleLength() != null
@@ -2041,11 +2043,49 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		if ( !areTypesComparable( leftType, rightType ) ) {
 			throw new SemanticException(
 					String.format(
-							"Cannot compare left expression of type [%s] with right expression of type [%s]",
-							leftType,
-							rightType
+							"Cannot compare left expression of type '%s' with right expression of type '%s'",
+							leftType.getTypeName(),
+							rightType.getTypeName()
 					)
 			);
+		}
+	}
+
+	public static void assertNumeric(SqmExpression<?> expression, BinaryArithmeticOperator op) {
+		final SqmExpressible<?> nodeType = expression.getNodeType();
+		if ( nodeType != null ) {
+			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
+			if ( !Number.class.isAssignableFrom( javaType )
+					&& !Temporal.class.isAssignableFrom( javaType )
+					&& !TemporalAmount.class.isAssignableFrom( javaType )
+					&& !java.util.Date.class.isAssignableFrom( javaType ) ) {
+				throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+						+ " is of type '" + nodeType.getTypeName() + "' which is not a numeric type"
+						+ " (it is not an instance of 'java.lang.Number', 'java.time.Temporal', or 'java.time.TemporalAmount')" );
+			}
+		}
+	}
+
+	public static void assertDuration(SqmExpression<?> expression) {
+		final SqmExpressible<?> nodeType = expression.getNodeType();
+		if ( nodeType != null ) {
+			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
+			if ( !TemporalAmount.class.isAssignableFrom( javaType ) ) {
+				throw new SemanticException( "Operand of 'by' is of type '" + nodeType.getTypeName() + "' which is not a duration"
+						+ " (it is not an instance of 'java.time.TemporalAmount')" );
+			}
+		}
+	}
+
+	public static void assertNumeric(SqmExpression<?> expression, UnaryArithmeticOperator op) {
+		final SqmExpressible<?> nodeType = expression.getNodeType();
+		if ( nodeType != null ) {
+			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
+			if ( !Number.class.isAssignableFrom( javaType ) ) {
+				throw new SemanticException( "Operand of " + op.getOperatorChar()
+						+ " is of type '" + nodeType.getTypeName() + "' which is not a numeric type"
+						+ " (it is not an instance of 'java.lang.Number')" );
+			}
 		}
 	}
 

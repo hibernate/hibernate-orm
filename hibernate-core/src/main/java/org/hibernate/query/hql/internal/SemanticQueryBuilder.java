@@ -2507,7 +2507,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				break;
 			}
 		}
-		( (SqmCriteriaNodeBuilder) creationContext.getNodeBuilder() ).assertComparable( left, right );
+		SqmCriteriaNodeBuilder.assertComparable( left, right );
 		return new SqmComparisonPredicate(
 				left,
 				comparisonOperator,
@@ -2708,7 +2708,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else if ( inListContext instanceof HqlParser.SubqueryInListContext ) {
 			final HqlParser.SubqueryInListContext subQueryOrParamInListContext = (HqlParser.SubqueryInListContext) inListContext;
 			final SqmSubQuery<?> subquery = visitSubquery(subQueryOrParamInListContext.subquery());
-			( (SqmCriteriaNodeBuilder) creationContext.getNodeBuilder() ).assertComparable( testExpression, subquery );
+			SqmCriteriaNodeBuilder.assertComparable( testExpression, subquery );
 			return new SqmInSubQueryPredicate(
 					testExpression,
 					subquery,
@@ -2979,10 +2979,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new ParsingException( "Expecting two operands to the additive operator" );
 		}
 
+		final SqmExpression<?> left = (SqmExpression<?>) ctx.expression(0).accept(this);
+		final SqmExpression<?> right = (SqmExpression<?>) ctx.expression(1).accept(this);
+		final BinaryArithmeticOperator operator = (BinaryArithmeticOperator) ctx.additiveOperator().accept(this);
+		SqmCriteriaNodeBuilder.assertNumeric( left, operator );
+		SqmCriteriaNodeBuilder.assertNumeric( right, operator );
+
 		return new SqmBinaryArithmetic<>(
-				(BinaryArithmeticOperator) ctx.getChild( 1 ).accept( this ),
-				(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
-				(SqmExpression<?>) ctx.getChild( 2 ).accept( this ),
+				operator,
+				left,
+				right,
 				creationContext.getJpaMetamodel(),
 				creationContext.getNodeBuilder()
 		);
@@ -2994,9 +3000,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new ParsingException( "Expecting two operands to the multiplicative operator" );
 		}
 
-		final SqmExpression<?> left = (SqmExpression<?>) ctx.getChild( 0 ).accept( this );
-		final SqmExpression<?> right = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final BinaryArithmeticOperator operator = (BinaryArithmeticOperator) ctx.getChild( 1 ).accept( this );
+		final SqmExpression<?> left = (SqmExpression<?>) ctx.expression(0).accept( this );
+		final SqmExpression<?> right = (SqmExpression<?>) ctx.expression(1).accept( this );
+		final BinaryArithmeticOperator operator = (BinaryArithmeticOperator) ctx.multiplicativeOperator().accept( this );
+		SqmCriteriaNodeBuilder.assertNumeric( left, operator );
+		SqmCriteriaNodeBuilder.assertNumeric( right, operator );
 
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
 			return getFunctionDescriptor("mod").generateSqmExpression(
@@ -3036,9 +3044,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitFromDurationExpression(HqlParser.FromDurationExpressionContext ctx) {
+		SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept( this );
+
 		return new SqmByUnit(
-				toDurationUnit( (SqmExtractUnit<?>) ctx.getChild( 2 ).accept( this ) ),
-				(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
+				toDurationUnit( (SqmExtractUnit<?>) ctx.datetimeField().accept( this ) ),
+				expression,
 				resolveExpressibleTypeBasic( Long.class ),
 				creationContext.getNodeBuilder()
 		);
@@ -3046,9 +3056,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmUnaryOperation<?> visitUnaryExpression(HqlParser.UnaryExpressionContext ctx) {
+		final SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept(this);
+		final UnaryArithmeticOperator operator = (UnaryArithmeticOperator) ctx.signOperator().accept(this);
+		SqmCriteriaNodeBuilder.assertNumeric( expression, operator );
 		return new SqmUnaryOperation<>(
-				(UnaryArithmeticOperator) ctx.getChild( 0 ).accept( this ),
-				(SqmExpression<?>) ctx.getChild( 1 ).accept( this )
+				operator,
+				expression
 		);
 	}
 

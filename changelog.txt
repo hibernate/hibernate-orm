@@ -3,6 +3,45 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.5.Final (June 15, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32158
+
+** Bug
+    * [HHH-16787] - Multi-valued parameter with single element parameter list fails with no such element exception
+    * [HHH-16786] - NPE in SqmParameterInterpretation when binding null for select item in insert-select statement
+    * [HHH-16774] - Composite field tracking in enhancement not working if field not annotated with @Embedded
+    * [HHH-16770] - Entity valued path expansion for GROUP BY clause causes problems for in-subquery predicates
+    * [HHH-16759] - Merge fails when entity has an Embedded Java record
+    * [HHH-16750] - ClassCastException when an Entity with an ElementCollection has an EmbeddableId with just one field and Batch is enabled
+    * [HHH-16745] - TransientObjectException when loading versioned entity from second-level cache with @OneToOne LAZY mapping
+    * [HHH-16744] - Wrong class created when reusing a join column for different entities in multiple ManyToOne
+    * [HHH-16740] - Fetching an element collection on an entity with a composite id fails when batch size > 1
+    * [HHH-16719] - Upgrading from 6.1.7.Final to 6.2.2.Final breaks Criteria queries for model with inheritance
+    * [HHH-16714] - Caching does not work properly when hibernate.cache.use_structured_entries is turned on 
+    * [HHH-16697] - Auto type discovery for aggregate functions wrongly determines Integer instead of BigDecimal for Oracle
+    * [HHH-16693] - MappedSuperClass with generic collections not mapped correctly
+    * [HHH-16682] - Changes in @JdbcTypeCode(SqlTypes.JSON) are not written to DB
+    * [HHH-16678] - AssertionError in QueryLiteral.<init> when using "update versioned Entity ..." if @Version is a long
+    * [HHH-16673] - Fail to get access lazy fetched field ( @ManyToOne ) which is part of a composite Id (using an @IdClass) when stored in L2 cache
+    * [HHH-16661] - Filters causes NPE when default schema is set
+    * [HHH-16641] - @OrderColumn fails for a generic collection with NPE on XProperty.getMapKey()
+    * [HHH-16640] - Some methods in org.hibernate.cfg.Configuration return `null` instead of `this` for method chaining 
+    * [HHH-16614] - Typo in logic handling before/after table creation of auxiliary database objects
+    * [HHH-16612] - NPE on @JdbcTypeCode(SqlTypes.JSON) in combination with explicit @Table name&owner
+    * [HHH-16606] - ClassCastException retrieving byte[] from database
+    * [HHH-16574] - Treat Querys throws SemanticException if InheritanceType=Joined
+    * [HHH-16498] - Hibernate DDL validation fails on enum database column type
+    * [HHH-16490] - The discriminator type mapper overrides any custom type specfied for a field mapped over the same column
+    * [HHH-16250] - Mapping same column twice and one of them using a custom type leads to "Unknown wrap conversion requested"
+    * [HHH-15929] - Mapping jsonb of different types in a class inheritance hierarchy does not work.
+
+** Task
+    * [HHH-16797] - Mark org.hibernate.metamodel as incubating
+    * [HHH-16741] - Remove method JdbcMappingContainer#getJdbcMappings()
+
+
 Changes in 6.2.4.Final (June 01, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

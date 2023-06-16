@@ -178,16 +178,10 @@ class ColumnDefinitions {
 		}
 		else {
 			final String columnType;
-//			if ( column.hasSpecializedTypeDeclaration() ) {
-//				columnType = column.getSpecializedTypeDeclaration();
-//				definition.append( ' ' ).append( columnType );
-//			}
-//			else {
-				columnType = column.getSqlType( metadata );
-				if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
-					definition.append( ' ' ).append( columnType );
-				}
-//			}
+			columnType = column.getSqlType( metadata );
+			if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
+				definition.append( ' ' ).append( columnType );
+			}
 
 			final String defaultValue = column.getDefaultValue();
 			if ( defaultValue != null ) {

@@ -492,21 +492,6 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return getClass().getSimpleName() + '(' + getName() + ')';
 	}
 
-//	@Incubating
-//	public void setSpecializedTypeDeclaration(String specializedTypeDeclaration) {
-//		this.specializedTypeDeclaration = specializedTypeDeclaration;
-//	}
-//
-//	@Incubating
-//	public String getSpecializedTypeDeclaration() {
-//		return specializedTypeDeclaration;
-//	}
-//
-//	@Incubating
-//	public boolean hasSpecializedTypeDeclaration() {
-//		return specializedTypeDeclaration != null;
-//	}
-
 	public void addCheckConstraint(CheckConstraint checkConstraint) {
 		if ( !checkConstraints.contains( checkConstraint) ) {
 			checkConstraints.add( checkConstraint );

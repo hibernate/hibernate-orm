@@ -139,6 +139,10 @@ First, we must mark an entity as versioned, using the `@Audited` annotation:
 @AuditTable("DocumentRevision")
 class Document { ... }
 ----
+[TIP]
+====
+The `@AuditTable` annotation is optional, and it's better to set either `org.hibernate.envers.audit_table_prefix` or `org.hibernate.envers.audit_table_suffix` and let the audit table name be inferred.
+====
 The `AuditReader` interface exposes operations for retrieving and querying historical revisions.
 It's really easy to get hold of one of these:
 [source,java]
@@ -611,6 +615,54 @@ sessionFactory.inTransaction(session -> {
 } );
 ----
 ====
+
+[[ordered-sorted]]
+=== Ordered and sorted collections and map keys
+
+Java lists and maps don't map very naturally to foreign key relationships between tables, and so we tend to avoid using them to represent associations between our entity classes.
+But if you feel like you _really_ need a collection with a fancier structure than `Set`, Hibernate does have options.
+
+The first two options let us map the index of a `List` or key of a `Map` to a column:
+
+.Annotations for mapping lists and maps
+[%breakable,cols="22,~,^13"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@OrderColumn` | Specifies the column used to maintain the order of a list | &#10004;
+| `@MapKeyColumn` | Specifies the column used to persist the keys of a map | &#10004;
+|===
+
+For an unowned association, the column must also be mapped on the owning side, usually by an attribute of the target entity.
+
+Now, let's introduce a little distinction:
+
+- an _ordered collection_ is one with an ordering maintained in the database, and
+- a _sorted collection_ is one which is sorted in Java code.
+
+These annotations allow us to specify how the elements of a collection should be ordered as they are read from the database:
+
+.Annotations for ordered collections
+[%breakable,cols="22,~,^13"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@OrderBy` | Specifies a fragment of JPQL used to order the collection | &#10004;
+| `@SQLOrder` | Specifies a fragment of SQL used to order the collection | &#10006;
+|===
+
+On the other hand, the following annotation specify how a collection should be sorted in memory, and are used for collections of type `SortedSet` or `SortedMap`:
+
+.Annotations for sorted collections
+[%breakable,cols="22,~,^13"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@SortNatural` | Specifies that the elements of a collection are `Comparable` | &#10006;
+| `@SortComparator` | Specifies a `Comparator` used to sort the collection | &#10006;
+|===
+
+Under the covers, Hibernate uses a `TreeSet` or `TreeMap` to maintain the collection in sorted order.
 
 [[any]]
 === Any mappings

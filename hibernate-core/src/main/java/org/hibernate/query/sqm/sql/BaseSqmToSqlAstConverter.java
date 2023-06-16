@@ -2990,7 +2990,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					entityNameUse = EntityNameUse.OPTIONAL_TREAT;
 				}
 				else {
-					entityNameUse = EntityNameUse.TREAT;
+					entityNameUse = EntityNameUse.BASE_TREAT;
 				}
 				registerEntityNameUsage(
 						tableGroup,
@@ -4993,12 +4993,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			if ( !( expression.getExpressionType() instanceof BasicValuedMapping ) ) {
 				// A case wrapper for non-basic paths is not possible,
-				// because a case expression must return a scalar value,
-				// so we instead add the type restriction predicate as conjunct
-				// by registering the treat into tableGroupEntityNameUses
-				final String treatedName = treatedPath.getTreatTarget().getHibernateEntityName();
-				final TableGroup tableGroup = getFromClauseIndex().findTableGroup( wrappedPath.getNavigablePath() );
-				registerEntityNameUsage( tableGroup, EntityNameUse.TREAT, treatedName );
+				// because a case expression must return a scalar value.
+				if ( lhs instanceof SqmRoot ) {
+					// For treated roots we need to add the type restriction predicate as conjunct
+					// by registering the treat into tableGroupEntityNameUses.
+					// Joins don't need the restriction as it will be embedded into
+					// the joined table group itself by #pruneTableGroupJoins
+					final String treatedName = treatedPath.getTreatTarget().getHibernateEntityName();
+					final TableGroup tableGroup = getFromClauseIndex().findTableGroup( wrappedPath.getNavigablePath() );
+					registerEntityNameUsage( tableGroup, EntityNameUse.TREAT, treatedName );
+				}
 				return expression;
 			}
 			final BasicValuedPathInterpretation<?> basicPath = (BasicValuedPathInterpretation<?>) expression;

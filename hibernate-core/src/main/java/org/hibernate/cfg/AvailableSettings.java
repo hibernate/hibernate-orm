@@ -2718,6 +2718,7 @@ public interface AvailableSettings {
 
 	/**
 	 * The preferred JDBC type to use for storing {@link java.util.UUID} values.
+	 * Defaults to {@link org.hibernate.type.SqlTypes#UUID}.
 	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
 	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
@@ -2731,14 +2732,14 @@ public interface AvailableSettings {
 	String PREFERRED_UUID_JDBC_TYPE = "hibernate.type.preferred_uuid_jdbc_type";
 
 	/**
-	 * The preferred JDBC type to use for storing duration values. Falls back to
-	 * {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND}.
+	 * The preferred JDBC type to use for storing {@link java.time.Duration} values.
+	 * Defaults to {@link org.hibernate.type.SqlTypes#NUMERIC}.
 	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
 	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
 	 * <p>
 	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
-	 * field, for example, {@code hibernate.type.preferred_duration_jdbc_type=NUMERIC}.
+	 * field, for example, {@code hibernate.type.preferred_duration_jdbc_type=INTERVAL_SECOND}.
 	 *
 	 * @since 6.0
 	 */
@@ -2746,8 +2747,8 @@ public interface AvailableSettings {
 	String PREFERRED_DURATION_JDBC_TYPE = "hibernate.type.preferred_duration_jdbc_type";
 
 	/**
-	 * Specifies the preferred JDBC type for storing instant values. When no
-	 * type is explicitly specified, {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}
+	 * Specifies the preferred JDBC type for storing {@link java.time.Instant} values.
+	 * Defaults to {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}.
 	 * is used.
 	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},

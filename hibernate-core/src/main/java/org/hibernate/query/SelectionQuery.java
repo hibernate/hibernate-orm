@@ -404,6 +404,18 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setCacheable(boolean cacheable);
 
 	/**
+	 * Should the query plan of the query be stored in the query plan cache?
+	 */
+	boolean isQueryPlanCacheable();
+
+	/**
+	 * Enable/disable query plan caching for this query.
+	 *
+	 * @see #isQueryPlanCacheable
+	 */
+	SelectionQuery<R> setQueryPlanCacheable(boolean queryPlanCacheable);
+
+	/**
 	 * Obtain the name of the second level query cache region in which query
 	 * results will be stored (if they are cached, see the discussion on
 	 * {@link #isCacheable()} for more information). {@code null} indicates

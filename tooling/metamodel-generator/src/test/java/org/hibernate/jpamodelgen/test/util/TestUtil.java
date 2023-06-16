@@ -86,6 +86,11 @@ public class TestUtil {
 		assertTrue( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
 	}
 
+	public static void assertPresenceOfNameFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
+		assertTrue( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
+		assertEquals(buildErrorString(errorString, clazz), getFieldFromMetamodelFor(clazz, fieldName).getType(), String.class);
+	}
+
 	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
 		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );

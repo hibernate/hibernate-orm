@@ -11,9 +11,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Describes any type that occurs in the application's domain model.
- *
+ * <p>
  * The base for Hibernate's extension of the JPA type system.
- *
+ * <p>
  * Encapsulates a {@link JavaType} describing the more rudimentary
  * aspects of the Java type.  The DomainType is a higher-level construct
  * incorporating information such as bean properties, constructors, etc
@@ -26,23 +26,8 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface DomainType<J> extends SqmExpressible<J> {
-	/**
-	 * The name of the type.
-	 *
-	 * @apiNote This is the Hibernate notion of the type name.  For most types
-	 * this will simply be the Java type (i.e. {@link Class}) name.  However
-	 * using the String allows for Hibernate's dynamic model feature.
-	 */
-	default String getTypeName() {
-		// default impl to handle the general case returning the Java type name
-		return getExpressibleJavaType().getJavaType().getTypeName();
+	@Override
+	default DomainType<J> getSqmType() {
+		return this;
 	}
-
-	/**
-	 * The descriptor for the Java type (i.e. {@link Class}) represented by this
-	 * DomainType.
-	 *
-	 * @see #getTypeName
-	 */
-	JavaType<J> getExpressibleJavaType();
 }

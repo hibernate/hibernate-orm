@@ -498,7 +498,7 @@ public class PostgreSQLDialect extends Dialect {
 				case NATIVE:
 					return "extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
 				default:
-					throw new SemanticException( "unrecognized field: " + unit );
+					throw new SemanticException( "Unrecognized field: " + unit );
 			}
 		}
 	}

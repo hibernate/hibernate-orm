@@ -44,6 +44,7 @@ import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -166,6 +167,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappedDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -200,6 +202,7 @@ import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.MergeCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
@@ -207,7 +210,7 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.query.SemanticException;
+import org.hibernate.query.PathException;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
@@ -233,7 +236,6 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
@@ -260,6 +262,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -388,6 +391,7 @@ public abstract class AbstractEntityPersister
 	private InsertCoordinator insertCoordinator;
 	private UpdateCoordinator updateCoordinator;
 	private DeleteCoordinator deleteCoordinator;
+	private UpdateCoordinator mergeCoordinator;
 
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
 	private SqmMultiTableInsertStrategy sqmMultiTableInsertStrategy;
@@ -763,9 +767,14 @@ public abstract class AbstractEntityPersister
 		propertyDefinedOnSubclass = toBooleanArray( definedBySubclass );
 
 		// Handle any filters applied to the class level
-		filterHelper = isNotEmpty( persistentClass.getFilters() )
-				? new FilterHelper( persistentClass.getFilters(), getEntityNameByTableNameMap( persistentClass ), factory )
-				: null;
+		filterHelper = isNotEmpty( persistentClass.getFilters() ) ? new FilterHelper(
+				persistentClass.getFilters(),
+				getEntityNameByTableNameMap(
+						persistentClass,
+						factory.getSqlStringGenerationContext()
+				),
+				factory
+		) : null;
 
 		useReferenceCacheEntries = shouldUseReferenceCacheEntries( creationContext.getSessionFactoryOptions() );
 		cacheEntryHelper = buildCacheEntryHelper( creationContext.getSessionFactoryOptions() );
@@ -824,20 +833,22 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	public static Map<String, String> getEntityNameByTableNameMap(PersistentClass persistentClass) {
+	public static Map<String, String> getEntityNameByTableNameMap(
+			PersistentClass persistentClass,
+			SqlStringGenerationContext stringGenerationContext) {
 		final Map<String, String> entityNameByTableNameMap = new HashMap<>();
 		PersistentClass superType = persistentClass.getSuperPersistentClass();
 		while ( superType != null ) {
-			entityNameByTableNameMap.put( superType.getTable().getName(), superType.getEntityName() );
+			entityNameByTableNameMap.put( superType.getTable().getQualifiedName( stringGenerationContext ), superType.getEntityName() );
 			for ( Join join : superType.getJoins() ) {
-				entityNameByTableNameMap.put( join.getTable().getName(), superType.getEntityName() );
+				entityNameByTableNameMap.put( join.getTable().getQualifiedName( stringGenerationContext ), superType.getEntityName() );
 			}
 			superType = superType.getSuperPersistentClass();
 		}
 		for ( PersistentClass subclass : persistentClass.getSubclassClosure() ) {
-			entityNameByTableNameMap.put( subclass.getTable().getName(), subclass.getEntityName() );
+			entityNameByTableNameMap.put( subclass.getTable().getQualifiedName( stringGenerationContext ), subclass.getEntityName() );
 			for ( Join join : subclass.getJoins() ) {
-				entityNameByTableNameMap.put( join.getTable().getName(), subclass.getEntityName() );
+				entityNameByTableNameMap.put( join.getTable().getQualifiedName( stringGenerationContext ), subclass.getEntityName() );
 			}
 		}
 		return entityNameByTableNameMap;
@@ -1353,7 +1364,11 @@ public abstract class AbstractEntityPersister
 				(columnIndex, selection) -> {
 					final String rootPkColumnName = pkColumnNames[ columnIndex ];
 					final Expression pkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
-							createColumnReferenceKey( rootTableReference, rootPkColumnName ),
+							createColumnReferenceKey(
+									rootTableReference,
+									rootPkColumnName,
+									selection.getJdbcMapping()
+							),
 							sqlAstProcessingState -> new ColumnReference(
 									rootTableReference.getIdentificationVariable(),
 									rootPkColumnName,
@@ -1365,7 +1380,11 @@ public abstract class AbstractEntityPersister
 
 					final String fkColumnName = fkColumnNames[ columnIndex ];
 					final Expression fkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
-							createColumnReferenceKey( joinedTableReference, fkColumnName ),
+							createColumnReferenceKey(
+									joinedTableReference,
+									fkColumnName,
+									selection.getJdbcMapping()
+							),
 							sqlAstProcessingState -> new ColumnReference(
 									joinedTableReference.getIdentificationVariable(),
 									fkColumnName,
@@ -1743,7 +1762,6 @@ public abstract class AbstractEntityPersister
 					i,
 					new SqlSelectionImpl(
 							i,
-							i + 1,
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierAlias + suffix )
 					)
 			);
@@ -1755,7 +1773,6 @@ public abstract class AbstractEntityPersister
 					i,
 					new SqlSelectionImpl(
 							i,
-							i + 1,
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), getDiscriminatorAlias() + suffix )
 					)
 			);
@@ -1767,7 +1784,6 @@ public abstract class AbstractEntityPersister
 					i,
 					new SqlSelectionImpl(
 							i,
-							i + 1,
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), ROWID_ALIAS + suffix )
 					)
 			);
@@ -1788,7 +1804,6 @@ public abstract class AbstractEntityPersister
 					i,
 					new SqlSelectionImpl(
 							sqlSelection.getValuesArrayPosition(),
-							sqlSelection.getJdbcResultSetIndex(),
 							new AliasedExpression( sqlSelection.getExpression(), selectAlias )
 					)
 			);
@@ -2062,6 +2077,11 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		return getIdentifierMapping().getJdbcMapping( index );
+	}
+
 	protected LockingStrategy generateLocker(LockMode lockMode) {
 		return factory.getJdbcServices().getDialect().getLockingStrategy( this, lockMode );
 	}
@@ -2255,12 +2275,12 @@ public abstract class AbstractEntityPersister
 		}
 
 		//noinspection rawtypes
-		final DiscriminatorConverter converter = DiscriminatorConverter.fromValueMappings(
+		final DiscriminatorConverter converter = MappedDiscriminatorConverter.fromValueMappings(
 				getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME ),
 				domainJavaType,
 				underlingJdbcMapping,
 				getSubclassByDiscriminatorValue(),
-				factory
+				factory.getMappingMetamodel()
 		);
 
 		//noinspection unchecked,rawtypes
@@ -2448,31 +2468,58 @@ public abstract class AbstractEntityPersister
 
 		if ( attributeNames.length != 0 ) {
 			final boolean[] propertyUpdateability = entityMetamodel.getPropertyUpdateability();
-			// Sort attribute names so that we can traverse mappings efficiently
-			Arrays.sort( attributeNames );
-			int index = 0;
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				final String attributeName = attributeMapping.getAttributeName();
-				if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
-					final int position = attributeMapping.getStateArrayPosition();
-					if ( propertyUpdateability[position] && !fields.contains( position ) ) {
-						fields.add( position );
+			if ( superMappingType == null ) {
+				/*
+						Sort attribute names so that we can traverse mappings efficiently
+						we cannot do this when there is a supertype because given:
+
+						class SuperEntity {
+							private String bSuper;
+							private String aSuper;
+						}
+
+						class ChildEntity extends SuperEntity {
+							private String aChild;
+							private String bChild;
+						}
+
+						`attributeMappings` contains { aSuper, bSuper, aChild, bChild	}
+						while the sorted `attributeNames` { aChild, aSuper, bChild, bSuper }
+				 */
+
+				Arrays.sort( attributeNames );
+				int index = 0;
+				for ( int i = 0; i < attributeMappings.size(); i++ ) {
+					final AttributeMapping attributeMapping = attributeMappings.get( i );
+					final String attributeName = attributeMapping.getAttributeName();
+					if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
+						final int position = attributeMapping.getStateArrayPosition();
+						if ( propertyUpdateability[position] && !fields.contains( position ) ) {
+							fields.add( position );
+						}
+						index++;
+						if ( index < attributeNames.length ) {
+							// Skip duplicates
+							do {
+								if ( attributeNames[index].equals( attributeName ) ) {
+									index++;
+								}
+								else {
+									break;
+								}
+							} while ( index < attributeNames.length );
+						}
+						else {
+							break;
+						}
 					}
-					index++;
-					if ( index < attributeNames.length ) {
-						// Skip duplicates
-						do {
-							if ( attributeNames[index].equals( attributeName ) ) {
-								index++;
-							}
-							else {
-								break;
-							}
-						} while ( index < attributeNames.length );
-					}
-					else {
-						break;
+				}
+			}
+			else {
+				for ( String attributeName : attributeNames ) {
+					final Integer index = entityMetamodel.getPropertyIndexOrNull( attributeName );
+					if ( index != null && propertyUpdateability[index] && !fields.contains( index ) ) {
+						fields.add( index );
 					}
 				}
 			}
@@ -2682,6 +2729,33 @@ public abstract class AbstractEntityPersister
 			final Object rowId,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		updateCoordinator.coordinateUpdate(
+				object,
+				id,
+				rowId,
+				values,
+				oldVersion,
+				oldValues,
+				dirtyAttributeIndexes,
+				hasDirtyCollection,
+				session
+		);
+	}
+
+	/**
+	 * Merge an object
+	 */
+	@Override
+	public void merge(
+			final Object id,
+			final Object[] values,
+			int[] dirtyAttributeIndexes,
+			final boolean hasDirtyCollection,
+			final Object[] oldValues,
+			final Object oldVersion,
+			final Object object,
+			final Object rowId,
+			final SharedSessionContractImplementor session) throws HibernateException {
+		mergeCoordinator.coordinateUpdate(
 				object,
 				id,
 				rowId,
@@ -2963,14 +3037,16 @@ public abstract class AbstractEntityPersister
 			discriminatorExpression = getDiscriminatorFormulaTemplate();
 			columnReferenceKey = createColumnReferenceKey(
 					tableGroup.getPrimaryTableReference(),
-					getDiscriminatorFormulaTemplate()
+					getDiscriminatorFormulaTemplate(),
+					getDiscriminatorType()
 			);
 		}
 		else {
 			discriminatorExpression = getDiscriminatorColumnName();
 			columnReferenceKey = createColumnReferenceKey(
 					tableGroup.getPrimaryTableReference(),
-					getDiscriminatorColumnName()
+					getDiscriminatorColumnName(),
+					getDiscriminatorType()
 			);
 		}
 
@@ -3151,6 +3227,7 @@ public abstract class AbstractEntityPersister
 		insertCoordinator = buildInsertCoordinator();
 		updateCoordinator = buildUpdateCoordinator();
 		deleteCoordinator = buildDeleteCoordinator();
+		mergeCoordinator = buildMergeCoordinator();
 
 		final int joinSpan = getTableSpan();
 
@@ -3374,6 +3451,18 @@ public abstract class AbstractEntityPersister
 			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping instanceof SingularAttributeMapping ) {
 				return new UpdateCoordinatorStandard( this, factory );
+			}
+		}
+		// otherwise, nothing to update
+		return new UpdateCoordinatorNoOp( this );
+	}
+
+	protected UpdateCoordinator buildMergeCoordinator() {
+		// we only have updates to issue for entities with one or more singular attributes
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			if ( attributeMapping instanceof SingularAttributeMapping ) {
+				return new MergeCoordinator( this, factory );
 			}
 		}
 		// otherwise, nothing to update
@@ -3824,7 +3913,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Boolean isTransient(Object entity, SharedSessionContractImplementor session) throws HibernateException {
-		final Object id = getIdentifier(entity, session);
+		final Object id = getIdentifier( entity, session );
 		// we *always* assume an instance with a null
 		// identifier or no identifier property is unsaved!
 		if ( id == null ) {
@@ -3832,12 +3921,23 @@ public abstract class AbstractEntityPersister
 		}
 
 		// check the version unsaved-value, if appropriate
-		final Object version = getVersion( entity );
 		if ( isVersioned() ) {
 			// let this take precedence if defined, since it works for
 			// assigned identifiers
+			final Object version = getVersion( entity );
 			final Boolean result = versionMapping.getUnsavedStrategy().isUnsaved( version );
 			if ( result != null ) {
+				if ( result && version == null && session.getPersistenceContext().hasLoadContext() ) {
+					// check if we're currently loading this entity instance, the version
+					// will be null but the entity cannot be considered transient
+					final EntityKey entityKey = new EntityKey( id, this );
+					final LoadingEntityEntry loadingEntityEntry = session.getPersistenceContext()
+							.getLoadContexts()
+							.findLoadingEntityEntry( entityKey );
+					if ( loadingEntityEntry != null && loadingEntityEntry.getEntityInstance() == entity ) {
+						return false;
+					}
+				}
 				return result;
 			}
 		}
@@ -5631,22 +5731,20 @@ public abstract class AbstractEntityPersister
 					final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
 					if ( subDefinedAttribute != null ) {
 						if ( attribute != null && !MappingModelHelper.isCompatibleModelPart( attribute, subDefinedAttribute ) ) {
-							throw new IllegalArgumentException(
-									new SemanticException(
-											String.format(
-													Locale.ROOT,
-													"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple sub types: ['%s', '%s']",
-													name,
-													getJavaType().getJavaType().getTypeName(),
-													attribute.asAttributeMapping().getDeclaringType()
-															.getJavaType()
-															.getJavaType()
-															.getTypeName(),
-													subDefinedAttribute.asAttributeMapping().getDeclaringType()
-															.getJavaType()
-															.getJavaType()
-															.getTypeName()
-											)
+							throw new PathException(
+									String.format(
+											Locale.ROOT,
+											"Could not resolve attribute '%s' of '%s' due to the attribute being declared in multiple subtypes '%s' and '%s'",
+											name,
+											getJavaType().getJavaType().getTypeName(),
+											attribute.asAttributeMapping().getDeclaringType()
+													.getJavaType()
+													.getJavaType()
+													.getTypeName(),
+											subDefinedAttribute.asAttributeMapping().getDeclaringType()
+													.getJavaType()
+													.getJavaType()
+													.getTypeName()
 									)
 							);
 						}

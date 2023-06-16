@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -52,6 +53,7 @@ public class MappedByNonAssociationTest {
 		private Long id;
 
 		@OneToMany(cascade = PERSIST, mappedBy = "exLoanId")
+		@OrderColumn(name = "EX_NO")
 		private List<Extensions> extensions = new ArrayList<>();
 	}
 

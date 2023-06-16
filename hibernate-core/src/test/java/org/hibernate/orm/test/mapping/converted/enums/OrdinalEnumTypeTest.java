@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
  */
 @MessageKeyInspection(
 		logger = @Logger( loggerName = JdbcBindingLogging.NAME ),
-		messageKey = "binding parameter ["
+		messageKey = "binding parameter"
 )
 @DomainModel( annotatedClasses = OrdinalEnumTypeTest.Person.class )
 @SessionFactory

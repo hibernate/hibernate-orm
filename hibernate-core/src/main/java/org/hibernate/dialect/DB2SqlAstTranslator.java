@@ -88,7 +88,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 					default:
 						throw new UnsupportedOperationException( "Can't emulate '" + tableJoin.getJoinType().getText() + "join' in a DB2 recursive query part" );
 				}
-				appendSql( COMA_SEPARATOR_CHAR );
+				appendSql( COMMA_SEPARATOR_CHAR );
 
 				renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
 
@@ -112,7 +112,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 				default:
 					throw new UnsupportedOperationException( "Can't emulate '" + tableGroupJoin.getJoinType().getText() + "join' in a DB2 recursive query part" );
 			}
-			appendSql( COMA_SEPARATOR_CHAR );
+			appendSql( COMMA_SEPARATOR_CHAR );
 
 			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {

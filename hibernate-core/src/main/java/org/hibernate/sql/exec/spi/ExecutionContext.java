@@ -60,8 +60,20 @@ public interface ExecutionContext {
 		return null;
 	}
 
+	/**
+	 *
+	 * @param entityKey
+	 * @param entry
+	 *
+	 * @deprecated use {@link #registerSubselect(EntityKey, LoadingEntityEntry)} instead.
+	 */
+	@Deprecated
 	default void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
 		// by default do nothing
+	}
+
+	default void registerSubselect(EntityKey entityKey, LoadingEntityEntry entry) {
+		registerLoadingEntityEntry( entityKey, entry );
 	}
 
 	/**

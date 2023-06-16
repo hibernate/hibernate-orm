@@ -26,7 +26,7 @@ public interface JdbcExtractingLogging {
 		assert TRACE_ENABLED;
 
 		JdbcExtractingLogging.LOGGER.tracef(
-				"extracted value ([%s] : [%s]) - [%s]",
+				"extracted value (%s:%s) -> [%s]",
 				jdbcPosition,
 				JdbcTypeNameMapper.getTypeName( typeCode ),
 				value
@@ -37,7 +37,7 @@ public interface JdbcExtractingLogging {
 		assert TRACE_ENABLED;
 
 		JdbcExtractingLogging.LOGGER.tracef(
-				"extracted value ([%s] : [%s]) - [null]",
+				"extracted value (%s:%s) -> [null]",
 				jdbcPosition,
 				JdbcTypeNameMapper.getTypeName( typeCode )
 		);
@@ -47,7 +47,7 @@ public interface JdbcExtractingLogging {
 		assert TRACE_ENABLED;
 
 		JdbcExtractingLogging.LOGGER.tracef(
-				"extracted value ([%s] : [%s]) - [%s]",
+				"extracted value (%s:%s) -> [%s]",
 				callableParamName,
 				JdbcTypeNameMapper.getTypeName( typeCode ),
 				value
@@ -58,7 +58,7 @@ public interface JdbcExtractingLogging {
 		assert TRACE_ENABLED;
 
 		JdbcExtractingLogging.LOGGER.tracef(
-				"extracted value ([%s] : [%s]) - [null]",
+				"extracted value (%s:%s) -> [null]",
 				callableParamName,
 				JdbcTypeNameMapper.getTypeName( typeCode )
 		);

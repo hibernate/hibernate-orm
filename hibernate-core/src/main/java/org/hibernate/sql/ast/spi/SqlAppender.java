@@ -14,8 +14,8 @@ package org.hibernate.sql.ast.spi;
 @FunctionalInterface
 public interface SqlAppender extends Appendable {
 	String NO_SEPARATOR = "";
-	String COMA_SEPARATOR = ",";
-	char COMA_SEPARATOR_CHAR = ',';
+	String COMMA_SEPARATOR = ",";
+	char COMMA_SEPARATOR_CHAR = ',';
 	char WHITESPACE = ' ';
 
 	char OPEN_PARENTHESIS = '(';

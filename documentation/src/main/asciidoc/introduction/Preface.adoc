@@ -2,6 +2,7 @@
 == Preface
 
 :user-guide: {userGuideBase}
+:java-doc: {versionDocBase}/javadocs
 
 Hibernate 6 is a major redesign of the world's most popular and feature-rich ORM solution.
 The redesign has touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and the query language.
@@ -25,4 +26,6 @@ Unfortunately, the changes in Hibernate 6 have obsoleted much of the information
 On the other hand, the Hibernate {user-guide}[User Guide] provides a great deal of detail about many aspects of Hibernate, but with so much information to cover, readability is difficult to achieve.
 
 This is therefore the new canonical guide to Hibernate.
-We do not attempt to cover every detail of Hibernate here, and so this guide should be used in conjunction with the extensive Javadoc available for Hibernate 6.
+We don't attempt to cover every detail of Hibernate here, and so this guide should be used in conjunction with the {java-doc}[extensive Javadoc] available for Hibernate 6.
+Nor do we discuss the query language of Hibernate.
+And so this introduction should be used in conjunction with its sister document, _A guide to Hibernate Query Language 6_.

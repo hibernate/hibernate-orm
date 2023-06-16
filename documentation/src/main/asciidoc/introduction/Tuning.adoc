@@ -93,9 +93,9 @@ All we need to do is set a single property:
 .Enabling JDBC batching
 [%autowidth.stretch]
 |===
-| Configuration property name | Purpose
+| Configuration property name | Purpose | Alternative
 
-| `hibernate.jdbc.batch_size` | Maximum batch size for SQL statement batching
+| `hibernate.jdbc.batch_size` | Maximum batch size for SQL statement batching | `setJdbcBatchSize()`
 |===
 
 [TIP]
@@ -116,7 +116,7 @@ Achieving high performance in ORM means minimizing the number of round trips to 
 image::images/fetching.png[Fetching process,width=700,align="center"]
 
 Without question, the most common cause of poorly-performing data access code in Java programs is the problem of _N+1 selects_.
-Here, a list of N rows is retrieved from the database in an initial query, and then associated instances of a related entity are fetched using N subsequent queries.
+Here, a list of _N_ rows is retrieved from the database in an initial query, and then associated instances of a related entity are fetched using _N_ subsequent queries.
 
 [IMPORTANT]
 // .This problem is your responsibility
@@ -127,26 +127,105 @@ But that's OK.
 Hibernate gives you all the tools you need.
 ====
 
-Hibernate provides several strategies for efficiently fetching associations and avoiding N+1 selects:
+In this section we're going to discuss different ways to avoid such "chatty" interaction with the database.
+
+Hibernate provides several strategies for efficiently fetching associations and avoiding _N+1_ selects:
 
 - _outer join fetching_—where an association is fetched using a `left outer join`,
 - _batch fetching_—where an association is fetched using a subsequent `select` with a batch of primary keys, and
 - _subselect fetching_—where an association is fetched using a subsequent `select` with keys re-queried in a subselect.
 
 Of these, you should almost always use outer join fetching.
+But let's consider the alternatives first.
 
 [[batch-subselect-fetch]]
 === Batch fetching and subselect fetching
 
+Consider the following code:
+
+[source,java]
+----
+List<Book> books =
+        session.createSelectionQuery("from Book order by isbn", Book.class)
+            .getResultList();
+books.forEach(book -> book.getAuthors().forEach(author -> out.println(book.title + " by " + author.name)));
+----
+
+This code is _very_ inefficient, resulting, by default, in the execution of _N+1_ `select` statements, where _n_ is the number of ``Book``s.
+
+Let's see how we can improve on that.
+
+[discrete]
+===== SQL for batch fetching
+
+With batch fetching enabled, Hibernate might execute the following SQL on PostgreSQL:
+
+[source,sql]
+----
+/* initial query for Books */
+select b1_0.isbn,b1_0.price,b1_0.published,b1_0.publisher_id,b1_0.title
+from Book b1_0
+order by b1_0.isbn
+
+/* first batch of associated Authors */
+select a1_0.books_isbn,a1_1.id,a1_1.bio,a1_1.name
+from Book_Author a1_0
+    join Author a1_1 on a1_1.id=a1_0.authors_id
+where a1_0.books_isbn = any (?)
+
+/* second batch of associated Authors */
+select a1_0.books_isbn,a1_1.id,a1_1.bio,a1_1.name
+from Book_Author a1_0
+    join Author a1_1 on a1_1.id=a1_0.authors_id
+where a1_0.books_isbn = any (?)
+----
+
+The first `select` statement queries and retrieves ``Book``s.
+The second and third queries fetch the associated ``Author``s in batches.
+The number of batches required depends on the configured _batch size_.
+Here, two batches were required, so two SQL statements were executed.
+
+[NOTE]
+====
+The SQL for batch fetching looks slightly different depending on the database.
+Here, on PostgreSQL, Hibernate passes a batch of primary key values as a SQL `ARRAY`.
+====
+
+[discrete]
+===== SQL for subselect fetching
+
+On the other hand, with subselect fetching, Hibernate would execute this SQL:
+
+[source,sql]
+----
+/* initial query for Books */
+select b1_0.isbn,b1_0.price,b1_0.published,b1_0.publisher_id,b1_0.title
+from Book b1_0
+order by b1_0.isbn
+
+/* fetch all associated Authors */
+select a1_0.books_isbn,a1_1.id,a1_1.bio,a1_1.name
+from Book_Author a1_0
+    join Author a1_1 on a1_1.id=a1_0.authors_id
+where a1_0.books_isbn in (select b1_0.isbn from Book b1_0)
+----
+
+Notice that the first query is re-executed in a subselect in the second query.
+The execution of the subselect is likely to be relatively inexpensive, since the data should already be cached by the database.
+Clever, huh?
+
+[discrete]
+===== Enabling the use of batch or subselect fetching
+
 Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
 
 .Configuration settings to enable batch and subselect fetching
-[%breakable,cols="35,~"]
+[%breakable,cols="35,~, 20"]
 |===
-| Configuration property name | Property value
+| Configuration property name | Property value | Alternative
 
-| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching
-| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching
+| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching | `@BatchSize`, `setFetchBatchSize()`
+| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching | `@Fetch(SUBSELECT)`
 |===
 
 Alternatively, we can enable one or the other in a given session:
@@ -157,6 +236,7 @@ session.setFetchBatchSize(5);
 session.setSubselectFetchingEnabled(true);
 ----
 
+[%unbreakable]
 [TIP]
 ====
 We may request subselect fetching more selectively by annotating a collection or many-valued association with the `@Fetch` annotation.
@@ -165,8 +245,8 @@ We may request subselect fetching more selectively by annotating a collection or
 @ManyToMany @Fetch(SUBSELECT)
 Set<Author> authors;
 ----
-Note that `@Fetch(SUBSELECT)` is equivalent to `@Fetch(SELECT)`, except after execution of a
-HQL or criteria query.
+Note that `@Fetch(SUBSELECT)` has the same effect as `@Fetch(SELECT)`, except after execution of a HQL or criteria query.
+But after query execution, `@Fetch(SUBSELECT)` is able to much more efficiently fetch associations.
 
 Later, we'll see how we can use <<fetch-profiles,fetch profiles>> to do this even more selectively.
 ====
@@ -179,13 +259,18 @@ While batch fetching might _mitigate_ problems involving N+1 selects, it won't s
 The truly correct solution is to fetch associations using joins.
 Batch fetching (or subselect fetching) can only be the _best_ solution in rare cases where outer join fetching would result in a cartesian product and a huge result set.
 
-Batch fetching and subselect fetching have one important characteristic in common: they can be performed _lazily_.
+But batch fetching and subselect fetching have one important characteristic in common: they can be performed _lazily_.
+This is, in principle, pretty convenient.
+When we query data, and then navigate an object graph, lazy fetching saves us the effort of planning ahead.
+It turns out that this is a convenience we're going to have to surrender.
 
 [[join-fetch]]
 === Join fetching
 
-Unfortunately, outer join fetching, by nature, simply can't be lazy.
-So:
+Outer join fetching is usually the best way to fetch associations, and it's what we use most of the time.
+Unfortunately, by its very nature, join fetching simply can't be lazy.
+So to make use of join fetching, we must plan ahead.
+Our general advice is:
 
 TIP: Avoid the use of lazy fetching, which is often the source of N+1 selects.
 
@@ -198,15 +283,18 @@ TIP: Most associations should be mapped for lazy fetching by default.
 It sounds as if this tip is in contradiction to the previous one, but it's not.
 It's saying that you must explicitly specify eager fetching for associations precisely when and where they are needed.
 
-If you need eager fetching in some particular transaction, use:
+If we need eager join fetching in some particular transaction, we have four different ways to specify that.
 
-- `left join fetch` in HQL,
-- `From.fetch()` in a criteria query,
-- a JPA `EntityGraph`, or
-- a <<fetch-profiles,fetch profile>>.
+[cols="40,~"]
+|===
+| Passing a JPA `EntityGraph` | We've already seen this in <<entity-graph>>
+| Specifying a named _fetch profile_ | We'll discuss this approach later in <<fetch-profiles>>
+| Using `left join fetch` in HQL/JPQL | See _A guide to Hibernate Query Language 6_ for details
+| Using `From.fetch()` in a criteria query | Same semantics as `join fetch` in HQL
+|===
 
-We've already seen how to do join fetching with an <<entity-graph,entity graph>>.
-This is how we can do it in HQL:
+Typically, a query is the most convenient option.
+Here's how we can ask for join fetching in HQL:
 
 [source,java]
 ----
@@ -229,7 +317,37 @@ List<Book> booksWithJoinFetchedAuthors =
         session.createSelectionQuery(query).getResultList();
 ----
 
-You can find much more information about association fetching in the {association-fetching}[User Guide].
+Either way, a single SQL `select` statement is executed:
+
+[source,sql]
+----
+select b1_0.isbn,a1_0.books_isbn,a1_1.id,a1_1.bio,a1_1.name,b1_0.price,b1_0.published,b1_0.publisher_id,b1_0.title
+from Book b1_0
+    join (Book_Author a1_0 join Author a1_1 on a1_1.id=a1_0.authors_id)
+        on b1_0.isbn=a1_0.books_isbn
+order by b1_0.isbn
+----
+
+Much better!
+
+Join fetching, despite its non-lazy nature, is clearly more efficient than either batch or subselect fetching, and this is the source of our recommendation to avoid the use of lazy fetching.
+
+[TIP]
+====
+There's one interesting case where join fetching becomes inefficient: when we fetch two many-values associations _in parallel_.
+Imagine we wanted to fetch both `Author.books` and `Author.royaltyStatements` in some unit of work.
+Joining both collections in a single query would result in a cartesian product of tables, and a large SQL result set.
+Subselect fetching comes to the rescue here, allowing us to fetch `books` using a join, and `royaltyStatements` using a single subsequent `select`.
+====
+
+Of course, an alternative way to avoid many round trips to the database is to cache the data we need in the Java client.
+If we're expecting to find the associated data in a local cache, we probably don't need join fetching at all.
+
+[TIP]
+====
+But what if we can't be _certain_ that all associated data will be in the cache?
+In that case, we might be able to reduce the cost of cache misses by enabling batch fetching.
+====
 
 [[second-level-cache]]
 === The second-level cache
@@ -260,6 +378,8 @@ Hibernate segments the second-level cache into named _regions_, one for each:
 
 - mapped entity hierarchy or
 - collection role.
+
+For example, there might be separate cache regions for `Author`, `Book`, `Author.books`, and `Book.authors`.
 
 Each region is permitted its own policies for expiry, persistence, and replication. These policies must be configured externally to Hibernate.
 
@@ -338,6 +458,7 @@ This strategy uses "soft" locks to prevent concurrent transactions from retrievi
 
 Which policies make sense may also depend on the underlying second-level cache implementation.
 
+[%unbreakable]
 [NOTE]
 // .The JPA-defined `@Cacheable` annotation
 ====
@@ -424,7 +545,7 @@ Therefore, we arrive at this rule of thumb:
 ====
 Many-to-one associations to "reference data", or to any other data that will almost always be available in the cache, should be mapped `EAGER`,`SELECT`.
 
-Other associations, as we've <<bidirectional-problem,already made clear>>, should be `LAZY`.
+Other associations, as we've <<lazy-problem,already made clear>>, should be `LAZY`.
 ====
 
 Once we've marked an entity or collection as eligible for storage in the second-level cache, we still need to set up an actual cache.
@@ -505,6 +626,7 @@ Finally, there's a way to globally disable the second-level cache:
 
 When `hibernate.cache.region.factory_class` is set, this property defaults to `true`.
 
+[%unbreakable]
 [TIP]
 ====
 This setting lets us easily disable the second-level cache completely when troubleshooting or profiling performance.
@@ -612,11 +734,13 @@ We might select `CacheRetrieveMode.BYPASS` if we're concerned about the possibil
 
 We should select `CacheStoreMode.BYPASS` if we're querying data that doesn't need to be cached.
 
+[%unbreakable]
 [TIP]
 // .A good time to `BYPASS` the cache
 ====
 It's a good idea to set the `CacheStoreMode` to `BYPASS` just before running a query which returns a large result set full of data that we don't expect to need again soon.
 This saves work, and prevents the newly-read data from pushing out the previously cached data.
+====
 
 In JPA we would use this idiom:
 
@@ -638,7 +762,6 @@ List<Publisher> allpubs =
             .setCacheStoreMode(CacheStoreMode.BYPASS)
             .getResultList();
 ----
-====
 
 A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
 
@@ -657,6 +780,7 @@ A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
 There's no particular reason to prefer Hibernate's `CacheMode` over the JPA equivalents.
 This enumeration only exists because Hibernate had cache modes long before they were added to JPA.
 
+[%unbreakable]
 [TIP]
 ====
 For "reference" data, that is, for data which is expected to always be found in the second-level cache, it's a good idea to _prime_ the cache at startup.
@@ -689,6 +813,7 @@ The `Cache` interface allows programmatic eviction of cached items.
 sessionFactory.getCache().evictEntityData(Book.class, bookId);
 ----
 
+[%unbreakable]
 [CAUTION]
 // .Second-level cache management is not transaction-aware
 ====
@@ -747,6 +872,7 @@ NOTE: There's no `flush()` operation, and so `update()` is always explicit.
 
 In certain circumstances, this makes stateless sessions easier to work with, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
 
+[%unbreakable]
 [CAUTION]
 ====
 If you use `fetch()` in a stateless session, you can very easily obtain two objects representing the same database row!
@@ -758,6 +884,7 @@ Use of a `StatelessSession` alleviates the need to call:
 - `clear()` or `detach()` to perform first-level cache management, and
 - `setCacheMode()` to bypass interaction with the second-level cache.
 
+[%unbreakable]
 [TIP]
 ====
 Stateless sessions can be useful, but for bulk operations on huge datasets,
@@ -786,9 +913,12 @@ There's two basic approaches to data concurrency in Hibernate:
 In the Hibernate community it's _much_ more common to use optimistic locking, and
 Hibernate makes that incredibly easy.
 
-TIP: Where possible, in a multiuser system, avoid holding a pessimistic lock across
-a user interaction. Indeed, the usual practice is to avoid having transactions that
-span user interactions. For multiuser systems, optimistic locking is king.
+[%unbreakable]
+[TIP]
+====
+Where possible, in a multiuser system, avoid holding a pessimistic lock across a user interaction.
+Indeed, the usual practice is to avoid having transactions that span user interactions. For multiuser systems, optimistic locking is king.
+====
 
 That said, there _is_ also a place for pessimistic locks, which can sometimes reduce
 the probability of transaction rollbacks.

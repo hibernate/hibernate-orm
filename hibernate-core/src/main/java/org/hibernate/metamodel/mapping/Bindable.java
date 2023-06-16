@@ -6,9 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,16 +26,6 @@ public interface Bindable extends JdbcMappingContainer {
 	@Override
 	default int getJdbcTypeCount() {
 		return forEachJdbcType( (index, jdbcMapping) -> {} );
-	}
-
-	/**
-	 * The list of JDBC mappings
-	 */
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachJdbcType( (index, jdbcMapping) -> results.add( jdbcMapping ) );
-		return results;
 	}
 
 	/**

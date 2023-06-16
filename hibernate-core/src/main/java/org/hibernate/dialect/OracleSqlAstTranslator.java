@@ -305,7 +305,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		}
 		final QuerySpec subquery = new QuerySpec( false, 1 );
 		for ( ColumnReference idColumnReference : idColumnReferences ) {
-			subquery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, -1, idColumnReference ) );
+			subquery.getSelectClause().addSqlSelection( new SqlSelectionImpl( idColumnReference ) );
 		}
 		subquery.getFromClause().addRoot( rootTableGroup );
 		subquery.applyPredicate( querySpec.getWhereClauseRestrictions() );
@@ -593,7 +593,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			for ( ColumnReference columnReference : columnReferences ) {
 				appendSql( separator );
 				columnReference.appendColumnForWrite( this );
-				separator = COMA_SEPARATOR_CHAR;
+				separator = COMMA_SEPARATOR_CHAR;
 			}
 			appendSql( ")=" );
 			assignment.getAssignedValue().accept( this );

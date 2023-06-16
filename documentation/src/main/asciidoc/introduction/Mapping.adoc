@@ -40,7 +40,7 @@ That is to say, we simply adopted Java's excellent conventions and applied them 
 
 Now, there's no way we can force you to follow this convention, even if we wished to.
 Hell, you can easily write a `PhysicalNamingStrategy` which makes table and column names ALL UGLY AND SHOUTY LIKE THIS IF YOU PREFER.
-But, _by default_, that's what Hibernate does, and it's frankly a pretty sane thing to do.
+But, _by default_, it's the convention Hibernate follows, and it's frankly a pretty reasonable one.
 ****
 
 [[mapping-inheritance]]
@@ -222,6 +222,7 @@ The `@Table` annotation can do more than just specify a name:
 | `indexes` | One or more `@Index` annotations each declaring an index
 |===
 
+[%unbreakable]
 [TIP]
 // .If you don't need to, don't hardcode the schema and catalog
 ====
@@ -250,6 +251,11 @@ The `@SecondaryTable` annotation is even more interesting:
 | `foreignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``@PrimaryKeyJoinColumn``s
 |===
 
+[TIP]
+====
+Using `@SecondaryTable` on a subclass in a `SINGLE_TABLE` entity inheritance hierarchy gives us a sort of mix of `SINGLE_TABLE` with `JOINED` inheritance.
+====
+
 [[join-table-mappings]]
 === Mapping associations to tables
 
@@ -261,9 +267,11 @@ This annotation is usually used with `@ManyToMany` associations:
 @Entity
 class Book {
     ...
+
     @ManyToMany
     @JoinTable(name="BooksAuthors")
     Set<Author> authors;
+
     ...
 }
 ----
@@ -275,9 +283,11 @@ But it's even possible to use it to map a `@ManyToOne` or `@OneToOne` associatio
 @Entity
 class Book {
     ...
+
     @ManyToOne(fetch=LAZY)
     @JoinTable(name="BookPublisher")
     Publisher publisher;
+
     ...
 }
 ----
@@ -289,9 +299,11 @@ Here, there should be a `UNIQUE` constraint on one of the columns of the associa
 @Entity
 class Author {
     ...
+
     @OneToOne(optional=false, fetch=LAZY)
     @JoinTable(name="AuthorPerson")
     Person author;
+
     ...
 }
 ----
@@ -421,10 +433,12 @@ Here we see how to use `@JoinColumn` to define a `@ManyToOne` association mappin
 @Table(name="Items")
 class Item {
     ...
+
     @ManyToOne(optional=false)  // implies nullable=false
     @JoinColumn(name = "bookIsbn", referencedColumnName = "isbn",  // a reference to a non-PK column
                 foreignKey = @ForeignKey(name="ItemsToBooksBySsn")) // supply a name for the FK constraint
     Book book;
+
     ...
 }
 ----
@@ -453,10 +467,12 @@ For composite foreign keys we might have multiple `@JoinColumn` annotations:
 @Table(name="Items")
 class Item {
     ...
+
     @ManyToOne(optional=false)
     @JoinColumn(name = "bookIsbn", referencedColumnName = "isbn")
     @JoinColumn(name = "bookPrinting", referencedColumnName = "printing")
     Book book;
+
     ...
 }
 ----
@@ -469,11 +485,13 @@ If we need to specify the `@ForeignKey`, this starts to get a bit messy:
 @Table(name="Items")
 class Item {
     ...
+
     @ManyToOne(optional=false)
     @JoinColumns(value = {@JoinColumn(name = "bookIsbn", referencedColumnName = "isbn"),
                           @JoinColumn(name = "bookPrinting", referencedColumnName = "printing")},
                  foreignKey = @ForeignKey(name="ItemsToBooksBySsn"))
     Book book;
+
     ...
 }
 ----

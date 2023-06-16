@@ -106,7 +106,7 @@ public class Builders {
 			Class<R> jdbcJavaType,
 			AttributeConverter<O, R> converter,
 			SessionFactoryImplementor sessionFactory) {
-		return new DynamicResultBuilderBasicConverted( columnAlias, domainJavaType, jdbcJavaType, converter, sessionFactory );
+		return new DynamicResultBuilderBasicConverted<>( columnAlias, domainJavaType, jdbcJavaType, converter, sessionFactory );
 	}
 
 	public static <R> ResultBuilder converted(
@@ -123,7 +123,7 @@ public class Builders {
 			Class<R> jdbcJavaType,
 			Class<? extends AttributeConverter<O,R>> converterJavaType,
 			SessionFactoryImplementor sessionFactory) {
-		return new DynamicResultBuilderBasicConverted( columnAlias, domainJavaType, jdbcJavaType, converterJavaType, sessionFactory );
+		return new DynamicResultBuilderBasicConverted<>( columnAlias, domainJavaType, jdbcJavaType, converterJavaType, sessionFactory );
 	}
 
 	public static ResultBuilderBasicValued scalar(int position) {
@@ -233,10 +233,8 @@ public class Builders {
 			String entityName,
 			LockMode explicitLockMode,
 			SessionFactoryImplementor sessionFactory) {
-		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
-		final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
-
-		return new DynamicResultBuilderEntityCalculated( entityMapping, tableAlias, explicitLockMode, sessionFactory );
+		final EntityMappingType entityMapping = sessionFactory.getRuntimeMetamodels().getEntityMappingType( entityName );
+		return new DynamicResultBuilderEntityCalculated( entityMapping, tableAlias, explicitLockMode );
 	}
 
 	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
@@ -252,9 +250,9 @@ public class Builders {
 	public static ResultBuilder resultClassBuilder(
 			Class<?> resultMappingClass,
 			SessionFactoryImplementor sessionFactory) {
-		final MappingMetamodelImplementor mappingMetamodel = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
+		final MappingMetamodelImplementor mappingMetamodel =
+				sessionFactory.getRuntimeMetamodels()
+						.getMappingMetamodel();
 		final EntityMappingType entityMappingType = mappingMetamodel.findEntityDescriptor( resultMappingClass );
 		if ( entityMappingType != null ) {
 			// the resultClass is an entity

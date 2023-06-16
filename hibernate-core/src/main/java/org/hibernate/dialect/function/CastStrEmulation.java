@@ -53,21 +53,19 @@ public class CastStrEmulation
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final SqmTypedNode<?> argument = arguments.get( 0 );
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "cast" )
 				.generateSqmExpression(
 						asList(
 								argument,
 								new SqmCastTarget<>(
-										typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
-										argument.nodeBuilder()
+										queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
+										queryEngine.getCriteriaBuilder()
 								)
 						),
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 	}
 }

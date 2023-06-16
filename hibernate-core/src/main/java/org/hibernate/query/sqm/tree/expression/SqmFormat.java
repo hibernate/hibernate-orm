@@ -48,7 +48,7 @@ public class SqmFormat extends SqmLiteral<String> {
 			NodeBuilder nodeBuilder) {
 		super(value, inherentType, nodeBuilder);
 		if (!FORMAT.matcher(value).matches()) {
-			throw new SemanticException("illegal format pattern '" + value + "'");
+			throw new SemanticException("Illegal format pattern '" + value + "'");
 		}
 	}
 

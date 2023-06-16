@@ -21,10 +21,28 @@ public interface SqlSelectionProducer {
 	 * @param valuesArrayPosition The position in our {@linkplain RowProcessingState#getJdbcValue(SqlSelection) "current JDBC values array"}
 	 * @param javaType The descriptor for the Java type to read the value as
 	 * @param typeConfiguration The associated TypeConfiguration
+	 * @deprecated Use {@link #createSqlSelection(int, int, JavaType, boolean, TypeConfiguration)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	SqlSelection createSqlSelection(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			JavaType javaType,
+			TypeConfiguration typeConfiguration);
+
+	/**
+	 * Create a SqlSelection for the given JDBC ResultSet position
+	 *
+	 * @param jdbcPosition The index position used to read values from JDBC
+	 * @param valuesArrayPosition The position in our {@linkplain RowProcessingState#getJdbcValue(SqlSelection) "current JDBC values array"}
+	 * @param javaType The descriptor for the Java type to read the value as
+	 * @param virtual Whether the select is virtual or real. See {@link SqlSelection#isVirtual()}
+	 * @param typeConfiguration The associated TypeConfiguration
 	 */
 	SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
 			JavaType javaType,
+			boolean virtual,
 			TypeConfiguration typeConfiguration);
 }

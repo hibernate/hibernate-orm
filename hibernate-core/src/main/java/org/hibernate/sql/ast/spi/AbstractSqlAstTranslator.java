@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
@@ -187,9 +188,12 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
 import org.hibernate.sql.model.internal.TableInsertCustomSql;
@@ -319,9 +323,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		this.sessionFactory = sessionFactory;
-		this.dialect = sessionFactory.getJdbcServices().getDialect();
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		this.dialect = jdbcServices.getDialect();
 		this.statementStack.push( statement );
-		this.parameterMarkerStrategy = sessionFactory.getServiceRegistry().getService( ParameterMarkerStrategy.class );
+		this.parameterMarkerStrategy = jdbcServices.getParameterMarkerStrategy();
 	}
 
 	private static Clause matchWithClause(Clause clause) {
@@ -440,6 +445,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	// for tests, for now
 	public String getSql() {
 		return sqlBuffer.toString();
+	}
+
+	// For Blaze-Persistence until its function rendering code doesn't depend on SQL fragments anymore
+	@Internal
+	public StringBuilder getSqlBuffer() {
+		return sqlBuffer;
 	}
 
 	protected void cleanup() {
@@ -1068,7 +1079,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			clauseStack.push( Clause.SET );
 			for ( Assignment assignment : statement.getAssignments() ) {
 				appendSql( separator );
-				separator = COMA_SEPARATOR_CHAR;
+				separator = COMMA_SEPARATOR_CHAR;
 				visitSetAssignment( assignment );
 			}
 		}
@@ -1097,7 +1108,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			for ( ColumnReference columnReference : columnReferences ) {
 				appendSql( separator );
 				columnReference.appendColumnForWrite( this, null );
-				separator = COMA_SEPARATOR_CHAR;
+				separator = COMMA_SEPARATOR_CHAR;
 			}
 			appendSql( ")=" );
 			assignment.getAssignedValue().accept( this );
@@ -1136,7 +1147,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					firstPass = false;
 				}
 				else {
-					appendSql( COMA_SEPARATOR_CHAR );
+					appendSql( COMMA_SEPARATOR_CHAR );
 				}
 
 				appendSql( targetColumnReference.getColumnExpression() );
@@ -1168,7 +1179,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					firstTuple = false;
 				}
 				else {
-					appendSql( COMA_SEPARATOR_CHAR );
+					appendSql( COMMA_SEPARATOR_CHAR );
 				}
 				appendSql( " (" );
 				boolean firstExpr = true;
@@ -1177,7 +1188,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						firstExpr = false;
 					}
 					else {
-						appendSql( COMA_SEPARATOR_CHAR );
+						appendSql( COMMA_SEPARATOR_CHAR );
 					}
 					expression.accept( this );
 				}
@@ -1491,7 +1502,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( int i = 0; i < size; i++ ) {
 			appendSql( separator );
 			appendSql( returningColumns.get( i ).getColumnExpression() );
-			separator = COMA_SEPARATOR;
+			separator = COMMA_SEPARATOR;
 		}
 	}
 
@@ -1559,7 +1570,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			for ( CteStatement cte : cteStatements ) {
 				appendSql( mainSeparator );
 				visitCteStatement( cte );
-				mainSeparator = COMA_SEPARATOR;
+				mainSeparator = COMMA_SEPARATOR;
 				topLevelWithClauseIndex = sqlBuffer.length();
 			}
 			appendSql( WHITESPACE );
@@ -1600,12 +1611,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			sqlBuffer.setLength( topLevelWithClauseIndex );
 			if ( sqlBuffer.charAt( topLevelWithClauseIndex - 1 ) == ')' ) {
 				// This is the case when there is an existing CTE, so we need a comma for the CTE that are about to render
-				mainSeparator = COMA_SEPARATOR;
+				mainSeparator = COMMA_SEPARATOR;
 			}
 			for ( CteStatement cte : cteStatements ) {
 				appendSql( mainSeparator );
 				visitCteStatement( cte );
-				mainSeparator = COMA_SEPARATOR;
+				mainSeparator = COMMA_SEPARATOR;
 				// Make that the topLevelWithClauseIndex is up-to-date
 				topLevelWithClauseIndex = sqlBuffer.length();
 			}
@@ -1619,7 +1630,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			for ( CteStatement cte : cteStatements ) {
 				appendSql( mainSeparator );
 				visitCteStatement( cte );
-				mainSeparator = COMA_SEPARATOR;
+				mainSeparator = COMMA_SEPARATOR;
 			}
 			appendSql( WHITESPACE );
 		}
@@ -1676,36 +1687,36 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			for ( String columnExpression : columnExpressions ) {
 				appendSql( separator );
 				appendSql( columnExpression );
-				separator = COMA_SEPARATOR;
+				separator = COMMA_SEPARATOR;
 			}
 		}
 		else {
 			for ( CteColumn cteColumn : cte.getCteTable().getCteColumns() ) {
 				appendSql( separator );
 				appendSql( cteColumn.getColumnExpression() );
-				separator = COMA_SEPARATOR;
+				separator = COMMA_SEPARATOR;
 			}
 		}
 		if ( cte.isRecursive() ) {
 			if ( !supportsRecursiveSearchClause() ) {
 				if ( cte.getSearchColumn() != null ) {
-					appendSql( COMA_SEPARATOR );
+					appendSql( COMMA_SEPARATOR );
 					if ( cte.getSearchClauseKind() == CteSearchClauseKind.BREADTH_FIRST ) {
 						appendSql( determineDepthColumnName( cte ) );
-						appendSql( COMA_SEPARATOR );
+						appendSql( COMMA_SEPARATOR );
 					}
 					appendSql( cte.getSearchColumn().getColumnExpression() );
 				}
 			}
 			if ( !supportsRecursiveCycleClause() ) {
 				if ( cte.getCycleMarkColumn() != null ) {
-					appendSql( COMA_SEPARATOR );
+					appendSql( COMMA_SEPARATOR );
 					appendSql( cte.getCycleMarkColumn().getColumnExpression() );
 				}
 			}
 			if ( cte.getCycleMarkColumn() != null && !supportsRecursiveCycleClause()
 					|| cte.getCyclePathColumn() != null && !supportsRecursiveCycleUsingClause() ) {
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 				appendSql( determineCyclePathColumnName( cte ) );
 			}
 		}
@@ -1923,7 +1934,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						}
 					}
 				}
-				separator = COMA_SEPARATOR;
+				separator = COMMA_SEPARATOR;
 			}
 			appendSql( " set " );
 			appendSql( cte.getSearchColumn().getColumnExpression() );
@@ -1944,7 +1955,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			for ( CteColumn cycleColumn : cte.getCycleColumns() ) {
 				appendSql( separator );
 				appendSql( cycleColumn.getColumnExpression() );
-				separator = COMA_SEPARATOR;
+				separator = COMMA_SEPARATOR;
 			}
 			appendSql( " set " );
 			appendSql( cte.getCycleMarkColumn().getColumnExpression() );
@@ -1962,7 +1973,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void renderRecursiveCteVirtualSelections(SelectClause selectClause) {
 		if ( currentCteStatement != null && currentCteStatement.isRecursive() ) {
 			if ( currentCteStatement.getSearchColumn() != null && !supportsRecursiveSearchClause() ) {
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 				if ( supportsRecursiveClauseArrayAndRowEmulation() ) {
 					emulateSearchClauseOrderWithRowAndArray( selectClause );
 				}
@@ -1972,7 +1983,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			if ( !supportsRecursiveCycleClause() || currentCteStatement.getCyclePathColumn() != null && !supportsRecursiveCycleUsingClause() ) {
 				if ( currentCteStatement.getCycleMarkColumn() != null ) {
-					appendSql( COMA_SEPARATOR );
+					appendSql( COMMA_SEPARATOR );
 					if ( supportsRecursiveClauseArrayAndRowEmulation() ) {
 						emulateCycleClauseWithRowAndArray( selectClause );
 					}
@@ -2031,7 +2042,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 				visitColumnReference( depthColumnReference );
 				appendSql( "+1" );
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 				appendSql( "row(" );
 				visitColumnReference( depthColumnReference );
 
@@ -2046,7 +2057,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							.getCteColumns()
 							.indexOf( searchBySpecification.getCteColumn() );
 					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( selectionIndex );
-					appendSql( COMA_SEPARATOR );
+					appendSql( COMMA_SEPARATOR );
 					sqlSelection.accept( this );
 				}
 				appendSql( ')' );
@@ -2080,7 +2091,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( selectionIndex );
 					appendSql( separator );
 					sqlSelection.accept( this );
-					separator = COMA_SEPARATOR;
+					separator = COMMA_SEPARATOR;
 				}
 				if ( currentCteStatement.getSearchBySpecifications().size() > 1 ) {
 					appendSql( CLOSE_PARENTHESIS );
@@ -2091,7 +2102,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			if ( currentCteStatement.getSearchClauseKind() == CteSearchClauseKind.BREADTH_FIRST ) {
 				appendSql( '1' );
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 				appendSql( "row(0" );
 
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
@@ -2105,7 +2116,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							.getCteColumns()
 							.indexOf( searchBySpecification.getCteColumn() );
 					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( selectionIndex );
-					appendSql( COMA_SEPARATOR );
+					appendSql( COMMA_SEPARATOR );
 					sqlSelection.accept( this );
 				}
 				appendSql( ')' );
@@ -2129,7 +2140,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( selectionIndex );
 					appendSql( separator );
 					sqlSelection.accept( this );
-					separator = COMA_SEPARATOR;
+					separator = COMMA_SEPARATOR;
 				}
 				if ( currentCteStatement.getSearchBySpecifications().size() > 1 ) {
 					appendSql( CLOSE_PARENTHESIS );
@@ -2173,7 +2184,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 				visitColumnReference( depthColumnReference );
 				appendSql( "+1" );
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 
 				arguments.add( lpad( castToString( depthColumnReference ), 10, "0" ) );
 				arguments.add( nullSeparator );
@@ -2249,7 +2260,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			int columnSizeEstimate = 0;
 			if ( currentCteStatement.getSearchClauseKind() == CteSearchClauseKind.BREADTH_FIRST ) {
 				appendSql( '1' );
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 
 				arguments.add( new QueryLiteral<>( StringHelper.repeat( '0', 10 ), stringType ) );
 				arguments.add( nullSeparator );
@@ -2367,7 +2378,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( arrayContainsFunction );
 					appendSql( OPEN_PARENTHESIS );
 					visitColumnReference( cyclePathColumnReference );
-					appendSql( COMA_SEPARATOR );
+					appendSql( COMMA_SEPARATOR );
 				}
 				if ( currentCteStatement.getCycleColumns().size() > 1 ) {
 					appendSql( "row(" );
@@ -2379,7 +2390,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						final SqlSelection sqlSelection = selectClause.getSqlSelections().get( selectionIndex );
 						appendSql( separator );
 						sqlSelection.accept( this );
-						separator = COMA_SEPARATOR;
+						separator = COMMA_SEPARATOR;
 					}
 					appendSql( ')' );
 				}
@@ -2401,7 +2412,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( " else " );
 				currentCteStatement.getNoCycleValue().accept( this );
 				appendSql( " end" );
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 			}
 
 			// Cycle path
@@ -2418,7 +2429,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				final SqlSelection sqlSelection = selectClause.getSqlSelections().get( selectionIndex );
 				appendSql( separator );
 				sqlSelection.accept( this );
-				separator = COMA_SEPARATOR;
+				separator = COMMA_SEPARATOR;
 			}
 			if ( currentCteStatement.getCycleColumns().size() > 1 ) {
 				appendSql( CLOSE_PARENTHESIS );
@@ -2429,7 +2440,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( !supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				currentCteStatement.getNoCycleValue().accept( this );
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 			}
 
 			// Cycle path
@@ -2445,7 +2456,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				final SqlSelection sqlSelection = selectClause.getSqlSelections().get( selectionIndex );
 				appendSql( separator );
 				sqlSelection.accept( this );
-				separator = COMA_SEPARATOR;
+				separator = COMMA_SEPARATOR;
 			}
 			if ( currentCteStatement.getCycleColumns().size() > 1 ) {
 				appendSql( CLOSE_PARENTHESIS );
@@ -2488,8 +2499,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final AbstractSqmSelfRenderingFunctionDescriptor concat = findSelfRenderingFunction( "concat", 2 );
 		final AbstractSqmSelfRenderingFunctionDescriptor coalesce = findSelfRenderingFunction( "coalesce", 2 );
 		final BasicType<String> stringType = getStringType();
-		// Shift by 1 bit instead of multiplying by 2
-		final List<SqlAstNode> arguments = new ArrayList<>( currentCteStatement.getCycleColumns().size() << 1 );
+		// Shift by 2 bit instead of multiplying by 4
+		final List<SqlAstNode> arguments = new ArrayList<>( currentCteStatement.getCycleColumns().size() << 2 );
 		final Expression nullSeparator = createNullSeparator();
 
 		if ( isInRecursiveQueryPart() ) {
@@ -2511,6 +2522,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						.indexOf( cycleColumn );
 				final Expression selectionExpression = selectClause.getSqlSelections().get( selectionIndex )
 						.getExpression();
+				arguments.add( nullSeparator );
 				arguments.add(
 						new SelfRenderingFunctionSqlAstExpression(
 								"coalesce",
@@ -2539,7 +2551,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( " else " );
 				currentCteStatement.getNoCycleValue().accept( this );
 				appendSql( " end" );
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 			}
 
 			// Remove the wildcard literals
@@ -2552,7 +2564,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( !supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				currentCteStatement.getNoCycleValue().accept( this );
-				appendSql( COMA_SEPARATOR );
+				appendSql( COMMA_SEPARATOR );
 			}
 
 			// Cycle path
@@ -2563,6 +2575,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						.indexOf( cycleColumn );
 				final Expression selectionExpression = selectClause.getSqlSelections().get( selectionIndex )
 						.getExpression();
+				arguments.add( nullSeparator );
 				arguments.add(
 						new SelfRenderingFunctionSqlAstExpression(
 								"coalesce",
@@ -2914,7 +2927,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				for ( int i = 0; i < sqlSelectionsSize; i++ ) {
 					syntheticSelectClause.addSqlSelection(
 							new SqlSelectionImpl(
-									i + 1,
 									i,
 									new ColumnReference(
 											queryGroupAlias,
@@ -3219,7 +3231,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					else {
 						renderPartitionItem( resolved );
 					}
-					separator = COMA_SEPARATOR;
+					separator = COMMA_SEPARATOR;
 				}
 			}
 			else {
@@ -3235,7 +3247,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					renderPartitionItem( resolved );
 				}
 			}
-			separator = COMA_SEPARATOR;
+			separator = COMMA_SEPARATOR;
 		}
 	}
 
@@ -3291,7 +3303,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				for ( SortSpecification sortSpecification : sortSpecifications ) {
 					appendSql( separator );
 					visitSortSpecification( sortSpecification );
-					separator = COMA_SEPARATOR;
+					separator = COMMA_SEPARATOR;
 				}
 			}
 			finally {
@@ -3543,7 +3555,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( SqlSelection lhsExpression : lhsExpressions ) {
 			appendSql( separator );
 			lhsExpression.getExpression().accept( this );
-			separator = COMA_SEPARATOR;
+			separator = COMMA_SEPARATOR;
 		}
 		appendSql( CLOSE_PARENTHESIS );
 		appendSql( operator.sqlText() );
@@ -3680,7 +3692,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			for ( Expression expression : sqlTuple.getExpressions() ) {
 				appendSql( separator );
 				visitSortSpecification( expression, sortOrder, nullPrecedence );
-				separator = COMA_SEPARATOR;
+				separator = COMMA_SEPARATOR;
 			}
 		}
 		else {
@@ -3735,7 +3747,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( "1 else 0" );
 		}
 		appendSql( " end" );
-		appendSql( COMA_SEPARATOR_CHAR );
+		appendSql( COMMA_SEPARATOR_CHAR );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4247,7 +4259,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			finally {
 				clauseStack.pop();
 			}
-			appendSql( COMA_SEPARATOR_CHAR );
+			appendSql( COMMA_SEPARATOR_CHAR );
 			if ( fetchExpression != null ) {
 				clauseStack.push( Clause.FETCH );
 				try {
@@ -4393,7 +4405,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( alias );
 					appendSql( ".c" );
 					appendSql( i );
-					separator = COMA_SEPARATOR;
+					separator = COMMA_SEPARATOR;
 				}
 			}
 			appendSql( " from " );
@@ -4588,6 +4600,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			int offset = 0;
 			for ( int i = 0; i < size; i++ ) {
 				final SqlSelection sqlSelection = sqlSelections.get( i );
+				if ( sqlSelection.isVirtual() ) {
+					continue;
+				}
 				if ( selectItemsToInline != null && selectItemsToInline.get( i ) ) {
 					parameterRenderingMode = SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
 				}
@@ -4610,7 +4625,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							appendSql( columnAliases.get( offset ) );
 						}
 						offset++;
-						separator = COMA_SEPARATOR;
+						separator = COMMA_SEPARATOR;
 					}
 				}
 				else {
@@ -4625,7 +4640,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						appendSql( columnAliases.get( offset ) );
 					}
 					offset++;
-					separator = COMA_SEPARATOR;
+					separator = COMMA_SEPARATOR;
 				}
 				parameterRenderingMode = original;
 			}
@@ -4638,6 +4653,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			String separator = NO_SEPARATOR;
 			for ( int i = 0; i < size; i++ ) {
 				final SqlSelection sqlSelection = sqlSelections.get( i );
+				if ( sqlSelection.isVirtual() ) {
+					continue;
+				}
 				appendSql( separator );
 				if ( selectItemsToInline != null && selectItemsToInline.get( i ) ) {
 					parameterRenderingMode = SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
@@ -4647,7 +4665,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				visitSqlSelection( sqlSelection );
 				parameterRenderingMode = original;
-				separator = COMA_SEPARATOR;
+				separator = COMMA_SEPARATOR;
 			}
 		}
 	}
@@ -4709,7 +4727,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void renderRowNumberingSelectItems(SelectClause selectClause, QueryPart queryPart) {
 		final FetchClauseType fetchClauseType = getFetchClauseTypeForRowNumbering( queryPart );
 		if ( fetchClauseType != null ) {
-			appendSql( COMA_SEPARATOR_CHAR );
+			appendSql( COMMA_SEPARATOR_CHAR );
 			switch ( fetchClauseType ) {
 				case PERCENT_ONLY:
 					appendSql( "count(*) over () cnt," );
@@ -5143,7 +5161,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else if ( root.isInitialized() ) {
 			appendSql( separator );
 			renderRootTableGroup( root, null );
-			separator = COMA_SEPARATOR;
+			separator = COMMA_SEPARATOR;
 		}
 		return separator;
 	}
@@ -5329,7 +5347,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							columnNames.add( "sort_col_" + i );
 							sqlSelections.add(
 									new SqlSelectionImpl(
-											sqlSelections.size() + 1,
 											sqlSelections.size(),
 											sortSpecification.getSortExpression()
 									)
@@ -5643,7 +5660,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				for ( ColumnReference columnReference : columnReferences ) {
 					lhsReferencesQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									1,
 									0,
 									columnReference
 							)
@@ -5693,7 +5709,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				final QuerySpec existsQuery = new QuerySpec( false, 1 );
 				existsQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								1,
 								0,
 								new QueryLiteral<>( 1, getIntegerType() )
 						)
@@ -5746,7 +5761,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			existsQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			existsQuery.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
-							1,
 							0,
 							new QueryLiteral<>( 1, getIntegerType() )
 					)
@@ -5783,7 +5797,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			countQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			countQuery.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
-							1,
 							0,
 							new SelfRenderingAggregateFunctionSqlAstExpression(
 									"count",
@@ -6233,7 +6246,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected final void renderParameterAsParameter(JdbcParameter jdbcParameter) {
-		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMapping( 0 ).getJdbcType();
 		assert jdbcType != null;
 		renderParameterAsParameter( parameterBinders.size() + 1, jdbcParameter );
 	}
@@ -6244,7 +6257,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * @param position
 	 */
 	protected void renderParameterAsParameter(int position, JdbcParameter jdbcParameter) {
-		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType();
+		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMapping( 0 ).getJdbcType();
 		assert jdbcType != null;
 		final String parameterMarker = parameterMarkerStrategy.createMarker( position, jdbcType );
 		jdbcType.appendWriteExpression( parameterMarker, this, dialect );
@@ -6291,7 +6304,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( SqlAstNode expression : expressions ) {
 			appendSql( separator );
 			expression.accept( this );
-			separator = COMA_SEPARATOR;
+			separator = COMMA_SEPARATOR;
 		}
 	}
 
@@ -6303,7 +6316,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				for ( Expression e : sqlTuple.getExpressions() ) {
 					appendSql( separator );
 					renderSelectExpression( e );
-					separator = COMA_SEPARATOR;
+					separator = COMMA_SEPARATOR;
 				}
 			}
 			else if ( expression instanceof Expression ) {
@@ -6314,7 +6327,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( separator );
 				expression.accept( this );
 			}
-			separator = COMA_SEPARATOR;
+			separator = COMMA_SEPARATOR;
 		}
 	}
 
@@ -6327,7 +6340,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				for ( Expression e : sqlTuple.getExpressions() ) {
 					appendSql( separator );
 					renderSelectExpression( e );
-					separator = COMA_SEPARATOR;
+					separator = COMMA_SEPARATOR;
 				}
 			}
 			else if ( expression instanceof Expression ) {
@@ -6338,7 +6351,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( separator );
 				expression.accept( this );
 			}
-			separator = COMA_SEPARATOR;
+			separator = COMMA_SEPARATOR;
 			append( WHITESPACE );
 			append( aliasIterator.next() );
 		}
@@ -6874,7 +6887,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final Expression listExpression = itemAccessor.apply( iterator.next() );
 			appendSql( separator );
 			listExpression.accept( this );
-			separator = COMA_SEPARATOR;
+			separator = COMMA_SEPARATOR;
 			itemNumber++;
 			// If we encounter an expression that is not a parameter or literal, we reset the inExprLimit and bindValueMaxCount
 			// and just render through the in list expressions as they are without padding/splitting
@@ -6903,7 +6916,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					final Expression listExpression = iterator.next();
 					appendSql( separator );
 					itemAccessor.apply( listExpression ).accept( this );
-					separator = COMA_SEPARATOR;
+					separator = COMMA_SEPARATOR;
 					itemNumber++;
 				}
 			} while ( iterator.hasNext() );
@@ -6914,7 +6927,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			for ( ; itemNumber < bindValueMaxCount; itemNumber++ ) {
 				appendSql( separator );
 				lastExpression.accept( this );
-				separator = COMA_SEPARATOR;
+				separator = COMMA_SEPARATOR;
 			}
 		}
 		appendSql( CLOSE_PARENTHESIS );
@@ -7110,7 +7123,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( '1' );
 				appendSql( order );
 				for ( int i = 1; i < sqlSelections.size(); i++ ) {
-					appendSql( COMA_SEPARATOR_CHAR );
+					appendSql( COMMA_SEPARATOR_CHAR );
 					appendSql( i + 1 );
 					appendSql( order );
 				}
@@ -7707,7 +7720,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		public void setLockMode(LockMode lockMode) {
 			if ( this.lockMode != LockMode.NONE && lockMode != this.lockMode ) {
-				throw new QueryException( "mixed LockModes" );
+				throw new QueryException( "Mixed LockModes" );
 			}
 			this.lockMode = lockMode;
 		}
@@ -7820,7 +7833,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						if ( LockMode.READ.lessThan( lockMode ) ) {
 							addAlias( entry.getKey(), null );
 							if ( upgradeType != LockMode.NONE && lockMode != upgradeType ) {
-								throw new QueryException( "mixed LockModes" );
+								throw new QueryException( "Mixed LockModes" );
 							}
 							upgradeType = lockMode;
 						}
@@ -7923,67 +7936,82 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
 		getCurrentClauseStack().push( Clause.UPDATE );
 		try {
-			applySqlComment( tableUpdate.getMutationComment() );
+			visitTableUpdate( tableUpdate );
+			if ( tableUpdate.getWhereFragment() != null ) {
+				sqlBuffer.append( " and (" ).append( tableUpdate.getWhereFragment() ).append( ")" );
+			}
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+	}
 
-			sqlBuffer.append( "update " );
-			appendSql( tableUpdate.getMutatingTable().getTableName() );
-			registerAffectedTable( tableUpdate.getMutatingTable().getTableName() );
+	@Override
+	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+		getCurrentClauseStack().push( Clause.UPDATE );
+		try {
+			visitTableUpdate( tableUpdate );
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+	}
 
-			getCurrentClauseStack().push( Clause.SET );
-			try {
-				sqlBuffer.append( " set" );
-				tableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-					if ( columnPosition == 0 ) {
-						sqlBuffer.append( ' ' );
+	private void visitTableUpdate(RestrictedTableMutation<? extends MutationOperation> tableUpdate) {
+		applySqlComment( tableUpdate.getMutationComment() );
+
+		sqlBuffer.append( "update " );
+		appendSql( tableUpdate.getMutatingTable().getTableName() );
+		registerAffectedTable( tableUpdate.getMutatingTable().getTableName() );
+
+		getCurrentClauseStack().push( Clause.SET );
+		try {
+			sqlBuffer.append( " set" );
+			tableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+				if ( columnPosition == 0 ) {
+					sqlBuffer.append( ' ' );
+				}
+				else {
+					sqlBuffer.append( ',' );
+				}
+				sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+				sqlBuffer.append( '=' );
+				columnValueBinding.getValueExpression().accept( this );
+			} );
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+
+		getCurrentClauseStack().push( Clause.WHERE );
+		try {
+			sqlBuffer.append( " where" );
+			tableUpdate.forEachKeyBinding( (position, columnValueBinding) -> {
+				if ( position == 0 ) {
+					sqlBuffer.append( ' ' );
+				}
+				else {
+					sqlBuffer.append( " and " );
+				}
+				sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+				sqlBuffer.append( '=' );
+				columnValueBinding.getValueExpression().accept( this );
+			} );
+
+			if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
+				tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
+					sqlBuffer.append( " and " );
+					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
+					if ( columnValueBinding.getValueExpression() == null ) {
+						sqlBuffer.append( " is null" );
 					}
 					else {
-						sqlBuffer.append( ',' );
+						sqlBuffer.append( "=" );
+						columnValueBinding.getValueExpression().accept( this );
 					}
-					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					sqlBuffer.append( '=' );
-					columnValueBinding.getValueExpression().accept( this );
 				} );
 			}
-			finally {
-				getCurrentClauseStack().pop();
-			}
 
-			getCurrentClauseStack().push( Clause.WHERE );
-			try {
-				sqlBuffer.append( " where" );
-				tableUpdate.forEachKeyBinding( (position, columnValueBinding) -> {
-					if ( position == 0 ) {
-						sqlBuffer.append( ' ' );
-					}
-					else {
-						sqlBuffer.append( " and " );
-					}
-					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					sqlBuffer.append( '=' );
-					columnValueBinding.getValueExpression().accept( this );
-				} );
-
-				if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
-					tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
-						sqlBuffer.append( " and " );
-						sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-						if ( columnValueBinding.getValueExpression() == null ) {
-							sqlBuffer.append( " is null" );
-						}
-						else {
-							sqlBuffer.append( "=" );
-							columnValueBinding.getValueExpression().accept( this );
-						}
-					} );
-				}
-
-				if ( tableUpdate.getWhereFragment() != null ) {
-					sqlBuffer.append( " and (" ).append( tableUpdate.getWhereFragment() ).append( ")" );
-				}
-			}
-			finally {
-				getCurrentClauseStack().pop();
-			}
 		}
 		finally {
 			getCurrentClauseStack().pop();

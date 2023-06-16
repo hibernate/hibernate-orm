@@ -1,0 +1,25 @@
+= ORM Branching
+
+Describes the paradigm used for branching within the ORM project
+
+[[branches]]
+== The Branches
+
+* `main` is where we do "latest stable" development. Which specific release family this targets is dependent upon the "critical mass" discussion in <<process>>.
+* "Dedicated release branches" (`5.6`, `6.0`, `6.1`, `6.2`, ...) represent previous, no longer supported releases. Branched for posterity.
+* PR branches for new features, improvements, disruptive bugfixes, etc target main
+* PR branches for performance improvements, security fixes and bugfixes target the affected minor branches (which could be main for a short period of time)
+
+[[process]]
+== THe Process
+
+Process (using 6.3 -> 6.4 as an example):
+
+* As mentioned, all new features, improvements, disruptive bugfixes, etc. are developed on topic branches (PR) against main. Based on sprint planning, these will be given a priority and target a particular major/minor release.
+* Once we have critical mass for topic branches targeting 6.4:
+    * `main` will be branched as `6.3` and a 6.3.x release will be done.
+    * The finished topic branches will be integrated into main and a 6.4.0 Alpha (or Beta or CR)[1] release will be done.
+* A bot will cherry-pick changes made to the latest "dedicated release branch" (here, 6.3) and create a PR against main (on the assumption that these changes might be needed there as well). TBD if we want to auto-apply these PRs on successful build.
+* PRs against older "dedicated release branches", will first be rebased to the latest stable branch and applied. We'll decide between 6.3 and main based mostly on ; if 6.3, the bot will pick it up.
+
+[1] Historically I am not a huge fan of a full Alpha/Beta/CR cycle for minor releases, usually just doing CRs. But open to convincing otherwise.

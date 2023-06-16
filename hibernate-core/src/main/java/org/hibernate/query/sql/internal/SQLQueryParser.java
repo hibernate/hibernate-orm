@@ -182,7 +182,7 @@ public class SQLQueryParser {
 		switch ( propertyName ) {
 			case "*":
 				if ( !fieldResults.isEmpty() ) {
-					throw new QueryException( "Using return-propertys together with * syntax is not supported." );
+					throw new QueryException( "Using return-property together with * syntax is not supported" );
 				}
 
 				String selectFragment = collectionPersister.selectFragment( aliasName, collectionSuffix );
@@ -230,7 +230,7 @@ public class SQLQueryParser {
 
 		if ( "*".equals( propertyName ) ) {
 			if( !fieldResults.isEmpty() ) {
-				throw new QueryException( "Using return-propertys together with * syntax is not supported." );
+				throw new QueryException( "Using return-property together with * syntax is not supported" );
 			}
 			aliasesFound++;
 			return persister.selectFragment( aliasName, suffix ) ;

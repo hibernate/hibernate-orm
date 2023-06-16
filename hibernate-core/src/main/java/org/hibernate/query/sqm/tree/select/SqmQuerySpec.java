@@ -557,7 +557,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	private void assertFetchOwner(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmJoin<?, ?> sqmJoin) {
 		if ( !selectedFromSet.contains( owner ) ) {
 			throw new SemanticException(
-					"query specified join fetching, but the owner " +
+					"Query specified join fetching, but the owner " +
 							"of the fetched association was not present in the select list " +
 							"[" + sqmJoin.asLoggableText() + "]"
 			);

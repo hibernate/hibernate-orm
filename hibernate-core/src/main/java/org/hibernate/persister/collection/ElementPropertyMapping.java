@@ -33,7 +33,7 @@ public class ElementPropertyMapping implements PropertyMapping {
 			return type;
 		}
 		else {
-			throw new QueryException("cannot dereference scalar collection element: " + propertyName);
+			throw new QueryException("Cannot dereference scalar collection element: " + propertyName);
 		}
 	}
 

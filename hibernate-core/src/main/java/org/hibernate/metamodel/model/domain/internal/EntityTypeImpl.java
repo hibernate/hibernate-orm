@@ -23,7 +23,6 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -47,22 +46,25 @@ public class EntityTypeImpl<J>
 	private final SqmPathSource<?> discriminatorPathSource;
 
 	public EntityTypeImpl(
+			String entityName,
+			String jpaEntityName,
+			boolean hasIdClass,
+			boolean hasIdProperty,
+			boolean hasVersion,
 			JavaType<J> javaType,
 			IdentifiableDomainType<? super J> superType,
-			PersistentClass persistentClass,
 			JpaMetamodelImplementor jpaMetamodel) {
 		super(
-				persistentClass.getEntityName(),
+				entityName,
 				javaType,
 				superType,
-				persistentClass.getDeclaredIdentifierMapper() != null
-						|| superType != null && superType.hasIdClass(),
-				persistentClass.hasIdentifierProperty(),
-				persistentClass.isVersioned(),
+				hasIdClass,
+				hasIdProperty,
+				hasVersion,
 				jpaMetamodel
 		);
 
-		this.jpaEntityName = persistentClass.getJpaEntityName();
+		this.jpaEntityName = jpaEntityName;
 
 		final Queryable entityDescriptor = (Queryable)
 				jpaMetamodel.getMappingMetamodel()
@@ -84,6 +86,25 @@ public class EntityTypeImpl<J>
 				entityDescriptor
 		);
 	}
+
+	public EntityTypeImpl(
+			JavaType<J> javaType,
+			IdentifiableDomainType<? super J> superType,
+			PersistentClass persistentClass,
+			JpaMetamodelImplementor jpaMetamodel) {
+		this(
+				persistentClass.getEntityName(),
+				persistentClass.getJpaEntityName(),
+				persistentClass.getDeclaredIdentifierMapper() != null
+						|| superType != null && superType.hasIdClass(),
+				persistentClass.hasIdentifierProperty(),
+				persistentClass.isVersioned(),
+				javaType,
+				superType,
+				jpaMetamodel
+		);
+	}
+
 	public EntityTypeImpl(JavaType<J> javaTypeDescriptor, JpaMetamodelImplementor jpaMetamodel) {
 		super(
 				javaTypeDescriptor.getJavaTypeClass().getName(),

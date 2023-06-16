@@ -37,6 +37,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -218,6 +219,12 @@ public abstract class AbstractQuery<R>
 	@Override
 	public QueryImplementor<R> setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
 		return this;
 	}
 

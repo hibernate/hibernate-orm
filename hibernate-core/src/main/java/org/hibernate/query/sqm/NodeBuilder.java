@@ -24,7 +24,6 @@ import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaParameterExpression;
-import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
@@ -48,7 +47,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -77,8 +75,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	TypeConfiguration getTypeConfiguration();
 
 	boolean isJpaQueryComplianceEnabled();
-
-	ServiceRegistry getServiceRegistry();
 
 	QueryEngine getQueryEngine();
 
@@ -135,7 +131,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmInsertSelectStatement<T> createCriteriaInsertSelect(Class<T> targetEntity);
 
 	@Override
-	<N extends Number> SqmExpression abs(Expression<N> x);
+	<N extends Number> SqmExpression<N> abs(Expression<N> x);
 
 	@Override
 	<X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);

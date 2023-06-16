@@ -58,7 +58,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Defines how identifier values are selected from the updatable/deletable tables.
@@ -174,7 +173,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 						( (SqlExpressible) count).getJdbcMapping()
 				)
 		);
-		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );
+		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, count ) );
 		querySpec.getFromClause().addRoot(
 				new CteTableGroup(
 						new NamedTableReference(
@@ -218,12 +217,10 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
-		final TypeConfiguration typeConfiguration = factory.getJpaMetamodel().getTypeConfiguration();
 		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
 				arg,
 				null,
-				factory.getQueryEngine(),
-				typeConfiguration
+				factory.getQueryEngine()
 		).convertToSqlAst( sqmConverter );
 	}
 
@@ -280,7 +277,6 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				final CteColumn cteColumn = cteColumns.get( i );
 				subQuerySelectClause.addSqlSelection(
 						new SqlSelectionImpl(
-								i + 1,
 								i,
 								new ColumnReference(
 										idSelectTableReference,
@@ -295,7 +291,6 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			fkModelPart.forEachSelectable(
 					(selectionIndex, selectableMapping) -> subQuerySelectClause.addSqlSelection(
 							new SqlSelectionImpl(
-									selectionIndex + 1,
 									selectionIndex,
 									new ColumnReference(
 											idSelectTableReference,

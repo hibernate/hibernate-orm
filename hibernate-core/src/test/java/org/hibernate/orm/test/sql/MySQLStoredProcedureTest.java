@@ -218,7 +218,7 @@ public class MySQLStoredProcedureTest {
 		}
 		catch (Exception e) {
 			assertTrue( Pattern.compile( "Dialect .*? not known to support REF_CURSOR parameters" )
-								.matcher( e.getCause().getMessage() )
+								.matcher( e.getMessage() )
 								.matches() );
 		}
 	}

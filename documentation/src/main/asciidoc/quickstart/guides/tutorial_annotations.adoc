@@ -1,104 +1,208 @@
 [[tutorial_annotations]]
-== Tutorial Using Native Hibernate APIs and Annotation Mappings
-
-NOTE: This tutorial is located within the download bundle under `annotations/`.
+== Tutorial using native Hibernate APIs
 
 .Objectives
-- [*] Bootstrap a Hibernate `SessionFactory`
+- [*] Configure Hibernate using `hibernate.properties`
+- [*] Create a `SessionFactory` using `org.hibernate.boot`
 - [*] Use annotations to provide mapping information
-- [*] Use the Hibernate native APIs
+- [*] Use `Session` to persist and query data
 
+
+****
+This tutorial is located within the download bundle under `annotations/`.
+****
 
 [[hibernate-gsg-tutorial-annotations-config]]
-=== The Hibernate configuration file
+=== Configuration via properties file
 
-The contents are identical to <<hibernate-gsg-tutorial-basic-config>> with one important difference...
-The `<mapping/>` element at the very end naming the annotated entity class using the `class` attribute.
+In this example, configuration properties are specified in a file named `hibernate.properties`.
 
+.Configuration via `hibernate.properties`
+[source,properties]
+----
+# Database connection settings
+hibernate.connection.url=jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
+hibernate.connection.username=sa
+hibernate.connection.password=
+
+# Echo all executed SQL to console
+hibernate.show_sql=true
+hibernate.format_sql=true
+hibernate.highlight_sql=true
+
+# Automatically export the schema
+hibernate.hbm2ddl.auto=create
+----
+
+The following properties specify JDBC connection information:
+
+.JDBC connection settings
+[%breakable,cols="35,~"]
+|===
+| Configuration property name | Purpose
+
+| `jakarta.persistence.jdbc.url` | JDBC URL of your database
+| `jakarta.persistence.jdbc.user` and `jakarta.persistence.jdbc.password` | Your database credentials
+|===
+
+[NOTE]
+These tutorials use the H2 embedded database, so the values of these properties are specific to running H2 in its in-memory mode.
+
+These properties enable logging of SQL to the console as it is executed, in an aesthetically pleasing format:
+
+.Settings for SQL logging to the console
+[%breakable,cols="35,~"]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.show_sql`        | If `true`, log SQL directly to the console
+| `hibernate.format_sql`      | If `true`, log SQL in a multiline, indented format
+| `hibernate.highlight_sql`   | If `true`, log SQL with syntax highlighting via ANSI escape codes
+|===
+
+When developing persistence logic with Hibernate, it's very important to be able to see exactly what SQL is being executed.
 
 [[hibernate-gsg-tutorial-annotations-entity]]
 === The annotated entity Java class
 
-The entity class in this tutorial is `org.hibernate.tutorial.annotations.Event` which follows JavaBean conventions.
-In fact the class itself is identical to the one in <<hibernate-gsg-tutorial-basic-entity>>, except that annotations
-are used to provide the metadata, rather than a separate mapping file.
+The entity class in this tutorial is `org.hibernate.tutorial.annotations.Event`.
+Observe that:
+
+- This class uses standard JavaBean naming conventions for property getter and setter methods, as well as private visibility for the fields.
+  This is recommended, but it's not a requirement.
+- The no-argument constructor, which is also a JavaBean convention, _is_ a requirement for all persistent classes.
+  Hibernate needs to instantiate objects for you, using Java Reflection.
+  The constructor should have package-private or `public` visibility, to allow Hibernate to generate proxies and optimized code for field access.
+
+We use annotations to identify the class as an entity, and to map it to the relational schema.
 
 [[hibernate-gsg-tutorial-annotations-entity-entity]]
 .Identifying the class as an entity
-====
-[source, JAVA]
+[source, java]
 ----
-@Entity
-@Table( name = "EVENTS" )
+@Entity   <1>
+@Table(name = "Events")   <2>
 public class Event {
     ...
 }
 ----
-====
+<1> `@jakarta.persistence.Entity` marks the `Event` class as an entity.
+<2> `@jakarta.persistence.Table` explicitly specifies the name of the mapped table.
+  Without this annotation, the table name would default to `Event`.
 
-The `@jakarta.persistence.Entity` annotation is used to mark a class as an entity.  It functions the same as the
-`<class/>` mapping element discussed in <<hibernate-gsg-tutorial-basic-mapping>>.   Additionally the
-`@jakarta.persistence.Table` annotation explicitly specifies the table name. Without this specification, the default
-table name would be _EVENT_.
-
+Every entity class must have an identifier.
 
 [[hibernate-gsg-tutorial-annotations-entity-id]]
 .Identifying the identifier property
-====
-[source, JAVA]
+[source, java]
 ----
-@Id
-@GeneratedValue(generator="increment")
-@GenericGenerator(name="increment", strategy = "increment")
-public Long getId() {
-    return id;
-}
+@Id   <1>
+@GeneratedValue   <2>
+private Long id;
 ----
-====
 
-`@jakarta.persistence.Id` marks the property which defines the entity's identifier.
+<1> `@jakarta.persistence.Id` marks the field as holding the identifier (primary key) of the entity.
+<2> `@jakarta.persistence.GeneratedValue` specifies that this is a _synthetic id_, that is, a system-generated identifier (a surrogate primary key).
 
-`@jakarta.persistence.GeneratedValue` and `@org.hibernate.annotations.GenericGenerator` work in tandem
-to indicate that Hibernate should use Hibernate's `increment` generation strategy for this entity's identifier values.
-
+Other fields of the entity are considered persistent by default.
 
 [[hibernate-gsg-tutorial-annotations-entity-properties]]
-.Identifying basic properties
-====
-[source, JAVA]
+.Mapping basic properties
+[source, java]
 ----
-public String getTitle() {
-    return title;
-}
+private String title;
 
-@Temporal(TemporalType.TIMESTAMP)
-@Column(name = "EVENT_DATE")
-public Date getDate() {
-    return date;
-}
+@Column(name = "eventDate")   <1>
+private LocalDateTime date;
 ----
-====
 
-As in <<hibernate-gsg-tutorial-basic-mapping>>, the `date` property needs special handling to account for its special
-naming and its SQL type.
-
-Attributes of an entity are considered persistent by default when mapping with annotations, which is why we don't see
-any mapping information associated with `title`.
+<1> `@jakarta.persistence.Column` explicitly specifies the name of a mapped column.
+  Without this annotation, the column name would default to `date`, which is a keyword on some databases.
 
 
 [[hibernate-gsg-tutorial-annotations-test]]
 === Example code
 
-`org.hibernate.tutorial.annotations.AnnotationsIllustrationTest` is essentially the same as
-`org.hibernate.tutorial.hbm.NativeApiIllustrationTest` discussed in <<hibernate-gsg-tutorial-basic-test>>.
+The class `org.hibernate.tutorial.annotations.HibernateIllustrationTest` illustrates the use of the Hibernate's native APIs, including:
+
+- `Session` and `SessionFactory`, and
+- `org.hibernate.boot` for configuration and bootstrap.
+
+There are several different ways to configure and start Hibernate, and this is not even the most common approach.
+
+[NOTE]
+The examples in these tutorials are presented as JUnit tests.
+A benefit of this approach is that `setUp()` and `tearDown()` roughly illustrate how a `org.hibernate.SessionFactory` is
+created when the program starts, and closed when the program terminates.
+
+[[hibernate-gsg-tutorial-basic-test-setUp]]
+.Obtaining the `SessionFactory`
+[source, java]
+----
+protected void setUp() {
+    // A SessionFactory is set up once for an application!
+    final StandardServiceRegistry registry =
+            new StandardServiceRegistryBuilder()
+                    .build();   <1> <2>
+    try {
+        sessionFactory =
+                new MetadataSources(registry)             <3>
+                        .addAnnotatedClass(Event.class)   <4>
+                        .buildMetadata()                  <5>
+                        .buildSessionFactory();           <6>
+    }
+    catch (Exception e) {
+        // The registry would be destroyed by the SessionFactory, but we
+        // had trouble building the SessionFactory so destroy it manually.
+        StandardServiceRegistryBuilder.destroy(registry);
+    }
+}
+----
+<1> The `setUp()` method first builds a `StandardServiceRegistry` instance which incorporates configuration information into a working set of `Services` for use by the `SessionFactory`.
+<2> Here we put all configuration information in `hibernate.properties`, so there's not much interesting to see.
+<3> Using the `StandardServiceRegistry` we create the `MetadataSources` which lets us tell Hibernate about our domain model.
+<4> Here we have only one entity class to register.
+<5> An instance of `Metadata` represents a complete, partially-validated view of the application domain model.
+<6> The final step in the bootstrap process is to build a `SessionFactory` for the configured services and validated domain model.
+The `SessionFactory` is a thread-safe object that's instantiated once to serve the entire application.
+
+The `SessionFactory` produces instances of `Session`.
+Each session should be thought of as representing a _unit of work_.
+
+[[hibernate-gsg-tutorial-basic-test-saving]]
+.Persisting entities
+[source, java]
+----
+sessionFactory.inTransaction(session -> {   <1>
+    session.persist(new Event("Our very first event!", now()));   <2>
+    session.persist(new Event("A follow up event", now()));
+});
+----
+<1> The `inTransaction()` method creates a session and starts a new transaction.
+<2> Here we create two new `Event` objects and hands them over to Hibernate, calling the `persist()` method to make these instances persistent.
+Hibernate is responsible for executing an `INSERT` statement for each `Event`.
+
+
+[[hibernate-gsg-tutorial-basic-test-list]]
+.Obtaining a list of entities
+[source, java]
+----
+sessionFactory.inTransaction(session -> {
+    session.createSelectionQuery("from Event", Event.class)   <1>
+            .getResultList()   <2>
+            .forEach(event -> out.println("Event (" + event.getDate() + ") : " + event.getTitle()));
+});
+----
+
+<1> Here we use a very simple _Hibernate Query Language_ (HQL) statement to load all existing `Event` objects from the database.
+<2> Hibernate generates and executes the appropriate `SELECT` statement, and then instantiates and populates `Event` objects with the data in the query result set.
 
 
 [[hibernate-gsg-tutorial-annotations-further]]
 === Take it further!
 
 .Practice Exercises
-- [ ] Add an association to the `Event` entity to model a message thread. Use the
-https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html[_User Guide_] for more details.
-- [ ] Add a callback to receive notifications when an `Event` is created, updated or deleted.
-Try the same with an event listener. Use the
-https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html[_User Guide_] for more details.
+- [ ] Actually run this example to see the SQL executed by Hibernate displayed in the console.
+- [ ] Reconfigure the examples to connect to your own persistent relational database.
+- [ ] Add an association to the `Event` entity to model a message thread.
+  See the _Introduction to Hibernate 6_ for details.

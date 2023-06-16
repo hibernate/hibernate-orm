@@ -239,12 +239,18 @@ JPA defines the following strategies for generating ids, which are enumerated by
 | `GenerationType.AUTO`     | `Long` or `Integer` | Selects `SEQUENCE`, `TABLE`, or `UUID` based on the identifier type and capabilities of the database
 |===
 
-For example, the following id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
+For example, this UUID is generated in Java code:
 
 [source,java]
 ----
-@Id @GeneratedValue(strategy=IDENTITY)
-Long id;
+@Id @GeneratedValue UUID id;  // AUTO strategy selects UUID based on the field type
+----
+
+This id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
+
+[source,java]
+----
+@Id @GeneratedValue(strategy=IDENTITY) Long id;
 ----
 
 The `@SequenceGenerator` and `@TableGenerator` annotations allow further control over `SEQUENCE` and `TABLE` generation respectively.
@@ -253,8 +259,7 @@ Consider this sequence generator:
 
 [source,java]
 ----
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book",
-                   initialValue = 5, allocationSize=10)
+@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
 ----
 
 Values are generated using a database sequence defined as follows:
@@ -279,7 +284,8 @@ Any identifier attribute may now make use of the generator named `bookSeq`:
 
 [source,java]
 ----
-@Id @GeneratedValue(strategy=SEQUENCE, generator="bookSeq")
+@Id
+@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined elsewhere
 Long id;
 ----
 
@@ -287,9 +293,9 @@ Actually, it's extremely common to place the `@SequenceGenerator` annotation on 
 
 [source,java]
 ----
-@Id @GeneratedValue(strategy=SEQUENCE, generator="bookSeq")
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book",
-                   initialValue = 5, allocationSize=10)
+@Id
+@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined below
+@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
 Long id;
 ----
 
@@ -753,7 +759,7 @@ We may explicitly specify a Java type using the `@JavaType` annotation, but for 
 
 [source,java]
 ----
-@JavaType(LongJavaType.class) // not needed, this is the default JavaType for long
+@JavaType(LongJavaType.class)  // not needed, this is the default JavaType for long
 long currentTimeMillis;
 ----
 
@@ -936,6 +942,7 @@ In this example data model, we can see the sorts of associations which are possi
 
 image::images/associations.png[Example data model,align="center",pdfwidth=90%]
 
+[%unbreakable]
 [TIP]
 // .One-to-one associations and subtyping
 ====
@@ -990,6 +997,7 @@ class Book {
 
     @ManyToOne(fetch=LAZY)
     Publisher publisher;
+
     ...
 }
 ----
@@ -1011,6 +1019,13 @@ Most of the time, we would like to be able to easily navigate our associations i
 We do need a way to get the `Publisher` of a given `Book`, but we would also like to be able to obtain all the ``Book``s belonging to a given publisher.
 
 To make this association bidirectional, we need to add a collection-valued attribute to the `Publisher` class, and annotate it `@OneToMany`.
+
+[NOTE]
+====
+Hibernate needs to <<proxies-and-lazy-fetching,proxy>> unfetched associations at runtime.
+Therefore, the many-valued side must be declared using an interface type like `Set` or `List`, and never using a concrete type like `HashSet` or `ArrayList`.
+====
+
 To indicate clearly that this is a bidirectional association, and to reuse any mapping information already specified in the `Book` entity, we must use the `mappedBy` annotation member to refer back to `Book.publisher`.
 
 [source,java]
@@ -1022,6 +1037,7 @@ class Publisher {
 
     @OneToMany(mappedBy="publisher")
     Set<Book> books;
+
     ...
 }
 ----
@@ -1038,21 +1054,21 @@ Set<Book> books;
 ----
 We're going to use this approach for the rest of the Introduction.
 
+To modify a bidirectional association, we must change the _owning side_.
+
 [[bidirectional-problem]]
 [WARNING]
 // .To modify a bidirectional association, you must change the _owning side_!
 ====
-To modify a bidirectional association, you must change the _owning side_!
-
 Changes made to the unowned side of an association are never synchronized to the database.
 If we desire to change an association in the database, we must change it from the owning side.
 Here, we must set `Book.publisher`.
 
 In fact, it's often necessary to change _both sides_ of a bidirectional association.
 For example, if the collection `Publisher.books` was stored in the second-level cache, we must also modify the collection, to ensure that the second-level cache remains synchronized with the database.
-
-That said, it's not a hard requirement to update the unowned side, at least if you're sure you know what you're doing.
 ====
+
+That said, it's _not_ a hard requirement to update the unowned side, at least if you're sure you know what you're doing.
 
 [TIP]
 // .Unidirectional `@OneToMany`?

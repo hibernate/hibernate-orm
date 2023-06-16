@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.xml;
 
-import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.model.Metamodel;
 
 /**
  * @author Hardy Ferentschik
@@ -22,7 +22,7 @@ public class XmlMetaMap extends XmlMetaCollection {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final MetaEntity hostingEntity = getHostingEntity();
+		final Metamodel hostingEntity = getHostingEntity();
 		return new StringBuilder().append( "public static volatile " )
 				.append( hostingEntity.importType( getMetaType() ) )
 				.append( "<" )

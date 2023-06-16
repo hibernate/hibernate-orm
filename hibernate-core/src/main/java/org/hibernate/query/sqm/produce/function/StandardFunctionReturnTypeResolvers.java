@@ -215,7 +215,7 @@ public class StandardFunctionReturnTypeResolvers {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
 		final SqmExpressible<?> specifiedArgType = getArgumentExpressible( specifiedArgument );
 		if ( !(specifiedArgType instanceof ReturnableType ) ) {
-			throw new QueryException(
+			throw new FunctionArgumentException(
 					String.format(
 							Locale.ROOT,
 							"Function argument [%s] of type [%s] at specified position [%d] in call arguments was not typed as an allowable function return type",
@@ -250,7 +250,7 @@ public class StandardFunctionReturnTypeResolvers {
 					specifiedArgType.getExpressibleJavaType().getJavaTypeClass()
 			);
 			if ( basicType == null ) {
-				throw new QueryException(
+				throw new FunctionArgumentException(
 						String.format(
 								Locale.ROOT,
 								"Function argument [%s] of type [%s] at specified position [%d] in call arguments was not typed as basic type",
@@ -275,7 +275,7 @@ public class StandardFunctionReturnTypeResolvers {
 			return (BasicValuedMapping) specifiedArgType;
 		}
 
-		throw new QueryException(
+		throw new FunctionArgumentException(
 				String.format(
 						Locale.ROOT,
 						"Function argument [%s] at specified position [%d] in call arguments was not typed as an allowable function return type",

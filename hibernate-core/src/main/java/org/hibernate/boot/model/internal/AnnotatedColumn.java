@@ -589,7 +589,7 @@ public class AnnotatedColumn {
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
 		return buildColumnsOrFormulaFromAnnotation(
-				new jakarta.persistence.Column[] { column },
+				column==null ? null : new jakarta.persistence.Column[] { column },
 				formulaAnn,
 //				commentAnn,
 				nullability,

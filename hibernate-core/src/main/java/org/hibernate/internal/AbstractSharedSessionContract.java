@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
@@ -44,6 +45,9 @@ import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
+import org.hibernate.jpa.spi.NativeQueryListTransformer;
+import org.hibernate.jpa.spi.NativeQueryMapTransformer;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
@@ -98,6 +102,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 
 import static java.lang.Boolean.TRUE;
+import static org.hibernate.internal.util.ReflectHelper.isClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
@@ -742,13 +747,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	protected static <R> void checkResultType(Class<R> expectedResultType, SqmSelectionQueryImpl<?> query) {
+	protected static <R> void checkResultType(Class<R> expectedResultType, SqmSelectionQueryImpl<R> query) {
 		final Class<?> resultType = query.getResultType();
 		if ( !expectedResultType.isAssignableFrom( resultType ) ) {
 			throw new QueryTypeMismatchException(
 					String.format(
 							Locale.ROOT,
-							"Query result-type error - expecting `%s`, but found `%s`",
+							"Incorrect query result type: query produces '%s' but type '%s' was given",
 							expectedResultType.getName(),
 							resultType.getName()
 					)
@@ -847,13 +852,26 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected <T> void addResultType(Class<T> resultClass, NativeQueryImplementor<T> query) {
 		if ( Tuple.class.equals( resultClass ) ) {
-			query.setTupleTransformer( new NativeQueryTupleTransformer() );
+			query.setTupleTransformer( NativeQueryTupleTransformer.INSTANCE );
+		}
+		else if ( Map.class.equals( resultClass ) ) {
+			query.setTupleTransformer( NativeQueryMapTransformer.INSTANCE );
+		}
+		else if ( List.class.equals( resultClass ) ) {
+			query.setTupleTransformer( NativeQueryListTransformer.INSTANCE );
 		}
 		else if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
-			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+			query.addEntity( resultClass, LockMode.READ );
 		}
 		else if ( resultClass != Object.class && resultClass != Object[].class ) {
-			query.addResultTypeClass( resultClass );
+			if ( isClass( resultClass )
+					&& getTypeConfiguration().getJavaTypeRegistry().findDescriptor( resultClass ) == null ) {
+				// not a basic type
+				query.setTupleTransformer( new NativeQueryConstructorTransformer<>( resultClass ) );
+			}
+			else {
+				query.addResultTypeClass( resultClass );
+			}
 		}
 	}
 
@@ -875,7 +893,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		@SuppressWarnings("unchecked")
 		final NativeQueryImplementor<T> query = createNativeQuery( sqlString, resultSetMappingName );
 		if ( Tuple.class.equals( resultClass ) ) {
-			query.setTupleTransformer( new NativeQueryTupleTransformer() );
+			query.setTupleTransformer( NativeQueryTupleTransformer.INSTANCE );
+		}
+		else if ( Map.class.equals( resultClass ) ) {
+			query.setTupleTransformer( NativeQueryMapTransformer.INSTANCE );
+		}
+		else if ( List.class.equals( resultClass ) ) {
+			query.setTupleTransformer( NativeQueryListTransformer.INSTANCE );
 		}
 		return query;
 	}

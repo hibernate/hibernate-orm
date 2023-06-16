@@ -9,6 +9,8 @@ package org.hibernate.loader.ast.internal;
 import java.lang.reflect.Array;
 
 import org.hibernate.LockOptions;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -18,7 +20,6 @@ import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -32,6 +33,8 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
@@ -67,15 +70,12 @@ public class CollectionBatchLoaderArrayParam
 		final Class<?> keyType = keyDescriptor.getJavaType().getJavaTypeClass();
 		final Class<?> arrayClass = Array.newInstance( keyType, 0 ).getClass();
 
-		// this typecast is always safe because we don't instantiate this class unless the FK is "simple"
-		final SimpleForeignKeyDescriptor simpleKeyDescriptor = (SimpleForeignKeyDescriptor) keyDescriptor;
-
 		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
 				.getBasicTypeRegistry()
 				.getRegisteredType( arrayClass );
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				arrayBasicType,
-				simpleKeyDescriptor.getJdbcMapping(),
+				keyDescriptor.getSingleJdbcMapping(),
 				arrayClass,
 				getSessionFactory()
 		);
@@ -83,7 +83,7 @@ public class CollectionBatchLoaderArrayParam
 		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
 		sqlSelect = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
-				simpleKeyDescriptor.getKeyPart(),
+				keyDescriptor.getKeyPart(),
 				getInfluencers(),
 				LockOptions.NONE,
 				jdbcParameter,
@@ -95,6 +95,72 @@ public class CollectionBatchLoaderArrayParam
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( getSessionFactory(), sqlSelect )
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+	}
+
+	@Override
+	public PersistentCollection<?> load(Object keyBeingLoaded, SharedSessionContractImplementor session) {
+		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
+		if ( keyDescriptor.isEmbedded() ) {
+			assert keyDescriptor.getJdbcTypeCount() == 1;
+			return loadEmbeddable( keyBeingLoaded, session, keyDescriptor );
+		}
+		else {
+			return super.load( keyBeingLoaded, session );
+		}
+
+	}
+
+	private PersistentCollection<?> loadEmbeddable(
+			Object keyBeingLoaded,
+			SharedSessionContractImplementor session,
+			ForeignKeyDescriptor keyDescriptor) {
+		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+			MULTI_KEY_LOAD_LOGGER.debugf(
+					"Batch fetching collection: %s.%s",
+					getLoadable().getNavigableRole().getFullPath(), keyBeingLoaded
+			);
+		}
+
+		final int length = getDomainBatchSize();
+		final Object[] keysToInitialize = (Object[]) Array.newInstance(
+				keyDescriptor.getSingleJdbcMapping().getJdbcJavaType().getJavaTypeClass(),
+				length
+		);
+		final Object[] embeddedKeys = (Object[]) Array.newInstance(
+				keyDescriptor.getJavaType().getJavaTypeClass(),
+				length
+		);
+		session.getPersistenceContextInternal().getBatchFetchQueue()
+				.collectBatchLoadableCollectionKeys(
+						length,
+						(index, key) ->
+								keyDescriptor.forEachJdbcValue( key, (i, value, jdbcMapping) -> {
+									keysToInitialize[index] = value;
+									embeddedKeys[index] = key;
+								}, session )
+						,
+						keyBeingLoaded,
+						getLoadable()
+				);
+		// now trim down the array to the number of keys we found
+		final Object[] keys = trimIdBatch( length, keysToInitialize );
+
+		if ( hasSingleId( keys ) ) {
+			return singleKeyLoader.load( keyBeingLoaded, session );
+		}
+
+		initializeKeys( keyBeingLoaded, keys, session );
+
+		for ( Object initializedKey : embeddedKeys ) {
+			if ( initializedKey != null ) {
+				finishInitializingKey( initializedKey, session );
+			}
+		}
+		final CollectionKey collectionKey = new CollectionKey(
+				getLoadable().getCollectionDescriptor(),
+				keysToInitialize
+		);
+		return session.getPersistenceContext().getCollection( collectionKey );
 	}
 
 	@Override
@@ -134,9 +200,36 @@ public class CollectionBatchLoaderArrayParam
 				RowTransformerStandardImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
+	}
 
-		for ( Object initializedKey : keysToInitialize ) {
+	@Override
+	void finishInitializingKeys(Object[] keys, SharedSessionContractImplementor session) {
+		for ( Object initializedKey : keys ) {
 			finishInitializingKey( initializedKey, session );
 		}
+	}
+
+	@Override
+	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
+		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
+		if( keyDescriptor.isEmbedded()){
+			assert keyDescriptor.getJdbcTypeCount() == 1;
+			final int length = getDomainBatchSize();
+			final Object[] keysToInitialize = (Object[]) Array.newInstance( keyDescriptor.getSingleJdbcMapping().getJdbcJavaType().getJavaTypeClass(), length );
+			session.getPersistenceContextInternal().getBatchFetchQueue()
+					.collectBatchLoadableCollectionKeys(
+							length,
+							(index, key) ->
+								keyDescriptor.forEachJdbcValue( key, (i, value, jdbcMapping) -> {
+									keysToInitialize[index] = value;
+								}, session )
+							,
+							keyBeingLoaded,
+							getLoadable()
+					);
+			// now trim down the array to the number of keys we found
+			return trimIdBatch( length, keysToInitialize );
+		}
+		return super.resolveKeysToInitialize( keyBeingLoaded, session );
 	}
 }

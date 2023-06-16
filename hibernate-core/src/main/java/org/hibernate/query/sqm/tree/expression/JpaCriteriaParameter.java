@@ -79,6 +79,12 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
+	public Integer getTupleLength() {
+		// TODO: we should be able to do much better than this!
+		return null;
+	}
+
+	@Override
 	public boolean allowsMultiValuedBinding() {
 		return allowsMultiValuedBinding;
 	}

@@ -71,6 +71,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
+import static org.hibernate.jpa.HibernateHints.HINT_QUERY_PLAN_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
@@ -182,6 +183,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		putIfNotNull( hints, HINT_CACHEABLE, getQueryOptions().isResultCachingEnabled() );
 		putIfNotNull( hints, HINT_CACHE_REGION, getQueryOptions().getResultCacheRegionName() );
 		putIfNotNull( hints, HINT_CACHE_MODE, getQueryOptions().getCacheMode() );
+		putIfNotNull( hints, HINT_QUERY_PLAN_CACHEABLE, getQueryOptions().getQueryPlanCachingEnabled() );
 
 		putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
 		putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
@@ -299,6 +301,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				case HINT_FETCH_SIZE:
 					applyFetchSizeHint( getInteger( value ) );
 					return true;
+				case HINT_QUERY_PLAN_CACHEABLE:
+					applyQueryPlanCacheableHint( getBoolean( value ) );
+					return true;
 				case HINT_CACHEABLE:
 					applyCacheableHint( getBoolean( value ) );
 					return true;
@@ -341,6 +346,10 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	protected void applyFetchSizeHint(int fetchSize) {
 		getQueryOptions().setFetchSize( fetchSize );
+	}
+
+	protected void applyQueryPlanCacheableHint(boolean isCacheable) {
+		getQueryOptions().setQueryPlanCachingEnabled( isCacheable );
 	}
 
 	protected void applyCacheModeHint(CacheMode cacheMode) {
@@ -637,7 +646,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		try {
 			//noinspection rawtypes
 			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( name );
-			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
 								"] associated with the parameter corresponding to name [" + name +
@@ -668,7 +677,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 		try {
 			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( position );
-			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
+			if ( !type.isAssignableFrom( parameter.getParameterType() ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
 								"] associated with the parameter corresponding to position [" + position +

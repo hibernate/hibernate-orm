@@ -6,9 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -17,10 +14,10 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
@@ -66,11 +63,6 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	@Override
 	default int getJdbcTypeCount() {
 		return 1;
-	}
-
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( this );
 	}
 
 	@Override

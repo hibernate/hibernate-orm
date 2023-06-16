@@ -99,10 +99,7 @@ public class JoinFetchImplicitOwnerTest {
 				+ "join fetch p.company",
 				Project.class
 		) ).hasCauseInstanceOf( SemanticException.class )
-				.hasMessageContaining(
-						"query specified join fetching, but the owner "
-						+ "of the fetched association was not present in the select list"
-				) );
+				.hasMessageContaining("the owner of the fetched association was not present in the select list") );
 	}
 
 	@Test
@@ -112,10 +109,7 @@ public class JoinFetchImplicitOwnerTest {
 				"join fetch le.project.company",
 				Project.class
 		) ).hasCauseInstanceOf( SemanticException.class )
-				.hasMessageContaining(
-						"query specified join fetching, but the owner "
-						+ "of the fetched association was not present in the select list"
-				) );
+				.hasMessageContaining("the owner of the fetched association was not present in the select list") );
 	}
 
 	@Test
@@ -125,10 +119,7 @@ public class JoinFetchImplicitOwnerTest {
 				"join fetch ilog.lateralEntity.project.company",
 				Project.class
 		) ).hasCauseInstanceOf( SemanticException.class )
-				.hasMessageContaining(
-						"query specified join fetching, but the owner "
-						+ "of the fetched association was not present in the select list"
-				) );
+				.hasMessageContaining("the owner of the fetched association was not present in the select list") );
 	}
 
 	@Entity( name = "ImageLog" )

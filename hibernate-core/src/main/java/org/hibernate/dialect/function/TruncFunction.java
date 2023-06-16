@@ -97,8 +97,7 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final NodeBuilder nodeBuilder = queryEngine.getCriteriaBuilder();
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
 		final FunctionRenderingSupport renderingSupport;
@@ -114,8 +113,7 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 				return dateTruncEmulation.generateSqmFunctionExpression(
 						arguments,
 						impliedResultType,
-						queryEngine,
-						typeConfiguration
+						queryEngine
 				);
 			}
 			else if ( datetimeTrunc == DatetimeTrunc.TRUNC ) {
@@ -150,7 +148,7 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 				// replace temporal_unit parameter with translated string format literal
 				args.set( 1, new SqmLiteral<>(
 						pattern,
-						typeConfiguration.getBasicTypeForJavaType( String.class ),
+						nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( String.class ),
 						nodeBuilder
 				) );
 			}

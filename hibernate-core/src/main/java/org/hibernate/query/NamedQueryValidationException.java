@@ -13,7 +13,10 @@ import java.util.Map;
 
 /**
  * Indicates that validation and translation of one or more named
- * queries failed at initialization time.
+ * queries failed at initialization time. This exception packages
+ * every {@link org.hibernate.QueryException} that occurred for an
+ * invalid HQL/JPQL query, together with any exceptions that indicate
+ * problems with named native SQL queries.
  *
  * @author Gavin King
  */

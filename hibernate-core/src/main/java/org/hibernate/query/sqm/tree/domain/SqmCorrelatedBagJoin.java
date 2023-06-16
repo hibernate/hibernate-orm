@@ -62,7 +62,7 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 				this,
 				new SqmCorrelatedBagJoin<>(
 						getLhs().copy( context ),
-						getReferencedPathSource(),
+						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -105,7 +105,7 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCorrelatedBagJoin<>(
 				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
+				getAttribute(),
 				getExplicitAlias(),
 				getSqmJoinType(),
 				isFetched(),

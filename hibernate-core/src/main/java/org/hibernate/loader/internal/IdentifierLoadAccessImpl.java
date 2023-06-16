@@ -16,7 +16,8 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
@@ -24,12 +25,12 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Standard implementation of load-by-id
@@ -83,8 +84,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 
 	protected T perform(Supplier<T> executor) {
 		final SessionImplementor session = context.getSession();
+		final CacheMode sessionCacheMode = session.getCacheMode();
 
-		CacheMode sessionCacheMode = session.getCacheMode();
 		boolean cacheModeChanged = false;
 		if ( cacheMode != null ) {
 			// naive check for now...
@@ -96,11 +97,13 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		}
 
 		try {
+			final EffectiveEntityGraph effectiveEntityGraph =
+					session.getLoadQueryInfluencers().getEffectiveEntityGraph();
 			if ( graphSemantic != null ) {
 				if ( rootGraph == null ) {
 					throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
 				}
-				session.getLoadQueryInfluencers().getEffectiveEntityGraph().applyGraph( rootGraph, graphSemantic );
+				effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
 			}
 
 			try {
@@ -108,7 +111,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			}
 			finally {
 				if ( graphSemantic != null ) {
-					session.getLoadQueryInfluencers().getEffectiveEntityGraph().clear();
+					effectiveEntityGraph.clear();
 				}
 			}
 		}
@@ -123,36 +126,21 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	@SuppressWarnings( "unchecked" )
 	protected T doGetReference(Object id) {
 		final SessionImplementor session = context.getSession();
-		final EventSource eventSource = session.asEventSource();
-		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+		final SessionFactoryImplementor factory = session.getFactory();
+		return (T) getReference(
+				coerceId( id, factory ),
+				session.asEventSource(),
+				factory,
+				entityPersister.getEntityName(),
+				isReadOnly( session )
+		);
+	}
 
-		final JpaCompliance jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
-		if ( ! jpaCompliance.isLoadByIdComplianceEnabled() ) {
-			id = entityPersister.getIdentifierMapping().getJavaType().coerce( id, this );
-		}
 
-		String entityName = entityPersister.getEntityName();
-		Boolean readOnly = this.readOnly != null ? this.readOnly : loadQueryInfluencers.getReadOnly();
-
-		if ( lockOptions != null ) {
-			LoadEvent event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
-			context.fireLoad( event, LoadEventListener.LOAD );
-			return (T) event.getResult();
-		}
-
-		LoadEvent event = new LoadEvent( id, entityName, false, eventSource, readOnly );
-		boolean success = false;
-		try {
-			context.fireLoad( event, LoadEventListener.LOAD );
-			if ( event.getResult() == null ) {
-				session.getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
-			}
-			success = true;
-			return (T) event.getResult();
-		}
-		finally {
-			context.afterOperation( success );
-		}
+	private Boolean isReadOnly(SessionImplementor session) {
+		return readOnly != null
+				? readOnly
+				: session.getLoadQueryInfluencers().getReadOnly();
 	}
 
 	@Override
@@ -168,72 +156,111 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	@SuppressWarnings( "unchecked" )
 	protected final T doLoad(Object id) {
 		final SessionImplementor session = context.getSession();
-		final EventSource eventSource = session.asEventSource();
-		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
-
-		final JpaCompliance jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
-		if ( ! jpaCompliance.isLoadByIdComplianceEnabled() ) {
-			try {
-				id = entityPersister.getIdentifierMapping().getJavaType().coerce( id, this );
-			}
-			catch ( Exception e ) {
-				throw new IllegalArgumentException( "Argument '" + id
-						+ "' could not be converted to the identifier type of entity '" + entityPersister.getEntityName() + "'"
-						+ " [" + e.getMessage() + "]", e );
-			}
-		}
-
-		String entityName = entityPersister.getEntityName();
-		Boolean readOnly = this.readOnly != null ? this.readOnly : loadQueryInfluencers.getReadOnly();
-
-		if ( lockOptions != null ) {
-			LoadEvent event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
-			context.fireLoad( event, LoadEventListener.GET );
-			final Object result = event.getResult();
-			initializeIfNecessary( result );
-
-			return (T) result;
-		}
-
-		LoadEvent event = new LoadEvent( id, entityName, false, eventSource, readOnly );
-		boolean success = false;
-		try {
-			context.fireLoad( event, LoadEventListener.GET );
-			success = true;
-		}
-		catch (ObjectNotFoundException e) {
-			// if session cache contains proxy for non-existing object
-		}
-		finally {
-			context.afterOperation( success );
-		}
-
-		final Object result = event.getResult();
+		final Object result = load(
+				coerceId( id, session.getFactory() ),
+				session.asEventSource(),
+				entityPersister.getEntityName(),
+				isReadOnly( session )
+		);
 		initializeIfNecessary( result );
-
 		return (T) result;
 	}
 
-	private void initializeIfNecessary(Object result) {
-		if ( result == null ) {
-			return;
-		}
-
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( result );
-		if ( lazyInitializer != null ) {
-			if ( lazyInitializer.isUninitialized() ) {
-				lazyInitializer.initialize();
-			}
+	private Object getReference(
+			Object id,
+			EventSource eventSource,
+			SessionFactoryImplementor factory,
+			String entityName,
+			Boolean readOnly) {
+		if ( lockOptions != null ) {
+			final LoadEvent event = new LoadEvent(id, entityName, lockOptions, eventSource, readOnly);
+			context.fireLoad( event, LoadEventListener.LOAD );
+			return event.getResult();
 		}
 		else {
-			final BytecodeEnhancementMetadata enhancementMetadata = entityPersister.getEntityMetamodel().getBytecodeEnhancementMetadata();
-			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-				final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor( result);
-				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( result, null );
+			final LoadEvent event = new LoadEvent( id, entityName, false, eventSource, readOnly );
+			boolean success = false;
+			try {
+				context.fireLoad( event, LoadEventListener.LOAD );
+				final Object result = event.getResult();
+				if ( result == null ) {
+					factory.getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+				}
+				success = true;
+				return result;
+			}
+			finally {
+				context.afterOperation( success );
+			}
+		}
+	}
+
+	private Object load(Object id, EventSource eventSource, String entityName, Boolean readOnly) {
+		final LoadEvent event;
+		if ( lockOptions != null ) {
+			event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
+			context.fireLoad( event, LoadEventListener.GET );
+		}
+		else {
+			event = new LoadEvent( id, entityName, false, eventSource, readOnly );
+			boolean success = false;
+			try {
+				context.fireLoad( event, LoadEventListener.GET );
+				success = true;
+			}
+			catch (ObjectNotFoundException e) {
+				// if session cache contains proxy for non-existing object
+			}
+			finally {
+				context.afterOperation( success );
+			}
+		}
+		return event.getResult();
+	}
+
+	private Object coerceId(Object id, SessionFactoryImplementor factory) {
+		if ( isLoadByIdComplianceEnabled( factory ) ) {
+			return id;
+		}
+		else {
+			try {
+				return entityPersister.getIdentifierMapping().getJavaType().coerce( id, this );
+			}
+			catch ( Exception e ) {
+				throw new IllegalArgumentException( "Argument '" + id
+						+ "' could not be converted to the identifier type of entity '"
+						+ entityPersister.getEntityName() + "'"
+						+ " [" + e.getMessage() + "]", e );
+			}
+		}
+	}
+
+	private void initializeIfNecessary(Object result) {
+		if ( result != null ) {
+			final LazyInitializer lazyInitializer = extractLazyInitializer( result );
+			if ( lazyInitializer != null ) {
+				if ( lazyInitializer.isUninitialized() ) {
+					lazyInitializer.initialize();
+				}
+			}
+			else {
+				final BytecodeEnhancementMetadata enhancementMetadata =
+						entityPersister.getEntityMetamodel().getBytecodeEnhancementMetadata();
+				if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
+					final BytecodeLazyAttributeInterceptor interceptor =
+							enhancementMetadata.extractLazyInterceptor( result);
+					if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+						final EnhancementAsProxyLazinessInterceptor lazinessInterceptor =
+								(EnhancementAsProxyLazinessInterceptor) interceptor;
+						lazinessInterceptor.forceInitialize( result, null );
+					}
 				}
 			}
 		}
+	}
+
+	private static boolean isLoadByIdComplianceEnabled(SessionFactoryImplementor factory) {
+		return factory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
 	}
 
 	@Override

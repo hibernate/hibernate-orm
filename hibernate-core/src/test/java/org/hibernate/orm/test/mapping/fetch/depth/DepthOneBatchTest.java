@@ -104,7 +104,7 @@ public class DepthOneBatchTest {
 					);
 
 					assertThat( executedQueries.get( 4 ).toLowerCase() ).isEqualTo(
-							"select u1_0.group_id,u1_1.user_id,a1_0.agency_id,a1_0.agency_txt,u1_1.user_name from group_user u1_0 join user_table u1_1 on u1_1.user_id=u1_0.user_id left join agency_table a1_0 on a1_0.agency_id=u1_1.agency_id where u1_0.group_id in (select g1_0.group_id from group_table g1_0 where g1_0.agency_id=?)"
+							"select u1_0.group_id,u1_1.user_id,a1_0.agency_id,a1_0.agency_txt,u1_1.user_name from group_user u1_0 join user_table u1_1 on u1_1.user_id=u1_0.user_id left join agency_table a1_0 on a1_0.agency_id=u1_1.agency_id where u1_0.group_id=?"
 					);
 
 				}

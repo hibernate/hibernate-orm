@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -47,10 +48,9 @@ public class SqmMapEntryReference<K,V>
 		this.mapPath = mapPath;
 		this.nodeBuilder = nodeBuilder;
 
-		this.mapEntryTypeDescriptor = nodeBuilder.getDomainModel()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( Map.Entry.class );
+		this.mapEntryTypeDescriptor =
+				nodeBuilder.getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( Map.Entry.class );
 	}
 
 	@Override
@@ -119,6 +119,11 @@ public class SqmMapEntryReference<K,V>
 	@Override
 	public SqmExpressible<Map.Entry<K, V>> getNodeType() {
 		return this;
+	}
+
+	@Override
+	public DomainType<Map.Entry<K, V>> getSqmType() {
+		return null;
 	}
 
 	@Override

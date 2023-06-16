@@ -99,6 +99,11 @@ public interface QueryOptions {
 	 */
 	String getResultCacheRegionName();
 
+	/**
+	 * Should the query plan of the query be cached?
+	 */
+	Boolean getQueryPlanCachingEnabled();
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JDBC / SQL options

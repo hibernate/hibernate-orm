@@ -258,6 +258,11 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	public Boolean getQueryPlanCachingEnabled() {
+		return null;
+	}
+
+	@Override
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return CacheRetrieveMode.BYPASS;
 	}

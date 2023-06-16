@@ -218,7 +218,7 @@ public class QuerySqmImpl<R>
 	 */
 	public QuerySqmImpl(
 			SqmStatement<R> criteria,
-			Class<R> resultType,
+			Class<R> expectedResultType,
 			SharedSessionContractImplementor producer) {
 		super( producer );
 		this.hql = CRITERIA_HQL_STRING;
@@ -227,6 +227,8 @@ public class QuerySqmImpl<R>
 		}
 		else {
 			this.sqm = criteria;
+			// Cache immutable query plans by default
+			setQueryPlanCacheable( true );
 		}
 
 		setComment( hql );
@@ -262,12 +264,12 @@ public class QuerySqmImpl<R>
 			queryPart.validateQueryStructureAndFetchOwners();
 			visitQueryReturnType(
 					queryPart,
-					resultType,
+					expectedResultType,
 					producer.getFactory()
 			);
 		}
 		else {
-			if ( resultType != null ) {
+			if ( expectedResultType != null ) {
 				throw new IllegalQueryOperationException(
 						"Result type given for a non-SELECT Query",
 						hql,
@@ -288,8 +290,8 @@ public class QuerySqmImpl<R>
 			}
 		}
 
-		this.resultType = resultType;
-		this.tupleMetadata = buildTupleMetadata( criteria, resultType );
+		this.resultType = expectedResultType;
+		this.tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
 	}
 
 	private void validateStatement(SqmStatement<R> sqmStatement, Class<R> resultType) {
@@ -436,7 +438,8 @@ public class QuerySqmImpl<R>
 		return hql;
 	}
 
-	public SqmStatement getSqmStatement() {
+	@Override
+	public SqmStatement<R> getSqmStatement() {
 		return sqm;
 	}
 
@@ -632,6 +635,14 @@ public class QuerySqmImpl<R>
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Select query plan
+
+	@Override
+	public boolean isQueryPlanCacheable() {
+		return CRITERIA_HQL_STRING.equals( hql )
+				// For criteria queries, query plan caching requires an explicit opt-in
+				? getQueryOptions().getQueryPlanCachingEnabled() == Boolean.TRUE
+				: super.isQueryPlanCacheable();
+	}
 
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.createInterpretationsKey( this );
@@ -1199,6 +1210,12 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
 		return this;
 	}
 

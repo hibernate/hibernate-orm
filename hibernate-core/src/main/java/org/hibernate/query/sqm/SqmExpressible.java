@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -38,4 +39,19 @@ public interface SqmExpressible<J> extends BindableType<J> {
 	default SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory) {
 		return this;
 	}
+
+	/**
+	 * The name of the type.
+	 *
+	 * @apiNote This is the Hibernate notion of the type name.  For most types
+	 * this will simply be the Java type (i.e. {@link Class}) name.  However
+	 * using the String allows for Hibernate's dynamic model feature.
+	 */
+	default String getTypeName() {
+		// default impl to handle the general case returning the Java type name
+		JavaType<J> expressibleJavaType = getExpressibleJavaType();
+		return expressibleJavaType == null ? "unknown" : expressibleJavaType.getJavaType().getTypeName();
+	}
+
+	DomainType<J> getSqmType();
 }

@@ -81,6 +81,11 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 	}
 
 	@Override
+	public Boolean getQueryPlanCachingEnabled() {
+		return null;
+	}
+
+	@Override
 	public String getResultCacheRegionName() {
 		return null;
 	}

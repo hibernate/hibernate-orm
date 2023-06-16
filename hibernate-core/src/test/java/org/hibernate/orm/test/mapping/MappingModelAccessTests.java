@@ -8,6 +8,7 @@ package org.hibernate.orm.test.mapping;
 
 import java.time.Instant;
 
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -30,6 +31,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
  * Tests access to {@link MappingMetamodel} as API and SPI contracts
@@ -96,7 +98,7 @@ public class MappingModelAccessTests {
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( 0 ).getIndicatedEntity() ).isEqualTo( paymentMapping );
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( 1 ).getIndicatedEntity() ).isEqualTo( cashPaymentMapping );
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( 2 ).getIndicatedEntity() ).isEqualTo( cardPaymentMapping );
-		assertThat( discriminatorMapping.resolveDiscriminatorValue( 3 ) ).isNull();
+		assertThatCode( () -> discriminatorMapping.resolveDiscriminatorValue( 3 ) ).isInstanceOf(HibernateException.class);
 	}
 
 	@Test
@@ -126,6 +128,6 @@ public class MappingModelAccessTests {
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( "Vendor" ).getIndicatedEntity() ).isEqualTo( vendorMapping );
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( "domestic" ).getIndicatedEntity() ).isEqualTo( domesticVendorMapping );
 		assertThat( discriminatorMapping.resolveDiscriminatorValue( "foreign" ).getIndicatedEntity() ).isEqualTo( foreignVendorMapping );
-		assertThat( discriminatorMapping.resolveDiscriminatorValue( "invalid" ) ).isNull();
+		assertThatCode( () -> discriminatorMapping.resolveDiscriminatorValue( "invalid" ) ).isInstanceOf(HibernateException.class);
 	}
 }

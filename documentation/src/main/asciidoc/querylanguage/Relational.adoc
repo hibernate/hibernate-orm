@@ -137,142 +137,6 @@ If a query has no explicit `select` list, then, as we saw <<select-simplest-exam
 But it's better to specify the projection explicitly, except in the simplest cases.
 ====
 
-There might be multiple items in a projection list, in which case each query result is a tuple, and this poses a problem:
-Java doesn't have a good way to represent tuples.
-
-If there's just one projected item in the `select` list, then, no sweat, that's the type of each query result.
-There's no need to bother with trying to represent a "tuple of length 1".
-
-[source, java]
-[%unbreakable]
-----
-List<String> results =
-        entityManager.createQuery("select title from Book", String.class)
-            .getResultList();
-----
-
-But if there are multiple expressions in the select list then, by default, each query result is packaged as an array of type `Object[]`.
-
-[[select-clause-projection-example]]
-[source, java]
-[%unbreakable]
-----
-List<Object[]> results =
-        entityManager.createQuery("select title, left(book.text, 200) from Book",
-                                  Object[].class)
-            .getResultList();
-for (var result : results) {
-	String title = (String) result[0];
-	String preamble = (String) result[1];
-}
-----
-
-Or, if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `javax.persistence.Tuple`.
-
-[source, java]
-[%unbreakable]
-----
-List<Tuple> results =
-        entityManager.createQuery("select title as title, left(book.text, 200) as preamble from Book",
-                                  Tuple.class)
-            .getResultList();
-for (Tuple tuple : tuples) {
-    String title = tuple.get("title", String.class);
-    String preamble = tuple.get("preamble", String.class);
-}
-----
-
-The names of the `Tuple` elements are determined by the aliases given to the projected items in the select list.
-If no aliases are specified, the elements may be accessed by their position in the list, where the first item is assigned the position zero.
-
-Unfortunately, neither `Object[]` nor `Tuple` lets us access an individual item in a result tuple of an HQL query without explicitly specifying the type of the item, either using a typecast in the case of `Object[]`, or by passing the class object to `get()` in the case of `Tuple`.
-But there's another option, as we're about to see.
-
-Simplifying slightly, the BNF for a projected item is:
-
-[[select-item-bnf]]
-[source, antlrv4]
-----
-selection
-    : (expression | instantiation) alias?
-
-instantiation
-    : "NEW" instantiationTarget "(" selection ("," selection)* ")"
-
-alias
-    : "AS"? identifier
-----
-
-Where the list of ``selection``s in an `instantiation` is essentially a nested projection list.
-
-So there's a special expression type that's only legal in the select clause: the `instantiation` rule in the BNF above.
-// Let's see what it does.
-
-[[select-new]]
-==== Instantiation
-
-The `select new` construct packages the query results into a user-written Java class instead of an array.
-
-[[select-clause-dynamic-instantiation-example]]
-[source, java]
-[%unbreakable]
-----
-record BookSummary(String title, String summary) {}
-
-List<BookSummary> results =
-        entityManager.createQuery("select new BookSummary(title, left(book.text, 200)) from Book",
-                                  BookSummary.class)
-            .getResultList();
-for (var result : results) {
-    String title = result.title();
-    String preamble = result.summary();
-}
-----
-
-The class must have a matching constructor.
-
-[IMPORTANT]
-====
-This class does not need to be mapped or annotated in any way.
-
-Even if the class _is_ an entity class, the resulting instances are _not_ managed entities and are _not_ associated with the session.
-====
-
-Alternatively, using the syntax `select new map`, the query may specify that each result should be packaged as a map:
-
-[[select-clause-dynamic-map-instantiation-example]]
-[source, java]
-[%unbreakable]
-----
-List<Map> results =
-        entityManager.createQuery("select new map(title as title, left(book.text, 200) as summary) from Book",
-                                  Map.class)
-            .getResultList();
-----
-
-The keys of the map are determined by the aliases given to the projected items in the select list.
-If no aliases are specified, the key of an item is its position in the list, where the first item is assigned the position zero.
-
-Or, using the syntax `select new list`, the query may specify that each result should be packaged as a list:
-
-[[select-clause-dynamic-list-instantiation-example]]
-[source, java]
-[%unbreakable]
-----
-List<List> results =
-        entityManager.createQuery("select new list(title as title, left(book.text, 200) as summary) from Book",
-                                  List.class)
-            .getResultList();
-----
-
-[NOTE]
-====
-This is an older syntax, that predates JPQL.
-In hindsight, it's hard to see what advantage `List<Object>` offers compared to `Object[]`.
-We mention it here only for completeness.
-On the other hand, `Map` is a perfectly fine alternative `Tuple`, but of course it isn't portable to other implementations of JPA.
-====
-
 [[distinct]]
 ==== Duplicate removal
 
@@ -390,7 +254,7 @@ The `elements()` and `indices()` functions we met <<elements-indices,earlier>> l
 
 [cols="18,15,~,~"]
 |===
-| New syntax | Legacy HQL function | Applies to | Purpose
+| New syntax | Legacy HQL function 💀 | Applies to | Purpose
 
 | `max(elements(x))` | `maxelement(x)` | Any collection with sortable elements | The maximum element or map value
 | `min(elements(x))` | `minelement(x)` | Any collection with sortable elements | The minimum element or map value
@@ -497,7 +361,7 @@ This function has different names on different databases, but HQL abstracts thes
 select listagg(title, ', ')
     within group (order by isbn)
 from Book
-group by elements(authors)
+group by element(authors)
 ----
 
 This very useful function produces a string by concatenation of the aggregated values of its argument.
@@ -1078,6 +942,7 @@ with Tree as (
         join Node child on child.parent.id = parent.id
 ) search depth first by id set level  /* depth-first search */
 from Tree
+select text
 order by level
 ----
 
@@ -1098,6 +963,7 @@ with Tree as (
         join Node child on child.parent.id = parent.id
 ) search breadth first by id set level  /* breadth-first search */
 from Tree
+select text
 order by level desc
 ----
 

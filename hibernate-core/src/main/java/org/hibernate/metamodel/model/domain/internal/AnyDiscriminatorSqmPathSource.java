@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -59,6 +60,11 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 	@Override
 	public BasicType<D> getSqmPathType() {
 		return (BasicType<D>) super.getSqmPathType();
+	}
+
+	@Override
+	public DomainType<D> getSqmType() {
+		return getSqmPathType();
 	}
 
 	@Override

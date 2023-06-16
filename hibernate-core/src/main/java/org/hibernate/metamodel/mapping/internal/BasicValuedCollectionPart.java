@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchStyle;
@@ -279,11 +277,6 @@ public class BasicValuedCollectionPart
 				FetchTiming.IMMEDIATE,
 				creationState
 		);
-	}
-
-	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( getJdbcMapping() );
 	}
 
 	@Override

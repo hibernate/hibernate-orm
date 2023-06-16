@@ -7,7 +7,9 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -42,8 +44,15 @@ public class BasicSqmPathSource<J>
 	}
 
 	@Override
+	public DomainType<J> getSqmType() {
+		return getSqmPathType();
+	}
+
+	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		throw new IllegalStateException( "Basic paths cannot be dereferenced" );
+		String path = pathModel.getPathName();
+		String pathDesc = path==null || path.startsWith("{") ? " " : " '" + pathModel.getPathName() + "' ";
+		throw new TerminalPathException( "Terminal path" + pathDesc + "has no attribute '" + name + "'" );
 	}
 
 	@Override

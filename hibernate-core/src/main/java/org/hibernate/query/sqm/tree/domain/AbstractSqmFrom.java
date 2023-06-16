@@ -24,6 +24,7 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
@@ -159,7 +160,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			SqmCreationState creationState) {
 		// Try to resolve an existing attribute join without ON clause
 		SqmPath<?> resolvedPath = null;
-		ModelPartContainer modelPartContainer = null;
 		for ( SqmJoin<?, ?> sqmJoin : getSqmJoins() ) {
 			// We can only match singular joins here, as plural path parts are interpreted like sub-queries
 			if ( sqmJoin instanceof SqmSingularJoin<?, ?>
@@ -238,7 +238,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public boolean hasJoins() {
-		return !( joins == null || joins.isEmpty() );
+		return joins != null && !joins.isEmpty();
 	}
 
 	@Override
@@ -320,7 +320,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	public Set<Join<T, ?>> getJoins() {
 		//noinspection unchecked
 		return (Set<Join<T, ?>>) (Set<?>) getSqmJoins().stream()
-				.filter( sqmJoin -> ! ( sqmJoin instanceof SqmAttributeJoin && ( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() ) )
+				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin && !( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() )
 				.collect( Collectors.toSet() );
 	}
 
@@ -330,7 +330,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <A> SqmSingularJoin<T, A> join(SingularAttribute<? super T, A> attribute, JoinType jt) {
 		final SqmSingularJoin<T, A> join = buildSingularJoin( (SingularPersistentAttribute<? super T, A>) attribute, SqmJoinType.from( jt ), false );
 		addSqmJoin( join );
@@ -356,7 +355,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <E> SqmSetJoin<T, E> join(SetAttribute<? super T, E> attribute, JoinType jt) {
 		final SqmSetJoin<T, E> join = buildSetJoin(
 				(SetPersistentAttribute<? super T, E>) attribute,
@@ -373,7 +371,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <E> SqmListJoin<T, E> join(ListAttribute<? super T, E> attribute, JoinType jt) {
 		final SqmListJoin<T, E> join = buildListJoin(
 				(ListPersistentAttribute<? super T, E>) attribute,
@@ -612,7 +609,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	private void validateComplianceFromSubQuery() {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries in the from clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );
@@ -646,7 +643,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <A> SqmSingularJoin<T, A> fetch(SingularAttribute<? super T, A> attribute, JoinType jt) {
 		final SqmSingularJoin<T, A> join = buildSingularJoin(
 				(SingularPersistentAttribute<? super T, A>) attribute,
@@ -663,7 +659,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <A> SqmAttributeJoin<T, A> fetch(PluralAttribute<? super T, ?, A> attribute, JoinType jt) {
 		return buildJoin(
 				(PluralPersistentAttribute<? super T, ?, A>) attribute,
@@ -760,7 +755,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			);
 		}
 
-		throw new SemanticException( "Attribute [" + attribute + "] is not joinable" );
+		throw new SemanticException( "Attribute '" + attribute + "' is not joinable" );
 	}
 
 	@SuppressWarnings("unchecked")

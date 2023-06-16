@@ -53,7 +53,6 @@ import static org.junit.Assert.assertTrue;
  * @author Brett Meyer
  */
 @RequiresDialect( H2Dialect.class ) // Nothing dialect-specific -- no need to run in matrix.
-@SuppressWarnings("unchecked")
 public class JarVisitorTest extends PackagingTestCase {
 	@Test
 	public void testHttp() throws Exception {

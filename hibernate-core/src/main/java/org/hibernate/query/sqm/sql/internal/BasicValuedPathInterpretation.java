@@ -18,6 +18,8 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.PathException;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -25,7 +27,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -121,7 +122,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 				}
 			}
 
-			throw new SemanticException( "`" + sqmPath.getNavigablePath() + "` did not reference a known model part" );
+			throw new UnknownPathException( "Path '" + sqmPath.getNavigablePath() + "' did not reference a known model part" );
 		}
 
 		final TableReference tableReference = tableGroup.resolveTableReference(

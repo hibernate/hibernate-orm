@@ -14,7 +14,7 @@ import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.results.ResultSetMapping;
 
 /**
- * Standard `NamedResultSetMappingMemento` implementation
+ * Standard {@link NamedResultSetMappingMemento} implementation
  *
  * @author Steve Ebersole
  */

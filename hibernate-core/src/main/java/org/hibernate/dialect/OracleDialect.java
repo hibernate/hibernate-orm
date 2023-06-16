@@ -603,7 +603,7 @@ public class OracleDialect extends Dialect {
 				pattern.append( ")" );
 				break;
 			default:
-				throw new SemanticException( "unrecognized field: " + unit );
+				throw new SemanticException( "Unrecognized field: " + unit );
 		}
 		return pattern.toString();
 	}
@@ -767,7 +767,7 @@ public class OracleDialect extends Dialect {
 				}
 				//intentional fall-through:
 			case DECIMAL:
-				if ( scale == 0 ) {
+				if ( scale == 0 && precision != 0 ) {
 					// Don't infer TINYINT or SMALLINT on Oracle, since the
 					// range of values of a NUMBER(3,0) or NUMBER(5,0) just
 					// doesn't really match naturally.

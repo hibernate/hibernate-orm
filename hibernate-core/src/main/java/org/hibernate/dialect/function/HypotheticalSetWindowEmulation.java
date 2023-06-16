@@ -49,8 +49,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return new SelfRenderingSqmOrderedSetAggregateFunction<>(
 				this,
 				this,
@@ -109,7 +108,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 						getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
 						Collections.emptyList(),
 						resultType,
-						getMappingModelExpressible( walker, resultType )
+						getMappingModelExpressible( walker, resultType, arguments )
 				);
 				final Over<Object> windowFunction = new Over<>( function, new ArrayList<>(), withinGroup );
 				walker.registerQueryTransformer(

@@ -36,6 +36,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.UnknownFilterException;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -88,6 +89,7 @@ import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
+import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
@@ -260,7 +262,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			// created, then we can split creation of QueryEngine
 			// and SqmFunctionRegistry, instantiating just the
 			// registry here, and doing the engine later
-			queryEngine = QueryEngine.from( this, bootMetamodel );
+			queryEngine = QueryEngineImpl.from( this, bootMetamodel );
 
 			// create runtime metamodels (mapping and JPA)
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
@@ -1032,7 +1034,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
 		FilterDefinition def = filters.get( filterName );
 		if ( def == null ) {
-			throw new HibernateException( "No such filter configured [" + filterName + "]" );
+			throw new UnknownFilterException( filterName );
 		}
 		return def;
 	}

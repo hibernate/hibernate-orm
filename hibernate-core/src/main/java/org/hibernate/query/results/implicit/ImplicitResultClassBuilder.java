@@ -45,11 +45,13 @@ public class ImplicitResultClassBuilder implements ResultBuilder {
 			DomainResultCreationState domainResultCreationState) {
 		assert resultPosition == 0;
 
-		final SessionFactoryImplementor sessionFactory = domainResultCreationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getSessionFactory();
+		final SessionFactoryImplementor sessionFactory =
+				domainResultCreationState.getSqlAstCreationState()
+						.getCreationContext()
+						.getSessionFactory();
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final SqlExpressionResolver sqlExpressionResolver =
+				domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 
 		final int jdbcResultPosition = 1;
 

@@ -759,7 +759,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					tableName,
 					() -> columnConsumer -> columnConsumer.accept(
 							tableName,
-							constraintOrderedKeyColumnNames[tablePosition]
+							constraintOrderedKeyColumnNames[tablePosition],
+							getIdentifierMapping()::getJdbcMapping
 					)
 			);
 		}

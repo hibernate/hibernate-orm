@@ -13,7 +13,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.TransientObjectException;
@@ -25,7 +24,9 @@ import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.loader.MultipleBagFetchException;
-import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.SyntaxException;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -134,7 +135,9 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			rollbackIfNecessary( converted );
 			return converted;
 		}
-		else if ( exception instanceof QueryException || exception instanceof ParsingException) {
+		else if ( exception instanceof SyntaxException
+				|| exception instanceof SemanticException
+				|| exception instanceof IllegalQueryOperationException) {
 			return new IllegalArgumentException( exception );
 		}
 		else if ( exception instanceof MultipleBagFetchException ) {

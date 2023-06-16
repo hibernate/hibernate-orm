@@ -23,7 +23,6 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 /**
  * Custom {@link TruncFunction} for Sybase which uses a dialect-specific emulation function for datetimes
@@ -48,16 +47,14 @@ public class SybaseTruncFunction extends TruncFunction {
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
 		if ( arguments.size() == 2 && arguments.get( 1 ) instanceof SqmExtractUnit ) {
 			// datetime truncation
 			return dateTruncEmulation.generateSqmFunctionExpression(
 					arguments,
 					impliedResultType,
-					queryEngine,
-					typeConfiguration
+					queryEngine
 			);
 		}
 		// numeric truncation
@@ -112,9 +109,7 @@ public class SybaseTruncFunction extends TruncFunction {
 		protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 				List<? extends SqmTypedNode<?>> arguments,
 				ReturnableType<T> impliedResultType,
-				QueryEngine queryEngine,
-				TypeConfiguration typeConfiguration) {
-			final NodeBuilder nodeBuilder = queryEngine.getCriteriaBuilder();
+				QueryEngine queryEngine) {
 			final TemporalUnit temporalUnit = ( (SqmExtractUnit<?>) arguments.get( 1 ) ).getUnit();
 			final String literal;
 			switch ( temporalUnit ) {
@@ -140,19 +135,18 @@ public class SybaseTruncFunction extends TruncFunction {
 					throw new UnsupportedOperationException( "Temporal unit not supported [" + temporalUnit + "]" );
 			}
 
+			final NodeBuilder nodeBuilder = queryEngine.getCriteriaBuilder();
 			return new SelfRenderingSqmFunction<>(
 					this,
 					this,
-					literal == null ?
-							singletonList( arguments.get( 0 ) ) :
-							asList(
-									arguments.get( 0 ),
-									new SqmLiteral<>(
-											literal,
-											typeConfiguration.getBasicTypeForJavaType( String.class ),
-											nodeBuilder
-									)
-							),
+					asList(
+							arguments.get( 0 ),
+							new SqmLiteral<>(
+									literal,
+									queryEngine.getTypeConfiguration().getBasicTypeForJavaType( String.class ),
+									nodeBuilder
+							)
+					),
 					impliedResultType,
 					null,
 					getReturnTypeResolver(),

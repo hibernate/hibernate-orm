@@ -19,6 +19,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
+import jakarta.persistence.metamodel.Attribute;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentBag;
@@ -273,18 +274,30 @@ public final class Hibernate {
 	}
 
 	/**
+	 * Determines if the given attribute of the given entity instance is initialized.
+	 *
+	 * @param entity The entity instance or proxy
+	 * @param attribute A persistent attribute of the entity
+	 * @return true if the named property of the object is not listed as uninitialized;
+	 *         false otherwise
+	 */
+	public <E, T> boolean isPropertyInitialized(E entity, Attribute<E, T> attribute) {
+		return isPropertyInitialized( entity, attribute.getName() );
+	}
+
+	/**
 	 * Determines if the property with the given name of the given entity instance is
 	 * initialized. If the named property does not exist or is not persistent, this
 	 * method always returns {@code true}.
 	 * <p>
 	 * This operation is equivalent to {@link jakarta.persistence.PersistenceUtil#isLoaded(Object, String)}.
 	 *
-	 * @param proxy The potential proxy
-	 * @param propertyName the name of a persistent attribute of the object
+	 * @param proxy The entity instance or proxy
+	 * @param attributeName the name of a persistent attribute of the object
 	 * @return true if the named property of the object is not listed as uninitialized;
 	 *         false otherwise
 	 */
-	public static boolean isPropertyInitialized(Object proxy, String propertyName) {
+	public static boolean isPropertyInitialized(Object proxy, String attributeName) {
 		final Object entity;
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
 		if ( lazyInitializer != null ) {
@@ -300,9 +313,10 @@ public final class Hibernate {
 		}
 
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+			PersistentAttributeInterceptor interceptor =
+					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
-				return ( (BytecodeLazyAttributeInterceptor) interceptor ).isAttributeLoaded( propertyName );
+				return ( (BytecodeLazyAttributeInterceptor) interceptor ).isAttributeLoaded( attributeName );
 			}
 		}
 

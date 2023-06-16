@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Iterator;
 import java.util.Locale;
-import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
@@ -96,13 +95,13 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				bootValueMapping.isPartitionKey(),
 				(BasicType<?>) metaType.getBaseType(),
 				metaType.getDiscriminatorValuesToEntityNameMap(),
-				creationProcess.getCreationContext().getSessionFactory()
+				creationProcess.getCreationContext().getSessionFactory().getMappingMetamodel()
 		);
 
 
 		final BasicType<?> keyType = (BasicType<?>) anyType.getIdentifierType();
 		final BasicValuedModelPart keyPart = new AnyKeyPart(
-				containerRole.append( AnyKeyPart.ROLE_NAME),
+				containerRole.append( AnyKeyPart.KEY_NAME ),
 				declaringModelPart,
 				tableName,
 				keyColumn.getText( dialect ),
@@ -164,14 +163,18 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	public Object resolveDiscriminatorValueToEntityMapping(EntityMappingType entityMappingType) {
-		final DiscriminatorValueDetails details = discriminatorPart.getValueConverter().getDetailsForEntityName( entityMappingType.getEntityName() );
+		final DiscriminatorValueDetails details =
+				discriminatorPart.getValueConverter()
+						.getDetailsForEntityName( entityMappingType.getEntityName() );
 		return details != null
 				? details.getValue()
 				: null;
 	}
 
 	public EntityMappingType resolveDiscriminatorValueToEntityMapping(Object discriminatorValue) {
-		final DiscriminatorValueDetails details = discriminatorPart.getValueConverter().getDetailsForDiscriminatorValue( discriminatorValue );
+		final DiscriminatorValueDetails details =
+				discriminatorPart.getValueConverter().
+						getDetailsForDiscriminatorValue( discriminatorValue );
 		return details != null
 				? details.getIndicatedEntity()
 				: null;
@@ -246,7 +249,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			return getDiscriminatorPart();
 		}
 
-		if ( AnyKeyPart.ROLE_NAME.equals( name ) ) {
+		if ( AnyKeyPart.KEY_NAME.equals( name ) ) {
 			return getKeyPart();
 		}
 
@@ -279,7 +282,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			final String idAttrName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
+			final String idAttrName = identifierMapping.getAttributeName();
 			if ( idAttrName.equals( name ) ) {
 				return getKeyPart();
 			}

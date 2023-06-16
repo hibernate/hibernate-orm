@@ -46,6 +46,7 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
@@ -1035,7 +1036,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup() );
 	}
 
-	private <O extends MutationOperation> TableUpdateBuilderStandard<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
+	<O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
 		return new TableUpdateBuilderStandard<>( entityPersister(), tableMapping, factory() );
 	}
 
@@ -1598,7 +1599,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return null;
 		}
 		else {
-			final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder =
+			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder =
 					newTableUpdateBuilder( entityPersister().getIdentifierTableMapping() );
 
 			updateBuilder.setSqlComment( "forced version increment for " + entityPersister().getRolePath() );
@@ -1622,7 +1623,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private void addPartitionRestriction(TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder) {
+	private void addPartitionRestriction(AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder) {
 		final AbstractEntityPersister persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
 			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();

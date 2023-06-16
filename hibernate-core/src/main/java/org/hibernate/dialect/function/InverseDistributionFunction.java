@@ -60,8 +60,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return new SelfRenderingInverseDistributionFunction<>(
 				arguments,
 				filter,
@@ -150,7 +149,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			);
 			if ( withinGroupClause == null ) {
 				throw new SemanticException("Inverse distribution function '" + getFunctionName()
-						+ "' must specify WITHIN GROUP");
+						+ "' must specify 'WITHIN GROUP'");
 			}
 		}
 
@@ -159,13 +158,15 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			return (ReturnableType<?>)
 					getWithinGroup().getSortSpecifications().get( 0 )
 							.getSortExpression()
-							.getExpressible();
+							.getExpressible()
+							.getSqmType();
 		}
 
 		@Override
 		protected MappingModelExpressible<?> getMappingModelExpressible(
 				SqmToSqlAstConverter walker,
-				ReturnableType<?> resultType) {
+				ReturnableType<?> resultType,
+				List<SqlAstNode> arguments) {
 			MappingModelExpressible<?> mapping;
 			if ( resultType instanceof MappingModelExpressible) {
 				// here we have a BasicType, which can be cast

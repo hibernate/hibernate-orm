@@ -6,11 +6,12 @@
  */
 package org.hibernate.jpamodelgen.util;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -138,7 +139,7 @@ public final class TypeUtils {
 		assert element != null;
 		assert annotations != null;
 
-		List<String> annotationClassNames = new ArrayList<String>();
+		Set<String> annotationClassNames = new HashSet<>();
 		Collections.addAll( annotationClassNames, annotations );
 
 		List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();

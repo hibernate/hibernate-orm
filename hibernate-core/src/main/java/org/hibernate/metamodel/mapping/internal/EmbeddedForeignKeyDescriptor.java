@@ -636,6 +636,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(final int index) {
+		return targetSide.getModelPart().getJdbcMapping( index );
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return targetSide.getModelPart().forEachJdbcType( offset, action );
 	}
@@ -664,5 +669,10 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return keySide.getModelPart().hasPartitionedSelectionMapping();
+	}
+
+	@Override
+	public boolean isEmbedded() {
+		return true;
 	}
 }

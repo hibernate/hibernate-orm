@@ -675,7 +675,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 				tableInformation,
 				DatabaseIdentifier.toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) ),
 				resultSet.getInt( getResultSetSqlTypeCodeLabel() ),
-				new StringTokenizer( resultSet.getString( getResultSetTypeNameLabel() ), "() " ).nextToken(),
+				new StringTokenizer( resultSet.getString( getResultSetTypeNameLabel() ), "()" ).nextToken(),
 				resultSet.getInt( getResultSetColumnSizeLabel() ),
 				resultSet.getInt( getResultSetDecimalDigitsLabel() ),
 				interpretTruthValue( resultSet.getString( getResultSetIsNullableLabel() ) )

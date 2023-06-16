@@ -16,6 +16,7 @@ import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.tree.SqmStatement;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.query.spi.AbstractSelectionQuery.CRITERIA_HQL_STRING;
@@ -25,7 +26,9 @@ import static org.hibernate.query.spi.AbstractSelectionQuery.CRITERIA_HQL_STRING
  */
 public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	public interface CacheabilityInfluencers {
+		boolean isQueryPlanCacheable();
 		String getQueryString();
+		SqmStatement<?> getSqmStatement();
 		QueryOptions getQueryOptions();
 		LoadQueryInfluencers getLoadQueryInfluencers();
 		Supplier<Boolean> hasMultiValuedParameterBindingsChecker();
@@ -36,9 +39,11 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	}
 
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
-		if ( isCacheable (keySource ) ) {
+		if ( isCacheable ( keySource ) ) {
 			return new SqmInterpretationsKey(
-					keySource.getQueryString(),
+					CRITERIA_HQL_STRING.equals( keySource.getQueryString() )
+							? keySource.getSqmStatement()
+							: keySource.getQueryString(),
 					keySource.getResultType(),
 					keySource.getQueryOptions().getLockOptions(),
 					keySource.getQueryOptions().getTupleTransformer(),
@@ -57,7 +62,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		// for now at least, skip caching Criteria-based plans
 		// - especially wrt parameters atm; this works with HQL because the
 		// parameters are part of the query string; with Criteria, they're not.
-		return ! CRITERIA_HQL_STRING.equals( keySource.getQueryString() )
+		return keySource.isQueryPlanCacheable()
 				// At the moment we cannot cache query plan if there is filter enabled.
 			&& ! keySource.getLoadQueryInfluencers().hasEnabledFilters()
 				// At the moment we cannot cache query plan if it has an entity graph
@@ -79,7 +84,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		return null;
 	}
 
-	private final String query;
+	private final Object query;
 	private final Class<?> resultType;
 	private final LockOptions lockOptions;
 	private final TupleTransformer<?> tupleTransformer;
@@ -87,7 +92,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	private final Collection<String> enabledFetchProfiles;
 
 	private SqmInterpretationsKey(
-			String query,
+			Object query,
 			Class<?> resultType,
 			LockOptions lockOptions,
 			TupleTransformer<?> tupleTransformer,
@@ -116,7 +121,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 	@Override
 	public String getQueryString() {
-		return query;
+		return query instanceof String ? (String) query : null;
 	}
 
 	@Override

@@ -638,6 +638,22 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 			SharedSessionContractImplementor session);
 
 	/**
+	 * Merge a persistent instance
+	 */
+	default void merge(
+			Object id,
+			Object[] fields,
+			int[] dirtyFields,
+			boolean hasDirtyCollection,
+			Object[] oldFields,
+			Object oldVersion,
+			Object object,
+			Object rowId,
+			SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
 	 * Get the Hibernate types of the class properties
 	 */
 	Type[] getPropertyTypes();

@@ -1087,7 +1087,7 @@ In particular, the `List` may not contain duplicate elements, and its order will
 Collection<Book> books;
 ----
 
-(We'll see how to map a collection with a persistent order later.)
+We'll see how to map a collection with a persistent order <<ordered-sorted,much later>>.
 
 .`Set`, `List`, or `Collection`?
 ****

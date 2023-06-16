@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm;
 
-import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
 
 /**
  * Occurs when an unexpected condition is encountered while interpreting the
@@ -26,12 +26,8 @@ import org.hibernate.HibernateException;
  *
  * @see InterpretationException
  */
-public class ParsingException extends HibernateException {
+public class ParsingException extends QueryException {
 	public ParsingException(String message) {
 		super( message );
-	}
-
-	public ParsingException(String message, Throwable cause) {
-		super( message, cause );
 	}
 }

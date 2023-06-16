@@ -34,6 +34,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32158
     * [HHH-16574] - Treat Querys throws SemanticException if InheritanceType=Joined
     * [HHH-16498] - Hibernate DDL validation fails on enum database column type
     * [HHH-16490] - The discriminator type mapper overrides any custom type specfied for a field mapped over the same column
+    * [HHH-16286] - NullPointerException: Cannot invoke "EntityInitializer.getNavigablePath()" because "firstEntityInitializer" is null
     * [HHH-16250] - Mapping same column twice and one of them using a custom type leads to "Unknown wrap conversion requested"
     * [HHH-15929] - Mapping jsonb of different types in a class inheritance hierarchy does not work.
 

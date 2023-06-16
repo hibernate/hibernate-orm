@@ -920,7 +920,8 @@ Indeed, the usual practice is to avoid having transactions that span user intera
 
 That said, there _is_ also a place for pessimistic locks, which can sometimes reduce the probability of transaction rollbacks.
 
-Therefore, the `find()`, `lock()`, and `refresh()` methods of the reactive session accept an optional `LockMode`. You can also specify a `LockMode` for a query.
+Therefore, the `find()`, `lock()`, and `refresh()` methods of the reactive session accept an optional `LockMode`.
+We can also specify a `LockMode` for a query.
 The lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
 
 .Optimistic and pessimistic lock modes

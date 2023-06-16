@@ -250,8 +250,7 @@ public final class Hibernate {
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
 		if ( lazyInitializer != null ) {
 			result = lazyInitializer
-					.getImplementation()
-					.getClass();
+					.getPersistentClass();
 		}
 		else {
 			result = proxy.getClass();

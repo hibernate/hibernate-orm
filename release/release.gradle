@@ -241,7 +241,7 @@ task stageTopicalGuide(type: Copy) {
 task stageIntroduction(type: Copy) {
     group 'Release'
 
-    dependsOn ':documentation:renderIntroduction'
+    dependsOn ':documentation:renderIntroduction', ':documentation:renderIntroductionPdf'
 
     from "${project( ':documentation' ).buildDir}/asciidoc/introduction"
     into "${buildDir}/documentation/introduction"
@@ -250,7 +250,7 @@ task stageIntroduction(type: Copy) {
 task stageQL(type: Copy) {
     group 'Release'
 
-    dependsOn ':documentation:renderQL'
+    dependsOn ':documentation:renderQL', ':documentation:renderQLPdf'
 
     from "${project( ':documentation' ).buildDir}/asciidoc/querylanguage"
     into "${buildDir}/documentation/querylanguage"

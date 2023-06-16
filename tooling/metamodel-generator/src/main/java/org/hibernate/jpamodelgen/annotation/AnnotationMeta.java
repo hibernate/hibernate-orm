@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
+import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.TypeUtils;
@@ -66,5 +67,5 @@ public abstract class AnnotationMeta implements Metamodel {
 		});
 	}
 
-	abstract void putMember(String name, NameMetaAttribute nameMetaAttribute);
+	abstract void putMember(String name, MetaAttribute nameMetaAttribute);
 }

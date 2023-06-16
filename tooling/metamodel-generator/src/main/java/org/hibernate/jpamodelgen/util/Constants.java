@@ -50,6 +50,8 @@ public final class Constants {
 	public static final String HIB_FILTER_DEF = "org.hibernate.annotations.FilterDef";
 	public static final String HIB_FILTER_DEFS = "org.hibernate.annotations.FilterDefs";
 
+	public static final String QUERY_METHOD = "org.hibernate.annotations.Hql";
+
 	public static final Map<String, String> COLLECTIONS = allCollectionTypes();
 
 	private static Map<String, String> allCollectionTypes() {

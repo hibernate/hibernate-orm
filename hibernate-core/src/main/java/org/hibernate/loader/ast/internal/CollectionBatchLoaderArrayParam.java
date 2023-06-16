@@ -67,8 +67,7 @@ public class CollectionBatchLoaderArrayParam
 		}
 
 		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
-		final Class<?> keyType = keyDescriptor.getJavaType().getJavaTypeClass();
-		final Class<?> arrayClass = Array.newInstance( keyType, 0 ).getClass();
+		final Class<?> arrayClass = keyDescriptor.getJavaType().getArrayType();
 
 		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
 				.getBasicTypeRegistry()

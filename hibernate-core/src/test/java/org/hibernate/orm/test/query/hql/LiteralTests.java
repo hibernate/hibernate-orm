@@ -9,6 +9,7 @@ package org.hibernate.orm.test.query.hql;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.animal.Classification;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -56,6 +57,27 @@ public class LiteralTests {
 					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes3), is( "deadbeef") );
 					byte[] bytes4 = (byte[]) session.createQuery( "select {0xde, 0xad, 0xbe, 0xef}" ).getSingleResult();
 					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes4), is( "deadbeef") );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-16737")
+	public void testUntypedIntegralLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select 1 from Human h where h.bigIntegerValue = 9876543210" ).getResultList();
+					session.createQuery( "select 1 from Human h where h.bigIntegerValue = 98765432109876543210" ).getResultList();
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-16737")
+	public void testUntypedDecimalLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select 1 from Human h where h.bigDecimalValue = 199999.99f" ).getResultList();
 				}
 		);
 	}

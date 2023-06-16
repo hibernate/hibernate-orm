@@ -1791,7 +1791,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmExpression<?> visitParameterOrIntegerLiteral(HqlParser.ParameterOrIntegerLiteralContext ctx) {
 		if ( ctx.INTEGER_LITERAL() != null ) {
-			return integerLiteral( ctx.INTEGER_LITERAL().getText() );
+			return integralLiteral( ctx.INTEGER_LITERAL().getText() );
 		}
 		else {
 			return (SqmExpression<?>) ctx.parameter().accept( this );
@@ -1801,10 +1801,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmExpression<?> visitParameterOrNumberLiteral(HqlParser.ParameterOrNumberLiteralContext ctx) {
 		if ( ctx.INTEGER_LITERAL() != null ) {
-			return integerLiteral( ctx.INTEGER_LITERAL().getText() );
+			return integralLiteral( ctx.INTEGER_LITERAL().getText() );
 		}
 		if ( ctx.FLOAT_LITERAL() != null ) {
-			return floatLiteral( ctx.FLOAT_LITERAL().getText() );
+			return numericLiteral( ctx.FLOAT_LITERAL().getText() );
 		}
 		if ( ctx.DOUBLE_LITERAL() != null ) {
 			return doubleLiteral( ctx.DOUBLE_LITERAL().getText() );
@@ -1816,9 +1816,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( firstChild instanceof TerminalNode ) {
 			switch ( ( (TerminalNode) firstChild ).getSymbol().getType() ) {
 				case HqlParser.INTEGER_LITERAL:
-					return integerLiteral( firstChild.getText() );
+					return integralLiteral( firstChild.getText() );
 				case HqlParser.FLOAT_LITERAL:
-					return floatLiteral( firstChild.getText() );
+					return numericLiteral( firstChild.getText() );
 				case HqlParser.DOUBLE_LITERAL:
 					return doubleLiteral( firstChild.getText() );
 				default:
@@ -2107,7 +2107,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		final SqmCrossJoin<T> join =
 				new SqmCrossJoin<>( entityDescriptor, visitVariable( parserJoin.variable() ), sqmRoot );
-		
+
 		processingStateStack.getCurrent().getPathRegistry().register( join );
 
 		// CROSS joins are always added to the root
@@ -3224,7 +3224,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		switch ( node.getSymbol().getType() ) {
 			case HqlParser.INTEGER_LITERAL:
-				return integerOrLongLiteral( text );
+				return integralLiteral( text );
 			case HqlParser.LONG_LITERAL:
 				return longLiteral( text );
 			case HqlParser.BIG_INTEGER_LITERAL:
@@ -3232,7 +3232,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.HEX_LITERAL:
 				return hexLiteral( text );
 			case HqlParser.FLOAT_LITERAL:
-				return floatLiteral( text );
+				return numericLiteral( text );
 			case HqlParser.DOUBLE_LITERAL:
 				return doubleLiteral( text );
 			case HqlParser.BIG_DECIMAL_LITERAL:
@@ -3281,7 +3281,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.JAVA_STRING_LITERAL:
 				return javaStringLiteral( node.getText() );
 			case HqlParser.INTEGER_LITERAL:
-				return integerOrLongLiteral( node.getText() );
+				return integralLiteral( node.getText() );
 			case HqlParser.LONG_LITERAL:
 				return longLiteral( node.getText() );
 			case HqlParser.BIG_INTEGER_LITERAL:
@@ -3289,7 +3289,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.HEX_LITERAL:
 				return hexLiteral( node.getText() );
 			case HqlParser.FLOAT_LITERAL:
-				return floatLiteral( node.getText() );
+				return numericLiteral( node.getText() );
 			case HqlParser.DOUBLE_LITERAL:
 				return doubleLiteral( node.getText() );
 			case HqlParser.BIG_DECIMAL_LITERAL:
@@ -3621,9 +3621,56 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-	private SqmLiteral<? extends Number> integerOrLongLiteral(String text) {
+	private SqmLiteral<? extends Number> integralLiteral(String text) {
+		final String integralText = text.replace( "_", "" );
+		final int decimalNumbers = integralText.length() - ( integralText.charAt( 0 ) == '-' ? 1 : 0 );
+		if ( decimalNumbers > 19 ) {
+			try {
+				final BigInteger value = new BigInteger( integralText );
+				return new SqmLiteral<>(
+						value,
+						resolveExpressibleTypeBasic( BigInteger.class ),
+						creationContext.getNodeBuilder()
+				);
+			}
+			catch (NumberFormatException e) {
+				throw new LiteralNumberFormatException(
+						"Unable to convert sqm literal [" + text + "] to BigInteger",
+						e
+				);
+			}
+		}
+		else if ( decimalNumbers > 10 ) {
+			try {
+				final Long value = Long.valueOf( integralText );
+				return new SqmLiteral<>(
+						value,
+						resolveExpressibleTypeBasic( Long.class ),
+						creationContext.getNodeBuilder()
+				);
+			}
+			catch (NumberFormatException e) {
+				try {
+					final BigInteger value = new BigInteger( integralText );
+					return new SqmLiteral<>(
+							value,
+							resolveExpressibleTypeBasic( BigInteger.class ),
+							creationContext.getNodeBuilder()
+					);
+				}
+				catch (NumberFormatException e2) {
+					final LiteralNumberFormatException exception = new LiteralNumberFormatException(
+							"Unable to convert sqm literal [" + text + "] to Long or BigInteger",
+							e
+					);
+					exception.addSuppressed( e );
+					exception.addSuppressed( e2 );
+					throw exception;
+				}
+			}
+		}
 		try {
-			final Integer value = Integer.valueOf( text.replace("_", "") );
+			final Integer value = Integer.valueOf( integralText );
 			return new SqmLiteral<>(
 					value,
 					resolveExpressibleTypeBasic( Integer.class ),
@@ -3631,9 +3678,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 		catch (NumberFormatException e) {
-			// This is at least what 5.x did
 			try {
-				final Long value = Long.valueOf( text );
+				final Long value = Long.valueOf( integralText );
 				return new SqmLiteral<>(
 						value,
 						resolveExpressibleTypeBasic( Long.class ),
@@ -3641,29 +3687,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 			catch (NumberFormatException e2) {
-				e.addSuppressed( e2 );
-				throw new LiteralNumberFormatException(
-						"Unable to convert sqm literal [" + text + "] to Integer",
-						e
-				);
+				try {
+					final BigInteger value = new BigInteger( integralText );
+					return new SqmLiteral<>(
+							value,
+							resolveExpressibleTypeBasic( BigInteger.class ),
+							creationContext.getNodeBuilder()
+					);
+				}
+				catch (NumberFormatException e3) {
+					final LiteralNumberFormatException exception = new LiteralNumberFormatException(
+							"Unable to convert sqm literal [" + text + "] to Integer, Long or BigInteger",
+							e
+					);
+					exception.addSuppressed( e );
+					exception.addSuppressed( e2 );
+					exception.addSuppressed( e3 );
+					throw exception;
+				}
 			}
-		}
-	}
-
-	private SqmLiteral<Integer> integerLiteral(String text) {
-		try {
-			final Integer value = Integer.valueOf( text.replace("_", "") );
-			return new SqmLiteral<>(
-					value,
-					resolveExpressibleTypeBasic( Integer.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + text + "] to Integer",
-					e
-			);
 		}
 	}
 
@@ -3738,19 +3780,40 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
-	private SqmLiteral<Float> floatLiteral(String text) {
-		try {
-			return new SqmLiteral<>(
-					Float.valueOf( text ),
-					resolveExpressibleTypeBasic( Float.class ),
-					creationContext.getNodeBuilder()
-			);
+	private SqmLiteral<? extends Number> numericLiteral(String text) {
+		final String numericText = text.replace( "_", "" );
+		final char lastChar = text.charAt( text.length() - 1 );
+		if ( lastChar == 'f' || lastChar == 'F' ) {
+			try {
+				return new SqmLiteral<>(
+						Float.valueOf( numericText ),
+						resolveExpressibleTypeBasic( Float.class ),
+						creationContext.getNodeBuilder()
+				);
+			}
+			catch (NumberFormatException e) {
+				throw new LiteralNumberFormatException(
+						"Unable to convert sqm literal [" + text + "] to Float",
+						e
+				);
+			}
 		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + text + "] to Float",
-					e
-			);
+		else {
+			// Treat numeric literals without a type suffix like BigDecimal
+			// according to the JPA spec 4.6.1 and SQL spec 5.3
+			try {
+				return new SqmLiteral<>(
+						new BigDecimal( numericText ),
+						resolveExpressibleTypeBasic( BigDecimal.class ),
+						creationContext.getNodeBuilder()
+				);
+			}
+			catch (NumberFormatException e) {
+				throw new LiteralNumberFormatException(
+						"Unable to convert sqm literal [" + text + "] to BigDecimal",
+						e
+				);
+			}
 		}
 	}
 

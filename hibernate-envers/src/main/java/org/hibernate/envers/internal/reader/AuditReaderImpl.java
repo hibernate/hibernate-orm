@@ -145,6 +145,12 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 	}
 
 	@Override
+	public <T> T find(Class<T> cls, Object primaryKey, LocalDateTime datetime)
+			throws IllegalArgumentException, NotAuditedException, RevisionDoesNotExistException, IllegalStateException {
+		return find( cls, primaryKey, getRevisionNumberForDate( datetime ) );
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public List<Number> getRevisions(Class<?> cls, String entityName, Object primaryKey)
 			throws IllegalArgumentException, NotAuditedException, IllegalStateException {

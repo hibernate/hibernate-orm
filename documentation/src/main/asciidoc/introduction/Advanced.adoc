@@ -118,7 +118,61 @@ This is completely by design and is not in any way a bug.
 
 More than one filter may be enabled in a given session.
 
-A closely-related problem is multi-tenancy.
+:envers: https://hibernate.org/orm/envers/
+:envers-doc: {userGuideBase}#envers
+
+We've mentioned that a filter can be used to implement versioning, and to provide _historical_ views of the data.
+Being such a general-purpose construct, filters provide a lot of flexibility here.
+But if you're after a more focused/opinionated solution to this problem, you should definitely check out {envers}[Envers].
+
+[[envers]]
+.Using Envers for auditing historical data
+****
+Envers is an add-on to Hibernate ORM which keeps a historical record of each versioned entity in a separate _audit table_, and allows past revisions of the data to be viewed and queried.
+A full introduction to Envers would require a whole chapter, so we'll just give you a quick taste here.
+
+First, we must mark an entity as versioned, using the `@Audited` annotation:
+[source,java]
+----
+@Audited @Entity
+@Table(name="CurrentDocument")
+@AuditTable("DocumentRevision")
+class Document { ... }
+----
+The `AuditReader` interface exposes operations for retrieving and querying historical revisions.
+It's really easy to get hold of one of these:
+[source,java]
+----
+AuditReader reader = AuditReaderFactory.get(entityManager);
+----
+Envers tracks revisions of the data via a global _revision number_.
+We may easily find the revision number which was current at a given instant:
+[source,java]
+----
+Number revision = reader.getRevisionNumberForDate(datetime);
+----
+We can use the revision number to ask for the version of our entity associated with the given revision number:
+[source,java]
+----
+Document doc = reader.find(Document.class, id, revision);
+----
+Alternatively, we can directly ask for the version which was current at a given instant:
+[source,java]
+----
+Document doc = reader.find(Document.class, id, datetime);
+----
+We can even execute queries to obtain lists of entities current at the given revision number:
+[source,java]
+----
+List documents =
+        reader.createQuery()
+            .forEntitiesAtRevision(Document.class, revision)
+            .getResultList();
+----
+For much more information, see {envers-doc}[the User Guide].
+****
+
+Another closely-related problem is multi-tenancy.
 
 [[multitenancy]]
 === Multi-tenancy

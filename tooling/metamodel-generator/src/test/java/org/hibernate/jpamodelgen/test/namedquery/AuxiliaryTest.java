@@ -19,9 +19,10 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfNameF
  */
 public class AuxiliaryTest extends CompilationTest {
 	@Test
-	@WithClasses({ Book.class, Main.class })
+	@WithClasses({ Book.class, Main.class, Dao.class })
 	public void testGeneratedAnnotationNotGenerated() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Main.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );
 		assertMetamodelClassGeneratedFor( Main.class );
 		assertPresenceOfNameFieldInMetamodelFor(

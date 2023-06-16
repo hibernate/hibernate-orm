@@ -39,6 +39,9 @@ import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.jpamodelgen.util.Constants.QUERY_METHOD;
+import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
+
 /**
  * Main annotation processor.
  *
@@ -137,6 +140,16 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class " + element.toString() );
 				handleRootElementAuxiliaryAnnotationMirrors( element );
 			}
+			else if ( element instanceof TypeElement ) {
+				for ( Element enclosedElement : element.getEnclosedElements() ) {
+					if ( containsAnnotation( enclosedElement, QUERY_METHOD ) ) {
+						AnnotationMetaEntity metaEntity =
+								AnnotationMetaEntity.create( (TypeElement) element, context, false );
+						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+						break;
+					}
+				}
+			}
 		}
 
 		createMetaModelClasses();
@@ -228,7 +241,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	private boolean isJPAEntity(Element element) {
-		return TypeUtils.containsAnnotation(
+		return containsAnnotation(
 				element,
 				Constants.ENTITY,
 				Constants.MAPPED_SUPERCLASS,
@@ -237,7 +250,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	private boolean hasAuxiliaryAnnotations(Element element) {
-		return TypeUtils.containsAnnotation(
+		return containsAnnotation(
 				element,
 				Constants.NAMED_QUERY,
 				Constants.NAMED_QUERIES,
@@ -275,8 +288,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 			boolean requiresLazyMemberInitialization = false;
 			AnnotationMetaEntity metaEntity;
-			if ( TypeUtils.containsAnnotation( element, Constants.EMBEDDABLE ) ||
-					TypeUtils.containsAnnotation( element, Constants.MAPPED_SUPERCLASS ) ) {
+			if ( containsAnnotation( element, Constants.EMBEDDABLE ) ||
+					containsAnnotation( element, Constants.MAPPED_SUPERCLASS ) ) {
 				requiresLazyMemberInitialization = true;
 			}
 

@@ -46,6 +46,7 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 		return new AnnotationMetaPackage( element, context );
 	}
 
+	@Override
 	public final Context getContext() {
 		return context;
 	}
@@ -121,7 +122,7 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	}
 
 	@Override
-	void putMember(String name, NameMetaAttribute nameMetaAttribute) {
+	void putMember(String name, MetaAttribute nameMetaAttribute) {
 		members.put( name, nameMetaAttribute );
 	}
 }

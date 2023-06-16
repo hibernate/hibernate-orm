@@ -21,6 +21,8 @@ ext {
 dependencies {
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb
+    implementation libs.antlrRuntime
+    implementation project( ':hibernate-core' )
 
     xjc jakartaLibs.xjc
     xjc jakartaLibs.jaxb

@@ -627,4 +627,9 @@ public class XmlMetaEntity implements Metamodel {
 			return ElementKind.METHOD;
 		}
 	}
+
+	@Override
+	public Context getContext() {
+		return context;
+	}
 }

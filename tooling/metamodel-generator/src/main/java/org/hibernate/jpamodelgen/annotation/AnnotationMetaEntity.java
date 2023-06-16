@@ -7,19 +7,36 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
+import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.BailErrorStrategy;
+import org.antlr.v4.runtime.DefaultErrorStrategy;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
+import org.antlr.v4.runtime.atn.PredictionMode;
+import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.grammars.hql.HqlLexer;
+import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.model.ImportContext;
@@ -30,6 +47,14 @@ import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
+import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
+
+import static java.util.stream.Collectors.toList;
+import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
+import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecifiedAccessType;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
+import static org.hibernate.query.hql.internal.StandardHqlTranslator.prettifyAntlrError;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -37,6 +62,7 @@ import org.hibernate.jpamodelgen.util.TypeUtils;
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
+ * @author Gavin King
  */
 public class AnnotationMetaEntity extends AnnotationMeta {
 
@@ -86,6 +112,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return entityAccessTypeInfo;
 	}
 
+	@Override
 	public final Context getContext() {
 		return context;
 	}
@@ -168,7 +195,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	@Override
-	void putMember(String name, NameMetaAttribute nameMetaAttribute) {
+	void putMember(String name, MetaAttribute nameMetaAttribute) {
 		members.put( name, nameMetaAttribute );
 	}
 
@@ -194,19 +221,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
 		List<Element> gettersAndSettersOfClass = new ArrayList<>();
+		List<ExecutableElement> queryMethods = new ArrayList<>();
 
 		for ( Element rawMethodOfClass: methodsOfClass ) {
 			if ( isGetterOrSetter( rawMethodOfClass ) ) {
 				gettersAndSettersOfClass.add( rawMethodOfClass );
+			}
+			else if ( rawMethodOfClass instanceof ExecutableElement
+					&& containsAnnotation( rawMethodOfClass, Constants.QUERY_METHOD ) ) {
+				queryMethods.add( (ExecutableElement) rawMethodOfClass );
 			}
 		}
 		addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 
 		addAuxiliaryMembers();
 
+		addQueryMethods( queryMethods );
+
 		initialized = true;
 	}
-
 
 	/**
 	 * Check if method respects Java Bean conventions for getter and setters.
@@ -221,31 +254,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		List<? extends TypeMirror> methodParameterTypes = methodType.getParameterTypes();
 		TypeMirror returnType = methodType.getReturnType();
 
-		if(
-			methodSimpleName.startsWith("set") &&
-			methodParameterTypes.size() == 1 &&
-			"void".equalsIgnoreCase( returnType.toString() ) ) {
-			return true;
-		}
-		else if(
-			( methodSimpleName.startsWith("get") || methodSimpleName.startsWith("is") ) &&
-			methodParameterTypes.isEmpty() &&
-			!"void".equalsIgnoreCase( returnType.toString() ) ) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return isSetter(methodSimpleName, methodParameterTypes, returnType)
+			|| isGetter(methodSimpleName, methodParameterTypes, returnType);
+	}
+
+	private static boolean isGetter(String methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
+		return (methodSimpleName.startsWith("get") || methodSimpleName.startsWith("is"))
+			&& methodParameterTypes.isEmpty()
+			&& !"void".equalsIgnoreCase(returnType.toString());
+	}
+
+	private static boolean isSetter(String methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
+		return methodSimpleName.startsWith("set")
+			&& methodParameterTypes.size() == 1
+			&& "void".equalsIgnoreCase(returnType.toString());
 	}
 
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {
 		for ( Element memberOfClass : membersOfClass ) {
-			AccessType forcedAccessType = TypeUtils.determineAnnotationSpecifiedAccessType( memberOfClass );
+			AccessType forcedAccessType = determineAnnotationSpecifiedAccessType( memberOfClass );
 			if ( entityAccessTypeInfo.getAccessType() != membersKind && forcedAccessType == null ) {
 				continue;
 			}
 
-			if ( TypeUtils.containsAnnotation( memberOfClass, Constants.TRANSIENT )
+			if ( containsAnnotation( memberOfClass, Constants.TRANSIENT )
 					|| memberOfClass.getModifiers().contains( Modifier.TRANSIENT )
 					|| memberOfClass.getModifiers().contains( Modifier.STATIC ) ) {
 				continue;
@@ -259,4 +291,159 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	private void addQueryMethods(List<ExecutableElement> queryMethods) {
+		for ( ExecutableElement method : queryMethods) {
+			addQueryMethod(method);
+		}
+	}
+
+	private void addQueryMethod(ExecutableElement method) {
+		final String methodName = method.getSimpleName().toString();
+		final TypeMirror returnType = method.getReturnType();
+		if ( returnType instanceof DeclaredType ) {
+			final DeclaredType declaredType = (DeclaredType) returnType;
+			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+			if ( typeArguments.size() == 0 ) {
+				if ( containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
+					addQueryMethod(method, methodName, declaredType.toString(), null);
+				}
+				else {
+					final String containerTypeName = declaredType.toString();
+					if (isLegalRawResultType(containerTypeName)) {
+						addQueryMethod(method, methodName, null, containerTypeName);
+					}
+					else {
+						displayError(method, "incorrect return type '" + containerTypeName + "'");
+					}
+				}
+			}
+			else if ( typeArguments.size() == 1 ) {
+				final String containerTypeName = declaredType.asElement().toString();
+				final String returnTypeName = typeArguments.get(0).toString();
+				if (isLegalGenericResultType(containerTypeName)) {
+					addQueryMethod(method, methodName, returnTypeName, containerTypeName);
+				}
+				else {
+					displayError(method, "incorrect return type '" + containerTypeName + "'");
+				}
+			}
+			else {
+				displayError(method, "incorrect return type '" + declaredType + "'");
+			}
+		}
+	}
+
+	private static boolean isLegalRawResultType(String containerTypeName) {
+		return containerTypeName.equals("java.util.List")
+			|| containerTypeName.equals("jakarta.persistence.Query")
+			|| containerTypeName.equals("org.hibernate.query.Query");
+	}
+
+	private static boolean isLegalGenericResultType(String containerTypeName) {
+		return containerTypeName.equals("java.util.List")
+			|| containerTypeName.equals("jakarta.persistence.TypedQuery")
+			|| containerTypeName.equals("org.hibernate.query.Query");
+	}
+
+	private void addQueryMethod(
+			ExecutableElement method,
+			String methodName,
+			@Nullable String returnTypeName, @Nullable String containerTypeName) {
+		final AnnotationMirror mirror = getAnnotationMirror(method, Constants.QUERY_METHOD );
+		if ( mirror != null ) {
+			final Object queryString = getAnnotationValue( mirror, "value" );
+			if ( queryString instanceof String ) {
+				final List<String> paramNames =
+						method.getParameters().stream()
+								.map(param -> param.getSimpleName().toString())
+								.collect(toList());
+				final List<String> paramTypes =
+						method.getParameters().stream()
+								.map(param -> param.asType().toString())
+								.collect(toList());
+				final String hql = (String) queryString;
+				final QueryMethod attribute =
+						new QueryMethod(
+								this,
+								methodName,
+								hql,
+								returnTypeName,
+								containerTypeName,
+								paramNames,
+								paramTypes
+						);
+				putMember( attribute.getPropertyName(), attribute );
+
+				checkParameters(method, paramNames, mirror, hql);
+				checkHqlSyntax(method, mirror, hql);
+			}
+		}
+	}
+
+	private void checkParameters(ExecutableElement method, List<String> paramNames, AnnotationMirror mirror, String hql) {
+		for (int i = 1; i <= paramNames.size(); i++) {
+			final String param = paramNames.get(i-1);
+			if ( !hql.contains(":" + param) && !hql.contains("?" + i) ) {
+				displayError(method, mirror, "missing query parameter for '" + param
+						+ "' (no parameter named :" + param + " or ?" + i + ")");
+			}
+		}
+	}
+
+	private void checkHqlSyntax(ExecutableElement method, AnnotationMirror mirror, String queryString) {
+		ANTLRErrorListener errorListener = new ANTLRErrorListener() {
+			@Override
+			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String message, RecognitionException e) {
+				displayError(method, mirror, "illegal HQL syntax - "
+						+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, false ));
+			}
+
+			@Override
+			public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
+			}
+
+			@Override
+			public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
+			}
+
+			@Override
+			public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
+			}
+		};
+
+		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( queryString );
+		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( queryString, hqlLexer );
+		hqlLexer.addErrorListener( errorListener );
+		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
+		hqlParser.removeErrorListeners();
+		hqlParser.addErrorListener( errorListener );
+		hqlParser.setErrorHandler( new BailErrorStrategy() );
+
+		try {
+			hqlParser.statement();
+		}
+		catch ( ParseCancellationException e) {
+			// reset the input token stream and parser state
+			hqlLexer.reset();
+			hqlParser.reset();
+
+			// fall back to LL(k)-based parsing
+			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
+			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
+
+			hqlParser.statement();
+		}
+	}
+
+	private void displayError(ExecutableElement method, String message) {
+		context.getProcessingEnvironment().getMessager()
+				.printMessage( Diagnostic.Kind.ERROR, message, method );
+	}
+	private void displayError(ExecutableElement method, AnnotationMirror mirror, String message) {
+		context.getProcessingEnvironment().getMessager()
+				.printMessage( Diagnostic.Kind.ERROR, message, method, mirror,
+						mirror.getElementValues().entrySet().stream()
+								.filter( entry -> entry.getKey().getSimpleName().toString().equals("value") )
+								.map(Map.Entry::getValue).findAny().orElseThrow() );
+	}
 }

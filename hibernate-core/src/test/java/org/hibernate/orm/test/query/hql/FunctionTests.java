@@ -475,7 +475,7 @@ public class FunctionTests {
 							// Fetching the result as float would "hide" the error as that would do some rounding
 							Matchers.closeTo( 9.0d, ERROR )
 					);
-					assertThat( session.createQuery("select round(32.12345,2)", Float.class).getSingleResult(), is(32.12f) );
+					assertThat( session.createQuery("select round(32.12345f,2)", Float.class).getSingleResult(), is(32.12f) );
 					assertThat( session.createQuery("select mod(3,2)", Integer.class).getSingleResult(), is(1) );
 					assertThat( session.createQuery("select 3%2", Integer.class).getSingleResult(), is(1) );
 					assertThat( session.createQuery("select sqrt(9.0)", Double.class).getSingleResult(), is(3.0d) );

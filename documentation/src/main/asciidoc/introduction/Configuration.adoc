@@ -117,6 +117,7 @@ and `com.github.ben-manes.caffeine:jcache`
 `com.fasterxml.jackson.core:jackson-databind` +
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
+| <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your

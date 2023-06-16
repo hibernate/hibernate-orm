@@ -16,8 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.results.internal.ResultsHelper;
-
-import java.lang.reflect.Array;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
@@ -128,15 +127,14 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
 		final int length = getDomainBatchSize();
-		final Class<?> keyType = getLoadable().getKeyDescriptor().getJavaType().getJavaTypeClass();
-		final Object[] keysToInitialize = (Object[]) Array.newInstance( keyType, length );
-		session.getPersistenceContextInternal().getBatchFetchQueue()
-				.collectBatchLoadableCollectionKeys(
-						length,
-						(index, key) -> keysToInitialize[index] = key,
-						keyBeingLoaded,
-						getLoadable()
-				);
+		final JavaType<?> keyJavaType = getLoadable().getKeyDescriptor().getJavaType();
+		final Object[] keysToInitialize = keyJavaType.createTypedArray( length );
+		session.getPersistenceContextInternal().getBatchFetchQueue().collectBatchLoadableCollectionKeys(
+				length,
+				(index, key) -> keysToInitialize[index] = key,
+				keyBeingLoaded,
+				getLoadable()
+		);
 		// now trim down the array to the number of keys we found
 		return trimIdBatch( length, keysToInitialize );
 	}

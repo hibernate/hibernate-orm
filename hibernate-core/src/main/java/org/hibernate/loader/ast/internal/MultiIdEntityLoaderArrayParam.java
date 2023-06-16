@@ -6,9 +6,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -394,6 +392,6 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	private <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
-		return (X[]) Array.newInstance( getIdentifierMapping().getJavaType().getJavaTypeClass(), length );
+		return (X[]) getIdentifierMapping().getJavaType().createTypedArray( length );
 	}
 }

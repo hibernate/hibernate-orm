@@ -6,8 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.lang.reflect.Array;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -163,17 +161,6 @@ public class LoaderHelper {
 			}
 		}
 		return typedArray;
-	}
-
-	/**
-	 * Creates a typed array, as opposed to a generic {@code Object[]} that holds the typed values
-	 *
-	 * @param elementClass The type of the array elements.  See {@link Class#getComponentType()}
-	 * @param length The length to which the array should be created.  This is usually zero for Hibernate uses
-	 */
-	public static <X> X[] createTypedArray(Class<X> elementClass, @SuppressWarnings("SameParameterValue") int length) {
-		//noinspection unchecked
-		return (X[]) Array.newInstance( elementClass, length );
 	}
 
 	/**

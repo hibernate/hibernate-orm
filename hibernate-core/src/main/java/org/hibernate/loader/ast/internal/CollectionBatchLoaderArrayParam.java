@@ -125,22 +125,20 @@ public class CollectionBatchLoaderArrayParam
 				keyDescriptor.getSingleJdbcMapping().getJdbcJavaType().getJavaTypeClass(),
 				length
 		);
-		final Object[] embeddedKeys = (Object[]) Array.newInstance(
-				keyDescriptor.getJavaType().getJavaTypeClass(),
-				length
+		final Object[] embeddedKeys = keyDescriptor.getJavaType().createTypedArray( length );
+		session.getPersistenceContextInternal().getBatchFetchQueue().collectBatchLoadableCollectionKeys(
+				length,
+				(index, key) -> keyDescriptor.forEachJdbcValue(
+						key,
+						(i, value, jdbcMapping) -> {
+								keysToInitialize[index] = value;
+								embeddedKeys[index] = key;
+						},
+						session
+				),
+				keyBeingLoaded,
+				getLoadable()
 		);
-		session.getPersistenceContextInternal().getBatchFetchQueue()
-				.collectBatchLoadableCollectionKeys(
-						length,
-						(index, key) ->
-								keyDescriptor.forEachJdbcValue( key, (i, value, jdbcMapping) -> {
-									keysToInitialize[index] = value;
-									embeddedKeys[index] = key;
-								}, session )
-						,
-						keyBeingLoaded,
-						getLoadable()
-				);
 		// now trim down the array to the number of keys we found
 		final Object[] keys = trimIdBatch( length, keysToInitialize );
 
@@ -214,7 +212,7 @@ public class CollectionBatchLoaderArrayParam
 		if( keyDescriptor.isEmbedded()){
 			assert keyDescriptor.getJdbcTypeCount() == 1;
 			final int length = getDomainBatchSize();
-			final Object[] keysToInitialize = (Object[]) Array.newInstance( keyDescriptor.getSingleJdbcMapping().getJdbcJavaType().getJavaTypeClass(), length );
+			final Object[] keysToInitialize = keyDescriptor.getJavaType().createTypedArray( length );
 			session.getPersistenceContextInternal().getBatchFetchQueue()
 					.collectBatchLoadableCollectionKeys(
 							length,

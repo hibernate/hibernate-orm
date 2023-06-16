@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -25,6 +24,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.engine.internal.BatchFetchQueueHelper.removeBatchLoadableEntityKey;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
@@ -110,8 +110,8 @@ public class EntityBatchLoaderArrayParam<T>
 
 	protected Object[] resolveIdsToInitialize(Object pkValue, SharedSessionContractImplementor session) {
 		//TODO: should this really be different to EntityBatchLoaderInPredicate impl?
-		final Class<?> idType = identifierMapping.getJavaType().getJavaTypeClass();
-		final Object[] idsToLoad = (Object[]) Array.newInstance( idType, domainBatchSize );
+		final JavaType<?> idJavaType = identifierMapping.getJavaType();
+		final Object[] idsToLoad = idJavaType.createTypedArray( domainBatchSize );
 		session.getPersistenceContextInternal().getBatchFetchQueue()
 				.collectBatchLoadableEntityIds(
 						domainBatchSize,

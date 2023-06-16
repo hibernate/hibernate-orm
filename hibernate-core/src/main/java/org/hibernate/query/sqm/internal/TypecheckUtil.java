@@ -266,8 +266,8 @@ public class TypecheckUtil {
 					// (this list might need to be extended in future)
 					|| lhsJdbcType.isStringLike() && rhsJdbcType.isStringLike()
 					|| lhsJdbcType.isInteger() && rhsJdbcType.isInteger()
-					|| lhsJdbcType.isFloat() && rhsJdbcType.isFloat()
-					|| lhsJdbcType.isFloat() && rhsJdbcType.isInteger() ) {
+					|| lhsJdbcType.isFloat() && rhsJdbcType.isNumber()
+					|| lhsJdbcType.isDecimal() && rhsJdbcType.isNumber() ) {
 				return true;
 			}
 		}

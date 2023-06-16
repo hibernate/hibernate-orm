@@ -121,7 +121,7 @@ public class IntegralTimestampaddFunction
 
 	private TemporalUnit bestTemporalUnit(Expression magnitude, DurationUnit field) {
 		final JdbcType jdbcType = magnitude.getExpressionType().getSingleJdbcMapping().getJdbcType();
-		if ( jdbcType.isFloat() ) {
+		if ( jdbcType.isFloat() || jdbcType.isDecimal() ) {
 			// We need to multiply the magnitude by the conversion factor and cast to int
 			// Use second by default and nanosecond if we encounter fractional seconds
 			return field.getUnit() == TemporalUnit.SECOND

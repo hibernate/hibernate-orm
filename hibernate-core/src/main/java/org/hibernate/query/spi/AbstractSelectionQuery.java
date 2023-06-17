@@ -71,6 +71,7 @@ import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -138,51 +139,51 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	private static TupleElement<?>[] buildTupleElementArray(List<SqmSelection<?>> selections) {
-		final TupleElement<?>[] elements;
 		if ( selections.size() == 1 ) {
 			final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
 			if ( selectableNode instanceof CompoundSelection<?> ) {
 				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
-				elements  = new TupleElement<?>[ selectionItems.size() ];
+				final TupleElement<?>[] elements = new TupleElement<?>[ selectionItems.size() ];
 				for ( int i = 0; i < selectionItems.size(); i++ ) {
 					elements[i] = selectionItems.get( i );
 				}
+				return elements;
 			}
 			else {
-				elements = new TupleElement<?>[] { selectableNode };
+				return new TupleElement<?>[] { selectableNode };
 			}
 		}
 		else {
-			elements = new TupleElement<?>[ selections.size() ];
+			final TupleElement<?>[] elements = new TupleElement<?>[ selections.size() ];
 			for ( int i = 0; i < selections.size(); i++ ) {
-				elements[i] = selections.get(i).getSelectableNode();
+				elements[i] = selections.get( i ).getSelectableNode();
 			}
+			return elements;
 		}
-		return elements;
 	}
 
 	private static String[] buildTupleAliasArray(List<SqmSelection<?>> selections) {
-		final String[] elements;
 		if ( selections.size() == 1 ) {
 			final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
 			if ( selectableNode instanceof CompoundSelection<?> ) {
 				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
-				elements  = new String[ selectionItems.size() ];
+				final String[] elements  = new String[ selectionItems.size() ];
 				for ( int i = 0; i < selectionItems.size(); i++ ) {
 					elements[i] = selectionItems.get( i ).getAlias();
 				}
+				return elements;
 			}
 			else {
-				elements = new String[] { selectableNode.getAlias() };
+				return new String[] { selectableNode.getAlias() };
 			}
 		}
 		else {
-			elements = new String[ selections.size() ];
+			final String[] elements = new String[ selections.size() ];
 			for ( int i = 0; i < selections.size(); i++ ) {
-				elements[i] = selections.get(i).getAlias();
+				elements[i] = selections.get( i ).getAlias();
 			}
+			return elements;
 		}
-		return elements;
 	}
 
 	protected void applyOptions(NamedSqmQueryMemento memento) {
@@ -197,14 +198,13 @@ public abstract class AbstractSelectionQuery<R>
 		}
 
 		if ( memento.getParameterTypes() != null ) {
+			final BasicTypeRegistry basicTypeRegistry =
+					getSessionFactory().getTypeConfiguration().getBasicTypeRegistry();
 			for ( Map.Entry<String, String> entry : memento.getParameterTypes().entrySet() ) {
-				final QueryParameterImplementor<?> parameter =
-						getParameterMetadata().getQueryParameter( entry.getKey() );
 				final BasicType<?> type =
-						getSessionFactory().getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.getRegisteredType( entry.getValue() );
-				parameter.applyAnticipatedType( type );
+						basicTypeRegistry.getRegisteredType( entry.getValue() );
+				getParameterMetadata()
+						.getQueryParameter( entry.getKey() ).applyAnticipatedType( type );
 			}
 		}
 	}
@@ -270,11 +270,10 @@ public abstract class AbstractSelectionQuery<R>
 				}
 				// if there is a single root, use that as the selection
 				if ( sqmRoots.size() == 1 ) {
-					final SqmRoot<?> sqmRoot = sqmRoots.get( 0 );
-					sqmQuerySpec.getSelectClause().add( sqmRoot, null );
+					sqmQuerySpec.getSelectClause().add( sqmRoots.get( 0 ), null );
 				}
 				else {
-					throw new IllegalArgumentException(  );
+					throw new IllegalArgumentException( "Criteria has multiple query roots" );
 				}
 			}
 
@@ -313,11 +312,7 @@ public abstract class AbstractSelectionQuery<R>
 					}
 				}
 
-				final boolean jpaQueryComplianceEnabled =
-						sessionFactory.getSessionFactoryOptions()
-								.getJpaCompliance()
-								.isJpaQueryComplianceEnabled();
-				if ( !jpaQueryComplianceEnabled ) {
+				if ( !sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
 					verifyResultType( expectedResultClass, sqmSelection.getNodeType() );
 				}
 			}
@@ -347,16 +342,15 @@ public abstract class AbstractSelectionQuery<R>
 		final Class<?> javaTypeClass = expressibleJavaType.getJavaTypeClass();
 		if ( !resultClass.isAssignableFrom( javaTypeClass ) ) {
 			if ( expressibleJavaType instanceof PrimitiveJavaType ) {
-				if ( ( (PrimitiveJavaType<?>) expressibleJavaType ).getPrimitiveClass() != resultClass ) {
+				final PrimitiveJavaType<?> javaType = (PrimitiveJavaType<?>) expressibleJavaType;
+				if ( javaType.getPrimitiveClass() != resultClass ) {
 					throwQueryTypeMismatchException( resultClass, sqmExpressible );
 				}
 			}
-			else if ( isMatchingDateType( javaTypeClass, resultClass, sqmExpressible ) ) {
-				// special case, we are good
-			}
-			else {
+			else if ( !isMatchingDateType( javaTypeClass, resultClass, sqmExpressible ) ) {
 				throwQueryTypeMismatchException( resultClass, sqmExpressible );
 			}
+			// else special case, we are good
 		}
 	}
 
@@ -375,7 +369,8 @@ public abstract class AbstractSelectionQuery<R>
 			return ( (BasicDomainType<?>) sqmExpressible).getJdbcType();
 		}
 		else if ( sqmExpressible instanceof SqmPathSource<?> ) {
-			final DomainType<?> domainType = ( (SqmPathSource<?>) sqmExpressible).getSqmPathType();
+			final SqmPathSource<?> pathSource = (SqmPathSource<?>) sqmExpressible;
+			final DomainType<?> domainType = pathSource.getSqmPathType();
 			if ( domainType instanceof BasicDomainType<?> ) {
 				return ( (BasicDomainType<?>) domainType ).getJdbcType();
 			}

@@ -1500,7 +1500,20 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
+	@Override
+	public Query<R> ascending(SingularAttribute<R, ?> attribute) {
+		throw new UnsupportedOperationException("Not yet supported for native queries");
+	}
 
+	@Override
+	public Query<R> descending(SingularAttribute<R, ?> attribute) {
+		throw new UnsupportedOperationException("Not yet supported for native queries");
+	}
+
+	@Override
+	public Query<R> unordered() {
+		return this;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Hints

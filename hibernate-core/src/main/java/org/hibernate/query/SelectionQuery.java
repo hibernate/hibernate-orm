@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -469,6 +470,15 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
 	 */
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
+
+	@Incubating
+	SelectionQuery<R> ascending(SingularAttribute<R, ?> attribute);
+
+	@Incubating
+	SelectionQuery<R> descending(SingularAttribute<R, ?> attribute);
+
+	@Incubating
+	SelectionQuery<R> unordered();
 
 	/**
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query

@@ -22,6 +22,8 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -52,12 +54,16 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -75,7 +81,6 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
-import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
 
 /**
  * @author Steve Ebersole
@@ -546,6 +551,37 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R> implemen
 				: super.isQueryPlanCacheable();
 	}
 
+	@Override
+	public SqmSelectionQuery<R> ascending(SingularAttribute<R, ?> attribute) {
+		addOrdering( attribute, SortOrder.ASCENDING );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> descending(SingularAttribute<R, ?> attribute) {
+		addOrdering( attribute, SortOrder.DESCENDING );
+		return this;
+	}
+
+	public SqmSelectionQuery<R> addOrdering(SingularAttribute<R, ?> attribute, SortOrder order) {
+		List<Order> orders = new ArrayList<>( sqm.getOrderList() );
+		sqm.getQuerySpec().getRoots().forEach( root -> {
+			@SuppressWarnings("unchecked")
+			SqmRoot<R> singleRoot = (SqmRoot<R>) root;
+			SqmPath<?> ref = singleRoot.get( attribute );
+			NodeBuilder nodeBuilder = sqm.nodeBuilder();
+			orders.add( order==SortOrder.ASCENDING ? nodeBuilder.asc(ref) : nodeBuilder.desc(ref) );
+
+		} );
+		sqm.orderBy( orders );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> unordered() {
+		sqm.getQueryPart().setOrderByClause( null );
+		return this;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// hints

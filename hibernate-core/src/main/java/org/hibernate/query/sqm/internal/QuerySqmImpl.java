@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -74,6 +76,8 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -995,6 +999,36 @@ public class QuerySqmImpl<R>
 		return getJpaFlushMode();
 	}
 
+	@Override
+	public SqmQueryImplementor<R> addOrdering(SingularAttribute<R, ?> attribute, SortOrder order) {
+		if ( sqm instanceof SqmSelectStatement ) {
+			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
+			List<Order> orders = new ArrayList<>( select.getOrderList() );
+			select.getQuerySpec().getRoots().forEach( root -> {
+				@SuppressWarnings("unchecked")
+				SqmRoot<R> singleRoot = (SqmRoot<R>) root;
+				SqmPath<?> ref = singleRoot.get( attribute );
+				NodeBuilder nodeBuilder = select.nodeBuilder();
+				orders.add( order==SortOrder.ASCENDING ? nodeBuilder.asc(ref) : nodeBuilder.desc(ref) );
+
+			} );
+			select.orderBy( orders );
+			return this;
+		}
+		else {
+			throw new IllegalStateException( "Not a select query" );
+		}
+	}
+
+	@Override
+	public SqmQueryImplementor<R> unordered() {
+		if ( sqm instanceof SqmSelectStatement ) {
+			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
+			select.getQueryPart().setOrderByClause( null );
+
+		}
+		return this;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// hints

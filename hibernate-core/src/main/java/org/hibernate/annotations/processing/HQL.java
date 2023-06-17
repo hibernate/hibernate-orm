@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.annotations;
+package org.hibernate.annotations.processing;
 
 import org.hibernate.Incubating;
 
@@ -15,29 +15,27 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.CLASS;
 
 /**
- * Identifies a method of an abstract class or interface
- * as defining the signature of a method which is used to
- * execute the given {@linkplain #value SQL query}, and is
- * generated automatically by the Hibernate Metamodel
- * Generator.
+ * Identifies a method of an abstract class or interface as defining
+ * the signature of a method which is used to execute the given
+ * {@linkplain #value HQL query}, and is generated automatically by
+ * the Hibernate Metamodel Generator.
  * <p>
  * For example:
  * <pre>
  * public interface Books {
- *     &#64;Sql("select * from Book where isbn = :isbn")
+ *     &#64;HQL("from Book where isbn = :isbn")
  *     Book findBookByIsbn(String isbn);
  *
- *     &#64;Sql("select * from Book where title like ?1 order by title offset ?3 fetch first ?2 rows only")
+ *     &#64;HQL("from Book where title like ?1 order by title offset ?3 fetch first ?2 rows only")
  *     List&lt;Book&gt; findBooksByTitleWithPagination(String title, int max, int start);
  *
- *     &#64;Sql("select * from Book where title like ?1")
- *     Query findBooksByTitle(String title);
+ *     &#64;HQL("from Book where title like ?1")
+ *     TypedQuery&lt;Book&gt; findBooksByTitle(String title);
  * }
  * </pre>
  * <p>
- * The Metamodel Generator automatically creates an
- * "implementation" of these methods in the static metamodel
- * class {@code Books_}.
+ * The Metamodel Generator automatically creates an "implementation"
+ * of these methods in the static metamodel class {@code Books_}.
  * <pre>
  * Book book = Books_.findBookByIsbn(session, isbn);
  * List&lt;Book&gt; books = Books_.findBooksByTitleWithPagination(session, pattern, 10, 0);
@@ -49,11 +47,11 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <li>{@link java.util.List},
  * <li>{@link org.hibernate.query.Query},
  * <li>{@link jakarta.persistence.Query}, or
- * <li>{@link org.hibernate.query.NativeQuery}.
+ * <li>{@link jakarta.persistence.TypedQuery}.
  * </ul>
  * <p>
- * The method parameters must match the parameters of the
- * SQL query, either by name or by position.
+ * The method parameters must match the parameters of the HQL query,
+ * either by name or by position.
  *
  * @author Gavin King
  * @since 6.3
@@ -61,6 +59,6 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
 @Target(METHOD)
 @Retention(CLASS)
 @Incubating
-public @interface Sql {
+public @interface HQL {
 	String value();
 }

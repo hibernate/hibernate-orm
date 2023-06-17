@@ -41,7 +41,13 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		return new StringBuilder().append( "public static volatile " )
+		return new StringBuilder()
+				.append("\n/**\n * @see ")
+				.append(parent.getQualifiedName())
+				.append("#")
+				.append(element.getSimpleName())
+				.append("\n **/\n")
+				.append( "public static volatile " )
 				.append( parent.importType( getMetaType() ) )
 				.append( "<" )
 				.append( parent.importType( parent.getQualifiedName() ) )

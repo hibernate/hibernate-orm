@@ -58,6 +58,7 @@ import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.SyntaxException;
 import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
@@ -1443,11 +1444,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( child instanceof TerminalNode ) {
 			if ( definedCollate ) {
 				// This is syntactically disallowed
-				throw new ParsingException( "COLLATE is not allowed for position based order-by or group-by items" );
+				throw new SyntaxException( "'collate' is not allowed for position based 'order by' or 'group by' items" );
 			}
 			else if ( !allowPositionalOrAliases ) {
 				// This is syntactically disallowed
-				throw new ParsingException( "Position based order-by is not allowed in OVER or WITHIN GROUP clauses" );
+				throw new SyntaxException( "Position based 'order by' is not allowed in 'over' or 'within group' clauses" );
 			}
 
 			final int position = Integer.parseInt( child.getText() );
@@ -1462,7 +1463,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				nodeByPosition = processingState.getPathRegistry().findAliasedNodeByPosition( position );
 			}
 			if ( nodeByPosition == null ) {
-				throw new ParsingException( "Numeric literal '" + position + "' used in group-by does not match a registered select-item" );
+				throw new SemanticException( "Numeric literal '" + position + "' used in 'group by' does not match a registered select item" );
 			}
 
 			return new SqmAliasedNodeRef( position, integerDomainType, creationContext.getNodeBuilder() );
@@ -1531,7 +1532,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				if ( correspondingPosition != null ) {
 					if ( definedCollate ) {
 						// This is syntactically disallowed
-						throw new ParsingException( "COLLATE is not allowed for alias based order-by or group-by items" );
+						throw new SyntaxException( "'collate' is not allowed for alias-based 'order by' or 'group by' items" );
 					}
 					return new SqmAliasedNodeRef(
 							correspondingPosition,
@@ -1547,7 +1548,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				if ( sqmFrom != null ) {
 					if ( definedCollate ) {
 						// This is syntactically disallowed
-						throw new ParsingException( "COLLATE is not allowed for alias based order-by or group-by items" );
+						throw new SyntaxException( "'collate' is not allowed for alias-based 'order by' or 'group by' items" );
 					}
 					// this will group-by all the sub-parts in the from-element's model part
 					return sqmFrom;
@@ -1603,11 +1604,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			HqlParser.SortSpecificationContext ctx,
 			boolean allowPositionalOrAliases) {
 		final SqmExpression<?> sortExpression = visitSortExpression(
-				(HqlParser.SortExpressionContext) ctx.getChild( 0 ),
+				ctx.sortExpression(),
 				allowPositionalOrAliases
 		);
 		if ( sortExpression == null ) {
-			throw new ParsingException( "Could not resolve sort-expression : " + ctx.getChild( 0 ).getText() );
+			throw new SemanticException( "Could not resolve sort expression: '" + ctx.sortExpression().getText() + "'" );
 		}
 		if ( sortExpression instanceof SqmLiteral || sortExpression instanceof SqmParameter ) {
 			HqlLogging.QUERY_LOGGER.debugf( "Questionable sorting by constant value : %s", sortExpression );
@@ -2923,7 +2924,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmExpression<?> visitConcatenationExpression(HqlParser.ConcatenationExpressionContext ctx) {
 		if ( ctx.getChildCount() != 3 ) {
-			throw new ParsingException( "Expecting two operands to the concat operator" );
+			throw new SyntaxException( "Expecting two operands to the '||' operator" );
 		}
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList(
@@ -2976,7 +2977,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public Object visitAdditionExpression(HqlParser.AdditionExpressionContext ctx) {
 		if ( ctx.getChildCount() != 3 ) {
-			throw new ParsingException( "Expecting two operands to the additive operator" );
+			throw new SyntaxException( "Expecting two operands to the additive operator" );
 		}
 
 		final SqmExpression<?> left = (SqmExpression<?>) ctx.expression(0).accept(this);
@@ -2997,7 +2998,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public Object visitMultiplicationExpression(HqlParser.MultiplicationExpressionContext ctx) {
 		if ( ctx.getChildCount() != 3 ) {
-			throw new ParsingException( "Expecting two operands to the multiplicative operator" );
+			throw new SyntaxException( "Expecting two operands to the multiplicative operator" );
 		}
 
 		final SqmExpression<?> left = (SqmExpression<?>) ctx.expression(0).accept( this );

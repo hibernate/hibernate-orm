@@ -21,4 +21,7 @@ public class SyntaxException extends QueryException {
 	public SyntaxException(String message, String queryString) {
 		super( message, queryString );
 	}
+	public SyntaxException(String message) {
+		super( message );
+	}
 }

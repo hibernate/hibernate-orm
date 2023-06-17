@@ -39,7 +39,8 @@ import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.jpamodelgen.util.Constants.QUERY_METHOD;
+import static org.hibernate.jpamodelgen.util.Constants.HQL;
+import static org.hibernate.jpamodelgen.util.Constants.SQL;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 
 /**
@@ -142,7 +143,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			}
 			else if ( element instanceof TypeElement ) {
 				for ( Element enclosedElement : element.getEnclosedElements() ) {
-					if ( containsAnnotation( enclosedElement, QUERY_METHOD ) ) {
+					if ( containsAnnotation( enclosedElement, HQL, SQL ) ) {
 						AnnotationMetaEntity metaEntity =
 								AnnotationMetaEntity.create( (TypeElement) element, context, false );
 						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );

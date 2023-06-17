@@ -900,10 +900,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	Query<R> setLockMode(LockModeType lockMode);
 
 	@Override
-	Query<R> ascending(SingularAttribute<R, ?> attribute);
+	Query<R> ascending(SingularAttribute<? super R, ?> attribute);
 
 	@Override
-	Query<R> descending(SingularAttribute<R, ?> attribute);
+	Query<R> descending(SingularAttribute<? super R, ?> attribute);
 
 	@Override
 	Query<R> unordered();

@@ -1501,12 +1501,12 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public Query<R> ascending(SingularAttribute<R, ?> attribute) {
+	public Query<R> ascending(SingularAttribute<? super R, ?> attribute) {
 		throw new UnsupportedOperationException("Not yet supported for native queries");
 	}
 
 	@Override
-	public Query<R> descending(SingularAttribute<R, ?> attribute) {
+	public Query<R> descending(SingularAttribute<? super R, ?> attribute) {
 		throw new UnsupportedOperationException("Not yet supported for native queries");
 	}
 

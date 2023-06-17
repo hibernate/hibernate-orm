@@ -1065,12 +1065,12 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public Query<R> ascending(SingularAttribute<R, ?> attribute) {
+	public Query<R> ascending(SingularAttribute<? super R, ?> attribute) {
 		throw new UnsupportedOperationException( "Not supported for procedure calls" );
 	}
 
 	@Override
-	public Query<R> descending(SingularAttribute<R, ?> attribute) {
+	public Query<R> descending(SingularAttribute<? super R, ?> attribute) {
 		throw new UnsupportedOperationException( "Not supported for procedure calls" );
 	}
 

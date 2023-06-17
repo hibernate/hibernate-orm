@@ -68,7 +68,7 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 		catch (PersistenceException e) {
 			assertTrue( e instanceof HibernateException );
 			assertEquals(
-					"The query: [update Country set name = :name] attempts to update an immutable entity: [Country]",
+					"The query [update Country set name = :name] attempts to update an immutable entity: [Country]",
 					e.getMessage()
 			);
 		}

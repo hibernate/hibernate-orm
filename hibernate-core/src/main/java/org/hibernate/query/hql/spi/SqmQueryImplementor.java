@@ -125,18 +125,18 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setLockMode(LockModeType lockMode);
 
 	@Override
-	default SqmQueryImplementor<R> ascending(SingularAttribute<R, ?> attribute) {
+	default SqmQueryImplementor<R> ascending(SingularAttribute<? super R, ?> attribute) {
 		addOrdering( attribute, SortOrder.ASCENDING );
 		return this;
 	}
 
 	@Override
-	default SqmQueryImplementor<R> descending(SingularAttribute<R, ?> attribute) {
+	default SqmQueryImplementor<R> descending(SingularAttribute<? super R, ?> attribute) {
 		addOrdering( attribute, SortOrder.DESCENDING );
 		return this;
 	}
 
-	SqmQueryImplementor<R> addOrdering(SingularAttribute<R, ?> attribute, SortOrder order);
+	SqmQueryImplementor<R> addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order);
 
 	@Override
 	SqmQueryImplementor<R> unordered();

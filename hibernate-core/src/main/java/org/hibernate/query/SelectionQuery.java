@@ -472,10 +472,10 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
 
 	@Incubating
-	SelectionQuery<R> ascending(SingularAttribute<R, ?> attribute);
+	SelectionQuery<R> ascending(SingularAttribute<? super R, ?> attribute);
 
 	@Incubating
-	SelectionQuery<R> descending(SingularAttribute<R, ?> attribute);
+	SelectionQuery<R> descending(SingularAttribute<? super R, ?> attribute);
 
 	@Incubating
 	SelectionQuery<R> unordered();

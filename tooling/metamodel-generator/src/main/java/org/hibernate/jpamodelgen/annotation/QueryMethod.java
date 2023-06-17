@@ -86,7 +86,8 @@ public class QueryMethod implements MetaAttribute {
 				.append(")")
 				.append(" {")
 				.append("\n    return ");
-		if ( isNative && returnTypeName != null ) {
+		if ( isNative && returnTypeName != null
+				|| containerTypeName != null && containerTypeName.startsWith("org.hibernate") ) {
 			declaration.append("(").append(type).append(") ");
 		}
 		declaration

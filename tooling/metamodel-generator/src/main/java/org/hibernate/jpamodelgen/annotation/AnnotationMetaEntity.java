@@ -304,16 +304,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			if ( typeArguments.size() == 0 ) {
+				final String typeName = declaredType.toString();
 				if ( containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
-					addQueryMethod(method, methodName, declaredType.toString(), null);
+					addQueryMethod(method, methodName, typeName, null);
 				}
 				else {
-					final String containerTypeName = declaredType.toString();
-					if (isLegalRawResultType(containerTypeName)) {
-						addQueryMethod(method, methodName, null, containerTypeName);
+					if (isLegalRawResultType(typeName)) {
+						addQueryMethod(method, methodName, null, typeName);
 					}
 					else {
-						displayError(method, "incorrect return type '" + containerTypeName + "'");
+						// probably a projection
+						addQueryMethod(method, methodName, typeName, null);
 					}
 				}
 			}
@@ -342,7 +343,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static boolean isLegalGenericResultType(String containerTypeName) {
 		return containerTypeName.equals("java.util.List")
 			|| containerTypeName.equals("jakarta.persistence.TypedQuery")
-			|| containerTypeName.equals("org.hibernate.query.Query");
+			|| containerTypeName.equals("org.hibernate.query.Query")
+			|| containerTypeName.equals("org.hibernate.query.SelectionQuery");
 	}
 
 	private void addQueryMethod(

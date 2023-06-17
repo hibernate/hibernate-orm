@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.internal.util.ExceptionHelper;
-import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.SyntaxException;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -202,9 +202,9 @@ public class WindowFunctionTest {
 			}
 			catch (Exception e) {
 				final Throwable rootCause = ExceptionHelper.getRootCause( e );
-				assertInstanceOf( ParsingException.class, rootCause );
+				assertInstanceOf( SyntaxException.class, rootCause );
 				assertEquals(
-						"Position based order-by is not allowed in OVER or WITHIN GROUP clauses",
+						"Position based 'order by' is not allowed in 'over' or 'within group' clauses",
 						rootCause.getMessage()
 				);
 			}

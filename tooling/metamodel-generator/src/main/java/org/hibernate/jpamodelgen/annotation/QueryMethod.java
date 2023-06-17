@@ -12,6 +12,7 @@ import org.hibernate.jpamodelgen.model.Metamodel;
 
 import java.util.List;
 
+import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -56,7 +57,16 @@ public class QueryMethod implements MetaAttribute {
 	@Override
 	public String getAttributeDeclarationString() {
 		StringBuilder declaration = new StringBuilder();
-		declaration.append("public static ");
+		declaration
+				.append("\n/**\n * @see ")
+				.append(annotationMetaEntity.getQualifiedName())
+				.append("#")
+				.append(methodName)
+				.append("(")
+				.append(join(",", paramTypes.stream().map(annotationMetaEntity::importType).toArray()))
+				.append(")")
+				.append("\n **/\n")
+				.append("public static ");
 		StringBuilder type = new StringBuilder();
 		if (containerTypeName != null) {
 			type.append(annotationMetaEntity.importType(containerTypeName));

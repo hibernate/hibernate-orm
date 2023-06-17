@@ -90,6 +90,12 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			boolean addGeneratedAnnotation = Boolean.parseBoolean( tmp );
 			context.setAddGeneratedAnnotation( addGeneratedAnnotation );
 		}
+		else {
+			PackageElement jakartaAnnotationPackage =
+					context.getProcessingEnvironment().getElementUtils()
+							.getPackageElement( "jakarta.annotation" );
+			context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
+		}
 
 		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_GENERATION_DATE );
 		boolean addGenerationDate = Boolean.parseBoolean( tmp );

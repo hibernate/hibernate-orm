@@ -98,15 +98,15 @@ public final class ClassWriter {
 		StringWriter sw = new StringWriter();
 		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
+			if ( entity.getElement() instanceof TypeElement ) {
+				pw.println(writeStaticMetaModelAnnotation(entity));
+			}
+
 			if (context.addGeneratedAnnotation()) {
 				pw.println(writeGeneratedAnnotation(entity, context));
 			}
 			if (context.isAddSuppressWarningsAnnotation()) {
 				pw.println(writeSuppressWarnings());
-			}
-
-			if ( entity.getElement() instanceof TypeElement ) {
-				pw.println(writeStaticMetaModelAnnotation(entity));
 			}
 
 			printClassDeclaration(entity, pw, context);
@@ -203,18 +203,26 @@ public final class ClassWriter {
 
 	private static String writeGeneratedAnnotation(Metamodel entity, Context context) {
 		StringBuilder generatedAnnotation = new StringBuilder();
-		generatedAnnotation.append( "@" )
+		generatedAnnotation
+				.append( "@" )
 				.append( entity.importType( "jakarta.annotation.Generated" ) )
-				.append( "(value = \"" )
-				.append( JPAMetaModelEntityProcessor.class.getName() );
+				.append( "(" );
 		if ( context.addGeneratedDate() ) {
-			generatedAnnotation.append( "\", date = \"" )
+			generatedAnnotation
+					.append( "value = " );
+		}
+		generatedAnnotation
+				.append( "\"" )
+				.append( JPAMetaModelEntityProcessor.class.getName() )
+				.append( "\"" );
+		if ( context.addGeneratedDate() ) {
+			generatedAnnotation
+					.append( ", date = " )
+					.append( "\"" )
 					.append( SIMPLE_DATE_FORMAT.get().format( new Date() ) )
-					.append( "\")" );
+					.append( "\"" );
 		}
-		else {
-			generatedAnnotation.append( "\")" );
-		}
+		generatedAnnotation.append( ")" );
 		return generatedAnnotation.toString();
 	}
 

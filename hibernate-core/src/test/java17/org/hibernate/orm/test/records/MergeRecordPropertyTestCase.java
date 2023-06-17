@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MergeRecordPropertyTestCase {
 
 	@Test
-	public void merge(SessionFactoryScope scope) {
+	public void mergeDetached(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.persist( new MyEntity( 1L, new MyRecord( "test", "abc" ) ) )
 		);
@@ -33,6 +33,39 @@ public class MergeRecordPropertyTestCase {
 					final MyEntity entity = session.find( MyEntity.class, 1L );
 					assertEquals( "test", entity.record.name );
 					assertEquals( "d", entity.record.description );
+				}
+		);
+	}
+
+	@Test
+	public void mergeTransient(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.merge( new MyEntity( 2L, new MyRecord( "test", "xyz" ) ) )
+		);
+		scope.inSession(
+				session -> {
+					final MyEntity entity = session.find( MyEntity.class, 2L );
+					assertEquals( "test", entity.record.name );
+					assertEquals( "xyz", entity.record.description );
+				}
+		);
+	}
+
+	@Test
+	public void mergePersistent(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final MyEntity entity = new MyEntity( 3L, new MyRecord( "test", "efg" ) );
+					session.persist( entity );
+					entity.setRecord( new MyRecord( "test", "h" ) );
+					session.merge( entity );
+				}
+		);
+		scope.inSession(
+				session -> {
+					final MyEntity entity = session.find( MyEntity.class, 3L );
+					assertEquals( "test", entity.record.name );
+					assertEquals( "h", entity.record.description );
 				}
 		);
 	}

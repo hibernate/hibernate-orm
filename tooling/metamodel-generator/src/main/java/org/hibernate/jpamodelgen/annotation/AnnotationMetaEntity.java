@@ -228,7 +228,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				gettersAndSettersOfClass.add( rawMethodOfClass );
 			}
 			else if ( rawMethodOfClass instanceof ExecutableElement
-					&& containsAnnotation( rawMethodOfClass, Constants.QUERY_METHOD ) ) {
+					&& containsAnnotation( rawMethodOfClass, Constants.HQL, Constants.SQL ) ) {
 				queryMethods.add( (ExecutableElement) rawMethodOfClass );
 			}
 		}
@@ -348,33 +348,53 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void addQueryMethod(
 			ExecutableElement method,
 			String methodName,
-			@Nullable String returnTypeName, @Nullable String containerTypeName) {
-		final AnnotationMirror mirror = getAnnotationMirror(method, Constants.QUERY_METHOD );
-		if ( mirror != null ) {
-			final Object queryString = getAnnotationValue( mirror, "value" );
-			if ( queryString instanceof String ) {
-				final List<String> paramNames =
-						method.getParameters().stream()
-								.map(param -> param.getSimpleName().toString())
-								.collect(toList());
-				final List<String> paramTypes =
-						method.getParameters().stream()
-								.map(param -> param.asType().toString())
-								.collect(toList());
-				final String hql = (String) queryString;
-				final QueryMethod attribute =
-						new QueryMethod(
-								this,
-								methodName,
-								hql,
-								returnTypeName,
-								containerTypeName,
-								paramNames,
-								paramTypes
-						);
-				putMember( attribute.getPropertyName(), attribute );
+			@Nullable String returnTypeName,
+			@Nullable String containerTypeName) {
+		final AnnotationMirror hql = getAnnotationMirror(method, Constants.HQL);
+		if ( hql != null ) {
+			addQueryMethod(method, methodName, returnTypeName, containerTypeName, hql, false);
+		}
+		final AnnotationMirror sql = getAnnotationMirror(method, Constants.SQL);
+		if ( sql != null ) {
+			addQueryMethod(method, methodName, returnTypeName, containerTypeName, sql, true);
+		}
+	}
 
-				checkParameters(method, paramNames, mirror, hql);
+	private void addQueryMethod(
+			ExecutableElement method,
+			String methodName,
+			@Nullable
+			String returnTypeName,
+			@Nullable
+			String containerTypeName,
+			AnnotationMirror mirror,
+			boolean isNative) {
+		final Object queryString = getAnnotationValue(mirror, "value" );
+		if ( queryString instanceof String ) {
+			final List<String> paramNames =
+					method.getParameters().stream()
+							.map(param -> param.getSimpleName().toString())
+							.collect(toList());
+			final List<String> paramTypes =
+					method.getParameters().stream()
+							.map(param -> param.asType().toString())
+							.collect(toList());
+			final String hql = (String) queryString;
+			final QueryMethod attribute =
+					new QueryMethod(
+							this,
+							methodName,
+							hql,
+							returnTypeName,
+							containerTypeName,
+							paramNames,
+							paramTypes,
+							isNative
+					);
+			putMember( attribute.getPropertyName(), attribute );
+
+			checkParameters(method, paramNames, mirror, hql);
+			if (!isNative) {
 				checkHqlSyntax(method, mirror, hql);
 			}
 		}

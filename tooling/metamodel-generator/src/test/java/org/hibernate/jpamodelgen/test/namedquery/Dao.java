@@ -2,6 +2,7 @@ package org.hibernate.jpamodelgen.test.namedquery;
 
 import jakarta.persistence.TypedQuery;
 import org.hibernate.annotations.Hql;
+import org.hibernate.annotations.Sql;
 
 import java.util.List;
 
@@ -14,4 +15,7 @@ public interface Dao {
 
     @Hql("from Book where isbn = :isbn")
     Book findByIsbn(String isbn);
+
+    @Sql("select * from Book where isbn = :isbn")
+    Book findByIsbnNative(String isbn);
 }

@@ -25,6 +25,7 @@ public class QueryMethod implements MetaAttribute {
 	private final @Nullable String containerTypeName;
 	private final List<String> paramNames;
 	private final List<String> paramTypes;
+	private final boolean isNative;
 
 	public QueryMethod(
 			Metamodel annotationMetaEntity,
@@ -35,8 +36,8 @@ public class QueryMethod implements MetaAttribute {
 			@Nullable
 			String containerTypeName,
 			List<String> paramNames,
-			List<String> paramTypes
-	) {
+			List<String> paramTypes,
+			boolean isNative) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.queryString = queryString;
@@ -44,6 +45,7 @@ public class QueryMethod implements MetaAttribute {
 		this.containerTypeName = containerTypeName;
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
+		this.isNative = isNative;
 	}
 
 	@Override
@@ -55,20 +57,18 @@ public class QueryMethod implements MetaAttribute {
 	public String getAttributeDeclarationString() {
 		StringBuilder declaration = new StringBuilder();
 		declaration.append("public static ");
+		StringBuilder type = new StringBuilder();
 		if (containerTypeName != null) {
-			declaration
-					.append(annotationMetaEntity.importType(containerTypeName));
+			type.append(annotationMetaEntity.importType(containerTypeName));
 			if (returnTypeName != null) {
-				declaration
-						.append("<")
-						.append(annotationMetaEntity.importType(returnTypeName))
-						.append(">");
+				type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
 			}
 		}
 		else if (returnTypeName != null)  {
-			declaration.append(annotationMetaEntity.importType(returnTypeName));
+			type.append(annotationMetaEntity.importType(returnTypeName));
 		}
 		declaration
+				.append(type)
 				.append(" ")
 				.append(methodName)
 				.append("(")
@@ -85,7 +85,14 @@ public class QueryMethod implements MetaAttribute {
 		declaration
 				.append(")")
 				.append(" {")
-				.append("\n	return entityManager.createQuery(")
+				.append("\n    return ");
+		if ( isNative && returnTypeName != null ) {
+			declaration.append("(").append(type).append(") ");
+		}
+		declaration
+				.append("entityManager.")
+				.append(isNative ? "createNativeQuery" :"createQuery")
+				.append("(")
 				.append(getUpperUnderscoreCaseFromLowerCamelCase(methodName));
 		if (returnTypeName != null) {
 			declaration

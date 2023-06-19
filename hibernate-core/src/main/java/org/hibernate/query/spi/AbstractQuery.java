@@ -37,10 +37,8 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.sqm.SqmExpressible;
 
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -75,6 +73,7 @@ public abstract class AbstractQuery<R>
 		super( session );
 	}
 
+	@Override
 	protected void applyOptions(NamedQueryMemento memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::setHint );
@@ -303,6 +302,7 @@ public abstract class AbstractQuery<R>
 		return AvailableHints.getDefinedHints();
 	}
 
+	@Override
 	protected void collectHints(Map<String, Object> hints) {
 		if ( getQueryOptions().getTimeout() != null ) {
 			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
@@ -370,13 +370,6 @@ public abstract class AbstractQuery<R>
 	public QueryImplementor<R> setParameter(String name, Object value) {
 		super.setParameter( name, value );
 		return this;
-	}
-
-	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressible<?> sqmExpressible = parameterType.resolveExpressible( getSession().getFactory() );
-		assert sqmExpressible != null;
-
-		return sqmExpressible.getExpressibleJavaType().isInstance( value );
 	}
 
 	@Override
@@ -447,26 +440,6 @@ public abstract class AbstractQuery<R>
 		super.setParameter( parameter, value );
 		return this;
 	}
-
-	private <P> void setParameter(Parameter<P> parameter, P value, BindableType<P> type) {
-		if ( parameter instanceof QueryParameter ) {
-			setParameter( (QueryParameter<P>) parameter, value, type );
-		}
-		else if ( value == null ) {
-			locateBinding( parameter ).setBindValue( null, type );
-		}
-		else if ( value instanceof Collection ) {
-			//TODO: this looks wrong to me: how can value be both a P and a (Collection<P>)?
-			locateBinding( parameter ).setBindValues( (Collection<P>) value );
-		}
-		else {
-			locateBinding( parameter ).setBindValue( value, type );
-		}
-	}
-
-
-
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter list

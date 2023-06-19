@@ -35,6 +35,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.internal.OrphanCollectionRemoveAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.internal.UnresolvedEntityInsertActions;
@@ -94,6 +95,7 @@ public class ActionQueue {
 	private ExecutableList<CollectionUpdateAction> collectionUpdates;
 	private ExecutableList<QueuedOperationCollectionAction> collectionQueuedOps;
 	private ExecutableList<CollectionRemoveAction> collectionRemovals;
+	private ExecutableList<OrphanCollectionRemoveAction> orphanCollectionRemovals;
 
 	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
 	// ordering is improved.
@@ -110,15 +112,15 @@ public class ActionQueue {
 
 	//The order of these operations is very important
 	private enum OrderedActions {
-		CollectionRemoveAction {
+		OrphanCollectionRemoveAction {
 			@Override
 			public ExecutableList<?> getActions(ActionQueue instance) {
-				return instance.collectionRemovals;
+				return instance.orphanCollectionRemovals;
 			}
 			@Override
 			public void ensureInitialized(ActionQueue instance) {
-				if ( instance.collectionRemovals == null ) {
-					instance.collectionRemovals = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
+				if ( instance.orphanCollectionRemovals == null ) {
+					instance.orphanCollectionRemovals = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
 			}
 		},
@@ -170,6 +172,18 @@ public class ActionQueue {
 			public void ensureInitialized(ActionQueue instance) {
 				if ( instance.collectionQueuedOps == null ) {
 					instance.collectionQueuedOps = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
+				}
+			}
+		},
+		CollectionRemoveAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.collectionRemovals;
+			}
+			@Override
+			public void ensureInitialized(ActionQueue instance) {
+				if ( instance.collectionRemovals == null ) {
+					instance.collectionRemovals = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
 			}
 		},
@@ -357,6 +371,17 @@ public class ActionQueue {
 	public void addAction(final CollectionRemoveAction action) {
 		OrderedActions.CollectionRemoveAction.ensureInitialized( this );
 		this.collectionRemovals.add( action );
+	}
+
+	/**
+	 * Adds a collection remove action for an orphaned entity, this will be
+	 * executed before the orphan removal itself
+	 *
+	 * @param action The action representing the removal of an orphan's collection
+	 */
+	public void addAction(final OrphanCollectionRemoveAction action) {
+		OrderedActions.OrphanCollectionRemoveAction.ensureInitialized( this );
+		this.orphanCollectionRemovals.add( action );
 	}
 
 	/**

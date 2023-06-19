@@ -21,7 +21,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 /**
  * The action for removing a collection
  */
-public final class CollectionRemoveAction extends CollectionAction {
+public class CollectionRemoveAction extends CollectionAction {
 
 	private final Object affectedOwner;
 	private final boolean emptySnapshot;

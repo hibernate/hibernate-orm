@@ -337,6 +337,10 @@ public final class CollectionEntry implements Serializable {
 		return ignore;
 	}
 
+	public void setIgnore(boolean ignore) {
+		this.ignore = ignore;
+	}
+
 	public CollectionPersister getCurrentPersister() {
 		return currentPersister;
 	}

@@ -251,10 +251,18 @@ public class MySQLDialect extends Dialect {
 			case NUMERIC:
 				// it's just a synonym
 				return columnType( DECIMAL );
+
+			// on MySQL 8, the nchar/nvarchar types use a deprecated character set
+			case NCHAR:
+				return "char($l) character set utf8";
+			case NVARCHAR:
+				return "varchar($l) character set utf8";
+
 			// the maximum long LOB length is 4_294_967_295, bigger than any Java string
 			case BLOB:
 				return "longblob";
 			case NCLOB:
+				return "longtext character set utf8";
 			case CLOB:
 				return "longtext";
 
@@ -338,16 +346,18 @@ public class MySQLDialect extends Dialect {
 		}
 		ddlTypeRegistry.addDescriptor( varcharBuilder.build() );
 
+		// do not use nchar/nvarchar/ntext because these
+		// types use a deprecated character set on MySQL 8
 		final CapacityDependentDdlType.Builder nvarcharBuilder = CapacityDependentDdlType.builder(
 						NVARCHAR,
 						columnType( NCLOB ),
-						"char",
+						"char character set utf8",
 						this
 				)
-				.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
-				.withTypeCapacity( maxMediumLobLen, "mediumtext" );
+				.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8" )
+				.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
-			nvarcharBuilder.withTypeCapacity( maxLobLen, "text" );
+			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8" );
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
@@ -385,10 +395,10 @@ public class MySQLDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NCLOB, columnType( NCLOB ), "char", this )
-						.withTypeCapacity( maxTinyLobLen, "tinytext" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
-						.withTypeCapacity( maxLobLen, "text" )
+				CapacityDependentDdlType.builder( NCLOB, columnType( NCLOB ), "char character set utf8", this )
+						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" )
+						.withTypeCapacity( maxLobLen, "text character set utf8" )
 						.build()
 		);
 

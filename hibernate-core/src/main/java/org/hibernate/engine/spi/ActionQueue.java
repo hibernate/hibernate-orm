@@ -94,6 +94,7 @@ public class ActionQueue {
 	private ExecutableList<CollectionUpdateAction> collectionUpdates;
 	private ExecutableList<QueuedOperationCollectionAction> collectionQueuedOps;
 	private ExecutableList<CollectionRemoveAction> collectionRemovals;
+	private ExecutableList<CollectionRemoveAction> orphanCollectionRemovals;
 
 	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
 	// ordering is improved.
@@ -110,15 +111,15 @@ public class ActionQueue {
 
 	//The order of these operations is very important
 	private enum OrderedActions {
-		CollectionRemoveAction {
+		OrphanCollectionRemoveAction {
 			@Override
 			public ExecutableList<?> getActions(ActionQueue instance) {
-				return instance.collectionRemovals;
+				return instance.orphanCollectionRemovals;
 			}
 			@Override
 			public void ensureInitialized(ActionQueue instance) {
-				if ( instance.collectionRemovals == null ) {
-					instance.collectionRemovals = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
+				if ( instance.orphanCollectionRemovals == null ) {
+					instance.orphanCollectionRemovals = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
 			}
 		},
@@ -170,6 +171,18 @@ public class ActionQueue {
 			public void ensureInitialized(ActionQueue instance) {
 				if ( instance.collectionQueuedOps == null ) {
 					instance.collectionQueuedOps = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
+				}
+			}
+		},
+		CollectionRemoveAction {
+			@Override
+			public ExecutableList<?> getActions(ActionQueue instance) {
+				return instance.collectionRemovals;
+			}
+			@Override
+			public void ensureInitialized(ActionQueue instance) {
+				if ( instance.collectionRemovals == null ) {
+					instance.collectionRemovals = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
 			}
 		},
@@ -355,6 +368,20 @@ public class ActionQueue {
 	 * @param action The action representing the removal of a collection
 	 */
 	public void addAction(final CollectionRemoveAction action) {
+		if ( orphanRemovals != null && action.getAffectedOwner() != null && session.getPersistenceContextInternal()
+				.getEntry( action.getAffectedOwner() )
+				.getStatus()
+				.isDeletedOrGone() ) {
+			// We need to check if this collection's owner is an orphan being removed,
+			// which case we should remove the collection first to avoid constraint violations
+			for ( OrphanRemovalAction orphanRemoval : orphanRemovals ) {
+				if ( orphanRemoval.getInstance() == action.getAffectedOwner() ) {
+					OrderedActions.OrphanCollectionRemoveAction.ensureInitialized( this );
+					this.orphanCollectionRemovals.add( action );
+					return;
+				}
+			}
+		}
 		OrderedActions.CollectionRemoveAction.ensureInitialized( this );
 		this.collectionRemovals.add( action );
 	}

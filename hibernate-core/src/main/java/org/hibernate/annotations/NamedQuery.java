@@ -38,7 +38,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface NamedQuery {
 
 	/**
-	 * The name of this query.
+	 * The name of this query. Must be unique within a persistence unit.
 	 */
 	String name();
 

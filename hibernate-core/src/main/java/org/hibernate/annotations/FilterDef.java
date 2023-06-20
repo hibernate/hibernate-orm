@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -64,7 +65,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(FilterDefs.class)
 public @interface FilterDef {
 	/**
-	 * The name of the declared filter.
+	 * The name of the declared filter. Must be unique within a
+	 * persistence unit.
+	 *
+	 * @see org.hibernate.SessionFactory#getDefinedFilterNames()
 	 */
 	String name();
 

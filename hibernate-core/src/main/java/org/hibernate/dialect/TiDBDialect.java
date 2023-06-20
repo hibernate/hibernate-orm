@@ -157,4 +157,9 @@ public class TiDBDialect extends MySQLDialect {
 		Duration duration = Duration.ofMillis( timeoutInMilliseconds );
 		return duration.getSeconds();
 	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
+	}
 }

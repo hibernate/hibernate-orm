@@ -225,26 +225,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	protected void visitValuesList(List<Values> valuesList) {
-		if ( valuesList.size() < 2 ) {
-			super.visitValuesList( valuesList );
-		}
-		else {
-			// Oracle doesn't support a multi-values insert
-			// So we render a select union emulation instead
-			String separator = "";
-			final Stack<Clause> clauseStack = getClauseStack();
-			try {
-				clauseStack.push( Clause.VALUES );
-				for ( Values values : valuesList ) {
-					appendSql( separator );
-					renderExpressionsAsSubquery( values.getExpressions() );
-					separator = " union all ";
-				}
-			}
-			finally {
-				clauseStack.pop();
-			}
-		}
+		visitValuesListEmulateSelectUnion( valuesList );
 	}
 
 	@Override

@@ -1136,11 +1136,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsValuesListForInsert() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsOrderByInSubquery() {
 		// Seems to work, though I don't know as of which version
 		return true;

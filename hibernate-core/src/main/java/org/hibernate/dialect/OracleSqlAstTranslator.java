@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -170,26 +169,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 	@Override
 	protected void visitValuesList(List<Values> valuesList) {
-		if ( valuesList.size() < 2 ) {
-			super.visitValuesList( valuesList );
-		}
-		else {
-			// Oracle doesn't support a multi-values insert
-			// So we render a select union emulation instead
-			String separator = "";
-			final Stack<Clause> clauseStack = getClauseStack();
-			try {
-				clauseStack.push( Clause.VALUES );
-				for ( Values values : valuesList ) {
-					appendSql( separator );
-					renderExpressionsAsSubquery( values.getExpressions() );
-					separator = " union all ";
-				}
-			}
-			finally {
-				clauseStack.pop();
-			}
-		}
+		visitValuesListEmulateSelectUnion( valuesList );
 	}
 
 	@Override

@@ -51,7 +51,6 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -252,7 +251,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsValuesListForInsert.class)
 	public void hql_multi_insert_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-insert-example[]

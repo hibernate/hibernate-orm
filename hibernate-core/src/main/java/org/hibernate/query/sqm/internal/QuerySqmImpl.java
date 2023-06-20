@@ -817,9 +817,30 @@ public class QuerySqmImpl<R>
 				}
 			}
 		}
-		return !useMultiTableInsert
-				? new SimpleInsertQueryPlan( sqmInsert, domainParameterXref )
-				: new MultiTableInsertQueryPlan( sqmInsert, domainParameterXref, persister.getSqmMultiTableInsertStrategy() );
+		if ( useMultiTableInsert ) {
+			return new MultiTableInsertQueryPlan(
+					sqmInsert,
+					domainParameterXref,
+					persister.getSqmMultiTableInsertStrategy()
+			);
+		}
+		else if ( sqmInsert instanceof SqmInsertValuesStatement<?>
+				&& ( (SqmInsertValuesStatement<R>) sqmInsert ).getValuesList().size() != 1
+				&& !getSessionFactory().getJdbcServices().getDialect().supportsValuesListForInsert() ) {
+			// Split insert-values queries if the dialect doesn't support values lists
+			final SqmInsertValuesStatement<R> insertValues = (SqmInsertValuesStatement<R>) sqmInsert;
+			final List<SqmValues> valuesList = insertValues.getValuesList();
+			final NonSelectQueryPlan[] planParts = new NonSelectQueryPlan[valuesList.size()];
+			for ( int i = 0; i < valuesList.size(); i++ ) {
+				final SqmInsertValuesStatement<?> subInsert = insertValues.copyWithoutValues( SqmCopyContext.simpleContext() );
+				subInsert.getValuesList().add( valuesList.get( i ) );
+				planParts[i] = new SimpleInsertQueryPlan( subInsert, domainParameterXref );
+			}
+
+			return new AggregatedNonSelectQueryPlanImpl( planParts );
+		}
+
+		return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
 	}
 
 	protected boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {

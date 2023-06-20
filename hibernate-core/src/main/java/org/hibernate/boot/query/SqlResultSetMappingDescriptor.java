@@ -407,7 +407,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			}
 			else if( subPart instanceof EmbeddedAttributeMapping ){
 				final ModelPart subPart1 = ( (EmbeddedAttributeMapping) subPart ).findSubPart( propertyPath.substring(
-						propertyPath.indexOf( "." ) + 1), null );
+						propertyPath.indexOf( '.' ) + 1), null );
 				return getFetchMemento( navigablePath,subPart1 );
 			}
 			throw new UnsupportedOperationException(

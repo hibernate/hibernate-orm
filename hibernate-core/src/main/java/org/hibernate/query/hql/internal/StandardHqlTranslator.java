@@ -172,7 +172,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 			errorText += ", ";
 		}
 		if ( e instanceof NoViableAltException ) {
-			errorText +=  message.substring( 0, message.indexOf("'") );
+			errorText +=  message.substring( 0, message.indexOf( '\'' ) );
 			if ( hql.isEmpty() ) {
 				errorText += "'*' (empty query string)";
 			}

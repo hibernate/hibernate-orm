@@ -8137,7 +8137,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		int lastEnd = 0;
 
 		for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
-			final int markerStart = sqlFragment.indexOf( "?", lastEnd );
+			final int markerStart = sqlFragment.indexOf( '?', lastEnd );
 
 			// append the part of the fragment from the last-end position (start of string for first pass)
 			// to the index of the parameter marker

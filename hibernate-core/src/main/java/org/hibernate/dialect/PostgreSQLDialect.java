@@ -405,15 +405,13 @@ public class PostgreSQLDialect extends Dialect {
 			separator = ",";
 		}
 		type.append( ')' );
-		StringBuilder cast1 = new StringBuilder();
-		cast1.append("create cast (varchar as " )
-				.append( name )
-				.append( ") with inout as implicit" );
-		StringBuilder cast2 = new StringBuilder();
-		cast2.append("create cast (" )
-				.append( name )
-				.append( " as varchar) with inout as implicit" );
-		return new String[] { type.toString(), cast1.toString(), cast2.toString() };
+		String cast1 = "create cast (varchar as " +
+				name +
+				") with inout as implicit";
+		String cast2 = "create cast (" +
+				name +
+				" as varchar) with inout as implicit";
+		return new String[] { type.toString(), cast1, cast2 };
 	}
 
 	@Override

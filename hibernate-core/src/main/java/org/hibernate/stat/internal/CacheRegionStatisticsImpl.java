@@ -87,15 +87,15 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 
 	@Override
 	public String toString() {
-		StringBuilder buf = new StringBuilder().append( "CacheRegionStatistics" )
-				.append( "[region=").append( region.getName() )
-				.append( ",hitCount=").append( this.hitCount )
-				.append( ",missCount=").append( this.missCount )
-				.append( ",putCount=").append( this.putCount )
-				.append( ",elementCountInMemory=" ).append( this.getElementCountInMemory() )
-				.append( ",elementCountOnDisk=" ).append( this.getElementCountOnDisk() )
-				.append( ",sizeInMemory=" ).append( this.getSizeInMemory() )
-				.append( ']' );
-		return buf.toString();
+		String buf = "CacheRegionStatistics" +
+				"[region=" + region.getName() +
+				",hitCount=" + this.hitCount +
+				",missCount=" + this.missCount +
+				",putCount=" + this.putCount +
+				",elementCountInMemory=" + this.getElementCountInMemory() +
+				",elementCountOnDisk=" + this.getElementCountOnDisk() +
+				",sizeInMemory=" + this.getSizeInMemory() +
+				']';
+		return buf;
 	}
 }

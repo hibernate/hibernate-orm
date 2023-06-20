@@ -256,7 +256,7 @@ public class InferredBasicValueResolver {
 
 		if ( jdbcMapping == null ) {
 			throw new MappingException(
-					"Could not determine JavaType nor JdbcType to use" + "" +
+					"Could not determine JavaType nor JdbcType to use" +
 							" for " + ( (BasicValue) stdIndicators ).getResolvedJavaType() +
 							"; table = " + table.getName() +
 							"; column = " + selectable.getText()

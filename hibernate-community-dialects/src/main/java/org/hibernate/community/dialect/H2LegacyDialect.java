@@ -728,7 +728,7 @@ public class H2LegacyDialect extends Dialect {
 					if ( idx > 0 ) {
 						String constraintName = message.substring( idx + "violation: ".length() );
 						if ( sqle.getSQLState().equals( "23506" ) ) {
-							constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
+							constraintName = constraintName.substring( 1, constraintName.indexOf( ':' ) );
 						}
 						return constraintName;
 					}

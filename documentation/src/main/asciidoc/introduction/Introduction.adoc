@@ -627,6 +627,8 @@ We might even analogize `EntityManager` to `List`.
 Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
 They're a parallel class hierarchy that makes the data model harder to evolve over time.
 
+image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
+
 // Of course, such decisions are highly context-dependent: surely _some_ programs out there really do benefit from isolating the persistence logic into some sort of distinct layer; on the other hand, we're equally sure that there are others which simply _don't_.
 
 Even where a distinct persistence layer _is_ appropriate, DAO-style repositories aren't the obviously-most-correct way to factorize the equation:
@@ -635,6 +637,7 @@ Even where a distinct persistence layer _is_ appropriate, DAO-style repositories
 - most queries are extremely specific to a particular fragment of program logic, and aren't reused in different places across the system.
 
 Indeed, repositories, by nature, exhibit very low _cohesion_.
+They're also extremely highly _coupled_ to their clients, with a very large API surface.
 
 // So even in cases where separation _is_ of benefit, we go on to question the notion that this must be achieved via a layer of container-managed objects.
 

@@ -555,11 +555,6 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public boolean supportsValuesListForInsert() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsLockTimeouts() {
 		return false;
 	}

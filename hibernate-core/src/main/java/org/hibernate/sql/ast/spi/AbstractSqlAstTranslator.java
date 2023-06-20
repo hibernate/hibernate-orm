@@ -1169,34 +1169,57 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitValuesList(List<Values> valuesList) {
+		visitValuesListStandard( valuesList );
+	}
+
+	protected final void visitValuesListStandard(List<Values> valuesList) {
+		if ( valuesList.size() != 1 && !dialect.supportsValuesListForInsert() ) {
+			throw new IllegalQueryOperationException( "Dialect does not support values lists for insert statements" );
+		}
 		appendSql("values");
-		boolean firstTuple = true;
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.VALUES );
-			for ( Values values : valuesList ) {
-				if ( firstTuple ) {
-					firstTuple = false;
-				}
-				else {
+			for ( int i = 0; i < valuesList.size(); i++ ) {
+				if ( i != 0 ) {
 					appendSql( COMMA_SEPARATOR_CHAR );
 				}
 				appendSql( " (" );
-				boolean firstExpr = true;
-				for ( Expression expression : values.getExpressions() ) {
-					if ( firstExpr ) {
-						firstExpr = false;
-					}
-					else {
+				final List<Expression> expressions = valuesList.get( i ).getExpressions();
+				for ( int j = 0; j < expressions.size(); j++ ) {
+					if ( j != 0 ) {
 						appendSql( COMMA_SEPARATOR_CHAR );
 					}
-					expression.accept( this );
+					expressions.get( j ).accept( this );
 				}
 				appendSql( ')' );
 			}
 		}
 		finally {
 			clauseStack.pop();
+		}
+	}
+
+	protected void visitValuesListEmulateSelectUnion(List<Values> valuesList) {
+		if ( valuesList.size() < 2 ) {
+			visitValuesListStandard( valuesList );
+		}
+		else {
+			// Oracle doesn't support a multi-values insert
+			// So we render a select union emulation instead
+			String separator = "";
+			final Stack<Clause> clauseStack = getClauseStack();
+			try {
+				clauseStack.push( Clause.VALUES );
+				for ( int i = 0; i < valuesList.size(); i++ ) {
+					appendSql( separator );
+					renderExpressionsAsSubquery( valuesList.get( i ).getExpressions() );
+					separator = " union all ";
+				}
+			}
+			finally {
+				clauseStack.pop();
+			}
 		}
 	}
 

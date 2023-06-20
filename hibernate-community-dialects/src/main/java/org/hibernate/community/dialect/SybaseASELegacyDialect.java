@@ -547,11 +547,6 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	}
 
 	@Override
-	public boolean supportsValuesListForInsert() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsLockTimeouts() {
 		return false;
 	}

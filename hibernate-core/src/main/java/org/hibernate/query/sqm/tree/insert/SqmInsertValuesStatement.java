@@ -69,6 +69,21 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> {
 		);
 	}
 
+	public SqmInsertValuesStatement<T> copyWithoutValues(SqmCopyContext context) {
+		return context.registerCopy(
+				this,
+				new SqmInsertValuesStatement<>(
+						nodeBuilder(),
+						getQuerySource(),
+						copyParameters( context ),
+						copyCteStatements( context ),
+						getTarget().copy( context ),
+						copyInsertionTargetPaths( context ),
+						new ArrayList<>()
+				)
+		);
+	}
+
 	public List<SqmValues> getValuesList() {
 		return valuesList;
 	}

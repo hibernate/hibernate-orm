@@ -286,10 +286,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		final EntityInitializer entityInitializer = parentAccess.asEntityInitializer();
-		if ( entityInitializer != null && entityInitializer.getParentKey() == null ) {
-			return true;
-		}
-		return false;
+		return entityInitializer != null && entityInitializer.getParentKey() == null;
 	}
 
 	private void extractRowState(RowProcessingState processingState) {

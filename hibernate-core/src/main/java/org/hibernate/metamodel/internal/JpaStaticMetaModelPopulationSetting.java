@@ -51,14 +51,9 @@ public enum JpaStaticMetaModelPopulationSetting {
 	}
 
 	private static String determineSetting(Map configurationValues) {
-		final String setting = ConfigurationHelper.getString(
+		return ConfigurationHelper.getString(
 				AvailableSettings.STATIC_METAMODEL_POPULATION,
 				configurationValues
 		);
-		if ( setting != null ) {
-			return setting;
-		}
-
-		return null;
 	}
 }

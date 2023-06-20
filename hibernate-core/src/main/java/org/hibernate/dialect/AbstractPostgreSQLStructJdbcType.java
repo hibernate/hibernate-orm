@@ -987,12 +987,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 				}
 				else if ( value instanceof TemporalAccessor ) {
 					final TemporalAccessor temporalAccessor = (TemporalAccessor) value;
-					if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-						appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
-					}
-					else {
-						appendAsTimestampWithMicros( appender, temporalAccessor, false, jdbcTimeZone );
-					}
+					appendAsTimestampWithMicros( appender, temporalAccessor, temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ), jdbcTimeZone );
 				}
 				else {
 					appendAsTimestampWithMicros(

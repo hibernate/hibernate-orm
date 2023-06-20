@@ -236,7 +236,7 @@ public class AttributeFactory {
 		switch ( typeContext.getValueClassification() ) {
 			case BASIC: {
 				Class returnedClass = typeContext.getJpaBindableType();
-				if ( returnedClass.isAssignableFrom( Object.class ) ) {
+				if ( returnedClass.isInterface() || returnedClass.isAssignableFrom( Object.class ) ) {
 					final SimpleValue simpleValue = (SimpleValue) typeContext.getHibernateValue();
 					if ( simpleValue.getTypeParameters() != null && typeContext.getAttributeMetadata()
 							.getOwnerType() instanceof EntityDomainType ) {

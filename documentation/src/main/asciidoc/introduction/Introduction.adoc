@@ -57,6 +57,8 @@ We can think of the API of Hibernate in terms of three basic elements:
 - a _native API_ exposing the full set of available functionality, centered around the interfaces `SessionFactory`, which extends `EntityManagerFactory`, and `Session`, which extends `EntityManager`, and
 - a set of _mapping annotations_ which augment the O/R mapping annotations defined by JPA, and which may be used with the JPA-defined interfaces, or with the native API.
 
+Hibernate also offers a range of SPIs for frameworks and libraries which extend or integrate with Hibernate, but we're not interested in any of that stuff here.
+
 image::images/api-overview.png[API overview,width=700,align="center"]
 
 As an application developer, you must decide whether to:
@@ -96,7 +98,7 @@ But it's something to watch out for.
 [[java-code]]
 === Writing Java code with Hibernate
 
-If you're completely new to Hibernate and JPA, you might already be wondering how the persistence-related code is structured, and how it fits into the rest of your program.
+If you're completely new to Hibernate and JPA, you might already be wondering how the persistence-related code is structured.
 
 Well, typically, your persistence-related code comes in two layers:
 
@@ -122,83 +124,16 @@ The second part of the code is much trickier to get right. This code must:
 
 [TIP]
 ====
-Some responsibility for transaction and session management, and for
-recovery from certain kinds of failure, can be best handled in some sort
-of framework code.
+Some responsibility for transaction and session management, and for recovery from certain kinds of failure, can be best handled in some sort of framework code.
 ====
 
-A question that's older than Hibernate is: should this code exist in a separate _persistence layer_.
-To give our answer to this question, and at the risk of this Introduction devolving into a rant at such an early stage, we're going to need to talk a little more about ancient history.
-
-.An epic tale of DAOs and Repositories
-****
-Back in the dark days of Java EE 4, before the standardization of Hibernate, and subsequent ascendance of JPA in Java enterprise development, it was common to hand-code the messy JDBC interactions that Hibernate takes care of today.
-In those terrible times, a pattern arose that we used to call _Data Access Objects_ (DAOs).
-A DAO gave you a place to put all that nasty JDBC code, leaving the important program logic cleaner.
-
-When Hibernate arrived suddenly on the scene in 2001, developers loved it.
-But Hibernate implemented no specification, and many wished to reduce or at least _localize_ the dependence of their project logic on Hibernate.
-An obvious solution was to keep the DAOs around, but to replace the JDBC code inside them with calls to the Hibernate `Session`.
-
-We partly blame ourselves for what happened next.
-
-Back in 2002 and 2003 this really seemed like a pretty reasonable thing to do.
-In fact, we contributed to the popularity of this approach by recommending—or at least not discouraging—the use of DAOs in _Hibernate in Action_.
-We hereby apologize for this mistake, and for taking much too long to recognize it.
-
-Eventually, some folks came to believe that their DAOs shielded their program from depending in a hard way on ORM, allowing them to "swap out" Hibernate, and replace it with JDBC, or with something else.
-In fact, this was never really true—there's quite a deep difference between the programming model of JDBC, where every interaction with the database is explicit and synchronous, and the programming model of stateful sessions in Hibernate, where updates are implicit, and SQL statements are executed asynchronously.
-
-But then the whole landscape for persistence in Java changed in April 2006, when the final draft of JPA 1.0 was approved.
-Java now had a standard way to do ORM, with multiple high-quality implementations of the standard API.
-This was the end of the line for the DAOs, right?
-
-Well, no.
-It wasn't.
-DAOs were rebranded "repositories", and continue to enjoy a sort-of zombie afterlife as a front-end to JPA.
-But are they really pulling their weight, or are they just unnecessary extra complexity and bloat? An extra layer of indirection that makes stack traces harder to read and code harder to debug?
-
-Our considered view is that they're mostly just bloat.
-The JPA `EntityManager` is a "repository", and it's a standard repository with a well-defined specification written by people who spend all day thinking about persistence.
-If these repository frameworks offered anything actually _useful_—and not obviously foot-shooty—over and above what `EntityManager` provides, we would have already added it to `EntityManager` decades ago.
-
-Indeed, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
-We might analogize it to `ArrayList`.
-Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
-They're a parallel class hierarchy that makes the data model harder to evolve over time.
-
-[TIP]
-====
-On the other hand, we admit that repositories do provide a convenient place to stick your `@NamedQuery` annotations.
-So there's that.
-====
-
-One thing that some repository frameworks offer is the ability to declare an abstract method that queries the database, and have the framework fill in an implementation of the method.
-But the way this works is that you must encode your query into the name of the method itself.
-
-Which, at least in principle, for a not-very-complicated query, leads to a method name like this:
-
-[.text-center]
-`findFirst10ByOrderDistinctPeopleByLastnameOrFirstnameAsc`
-
-This is a much worse query language than HQL.
-I think you can see why we didn't implement this idea in Hibernate.
-****
-
-Ultimately, we're not sure you do need a separate persistence layer.
-And even if you do, DAO-style repositories aren't the obviously-correct way to factorize the equation:
-
-- every nontrivial query touches multiple entities, and so it's often quite ambiguous which DAO such a query belongs to, and
-- most queries are extremely specific to a particular fragment of program logic, and aren't reused in many different places.
-
-So at least _consider_ the possibility that it might be OK to call the `EntityManager` direct from your business logic.
-
-OK, _phew_, let's move on.
+We're going to <<organizing-persistence,come back soon>> to the thornier question of how the persistence logic should fit into the rest of the system.
+// First we want to make the ideas above concrete by seeing a simple example program that uses Hibernate in isolation.
 
 [[hello-hibernate]]
 === Hello, Hibernate
 
-Before we get into the weeds, we'll quickly present a basic example program that will help you get started if you don't already have Hibernate integrated into your project.
+Before we get further into the weeds, we'll quickly present a basic example program that will help you get started if you don't already have Hibernate integrated into your project.
 
 We begin with a simple gradle build file:
 
@@ -467,10 +402,268 @@ public class Main {
 }
 ----
 
-It's now time to begin our journey toward actually _understanding_ the code we've just seen.
+In practice, we never access the database directly from a `main()` method.
+So let's talk about how to organize persistence logic in a real system.
+
+[[organizing-persistence]]
+=== Organizing persistence logic
+
+In a real program, persistence logic like the code shown above is usally interleaved with other sorts of code: logic implementing the rules of the business domain, or logic for interacting with the user.
+Therefore, most developers quickly—even _too quickly_, in our opinion—start to reach for ways to isolate the persistence logic into some sort of separate architectural layer.
+
+We prefer a _bottom-up_ approach to organizing our code.
+We like to start thinking about methods and functions, not about architectural layers and container-managed objects.
+To illustrate the sort of approach to code organization that we advocate, let's consider how to write a service which queries the database using HQL or SQL.
+
+We might start with something like this, a mix of UI and persistence logic:
+
+[source,java]
+----
+@Path("/") @Produces("application/json")
+public class BookResource {
+
+    @GET @Path("books/{titlePattern}")
+    public List<Book> findBooks(String titlePattern) {
+        var books = sessionFactory.fromTransaction(session -> {
+            return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
+                    .setParameter(1, title)
+                    .setMaxResults(max)
+                    .setFirstResult(start)
+                    .getResultList();
+        });
+        return books.isEmpty() ? Response.status(404).build() : books;
+    }
+
+}
+----
+
+Indeed, we might also _finish_ with something like that—it's really hard to identify anything concretely wrong with the code above.
+
+Nevertheless, we love super-short methods with single responsibilities, and there looks to be an opportunity to introduce one here.
+Let's hit the code with our favorite thing, the Extract Method refactoring.
+Out pops:
+
+[source,java]
+----
+static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
+                                                 String titlePattern, int max, int start) {
+    return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
+            .setParameter(1, titlePattern)
+            .setMaxResults(max)
+            .setFirstResult(start)
+            .getResultList();
+}
+----
+
+This is an example of a _query method_, a function which accepts arguments to the parameters of a HQL or SQL query, and executes the query, returning its results to the caller.
+And that's all it does; it doesn't orchestrate additional program logic, and it doesn't perform transaction or session management.
+
+It's even better to specify the query string using the `@NamedQuery` annotation, so that Hibernate can validate the query it at startup time, that is, when the `SessionFactory` is created, instead of when the query is first executed.
+We need a place to put the annotation, so lets move our query method to a new class:
+
+[source,java]
+----
+@NamedQuery(name="findBooksByTitle",
+            query="from Book where title like :title order by title")
+class Queries {
+
+    static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
+                                                     String titlePattern, int max, int start) {
+        return entityManager.createNamedQuery("findBooksByTitle", Book.class)
+                .setParameter("title", titlePattern)
+                .setMaxResults(max)
+                .setFirstResult(start)
+                .getResultList();
+    }
+}
+----
+
+Notice that our query method doesn't attempt to hide the `EntityManager` from its clients.
+Indeed, the client code is responsible for providing the `EntityManager` or `Session` to the query method.
+This is a quite distinctive feature of our whole approach.
+
+The client code may obtain an `EntityManager` or `Session` by calling `inTransaction()`, as we saw above, or, in an environment with container-managed transactions, it might obtain it via dependency injection.
+Whatever the case, the code which orchestrates a unit of work usually just calls the `Session` or `EntityManager` directly, passing it along to helper methods like our query method if necessary.
+
+[source,java]
+----
+@GET
+@Path("books/{titlePattern}")
+public List<Book> findBooks(String titlePattern) {
+    var books = sessionFactory.fromTransaction(session ->
+            Queries.findBooksByTitleWithPagination(session, titlePattern, 20, 20*page));
+    return books.isEmpty() ? Response.status(404).build() : books;
+}
+----
+
+You might be thinking that our query methods are a bit boilerplatey.
+That's true, perhaps, but we're much more concerned that they're not very typesafe.
+Fortunately, there's now a solution to both problems: as an incubating feature of Hibernate 6.3, we now offer the possibility to have the <<metamodel-generator,Metamodel Generator>> fill in the implementation of such query methods for you.
+
+.Generated query methods
+****
+In an interface or abstract class, write down the "signature" of the query as a function, and specify the HQL or SQL query string itself using a `@HQL` or `@SQL` annotation:
+
+[source,java]
+----
+interface Queries {
+
+    @HQL("from Book where title like :title order by title offset :start fetch first :max rows only")
+    List<Book> findBooksByTitleWithPagination(String title, int max, int start);
+
+}
+----
+
+The Metamodel Generator checks that the parameters of this method match the parameters of the HQL or SQL query, that the query is syntactically legal, and generates a query method with a similar signature and return type in the corresponding static metamodel class `Queries_`.
+You can call the generated query method like this:
+
+[source,java]
+----
+List<Book> books = Queries_.findBooksByTitleWithPagination(entityManager, titlePattern, 20, page*20);
+----
+
+A query method doesn't need to return `List`.
+It might return a single `Book`.
+
+[source,java]
+----
+interface Queries {
+
+    @HQL("from Book where isbn = :isbn")
+    Book findBookByIsbn(String isbn);
+
+}
+----
+
+It might even return `TypedQuery` or `SelectionQuery`:
+
+[source,java]
+----
+interface Queries {
+
+    @HQL("from Book where title like :title")
+    SelectionQuery<Book> findBooksByTitle(String title);
+
+}
+----
+
+This is extremely useful at times, since it allows the client to further manipulate the query:
+
+[source,java]
+----
+List<Book> books =
+        Queries_.findBooksByTitle(entityManager, titlePattern)
+            .ascending(Book_.title)     // order the results
+            .setMaxResults(20)          // return at most 20 results
+            .setFirstResult(page*20)    // start from the given page of results
+            .getResultList();
+----
+
+:query-validator: https://github.com/hibernate/query-validator/
+
+If we also set up the {query-validator}[Query Validator], our HQL query will even be completely _type-checked_ at compile time.
+****
+
+Let's now consider a different approach to code organization, one we treat with suspicion.
+
+[[archtecture]]
+=== Architecture and the persistence layer
+
+Hibernate is an architecture-agnostic library, not a framework, and therefore integrates comfortably with a wide range of Java frameworks and containers.
+Consistent with our place within the ecosystem, we've historically avoided giving out much advice on architecture.
+This is a practice we're now perhaps inclined to regret, since the resulting vacuum has come to be filled with advice from people advocating architectures, design patterns, and extra frameworks which we suspect make Hibernate a bit less pleasant to use than it should be.
+In particular, frameworks which wrap JPA seem to add bloat while subtracting some of the fine-grained control over interaction with the database that Hibernate works hard to provide.
+
+The stodgy, dogmatic, _conventional_ wisdom, which we hesitate to challenge for simple fear of pricking ourselves on the erect hackles that inevitably accompany such dogma-questioning is:
+
+> code which interacts with the database belongs in a separate _persistence layer_.
+
+We lack the courage—perhaps even the conviction—to tell you categorically to _not_ follow this recommendation.
+But we do ask you to consider the cost in boilerplate of any architectural layer, and whether the benefits this cost buys are really worth it in the context of your system.
+
+To add a little background texture to this discussion, and at the risk of our Introduction devolving into a rant at such an early stage, we're going ask you to humor us while talk a little more about ancient history.
+
+.An epic tale of DAOs and Repositories
+****
+Back in the dark days of Java EE 4, before the standardization of Hibernate, and subsequent ascendance of JPA in Java enterprise development, it was common to hand-code the messy JDBC interactions that Hibernate takes care of today.
+In those terrible times, a pattern arose that we used to call _Data Access Objects_ (DAOs).
+A DAO gave you a place to put all that nasty JDBC code, leaving the important program logic cleaner.
+
+When Hibernate arrived suddenly on the scene in 2001, developers loved it.
+But Hibernate implemented no specification, and many wished to reduce or at least _localize_ the dependence of their project logic on Hibernate.
+An obvious solution was to keep the DAOs around, but to replace the JDBC code inside them with calls to the Hibernate `Session`.
+
+We partly blame ourselves for what happened next.
+
+Back in 2002 and 2003 this really seemed like a pretty reasonable thing to do.
+In fact, we contributed to the popularity of this approach by recommending—or at least not discouraging—the use of DAOs in _Hibernate in Action_.
+We hereby apologize for this mistake, and for taking much too long to recognize it.
+
+Eventually, some folks came to believe that their DAOs shielded their program from depending in a hard way on ORM, allowing them to "swap out" Hibernate, and replace it with JDBC, or with something else.
+In fact, this was never really true—there's quite a deep difference between the programming model of JDBC, where every interaction with the database is explicit and synchronous, and the programming model of stateful sessions in Hibernate, where updates are implicit, and SQL statements are executed asynchronously.
+
+But then the whole landscape for persistence in Java changed in April 2006, when the final draft of JPA 1.0 was approved.
+Java now had a standard way to do ORM, with multiple high-quality implementations of the standard API.
+This was the end of the line for the DAOs, right?
+
+Well, no.
+It wasn't.
+DAOs were rebranded "repositories", and continue to enjoy a sort-of zombie afterlife as a front-end to JPA.
+But are they really pulling their weight, or are they just unnecessary extra complexity and bloat? An extra layer of indirection that makes stack traces harder to read and code harder to debug?
+
+Our considered view is that they're mostly just bloat.
+The JPA `EntityManager` is a "repository", and it's a standard repository with a well-defined specification written by people who spend all day thinking about persistence.
+If these repository frameworks offered anything actually _useful_—and not obviously foot-shooty—over and above what `EntityManager` provides, we would have already added it to `EntityManager` decades ago.
+****
+
+Ultimately, we're not sure you need a separate persistence layer at all.
+At least _consider_ the possibility that it might be OK to call the `EntityManager` directly from your business logic.
+
+_Sssssssss. Heresy!_
+
+OK, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
+From this point of view, JPA _is_ your persistence layer!
+We might even analogize `EntityManager` to `List`.
+Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
+They're a parallel class hierarchy that makes the data model harder to evolve over time.
+
+// Of course, such decisions are highly context-dependent: surely _some_ programs out there really do benefit from isolating the persistence logic into some sort of distinct layer; on the other hand, we're equally sure that there are others which simply _don't_.
+
+Even where a distinct persistence layer _is_ appropriate, DAO-style repositories aren't the obviously-most-correct way to factorize the equation:
+
+- most nontrivial queries touch multiple entities, and so it's often quite ambiguous which DAO such a query belongs to, and
+- most queries are extremely specific to a particular fragment of program logic, and aren't reused in different places across the system.
+
+Indeed, repositories, by nature, exhibit very low _cohesion_.
+
+// So even in cases where separation _is_ of benefit, we go on to question the notion that this must be achieved via a layer of container-managed objects.
+
+// That said, one thing we _do_ understand is the desire to package:
+//
+// - a HQL or SQL query string with
+// - the code which binds its parameters
+//
+// as a typesafe function.
+// DAO-style repositories seem to provide a very natural place to hang such functions, and we suspect that this accounts for at least some of their continued popularity.
+// You're probably wondering how _we_ would go about defining such functions.
+
+// One thing that some repository frameworks offer is the ability to declare an abstract method that queries the database, and have the framework fill in an implementation of the method.
+// But the way this works is that you must encode your query into the name of the method itself.
+//
+// Which, at least in principle, for a not-very-complicated query, leads to a method name like this:
+//
+// [.text-center]
+// `findFirst10ByOrderDistinctPeopleByLastnameOrFirstnameAsc`
+//
+// This is a much worse query language than HQL.
+// I think you can see why we didn't implement this idea in Hibernate.
+//
+OK, _phew_, let's move on.
 
 [[overview]]
 === Overview
+
+It's now time to begin our journey toward actually _understanding_ the code we saw above.
 
 This introduction will guide you through the basic tasks involved in developing a program that uses Hibernate for persistence:
 

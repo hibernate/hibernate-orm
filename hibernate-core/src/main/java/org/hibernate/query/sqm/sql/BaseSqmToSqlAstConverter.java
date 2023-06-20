@@ -4122,8 +4122,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					tableGroup
 			);
 		}
-		else {
-			assert actualModelPart instanceof BasicValuedModelPart;
+		else if ( actualModelPart instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart mapping = (BasicValuedModelPart) actualModelPart;
 			final TableReference tableReference = tableGroup.resolveTableReference(
 					navigablePath.append( actualModelPart.getPartName() ),
@@ -4152,6 +4151,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					navigablePath,
 					mapping,
 					tableGroup
+			);
+		}
+		else if ( actualModelPart instanceof AnonymousTupleTableGroupProducer ) {
+			throw new SemanticException(
+					"The derived SqmFrom" + ( (AnonymousTupleType<?>) path.getReferencedPathSource() ).getComponentNames() + " can not be used in a context where the expression needs to " +
+							"be expanded to identifying parts, because a derived model part does not have identifying parts. " +
+							"Replace uses of the root with paths instead e.g. `derivedRoot.get(\"alias1\")` or `derivedRoot.alias1`"
+			);
+		}
+		else {
+			throw new SemanticException(
+					"The SqmFrom node [" + path + "] can not be used in a context where the expression needs to " +
+							"be expanded to identifying parts, because the model part [" + actualModelPart +
+							"] does not have identifying parts."
 			);
 		}
 

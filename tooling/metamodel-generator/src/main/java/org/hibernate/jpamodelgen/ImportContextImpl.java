@@ -84,12 +84,7 @@ public class ImportContextImpl implements ImportContext {
 		String simpleName = unqualify( fqcn );
 		if ( simpleNames.containsKey( simpleName ) ) {
 			String existingFqcn = simpleNames.get( simpleName );
-			if ( existingFqcn.equals( pureFqcn ) ) {
-				canBeSimple = true;
-			}
-			else {
-				canBeSimple = false;
-			}
+			canBeSimple = existingFqcn.equals( pureFqcn );
 		}
 		else {
 			canBeSimple = true;

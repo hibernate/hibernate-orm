@@ -172,9 +172,7 @@ public class SqmExpressionHelper {
 				return lhs;
 			}
 			final SqmPath<?> rhs = findPath( binaryArithmetic.getRightHandOperand(), nodeType );
-			if ( rhs != null ) {
-				return rhs;
-			}
+			return rhs;
 		}
 		return null;
 	}

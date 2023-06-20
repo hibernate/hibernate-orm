@@ -33,10 +33,7 @@ public class FromClauseAccessImpl implements FromClauseAccess {
 
 	public TableGroup findByAlias(String alias) {
 		if ( tableGroupBySqlAlias != null ) {
-			final TableGroup tableGroup = tableGroupBySqlAlias.get( alias );
-			if ( tableGroup != null ) {
-				return tableGroup;
-			}
+			return tableGroupBySqlAlias.get( alias );
 		}
 
 		return null;
@@ -51,9 +48,7 @@ public class FromClauseAccessImpl implements FromClauseAccess {
 	public TableGroup findTableGroup(NavigablePath navigablePath) {
 		if ( tableGroupByPath != null ) {
 			final TableGroup tableGroup = tableGroupByPath.get( navigablePath );
-			if ( tableGroup != null ) {
-				return tableGroup;
-			}
+			return tableGroup;
 		}
 
 		return null;

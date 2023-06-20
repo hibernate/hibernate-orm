@@ -93,9 +93,7 @@ public class CorrelatedPluralTableGroup extends CorrelatedTableGroup implements 
 					tableExpression,
 					resolve
 			);
-			if ( elementTableReference != null ) {
-				return elementTableReference;
-			}
+			return elementTableReference;
 		}
 		return null;
 	}
@@ -129,9 +127,7 @@ public class CorrelatedPluralTableGroup extends CorrelatedTableGroup implements 
 					tableExpression,
 					resolve
 			);
-			if ( elementTableReference != null ) {
-				return elementTableReference;
-			}
+			return elementTableReference;
 		}
 		return null;
 	}

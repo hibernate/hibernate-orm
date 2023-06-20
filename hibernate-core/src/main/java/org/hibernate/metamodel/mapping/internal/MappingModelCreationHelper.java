@@ -857,7 +857,7 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( referencedPropertyName != null  ) {
-			if ( referencedPropertyName.indexOf( "." ) > 0 ) {
+			if ( referencedPropertyName.indexOf( '.' ) > 0 ) {
 				return interpretNestedToOneKeyDescriptor(
 						referencedEntityDescriptor,
 						referencedPropertyName,

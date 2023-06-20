@@ -111,7 +111,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case BIGINT:
 								return template.replace(
 										placeholder,
-										"" + aggregateParentReadExpression + "." + column + ".number()"
+										aggregateParentReadExpression + "." + column + ".number()"
 								);
 							case DATE:
 								return template.replace(

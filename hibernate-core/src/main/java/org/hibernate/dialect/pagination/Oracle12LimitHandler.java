@@ -85,7 +85,7 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 		}
 		offsetFetchLength = sql.length() + offsetFetchString.length();
 
-		return new StringBuilder( offsetFetchLength ).append( sql ).append( offsetFetchString ).toString();
+		return sql + offsetFetchString;
 	}
 
 	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow) {
@@ -136,7 +136,7 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 	private int getForUpdateIndex(String sql) {
 		final int forUpdateLastIndex = sql.toLowerCase( Locale.ROOT ).lastIndexOf( "for update" );
 		// We need to recognize cases like : select a from t where b = 'for update';
-		final int lastIndexOfQuote = sql.lastIndexOf( "'" );
+		final int lastIndexOfQuote = sql.lastIndexOf( '\'' );
 		if ( forUpdateLastIndex > -1 ) {
 			if ( lastIndexOfQuote == -1 ) {
 				return forUpdateLastIndex;

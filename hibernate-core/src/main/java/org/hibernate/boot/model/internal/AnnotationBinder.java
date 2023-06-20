@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.persistence.FetchType;
 import org.hibernate.AnnotationException;
@@ -659,34 +660,93 @@ public final class AnnotationBinder {
 
 	private static void bindFilterDef(FilterDef filterDef, MetadataBuildingContext context) {
 		final String name = filterDef.name();
-		if ( context.getMetadataCollector().getFilterDefinition( name ) != null ) {
-			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
-		}
-		final Map<String, JdbcMapping> explicitParamJaMappings;
-		if ( filterDef.parameters().length == 0 ) {
-			explicitParamJaMappings = emptyMap();
+		final FilterDefinition existingFilterDefinition = context.getMetadataCollector().getFilterDefinition( name );
+		if ( existingFilterDefinition != null ) {
+			checkFiltersAreEqual( name, filterDef, existingFilterDefinition, context );
 		}
 		else {
-			explicitParamJaMappings = new HashMap<>();
-			for ( ParamDef paramDef : filterDef.parameters() ) {
-				final JdbcMapping jdbcMapping = resolveFilterParamType( paramDef.type(), context );
-				if ( jdbcMapping == null ) {
-					throw new MappingException(
-							String.format(
-									Locale.ROOT,
-									"Unable to resolve type specified for parameter (%s) defined for @FilterDef (%s)",
-									paramDef.name(),
-									name
-							)
-					);
-				}
-				explicitParamJaMappings.put( paramDef.name(), jdbcMapping );
+			final Map<String, JdbcMapping> explicitParamJaMappings = extractFilterDefParameters(
+					name,
+					filterDef,
+					context
+			);
+			final FilterDefinition filterDefinition =
+					new FilterDefinition( name, filterDef.defaultCondition(), explicitParamJaMappings );
+			LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
+			context.getMetadataCollector().addFilterDefinition( filterDefinition );
+		}
+	}
+
+	private static void checkFiltersAreEqual(
+			String filterName,
+			FilterDef filterDefinition,
+			FilterDefinition existingFilterDefinition,
+			MetadataBuildingContext context) {
+		if ( !existingFilterDefinition.getDefaultFilterCondition().equals( filterDefinition.defaultCondition() ) ) {
+			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + filterName + "' and different default conditions" );
+		}
+		if ( !areParametersEqual( filterName, filterDefinition, existingFilterDefinition, context ) ) {
+			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + filterName + "' and different parameter definitions" );
+		}
+	}
+
+	private static boolean areParametersEqual(
+			String filterName,
+			FilterDef filterDefinition,
+			FilterDefinition existingFilterDefinition,
+			MetadataBuildingContext context) {
+		final Map<String, JdbcMapping> explicitParamJaMappings = extractFilterDefParameters(
+				filterName,
+				filterDefinition,
+				context
+		);
+		if ( explicitParamJaMappings.isEmpty() ) {
+			if ( existingFilterDefinition.getParameterNames().size() != 0 ) {
+				return false;
 			}
 		}
-		final FilterDefinition filterDefinition =
-				new FilterDefinition( name, filterDef.defaultCondition(), explicitParamJaMappings );
-		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
-		context.getMetadataCollector().addFilterDefinition( filterDefinition );
+		else {
+			final Set<String> existingParameterNames = existingFilterDefinition.getParameterNames();
+			if ( existingParameterNames.size() != explicitParamJaMappings.size() ) {
+				return false;
+			}
+			for ( String paramName : existingParameterNames ) {
+				final JdbcMapping jdbcMapping = explicitParamJaMappings.get( paramName );
+				if ( jdbcMapping == null ) {
+					return false;
+				}
+				else if ( !jdbcMapping.equals( existingFilterDefinition.getParameterJdbcMapping( paramName ) ) ) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private static Map<String, JdbcMapping> extractFilterDefParameters(
+			String name,
+			FilterDef filterDef,
+			MetadataBuildingContext context) {
+		final ParamDef[] parameters = filterDef.parameters();
+		if ( parameters.length == 0 ) {
+			return emptyMap();
+		}
+		final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
+		for ( ParamDef paramDef : parameters ) {
+			final JdbcMapping jdbcMapping = resolveFilterParamType( paramDef.type(), context );
+			if ( jdbcMapping == null ) {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Unable to resolve type specified for parameter (%s) defined for @FilterDef (%s)",
+								paramDef.name(),
+								name
+						)
+				);
+			}
+			explicitParamJaMappings.put( paramDef.name(), jdbcMapping );
+		}
+		return explicitParamJaMappings;
 	}
 
 	@SuppressWarnings("unchecked")

@@ -324,23 +324,14 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 								getterType = ( (Method) getter ).getReturnType();
 							}
 
-							builder = builder.define(
-											new MethodDescription.InDefinedShape.Latent(
-													builder.toTypeDescription(),
-													new MethodDescription.Token(
-															"get_" + getter.getName(),
-															Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC,
-															TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
-																	getterType
-															),
-															Collections.singletonList(
-																	TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
-																			clazz
-																	)
-															)
-													)
-											)
+							builder = builder.defineMethod(
+											"get_" + getter.getName(),
+											TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
+													getterType
+											),
+											Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
 									)
+									.withParameter( foreignPackageClassInfo.clazz )
 									.intercept(
 											new Implementation.Simple(
 													new GetFieldOnArgument(
@@ -358,24 +349,13 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 								setterType = ( (Method) setter ).getParameterTypes()[0];
 							}
 
-							builder = builder.define(
-											new MethodDescription.InDefinedShape.Latent(
-													builder.toTypeDescription(),
-													new MethodDescription.Token(
-															"set_" + setter.getName(),
-															Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC,
-															TypeDescription.Generic.VOID,
-															Arrays.asList(
-																	TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
-																			clazz
-																	),
-																	TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
-																			setterType
-																	)
-															)
-													)
-											)
+							builder = builder.defineMethod(
+											"set_" + setter.getName(),
+											TypeDescription.Generic.VOID,
+											Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
 									)
+									.withParameter( foreignPackageClassInfo.clazz )
+									.withParameter( setterType )
 									.intercept(
 											new Implementation.Simple(
 													new SetFieldOnArgument(
@@ -788,7 +768,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 								Opcodes.INVOKESTATIC,
 								Type.getInternalName( foreignPackageMember.getForeignPackageAccessor() ),
 								"get_" + getterMember.getName(),
-								Type.getMethodDescriptor( Type.getType( type ), Type.getType( clazz ) ),
+								Type.getMethodDescriptor(
+										Type.getType( type ),
+										Type.getType( underlyingMember.getDeclaringClass() )
+								),
 								false
 						);
 					}
@@ -983,7 +966,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 							Opcodes.INVOKESTATIC,
 							Type.getInternalName( foreignPackageMember.getForeignPackageAccessor() ),
 							"set_" + setterMember.getName(),
-							Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( clazz ), Type.getType( type ) ),
+							Type.getMethodDescriptor(
+									Type.getType( void.class ),
+									Type.getType( foreignPackageMember.getMember().getDeclaringClass() ),
+									Type.getType( type )
+							),
 							false
 					);
 				}

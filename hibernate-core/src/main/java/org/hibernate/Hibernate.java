@@ -260,6 +260,26 @@ public final class Hibernate {
 	}
 
 	/**
+	 * Get the true, underlying class of a proxied entity. This operation might
+	 * initialize a proxy by side effect.
+	 *
+	 * @param proxy an entity instance or proxy
+	 * @return the true class of the instance
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> Class<? extends T> getClassLazy(T proxy) {
+		Class<?> result;
+		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
+		if ( lazyInitializer != null ) {
+			result = lazyInitializer.getImplementationClass();
+		}
+		else {
+			result = proxy.getClass();
+		}
+		return (Class<? extends T>) result;
+	}
+
+	/**
 	 * Determine if the true, underlying class of the proxied entity is assignable
 	 * to the given class. This operation will initialize a proxy by side effect.
 	 *

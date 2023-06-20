@@ -101,6 +101,22 @@ public interface LazyInitializer {
 	void setImplementation(Object target);
 
 	/**
+	 * Get the actual class of the entity, possibly initializing the entity if it has subclasses.
+	 *
+	 * @return The actual entity class.
+	 * @since 6.3
+	 */
+	Class<?> getImplementationClass();
+
+	/**
+	 * Get the actual name of the entity, possibly initializing the entity if it has subclasses.
+	 *
+	 * @return The actual entity name.
+	 * @since 6.3
+	 */
+	String getImplementationEntityName();
+
+	/**
 	 * Is the proxy's read-only/modifiable setting available?
 	 * @return true, if the setting is available
 	 *         false, if the proxy is detached or its associated session is closed

@@ -300,7 +300,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 				);
 			}
 
-			return txTimestamp > timestamp;
+			return txTimestamp >= timestamp;
 		}
 
 		@Override

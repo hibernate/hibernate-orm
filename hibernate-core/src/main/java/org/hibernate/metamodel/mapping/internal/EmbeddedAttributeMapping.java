@@ -13,18 +13,14 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -406,5 +402,10 @@ public class EmbeddedAttributeMapping
 			producer = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
 		}
 		return producer.containsTableReference( tableExpression );
+	}
+
+	@Override
+	public int compare(Object value1, Object value2) {
+		return embeddableMappingType.compare( value1, value2 );
 	}
 }

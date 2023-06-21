@@ -23,7 +23,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * Support for {@link jakarta.persistence.EmbeddedId}
@@ -129,4 +128,8 @@ public class EmbeddedIdentifierMappingImpl
 		return results;
 	}
 
+	@Override
+	public int compare(Object value1, Object value2) {
+		return getEmbeddableTypeDescriptor().compare( value1, value2 );
+	}
 }

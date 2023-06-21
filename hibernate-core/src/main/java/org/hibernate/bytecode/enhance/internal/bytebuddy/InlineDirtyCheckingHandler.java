@@ -87,7 +87,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				Advice.WithCustomMapping advice = Advice.withCustomMapping();
 				advice = persistentField.isVisibleTo( managedCtClass )
 						? advice.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
-						: advice.bind( CodeTemplates.FieldValue.class, new CodeTemplates.GetterMapping( persistentField.getFieldDescription() ) );
+						: advice.bind( CodeTemplates.FieldValue.class, new CodeTemplates.GetterMapping( persistentField.getFieldDescription(), persistentField.getGetter().get().getReturnType() ) );
 
 				implementation = advice
 						.bind( CodeTemplates.FieldName.class, persistentField.getName() )

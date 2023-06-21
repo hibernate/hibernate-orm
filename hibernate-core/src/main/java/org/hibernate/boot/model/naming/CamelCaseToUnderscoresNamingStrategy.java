@@ -68,7 +68,7 @@ public class CamelCaseToUnderscoresNamingStrategy implements PhysicalNamingStrat
 	 * @return an identifier instance
 	 */
 	protected Identifier getIdentifier(String name, final boolean quoted, final JdbcEnvironment jdbcEnvironment) {
-		if ( isCaseInsensitive( jdbcEnvironment ) ) {
+		if ( !quoted && isCaseInsensitive( jdbcEnvironment ) ) {
 			name = name.toLowerCase( Locale.ROOT );
 		}
 		return new Identifier( name, quoted );

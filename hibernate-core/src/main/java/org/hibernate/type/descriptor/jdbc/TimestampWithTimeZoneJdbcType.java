@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -78,7 +79,10 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 					int index,
 					WrapperOptions options) throws SQLException {
 				try {
-					final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
+					final OffsetDateTime dateTime = DateTimeUtils.roundToDefaultPrecision(
+							javaType.unwrap( value, OffsetDateTime.class, options ),
+							options.getSession().getJdbcServices().getDialect()
+					);
 					// supposed to be supported in JDBC 4.2
 					st.setObject( index, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
 				}

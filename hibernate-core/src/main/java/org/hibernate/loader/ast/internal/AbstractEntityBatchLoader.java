@@ -6,13 +6,15 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.util.List;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
@@ -29,7 +31,7 @@ public abstract class AbstractEntityBatchLoader<T>
 		singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, sessionFactory );
 	}
 
-	protected abstract void initializeEntities(
+	protected abstract List<Object> initializeEntities(
 			Object[] idsToInitialize,
 			Object pkValue,
 			Object entityInstance,
@@ -93,10 +95,17 @@ public abstract class AbstractEntityBatchLoader<T>
 			return singleIdLoader.load( id, entityInstance, lockOptions, readOnly, session );
 		}
 
-		initializeEntities( ids, id, entityInstance, lockOptions, readOnly, session );
-
-		final EntityKey entityKey = session.generateEntityKey( id, getLoadable().getEntityPersister() );
-		//noinspection unchecked
-		return (T) session.getPersistenceContext().getEntity( entityKey );
+		final List<Object> entities = initializeEntities( ids, id, entityInstance, lockOptions, readOnly, session );
+		final EntityPersister entityPersister = singleIdLoader.getLoadable().getEntityPersister();
+		for ( Object entity : entities ) {
+			if ( entityPersister.getIdentifierType().isEqual(
+					id,
+					session.getContextEntityIdentifier( entity ),
+					sessionFactory
+			) ) {
+				return (T) entity;
+			}
+		}
+		return null;
 	}
 }

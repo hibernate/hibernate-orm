@@ -8,12 +8,14 @@ package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -123,7 +125,7 @@ public class EntityBatchLoaderArrayParam<T>
 	}
 
 	@Override
-	protected void initializeEntities(
+	protected List<Object> initializeEntities(
 			Object[] idsToInitialize,
 			Object id,
 			Object entityInstance,
@@ -135,7 +137,7 @@ public class EntityBatchLoaderArrayParam<T>
 					getLoadable().getEntityName(), id, Arrays.toString(idsToInitialize) );
 		}
 
-		LoaderHelper.loadByArrayParameter(
+		List<Object> entities = LoaderHelper.loadByArrayParameter(
 				idsToInitialize,
 				sqlAst,
 				jdbcSelectOperation,
@@ -155,6 +157,7 @@ public class EntityBatchLoaderArrayParam<T>
 				removeBatchLoadableEntityKey( initializedId, getLoadable(), session );
 			}
 		}
+		return entities;
 	}
 
 	@Override

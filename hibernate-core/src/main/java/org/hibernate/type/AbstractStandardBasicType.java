@@ -183,28 +183,39 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public final boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
-		return isEqual( x, y );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public boolean isEqual(Object one, Object another) {
-		if ( one == another ) {
+		if ( x == y ) {
 			return true;
 		}
-		else if ( one == null || another == null ) {
+		else if ( x == null || y == null ) {
 			return false;
 		}
 		else {
 			final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
 			if ( type != null ) {
 				//Optimize for the most common case: avoid the megamorphic call
-				return type.areEqual( (T) one, (T) another );
+				if ( factory == null ) {
+					return type.areEqual( (T) x, (T) y );
+				}
+				else {
+					return type.areEqual( (T) x, (T) y, factory.getJdbcServices().getDialect() );
+				}
 			}
 			else {
-				return javaType.areEqual( (T) one, (T) another );
+				if ( factory == null ) {
+					return javaType.areEqual( (T) x, (T) y );
+				}
+				else {
+					return javaType.areEqual( (T) x, (T) y, factory.getJdbcServices().getDialect() );
+				}
 			}
 		}
+
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public boolean isEqual(Object one, Object another) {
+		return isEqual( one, another , null);
 	}
 
 	@Override

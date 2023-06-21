@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -54,6 +53,12 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
 		return stdIndicators.getTypeConfiguration().getJdbcTypeRegistry()
 				.getDescriptor( stdIndicators.getDefaultZonedTimeSqlType() );
+	}
+
+	@Override
+	public boolean areEqual(OffsetTime one, OffsetTime another, Dialect dialect) {
+		return DateTimeUtils.roundToDefaultPrecision( one, dialect )
+				.isEqual( DateTimeUtils.roundToDefaultPrecision( another, dialect ) );
 	}
 
 	@Override

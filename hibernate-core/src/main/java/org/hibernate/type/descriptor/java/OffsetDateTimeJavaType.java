@@ -24,6 +24,7 @@ import java.util.GregorianCalendar;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.CharSequenceHelper;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -71,6 +72,12 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
 		return stdIndicators.getTypeConfiguration().getJdbcTypeRegistry()
 				.getDescriptor( stdIndicators.getDefaultZonedTimestampSqlType() );
+	}
+
+	@Override
+	public boolean areEqual(OffsetDateTime one, OffsetDateTime another, Dialect dialect) {
+		return DateTimeUtils.roundToDefaultPrecision( one, dialect )
+				.isEqual( DateTimeUtils.roundToDefaultPrecision( another, dialect ) );
 	}
 
 	@Override

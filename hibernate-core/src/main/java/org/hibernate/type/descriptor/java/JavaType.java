@@ -214,6 +214,10 @@ public interface JavaType<T> extends Serializable {
 		return Objects.deepEquals( one, another );
 	}
 
+	default boolean areEqual(T one, T another, Dialect dialect){
+		return Objects.deepEquals( one, another );
+	}
+
 	/**
 	 * Extract a loggable representation of the given value.
 	 *

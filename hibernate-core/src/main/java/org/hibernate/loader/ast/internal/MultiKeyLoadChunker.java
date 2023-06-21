@@ -6,11 +6,12 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Bindable;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -83,7 +84,7 @@ public class MultiKeyLoadChunker<K> {
 	 * @param keyCollector Called for each key as it is processed
 	 * @param boundaryListener Notifications that processing a chunk has completed
 	 */
-	public void processChunks(
+	public List<Object> processChunks(
 			K[] keys,
 			int nonNullElementCount,
 			SqlExecutionContextCreator sqlExecutionContextCreator,
@@ -93,15 +94,25 @@ public class MultiKeyLoadChunker<K> {
 			SharedSessionContractImplementor session) {
 		int numberOfKeysLeft = nonNullElementCount;
 		int start = 0;
+		List<Object> entities = new ArrayList<>();
 		while ( numberOfKeysLeft > 0 ) {
-			processChunk( keys, start, sqlExecutionContextCreator, keyCollector, startListener, boundaryListener, session );
+			entities.addAll( processChunk(
+					keys,
+					start,
+					sqlExecutionContextCreator,
+					keyCollector,
+					startListener,
+					boundaryListener,
+					session
+			));
 
 			start += chunkSize;
 			numberOfKeysLeft -= chunkSize;
 		}
+		return entities;
 	}
 
-	private void processChunk(
+	private List<Object> processChunk(
 			K[] keys,
 			int startIndex,
 			SqlExecutionContextCreator sqlExecutionContextCreator,
@@ -146,10 +157,10 @@ public class MultiKeyLoadChunker<K> {
 
 		if ( nonNullCounter == 0 ) {
 			// there are no non-null keys in the chunk
-			return;
+			return Collections.emptyList();
 		}
 
-		session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+		List<Object> list = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				sqlExecutionContextCreator.createContext( jdbcParameterBindings, session ),
@@ -158,6 +169,7 @@ public class MultiKeyLoadChunker<K> {
 		);
 
 		boundaryListener.chunkBoundaryNotification( startIndex, nonNullCounter );
+		return list;
 	}
 
 }

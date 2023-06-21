@@ -607,14 +607,20 @@ class CodeTemplates {
 	// mapping to get private field from superclass by calling the enhanced reader, for use when field is not visible
 	static class GetterMapping implements Advice.OffsetMapping {
 
-		private final FieldDescription persistentField;
+		private final TypeDescription.Generic returnType;
+		private final String name;
 
 		GetterMapping(FieldDescription persistentField) {
-			this.persistentField = persistentField;
+			this( persistentField, persistentField.getType() );
+		}
+
+		GetterMapping(FieldDescription persistentField, TypeDescription.Generic returnType) {
+			this.name = persistentField.getName();
+			this.returnType = returnType;
 		}
 
 		@Override public Target resolve(TypeDescription instrumentedType, MethodDescription instrumentedMethod, Assigner assigner, Advice.ArgumentHandler argumentHandler, Sort sort) {
-			MethodDescription.Token signature = new MethodDescription.Token( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + persistentField.getName(), Opcodes.ACC_PUBLIC, persistentField.getType() );
+			MethodDescription.Token signature = new MethodDescription.Token( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + name , Opcodes.ACC_PUBLIC, returnType );
 			MethodDescription method = new MethodDescription.Latent( instrumentedType.getSuperClass().asErasure(), signature );
 
 			return new Target.AbstractReadOnlyAdapter() {

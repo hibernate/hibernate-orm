@@ -635,7 +635,15 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 
 		@Override
 		public void operate() {
-			bag.add( getAddedInstance() );
+			// Delayed operations only work on inverse collections i.e. collections with mappedBy,
+			// and these collections don't have duplicates by definition.
+			// Since cascading also operates on delayed operation's elements,
+			// it can happen that an element is already associated with the collection after cascading,
+			// but the queued operations are still executed after the lazy initialization of the collection.
+			// To avoid duplicates, we have to check if the bag already contains this element
+			if ( !bag.contains( getAddedInstance() ) ) {
+				bag.add( getAddedInstance() );
+			}
 		}
 	}
 

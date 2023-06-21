@@ -118,4 +118,8 @@ public class EmbeddedIdentifierMappingImpl
 		return name;
 	}
 
+	@Override
+	public int compare(Object value1, Object value2) {
+		return getEmbeddableTypeDescriptor().compare( value1, value2 );
+	}
 }

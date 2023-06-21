@@ -3146,17 +3146,17 @@ public class ModelBinder {
 			collectionBinding.createAllKeys();
 
 			if ( log.isDebugEnabled() ) {
-				log.debugf( "Mapped collection : " + getPluralAttributeSource().getAttributeRole().getFullPath() );
-				log.debugf( "   + table -> " + getCollectionBinding().getTable().getName() );
-				log.debugf( "   + key -> " + columns( getCollectionBinding().getKey() ) );
+				log.debugf( "Mapped collection : %s", getPluralAttributeSource().getAttributeRole().getFullPath() );
+				log.debugf( "   + table -> %s", getCollectionBinding().getTable().getName() );
+				log.debugf( "   + key -> %s", columns( getCollectionBinding().getKey() ) );
 				if ( getCollectionBinding().isIndexed() ) {
-					log.debugf( "   + index -> " + columns( ( (IndexedCollection) getCollectionBinding() ).getIndex() ) );
+					log.debugf( "   + index -> %s", columns( ( (IndexedCollection) getCollectionBinding() ).getIndex() ) );
 				}
 				if ( getCollectionBinding().isOneToMany() ) {
-					log.debugf( "   + one-to-many -> " + ( (OneToMany) getCollectionBinding().getElement() ).getReferencedEntityName() );
+					log.debugf( "   + one-to-many -> %s", ( (OneToMany) getCollectionBinding().getElement() ).getReferencedEntityName() );
 				}
 				else {
-					log.debugf( "   + element -> " + columns( getCollectionBinding().getElement() ) );
+					log.debugf( "   + element -> %s", columns( getCollectionBinding().getElement() ) );
 				}
 			}
 		}

@@ -645,7 +645,7 @@ The stodgy, dogmatic, _conventional_ wisdom, which we hesitate to challenge for 
 We lack the courage—perhaps even the conviction—to tell you categorically to _not_ follow this recommendation.
 But we do ask you to consider the cost in boilerplate of any architectural layer, and whether the benefits this cost buys are really worth it in the context of your system.
 
-To add a little background texture to this discussion, and at the risk of our Introduction devolving into a rant at such an early stage, we're going ask you to humor us while talk a little more about ancient history.
+To add a little background texture to this discussion, and at the risk of our Introduction degenerating into a rant at such an early stage, we're going ask you to humor us while talk a little more about ancient history.
 
 .An epic tale of DAOs and Repositories
 ****
@@ -742,7 +742,7 @@ OK, _phew_, let's move on.
 [[overview]]
 === Overview
 
-It's now time to begin our journey toward actually _understanding_ the code we saw above.
+It's now time to begin our journey toward actually _understanding_ the code we saw earlier.
 
 This introduction will guide you through the basic tasks involved in developing a program that uses Hibernate for persistence:
 

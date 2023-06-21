@@ -1354,15 +1354,4 @@ public class ActionQueue {
 
 	}
 
-	private abstract static class ListProvider<T extends ComparableExecutable> {
-		abstract ExecutableList<T> get(ActionQueue instance);
-		abstract ExecutableList<T> init(ActionQueue instance);
-		ExecutableList<T> getOrInit( ActionQueue instance ) {
-			ExecutableList<T> list = get( instance );
-			if ( list == null ) {
-				list = init( instance );
-			}
-			return list;
-		}
-	}
 }

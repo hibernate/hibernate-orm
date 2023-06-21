@@ -36,7 +36,6 @@ import jakarta.persistence.criteria.Predicate;
 public abstract class AbstractSqmAttributeJoin<O,T>
 		extends AbstractSqmQualifiedJoin<O,T>
 		implements SqmAttributeJoin<O,T> {
-	private static final Logger log = Logger.getLogger( AbstractSqmAttributeJoin.class );
 
 	private final boolean fetched;
 

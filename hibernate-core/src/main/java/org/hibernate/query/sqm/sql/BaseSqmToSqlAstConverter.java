@@ -1017,7 +1017,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							.getJdbcTypeCount();
 
 					if ( valueExprJdbcCount != assignedPathJdbcCount ) {
-						SqlTreeCreationLogger.LOGGER.debugf(
+						SqlTreeCreationLogger.LOGGER.debug(
 								"JDBC type count does not match in UPDATE assignment between the assigned-path and the assigned-value; " +
 										"this will likely lead to problems executing the query"
 						);
@@ -3338,7 +3338,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			if ( sqmJoin.isFetched() ) {
-				QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [" + sqmJoinNavigablePath + "] is restricted" );
+				QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [%s] is restricted", sqmJoinNavigablePath );
 			}
 
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;

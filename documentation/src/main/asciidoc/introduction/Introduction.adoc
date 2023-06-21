@@ -514,7 +514,7 @@ interface Queries {
 }
 ----
 
-The Metamodel Generator checks that the parameters of this method match the parameters of the HQL or SQL query, that the query is syntactically legal, and generates a query method with a similar signature and return type in the corresponding static metamodel class `Queries_`.
+The Metamodel Generator checks that the parameters of this method match the parameters of the HQL or SQL query, and that the query is syntactically legal, and generates a query method with a similar signature and return type in the corresponding static metamodel class `Queries_`.
 You can call the generated query method like this:
 
 [source,java]
@@ -566,6 +566,12 @@ If we also set up the {query-validator}[Query Validator], our HQL query will eve
 
 Let's now consider a different approach to code organization, one we treat with suspicion.
 
+[WARNING]
+====
+In the section that follows, we're going to give you our _opinion_.
+If you're only interested in facts, or if you prefer not to read things that might cut against the opinion you currently hold, please feel free to skip straight to the <<entities,next chapter>>.
+====
+
 [[archtecture]]
 === Architecture and the persistence layer
 
@@ -576,7 +582,7 @@ In particular, frameworks which wrap JPA seem to add bloat while subtracting som
 
 The stodgy, dogmatic, _conventional_ wisdom, which we hesitate to challenge for simple fear of pricking ourselves on the erect hackles that inevitably accompany such dogma-questioning is:
 
-> code which interacts with the database belongs in a separate _persistence layer_.
+> Code which interacts with the database belongs in a separate _persistence layer_.
 
 We lack the courage—perhaps even the conviction—to tell you categorically to _not_ follow this recommendation.
 But we do ask you to consider the cost in boilerplate of any architectural layer, and whether the benefits this cost buys are really worth it in the context of your system.
@@ -619,15 +625,17 @@ If these repository frameworks offered anything actually _useful_—and not obvi
 Ultimately, we're not sure you need a separate persistence layer at all.
 At least _consider_ the possibility that it might be OK to call the `EntityManager` directly from your business logic.
 
-_Sssssssss. Heresy!_
+> Sssssssss. Heresy!
 
 OK, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
-From this point of view, JPA _is_ your persistence layer!
-We might even analogize `EntityManager` to `List`.
-Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
-They're a parallel class hierarchy that makes the data model harder to evolve over time.
+From this point of view, JPA _is_ your persistence layer.
+And there's few good reasons to wrap this abstraction in a second abstraction that's _less_ generic.
 
 image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
+
+// We might even analogize `EntityManager` to `List`.
+// Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
+// They're a parallel class hierarchy that makes the data model harder to evolve over time.
 
 // Of course, such decisions are highly context-dependent: surely _some_ programs out there really do benefit from isolating the persistence logic into some sort of distinct layer; on the other hand, we're equally sure that there are others which simply _don't_.
 
@@ -637,7 +645,15 @@ Even where a distinct persistence layer _is_ appropriate, DAO-style repositories
 - most queries are extremely specific to a particular fragment of program logic, and aren't reused in different places across the system.
 
 Indeed, repositories, by nature, exhibit very low _cohesion_.
-They're also extremely highly _coupled_ to their clients, with a very large API surface.
+A layer of repository objects might make sense if you have multiple implementations of each repository, but in practice almost nobody ever does.
+That's because they're also extremely highly _coupled_ to their clients, with a very large API surface.
+A layer is only easily replaceable if it has a narrow API.
+
+[TIP]
+====
+Some people do indeed use mock repositories for testing, but we really struggle to see any value in this.
+If you don't want to run your tests against your real database, it's usually very easy to "mock" the database by running tests against an in-memory Java database like H2.
+====
 
 // So even in cases where separation _is_ of benefit, we go on to question the notion that this must be achieved via a layer of container-managed objects.
 

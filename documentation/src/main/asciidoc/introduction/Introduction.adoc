@@ -124,16 +124,16 @@ The second part of the code is much trickier to get right. This code must:
 
 [TIP]
 ====
-Some responsibility for transaction and session management, and for recovery from certain kinds of failure, can be best handled in some sort of framework code.
+Responsibility for transaction and session management, and for recovery from certain kinds of failure, is best handled in some sort of framework code.
 ====
 
-We're going to <<organizing-persistence,come back soon>> to the thornier question of how the persistence logic should fit into the rest of the system.
+We're going to <<organizing-persistence,come back soon>> to the thorny question of how this persistence logic should be organized, and how it should fit into the rest of the system.
 // First we want to make the ideas above concrete by seeing a simple example program that uses Hibernate in isolation.
 
 [[hello-hibernate]]
 === Hello, Hibernate
 
-Before we get further into the weeds, we'll quickly present a basic example program that will help you get started if you don't already have Hibernate integrated into your project.
+Before we get deeper into the weeds, we'll quickly present a basic example program that will help you get started if you don't already have Hibernate integrated into your project.
 
 We begin with a simple gradle build file:
 
@@ -201,6 +201,7 @@ appender.console.layout.pattern = %highlight{[%p]} %m%n
 Now we need some Java code.
 We begin with our _entity class_:
 
+[[book]]
 [source,java]
 .`Book.java`
 ----
@@ -231,6 +232,7 @@ Finally, let's see code which configures and instantiates Hibernate and asks it 
 Don't worry if this makes no sense at all right now.
 It's the job of this Introduction to make all this crystal clear.
 
+[[main-hibernate]]
 [source,java]
 .`Main.java`
 ----
@@ -339,6 +341,7 @@ Unfortunately, JPA doesn't offer an `inSession()` method, so we'll have to imple
 We can put that logic in our own `inSession()` function, so that we don't have to repeat it for every transaction.
 Again, you don't need to understand any of this code right now.
 
+[[main-jpa]]
 [source,java]
 .`Main.java` (JPA version)
 ----
@@ -403,17 +406,30 @@ public class Main {
 ----
 
 In practice, we never access the database directly from a `main()` method.
-So let's talk about how to organize persistence logic in a real system.
+So now let's talk about how to organize persistence logic in a real system.
+The rest of this chapter is not compulsory.
+If you're itching for more details about Hibernate itself, you're quite welcome to skip straight to the <<entities,next chapter>>, and come back later.
 
 [[organizing-persistence]]
 === Organizing persistence logic
 
-In a real program, persistence logic like the code shown above is usally interleaved with other sorts of code: logic implementing the rules of the business domain, or logic for interacting with the user.
-Therefore, most developers quickly—even _too quickly_, in our opinion—start to reach for ways to isolate the persistence logic into some sort of separate architectural layer.
+In a real program, persistence logic like the code shown above is usually interleaved with other sorts of code, including logic:
+
+- implementing the rules of the business domain, or
+- for interacting with the user.
+
+Therefore, many developers quickly—even _too quickly_, in our opinion—reach for ways to isolate the persistence logic into some sort of separate architectural layer.
+We're going to ask you to suppress this urge for now.
+
+[TIP]
+====
+The _easiest_ way to use Hibernate is to call the `Session` or `EntityManager` directly.
+If you're new to Hibernate, frameworks which wrap JPA are only going to make your life more difficult.
+====
 
 We prefer a _bottom-up_ approach to organizing our code.
 We like to start thinking about methods and functions, not about architectural layers and container-managed objects.
-To illustrate the sort of approach to code organization that we advocate, let's consider how to write a service which queries the database using HQL or SQL.
+To illustrate the sort of approach to code organization that we advocate, let's consider a service which queries the database using HQL or SQL.
 
 We might start with something like this, a mix of UI and persistence logic:
 
@@ -437,10 +453,21 @@ public class BookResource {
 }
 ----
 
-Indeed, we might also _finish_ with something like that—it's really hard to identify anything concretely wrong with the code above.
+Indeed, we might also _finish_ with something like that—it's quite hard to identify anything concretely wrong with the code above.
 
-Nevertheless, we love super-short methods with single responsibilities, and there looks to be an opportunity to introduce one here.
+One very nice aspect of this code, which we wish to draw your attention to, is that session and transaction management is handled by generic "framework" code, just as we already recommended above.
+In this case, we're using the `fromTransaction()` method, which happens to come built in to Hibernate.
+But you might prefer to use something else, for example:
+
+- in a container environment like Jakarta EE or Quarkus, _container-managed transactions_ and _container-managed persistence contexts_, or
+- something you write yourself.
+
+The important thing is that calls like `createEntityManager()` and `getTransaction().begin()` don't belong in regular program logic, because it's tricky and tedious to get the error handling correct.
+
+There's one thing we could perhaps improve.
+We love super-short methods with single responsibilities, and there looks to be an opportunity to introduce one here.
 Let's hit the code with our favorite thing, the Extract Method refactoring.
+
 Out pops:
 
 [source,java]
@@ -482,7 +509,11 @@ Notice that our query method doesn't attempt to hide the `EntityManager` from it
 Indeed, the client code is responsible for providing the `EntityManager` or `Session` to the query method.
 This is a quite distinctive feature of our whole approach.
 
-The client code may obtain an `EntityManager` or `Session` by calling `inTransaction()`, as we saw above, or, in an environment with container-managed transactions, it might obtain it via dependency injection.
+The client code may:
+
+-  obtain an `EntityManager` or `Session` by calling `inTransaction()` or `fromTransaction()`, as we saw above, or,
+- in an environment with container-managed transactions, it might obtain it via dependency injection.
+
 Whatever the case, the code which orchestrates a unit of work usually just calls the `Session` or `EntityManager` directly, passing it along to helper methods like our query method if necessary.
 
 [source,java]
@@ -496,12 +527,40 @@ public List<Book> findBooks(String titlePattern) {
 }
 ----
 
-You might be thinking that our query methods are a bit boilerplatey.
-That's true, perhaps, but we're much more concerned that they're not very typesafe.
+You might be thinking that our query method looks a bit boilerplatey.
+That's true, perhaps, but we're much more concerned that it's not very typesafe.
+Indeed, for many years, the lack of compile-time checking for HQL queries and code which binds arguments to query parameters was our number one source of discomfort with Hibernate.
+
 Fortunately, there's now a solution to both problems: as an incubating feature of Hibernate 6.3, we now offer the possibility to have the <<metamodel-generator,Metamodel Generator>> fill in the implementation of such query methods for you.
 
-.Generated query methods
+[[generated-query-methods]]
+=== Generated query methods
+
+The Metamodel Generator is a standard part of JPA.
+// It's an annotation processor that produces a statically-typed metamodel of the entity classes in a Java program.
+We've actually already seen its handiwork in the code examples <<main-jpa,above>>: it's the author of the class `Book_` which contains the static metamodel of the <<book,entity class>> `Book`.
+
+[[metamodel-generator]]
+.The Metamodel Generator
 ****
+
+:generator: https://hibernate.org/orm/tooling/
+:generator-guide: {userGuideBase}#tooling-modelgen
+
+Hibernate's {generator}[Metamodel Generator] is an annotation processor that produces what JPA calls a _static metamodel_.
+That is, it produces a typed model of the persistent classes in our program, giving us a type-safe way to refer to their attributes in Java code.
+In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
+
+We've already seen how to set up the annotation processor in the <<hello-hibernate,gradle build>> we saw earlier.
+
+Now, you don't have to use the Metamodel Generator with Hibernate—the APIs we just mentioned also accept plain strings—but we find that it works well with gradle and integrates well with our IDE, and the advantage in typesafety is compelling.
+//
+// You can find more information in the {generator-guide}[User Guide].
+****
+
+_Query method generation_ is a new feature of Hibernate's implementation of the Metamodel Generator, an extension to the functionality defined by the JPA specification.
+Let's see how it works.
+
 In an interface or abstract class, write down the "signature" of the query as a function, and specify the HQL or SQL query string itself using a `@HQL` or `@SQL` annotation:
 
 [source,java]
@@ -562,18 +621,17 @@ List<Book> books =
 :query-validator: https://github.com/hibernate/query-validator/
 
 If we also set up the {query-validator}[Query Validator], our HQL query will even be completely _type-checked_ at compile time.
-****
+
+[[architecture]]
+=== Architecture and the persistence layer
 
 Let's now consider a different approach to code organization, one we treat with suspicion.
 
 [WARNING]
 ====
-In the section that follows, we're going to give you our _opinion_.
+In this section, we're going to give you our _opinion_.
 If you're only interested in facts, or if you prefer not to read things that might cut against the opinion you currently hold, please feel free to skip straight to the <<entities,next chapter>>.
 ====
-
-[[archtecture]]
-=== Architecture and the persistence layer
 
 Hibernate is an architecture-agnostic library, not a framework, and therefore integrates comfortably with a wide range of Java frameworks and containers.
 Consistent with our place within the ecosystem, we've historically avoided giving out much advice on architecture.
@@ -639,10 +697,11 @@ image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="ce
 
 // Of course, such decisions are highly context-dependent: surely _some_ programs out there really do benefit from isolating the persistence logic into some sort of distinct layer; on the other hand, we're equally sure that there are others which simply _don't_.
 
-Even where a distinct persistence layer _is_ appropriate, DAO-style repositories aren't the obviously-most-correct way to factorize the equation:
+Even where a distinct persistence layer _is_ appropriate, DAO-style repositories aren't the unambiguously most-correct way to factorize the equation:
 
-- most nontrivial queries touch multiple entities, and so it's often quite ambiguous which DAO such a query belongs to, and
-- most queries are extremely specific to a particular fragment of program logic, and aren't reused in different places across the system.
+- most nontrivial queries touch multiple entities, and so it's often quite ambiguous which repository such a query belongs to,
+- most queries are extremely specific to a particular fragment of program logic, and aren't reused in different places across the system, and
+- the various operations of a repository rarely interact or share common internal implementation details.
 
 Indeed, repositories, by nature, exhibit very low _cohesion_.
 A layer of repository objects might make sense if you have multiple implementations of each repository, but in practice almost nobody ever does.
@@ -652,7 +711,8 @@ A layer is only easily replaceable if it has a narrow API.
 [TIP]
 ====
 Some people do indeed use mock repositories for testing, but we really struggle to see any value in this.
-If you don't want to run your tests against your real database, it's usually very easy to "mock" the database by running tests against an in-memory Java database like H2.
+If you don't want to run your tests against your real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
+This works even better in Hibernate 6 than in older versions of Hibernate, since HQL is now _much_ more portable between platforms.
 ====
 
 // So even in cases where separation _is_ of benefit, we go on to question the notion that this must be achieved via a layer of container-managed objects.

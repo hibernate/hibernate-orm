@@ -1619,14 +1619,15 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return null;
 		}
 		else {
+			final EntityTableMapping identifierTableMapping = entityPersister().getIdentifierTableMapping();
 			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder =
-					newTableUpdateBuilder( entityPersister().getIdentifierTableMapping() );
+					newTableUpdateBuilder( identifierTableMapping );
 
 			updateBuilder.setSqlComment( "forced version increment for " + entityPersister().getRolePath() );
 
 			updateBuilder.addValueColumn( versionMapping );
 
-			updateBuilder.addKeyRestrictionsLeniently( entityPersister().getIdentifierMapping() );
+			updateBuilder.addKeyRestrictionsLeniently( identifierTableMapping.getKeyMapping() );
 
 			updateBuilder.addOptimisticLockRestriction( versionMapping );
 			addPartitionRestriction( updateBuilder );

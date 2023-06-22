@@ -237,7 +237,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<ParameterExpression<?>> getParameters() {
 		// At this level, the number of parameters may still be growing as
 		// nodes are added to the Criteria - so we re-calculate this every
@@ -245,8 +244,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		//
 		// for a "finalized" set of parameters, use `#resolveParameters` instead
 		assert querySource == SqmQuerySource.CRITERIA;
-		final Set<ParameterExpression<?>> sqmParameters = (Set<ParameterExpression<?>>) (Set<?>) getSqmParameters();
-		return sqmParameters.stream()
+		return getSqmParameters().stream()
 				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
 				.collect( Collectors.toSet() );
 	}

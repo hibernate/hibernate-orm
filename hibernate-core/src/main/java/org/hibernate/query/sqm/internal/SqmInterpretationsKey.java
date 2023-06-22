@@ -8,8 +8,10 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.function.Supplier;
 
+import jakarta.persistence.criteria.Order;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.ResultListTransformer;
@@ -36,6 +38,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 	public interface InterpretationsKeySource extends CacheabilityInfluencers {
 		Class<?> getResultType();
+		List<Order> getOrder();
 	}
 
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
@@ -45,6 +48,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 							? keySource.getSqmStatement()
 							: keySource.getQueryString(),
 					keySource.getResultType(),
+					keySource.getOrder(),
 					keySource.getQueryOptions().getLockOptions(),
 					keySource.getQueryOptions().getTupleTransformer(),
 					keySource.getQueryOptions().getResultListTransformer(),
@@ -86,6 +90,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 	private final Object query;
 	private final Class<?> resultType;
+	private final List<Order> order;
 	private final LockOptions lockOptions;
 	private final TupleTransformer<?> tupleTransformer;
 	private final ResultListTransformer<?> resultListTransformer;
@@ -94,12 +99,14 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	private SqmInterpretationsKey(
 			Object query,
 			Class<?> resultType,
+			List<Order> order,
 			LockOptions lockOptions,
 			TupleTransformer<?> tupleTransformer,
 			ResultListTransformer<?> resultListTransformer,
 			Collection<String> enabledFetchProfiles) {
 		this.query = query;
 		this.resultType = resultType;
+		this.order = order;
 		this.lockOptions = lockOptions;
 		this.tupleTransformer = tupleTransformer;
 		this.resultListTransformer = resultListTransformer;
@@ -112,6 +119,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 				query,
 				resultType,
 				// Since lock options are mutable, we need a copy for the cache key
+				order,
 				lockOptions.makeCopy(),
 				tupleTransformer,
 				resultListTransformer,
@@ -135,11 +143,12 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 		final SqmInterpretationsKey that = (SqmInterpretationsKey) o;
 		return query.equals( that.query )
-				&& areEqual( resultType, that.resultType )
-				&& areEqual( lockOptions, that.lockOptions )
-				&& areEqual( tupleTransformer, that.tupleTransformer )
-				&& areEqual( resultListTransformer, that.resultListTransformer )
-				&& areEqual( enabledFetchProfiles, that.enabledFetchProfiles );
+			&& areEqual( resultType, that.resultType )
+			&& areEqual( order, that.order )
+			&& areEqual( lockOptions, that.lockOptions )
+			&& areEqual( tupleTransformer, that.tupleTransformer )
+			&& areEqual( resultListTransformer, that.resultListTransformer )
+			&& areEqual( enabledFetchProfiles, that.enabledFetchProfiles );
 	}
 
 	private <T> boolean areEqual(T o1, T o2) {

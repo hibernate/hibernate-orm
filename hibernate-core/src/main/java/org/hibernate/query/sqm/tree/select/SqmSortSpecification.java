@@ -13,6 +13,8 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import java.util.Objects;
+
 /**
  * @author Steve Ebersole
  */
@@ -107,5 +109,27 @@ public class SqmSortSpecification implements JpaOrder {
 				sb.append( " nulls last" );
 			}
 		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		else if ( !(o instanceof SqmSortSpecification) ) {
+			return false;
+		}
+		else {
+			// used in SqmInterpretationsKey.equals()
+			SqmSortSpecification that = (SqmSortSpecification) o;
+			return Objects.equals( sortExpression, that.sortExpression )
+				&& sortOrder == that.sortOrder
+				&& nullPrecedence == that.nullPrecedence;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( sortExpression, sortOrder, nullPrecedence );
 	}
 }

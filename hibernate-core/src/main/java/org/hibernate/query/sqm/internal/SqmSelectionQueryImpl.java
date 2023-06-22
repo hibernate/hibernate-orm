@@ -88,7 +88,7 @@ import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInter
 public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 		implements SqmSelectionQuery<R>, InterpretationsKeySource {
 	private final String hql;
-	private final SqmSelectStatement<R> sqm;
+	private SqmSelectStatement<R> sqm;
 
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
@@ -568,13 +568,14 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	}
 
 	private void addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order) {
+		sqm = sqm.copy( SqmCopyContext.simpleContext() );
+		NodeBuilder nodeBuilder = sqm.nodeBuilder();
 		List<Order> orders = new ArrayList<>( sqm.getOrderList() );
 		sqm.getQuerySpec().getRoots().forEach( root -> {
 			@SuppressWarnings("unchecked")
 			SqmRoot<R> singleRoot = (SqmRoot<R>) root;
 			SqmPath<?> ref = singleRoot.get( attribute );
-			NodeBuilder nodeBuilder = sqm.nodeBuilder();
-			orders.add( order==SortOrder.ASCENDING ? nodeBuilder.asc(ref) : nodeBuilder.desc(ref) );
+			orders.add( nodeBuilder.sort( ref, order ) );
 
 		} );
 		sqm.orderBy( orders );
@@ -582,8 +583,14 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 
 	@Override
 	public SqmSelectionQuery<R> unordered() {
+		sqm = sqm.copy( SqmCopyContext.simpleContext() );
 		sqm.getQueryPart().setOrderByClause( null );
 		return this;
+	}
+
+	@Override
+	public List<Order> getOrder() {
+		return sqm.getOrderList();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

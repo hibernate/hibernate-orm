@@ -140,7 +140,7 @@ public class QuerySqmImpl<R>
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QuerySqmImpl.class );
 
 	private final String hql;
-	private final SqmStatement<R> sqm;
+	private SqmStatement<R> sqm;
 
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
@@ -963,14 +963,15 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order) {
 		if ( sqm instanceof SqmSelectStatement ) {
+			sqm = sqm.copy( SqmCopyContext.simpleContext() );
+			NodeBuilder nodeBuilder = sqm.nodeBuilder();
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
 			List<Order> orders = new ArrayList<>( select.getOrderList() );
 			select.getQuerySpec().getRoots().forEach( root -> {
 				@SuppressWarnings("unchecked")
 				SqmRoot<R> singleRoot = (SqmRoot<R>) root;
 				SqmPath<?> ref = singleRoot.get( attribute );
-				NodeBuilder nodeBuilder = select.nodeBuilder();
-				orders.add( order==SortOrder.ASCENDING ? nodeBuilder.asc(ref) : nodeBuilder.desc(ref) );
+				orders.add( nodeBuilder.sort( ref, order) );
 
 			} );
 			select.orderBy( orders );
@@ -984,11 +985,19 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> unordered() {
 		if ( sqm instanceof SqmSelectStatement ) {
+			sqm = sqm.copy( SqmCopyContext.simpleContext() );
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
 			select.getQueryPart().setOrderByClause( null );
 
 		}
 		return this;
+	}
+
+	@Override
+	public List<Order> getOrder() {
+		return sqm instanceof SqmSelectStatement
+				? ((SqmSelectStatement<R>) sqm).getOrderList()
+				: null;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
